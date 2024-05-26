@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
@@ -142,31 +143,87 @@ class _StatsChartState extends State<StatsChart> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                                 children: [
-                                  TextButton(
-                                    onPressed: () {
-                                      toastification.dismiss(holder);
-                                      const url = 'https://tornstats.com/';
-                                      context.read<WebViewProvider>().openBrowserPreference(
-                                            context: context,
-                                            url: url,
-                                            browserTapType: BrowserTapType.short,
-                                          );
-                                    },
-                                    child: const Text(
-                                      'Open Torn Stats',
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                  if (success)
+                                    TextButton(
+                                      onPressed: () {
+                                        toastification.dismiss(holder);
+                                        const url = 'https://tornstats.com/';
+                                        context.read<WebViewProvider>().openBrowserPreference(
+                                              context: context,
+                                              url: url,
+                                              browserTapType: BrowserTapType.short,
+                                            );
+                                      },
+                                      child: const Text(
+                                        'Open Torn Stats',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12.0),
+                                          side: BorderSide(color: Colors.white, width: 2.0),
+                                        ),
                                       ),
                                     ),
-                                    style: TextButton.styleFrom(
-                                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12.0),
-                                        side: BorderSide(color: Colors.white, width: 2.0),
-                                      ),
+                                  if (success)
+                                    GestureDetector(
+                                      onTap: () {
+                                        Clipboard.setData(ClipboardData(text: message));
+                                        toastification.showCustom(
+                                          autoCloseDuration: const Duration(seconds: 2),
+                                          alignment: Alignment.center,
+                                          builder: (BuildContext context, ToastificationItem holder) {
+                                            return GestureDetector(
+                                              onTap: () {
+                                                toastification.dismiss(holder);
+                                              },
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(8),
+                                                  color: Colors.green[600],
+                                                  border: Border.all(
+                                                    color: Colors.green.shade800,
+                                                    width: 2,
+                                                  ),
+                                                ),
+                                                padding: const EdgeInsets.all(16),
+                                                margin: const EdgeInsets.all(8),
+                                                child: Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.copy),
+                                                    SizedBox(width: 20),
+                                                    Flexible(
+                                                      child: Column(
+                                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                                        children: [
+                                                          const Text(
+                                                            'Copied to clipboard!',
+                                                            style: TextStyle(
+                                                              color: Colors.white,
+                                                              fontWeight: FontWeight.bold,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        );
+
+                                        setState(() {
+                                          _statsUpdating = false;
+                                        });
+                                      },
+                                      child: Icon(Icons.copy, color: Colors.white),
                                     ),
-                                  ),
                                   GestureDetector(
                                     onTap: () {
                                       toastification.dismiss(holder);
