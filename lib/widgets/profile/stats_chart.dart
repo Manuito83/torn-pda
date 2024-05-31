@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -84,7 +85,7 @@ class _StatsChartState extends State<StatsChart> {
             try {
               final String tornStatsURL =
                   'https://www.tornstats.com/api/v2/${widget.userController.alternativeTornStatsKey}/battlestats/record';
-              final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 5));
+              final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 10));
               if (resp.statusCode == 200) {
                 final TornStatsChartUpdate statsJson = tornStatsChartUpdateFromJson(resp.body);
                 if (statsJson.status! && statsJson.message != null) {
@@ -93,6 +94,8 @@ class _StatsChartState extends State<StatsChart> {
                   widget.callbackStatsUpdate();
                 }
               }
+            } on TimeoutException {
+              message = "Error updating stats: Torn Stats did not respond, it might be unavailable at this time";
             } catch (e) {
               message = "Error updating stats: $e";
             }
@@ -141,7 +144,7 @@ class _StatsChartState extends State<StatsChart> {
                               ),
                               const SizedBox(height: 16),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   if (success)
                                     TextButton(
