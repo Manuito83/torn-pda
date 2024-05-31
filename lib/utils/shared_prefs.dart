@@ -78,7 +78,7 @@ class Prefs {
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
-  final String _kOnAppExit = "pda_onAppExit";
+  final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserStyleBottomBarEnabled = "pda_browserStyleAlternativeEnabled";
@@ -896,14 +896,14 @@ class Prefs {
   /// ----------------------------
   /// Methods for on app exit
   /// ----------------------------
-  Future<String> getOnAppExit() async {
+  Future<String> getOnBackButtonAppExit() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kOnAppExit) ?? 'stay';
+    return prefs.getString(_kOnBackButtonAppExit) ?? 'stay';
   }
 
   Future<bool> setOnAppExit(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kOnAppExit, value);
+    return prefs.setString(_kOnBackButtonAppExit, value);
   }
 
   /// ----------------------------

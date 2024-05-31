@@ -38,6 +38,14 @@ class ShortcutsProvider extends ChangeNotifier {
 
   void activateSavedShortcut(Shortcut activeShortcut) {
     activeShortcut.active = true;
+
+    // Note: this ensures that all custom colors are returned correctly after transitioning to Flutter 3.22 (v3.4.2)
+    // as custom colors were saved incorrectly and will be shown as black when restored from the model otherwise
+    // TODO: remove or allow users to select custom colors
+    if (activeShortcut.isCustom == true) {
+      activeShortcut.color = Colors.orange[500]!;
+    }
+
     _activeShortcuts.add(activeShortcut);
   }
 
@@ -127,6 +135,7 @@ class ShortcutsProvider extends ChangeNotifier {
           }
         }
       } catch (e, trace) {
+        FirebaseCrashlytics.instance.log("PDA Crash at Shortcuts initialization");
         FirebaseCrashlytics.instance.recordError(e, trace);
       }
     }

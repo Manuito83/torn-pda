@@ -58,7 +58,7 @@ dependencies:
   #  git:
   #    url: https://github.com/Manuito83/flutter_inappwebview.git
   #    ref: manuito-beta22
-  flutter_local_notifications: 17.0.1
+  flutter_local_notifications: 17.1.2
   flutter_native_splash: 2.4.0
   flutter_secure_storage: 9.2.1
   flutter_slidable: 3.0.1
@@ -90,7 +90,7 @@ dependencies:
   receive_intent: 0.2.5
   rxdart: 0.27.7
   share_plus: 9.0.0
-  shared_preferences: 2.0.15
+  shared_preferences: 2.2.3
   showcaseview: 
     git: 
       url: https://github.com/chandrabezzo/flutter_showcaseview
@@ -98,12 +98,22 @@ dependencies:
   sliding_up_panel: 2.0.0+1
   timeline_tile: 2.0.0
   timezone: 0.9.1
+  toastification: 2.0.0
   toggle_switch: 2.3.0
   url_launcher: 6.2.1
-  vibration: 1.8.4
+  vibration: 1.9.0
   wakelock_plus: 1.2.4
   webview_flutter: 4.7.0
   collection: 1.18.0
+
+dependency_overrides:
+  # TODO: Recheck once flutter_inappwebview version >6.0.0 is released
+  # Fixes Proguard https://github.com/pichillilorenzo/flutter_inappwebview/issues/2139
+  flutter_inappwebview_android:
+    git:
+      url: https://github.com/holzgeist/flutter_inappwebview
+      path: flutter_inappwebview_android
+      ref: d89b1d32638b49dfc58c4b7c84153be0c269d057
 
 dev_dependencies:
   flutter_launcher_icons: 0.13.1

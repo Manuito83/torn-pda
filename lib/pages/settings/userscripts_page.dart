@@ -59,7 +59,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
     routeWithDrawer = false;
     routeName = "userscripts";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "userscripts") _goBack();
     });
   }
@@ -75,6 +75,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
+        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -99,8 +101,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
+                            shape: WidgetStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                                 side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -122,8 +124,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           minWidth: 1.0,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
-                              shape: MaterialStateProperty.all<OutlinedBorder>(
+                              backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
+                              shape: WidgetStateProperty.all<OutlinedBorder>(
                                 RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(18),
                                   side: const BorderSide(
@@ -155,8 +157,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
+                            shape: WidgetStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                                 side: const BorderSide(

@@ -56,14 +56,14 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
     routeWithDrawer = false;
     routeName = "settings_browser";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "settings_browser") _goBack();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    _webViewProvider = Provider.of<WebViewProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
@@ -72,6 +72,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
+        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

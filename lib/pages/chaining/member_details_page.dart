@@ -41,7 +41,7 @@ class MemberDetailsPageState extends State<MemberDetailsPage> {
 
     routeWithDrawer = false;
     routeName = "member_details";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "member_details") _goBack();
     });
   }

@@ -11,6 +11,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
 class TargetDetailsPage extends StatefulWidget {
@@ -35,7 +36,7 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
 
     routeWithDrawer = false;
     routeName = "target_details";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "target_details") _goBack();
     });
   }
@@ -52,6 +53,10 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

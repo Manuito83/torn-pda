@@ -62,7 +62,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       _fbUser = widget.fbUser;
 
       routeWithDrawer = false;
-      _settingsP!.willPopShouldGoBack.stream.listen((event) {
+      _settingsP!.willPopShouldGoBackStream.stream.listen((event) {
         if (mounted && routeName == "stockmarket_alerts_page") _goBack();
       });
     } else {
@@ -84,6 +84,8 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
               : _themeProvider!.canvas
           : _themeProvider!.canvas,
       child: SafeArea(
+        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
+        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider!.canvas,
           appBar: _settingsP!.appBarTop ? buildAppBar() : null,

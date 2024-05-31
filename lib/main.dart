@@ -24,6 +24,7 @@ import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
+import 'package:toastification/toastification.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/firebase_options.dart';
@@ -58,8 +59,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.4.2';
-const String androidCompilation = '417';
-const String iosCompilation = '417';
+const String androidCompilation = '426';
+const String iosCompilation = '426';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
@@ -250,6 +251,7 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
+  late Widget _mainBrowser;
 
   @override
   void initState() {
@@ -272,6 +274,16 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
       }
     });
+
+    _mainBrowser = Consumer<WebViewProvider>(
+      builder: (context, w, child) {
+        return Visibility(
+          maintainState: true,
+          visible: w.browserShowInForeground || w.webViewSplitActive,
+          child: w.stackView,
+        );
+      },
+    );
   }
 
   @override
@@ -337,110 +349,90 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
     );
 
-    return MaterialApp(
-      title: 'Torn PDA',
-      navigatorKey: navigatorKey,
-      theme: theme,
-      debugShowCheckedModeBanner: false,
-      builder: BotToastInit(),
-      navigatorObservers: [BotToastNavigatorObserver()],
-      home: WillPopScope(
-        onWillPop: () async {
-          final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+    // Inside of Navigator so that even if DrawerPage is replaced (we push another route), the
+    // reference to this widget is not lost
+    final homeDrawer = Navigator(
+      onGenerateRoute: (_) {
+        return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
+      },
+    );
 
-          if (w.browserShowInForeground) {
-            // Browser is in front, delegate the call
-            w.tryGoBack();
-            return false;
-          } else {
-            // App is in front
-            //_webViewProvider.willPopCallbackStream.add(true);
-            final bool shouldPop = await _willPopFromApp();
-            if (shouldPop) return true;
-            return false;
-          }
-        },
-        child: Consumer<WebViewProvider>(builder: (context, wProvider, child) {
+    return ToastificationWrapper(
+      child: MaterialApp(
+        title: 'Torn PDA',
+        navigatorKey: navigatorKey,
+        theme: theme,
+        debugShowCheckedModeBanner: false,
+        builder: BotToastInit(),
+        navigatorObservers: [BotToastNavigatorObserver()],
+        home: Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
+          // Build standard or split-screen home
+          Widget home = Stack(
+            children: [
+              homeDrawer,
+              _mainBrowser,
+              const AppBorder(),
+            ],
+          );
+
           if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
-              _webViewProvider.webViewSplitActive &&
+              wProvider.webViewSplitActive &&
               screenIsWide) {
-            return Stack(
+            home = Stack(
               children: [
                 Row(
                   children: [
-                    Flexible(
-                      child: MaterialApp(
-                        debugShowCheckedModeBanner: false,
-                        theme: theme,
-                        home: DrawerPage(),
-                      ),
-                    ),
-                    Flexible(
-                      child: wProvider.stackView,
-                    ),
+                    Flexible(child: homeDrawer),
+                    Flexible(child: _mainBrowser),
                   ],
                 ),
                 const AppBorder(),
               ],
             );
           } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
-              _webViewProvider.webViewSplitActive &&
+              wProvider.webViewSplitActive &&
               screenIsWide) {
-            return Stack(
+            home = Stack(
               children: [
                 Row(
                   children: [
-                    Flexible(
-                      child: wProvider.stackView,
-                    ),
-                    Flexible(
-                      child: MaterialApp(
-                        debugShowCheckedModeBanner: false,
-                        theme: theme,
-                        home: DrawerPage(),
-                      ),
-                    ),
+                    Flexible(child: _mainBrowser),
+                    Flexible(child: homeDrawer),
                   ],
                 ),
                 const AppBorder(),
               ],
             );
-          } else {
-            return Stack(
-              children: [
-                MaterialApp(
-                  debugShowCheckedModeBanner: false,
-                  theme: theme,
-                  home: DrawerPage(),
-                ),
-                Visibility(
-                  maintainState: true,
-                  visible: wProvider.browserShowInForeground,
-                  child: wProvider.stackView,
-                ),
-                const AppBorder(),
-              ],
-            );
           }
+
+          return PopScope(
+            // Only exit app if user allows and we are not in the browser
+            canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
+            onPopInvoked: (didPop) async {
+              if (didPop) return;
+              // If we can't pop, decide if we open the drawer or go backwards in the browser
+              final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+              if (w.browserShowInForeground) {
+                // Browser is in front, delegate the call
+                w.tryGoBack();
+              } else {
+                _openDrawerIfPossible();
+              }
+            },
+            child: home,
+          );
         }),
       ),
     );
   }
 
-  Future<bool> _willPopFromApp() async {
+  _openDrawerIfPossible() async {
     final SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
-    final appExit = s.onAppExit;
-    if (appExit == 'exit') {
-      return true;
+    if (routeWithDrawer) {
+      // Open drawer instead
+      s.willPopShouldOpenDrawerStream.add(true);
     } else {
-      if (routeWithDrawer) {
-        // Open drawer instead
-        s.willPopShouldOpenDrawer.add(true);
-        return false;
-      } else {
-        s.willPopShouldGoBack.add(true);
-        return false;
-      }
+      s.willPopShouldGoBackStream.add(true);
     }
   }
 }

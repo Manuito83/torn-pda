@@ -38,7 +38,7 @@ class WarController extends GetxController {
   int onlineFilter = 0;
   int okayRedFilter = 0;
   bool countryFilter = false;
-  int travelingFilter = 0;
+  int abroadFilter = 0;
   bool showChainWidget = true;
 
   bool updating = false;
@@ -754,16 +754,16 @@ class WarController extends GetxController {
   }
 
   void setTravelingFilterStatus(int value) {
-    travelingFilter = value;
+    abroadFilter = value;
     if (value == 0) {
-      activeFilters.removeWhere((element) => element == "on the ground");
-      activeFilters.removeWhere((element) => element == "airborne");
+      activeFilters.removeWhere((element) => element == "not abroad");
+      activeFilters.removeWhere((element) => element == "abroad");
     } else if (value == 1) {
-      activeFilters.removeWhere((element) => element == "on the ground");
-      activeFilters.add("airborne");
+      activeFilters.removeWhere((element) => element == "not abroad");
+      activeFilters.add("abroad");
     } else if (value == 2) {
-      activeFilters.removeWhere((element) => element == "airborne");
-      activeFilters.add("on the ground");
+      activeFilters.removeWhere((element) => element == "abroad");
+      activeFilters.add("not abroad");
     }
     savePreferences();
     update();
@@ -781,7 +781,7 @@ class WarController extends GetxController {
     onlineFilter = await Prefs().getOnlineFilterInWars();
     okayRedFilter = await Prefs().getOkayRedFilterInWars();
     countryFilter = await Prefs().getCountryFilterInWars();
-    travelingFilter = await Prefs().getTravelingFilterInWars();
+    abroadFilter = await Prefs().getTravelingFilterInWars();
     showChainWidget = await Prefs().getShowChainWidgetInWars();
 
     nukeReviveActive = await Prefs().getUseNukeRevive();
@@ -852,7 +852,7 @@ class WarController extends GetxController {
     Prefs().setOnlineFilterInWars(onlineFilter);
     Prefs().setOkayRedFilterInWars(okayRedFilter);
     Prefs().setCountryFilterInWars(countryFilter);
-    Prefs().setTravelingFilterInWars(travelingFilter);
+    Prefs().setTravelingFilterInWars(abroadFilter);
     Prefs().setShowChainWidgetInWars(showChainWidget);
 
     // Save sorting

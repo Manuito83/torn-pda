@@ -1747,7 +1747,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
-    _willPopShouldOpenDrawer = _settingsProvider.willPopShouldOpenDrawer.stream;
+    _willPopShouldOpenDrawer = _settingsProvider.willPopShouldOpenDrawerStream.stream;
     _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
       _openDrawer();
     });

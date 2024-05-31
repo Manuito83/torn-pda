@@ -15,6 +15,7 @@ import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 class FriendsBackupPage extends StatefulWidget {
   @override
@@ -56,7 +57,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
 
     routeWithDrawer = false;
     routeName = "friends_backup";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friends_backup") _goBack();
     });
   }
@@ -73,6 +74,10 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,

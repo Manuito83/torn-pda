@@ -52,7 +52,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
 
     routeWithDrawer = false;
     routeName = "ranked_wars";
-    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "ranked_wars") _goBack();
     });
   }
