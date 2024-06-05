@@ -3646,6 +3646,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   chartType: _settingsProvider!.tornStatsChartType == "line"
                                       ? TornStatsChartType.Line
                                       : TornStatsChartType.Pie,
+                                  userController: _u,
+                                  callbackStatsUpdate: _getStatsChart,
                                 ),
                               ),
                               const SizedBox(height: 40),
@@ -3937,6 +3939,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   chartType: _settingsProvider!.tornStatsChartType == "line"
                                       ? TornStatsChartType.Line
                                       : TornStatsChartType.Pie,
+                                  userController: _u,
+                                  callbackStatsUpdate: _getStatsChart,
                                 ),
                               ),
                               const SizedBox(height: 40),

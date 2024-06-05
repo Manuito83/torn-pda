@@ -3,7 +3,6 @@ import 'dart:developer';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
@@ -353,18 +352,18 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
   void _closeWithError() {
     BotToast.showText(
       clickClose: true,
-      text: "Something went wrong, please try again. "
-          "If tabs are stuck, consider resetting the browser cache in Settings.",
+      text: "Something went wrong, please try again.",
       textStyle: const TextStyle(
         fontSize: 14,
         color: Colors.white,
       ),
       contentColor: Colors.deepOrangeAccent,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 6),
       contentPadding: const EdgeInsets.all(10),
     );
 
-    Get.back();
+    _webViewProvider.browserShowInForeground = false;
+    _webViewProvider.clearCacheAndTabs();
   }
 
   Future<void> _initialiseSecondary() async {

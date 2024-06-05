@@ -16,12 +16,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '415'
+    flutterVersionCode = '426'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '3.4.1'
+    flutterVersionName = '3.4.2'
 }
 
 def keystoreProperties = new Properties()
@@ -32,6 +32,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     compileSdkVersion 34
+
+    namespace 'com.manuito.tornpda'
 
     lintOptions {
         disable 'InvalidPackage'
@@ -57,8 +59,8 @@ android {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 8
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     signingConfigs {
@@ -100,7 +102,7 @@ dependencies {
     // See https://github.com/flutter/flutter/issues/110658 (local_notifications_plugin)
     implementation 'androidx.window:window:1.0.0'
     implementation 'androidx.window:window-java:1.0.0'
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
 }
 
 

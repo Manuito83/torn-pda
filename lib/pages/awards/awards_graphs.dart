@@ -14,6 +14,7 @@ import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 class AwardsGraphs extends StatefulWidget {
   const AwardsGraphs({required this.graphInfo});
@@ -41,7 +42,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
 
     routeWithDrawer = false;
     routeName = "awards_graphs";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "awards_graphs") _goBack();
     });
   }
@@ -58,6 +59,10 @@ class AwardsGraphsState extends State<AwardsGraphs> {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -169,7 +174,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
     return BarChartData(
       barTouchData: BarTouchData(
         touchTooltipData: BarTouchTooltipData(
-          tooltipBgColor: Colors.blueGrey,
+          getTooltipColor: (touchedSpot) => Colors.blueGrey,
           fitInsideVertically: true,
           fitInsideHorizontally: true,
           getTooltipItem: (group, groupIndex, rod, rodIndex) {

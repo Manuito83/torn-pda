@@ -102,9 +102,6 @@ class WebViewPanicState extends State<WebViewPanic> {
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-    // Enable hybrid composition
-    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
-
     _loadPreferences();
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
     _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
@@ -117,6 +114,61 @@ class WebViewPanicState extends State<WebViewPanic> {
 
     // Decide if voluntarily skipping first target (always when it's a panic target)
     _assessFirstTargetsOnLaunch();
+
+    _webViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..setUserAgent(
+        Platform.isAndroid
+            ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
+            : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
+      )
+      ..addJavaScriptChannel(
+        'loadoutChangeHandler',
+        onMessageReceived: (JavaScriptMessage message) async {
+          if (message.message.contains("equippedSet")) {
+            final regex = RegExp(r'"equippedSet":(\d)');
+            final match = regex.firstMatch(message.message)!;
+            final loadout = match.group(1);
+            _webViewController!.reload();
+            BotToast.showText(
+              text: "Loadout $loadout activated!",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue[600]!,
+              duration: const Duration(seconds: 1),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          } else {
+            BotToast.showText(
+              text: "There was a problem activating the loadout, are you already using it?",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.red[600]!,
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
+        },
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (page) {
+            _hideChat();
+            _assessProfileAttack(page);
+          },
+          onPageFinished: (page) {
+            _hideChat();
+            _highlightChat(page);
+          },
+        ),
+      )
+      ..loadRequest(Uri.parse(_initialUrl));
   }
 
   @override
@@ -169,59 +221,8 @@ class WebViewPanicState extends State<WebViewPanic> {
                       ),
                       _profileAttackWidget,
                       Expanded(
-                        child: WebView(
-                          initialUrl: _initialUrl,
-                          javascriptMode: JavascriptMode.unrestricted,
-                          userAgent: Platform.isAndroid
-                              ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
-                                  "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
-                              : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                                  "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
-                          javascriptChannels: {
-                            JavascriptChannel(
-                              name: 'loadoutChangeHandler',
-                              onMessageReceived: (JavascriptMessage message) async {
-                                if (message.message.contains("equippedSet")) {
-                                  final regex = RegExp(r'"equippedSet":(\d)');
-                                  final match = regex.firstMatch(message.message)!;
-                                  final loadout = match.group(1);
-                                  _webViewController!.reload();
-                                  BotToast.showText(
-                                    text: "Loadout $loadout activated!",
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.blue[600]!,
-                                    duration: const Duration(seconds: 1),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                } else {
-                                  BotToast.showText(
-                                    text: "There was a problem activating the loadout, are you already using it?",
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.red[600]!,
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                }
-                              },
-                            )
-                          },
-                          onWebViewCreated: (WebViewController c) {
-                            _webViewController = c;
-                          },
-                          onPageStarted: (page) {
-                            _hideChat();
-                            _assessProfileAttack(page);
-                          },
-                          onPageFinished: (page) {
-                            _hideChat();
-                            _highlightChat(page);
-                          },
-                          gestureNavigationEnabled: true,
+                        child: WebViewWidget(
+                          controller: _webViewController!,
                         ),
                       ),
                     ],
@@ -245,10 +246,10 @@ class WebViewPanicState extends State<WebViewPanic> {
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
-      _webViewController!.runJavascript(
+      _webViewController!.runJavaScript(
         chatHighlightJS(highlights: hlMap),
       );
-      _webViewController!.runJavascript("const x = document.createElement('style');"
+      _webViewController!.runJavaScript("const x = document.createElement('style');"
           "x.innerHTML = `$css`;"
           "document.head.appendChild(x);");
     }
@@ -256,7 +257,7 @@ class WebViewPanicState extends State<WebViewPanic> {
 
   void _hideChat() {
     if (_chatRemovalEnabled && _chatRemovalActive) {
-      _webViewController!.runJavascript(removeChatOnLoadStartJS());
+      _webViewController!.runJavaScript(removeChatOnLoadStartJS());
     }
   }
 
@@ -410,7 +411,7 @@ class WebViewPanicState extends State<WebViewPanic> {
         child: GestureDetector(
           child: const Icon(MdiIcons.chatOutline),
           onTap: () async {
-            _webViewController!.runJavascript(removeChatJS());
+            _webViewController!.runJavaScript(removeChatJS());
             Prefs().setChatRemovalActive(true);
             setState(() {
               _chatRemovalActive = true;
@@ -427,7 +428,7 @@ class WebViewPanicState extends State<WebViewPanic> {
             color: Colors.orange[500],
           ),
           onTap: () async {
-            _webViewController!.runJavascript(restoreChatJS());
+            _webViewController!.runJavaScript(restoreChatJS());
             Prefs().setChatRemovalActive(false);
             setState(() {
               _chatRemovalActive = false;
@@ -566,7 +567,7 @@ class WebViewPanicState extends State<WebViewPanic> {
 
         const nextBaseUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=';
         if (!mounted) return;
-        await _webViewController!.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+        await _webViewController!.loadRequest(Uri.parse('$nextBaseUrl${widget.attackIdList[_attackNumber]}'));
         _attackedIds.add(widget.attackIdList[_attackNumber]);
         setState(() {
           _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
@@ -728,7 +729,7 @@ class WebViewPanicState extends State<WebViewPanic> {
 
     _attackNumber++;
     if (!mounted) return;
-    await _webViewController!.loadUrl('$nextBaseUrl${widget.attackIdList[_attackNumber]}');
+    await _webViewController!.loadRequest(Uri.parse('$nextBaseUrl${widget.attackIdList[_attackNumber]}'));
     _attackedIds.add(widget.attackIdList[_attackNumber]);
     setState(() {
       _currentPageTitle = '${widget.attackNameList[_attackNumber]}';
@@ -770,7 +771,7 @@ class WebViewPanicState extends State<WebViewPanic> {
     // it won't let us change to another page!). Note: this is something
     // that can't be done from one target to another, but only between
     // different sections (not sure why).
-    await _webViewController!.loadUrl('${choice.url}');
+    await _webViewController!.loadRequest(Uri.parse('${choice.url}'));
     await Future.delayed(const Duration(seconds: 1), () {});
     final newUrl = await _webViewController!.currentUrl();
     if (newUrl == '${choice.url}') {

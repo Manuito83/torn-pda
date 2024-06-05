@@ -14,6 +14,7 @@ import 'package:torn_pda/pages/profile/profile_notifications_ios.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsReturn {
@@ -75,7 +76,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
 
     routeWithDrawer = false;
     routeName = "profile_options";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "profile_options") _goBack();
     });
   }
@@ -90,6 +91,10 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -608,9 +613,10 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
-                                  "Show TornStats's stats chart in the Basic Info card. Stats are updated every "
-                                  "24 hours. If there is an issue, you can try to force a manual update by "
-                                  "switching this option off and back to on",
+                                  "Show Torn Stats's stats chart in the Basic Info card. Stats are updated every "
+                                  "24 hours, but you can force a manual update request by tapping the Torn Stats logo "
+                                  "in the chart legend. If there is an issue, you can try to force a manual update by "
+                                  "switching this option off and back to on.",
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,

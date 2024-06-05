@@ -1161,239 +1161,137 @@ String bountiesJS({
   ''';
 }
 
-String ocNNB({required String members}) {
+String ocNNB({required String members, required int playerID}) {
   return '''
-    // Credits: some functions and logic thanks to Torn Tools
+((members, playerID) => {
+		const waitForOCs = (maxCount = 100) =>
+			new Promise((resolve, reject) => {
+				const intID = setInterval(() => {
+					const ocRows = \$("ul.crimes-list > li");
+					if (ocRows.length) {
+						clearInterval(intID);
+						resolve(ocRows);
+					} else {
+						if (maxCount-- <= 0) {
+							clearInterval(intID);
+							reject(new Error("Could not find member rows"));
+						}
+					}
+				}, 100);
+			});
 
-    (function() {
+		const handleOCRows = (ocRows) => {
+			ocRows.each((_, row) => {
+				const table = \$(row).find(
+					".details-wrap:not(.pda-modified), .plans-wrap:not(.pda-modified)"
+				);
+				if (!table.length) return; // No new table to update
+				if (row.closest(".organize-wrap")) {
+					const shouldHighlightRow = handleOCTable(table);
+					if (shouldHighlightRow)
+						\$(row).find("> ul.item").addClass("pda-highlight-row");
+				} else {
+					handleOCPlanningTable(table);
+				}
+			});
+		};
 
-      var data = $members;
-	
-      function loadNNB () {
+		const handleOCTable = (table) => {
+			// add .stat to the new Li element to match the status styling at the end of the row
+			let shouldHighlightRow = false;
+			table.addClass("pda-modified");
+			table.find("> ul > li > ul:not(.pda-table-row)").each((i, row) => {
+				\$(row).addClass("pda-table-row");
+				if (i === 0)
+					return \$("<li/>", { text: "NNB", class: "stat" }).insertBefore(
+						\$(row).find("li.stat")
+					);
+				const id = \$(row)
+					.find("a[href*='profiles.php?XID=']")
+					.attr("href")
+					?.match(/XID=(\\d+)/)?.[1];
+				if (!id) return console.error("Missing ID for row", row);
+				if (id === playerID.toString()) shouldHighlightRow = true;
 
-		    var iw = window.innerWidth;
+				\$("<li/>", {
+					text: members[id] || "unk",
+					class: "stat",
+				}).insertBefore(\$(row).find("li.stat"));
+			});
+			return shouldHighlightRow;
+		};
 
-        // Avoid adding NNB twice
-        var savedFound = document.querySelector(".pdaNNBListener") !== null;
-        if (!savedFound) {
-          var save = document.querySelector(".faction-crimes-wrap");
-          save.classList.add("pdaNNBListener");
-          console.log("Torn PDA: adding NNB!");
-        } else {
-          console.log("PDA NNB found, returning");
-          return;
-        }
-	
-        // Add style nnb title
-        function addStyle(styleString) {
-          const style = document.createElement('style');
-          style.textContent = styleString;
-          document.head.append(style);
-        }
+		const handleOCPlanningTable = (table) => {
+			table.addClass("pda-modified");
+			table.find("div.plans-list > ul, ul.plans-list > li").each((i, row) => {
+				\$(row).addClass("pda-table-row-planning");
+				if (i === 0)
+					return \$("<li/>", { text: "NNB", class: "pda-nnb-planning" }).insertBefore(
+						\$(row).find("li.act")
+					);
+				const id = \$(row)
+					.find("a[href*='profiles.php?XID=']")
+					.attr("href")
+					?.match(/XID=(\\d+)/)?.[1];
+				if (!id) return console.error("Missing ID for row", row);
+				\$("<li/>", {
+					text: members[id] || "unk",
+					class: "pda-nnb-planning",
+				}).insertBefore(\$(row).find("li.act"));
+			});
+		};
 
-        addStyle(
-          `.pda-nnb-title {
-          text-align: right;
-          width: 30px;
-          }`
-        );
-
-        addStyle(
-          `.pda-nnb-value {
-          width: 30px;
-          }`
-        );
-
-        addStyle(
-          `.member.pda-modified-top-narrow {
-          width: 140px !important;
-          }`
-        );
-		
-        addStyle(
-              `.member.pda-modified-top-wide {
-              width: 200px !important;
-              }`
-            );
-        
-        addStyle(
-              `.member.pda-modified-bottom-narrow {
-              width: 80px !important;
-              }`
-            );
-		
-        addStyle(
-              `.member.pda-modified-bottom-wide {
-              width: 140px !important;
-              }`
-            );
-
-        addStyle(
-          `.level.pda-modified-top-narrow {
-          width: 15px !important;
-          }`
-        );
-        
-        addStyle(
-              `.level.pda-modified-top-wide {
-              width: 25px !important;
-              }`
-            );
-		
-        addStyle(
-            `.level.pda-modified-bottom-narrow {
-              width: 15px !important;
-              }`
-            );
-        
-        addStyle(
-            `.level.pda-modified-bottom-wide {
-              width: 25px !important;
-              }`
-            );
-
-        addStyle(
-          `.offences.pda-modified {
-          width: 50px !important;
-          }`
-        );
-
-        addStyle(
-          `.act.pda-modified {
-          width: 29px !important;
-          }`
-        );
-        
-        addStyle(
-          `.stat.pda-modified {
-          width: 50px !important;
-          }`
-        );
-
-
-        function createNerveTitle () {
-          var newDiv = document.createElement("li");
-          var newContent = document.createTextNode("NNB");
-          newDiv.className = "pda-nnb-title";
-          newDiv.appendChild(newContent);
-          return newDiv;
-        }
-
-        function createNerveValue (value) {
-          var newDiv = document.createElement("li");
-          var newContent = document.createTextNode(value);
-          newDiv.className = "pda-nnb-value";
-          newDiv.appendChild(newContent);
-          return newDiv;
-        }
-        
-        var member = document.querySelectorAll('.member');
-        for (var m of member) {
-          // Crimes scheduled
-          var row = m.closest(".organize-wrap .crimes-list .details-list > li > ul");
-          if (row !== null) 
-          {
-            row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
-            
-            row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
-                  if (iw < 785) {
-              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-top-narrow"));
-            } else {
-              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-top-wide"));
-            }
-                  
-            if (iw < 387) {
-              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-top-narrow"));
-            } else {
-              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-top-wide"));
-            }				
-                  
-            row.querySelectorAll(`.stat`).forEach((element) => element.classList.add("pda-modified"));
-            
-            let stat = row.querySelector(".stat");
-            if (stat === null) continue; 
-            
-            if (row.classList.contains("title")) {
-            stat.parentElement.insertBefore(
-              createNerveTitle(),
-              stat
-            );
-            continue;
-            }
-            
-            const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
-            
-            var found = false;
-            for (const [key, value] of Object.entries(data)) {
-            if (id === key) {
-              stat.insertAdjacentElement("beforebegin", createNerveValue(value));
-              found = true;
-              continue;
-            } 
-            }
-            if (!found) {
-            stat.insertAdjacentElement("beforebegin", createNerveValue("unk"));
-            }
-            continue;
-          }
-          
-            
-          // Crimes available
-          var row = m.closest(".plans-list .item");
-          if (row !== null) {
-            row.querySelectorAll(`.offences`).forEach((element) => element.classList.add("pda-modified"));
-            
-            row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified"));
-                  if (iw < 785) {
-              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-bottom-narrow"));
-            } else {
-              row.querySelectorAll(`.level`).forEach((element) => element.classList.add("pda-modified-bottom-wide"));
-            }
-                  
-            if (iw < 387) {
-              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-bottom-narrow"));
-            } else {
-              row.querySelectorAll(`.member`).forEach((element) => element.classList.add("pda-modified-bottom-wide"));
-            }	
-                  
-            row.querySelectorAll(`.act`).forEach((element) => element.classList.add("pda-modified"));
-              
-            let act = row.querySelector(".act");
-            if (act === null) continue; 
-            
-            if (row.classList.contains("title")) {
-            act.parentElement.insertBefore(
-              createNerveTitle(),
-              act
-            );
-            continue;
-            }
-            
-            const id = row.querySelector(".h").getAttribute("href").split("XID=")[1];
-            
-            var found = false;
-            for (const [key, value] of Object.entries(data)) {
-            if (id === key) {
-              act.insertAdjacentElement("beforebegin", createNerveValue(value));
-              found = true;
-              continue;
-            } 
-            }
-            if (!found) {
-            act.insertAdjacentElement("beforebegin", createNerveValue("unk"));
-            }
-          }	    
-        }  
-      }
-
-      let waitForOCAndRun = setInterval(() => {
-        if (document.querySelector(".faction-crimes-wrap")) {
-          loadNNB();
-          return clearInterval(waitForOCAndRun);
-        }
-      }, 300);
-
-    })();
+		const addStyles = () => {
+			const styles = `
+								.pda-highlight-row {
+					background-color: #F0F7 !important;
+				}    		
+				/* Absolute values are modified from Torn's css, don't blame me */
+				.pda-table-row > li.level {
+					width: 208px !important;
+				}
+				.pda-table-row-planning .member {
+					width: 230px !important;
+				}
+				.pda-table-row-planning .pda-nnb-planning {
+					width: 30px !important;
+				}
+				
+				@media screen and (max-width: 784px) {
+					.pda-table-row > li.member {
+						width: 157px !important;
+					}
+					.pda-table-row > li.level {
+						width: 42px !important;
+					}
+					.pda-table-row-planning .member {
+						width: 99px !important;
+					}
+					.pda-table-row-planning .offences, .pda-table-row-planning .offenses {
+						width: 96px !important;
+					}
+				}
+				
+				@media screen and (max-width: 386px) {
+					.pda-table-row > li.member {
+						width: 91px !important;
+					}
+					.pda-table-row-planning .pda-nnb-planning {
+						display: none !important; /* Hide NNB column, screen is too thin */
+					}
+					.pda-table-row-planning .member {
+						width: 119px !important; /* reset */
+					}
+					.pda-table-row-planning .offences, .pda-table-row-planning .offenses {
+						width: 60px !important; /* reset */
+					}
+				}
+				`;
+			\$("<style/>", { text: styles }).appendTo("head");
+		};
+		addStyles();
+		waitForOCs().then(handleOCRows).catch(console.trace);
+	})($members, $playerID);
   ''';
 }
 
@@ -1464,5 +1362,54 @@ String greasyForkMockVM(String scripts) {
         }
       };
     })($scripts);
+  """;
+}
+
+String ageToWordsOnProfile() {
+  return r"""
+    (() => {
+    	const waitForContainer = (maxCount = 100) =>
+    		new Promise((resolve) => {
+    			const intID = setInterval(() => {
+    				const container = $("div.age");
+    				if (container.length) {
+    					clearInterval(intID);
+    					resolve(container);
+    				} else if (maxCount-- <= 0) {
+    					clearInterval(intID);
+    					resolve(null);
+    				}
+    			}, 100);
+    		});
+    
+    	const modifyTextToAge = (container) => {
+    		const ageString = generateAgeString(container);
+    		container
+    			.find("div.box-name")
+    			.text(ageString)
+    			.css("margin", "8px 0 0 0")
+    			.appendTo(container);
+    	};
+    
+    	const generateAgeString = (container) => {
+    		const el = container.find("ul.box-value");
+    		const age = parseInt(el.text());
+    
+    		const current = new Date();
+    		const signup = new Date(current - age * 24 * 60 * 60 * 1000);
+    		const diffDate = new Date(current - signup);
+    		const years = diffDate.getUTCFullYear() - 1970,
+    			months = diffDate.getUTCMonth(),
+    			days = diffDate.getUTCDate() - 1;
+    
+    		// yes this is dirty, but not incorrect....
+    		let ageString = `${days} days`;
+    		if (months) ageString = `${months} months, ${ageString}`;
+    		if (years) ageString = `${years} years, ${ageString}`;
+    		return ageString;
+    	};
+    
+    	waitForContainer().then(modifyTextToAge);
+    })();
   """;
 }

@@ -4,11 +4,11 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 // Package imports:
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
@@ -56,14 +56,14 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
     routeWithDrawer = false;
     routeName = "settings_browser";
-    _settingsProvider.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "settings_browser") _goBack();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    _webViewProvider = Provider.of<WebViewProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
@@ -72,6 +72,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
+        right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
+        left: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
@@ -1964,7 +1966,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
-  void _showColorPickerTabs(BuildContext context) {
+  void _showColorPickerTabs(BuildContext context) async {
     showDialog(
       useRootNavigator: false,
       context: context,
@@ -1973,14 +1975,47 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           title: const Text('Pick a color!'),
           content: SingleChildScrollView(
             child: ColorPicker(
-              pickerColor: Color(_settingsProvider.tabsHideBarColor),
-              //enableAlpha: false,
+              color: Color(_settingsProvider.tabsHideBarColor),
               onColorChanged: (color) {
                 setState(() {
                   _settingsProvider.changeTabsHideBarColor = color.value;
                 });
               },
-              pickerAreaHeightPercent: 0.8,
+              width: 40,
+              height: 40,
+              borderRadius: 4,
+              spacing: 5,
+              runSpacing: 5,
+              wheelDiameter: 155,
+              heading: Text(
+                'Select color',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              subheading: Text(
+                'Select color shade',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              wheelSubheading: Text(
+                'Selected color and its shades',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              showMaterialName: true,
+              showColorName: true,
+              showColorCode: true,
+              copyPasteBehavior: const ColorPickerCopyPasteBehavior(
+                longPressMenu: true,
+              ),
+              materialNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorCodeTextStyle: Theme.of(context).textTheme.bodySmall,
+              pickersEnabled: const <ColorPickerType, bool>{
+                ColorPickerType.both: false,
+                ColorPickerType.primary: true,
+                ColorPickerType.accent: true,
+                ColorPickerType.bw: false,
+                ColorPickerType.custom: true,
+                ColorPickerType.wheel: true,
+              },
             ),
           ),
           actions: <Widget>[
@@ -2010,15 +2045,48 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           title: const Text('Pick a color!'),
           content: SingleChildScrollView(
             child: ColorPicker(
-              pickerColor: _highlightColor,
-              //enableAlpha: false,
+              color: _highlightColor,
               onColorChanged: (color) {
                 _settingsProvider.changeHighlightColor = color.value;
                 setState(() {
                   pickerColor = color;
                 });
               },
-              pickerAreaHeightPercent: 0.8,
+              width: 40,
+              height: 40,
+              borderRadius: 4,
+              spacing: 5,
+              runSpacing: 5,
+              wheelDiameter: 155,
+              heading: Text(
+                'Select color',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              subheading: Text(
+                'Select color shade',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              wheelSubheading: Text(
+                'Selected color and its shades',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              showMaterialName: true,
+              showColorName: true,
+              showColorCode: true,
+              copyPasteBehavior: const ColorPickerCopyPasteBehavior(
+                longPressMenu: true,
+              ),
+              materialNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorNameTextStyle: Theme.of(context).textTheme.bodySmall,
+              colorCodeTextStyle: Theme.of(context).textTheme.bodySmall,
+              pickersEnabled: const <ColorPickerType, bool>{
+                ColorPickerType.both: false,
+                ColorPickerType.primary: true,
+                ColorPickerType.accent: true,
+                ColorPickerType.bw: false,
+                ColorPickerType.custom: true,
+                ColorPickerType.wheel: true,
+              },
             ),
           ),
           actions: <Widget>[

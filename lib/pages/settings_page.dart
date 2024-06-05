@@ -1227,7 +1227,7 @@ class SettingsPageState extends State<SettingsPage> {
             children: <Widget>[
               const Flexible(
                 child: Text(
-                  "Clear tutorials",
+                  "Reset tutorials",
                 ),
               ),
               ElevatedButton(
@@ -1791,11 +1791,11 @@ class SettingsPageState extends State<SettingsPage> {
             children: <Widget>[
               const Flexible(
                 child: Text(
-                  "On app exit",
+                  "Back button exits app",
                 ),
               ),
               Flexible(
-                child: _appExitDropdown(),
+                child: _backButtonAppExitDropdown(),
               ),
             ],
           ),
@@ -1803,9 +1803,10 @@ class SettingsPageState extends State<SettingsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            "Note: this will only have effect in certain devices, depending on "
+            "This will only have effect in certain devices, depending on "
             "your configuration. Dictates how to proceed when the app detects a back button "
-            "press or swipe that would otherwise close the app.",
+            "press or swipe that would otherwise close the app. Note: while in the browser, the back button will "
+            "always trigger backwards navigation",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -2794,7 +2795,7 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  DropdownButton _appExitDropdown() {
+  DropdownButton _backButtonAppExitDropdown() {
     return DropdownButton<String>(
       value: _onAppExitValue,
       items: const [
@@ -3441,11 +3442,9 @@ class SettingsPageState extends State<SettingsPage> {
       _getApiDetails(userTriggered: false);
     }
 
-    final onAppExit = _settingsProvider.onAppExit;
+    final onAppExit = _settingsProvider.onBackButtonAppExit;
     setState(() {
       switch (onAppExit) {
-        case 'ask':
-          _onAppExitValue = 'stay'; // Fix after removing "ask" option
         case 'exit':
           _onAppExitValue = 'exit';
         case 'stay':

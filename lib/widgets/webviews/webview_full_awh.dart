@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 
 class WebViewFullAwh extends StatefulWidget {
@@ -57,7 +58,7 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
 
   @override
   void dispose() {
-    webView = null;
+    webView?.dispose();
     super.dispose();
   }
 
@@ -82,6 +83,10 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
               ? Colors.grey[900]
               : Colors.black,
       child: SafeArea(
+        right: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+        left: context.read<WebViewProvider>().webViewSplitActive &&
+            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           appBar: _settingsProvider.appBarTop ? buildCustomAppBar() : null,
@@ -185,6 +190,9 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () async {
+            // Try to avoid errors when closing on iOS
+            await Future.delayed(Duration(milliseconds: 100));
+            if (!mounted) return;
             Navigator.pop(context);
           },
         ),

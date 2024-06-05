@@ -52,7 +52,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
 
     routeWithDrawer = false;
     routeName = "ranked_wars";
-    _settingsProvider!.willPopShouldGoBack.stream.listen((event) {
+    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "ranked_wars") _goBack();
     });
   }
@@ -382,7 +382,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
               }
             }
           } else {
-            Get.back();
+            Navigator.pop(context);
           }
         },
       ),
@@ -444,7 +444,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
     } else {
       routeWithDrawer = true;
       routeName = "chaining_war";
-      Get.back();
+      Navigator.pop(context);
     }
   }
 }

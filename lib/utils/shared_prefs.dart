@@ -31,7 +31,7 @@ class Prefs {
   final String _kOnlineFilterInWars = "pda_onlineFilterInWars";
   final String _kOkayRedFilterInWars = "pda_okayRedFilterInWars";
   final String _kCountryFilterInWars = "pda_countryFilterInWars";
-  final String _kTravelingFilterInWars = "pda_travelingFilterInWars";
+  final String _kTravelingFilterInWars = "pda_travelingFilterStatusInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
   final String _kYataSpies = "pda_yataSpies";
@@ -78,7 +78,7 @@ class Prefs {
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
-  final String _kOnAppExit = "pda_onAppExit";
+  final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
   final String _kBrowserStyleBottomBarEnabled = "pda_browserStyleAlternativeEnabled";
@@ -550,14 +550,14 @@ class Prefs {
     return prefs.setBool(_kCountryFilterInWars, value);
   }
 
-  Future<bool> getTravelingFilterInWars() async {
+  Future<int> getTravelingFilterInWars() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelingFilterInWars) ?? false;
+    return prefs.getInt(_kTravelingFilterInWars) ?? 0;
   }
 
-  Future<bool> setTravelingFilterInWars(bool value) async {
+  Future<bool> setTravelingFilterInWars(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelingFilterInWars, value);
+    return prefs.setInt(_kTravelingFilterInWars, value);
   }
 
   Future<bool> getShowChainWidgetInWars() async {
@@ -896,14 +896,14 @@ class Prefs {
   /// ----------------------------
   /// Methods for on app exit
   /// ----------------------------
-  Future<String> getOnAppExit() async {
+  Future<String> getOnBackButtonAppExit() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kOnAppExit) ?? 'stay';
+    return prefs.getString(_kOnBackButtonAppExit) ?? 'stay';
   }
 
   Future<bool> setOnAppExit(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kOnAppExit, value);
+    return prefs.setString(_kOnBackButtonAppExit, value);
   }
 
   /// ----------------------------

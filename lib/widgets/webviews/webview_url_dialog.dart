@@ -640,9 +640,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
           ),
         );
       } else {
-        widget.stockWebView!.loadUrl(
-          _customURLController.text,
-        );
+        widget.stockWebView!.loadRequest(Uri.parse(_customURLController.text));
       }
 
       _customURLController.text = "";

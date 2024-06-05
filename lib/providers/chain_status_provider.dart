@@ -465,8 +465,8 @@ class ChainStatusProvider extends ChangeNotifier {
         //
         /*
         chainModel!.chain!
-          ..timeout = 200
-          ..current = 51
+          ..timeout = 20
+          ..current = 52
           ..max = 2500
           ..start = 1230000
           ..modifier = 1.23
@@ -716,18 +716,23 @@ class ChainStatusProvider extends ChangeNotifier {
         attackNotesColorList.add('z');
         attackNotesList.add('');
       }
-      Get.to(
-        WebViewPanic(
+
+      bool showNotes = await Prefs().getShowTargetsNotes();
+      bool showBlankNotes = await Prefs().getShowBlankTargetsNotes();
+      bool showOnlineFactionWarning = await Prefs().getShowOnlineFactionWarning();
+
+      navigatorKey.currentState?.push(MaterialPageRoute(builder: (context) {
+        return WebViewPanic(
           attackIdList: attacksIds,
           attackNameList: attacksNames,
           attackNotesColorList: attackNotesColorList,
           attackNotesList: attackNotesList,
-          panic: true, // This will skip first target if red/blue regardless of user preferences
-          showNotes: await Prefs().getShowTargetsNotes(),
-          showBlankNotes: await Prefs().getShowBlankTargetsNotes(),
-          showOnlineFactionWarning: await Prefs().getShowOnlineFactionWarning(),
-        ),
-      );
+          panic: true,
+          showNotes: showNotes,
+          showBlankNotes: showBlankNotes,
+          showOnlineFactionWarning: showOnlineFactionWarning,
+        );
+      }));
     }
   }
 

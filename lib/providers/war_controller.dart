@@ -38,7 +38,7 @@ class WarController extends GetxController {
   int onlineFilter = 0;
   int okayRedFilter = 0;
   bool countryFilter = false;
-  bool travelingFilter = false;
+  int abroadFilter = 0;
   bool showChainWidget = true;
 
   bool updating = false;
@@ -753,12 +753,17 @@ class WarController extends GetxController {
     update();
   }
 
-  void setTravelingFilterActive(bool value) {
-    travelingFilter = value;
-    if (!value) {
-      activeFilters.removeWhere((element) => element == "hide traveling");
-    } else {
-      activeFilters.add("hide traveling");
+  void setTravelingFilterStatus(int value) {
+    abroadFilter = value;
+    if (value == 0) {
+      activeFilters.removeWhere((element) => element == "not abroad");
+      activeFilters.removeWhere((element) => element == "abroad");
+    } else if (value == 1) {
+      activeFilters.removeWhere((element) => element == "not abroad");
+      activeFilters.add("abroad");
+    } else if (value == 2) {
+      activeFilters.removeWhere((element) => element == "abroad");
+      activeFilters.add("not abroad");
     }
     savePreferences();
     update();
@@ -776,7 +781,7 @@ class WarController extends GetxController {
     onlineFilter = await Prefs().getOnlineFilterInWars();
     okayRedFilter = await Prefs().getOkayRedFilterInWars();
     countryFilter = await Prefs().getCountryFilterInWars();
-    travelingFilter = await Prefs().getTravelingFilterInWars();
+    abroadFilter = await Prefs().getTravelingFilterInWars();
     showChainWidget = await Prefs().getShowChainWidgetInWars();
 
     nukeReviveActive = await Prefs().getUseNukeRevive();
@@ -847,7 +852,7 @@ class WarController extends GetxController {
     Prefs().setOnlineFilterInWars(onlineFilter);
     Prefs().setOkayRedFilterInWars(okayRedFilter);
     Prefs().setCountryFilterInWars(countryFilter);
-    Prefs().setTravelingFilterInWars(travelingFilter);
+    Prefs().setTravelingFilterInWars(abroadFilter);
     Prefs().setShowChainWidgetInWars(showChainWidget);
 
     // Save sorting
