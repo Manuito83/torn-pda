@@ -98,7 +98,7 @@ export const alertsGroup = {
   //******* ANDROID LOW ********//
   //****************************//
   checkAndroidLow: functions.region('us-east4')
-    .runWith(runtimeOpts512)
+    .runWith(runtimeOpts1024)
     .pubsub
     .schedule("1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52,55,58 * * * *")
     .onRun(async () => {
@@ -163,7 +163,7 @@ export const alertsGroup = {
   //******* ANDROID HIGH *******//
   //****************************//
   checkAndroidHigh: functions.region('us-east4')
-    .runWith(runtimeOpts512)
+    .runWith(runtimeOpts1024)
     .pubsub
     .schedule("2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59 * * * *")
     .onRun(async () => {
