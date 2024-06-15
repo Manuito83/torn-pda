@@ -176,6 +176,7 @@ class Prefs {
   final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
+  final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
@@ -1374,6 +1375,17 @@ class Prefs {
   Future<bool> setTSCEnabledStatus(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kTSCEnabledStatus, value);
+  }
+
+  // *************
+  Future<int> getYataStatsEnabledStatus() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kYataStatsEnabledStatus) ?? 1;
+  }
+
+  Future<bool> setYataStatsEnabledStatus(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kYataStatsEnabledStatus, value);
   }
 
   // *************

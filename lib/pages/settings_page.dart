@@ -688,7 +688,7 @@ class SettingsPageState extends State<SettingsPage> {
                       value: _settingsProvider.tscEnabledStatus == 1 ? true : false,
                       onChanged: (enabled) async {
                         if (_settingsProvider.tscEnabledStatus != 1) {
-                          showDialog(
+                          await showDialog(
                             context: context,
                             builder: (BuildContext context) {
                               return TSCInfoDialog(
@@ -697,6 +697,11 @@ class SettingsPageState extends State<SettingsPage> {
                               );
                             },
                           );
+                          if (_settingsProvider.tscEnabledStatus == 1) {
+                            setState(() {
+                              // Force switch update as we are not listening the provider
+                            });
+                          }
                         } else {
                           setState(() {
                             _settingsProvider.tscEnabledStatus = 0;
@@ -730,6 +735,68 @@ class SettingsPageState extends State<SettingsPage> {
               children: [
                 Text(
                   "TSC temporarily deactivated",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (_settingsProvider.yataStatsEnabledStatusRemoteConfig)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(
+                      child: Row(
+                        children: [
+                          const Flexible(
+                            child: Text(
+                              "Use YATA stats estimates",
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _settingsProvider.yataStatsEnabledStatus == 1 ? true : false,
+                      onChanged: (enabled) async {
+                        setState(() {
+                          _settingsProvider.yataStatsEnabledStatus = enabled ? 1 : 0;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'Enable YATA stats estimations in the sections where spied or estimated stats are shown (e.g.: '
+                  'war targets cards, retal cards or profile widget)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          )
+        else
+          Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              children: [
+                Text(
+                  "YATA stats temporarily deactivated",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,

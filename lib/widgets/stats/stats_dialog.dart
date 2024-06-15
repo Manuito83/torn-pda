@@ -9,6 +9,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/stats/estimated_stats_dialog.dart';
 import 'package:torn_pda/widgets/stats/spies_exact_details_dialog.dart';
 import 'package:torn_pda/widgets/stats/tcs_stats_dialog.dart';
+import 'package:torn_pda/widgets/stats/yata_stats_dialog.dart';
 
 class SpiesPayload {
   const SpiesPayload({
@@ -98,16 +99,26 @@ class TSCStatsPayload {
   final int targetId;
 }
 
+class YataStatsPayload {
+  const YataStatsPayload({
+    required this.targetId,
+  });
+
+  final int targetId;
+}
+
 class StatsDialog extends StatefulWidget {
   const StatsDialog({
     required this.spiesPayload,
     required this.estimatedStatsPayload,
     required this.tscStatsPayload,
+    required this.yataStatsPayload,
   });
 
   final SpiesPayload? spiesPayload;
   final EstimatedStatsPayload estimatedStatsPayload;
   final TSCStatsPayload? tscStatsPayload;
+  final YataStatsPayload? yataStatsPayload;
 
   @override
   State<StatsDialog> createState() => _StatsDialogState();
@@ -189,6 +200,10 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                           ),
                         ),
                       ),
+                    if (widget.yataStatsPayload != null && _settingsProvider.yataStatsEnabledStatusRemoteConfig)
+                      Tab(
+                        child: Image.asset('images/icons/yata_logo.png', height: 30),
+                      ),
                   ],
                 ),
               ),
@@ -232,6 +247,17 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                           ),
                         ],
                       ),
+                    ),
+                  if (widget.yataStatsPayload != null && _settingsProvider.yataStatsEnabledStatusRemoteConfig)
+                    SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          YataStatsDialog(
+                            yataStatsPayload: widget.yataStatsPayload!,
+                            themeProvider: _themeProvider,
+                          ),
+                        ],
+                      ),
                     )
                 ],
               ),
@@ -268,10 +294,18 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
     });
   }
 
+  /// Gets tabs lengthd depending on modules enabled by user
   int _getLength() {
+    int total = 2;
+
     if (widget.tscStatsPayload != null && !_disableTSCcalledBack && _settingsProvider.tscEnabledStatusRemoteConfig) {
-      return 3;
+      total++;
     }
-    return 2;
+
+    if (widget.yataStatsPayload != null && _settingsProvider.yataStatsEnabledStatusRemoteConfig) {
+      total++;
+    }
+
+    return total;
   }
 }

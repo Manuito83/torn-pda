@@ -46,6 +46,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '01 JUL 2024'
         ..features = [
           "Targets can now be sorted by time to hospital release",
+          "Added YATA stats estimates to stats dialog",
         ],
     );
 

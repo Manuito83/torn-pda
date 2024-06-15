@@ -911,11 +911,13 @@ class RetalCardState extends State<RetalCard> {
                   );
 
                   final tscStatsPayload = TSCStatsPayload(targetId: _retal!.retalId!);
+                  final yataStatsPayload = YataStatsPayload(targetId: _retal!.retalId!);
 
                   return StatsDialog(
                     spiesPayload: spiesPayload,
                     estimatedStatsPayload: estimatedStatsPayload,
                     tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },
               );
@@ -984,11 +986,13 @@ class RetalCardState extends State<RetalCard> {
                   );
 
                   final tscStatsPayload = TSCStatsPayload(targetId: _retal!.retalId!);
+                  final yataStatsPayload = YataStatsPayload(targetId: _retal!.retalId!);
 
                   return StatsDialog(
                     spiesPayload: null,
                     estimatedStatsPayload: estimatedStatsPayload,
                     tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                    yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                   );
                 },
               );

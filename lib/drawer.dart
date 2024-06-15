@@ -322,6 +322,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Remote Config defaults
     remoteConfig.setDefaults(const {
       "tsc_enabled": true,
+      "yata_stats_enabled": true,
       "prefs_backup_enabled": true,
       "tornexchange_enabled": true,
     });
@@ -330,17 +331,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _preferencesCompleter.future.whenComplete(() async {
       await remoteConfig.fetchAndActivate();
       _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
       _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
 
       remoteConfig.onConfigUpdated.listen((event) async {
         await remoteConfig.activate();
-        if (event.updatedKeys.contains("tsc_enabled")) {
-          log("Remote Config tsc_enabled: ${remoteConfig.getBool("tsc_enabled")}");
-          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
-          _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
-        }
+        _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+        _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+        _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+        _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
       });
     });
 

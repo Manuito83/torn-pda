@@ -435,6 +435,21 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  int _yataStatsEnabledStatus = 0;
+  int get yataStatsEnabledStatus => _yataStatsEnabledStatus;
+  set yataStatsEnabledStatus(int value) {
+    _yataStatsEnabledStatus = value;
+    Prefs().setYataStatsEnabledStatus(_yataStatsEnabledStatus);
+    notifyListeners();
+  }
+
+  bool _yataStatsEnabledStatusRemoteConfig = true;
+  bool get yataStatsEnabledStatusRemoteConfig => _yataStatsEnabledStatusRemoteConfig;
+  set yataStatsEnabledStatusRemoteConfig(bool value) {
+    _yataStatsEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
   bool _backupPrefsEnabledStatusRemoteConfig = true;
   bool get backupPrefsEnabledStatusRemoteConfig => _backupPrefsEnabledStatusRemoteConfig;
   set backupPrefsEnabledStatusRemoteConfig(bool value) {
@@ -893,6 +908,7 @@ class SettingsProvider extends ChangeNotifier {
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 
     _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
+    _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
 
     //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();
 

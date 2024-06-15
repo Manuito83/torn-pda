@@ -976,11 +976,14 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                               );
 
                               final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
+                              final yataStatsPayload = YataStatsPayload(targetId: otherProfile.playerId!);
 
                               return StatsDialog(
                                 spiesPayload: spiesPayload,
                                 estimatedStatsPayload: estimatedStatsPayload,
                                 tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                                yataStatsPayload:
+                                    _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                               );
                             },
                           );
@@ -1070,11 +1073,13 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           );
 
                           final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
+                          final yataStatsPayload = YataStatsPayload(targetId: otherProfile.playerId!);
 
                           return StatsDialog(
                             spiesPayload: null,
                             estimatedStatsPayload: estimatedStatsPayload,
                             tscStatsPayload: _settingsProvider.tscEnabledStatus != 0 ? tscStatsPayload : null,
+                            yataStatsPayload: _settingsProvider.yataStatsEnabledStatus != 0 ? yataStatsPayload : null,
                           );
                         },
                       );
