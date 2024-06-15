@@ -1739,6 +1739,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
             await _downloadRequest(autoRequest: request);
           },
+          // Reload webview after memory leak
+          onWebContentProcessDidTerminate: (c) {
+            c.reload();
+          },
           /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
               // MAIN AJAX REQUEST RETURN

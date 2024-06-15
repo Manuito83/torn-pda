@@ -9,6 +9,8 @@ enum TargetSortType {
   nameAsc,
   lifeDes,
   lifeAsc,
+  hospitalDes,
+  hospitalAsc,
   colorAsc,
   colorDes,
   onlineDes,
@@ -44,6 +46,10 @@ class TargetSort {
         description = 'Sort by life (des)';
       case TargetSortType.lifeAsc:
         description = 'Sort by life (asc)';
+      case TargetSortType.hospitalDes:
+        description = 'Sort by hosp. time (des)';
+      case TargetSortType.hospitalAsc:
+        description = 'Sort by hosp. time (asc)';
       case TargetSortType.colorDes:
         description = 'Sort by color (#-R-Y-G)';
       case TargetSortType.colorAsc:
