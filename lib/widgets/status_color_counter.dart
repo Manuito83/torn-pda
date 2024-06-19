@@ -31,8 +31,11 @@ class StatusColorCounterState extends State<StatusColorCounter> {
   void initState() {
     super.initState();
     _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
-    _updateFormattedUntil(_chainStatusProvider.statusColorUntil);
-    _startTimer();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _updateFormattedUntil(_chainStatusProvider.statusColorUntil);
+      _startTimer();
+    });
   }
 
   @override
