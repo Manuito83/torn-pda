@@ -47,6 +47,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Targets can now be sorted by time to hospital release",
           "Added YATA stats estimates to stats dialog",
+          "Fixed retals notifications not opening browser when the app is in the background",
         ],
     );
 

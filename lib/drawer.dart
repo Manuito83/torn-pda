@@ -807,29 +807,30 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // If we have the section manually deactivated
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
-      _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
-        if (!_settingsProvider.retaliationSectionEnabled ||
-            (int.parse(bulkDetails!) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+
+      await _changelogCompleter.future;
+      if (!_settingsProvider.retaliationSectionEnabled ||
+          (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      } else {
+        // Even if we meet above requirements, call the API and assess whether the user
+        // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+        final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+        if (attacksResult is! FactionAttacksModel) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
-          // Even if we meet above requirements, call the API and assess whether the user
-          // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
-          if (attacksResult is! FactionAttacksModel) {
-            launchBrowser = true;
-            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
-          } else {
+          _preferencesCompleter.future.whenComplete(() async {
             // If we pass all checks above, redirect to the retals section
             _retalsRedirection = true;
             _callSectionFromOutside(2);
             Future.delayed(const Duration(seconds: 2)).then((value) {
               _retalsRedirection = false;
             });
-          }
+          });
         }
-      });
+      }
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
