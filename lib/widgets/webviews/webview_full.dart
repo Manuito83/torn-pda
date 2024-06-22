@@ -1510,6 +1510,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 // it too early (before it has changed)
                 _reportPageTitle();
               }
+
+              _assessTravel(document);
               _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
@@ -2390,7 +2392,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// faster. The ones here probably would not benefit from it.
   Future _assessGeneral(dom.Document document) async {
     _assessBackButtonBehavior();
-    _assessTravel(document);
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
     _assessBarsRedirect(document);
