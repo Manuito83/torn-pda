@@ -686,6 +686,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool events = false;
     bool trades = false;
     bool nerve = false;
+    bool life = false;
     bool energy = false;
     bool drugs = false;
     bool medical = false;
@@ -732,6 +733,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       trades = true;
     } else if (channel.contains("Alerts nerve")) {
       nerve = true;
+    } else if (channel.contains("Alerts life")) {
+      life = true;
     } else if (channel.contains("Alerts energy")) {
       energy = true;
     } else if (channel.contains("Alerts drugs")) {
@@ -784,6 +787,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (nerve) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
+    } else if (life) {
+      launchBrowser = true;
+      browserUrl = "https://www.torn.com/item.php";
     } else if (energy) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
@@ -990,6 +996,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('nerve')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/crimes.php';
+      } else if (payload.contains('life')) {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php';
       } else if (payload.contains('drugs')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';

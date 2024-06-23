@@ -74,6 +74,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts nerve';
     channelName = 'Alerts nerve';
     channelDescription = 'Automatic alerts for nerve';
+  } else if (channel.contains("Alerts life")) {
+    notificationIcon = "notification_life";
+    notificationColor = Colors.red;
+    onTapPayload += 'life';
+    channelId = 'Alerts life';
+    channelName = 'Alerts life';
+    channelDescription = 'Automatic alerts for life';
   } else if (channel.contains("Alerts travel")) {
     notificationIcon = "notification_travel";
     notificationColor = Colors.blue;
@@ -598,6 +605,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Manual life ${modifier.channelIdModifier}',
       'Manual life ${modifier.channelIdModifier}',
       description: 'Manual notifications for life',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts life ${modifier.channelIdModifier}',
+      'Alerts life ${modifier.channelIdModifier}',
+      description: 'Automatic alerts for life',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

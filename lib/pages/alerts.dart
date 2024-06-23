@@ -201,6 +201,28 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         child: CheckboxListTile(
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel!.lifeNotification ?? false,
+                          title: const Text("Life full"),
+                          subtitle: const Text(
+                            "Get notified once you reach full life",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.lifeNotification = value;
+                            });
+                            firestore.subscribeToLifeNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
                           value: _firebaseUserModel!.hospitalNotification ?? false,
                           title: const Text("Hospital admission and release"),
                           subtitle: const Text(

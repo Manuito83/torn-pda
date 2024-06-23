@@ -45,6 +45,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.4.3'
         ..date = '01 JUL 2024'
         ..features = [
+          "Added new automatic alert for full life bar",
           "Targets can now be sorted by time to hospital release",
           "Added YATA stats estimates to stats dialog",
           "Added bounty claims and referrals to alerts events filters",
