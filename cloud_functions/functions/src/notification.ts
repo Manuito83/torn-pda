@@ -858,6 +858,24 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
               continue;
             }
           }
+
+          if (filters.includes('bounty_claims')) {
+            if (newEventsDescriptions[i].includes('earned your') &&
+              newEventsDescriptions[i].includes('bounty reward')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
+          if (filters.includes('referrals')) {
+            if (newEventsDescriptions[i].includes('You have successfully referred')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
         }
       }
 

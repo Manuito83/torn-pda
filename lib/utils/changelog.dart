@@ -47,6 +47,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Targets can now be sorted by time to hospital release",
           "Added YATA stats estimates to stats dialog",
+          "Added bounty claims and referrals to alerts events filters",
           "Fixed retaliation notifications not opening browser when the app is in the background",
           "Fixed delays in foreign stocks uploads to providers",
         ],

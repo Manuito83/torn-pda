@@ -219,6 +219,58 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Bounty claims"),
+                  Switch(
+                    value: _firebaseUserModel!.eventsFilter.contains('bounty_claims'),
+                    onChanged: (value) {
+                      if (value) {
+                        setState(() {
+                          firestore.addToEventsFilter('bounty_claims');
+                        });
+                      } else {
+                        setState(() {
+                          firestore.removeFromEventsFilter('bounty_claims');
+                        });
+                      }
+                    },
+                    activeTrackColor: Colors.redAccent[100],
+                    activeColor: Colors.red,
+                    inactiveThumbColor: Colors.green[100],
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Player referrals"),
+                  Switch(
+                    value: _firebaseUserModel!.eventsFilter.contains('referrals'),
+                    onChanged: (value) {
+                      if (value) {
+                        setState(() {
+                          firestore.addToEventsFilter('referrals');
+                        });
+                      } else {
+                        setState(() {
+                          firestore.removeFromEventsFilter('referrals');
+                        });
+                      }
+                    },
+                    activeTrackColor: Colors.redAccent[100],
+                    activeColor: Colors.red,
+                    inactiveThumbColor: Colors.green[100],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
