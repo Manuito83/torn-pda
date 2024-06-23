@@ -11,32 +11,32 @@ String nukeReviveModelToJson(NukeReviveModel data) => json.encode(data.toJson())
 
 class NukeReviveModel {
   NukeReviveModel({
-    this.uid,
-    this.player,
-    this.faction,
-    this.country,
+    this.tornPlayerId,
+    this.tornPlayerName,
+    this.factionId,
+    this.tornPlayerCountry,
     this.appInfo,
   });
 
-  String? uid;
-  String? player;
-  String? faction;
-  String? country;
+  int? tornPlayerId;
+  String? tornPlayerName;
+  int? factionId;
+  String? tornPlayerCountry;
   String? appInfo;
 
   factory NukeReviveModel.fromJson(Map<String, dynamic> json) => NukeReviveModel(
-    uid: json["uid"],
-    player: json["Player"],
-    faction: json["Faction"],
-    country: json["Country"],
-    appInfo: json["AppInfo"],
-  );
+        tornPlayerId: json["torn_player_id"],
+        tornPlayerName: json["torn_player_name"],
+        factionId: json["faction_id"],
+        tornPlayerCountry: json["torn_player_country"],
+        appInfo: json["app_info"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "uid": uid,
-    "Player": player,
-    "Faction": faction,
-    "Country": country,
-    "AppInfo": appInfo,
-  };
+        "torn_player_id": tornPlayerId,
+        "torn_player_name": tornPlayerName,
+        "faction_id": factionId,
+        "torn_player_country": tornPlayerCountry,
+        "app_info": appInfo,
+      };
 }

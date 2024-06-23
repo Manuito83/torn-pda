@@ -217,38 +217,32 @@ Future<void> openNukeReviveDialog(BuildContext _, ThemeProvider themeProvider, O
                               }
 
                               final nuke = NukeRevive(
-                                playerId: user!.playerId.toString(),
+                                playerId: user!.playerId!,
                                 playerName: user!.name,
-                                playerFaction: user!.faction!.factionName,
+                                playerFaction: user!.faction!.factionId,
                                 playerLocation: user!.travel!.destination,
                               );
 
-                              nuke.callMedic().then((value) {
-                                if (value.isNotEmpty) {
-                                  BotToast.showText(
-                                    text: value,
-                                    textStyle: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.green[800]!,
-                                    duration: const Duration(seconds: 5),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                } else {
-                                  BotToast.showText(
-                                    text: 'There was an error contacting Nuke, try again later '
-                                        "or contact them through Central Hospital's Discord "
-                                        'server!',
-                                    textStyle: const TextStyle(
-                                      fontSize: 13,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.red[800]!,
-                                    duration: const Duration(seconds: 5),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
+                              nuke.callMedic().then((success) {
+                                String message = 'Revive requested!';
+                                Color messageColor = Colors.green;
+                                if (!success) {
+                                  message = 'There was an error contacting Nuke, try again later '
+                                      "or contact them through Central Hospital's Discord "
+                                      'server!';
+                                  messageColor = Colors.red.shade800;
                                 }
+
+                                BotToast.showText(
+                                  text: message,
+                                  textStyle: const TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.white,
+                                  ),
+                                  contentColor: messageColor,
+                                  duration: const Duration(seconds: 5),
+                                  contentPadding: const EdgeInsets.all(10),
+                                );
                               });
                               Navigator.of(context).pop();
                             },

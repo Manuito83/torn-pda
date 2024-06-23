@@ -1,4 +1,5 @@
 // Package imports:
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart' as http;
 
 // Project imports:
@@ -6,9 +7,9 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/revive_services/nuke_revive_model.dart';
 
 class NukeRevive {
-  String playerId;
+  int playerId;
   String? playerName;
-  String? playerFaction;
+  int? playerFaction;
   String? playerLocation;
 
   NukeRevive({
@@ -18,32 +19,33 @@ class NukeRevive {
     required this.playerLocation,
   });
 
-  Future<String> callMedic() async {
+  Future<bool> callMedic() async {
     final modelOut = NukeReviveModel()
-      ..uid = playerId
-      ..player = "$playerName [$playerId]"
-      ..faction = playerFaction
-      ..country = playerLocation
+      ..tornPlayerId = playerId
+      ..tornPlayerName = "$playerName [$playerId]"
+      ..factionId = playerFaction
+      ..tornPlayerCountry = playerLocation
       ..appInfo = "Torn PDA v$appVersion";
 
     final bodyOut = nukeReviveModelToJson(modelOut);
 
     try {
       final response = await http.post(
-        Uri.parse('https://www.nukefamily.org/dev/reviveme.php'),
+        Uri.parse('https://nuke.family/api/revive-request'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: bodyOut,
       );
 
-      if (response.statusCode == 200) {
-        return response.body;
-      } else {
-        return "";
+      if (response.statusCode == 201) {
+        return true;
       }
     } catch (e) {
-      return "";
+      FirebaseCrashlytics.instance.log("PDA Crash at Nuke Revive Comm");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
     }
+
+    return false;
   }
 }
