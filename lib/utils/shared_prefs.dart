@@ -273,6 +273,9 @@ class Prefs {
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
 
+  // Notification actions
+  final String _kLifeNotificationTapAction = "pda_lifeNotificationTapAction";
+
   // Items
   final String _kItemsSort = "pda_itemssSort";
   final String _kOnlyOwnedItemsFilter = "pda_onlyOwnedItemsFilter";
@@ -3107,6 +3110,20 @@ class Prefs {
   Future<bool> setFullScreenIncludesPDAButtonTap(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kFullScreenIncludesPDAButtonTap, value);
+  }
+
+  /// --------------------------------
+  /// Methods for notification actions
+  /// --------------------------------
+
+  Future<String> getLifeNotificationTapAction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLifeNotificationTapAction) ?? 'itemsOwn';
+  }
+
+  Future<bool> setLifeNotificationTapAction(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLifeNotificationTapAction, value);
   }
 
   /// ----------------------------

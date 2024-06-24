@@ -788,8 +788,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
     } else if (life) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php";
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.lifeNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#medical-items';
+      } else if (_settingsProvider.lifeNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#armoury-medical';
+      } else if (_settingsProvider.lifeNotificationTapAction == "factionMain") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/';
+      }
     } else if (energy) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
@@ -814,7 +825,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
 
+      // Important: await preferences before using SettingsProvider (in case app is launching)
       await _changelogCompleter.future;
+
       if (!_settingsProvider.retaliationSectionEnabled ||
           (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
         launchBrowser = true;
@@ -827,13 +840,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
-          _preferencesCompleter.future.whenComplete(() async {
-            // If we pass all checks above, redirect to the retals section
-            _retalsRedirection = true;
-            _callSectionFromOutside(2);
-            Future.delayed(const Duration(seconds: 2)).then((value) {
-              _retalsRedirection = false;
-            });
+          // If we pass all checks above, redirect to the retals section
+          _retalsRedirection = true;
+          _callSectionFromOutside(2);
+          Future.delayed(const Duration(seconds: 2)).then((value) {
+            _retalsRedirection = false;
           });
         }
       }
@@ -997,8 +1008,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/crimes.php';
       } else if (payload.contains('life')) {
-        launchBrowser = true;
-        browserUrl = 'https://www.torn.com/item.php';
+        if (_settingsProvider.lifeNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#medical-items';
+        } else if (_settingsProvider.lifeNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#armoury-medical';
+        } else if (_settingsProvider.lifeNotificationTapAction == "factionMain") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/';
+        }
       } else if (payload.contains('drugs')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';

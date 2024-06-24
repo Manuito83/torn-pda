@@ -218,6 +218,87 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      if (_firebaseUserModel!.lifeNotification!)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              const Padding(
+                                padding: EdgeInsets.only(left: 10),
+                                child: Text(
+                                  "Notification tap opens",
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ),
+                              DropdownButton<String>(
+                                value: _settingsProvider.lifeNotificationTapAction,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: "app",
+                                    child: SizedBox(
+                                      width: 110,
+                                      child: Text(
+                                        "App",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: "itemsOwn",
+                                    child: SizedBox(
+                                      width: 110,
+                                      child: Text(
+                                        "Own items",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: "itemsFaction",
+                                    child: SizedBox(
+                                      width: 110,
+                                      child: Text(
+                                        "Faction items",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: "factionMain",
+                                    child: SizedBox(
+                                      width: 110,
+                                      child: Text(
+                                        "Faction page",
+                                        textAlign: TextAlign.right,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) async {
+                                  setState(() {
+                                    _settingsProvider.lifeNotificationTapAction = value;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: CheckboxListTile(

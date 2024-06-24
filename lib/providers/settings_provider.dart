@@ -329,6 +329,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _lifeNotificationTapAction = "ownItems";
+  get lifeNotificationTapAction => _lifeNotificationTapAction;
+  set lifeNotificationTapAction(value) {
+    _lifeNotificationTapAction = value;
+    Prefs().setLifeNotificationTapAction(_lifeNotificationTapAction);
+    notifyListeners();
+  }
+
   var _fullScreenByDeepLinkTap = false;
   bool get fullScreenByDeepLinkTap => _fullScreenByDeepLinkTap;
   set fullScreenByDeepLinkTap(bool value) {
@@ -884,6 +892,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
+
+    _lifeNotificationTapAction = await Prefs().getLifeNotificationTapAction();
 
     final refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
