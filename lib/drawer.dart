@@ -1030,7 +1030,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('hospital')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com';
-      } else if (payload.contains('racing')) {
+      } else if (payload.contains('racing') || payload.contains('race')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';
       } else if (payload.contains("scriptupdate")) {
