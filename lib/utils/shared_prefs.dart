@@ -154,6 +154,10 @@ class Prefs {
   final String _kRankedWarNotificationAhead = "pda_rankedWarNotificationAhead";
   final String _kRankedWarAlarmAhead = "pda_rankedWarAlarmAhead";
   final String _kRankedWarTimerAhead = "pda_rankedWarTimesAhead";
+  final String _kRaceStartNotificationType = "pda_raceStartNotificationType";
+  final String _kRaceStartNotificationAhead = "pda_raceStartNotificationAhead";
+  final String _kRaceStartAlarmAhead = "pda_raceStartAlarmAhead";
+  final String _kRaceStartTimerAhead = "pda_raceStartTimesAhead";
 
   // Profile options
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
@@ -1799,6 +1803,49 @@ class Prefs {
   Future<bool> setRankedWarTimerAhead(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kRankedWarTimerAhead, value);
+  }
+
+  //
+
+  // Ranked War notification
+  Future<String> getRaceStartNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kRaceStartNotificationType) ?? '0';
+  }
+
+  Future<bool> setRaceStartNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kRaceStartNotificationType, value);
+  }
+
+  Future<int> getRaceStartNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRaceStartNotificationAhead) ?? 60;
+  }
+
+  Future<bool> setRaceStartNotificationAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRaceStartNotificationAhead, value);
+  }
+
+  Future<int> getRaceStartAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRaceStartAlarmAhead) ?? 1;
+  }
+
+  Future<bool> setRaceStartAlarmAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRaceStartAlarmAhead, value);
+  }
+
+  Future<int> getRaceStartTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRaceStartTimerAhead) ?? 60;
+  }
+
+  Future<bool> setRaceStartTimerAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRaceStartTimerAhead, value);
   }
 
   //

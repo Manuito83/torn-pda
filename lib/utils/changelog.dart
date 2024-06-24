@@ -46,6 +46,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '01 JUL 2024'
         ..features = [
           "Added new automatic alert for full life bar",
+          "Added manual notification for race start (Profile Misc)",
           "Targets can now be sorted by time to hospital release",
           "Added YATA stats estimates to stats dialog",
           "Added bounty claims and referrals to alerts events filters",

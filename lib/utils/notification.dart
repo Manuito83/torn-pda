@@ -16,7 +16,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 
 // IDS
-// 101 -> 109 profile cooldowns
+// 101 -> 110 profile cooldowns
 // 201 travel arrival
 // 211 travel departure
 // 300 war targets status
@@ -269,6 +269,13 @@ Future showNotificationBoth(Map payload, int notId) async {
           sound: 'sword_clash.aiff',
         ),
       );
+    } else if (channelName.contains("race")) {
+      platformChannelSpecifics = const NotificationDetails(
+        iOS: DarwinNotificationDetails(
+          presentSound: true,
+          sound: 'car_start.aiff',
+        ),
+      );
     }
 
     await flutterLocalNotificationsPlugin.show(
@@ -498,6 +505,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
+      'Manual race start ${modifier.channelIdModifier}',
+      'Manual race start ${modifier.channelIdModifier}',
+      description: 'Manual notifications for race start',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('car_start'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
       'Alerts drugs ${modifier.channelIdModifier}',
       'Alerts drugs ${modifier.channelIdModifier}',
       description: 'Automatic alerts for drugs',
@@ -528,7 +548,7 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Alerts racing ${modifier.channelIdModifier}',
       description: 'Automatic alerts for racing',
       importance: Importance.max,
-      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('car_start'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
