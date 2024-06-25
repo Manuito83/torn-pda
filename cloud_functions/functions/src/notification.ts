@@ -179,7 +179,7 @@ export async function sendLifeNotification(userStats: any, subscriber: any) {
 
     if (
       life.current < life.maximum &&
-      (subscriber.nerveLastCheckFull === true)
+      (subscriber.lifeLastCheckFull === true)
     ) {
       promises.push(
         admin
