@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Torn Custom Race Presets
 // @namespace    https://greasyfork.org/en/scripts/393632-torn-custom-race-presets
-// @version      0.2.2 - Fixed match URL [Manuito]
+// @version      0.2.3 - Added second match URL [Manuito]
 // @description  Make it easier and faster to make custom races - Extended from Xiphias's
 // @author       Cryosis7 [926640]
 // @match        www.torn.com/page.php?sid=racing
+// @match        www.torn.com/loader.php?sid=racing
 // ==/UserScript==
 
 /**
