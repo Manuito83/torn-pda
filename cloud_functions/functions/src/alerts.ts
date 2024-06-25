@@ -1,7 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {
-  sendEnergyNotification, sendNerveNotification,
+  sendEnergyNotification, sendNerveNotification, sendLifeNotification,
   logTravelArrival, sendHospitalNotification,
   sendDrugsNotification, sendMedicalNotification,
   sendBoosterNotification, sendRacingNotification,
@@ -307,6 +307,8 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
         promises.push(sendEnergyNotification(userStats, subscriber));
       if (subscriber.nerveNotification)
         promises.push(sendNerveNotification(userStats, subscriber));
+      if (subscriber.sendLifeNotification)
+        promises.push(sendLifeNotification(userStats, subscriber));
       if (subscriber.travelNotification)
         promises.push(logTravelArrival(userStats, subscriber));
       if (subscriber.hospitalNotification)
