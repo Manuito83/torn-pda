@@ -307,7 +307,7 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
         promises.push(sendEnergyNotification(userStats, subscriber));
       if (subscriber.nerveNotification)
         promises.push(sendNerveNotification(userStats, subscriber));
-      if (subscriber.sendLifeNotification)
+      if (subscriber.lifeNotification)
         promises.push(sendLifeNotification(userStats, subscriber));
       if (subscriber.travelNotification)
         promises.push(logTravelArrival(userStats, subscriber));
