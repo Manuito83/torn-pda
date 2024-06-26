@@ -172,7 +172,7 @@ export async function sendLifeNotification(userStats: any, subscriber: any) {
           .collection("players")
           .doc(subscriber.uid)
           .update({
-            nerveLastCheckFull: true,
+            lifeLastCheckFull: true,
           })
       );
     }
