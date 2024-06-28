@@ -7,6 +7,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool discrete = false;
   bool? travelNotification = false;
   bool? foreignRestockNotification = false;
+  bool? foreignRestockNotificationOnlyCurrentCountry = false;
   bool? energyNotification = false;
   bool energyLastCheckFull = true;
   bool? nerveNotification = false;
@@ -57,6 +58,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "discrete": discrete,
       "travelNotification": travelNotification,
       "foreignRestockNotification": foreignRestockNotification,
+      "foreignRestockNotificationOnlyCurrentCountry": foreignRestockNotificationOnlyCurrentCountry,
       "energyNotification": energyNotification,
       "energyLastCheckFull": energyLastCheckFull,
       "nerveNotification": nerveNotification,
@@ -93,6 +95,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..discrete = data["discrete"] ?? false
       ..travelNotification = data["travelNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
+      ..foreignRestockNotificationOnlyCurrentCountry = data["foreignRestockNotificationOnlyCurrentCountry"] ?? false
       ..energyNotification = data["energyNotification"] ?? false
       ..energyLastCheckFull = data["energyLastCheckFull"] ?? false
       ..nerveNotification = data["nerveNotification"] ?? false

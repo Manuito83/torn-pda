@@ -326,7 +326,7 @@ async function sendNotificationForProfile(subscriber: any, foreignStocks: any, s
       if (subscriber.eventsNotification)
         promises.push(sendEventsNotification(userStats, subscriber));
       if (subscriber.foreignRestockNotification)
-        promises.push(sendForeignRestockNotification(foreignStocks, subscriber));
+        promises.push(sendForeignRestockNotification(userStats, foreignStocks, subscriber));
       if (subscriber.stockMarketNotification)
         promises.push(sendStockMarketNotification(stockMarket, subscriber));
 

@@ -116,6 +116,12 @@ class FirestoreHelper {
     });
   }
 
+  Future<void> changeForeignRestockNotificationOnlyCurrentCountry(bool? enabled) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "foreignRestockNotificationOnlyCurrentCountry": enabled,
+    });
+  }
+
   Future<DocumentSnapshot> getStockInformation(String codeName) async {
     return _firestore.collection("stocks-main").doc(codeName).get();
   }

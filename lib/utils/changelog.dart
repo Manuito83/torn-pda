@@ -39,13 +39,15 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.4.3 - Build 429 - 23/06/2024
+    // v3.4.3 - Build 430 - 28/06/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.4.3'
-        ..date = '01 JUL 2024'
+        ..date = '10 JUL 2024'
         ..features = [
           "Added new automatic alert for full life bar",
+          "Foreign stock alerts can now be enabled for the current country only",
+          "Added approximate restock time to depleted foreign stocks",
           "Added manual notification for race start (Profile Misc)",
           "Targets can now be sorted by time to hospital release",
           "Added YATA stats estimates to stats dialog",

@@ -12,6 +12,7 @@ import 'package:fl_chart/fl_chart.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -458,6 +459,31 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                           fontSize: 12,
                         ),
                       ),
+                      if (widget.foreignStock.quantity == 0)
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                "Next restock might happen at: ",
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ),
+                            Text(
+                              _projectedRestockDateTime.isAfter(DateTime.now().add(const Duration(days: 7))) ||
+                                      _projectedRestockDateTime.isBefore(DateTime.now().toLocal())
+                                  ? 'unknown'
+                                  : TimeFormatter(
+                                      inputTime: _projectedRestockDateTime,
+                                      timeFormatSetting: _settingsProvider.currentTimeFormat,
+                                      timeZoneSetting: _settingsProvider.currentTimeZone,
+                                    ).formatHourWithDaysElapsed(includeToday: true),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: reliabilityColor,
+                              ),
+                            ),
+                          ],
+                        ),
                       if (reliability.isNotEmpty)
                         Row(
                           children: [

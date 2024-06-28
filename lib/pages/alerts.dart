@@ -108,51 +108,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.travelNotification ?? false,
-                          title: const Text("Travel"),
-                          subtitle: const Text(
-                            "Get notified just before you arrive",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.travelNotification = value;
-                            });
-                            firestore.subscribeToTravelNotification(value);
-                          },
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                        child: CheckboxListTile(
-                          checkColor: Colors.white,
-                          activeColor: Colors.blueGrey,
-                          value: _firebaseUserModel!.foreignRestockNotification ?? false,
-                          title: const Text("Foreign stocks"),
-                          subtitle: const Text(
-                            "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
-                            "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _firebaseUserModel?.foreignRestockNotification = value;
-                            });
-                            firestore.subscribeToForeignRestockNotification(value);
-                          },
-                        ),
-                      ),
-                      Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: CheckboxListTile(
                           checkColor: Colors.white,
@@ -224,14 +179,23 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              const Padding(
-                                padding: EdgeInsets.only(left: 10),
-                                child: Text(
-                                  "Notification tap opens",
-                                  style: TextStyle(
-                                    fontSize: 15,
-                                    fontStyle: FontStyle.italic,
-                                  ),
+                              Flexible(
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.keyboard_arrow_right_outlined),
+                                    Flexible(
+                                      child: const Padding(
+                                        padding: EdgeInsets.only(left: 10),
+                                        child: Text(
+                                          "Notification tap opens",
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontStyle: FontStyle.italic,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               DropdownButton<String>(
@@ -295,6 +259,88 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                     _settingsProvider.lifeNotificationTapAction = value;
                                   });
                                 },
+                              ),
+                            ],
+                          ),
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel!.travelNotification ?? false,
+                          title: const Text("Travel"),
+                          subtitle: const Text(
+                            "Get notified just before you arrive",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.travelNotification = value;
+                            });
+                            firestore.subscribeToTravelNotification(value);
+                          },
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel!.foreignRestockNotification ?? false,
+                          title: const Text("Foreign stocks"),
+                          subtitle: const Text(
+                            "Get notified whenever new stocks are put in the market abroad. NOTE: in order to activate "
+                            "specific stock alerts, you need to go to the stocks page (Travel section) to activate the ones you are interested in!",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.foreignRestockNotification = value;
+                            });
+                            firestore.subscribeToForeignRestockNotification(value);
+                          },
+                        ),
+                      ),
+                      if (_firebaseUserModel!.foreignRestockNotification ?? false)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
+                          child: Row(
+                            children: [
+                              Icon(Icons.keyboard_arrow_right_outlined),
+                              Flexible(
+                                child: CheckboxListTile(
+                                  checkColor: Colors.white,
+                                  activeColor: Colors.blueGrey,
+                                  value: _firebaseUserModel!.foreignRestockNotificationOnlyCurrentCountry ?? false,
+                                  title: const Text(
+                                    "Limit to current country",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  subtitle: const Text(
+                                    "If enabled, limit foreign restock alerts to the items that get restocked in the "
+                                    "country you are currently flying to or staying in ",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _firebaseUserModel?.foreignRestockNotificationOnlyCurrentCountry = value;
+                                    });
+                                    firestore.changeForeignRestockNotificationOnlyCurrentCountry(value);
+                                  },
+                                ),
                               ),
                             ],
                           ),
