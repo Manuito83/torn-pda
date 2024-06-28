@@ -1163,6 +1163,8 @@ class WarPageState extends State<WarPage> {
         _w.sortTargets(WarSortType.hospitalDes);
       case WarSortType.hospitalAsc:
         _w.sortTargets(WarSortType.hospitalAsc);
+      case WarSortType.statsDes:
+        _w.sortTargets(WarSortType.statsDes);
       case WarSortType.statsAsc:
         _w.sortTargets(WarSortType.statsAsc);
       case WarSortType.onlineDes:
