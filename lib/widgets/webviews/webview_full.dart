@@ -1738,8 +1738,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
+            } else if (request.url.toString().startsWith("blob:")) {
+              final response = await webView?.callAsyncJavaScript(
+                  functionBody: "return fetch(url).then(r => r.text());", arguments: {"url": request.url.toString()});
+              if (response == null || response.value == null) return;
+              await _downloadData(response.value, fileName: request.suggestedFilename);
+            } else {
+              await _downloadRequest(autoRequest: request);
             }
-            await _downloadRequest(autoRequest: request);
           },
           // Reload webview after memory leak
           onWebContentProcessDidTerminate: (c) {
@@ -4509,6 +4515,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
+  Future<String> _getDownloadFilePath(String fileName) async {
+    if (Platform.isAndroid) {
+      // If we share, use temporary directory (we will delete this upon every webview provider initialisation)
+      if (_settingsProvider.downloadActionShare) {
+        return "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+      } else {
+        // If we save, use downloads directory unless it can't be found in Android (else, use the temp one)
+        var temp = await getDownloadsDirectory();
+        if (temp != null) {
+          return "${temp.path}/$fileName";
+        } else {
+          return "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+        }
+      }
+    } else if (Platform.isIOS) {
+      // iOS uses either the temp directory or the documents directory (which should always exist)
+      if (_settingsProvider.downloadActionShare) {
+        return "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+      } else {
+        return "${(await getApplicationDocumentsDirectory()).path}/$fileName";
+      }
+    }
+    return "";
+  }
+
   Future<void> _downloadRequest({
     CancelFunc? dialogCancel,
     String? manualSource,
@@ -4539,29 +4570,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
 
       // Get the correct path based on device
-      String fileSavePath = "";
-
-      if (Platform.isAndroid) {
-        // If we share, use temporary directory (we will delete this upon every webview provider initialisation)
-        if (_settingsProvider.downloadActionShare) {
-          fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
-        } else {
-          // If we save, use downloads directory unless it can't be found in Android (else, use the temp one)
-          var temp = await getDownloadsDirectory();
-          if (temp != null) {
-            fileSavePath = "${temp.path}/$fileName";
-          } else {
-            fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
-          }
-        }
-      } else if (Platform.isIOS) {
-        // iOS uses either the temp directory or the documents directory (which should always exist)
-        if (_settingsProvider.downloadActionShare) {
-          fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
-        } else {
-          fileSavePath = "${(await getApplicationDocumentsDirectory()).path}/$fileName";
-        }
-      }
+      String fileSavePath = await _getDownloadFilePath(fileName);
 
       var cancelToastCallback = BotToast.showCustomText(
         clickClose: false,
@@ -4621,6 +4630,49 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     } catch (e) {
       BotToast.showText(
         text: "Could not complete download: ${cancelToken.isCancelled ? "cancelled" : e}",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800]!,
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+  }
+
+  Future<void> _downloadData(String data, {String? fileName}) async {
+    try {
+      final downloadPath = await _getDownloadFilePath(fileName ?? "file.txt");
+      log("Downloading file ${fileName ?? "unnamed file"} to $downloadPath");
+      final file = await File(downloadPath).create(recursive: true);
+      await file.writeAsString(data);
+      if (_settingsProvider.downloadActionShare) {
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text: fileName,
+          sharePositionOrigin: Rect.fromLTWH(
+            0,
+            0,
+            MediaQuery.of(context).size.width,
+            MediaQuery.of(context).size.height / 2,
+          ),
+        );
+      } else {
+        BotToast.showText(
+          text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as $downloadPath",
+          clickClose: true,
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          duration: Duration(seconds: 5),
+          contentColor: Colors.blue[800]!,
+          contentPadding: const EdgeInsets.all(10),
+        );
+      }
+    } catch (e) {
+      BotToast.showText(
+        text: "Could not complete download: $e",
         textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,
