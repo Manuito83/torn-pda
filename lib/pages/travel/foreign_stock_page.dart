@@ -1076,7 +1076,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     Future<({bool apiSuccess, String apiMessage})> getFromProvider({required String provider}) async {
       try {
         String url = "https://yata.yt/api/v1/travel/export/";
-        if (provider == "prometheus") url = "https://prombot.co.uk:8443/api/travel";
+        if (provider == "prometheus") url = "https://api.prombot.co.uk/api/travel";
 
         final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 6));
         if (responseDB.statusCode == 200) {

@@ -77,6 +77,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
 
   Future? _footerInformationRetrieved;
   bool _footerSuccessful = false;
+  String errorReason = "";
 
   var _periodicMap = SplayTreeMap();
 
@@ -554,13 +555,21 @@ class ForeignStockCardState extends State<ForeignStockCard> {
               ),
             );
           } else {
-            return const Padding(
+            String errorMessage = "There is an issue contacting the server, please try again later";
+            Color errorColor = Colors.red;
+
+            if (errorReason.contains("cannot get field")) {
+              errorMessage = "There's no further information for this item yet!\n\nIt could be an issue with the "
+                  "server or either a very rare item that hasn't been reported a minumum number of times.";
+              errorColor = Colors.orange;
+            }
+
+            return Padding(
               padding: EdgeInsets.all(20),
               child: Text(
-                "There is an issue contacting the server, "
-                "please try again later",
+                errorMessage,
                 style: TextStyle(
-                  color: Colors.red,
+                  color: errorColor,
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
@@ -1065,7 +1074,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         _footerSuccessful = true;
       });
     } catch (e) {
-      print(e);
+      log(e.toString());
+      errorReason = e.toString();
       setState(() {
         _footerSuccessful = false;
       });
