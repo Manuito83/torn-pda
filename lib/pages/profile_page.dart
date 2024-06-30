@@ -5232,7 +5232,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } catch (e, trace) {
-      log("Error at Profile Events: $e >> $trace");
+      logToUser("PDA Error at Profile Events: $e, $trace");
       FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }

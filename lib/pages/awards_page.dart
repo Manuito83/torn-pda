@@ -853,9 +853,10 @@ class AwardsPageState extends State<AwardsPage> {
 
           // Populate models list
           _allAwards.add(singleAward);
-        } catch (e) {
+        } catch (e, trace) {
           FirebaseCrashlytics.instance.log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
           FirebaseCrashlytics.instance.recordError(e, null);
+          logToUser("PDA Error at YATA AWARD: $e, $trace");
         }
       }); // FINISH FOR EACH SINGLE-AWARD
     }); // FINISH FOR EACH SUBCATEGORY

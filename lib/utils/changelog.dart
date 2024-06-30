@@ -39,7 +39,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.4.3 - Build 430 - 28/06/2024
+    // v3.4.3 - Build 431 - 30/06/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.4.3'
@@ -52,6 +52,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Targets can now be sorted by time to hospital release",
           "Added YATA stats estimates to stats dialog",
           "Added bounty claims and referrals to alerts events filters",
+          "Fixed downloads for blob files [Kwack]",
           "Fixed retaliation notifications not opening browser when the app is in the background",
           "Fixed delays in foreign stocks uploads to providers",
         ],

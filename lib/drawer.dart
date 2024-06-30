@@ -569,40 +569,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else {
         // Prevents double activation
         if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
-          if (_settingsProvider.debugMessages) {
-            BotToast.showText(
-              onlyOne: false,
-              text: "Deep link triggered return\n\n "
-                  "${DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds} seconds",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.red[700]!,
-              duration: const Duration(seconds: 3),
-              contentPadding: const EdgeInsets.all(10),
-            );
-            await Future.delayed(Duration(seconds: 1));
-          }
+          logToUser(
+              "Deep link triggered return\n\n "
+              "${DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds} seconds",
+              duration: 3);
           return;
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         _preferencesCompleter.future.whenComplete(() async {
           await _changelogCompleter.future;
 
-          if (_settingsProvider.debugMessages) {
-            BotToast.showText(
-              onlyOne: false,
-              text: "Deep link browser opens\n\n$url",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.blue[700]!,
-              duration: const Duration(seconds: 3),
-              contentPadding: const EdgeInsets.all(10),
-            );
-          }
+          logToUser(
+            "Deep link browser opens\n\n$url",
+            duration: 3,
+            color: Colors.blue.shade600,
+            borderColor: Colors.blue.shade800,
+          );
 
           _webViewProvider.openBrowserPreference(
             context: context,
@@ -612,18 +594,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
       }
     } catch (e) {
-      if (_settingsProvider.debugMessages) {
-        BotToast.showText(
-          text: "Deep link catch\n\n$e",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.orange[700]!,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
-        );
-      }
+      logToUser("Deep link catch\n\n$e", duration: 4);
     }
   }
   // ## END Deep links

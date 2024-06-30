@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
@@ -283,6 +284,7 @@ class UserScriptsProvider extends ChangeNotifier {
       } catch (e, trace) {
         FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
         FirebaseCrashlytics.instance.recordError(e, trace);
+        logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
     _sort();
@@ -343,6 +345,7 @@ class UserScriptsProvider extends ChangeNotifier {
             } catch (e, trace) {
               FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
               FirebaseCrashlytics.instance.recordError(e, trace);
+              logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
             }
           }
         }
@@ -356,6 +359,7 @@ class UserScriptsProvider extends ChangeNotifier {
       // Pass (scripts will be empty)
       FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
       FirebaseCrashlytics.instance.recordError(e, trace);
+      logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
     }
   }
 

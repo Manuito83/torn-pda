@@ -439,6 +439,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     } catch (e) {
       FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+      logToUser("PDA Crash at WebviewFull dispose: $e");
     }
   }
 
@@ -2741,6 +2742,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           if (error.isNotEmpty) {
             FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
             FirebaseCrashlytics.instance.recordError(error, null);
+            logToUser("Error sending Foreign Stocks to YATA");
           }
         }
 
@@ -2769,6 +2771,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           if (error.isNotEmpty) {
             FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
             FirebaseCrashlytics.instance.recordError(error, null);
+            logToUser("Error sending Foreign Stocks to Prometheus");
           }
         }
 

@@ -5,6 +5,7 @@ import 'dart:convert';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
@@ -807,6 +808,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get debugMessages => _debugMessages;
   set debugMessages(bool value) {
     _debugMessages = value;
+    logAndShowToUser = value;
     Prefs().setDebugMessages(_debugMessages);
     notifyListeners();
   }
@@ -1027,7 +1029,7 @@ class SettingsProvider extends ChangeNotifier {
     _syncDeviceTheme = await Prefs().getSyncDeviceTheme();
     _darkThemeToSync = await Prefs().getDarkThemeToSync();
 
-    _debugMessages = await Prefs().getDebugMessages();
+    _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
 

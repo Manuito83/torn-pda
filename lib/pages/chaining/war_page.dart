@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:developer';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -15,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
@@ -1107,7 +1107,7 @@ class WarPageState extends State<WarPage> {
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
-      log("PDA Error: $e $trace");
+      logToUser("PDA Error at War Quick Update: $e, $trace");
     }
   }
 

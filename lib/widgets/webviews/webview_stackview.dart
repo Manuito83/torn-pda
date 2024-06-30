@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -217,6 +218,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                               } catch (e) {
                                 FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
                                 FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                                logToUser("PDA Crash at StackView (webview with tabs): $e");
                                 _closeWithError();
                               }
                             } else {
@@ -232,6 +234,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                               } catch (e) {
                                 FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
                                 FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                                logToUser("PDA Crash at StackView (webview with no tabs): $e");
                                 _closeWithError();
                               }
                             }

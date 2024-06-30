@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:async';
-import 'dart:developer';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -600,8 +599,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           }
 
           _inventorySuccess = true;
-        } catch (e) {
-          log(e.toString());
+        } catch (e, trace) {
+          logToUser("PDA Error at Get Items: $e, $trace");
         }
       }
 

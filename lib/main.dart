@@ -59,14 +59,16 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.4.3';
-const String androidCompilation = '430';
-const String iosCompilation = '430';
+const String androidCompilation = '431';
+const String iosCompilation = '431';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
 
 // TODO (App release)
 const bool enableWakelockForDebug = false;
+
+bool logAndShowToUser = false;
 
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
@@ -488,5 +490,39 @@ Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
     } else if (brightness == Brightness.light) {
       await Prefs().setAppTheme("light");
     }
+  }
+}
+
+logToUser(String? message, {int duration = 3, Color? color, Color? borderColor}) {
+  log(message.toString());
+  if (message == null) return;
+  color ??= Colors.red.shade600;
+  borderColor ??= Colors.red.shade800;
+  if (logAndShowToUser) {
+    toastification.showCustom(
+      autoCloseDuration: const Duration(seconds: 3),
+      alignment: Alignment.bottomCenter,
+      builder: (BuildContext context, ToastificationItem holder) {
+        return Center(
+          child: GestureDetector(
+              onTap: () => toastification.dismiss(holder),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: color,
+                  border: Border.all(color: borderColor!, width: 2),
+                ),
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    Text("Debug Message\n", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text(message.toString(), style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              )),
+        );
+      },
+    );
   }
 }

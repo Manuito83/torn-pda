@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items_model.dart';
@@ -924,19 +925,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       } else {
         // If debug messages are enabled, returned which provider contributed to the result
         // (this would also return any error with YATA if Prometheus is successful)
-        if (_settingsProvider!.debugMessages) {
-          BotToast.showText(
-            text: apiReturn.providersMessage,
-            textStyle: const TextStyle(
-              fontSize: 13,
-              color: Colors.white,
-            ),
-            contentColor: Colors.blue,
-            clickClose: true,
-            duration: const Duration(seconds: 4),
-            contentPadding: const EdgeInsets.all(10),
-          );
-        }
+        logToUser(
+          apiReturn.providersMessage,
+          duration: 4,
+          color: Colors.blue.shade600,
+          borderColor: Colors.blue.shade800,
+        );
       }
 
       await Future.wait<void>([
@@ -1052,18 +1046,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     } catch (e, t) {
       _apiSuccess = false;
 
-      if (_settingsProvider!.debugMessages) {
-        BotToast.showText(
-          text: "YATA debug catch: $e, $t",
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red[800]!,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
-        );
-      }
+      logToUser("YATA debug catch: $e, $t", duration: 4);
     }
   }
 
@@ -1088,6 +1071,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       } catch (e, trace) {
         FirebaseCrashlytics.instance.log("Issue fetching Foreign Stocks");
         FirebaseCrashlytics.instance.recordError("Provider: $provider, Error: $e", trace);
+        logToUser("Provider: $provider, Error: $e, Trace: $trace");
         return (apiSuccess: false, apiMessage: e.toString());
       }
       return (apiSuccess: false, apiMessage: "");
