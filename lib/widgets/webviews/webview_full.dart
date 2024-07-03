@@ -299,6 +299,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   bool _omitTabHistory = false;
 
+  // This is only temporary by design - warning should not pop up only once, but it also doesn't need to be shown
+  // every time the user reloads the page.
+  bool _bugReportsWarningPrompted = false;
+
   // Chaining configuration
   bool _isChainingBrowser = false;
   ChainingPayload? _chainingPayload;
@@ -2403,6 +2407,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _assessBazaarOthers(document);
     _assessBarsRedirect(document);
     _assessProfileAgeToWords();
+    _assessBugReportsWarning();
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -3678,6 +3683,54 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   void _assessProfileAgeToWords() {
     if (_currentUrl.contains("www.torn.com/profiles.php?")) webView?.evaluateJavascript(source: ageToWordsOnProfile());
+  }
+
+  void _assessBugReportsWarning() {
+    if (_currentUrl.contains("forums.php#/p=newthread&f=19&b=0&a=0") && !_bugReportsWarningPrompted) {
+      _bugReportsWarningPrompted = true;
+      showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+                title: const Text("WARNING"),
+                content: Scrollbar(
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text("Torn PDA is a third-party application, and is not developed by Torn."),
+                        const SizedBox(height: 10),
+                        const Text("Please do not report PDA bugs here, as they will be closed by Torn staff. Any bugs "
+                            "caused by the app should be reported to the developers via one of the buttons at"
+                            "the bottom."),
+                        const SizedBox(height: 10),
+                        Text("Make sure that you have tested in "
+                            "${Platform.isIOS ? "Safari" : "your system browser"}"
+                            " first to see whether the issue persists. If you're not sure, reach out to us below."),
+                        const SizedBox(height: 30),
+                        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                          TextButton(
+                            child: const Text("Forum Thread"),
+                            onPressed: () {
+                              _loadUrl("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503");
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                              child: const Text("Discord"),
+                              onPressed: () => launchUrl(Uri.parse("https://discord.gg/vyP23kJ"),
+                                  mode: LaunchMode.externalApplication)),
+                          TextButton(
+                            child: const Text("Close"),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ])
+                      ]),
+                    ),
+                  ),
+                ),
+              ));
+    }
   }
 
   // ASSESS PROFILES
