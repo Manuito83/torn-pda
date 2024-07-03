@@ -70,7 +70,8 @@ dependencies:
   home_widget:
     git:
       url: https://github.com/Manuito83/home_widget.git
-      ref: pda-dev  ## TODO: merge into pda-stable
+      ## TODO: merge pda-dev into pda-stable and change ref
+      ref: 8ecac9ede8c4a06a9409848da339f181169300db
   html: 0.15.4
   http: 0.13.6
   lints: 2.1.1
