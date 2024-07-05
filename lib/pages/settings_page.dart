@@ -1814,42 +1814,6 @@ class SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Allow auto rotation",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.allowScreenRotation,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.changeAllowScreenRotation = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
-            'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
-            'to be manually scrolled and some elements might look too big)',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
         const SizedBox(height: 5),
         Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
