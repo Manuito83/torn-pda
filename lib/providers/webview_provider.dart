@@ -1176,7 +1176,7 @@ class WebViewProvider extends ChangeNotifier {
 
     final browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
-      analytics.setCurrentScreen(screenName: 'browser_full');
+      analytics.logScreenView(screenName: 'browser_full');
 
       String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
 

@@ -4,6 +4,7 @@ import 'dart:collection';
 // Flutter imports:
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
@@ -137,6 +138,7 @@ class ShortcutsProvider extends ChangeNotifier {
       } catch (e, trace) {
         FirebaseCrashlytics.instance.log("PDA Crash at Shortcuts initialization");
         FirebaseCrashlytics.instance.recordError(e, trace);
+        logToUser("PDA Error at Shortcuts initialization: $e, $trace");
       }
     }
 

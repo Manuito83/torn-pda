@@ -13,6 +13,8 @@ enum WarSortType {
   onlineAsc,
   lifeDes,
   lifeAsc,
+  hospitalDes,
+  hospitalAsc,
   notesDes,
   notesAsc,
   bounty,
@@ -52,6 +54,10 @@ class WarSort {
         description = 'Sort by life (des)';
       case WarSortType.lifeAsc:
         description = 'Sort by life (asc)';
+      case WarSortType.hospitalDes:
+        description = 'Sort by hosp. time (des)';
+      case WarSortType.hospitalAsc:
+        description = 'Sort by hosp. time (asc)';
       case WarSortType.notesDes:
         description = 'Sort by note (des)';
       case WarSortType.notesAsc:

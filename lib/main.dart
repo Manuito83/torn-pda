@@ -58,9 +58,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.4.2';
-const String androidCompilation = '426';
-const String iosCompilation = '426';
+const String appVersion = '3.4.3';
+const String androidCompilation = '432';
+const String iosCompilation = '432';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
@@ -68,15 +68,19 @@ const bool pointFunctionsEmulatorToLocal = false;
 // TODO (App release)
 const bool enableWakelockForDebug = false;
 
+bool logAndShowToUser = false;
+
 final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
     StreamController<ReceivedNotification>.broadcast();
 
-final StreamController<String?> selectNotificationStream = StreamController<String?>.broadcast();
+final StreamController<String?> selectNotificationStream =
+    StreamController<String?>.broadcast();
 
 bool exactAlarmsPermissionAndroid = false;
 
@@ -111,7 +115,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       Prefs().setDataStockMarket(newData);
     }
   } catch (e) {
-    FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");
+    FirebaseCrashlytics.instance
+        .log("PDA Crash at Messaging Background Handler");
     FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
   }
 }
@@ -141,14 +146,17 @@ Future<void> main() async {
 
   // Flutter Local Notifications
   if (Platform.isAndroid) {
-    final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
+    final AndroidFlutterLocalNotificationsPlugin androidImplementation =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()!;
     await androidImplementation.requestNotificationsPermission();
-    exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
+    exactAlarmsPermissionAndroid =
+        await androidImplementation.canScheduleExactNotifications() ?? false;
   }
 
   tz.initializeTimeZones();
-  const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+  const initializationSettingsAndroid =
+      AndroidInitializationSettings('app_icon');
   const initializationSettingsIOS = DarwinInitializationSettings();
 
   const initializationSettings = InitializationSettings(
@@ -158,7 +166,8 @@ Future<void> main() async {
 
   await flutterLocalNotificationsPlugin.initialize(
     initializationSettings,
-    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+    onDidReceiveNotificationResponse:
+        (NotificationResponse notificationResponse) async {
       final String? payload = notificationResponse.payload;
       if (notificationResponse.payload != null) {
         log('Notification payload: $payload');
@@ -175,7 +184,8 @@ Future<void> main() async {
 
   if (kDebugMode) {
     if (pointFunctionsEmulatorToLocal) {
-      FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+      FirebaseFunctions.instanceFor(region: 'us-east4')
+          .useFunctionsEmulator('localhost', 5001);
     }
     // Only 'true' intended for debugging, otherwise leave in false
     await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
@@ -208,7 +218,8 @@ Future<void> main() async {
   // iOS settings for AudioPlayer are managed through the controller
   AudioPlayer.global.setAudioContext(
     AudioContext(
-      android: AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
+      android: AudioContextAndroid(
+          audioFocus: AndroidAudioFocus.gainTransientMayDuck),
     ),
   );
 
@@ -216,26 +227,44 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         // UserDetailsProvider has to go first to initialize the others!
-        ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
-        ChangeNotifierProvider<TargetsProvider>(create: (context) => TargetsProvider()),
-        ChangeNotifierProvider<AttacksProvider>(create: (context) => AttacksProvider()),
-        ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
-        ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
-        ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
-        ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
-        ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
-        ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
-        ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
-        ChangeNotifierProvider<TradesProvider>(create: (context) => TradesProvider()),
-        ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
-        ChangeNotifierProvider<AwardsProvider>(create: (context) => AwardsProvider()),
+        ChangeNotifierProvider<UserDetailsProvider>(
+            create: (context) => UserDetailsProvider()),
+        ChangeNotifierProvider<TargetsProvider>(
+            create: (context) => TargetsProvider()),
+        ChangeNotifierProvider<AttacksProvider>(
+            create: (context) => AttacksProvider()),
+        ChangeNotifierProvider<ThemeProvider>(
+            create: (context) => ThemeProvider()),
+        ChangeNotifierProvider<SettingsProvider>(
+            create: (context) => SettingsProvider()),
+        ChangeNotifierProvider<FriendsProvider>(
+            create: (context) => FriendsProvider()),
+        ChangeNotifierProvider<UserScriptsProvider>(
+            create: (context) => UserScriptsProvider()),
+        ChangeNotifierProvider<ChainStatusProvider>(
+            create: (context) => ChainStatusProvider()),
+        ChangeNotifierProvider<CrimesProvider>(
+            create: (context) => CrimesProvider()),
+        ChangeNotifierProvider<QuickItemsProvider>(
+            create: (context) => QuickItemsProvider()),
+        ChangeNotifierProvider<QuickItemsProviderFaction>(
+            create: (context) => QuickItemsProviderFaction()),
+        ChangeNotifierProvider<TradesProvider>(
+            create: (context) => TradesProvider()),
+        ChangeNotifierProvider<ShortcutsProvider>(
+            create: (context) => ShortcutsProvider()),
+        ChangeNotifierProvider<AwardsProvider>(
+            create: (context) => AwardsProvider()),
         ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
-        ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider("")),
-        ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
+        ChangeNotifierProvider<TerminalProvider>(
+            create: (context) => TerminalProvider("")),
+        ChangeNotifierProvider<WebViewProvider>(
+            create: (context) => WebViewProvider()),
         // Native login
-        ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
-        ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
+        ChangeNotifierProvider<NativeAuthProvider>(
+            create: (context) => NativeAuthProvider()),
+        ChangeNotifierProvider<NativeUserProvider>(
+            create: (context) => NativeUserProvider()),
         // ------------
       ],
       child: MyApp(),
@@ -270,7 +299,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // Callback to force the browser back to full screen if there is a system request to revert
     // Might happen when app is on the background or when only the top is being extended
     SystemChrome.setSystemUIChangeCallback((systemOverlaysAreVisible) async {
-      if (_webViewProvider.currentUiMode == UiMode.fullScreen && systemOverlaysAreVisible) {
+      if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
+          systemOverlaysAreVisible) {
         _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
       }
     });
@@ -290,7 +320,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeMetrics() async {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
       final bool splitNowActive = _webViewProvider.webViewSplitActive;
-      final bool splitUserEnabled = _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
+      final bool splitUserEnabled =
+          _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
       final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
 
       if (!splitNowActive && splitUserEnabled && screenIsWide) {
@@ -330,12 +361,16 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
       appBarTheme: AppBarTheme(
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        surfaceTintColor: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : null,
+        surfaceTintColor: _themeProvider.currentTheme == AppTheme.extraDark
+            ? Colors.black
+            : null,
         color: _themeProvider.statusBar,
       ),
       primarySwatch: Colors.blueGrey,
       useMaterial3: _themeProvider.useMaterial3,
-      brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+      brightness: _themeProvider.currentTheme == AppTheme.light
+          ? Brightness.light
+          : Brightness.dark,
     );
 
     SystemChrome.setSystemUIOverlayStyle(
@@ -365,7 +400,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         builder: BotToastInit(),
         navigatorObservers: [BotToastNavigatorObserver()],
-        home: Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
+        home: Consumer2<SettingsProvider, WebViewProvider>(
+            builder: (context, sProvider, wProvider, child) {
           // Build standard or split-screen home
           Widget home = Stack(
             children: [
@@ -389,7 +425,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 const AppBorder(),
               ],
             );
-          } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+          } else if (wProvider.splitScreenPosition ==
+                  WebViewSplitPosition.left &&
               wProvider.webViewSplitActive &&
               screenIsWide) {
             home = Stack(
@@ -407,11 +444,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
           return PopScope(
             // Only exit app if user allows and we are not in the browser
-            canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
+            canPop: sProvider.onBackButtonAppExit == "exit" &&
+                !wProvider.browserShowInForeground,
             onPopInvoked: (didPop) async {
               if (didPop) return;
               // If we can't pop, decide if we open the drawer or go backwards in the browser
-              final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+              final WebViewProvider w =
+                  Provider.of<WebViewProvider>(context, listen: false);
               if (w.browserShowInForeground) {
                 // Browser is in front, delegate the call
                 w.tryGoBack();
@@ -427,7 +466,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   _openDrawerIfPossible() async {
-    final SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
+    final SettingsProvider s =
+        Provider.of<SettingsProvider>(context, listen: false);
     if (routeWithDrawer) {
       // Open drawer instead
       s.willPopShouldOpenDrawerStream.add(true);
@@ -488,5 +528,43 @@ Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
     } else if (brightness == Brightness.light) {
       await Prefs().setAppTheme("light");
     }
+  }
+}
+
+logToUser(String? message,
+    {int duration = 3, Color? color, Color? borderColor}) {
+  log(message.toString());
+  if (message == null) return;
+  color ??= Colors.red.shade600;
+  borderColor ??= Colors.red.shade800;
+  if (logAndShowToUser) {
+    toastification.showCustom(
+      autoCloseDuration: const Duration(seconds: 3),
+      alignment: Alignment.bottomCenter,
+      builder: (BuildContext context, ToastificationItem holder) {
+        return Center(
+          child: GestureDetector(
+              onTap: () => toastification.dismiss(holder),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: color,
+                  border: Border.all(color: borderColor!, width: 2),
+                ),
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    Text("Debug Message\n",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text(message.toString(),
+                        style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              )),
+        );
+      },
+    );
   }
 }

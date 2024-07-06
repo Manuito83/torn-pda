@@ -134,6 +134,71 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
+export async function sendLifeNotification(userStats: any, subscriber: any) {
+  const life = userStats.life;
+  const promises: Promise<any>[] = [];
+
+  try {
+    if (
+      life.maximum === life.current &&
+      (subscriber.lifeLastCheckFull === false)
+    ) {
+
+      let title = `Full Life Bar`;
+      let body = `Your life is full, unstoppable!`;
+      if (subscriber.discrete) {
+        title = `Lf`;
+        body = `Full`;
+      }
+
+      promises.push(
+        sendNotificationToUser(
+          subscriber.token,
+          title,
+          body,
+          "notification_life",
+          "#FF0000",
+          "Alerts life",
+          "",
+          "",
+          "",
+          "",
+          subscriber.vibration,
+        )
+      );
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            lifeLastCheckFull: true,
+          })
+      );
+    }
+
+    if (
+      life.current < life.maximum &&
+      (subscriber.lifeLastCheckFull === true)
+    ) {
+      promises.push(
+        admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({
+            lifeLastCheckFull: false,
+          })
+      );
+    }
+
+  } catch (error) {
+    functions.logger.warn(`ERROR LIFE \n${subscriber.uid} \n${error}`);
+  }
+
+  return Promise.all(promises);
+}
+
 // This will log the travel at first opportunity (in case the API cannot be contacted later)
 // when it detects we have a new timestamp and are on the air. Then, the TravelGroup function
 // will sort users and send relevant notifications
@@ -858,6 +923,24 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
               continue;
             }
           }
+
+          if (filters.includes('bounty_claims')) {
+            if (newEventsDescriptions[i].includes('earned your') &&
+              newEventsDescriptions[i].includes('bounty reward')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
+          if (filters.includes('referrals')) {
+            if (newEventsDescriptions[i].includes('You have successfully referred')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
         }
       }
 
@@ -991,7 +1074,7 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
   return Promise.all(promises);
 }
 
-export async function sendForeignRestockNotification(dbStocks: any, subscriber: any) {
+export async function sendForeignRestockNotification(userStats: any, dbStocks: any, subscriber: any) {
   const promises: Promise<any>[] = [];
 
   try {
@@ -1002,13 +1085,44 @@ export async function sendForeignRestockNotification(dbStocks: any, subscriber: 
     const userStocks = subscriber.restockActiveAlerts;
     for (const [userCodeName, userTime] of Object.entries(userStocks)) {
 
+      /*
+      console.log("Stock country: " + dbStocks[userCodeName].country);
+      console.log("User travel or destination: "userStats.travel.destination);
+      console.log("Only current country alerts: " + subscriber.foreignRestockNotificationOnlyCurrentCountry);
+      */
+
+      let databaseCountryName = dbStocks[userCodeName].country;
+      let playerDestination = userStats.travel.destination;
+
+      // If the user has activated the option in Torn PDA only to be notified if the restock is happening
+      // in the country he is flying to / staying in, we need to check whether they match before proceeding
+      if (subscriber.foreignRestockNotificationOnlyCurrentCountry) {
+        // We are looking for the SPECIFIC country of the item here
+
+        if (userStats.travel.destination === "United Kingdom") {
+          // Standardize with values in the database and API
+          playerDestination = "UK";
+        }
+
+        if (playerDestination !== databaseCountryName) {
+          // No country coincidence, continue with the next stock
+          continue;
+        }
+
+        //console.log("Country matched, continue to notification!")
+      }
+
       if (userCodeName in dbStocks) {
         const dbTime = dbStocks[userCodeName].restock;
-
         const timeDifference = <number>userTime - dbTime * 1000;
+
         if (timeDifference < 0) {
+          // Note: we already have a method in Torn PDA [subscribeToForeignRestockNotification()] that ensures that
+          //the timestamp values of Firestore's [restockActiveAlerts] are updated to DateTime.now() when this notifications 
+          // are enabled after certain time, so that we avoid sending old and expiry notifications in a after activation
+
           updates++;
-          stocksUpdated.push(`${dbStocks[userCodeName].name} (${dbStocks[userCodeName].country})`)
+          stocksUpdated.push(`${dbStocks[userCodeName].name} (${databaseCountryName})`)
           userStocks[userCodeName] = dbTime * 1000;
         }
       }

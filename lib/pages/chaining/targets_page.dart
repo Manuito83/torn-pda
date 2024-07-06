@@ -97,6 +97,8 @@ class TargetsPageState extends State<TargetsPage> {
     TargetSort(type: TargetSortType.nameAsc),
     TargetSort(type: TargetSortType.lifeDes),
     TargetSort(type: TargetSortType.lifeAsc),
+    TargetSort(type: TargetSortType.hospitalDes),
+    TargetSort(type: TargetSortType.hospitalAsc),
     TargetSort(type: TargetSortType.onlineAsc),
     TargetSort(type: TargetSortType.onlineDes),
     TargetSort(type: TargetSortType.colorAsc),
@@ -635,6 +637,10 @@ class TargetsPageState extends State<TargetsPage> {
         _targetsProvider.sortTargets(TargetSortType.lifeDes);
       case TargetSortType.lifeAsc:
         _targetsProvider.sortTargets(TargetSortType.lifeAsc);
+      case TargetSortType.hospitalDes:
+        _targetsProvider.sortTargets(TargetSortType.hospitalDes);
+      case TargetSortType.hospitalAsc:
+        _targetsProvider.sortTargets(TargetSortType.hospitalAsc);
       case TargetSortType.colorDes:
         _targetsProvider.sortTargets(TargetSortType.colorDes);
       case TargetSortType.colorAsc:

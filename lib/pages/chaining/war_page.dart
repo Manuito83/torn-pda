@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
@@ -110,6 +111,8 @@ class WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.nameAsc),
     WarSort(type: WarSortType.lifeDes),
     WarSort(type: WarSortType.lifeAsc),
+    WarSort(type: WarSortType.hospitalDes),
+    WarSort(type: WarSortType.hospitalAsc),
     WarSort(type: WarSortType.statsDes),
     WarSort(type: WarSortType.statsAsc),
     WarSort(type: WarSortType.onlineDes),
@@ -1057,7 +1060,32 @@ class WarPageState extends State<WarPage> {
         messageColor = Colors.orange[700];
       }
 
-      if (mounted && !firstTime) {
+      bool additionalSortingIssue = false;
+      String sort = "";
+      if (_w.currentSort == WarSortType.lifeAsc) {
+        additionalSortingIssue = true;
+        sort = "Life Ascending";
+      } else if (_w.currentSort == WarSortType.lifeDes) {
+        additionalSortingIssue = true;
+        sort = "Life Descending";
+      } else if (_w.currentSort == WarSortType.bounty) {
+        additionalSortingIssue = true;
+        sort = "Bounty Amount";
+      }
+
+      if (additionalSortingIssue) {
+        if (!firstTime) {
+          message += "\n\nNOTE: your current SORT selection ($sort) requires a FULL UPDATE (LONG-PRESS) to retrieve "
+              "the necessary details!";
+        } else {
+          message = "Your current SORT selection ($sort) requires a FULL UPDATE (LONG-PRESS) to retrieve "
+              "the necessary details!";
+        }
+      }
+
+      // Triggers after a normal quick update (with or without sorting issues), or during the first-time check
+      // but only if there's a sorting issue
+      if (mounted && (!firstTime || (firstTime && additionalSortingIssue))) {
         BotToast.showText(
           clickClose: true,
           text: message,
@@ -1079,6 +1107,7 @@ class WarPageState extends State<WarPage> {
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      logToUser("PDA Error at War Quick Update: $e, $trace");
     }
   }
 
@@ -1130,6 +1159,10 @@ class WarPageState extends State<WarPage> {
         _w.sortTargets(WarSortType.lifeDes);
       case WarSortType.lifeAsc:
         _w.sortTargets(WarSortType.lifeAsc);
+      case WarSortType.hospitalDes:
+        _w.sortTargets(WarSortType.hospitalDes);
+      case WarSortType.hospitalAsc:
+        _w.sortTargets(WarSortType.hospitalAsc);
       case WarSortType.statsDes:
         _w.sortTargets(WarSortType.statsDes);
       case WarSortType.statsAsc:
@@ -1704,7 +1737,8 @@ class WarTargetsListState extends State<WarTargetsList> {
     }
 
     // Sorting function for pinned and non-pinned members
-    void sortMembers(List<WarCard> members) {
+    void sortMembers(List<WarCard> members) async {
+      print(widget.warController.currentSort);
       switch (widget.warController.currentSort) {
         case WarSortType.levelDes:
           members.sort((a, b) => b.memberModel.level!.compareTo(a.memberModel.level!));
@@ -1719,9 +1753,27 @@ class WarTargetsListState extends State<WarTargetsList> {
         case WarSortType.nameAsc:
           members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));
         case WarSortType.lifeDes:
-          members.sort((a, b) => b.memberModel.lifeSort!.compareTo(a.memberModel.lifeSort!));
+          members.sort((a, b) => b.memberModel.lifeCurrent!.compareTo(a.memberModel.lifeCurrent!));
         case WarSortType.lifeAsc:
-          members.sort((a, b) => a.memberModel.lifeSort!.compareTo(b.memberModel.lifeSort!));
+          members.sort((a, b) => a.memberModel.lifeCurrent!.compareTo(b.memberModel.lifeCurrent!));
+        case WarSortType.hospitalDes:
+          members.sort((a, b) {
+            return b.memberModel.hospitalSort!.compareTo(a.memberModel.hospitalSort!);
+          });
+        case WarSortType.hospitalAsc:
+          members.sort((a, b) {
+            // First sort by hospitalSort
+            if (a.memberModel.hospitalSort! > 0 && b.memberModel.hospitalSort! > 0) {
+              return a.memberModel.hospitalSort!.compareTo(b.memberModel.hospitalSort!);
+            } else if (a.memberModel.hospitalSort! > 0) {
+              return -1;
+            } else if (b.memberModel.hospitalSort! > 0) {
+              return 1;
+            } else {
+              // If both hospitalSort values are 0, sort by name
+              return a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase());
+            }
+          });
         case WarSortType.statsDes:
           members.sort((a, b) => b.memberModel.statsSort!.compareTo(a.memberModel.statsSort!));
         case WarSortType.statsAsc:

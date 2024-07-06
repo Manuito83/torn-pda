@@ -45,6 +45,10 @@ export const playersGroup = {
         promises.push(manageStats("nerveNotification", -1));
       }
 
+      if (beforeStat.lifeNotification) {
+        promises.push(manageStats("lifeNotification", -1));
+      }
+
       if (beforeStat.travelNotification) {
         promises.push(manageStats("travelNotification", -1));
       }
@@ -136,6 +140,12 @@ export const playersGroup = {
           )
         );
 
+      if (beforeStat.lifeNotification !== afterStat.lifeNotification)
+        promises.push(
+          manageStats("lifeNotification", afterStat.lifeNotification ? 1 : -1
+          )
+        );
+
       if (beforeStat.travelNotification !== afterStat.travelNotification)
         promises.push(
           manageStats("travelNotification", afterStat.travelNotification ? 1 : -1
@@ -217,6 +227,7 @@ export const playersGroup = {
       if (
         !afterStat.energyNotification &&
         !afterStat.nerveNotification &&
+        !afterStat.lifeNotification &&
         !afterStat.travelNotification &&
         !afterStat.foreignRestockNotification &&
         !afterStat.hospitalNotification &&
@@ -246,6 +257,7 @@ export const playersGroup = {
       if (
         (afterStat.energyNotification
           || afterStat.nerveNotification
+          || afterStat.lifeNotification
           || afterStat.travelNotification
           || afterStat.foreignRestockNotification
           || afterStat.hospitalNotification

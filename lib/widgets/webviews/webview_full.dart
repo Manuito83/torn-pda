@@ -299,6 +299,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   bool _omitTabHistory = false;
 
+  // This is only temporary by design - warning should not pop up only once, but it also doesn't need to be shown
+  // every time the user reloads the page.
+  bool _bugReportsWarningPrompted = false;
+
   // Chaining configuration
   bool _isChainingBrowser = false;
   ChainingPayload? _chainingPayload;
@@ -439,6 +443,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     } catch (e) {
       FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+      logToUser("PDA Crash at WebviewFull dispose: $e");
     }
   }
 
@@ -1510,6 +1515,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 // it too early (before it has changed)
                 _reportPageTitle();
               }
+
+              _assessTravel(document);
               _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
@@ -1736,8 +1743,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
+            } else if (request.url.toString().startsWith("blob:")) {
+              final response = await webView?.callAsyncJavaScript(
+                  functionBody: "return fetch(url).then(r => r.text());", arguments: {"url": request.url.toString()});
+              if (response == null || response.value == null) return;
+              await _downloadData(response.value, fileName: request.suggestedFilename);
+            } else {
+              await _downloadRequest(autoRequest: request);
             }
-            await _downloadRequest(autoRequest: request);
+          },
+          // Reload webview after memory leak
+          onWebContentProcessDidTerminate: (c) {
+            c.reload();
           },
           /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
@@ -2386,11 +2403,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// faster. The ones here probably would not benefit from it.
   Future _assessGeneral(dom.Document document) async {
     _assessBackButtonBehavior();
-    _assessTravel(document);
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
     _assessBarsRedirect(document);
     _assessProfileAgeToWords();
+    _assessBugReportsWarning();
   }
 
   Future _assessSectionsWithWidgets() async {
@@ -2730,6 +2747,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           if (error.isNotEmpty) {
             FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
             FirebaseCrashlytics.instance.recordError(error, null);
+            logToUser("Error sending Foreign Stocks to YATA");
           }
         }
 
@@ -2738,7 +2756,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           try {
             final response = await http
                 .post(
-                  Uri.parse('https://prombot.co.uk:8443/api/travel'),
+                  Uri.parse('https://api.prombot.co.uk/api/travel'),
                   headers: <String, String>{
                     'Content-Type': 'application/json; charset=UTF-8',
                   },
@@ -2758,6 +2776,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           if (error.isNotEmpty) {
             FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
             FirebaseCrashlytics.instance.recordError(error, null);
+            logToUser("Error sending Foreign Stocks to Prometheus");
           }
         }
 
@@ -3666,6 +3685,54 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (_currentUrl.contains("www.torn.com/profiles.php?")) webView?.evaluateJavascript(source: ageToWordsOnProfile());
   }
 
+  void _assessBugReportsWarning() {
+    if (_currentUrl.contains("forums.php#/p=newthread&f=19&b=0&a=0") && !_bugReportsWarningPrompted) {
+      _bugReportsWarningPrompted = true;
+      showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+                title: const Text("WARNING"),
+                content: Scrollbar(
+                  thumbVisibility: true,
+                  child: SingleChildScrollView(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        const Text("Torn PDA is a third-party application, and is not developed by Torn."),
+                        const SizedBox(height: 10),
+                        const Text("Please do not report PDA bugs here, as they will be closed by Torn staff. Any bugs "
+                            "caused by the app should be reported to the developers via one of the buttons at"
+                            "the bottom."),
+                        const SizedBox(height: 10),
+                        Text("Make sure that you have tested in "
+                            "${Platform.isIOS ? "Safari" : "your system browser"}"
+                            " first to see whether the issue persists. If you're not sure, reach out to us below."),
+                        const SizedBox(height: 30),
+                        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                          TextButton(
+                            child: const Text("Forum Thread"),
+                            onPressed: () {
+                              _loadUrl("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503");
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                          TextButton(
+                              child: const Text("Discord"),
+                              onPressed: () => launchUrl(Uri.parse("https://discord.gg/vyP23kJ"),
+                                  mode: LaunchMode.externalApplication)),
+                          TextButton(
+                            child: const Text("Close"),
+                            onPressed: () => Navigator.of(context).pop(),
+                          ),
+                        ])
+                      ]),
+                    ),
+                  ),
+                ),
+              ));
+    }
+  }
+
   // ASSESS PROFILES
   Future _assessProfileAttack({dom.Document? document, String pageTitle = ""}) async {
     if (mounted) {
@@ -4504,6 +4571,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     );
   }
 
+  Future<String> _getDownloadFilePath(String fileName) async {
+    if (Platform.isAndroid) {
+      // If we share, use temporary directory (we will delete this upon every webview provider initialisation)
+      if (_settingsProvider.downloadActionShare) {
+        return "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+      } else {
+        // If we save, use downloads directory unless it can't be found in Android (else, use the temp one)
+        var temp = await getDownloadsDirectory();
+        if (temp != null) {
+          return "${temp.path}/$fileName";
+        } else {
+          return "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+        }
+      }
+    } else if (Platform.isIOS) {
+      // iOS uses either the temp directory or the documents directory (which should always exist)
+      if (_settingsProvider.downloadActionShare) {
+        return "${(await getTemporaryDirectory()).path}/downloads/$fileName";
+      } else {
+        return "${(await getApplicationDocumentsDirectory()).path}/$fileName";
+      }
+    }
+    return "";
+  }
+
   Future<void> _downloadRequest({
     CancelFunc? dialogCancel,
     String? manualSource,
@@ -4534,29 +4626,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
 
       // Get the correct path based on device
-      String fileSavePath = "";
-
-      if (Platform.isAndroid) {
-        // If we share, use temporary directory (we will delete this upon every webview provider initialisation)
-        if (_settingsProvider.downloadActionShare) {
-          fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
-        } else {
-          // If we save, use downloads directory unless it can't be found in Android (else, use the temp one)
-          var temp = await getDownloadsDirectory();
-          if (temp != null) {
-            fileSavePath = "${temp.path}/$fileName";
-          } else {
-            fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
-          }
-        }
-      } else if (Platform.isIOS) {
-        // iOS uses either the temp directory or the documents directory (which should always exist)
-        if (_settingsProvider.downloadActionShare) {
-          fileSavePath = "${(await getTemporaryDirectory()).path}/downloads/$fileName";
-        } else {
-          fileSavePath = "${(await getApplicationDocumentsDirectory()).path}/$fileName";
-        }
-      }
+      String fileSavePath = await _getDownloadFilePath(fileName);
 
       var cancelToastCallback = BotToast.showCustomText(
         clickClose: false,
@@ -4616,6 +4686,49 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     } catch (e) {
       BotToast.showText(
         text: "Could not complete download: ${cancelToken.isCancelled ? "cancelled" : e}",
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: Colors.orange[800]!,
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+  }
+
+  Future<void> _downloadData(String data, {String? fileName}) async {
+    try {
+      final downloadPath = await _getDownloadFilePath(fileName ?? "file.txt");
+      log("Downloading file ${fileName ?? "unnamed file"} to $downloadPath");
+      final file = await File(downloadPath).create(recursive: true);
+      await file.writeAsString(data);
+      if (_settingsProvider.downloadActionShare) {
+        await Share.shareXFiles(
+          [XFile(file.path)],
+          text: fileName,
+          sharePositionOrigin: Rect.fromLTWH(
+            0,
+            0,
+            MediaQuery.of(context).size.width,
+            MediaQuery.of(context).size.height / 2,
+          ),
+        );
+      } else {
+        BotToast.showText(
+          text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as $downloadPath",
+          clickClose: true,
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          duration: Duration(seconds: 5),
+          contentColor: Colors.blue[800]!,
+          contentPadding: const EdgeInsets.all(10),
+        );
+      }
+    } catch (e) {
+      BotToast.showText(
+        text: "Could not complete download: $e",
         textStyle: const TextStyle(
           fontSize: 14,
           color: Colors.white,

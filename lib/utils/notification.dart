@@ -16,7 +16,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 
 // IDS
-// 101 -> 109 profile cooldowns
+// 101 -> 110 profile cooldowns
 // 201 travel arrival
 // 211 travel departure
 // 300 war targets status
@@ -74,6 +74,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts nerve';
     channelName = 'Alerts nerve';
     channelDescription = 'Automatic alerts for nerve';
+  } else if (channel.contains("Alerts life")) {
+    notificationIcon = "notification_life";
+    notificationColor = Colors.red;
+    onTapPayload += 'life';
+    channelId = 'Alerts life';
+    channelName = 'Alerts life';
+    channelDescription = 'Automatic alerts for life';
   } else if (channel.contains("Alerts travel")) {
     notificationIcon = "notification_travel";
     notificationColor = Colors.blue;
@@ -260,6 +267,13 @@ Future showNotificationBoth(Map payload, int notId) async {
         iOS: DarwinNotificationDetails(
           presentSound: true,
           sound: 'sword_clash.aiff',
+        ),
+      );
+    } else if (channelName.contains("race")) {
+      platformChannelSpecifics = const NotificationDetails(
+        iOS: DarwinNotificationDetails(
+          presentSound: true,
+          sound: 'car_start.aiff',
         ),
       );
     }
@@ -491,6 +505,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
+      'Manual race start ${modifier.channelIdModifier}',
+      'Manual race start ${modifier.channelIdModifier}',
+      description: 'Manual notifications for race start',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('car_start'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
       'Alerts drugs ${modifier.channelIdModifier}',
       'Alerts drugs ${modifier.channelIdModifier}',
       description: 'Automatic alerts for drugs',
@@ -521,7 +548,7 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Alerts racing ${modifier.channelIdModifier}',
       description: 'Automatic alerts for racing',
       importance: Importance.max,
-      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      sound: const RawResourceAndroidNotificationSound('car_start'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),
@@ -598,6 +625,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Manual life ${modifier.channelIdModifier}',
       'Manual life ${modifier.channelIdModifier}',
       description: 'Manual notifications for life',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts life ${modifier.channelIdModifier}',
+      'Alerts life ${modifier.channelIdModifier}',
+      description: 'Automatic alerts for life',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

@@ -120,7 +120,7 @@ class Member {
     this.statsDexUpdated = -1,
     //
     this.statsSort = 0,
-    this.lifeSort,
+    this.hospitalSort,
     this.overrideEasyLife,
     //
     this.statsComparisonSuccess,
@@ -180,7 +180,7 @@ class Member {
   int? statsDexUpdated;
   // Sort parameters
   int? statsSort; // Mixed estimates and exacts so that members can be sorted
-  int? lifeSort = 0;
+  int? hospitalSort = 0;
   bool? overrideEasyLife = false;
   // For stats estimates calculation
   bool? statsComparisonSuccess = false;
@@ -242,7 +242,7 @@ class Member {
         statsDex: json["statsDex"] ?? -1,
         statsDexUpdated: json["statsDexUpdated"],
         statsSort: json["statsSort"] ?? 0,
-        lifeSort: json["lifeSort"] ?? json["lifeCurrent"] ?? 0,
+        hospitalSort: json["hospitalSort"] ?? 0,
         overrideEasyLife: json["overrideEasyLife"] ?? false,
         statsComparisonSuccess: json["statsComparisonSuccess"] ?? false,
         memberXanax: json["memberXanax"] ?? 0,
@@ -297,7 +297,7 @@ class Member {
         "statsDex": statsDex,
         "statsDexUpdated": statsDexUpdated,
         "statsSort": statsSort,
-        "lifeSort": lifeSort,
+        "hospitalSort": hospitalSort,
         "overrideEasyLife": overrideEasyLife,
         "statsComparisonSuccess": statsComparisonSuccess,
         "memberXanax": memberXanax,

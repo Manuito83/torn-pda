@@ -1,6 +1,3 @@
-// Flutter imports:
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -390,7 +387,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       _stockList.sort((a, b) => a.acronym!.compareTo(b.acronym!));
       _stockList.sort((a, b) => b.owned.compareTo(a.owned));
     } catch (e, t) {
-      log("Error parsing stocks: $e\n$t");
+      logToUser("PDA Error at parsing stocks: $e, $t");
     }
   }
 

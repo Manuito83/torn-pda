@@ -5,6 +5,7 @@ import 'dart:convert';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
@@ -329,6 +330,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _lifeNotificationTapAction = "ownItems";
+  get lifeNotificationTapAction => _lifeNotificationTapAction;
+  set lifeNotificationTapAction(value) {
+    _lifeNotificationTapAction = value;
+    Prefs().setLifeNotificationTapAction(_lifeNotificationTapAction);
+    notifyListeners();
+  }
+
   var _fullScreenByDeepLinkTap = false;
   bool get fullScreenByDeepLinkTap => _fullScreenByDeepLinkTap;
   set fullScreenByDeepLinkTap(bool value) {
@@ -432,6 +441,21 @@ class SettingsProvider extends ChangeNotifier {
   bool get tscEnabledStatusRemoteConfig => _tscEnabledStatusRemoteConfig;
   set tscEnabledStatusRemoteConfig(bool value) {
     _tscEnabledStatusRemoteConfig = value;
+    notifyListeners();
+  }
+
+  int _yataStatsEnabledStatus = 0;
+  int get yataStatsEnabledStatus => _yataStatsEnabledStatus;
+  set yataStatsEnabledStatus(int value) {
+    _yataStatsEnabledStatus = value;
+    Prefs().setYataStatsEnabledStatus(_yataStatsEnabledStatus);
+    notifyListeners();
+  }
+
+  bool _yataStatsEnabledStatusRemoteConfig = true;
+  bool get yataStatsEnabledStatusRemoteConfig => _yataStatsEnabledStatusRemoteConfig;
+  set yataStatsEnabledStatusRemoteConfig(bool value) {
+    _yataStatsEnabledStatusRemoteConfig = value;
     notifyListeners();
   }
 
@@ -784,6 +808,7 @@ class SettingsProvider extends ChangeNotifier {
   bool get debugMessages => _debugMessages;
   set debugMessages(bool value) {
     _debugMessages = value;
+    logAndShowToUser = value;
     Prefs().setDebugMessages(_debugMessages);
     notifyListeners();
   }
@@ -870,6 +895,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
+    _lifeNotificationTapAction = await Prefs().getLifeNotificationTapAction();
+
     final refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
       case "icon":
@@ -893,6 +920,7 @@ class SettingsProvider extends ChangeNotifier {
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 
     _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
+    _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
 
     //_profileStatsEnabled = await Prefs().getProfileStatsEnabled();
 
@@ -1001,7 +1029,7 @@ class SettingsProvider extends ChangeNotifier {
     _syncDeviceTheme = await Prefs().getSyncDeviceTheme();
     _darkThemeToSync = await Prefs().getDarkThemeToSync();
 
-    _debugMessages = await Prefs().getDebugMessages();
+    _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
 

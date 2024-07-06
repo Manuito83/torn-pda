@@ -2,6 +2,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -208,6 +209,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
       message = "Error importing settings: $e";
       FirebaseCrashlytics.instance.log("PDA Crash at Importing Other User Settings");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      logToUser("PDA Crash at Importing Other User Settings: $e, $trace");
     }
 
     BotToast.showText(

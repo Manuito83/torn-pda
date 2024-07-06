@@ -1,6 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/settings/backup_prefs_groups.dart';
@@ -274,6 +275,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
       color = Colors.red;
       FirebaseCrashlytics.instance.log("PDA Crash at Send Online Backup");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      logToUser("PDA Crash at WebviewFull dispose: $e, $trace");
     }
 
     BotToast.showText(

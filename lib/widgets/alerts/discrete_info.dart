@@ -234,6 +234,23 @@ class DiscreteInfoState extends State<DiscreteInfo> {
                     Column(
                       children: [
                         Text(
+                          "Race start",
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "Title: R",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        Text(
+                          "Body: Start",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    Column(
+                      children: [
+                        Text(
                           "Race ending",
                           style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                         ),

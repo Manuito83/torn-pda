@@ -83,7 +83,7 @@ class TargetsProvider extends ChangeNotifier {
       _getTargetFaction(myNewTargetModel);
       myNewTargetModel.personalNote = notes;
       myNewTargetModel.personalNoteColor = notesColor;
-      myNewTargetModel.lifeSort = _getLifeSort(myNewTargetModel);
+      myNewTargetModel.hospitalSort = targetsSortHospitalTime(myNewTargetModel);
 
       // Parse bounty ammount if it exists
       if (myNewTargetModel.basicicons?.icon13 != null) {
@@ -230,7 +230,7 @@ class TargetsProvider extends ChangeNotifier {
         newTarget.personalNote = targetToUpdate.personalNote;
         newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
         newTarget.lastUpdated = DateTime.now();
-        newTarget.lifeSort = _getLifeSort(newTarget);
+        newTarget.hospitalSort = targetsSortHospitalTime(targetToUpdate);
 
         // Parse bounty ammount if it exists
         if (myUpdatedTargetModel.basicicons?.icon13 != null) {
@@ -282,7 +282,7 @@ class TargetsProvider extends ChangeNotifier {
           _targets[i].personalNote = notes;
           _targets[i].personalNoteColor = notesColor;
           _targets[i].lastUpdated = DateTime.now();
-          _targets[i].lifeSort = _getLifeSort(_targets[i]);
+          _targets[i].hospitalSort = targetsSortHospitalTime(_targets[i]);
 
           // Parse bounty ammount if it exists
           if (myUpdatedTargetModel.basicicons?.icon13 != null) {
@@ -326,35 +326,38 @@ class TargetsProvider extends ChangeNotifier {
     final dynamic attacks = await getAttacks();
 
     // Local function for the update of several targets after attacking
+    // Local function for the update of several targets after attacking
     for (final tar in _targets) {
       for (var i = 0; i < lastAttackedCopy.length; i++) {
         if (tar.playerId.toString() == lastAttackedCopy[i]) {
           tar.isUpdating = true;
           notifyListeners();
           try {
-            final dynamic myUpdatedTargetModel =
+            final dynamic attackedTarget =
                 await Get.find<ApiCallerController>().getTarget(playerId: tar.playerId.toString());
-            if (myUpdatedTargetModel is TargetModel) {
+            if (attackedTarget is TargetModel) {
+              final targetIndex = _targets.indexOf(tar);
               _getRespectFF(
                 attacks,
-                myUpdatedTargetModel,
-                oldRespect: _targets[_targets.indexOf(tar)].respectGain,
-                oldFF: _targets[_targets.indexOf(tar)].fairFight,
+                attackedTarget,
+                oldRespect: _targets[targetIndex].respectGain,
+                oldFF: _targets[targetIndex].fairFight,
               );
-              _getTargetFaction(myUpdatedTargetModel);
-              _targets[_targets.indexOf(tar)] = myUpdatedTargetModel;
-              final newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
-              _updateResultAnimation(newTarget, true);
-              newTarget.personalNote = tar.personalNote;
-              newTarget.personalNoteColor = tar.personalNoteColor;
-              newTarget.lastUpdated = DateTime.now();
-              newTarget.lifeSort = _getLifeSort(newTarget);
+              _getTargetFaction(attackedTarget);
+
+              // Update the existing target directly
+              _targets[targetIndex] = attackedTarget;
+              _targets[targetIndex].personalNote = tar.personalNote;
+              _targets[targetIndex].personalNoteColor = tar.personalNoteColor;
+              _targets[targetIndex].lastUpdated = DateTime.now();
+              _targets[targetIndex].hospitalSort = targetsSortHospitalTime(attackedTarget);
 
               // Parse bounty ammount if it exists
-              if (myUpdatedTargetModel.basicicons?.icon13 != null) {
-                newTarget.bountyAmount = _getBountyAmount(myUpdatedTargetModel);
+              if (attackedTarget.basicicons?.icon13 != null) {
+                _targets[targetIndex].bountyAmount = _getBountyAmount(attackedTarget);
               }
 
+              _updateResultAnimation(_targets[targetIndex], true);
               _saveTargetsSharedPrefs();
             } else {
               tar.isUpdating = false;
@@ -451,9 +454,29 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.nameAsc:
         _targets.sort((a, b) => a.name!.toLowerCase().compareTo(b.name!.toLowerCase()));
       case TargetSortType.lifeDes:
-        _targets.sort((a, b) => b.lifeSort!.compareTo(a.lifeSort!));
+        _targets.sort((a, b) => b.life!.current!.compareTo(a.life!.current!));
       case TargetSortType.lifeAsc:
-        _targets.sort((a, b) => a.lifeSort!.compareTo(b.lifeSort!));
+        _targets.sort((a, b) => a.life!.current!.compareTo(b.life!.current!));
+
+      case TargetSortType.hospitalDes:
+        _targets.sort((a, b) {
+          return b.hospitalSort!.compareTo(a.hospitalSort!);
+        });
+      case TargetSortType.hospitalAsc:
+        _targets.sort((a, b) {
+          // First sort by hospitalSort
+          if (a.hospitalSort! > 0 && b.hospitalSort! > 0) {
+            return a.hospitalSort!.compareTo(b.hospitalSort!);
+          } else if (a.hospitalSort! > 0) {
+            return -1;
+          } else if (b.hospitalSort! > 0) {
+            return 1;
+          } else {
+            // If both hospitalSort values are 0, sort by name
+            return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+          }
+        });
+
       case TargetSortType.colorDes:
         _targets.sort((a, b) => b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase()));
       case TargetSortType.colorAsc:
@@ -533,9 +556,13 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.nameAsc:
         sortToSave = 'nameDes';
       case TargetSortType.lifeDes:
-        sortToSave = 'nameDes';
+        sortToSave = 'lifeDes';
       case TargetSortType.lifeAsc:
-        sortToSave = 'nameDes';
+        sortToSave = 'lifeDes';
+      case TargetSortType.hospitalDes:
+        sortToSave = 'hospitalDes';
+      case TargetSortType.hospitalAsc:
+        sortToSave = 'hospitalDes';
       case TargetSortType.colorDes:
         sortToSave = 'colorDes';
       case TargetSortType.colorAsc:
@@ -739,11 +766,10 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  int? _getLifeSort(TargetModel myNewTargetModel) {
-    if (myNewTargetModel.status!.state != "Hospital") {
-      return myNewTargetModel.life!.current;
-    } else {
-      return -(myNewTargetModel.status!.until! - DateTime.now().millisecondsSinceEpoch / 1000).round();
+  int targetsSortHospitalTime(TargetModel myNewTargetModel) {
+    if (myNewTargetModel.status!.state == "Hospital") {
+      return myNewTargetModel.status!.until!;
     }
+    return 0;
   }
 }

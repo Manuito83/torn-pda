@@ -12,6 +12,7 @@ import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
 import 'package:torn_pda/pages/profile/jail_ahead_options.dart';
+import 'package:torn_pda/pages/profile/race_start_ahead_options.dart';
 import 'package:torn_pda/pages/profile/war_ahead_options.dart';
 import 'package:torn_pda/pages/profile_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
@@ -56,6 +57,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
   String? _hospitalDropDownValue;
   String? _jailDropDownValue;
   String? _rankedWarDropDownValue;
+  String? _raceStartDropDownValue;
 
   Future? _preferencesLoaded;
 
@@ -188,6 +190,9 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
         case ProfileNotification.rankedWar:
           typeString = 'Ranked War';
           profileType = ProfileNotification.rankedWar;
+        case ProfileNotification.raceStart:
+          typeString = 'Race Start';
+          profileType = ProfileNotification.raceStart;
       }
 
       types.add(
@@ -459,6 +464,34 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
         );
         types.add(const SizedBox(height: 10));
       }
+
+      if (element == ProfileNotification.raceStart) {
+        types.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Text("Race start notification timings"),
+                IconButton(
+                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const RaceStartAheadOptions();
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        types.add(const SizedBox(height: 10));
+      }
     }
 
     return Column(
@@ -489,6 +522,8 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
         value = _jailDropDownValue;
       case ProfileNotification.rankedWar:
         value = _rankedWarDropDownValue;
+      case ProfileNotification.raceStart:
+        value = _raceStartDropDownValue;
     }
 
     return DropdownButton<String>(
@@ -586,6 +621,11 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
             setState(() {
               _rankedWarDropDownValue = value;
             });
+          case ProfileNotification.raceStart:
+            Prefs().setRaceStartNotificationType(value!);
+            setState(() {
+              _raceStartDropDownValue = value;
+            });
         }
       },
     );
@@ -614,6 +654,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
     final hospitalType = await Prefs().getHospitalNotificationType();
     final jailType = await Prefs().getJailNotificationType();
     final rankedWarType = await Prefs().getRankedWarNotificationType();
+    final raceStartType = await Prefs().getRaceStartNotificationType();
     final boosterType = await Prefs().getBoosterNotificationType();
 
     setState(() {
@@ -633,6 +674,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
       _hospitalDropDownValue = hospitalType;
       _jailDropDownValue = jailType;
       _rankedWarDropDownValue = rankedWarType;
+      _raceStartDropDownValue = raceStartType;
       _boosterDropDownValue = boosterType;
     });
   }

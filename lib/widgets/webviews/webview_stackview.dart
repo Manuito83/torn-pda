@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -217,6 +218,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                               } catch (e) {
                                 FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
                                 FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                                logToUser("PDA Crash at StackView (webview with tabs): $e");
                                 _closeWithError();
                               }
                             } else {
@@ -232,6 +234,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                               } catch (e) {
                                 FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
                                 FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                                logToUser("PDA Crash at StackView (webview with no tabs): $e");
                                 _closeWithError();
                               }
                             }
@@ -645,112 +648,25 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                             color: _themeProvider.mainText,
                           ),
                         ),
-                        CircularMenuFixed(
-                          webViewProvider: _webViewProvider,
-                          alignment: Alignment.centerLeft,
-                          toggleButtonColor: Colors.transparent,
-                          toggleButtonIconColor: Colors.transparent,
-                          // Adds a return to windowed mode if we are in fullscreen with a double tap
-                          // Otherwise, the default double tap behavior applies
-                          longPressed: _webViewProvider.currentUiMode == UiMode.window
-                              ? null
-                              : () {
-                                  _webViewProvider.verticalMenuClose();
-                                  _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                                  if (_settingsProvider.fullScreenRemovesChat) {
-                                    _webViewProvider.showAllChatsFullScreen();
-                                  }
-                                },
-                          doubleTapped: () {
-                            _webViewProvider.verticalMenuClose();
-                            showDialog<void>(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return WebviewShortcutsDialog(fromShortcut: true);
-                              },
-                            );
-                          },
-                          backgroundWidget: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Container(
-                                color: _themeProvider.navSelected,
-                                child: Row(
-                                  children: [
-                                    Consumer<ChainStatusProvider>(
-                                      builder: (BuildContext context, provider, Widget? child) {
-                                        return Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsets.fromLTRB(
-                                                8,
-                                                0,
-                                                8,
-                                                provider.statusColorIsShown ? 12 : 0,
-                                              ),
-                                              child: _webViewProvider.currentUiMode == UiMode.window
-                                                  ? const Icon(MdiIcons.dotsHorizontal)
-                                                  : Icon(
-                                                      MdiIcons.dotsHorizontalCircleOutline,
-                                                      color: Colors.orange[800],
-                                                    ),
-                                            ),
-                                            if (provider.statusColorIsShown && provider.statusColorWidgetEnabled)
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 22.0),
-                                                child: StatusColorCounter(),
-                                              ),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                    SizedBox(
-                                      height: 40,
-                                      child: VerticalDivider(
-                                        width: 1,
-                                        thickness: 1,
-                                        color: Colors.grey[400],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          items: [
-                            if (context.read<ChainStatusProvider>().statusColorIsShown)
-                              if (context.read<ChainStatusProvider>().statusColorCurrent == PlayerStatusColor.hospital)
-                                CircularMenuItem(
-                                  icon: MdiIcons.hospital,
-                                  color: Colors.red[800],
-                                  onTap: () {
-                                    _webViewProvider.verticalMenuClose();
-                                    _webViewProvider.loadCurrentTabUrl("https://www.torn.com/hospitalview.php");
-                                  },
-                                )
-                              else if (context.read<ChainStatusProvider>().statusColorCurrent == PlayerStatusColor.jail)
-                                CircularMenuItem(
-                                  icon: MdiIcons.officeBuilding,
-                                  color: Colors.brown,
-                                  onTap: () {
-                                    _webViewProvider.verticalMenuClose();
-                                    _webViewProvider.loadCurrentTabUrl("https://www.torn.com/jailview.php");
-                                  },
-                                )
-                              else if (context.read<ChainStatusProvider>().statusColorCurrent ==
-                                  PlayerStatusColor.travel)
-                                CircularMenuItem(
-                                  icon: MdiIcons.airplaneTakeoff,
-                                  color: Colors.blue[800],
-                                  onTap: () {
-                                    _webViewProvider.verticalMenuClose();
-                                    _webViewProvider.loadCurrentTabUrl("https://www.torn.com/");
-                                  },
-                                ),
-                            CircularMenuItem(
-                              icon: MdiIcons.heartOutline,
-                              onTap: () {
+                        Consumer<ChainStatusProvider>(
+                          builder: (context, statusP, child) {
+                            return CircularMenuFixed(
+                              webViewProvider: _webViewProvider,
+                              alignment: Alignment.centerLeft,
+                              toggleButtonColor: Colors.transparent,
+                              toggleButtonIconColor: Colors.transparent,
+                              // Adds a return to windowed mode if we are in fullscreen with a double tap
+                              // Otherwise, the default double tap behavior applies
+                              longPressed: _webViewProvider.currentUiMode == UiMode.window
+                                  ? null
+                                  : () {
+                                      _webViewProvider.verticalMenuClose();
+                                      _webViewProvider.setCurrentUiMode(UiMode.window, context);
+                                      if (_settingsProvider.fullScreenRemovesChat) {
+                                        _webViewProvider.showAllChatsFullScreen();
+                                      }
+                                    },
+                              doubleTapped: () {
                                 _webViewProvider.verticalMenuClose();
                                 showDialog<void>(
                                   context: context,
@@ -759,91 +675,177 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                   },
                                 );
                               },
-                            ),
-                            CircularMenuItem(
-                              icon: MdiIcons.heartPlusOutline,
-                              onTap: () {
-                                _webViewProvider.verticalMenuClose();
-                                showDialog<void>(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (BuildContext context) {
-                                    return CustomShortcutDialog(
-                                      themeProvider: _themeProvider,
-                                      title: _webViewProvider.currentTabTitle(),
-                                      url: _webViewProvider.currentTabUrl(),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                            CircularMenuItem(
-                              icon: _webViewProvider.currentUiMode == UiMode.window
-                                  ? MdiIcons.fullscreen
-                                  : MdiIcons.fullscreenExit,
-                              color: _webViewProvider.currentUiMode == UiMode.window ? null : Colors.orange,
-                              onTap: () async {
-                                _webViewProvider.verticalMenuClose();
-                                await Future.delayed(const Duration(milliseconds: 150));
-                                if (_webViewProvider.currentUiMode == UiMode.window) {
-                                  _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
-                                  if (_settingsProvider.fullScreenRemovesChat) {
-                                    _webViewProvider.removeAllChatsFullScreen();
-                                  }
-
-                                  if (!await Prefs().getFullScreenExplanationShown()) {
-                                    Prefs().setFullScreenExplanationShown(true);
-                                    return showDialog<void>(
-                                      context: _,
-                                      barrierDismissible: false,
+                              backgroundWidget: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    color: _themeProvider.navSelected,
+                                    child: Row(
+                                      children: [
+                                        Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            Padding(
+                                              padding: EdgeInsets.fromLTRB(
+                                                8,
+                                                0,
+                                                8,
+                                                statusP.statusColorIsShown ? 12 : 0,
+                                              ),
+                                              child: _webViewProvider.currentUiMode == UiMode.window
+                                                  ? const Icon(MdiIcons.dotsHorizontal)
+                                                  : Icon(
+                                                      MdiIcons.dotsHorizontalCircleOutline,
+                                                      color: Colors.orange[800],
+                                                    ),
+                                            ),
+                                            if (statusP.statusColorIsShown && statusP.statusColorWidgetEnabled)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 22.0),
+                                                child: StatusColorCounter(),
+                                              ),
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: 40,
+                                          child: VerticalDivider(
+                                            width: 1,
+                                            thickness: 1,
+                                            color: Colors.grey[400],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              items: [
+                                if (statusP.statusColorIsShown)
+                                  if (statusP.statusColorCurrent == PlayerStatusColor.hospital)
+                                    CircularMenuItem(
+                                      icon: MdiIcons.hospital,
+                                      color: Colors.red[800],
+                                      onTap: () {
+                                        _webViewProvider.verticalMenuClose();
+                                        _webViewProvider.loadCurrentTabUrl("https://www.torn.com/hospitalview.php");
+                                      },
+                                    )
+                                  else if (statusP.statusColorCurrent == PlayerStatusColor.jail)
+                                    CircularMenuItem(
+                                      icon: MdiIcons.officeBuilding,
+                                      color: Colors.brown,
+                                      onTap: () {
+                                        _webViewProvider.verticalMenuClose();
+                                        _webViewProvider.loadCurrentTabUrl("https://www.torn.com/jailview.php");
+                                      },
+                                    )
+                                  else if (statusP.statusColorCurrent == PlayerStatusColor.travel)
+                                    CircularMenuItem(
+                                      icon: MdiIcons.airplaneTakeoff,
+                                      color: Colors.blue[800],
+                                      onTap: () {
+                                        _webViewProvider.verticalMenuClose();
+                                        _webViewProvider.loadCurrentTabUrl("https://www.torn.com/");
+                                      },
+                                    ),
+                                CircularMenuItem(
+                                  icon: MdiIcons.heartOutline,
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    showDialog<void>(
+                                      context: context,
                                       builder: (BuildContext context) {
-                                        return const FullScreenExplanationDialog();
+                                        return WebviewShortcutsDialog(fromShortcut: true);
                                       },
                                     );
-                                  }
-                                } else {
-                                  _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                                  if (_settingsProvider.fullScreenRemovesChat) {
-                                    _webViewProvider.showAllChatsFullScreen();
-                                  }
-                                }
-                              },
-                            ),
-                            if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
-                                !_settingsProvider.fullScreenExtraCloseButton)
-                              CircularMenuItem(
-                                icon: Icons.close,
-                                color: Colors.orange[900],
-                                onTap: () {
-                                  _webViewProvider.verticalMenuClose();
-                                  _webViewProvider.closeWebViewFromOutside();
-                                },
-                              ),
-                            if (_webViewProvider.currentUiMode == UiMode.fullScreen)
-                              CircularMenuItem(
-                                icon: Icons.settings,
-                                color: Colors.blue,
-                                onTap: () {
-                                  _webViewProvider.verticalMenuClose();
-                                  _webViewProvider.openUrlDialog();
-                                },
-                              ),
-                            if (_webViewProvider.tabList.length > 1)
-                              CircularMenuItem(
-                                icon: Icons.delete_forever_outlined,
-                                color: Colors.red[800],
-                                onTap: () {
-                                  _webViewProvider.verticalMenuClose();
-                                  showDialog<void>(
-                                    context: _,
-                                    barrierDismissible: false,
-                                    builder: (BuildContext context) {
-                                      return const TabsWipeDialog();
+                                  },
+                                ),
+                                CircularMenuItem(
+                                  icon: MdiIcons.heartPlusOutline,
+                                  onTap: () {
+                                    _webViewProvider.verticalMenuClose();
+                                    showDialog<void>(
+                                      context: context,
+                                      barrierDismissible: false,
+                                      builder: (BuildContext context) {
+                                        return CustomShortcutDialog(
+                                          themeProvider: _themeProvider,
+                                          title: _webViewProvider.currentTabTitle(),
+                                          url: _webViewProvider.currentTabUrl(),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                                CircularMenuItem(
+                                  icon: _webViewProvider.currentUiMode == UiMode.window
+                                      ? MdiIcons.fullscreen
+                                      : MdiIcons.fullscreenExit,
+                                  color: _webViewProvider.currentUiMode == UiMode.window ? null : Colors.orange,
+                                  onTap: () async {
+                                    _webViewProvider.verticalMenuClose();
+                                    await Future.delayed(const Duration(milliseconds: 150));
+                                    if (_webViewProvider.currentUiMode == UiMode.window) {
+                                      _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+                                      if (_settingsProvider.fullScreenRemovesChat) {
+                                        _webViewProvider.removeAllChatsFullScreen();
+                                      }
+
+                                      if (!await Prefs().getFullScreenExplanationShown()) {
+                                        Prefs().setFullScreenExplanationShown(true);
+                                        return showDialog<void>(
+                                          context: _,
+                                          barrierDismissible: false,
+                                          builder: (BuildContext context) {
+                                            return const FullScreenExplanationDialog();
+                                          },
+                                        );
+                                      }
+                                    } else {
+                                      _webViewProvider.setCurrentUiMode(UiMode.window, context);
+                                      if (_settingsProvider.fullScreenRemovesChat) {
+                                        _webViewProvider.showAllChatsFullScreen();
+                                      }
+                                    }
+                                  },
+                                ),
+                                if (_webViewProvider.currentUiMode == UiMode.fullScreen &&
+                                    !_settingsProvider.fullScreenExtraCloseButton)
+                                  CircularMenuItem(
+                                    icon: Icons.close,
+                                    color: Colors.orange[900],
+                                    onTap: () {
+                                      _webViewProvider.verticalMenuClose();
+                                      _webViewProvider.closeWebViewFromOutside();
                                     },
-                                  );
-                                },
-                              ),
-                          ],
+                                  ),
+                                if (_webViewProvider.currentUiMode == UiMode.fullScreen)
+                                  CircularMenuItem(
+                                    icon: Icons.settings,
+                                    color: Colors.blue,
+                                    onTap: () {
+                                      _webViewProvider.verticalMenuClose();
+                                      _webViewProvider.openUrlDialog();
+                                    },
+                                  ),
+                                if (_webViewProvider.tabList.length > 1)
+                                  CircularMenuItem(
+                                    icon: Icons.delete_forever_outlined,
+                                    color: Colors.red[800],
+                                    onTap: () {
+                                      _webViewProvider.verticalMenuClose();
+                                      showDialog<void>(
+                                        context: _,
+                                        barrierDismissible: false,
+                                        builder: (BuildContext context) {
+                                          return const TabsWipeDialog();
+                                        },
+                                      );
+                                    },
+                                  ),
+                              ],
+                            );
+                          },
                         ),
                       ],
                     ),

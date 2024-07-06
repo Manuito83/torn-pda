@@ -654,7 +654,7 @@ class LootPageState extends State<LootPage> {
       final Widget npcWidget = Column(children: npcBoxes);
       return npcWidget;
     } catch (e, t) {
-      BotToast.showText(text: "Error loading @npcCards: $e");
+      logToUser("Error loading @npcCards: $e");
       FirebaseCrashlytics.instance.log("PDA Crash @npcCards");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
       return const SizedBox.shrink();
@@ -699,7 +699,7 @@ class LootPageState extends State<LootPage> {
         }
       }
     } catch (e, t) {
-      BotToast.showText(text: "Error loading @lootRangers: $e");
+      logToUser("Error loading @lootRangers: $e");
       FirebaseCrashlytics.instance.log("PDA Crash @lootRangers");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
       _lootRangersTime = 0;
@@ -1020,7 +1020,7 @@ class LootPageState extends State<LootPage> {
         });
       }
     } catch (e) {
-      BotToast.showText(text: "Error loading @getLoot: $e");
+      logToUser("Error loading @getLoot: $e");
     }
   }
 
@@ -1043,7 +1043,7 @@ class LootPageState extends State<LootPage> {
 
       return true;
     } catch (e) {
-      BotToast.showText(text: "Error loading @fetchDatabase: $e");
+      logToUser("Error loading @fetchDatabase: $e");
       return false;
     }
   }
@@ -1114,7 +1114,7 @@ class LootPageState extends State<LootPage> {
         }
       }
     } catch (e) {
-      BotToast.showText(text: "Error loading @updateApi: $e");
+      logToUser("Error loading @updateApi: $e");
       return false;
     }
     if (apiSuccess == 0) {
@@ -1194,7 +1194,7 @@ class LootPageState extends State<LootPage> {
 
       _filterOutIds = await Prefs().getLootFiltered();
     } catch (e) {
-      BotToast.showText(text: "Error loading @loadPreferences: $e");
+      logToUser("Error loading @loadPreferences: $e");
     }
   }
 
@@ -1271,7 +1271,7 @@ class LootPageState extends State<LootPage> {
         }
       }
     } catch (e) {
-      BotToast.showText(text: "Error loading @retrievePendingNotifications: $e");
+      logToUser("Error loading @retrievePendingNotifications: $e");
     }
   }
 
@@ -1298,7 +1298,7 @@ class LootPageState extends State<LootPage> {
         _activeNotificationsIds.removeWhere((element) => element == remover);
       }
     } catch (e) {
-      BotToast.showText(text: "Error loading @cancelPassedNotifications: $e");
+      logToUser("Error loading @cancelPassedNotifications: $e");
     }
   }
 

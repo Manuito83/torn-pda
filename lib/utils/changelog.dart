@@ -39,6 +39,26 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.4.3 - Build 432 - 03/07/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.4.3'
+        ..date = '10 JUL 2024'
+        ..features = [
+          "Added new automatic alert for full life bar",
+          "Foreign stock alerts can now be enabled for the current country only",
+          "Added approximate restock time to depleted foreign stocks",
+          "Added manual notification for race start (Profile Misc)",
+          "Targets can now be sorted by time to hospital release",
+          "Added YATA stats estimates to stats dialog",
+          "Added bounty claims and referrals to alerts events filters",
+          "Added clarification dialog for Torn forum bug posts created from Torn PDA [Kwack]",
+          "Fixed downloads for blob files [Kwack]",
+          "Fixed retaliation notifications not opening browser when the app is in the background",
+          "Fixed delays in foreign stocks uploads to providers",
+        ],
+    );
+
     // v3.4.2 - Build 426 - 31/05/2024
     itemList.add(
       ChangeLogItem()

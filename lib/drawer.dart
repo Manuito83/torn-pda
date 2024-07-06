@@ -322,6 +322,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Remote Config defaults
     remoteConfig.setDefaults(const {
       "tsc_enabled": true,
+      "yata_stats_enabled": true,
       "prefs_backup_enabled": true,
       "tornexchange_enabled": true,
     });
@@ -330,17 +331,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _preferencesCompleter.future.whenComplete(() async {
       await remoteConfig.fetchAndActivate();
       _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
       _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
 
       remoteConfig.onConfigUpdated.listen((event) async {
         await remoteConfig.activate();
-        if (event.updatedKeys.contains("tsc_enabled")) {
-          log("Remote Config tsc_enabled: ${remoteConfig.getBool("tsc_enabled")}");
-          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
-          _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
-        }
+        _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+        _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+        _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+        _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
       });
     });
 
@@ -569,40 +569,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else {
         // Prevents double activation
         if (_deepLinkSubTriggeredTime != null && DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds < 3) {
-          if (_settingsProvider.debugMessages) {
-            BotToast.showText(
-              onlyOne: false,
-              text: "Deep link triggered return\n\n "
-                  "${DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds} seconds",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.red[700]!,
-              duration: const Duration(seconds: 3),
-              contentPadding: const EdgeInsets.all(10),
-            );
-            await Future.delayed(Duration(seconds: 1));
-          }
+          logToUser(
+              "Deep link triggered return\n\n "
+              "${DateTime.now().difference(_deepLinkSubTriggeredTime!).inSeconds} seconds",
+              duration: 3);
           return;
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         _preferencesCompleter.future.whenComplete(() async {
           await _changelogCompleter.future;
 
-          if (_settingsProvider.debugMessages) {
-            BotToast.showText(
-              onlyOne: false,
-              text: "Deep link browser opens\n\n$url",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.blue[700]!,
-              duration: const Duration(seconds: 3),
-              contentPadding: const EdgeInsets.all(10),
-            );
-          }
+          logToUser(
+            "Deep link browser opens\n\n$url",
+            duration: 3,
+            color: Colors.blue.shade600,
+            borderColor: Colors.blue.shade800,
+          );
 
           _webViewProvider.openBrowserPreference(
             context: context,
@@ -612,18 +594,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
       }
     } catch (e) {
-      if (_settingsProvider.debugMessages) {
-        BotToast.showText(
-          text: "Deep link catch\n\n$e",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.orange[700]!,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
-        );
-      }
+      logToUser("Deep link catch\n\n$e", duration: 4);
     }
   }
   // ## END Deep links
@@ -686,6 +657,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool events = false;
     bool trades = false;
     bool nerve = false;
+    bool life = false;
     bool energy = false;
     bool drugs = false;
     bool medical = false;
@@ -732,6 +704,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       trades = true;
     } else if (channel.contains("Alerts nerve")) {
       nerve = true;
+    } else if (channel.contains("Alerts life")) {
+      life = true;
     } else if (channel.contains("Alerts energy")) {
       energy = true;
     } else if (channel.contains("Alerts drugs")) {
@@ -784,6 +758,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (nerve) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/crimes.php";
+    } else if (life) {
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.lifeNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#medical-items';
+      } else if (_settingsProvider.lifeNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#armoury-medical';
+      } else if (_settingsProvider.lifeNotificationTapAction == "factionMain") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/';
+      }
     } else if (energy) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
@@ -807,29 +795,30 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // If we have the section manually deactivated
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
-      _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
-        if (!_settingsProvider.retaliationSectionEnabled ||
-            (int.parse(bulkDetails!) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (!_settingsProvider.retaliationSectionEnabled ||
+          (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
+        launchBrowser = true;
+        browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
+      } else {
+        // Even if we meet above requirements, call the API and assess whether the user
+        // as API permits (if he does not, open the browser anyway as he can't use the retals section)
+        final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+        if (attacksResult is! FactionAttacksModel) {
           launchBrowser = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
         } else {
-          // Even if we meet above requirements, call the API and assess whether the user
-          // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
-          if (attacksResult is! FactionAttacksModel) {
-            launchBrowser = true;
-            browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
-          } else {
-            // If we pass all checks above, redirect to the retals section
-            _retalsRedirection = true;
-            _callSectionFromOutside(2);
-            Future.delayed(const Duration(seconds: 2)).then((value) {
-              _retalsRedirection = false;
-            });
-          }
+          // If we pass all checks above, redirect to the retals section
+          _retalsRedirection = true;
+          _callSectionFromOutside(2);
+          Future.delayed(const Duration(seconds: 2)).then((value) {
+            _retalsRedirection = false;
+          });
         }
-      });
+      }
     } else if (stockMarket) {
       // Not implemented (there is a box showing in _getBackGroundNotifications)
     } else if (assists) {
@@ -989,6 +978,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('nerve')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/crimes.php';
+      } else if (payload.contains('life')) {
+        if (_settingsProvider.lifeNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#medical-items';
+        } else if (_settingsProvider.lifeNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#armoury-medical';
+        } else if (_settingsProvider.lifeNotificationTapAction == "factionMain") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/';
+        }
       } else if (payload.contains('drugs')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';
@@ -1001,7 +1001,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else if (payload.contains('hospital')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com';
-      } else if (payload.contains('racing')) {
+      } else if (payload.contains('racing') || payload.contains('race')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com/loader.php?sid=racing';
       } else if (payload.contains("scriptupdate")) {

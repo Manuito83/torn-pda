@@ -6,6 +6,7 @@
 import 'dart:convert';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:torn_pda/main.dart';
 
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 
@@ -27,7 +28,7 @@ class TargetModel {
   String? personalNoteColor;
   DateTime? lastUpdated;
   bool? hasFaction;
-  int? lifeSort;
+  int? hospitalSort;
 
   // Internal from API profiles
   String? rank;
@@ -68,7 +69,7 @@ class TargetModel {
     this.personalNoteColor,
     this.lastUpdated,
     this.hasFaction,
-    this.lifeSort,
+    this.hospitalSort = 0,
     /////////////////
 
     this.rank,
@@ -110,8 +111,7 @@ class TargetModel {
         personalNoteColor: json["personalNoteColor"] ?? '',
         lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
         hasFaction: json["hasFaction"] ?? false,
-        lifeSort: json["lifeSort"] ?? Life.fromJson(json["life"]).current,
-
+        hospitalSort: json["hospitalSort"] ?? 0,
         rank: json["rank"],
         level: json["level"],
         gender: json["gender"],
@@ -149,7 +149,7 @@ class TargetModel {
         "personalNoteColor": personalNoteColor,
         "lastUpdated": lastUpdated!.toIso8601String(),
         "hasFaction": hasFaction,
-        "lifeSort": lifeSort,
+        "hospitalSort": hospitalSort,
         "rank": rank,
         "level": level,
         "gender": gender,
@@ -406,6 +406,7 @@ class Competition {
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Competition model");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      logToUser("PDA Error at Competition model: $e, $trace");
       throw ArgumentError("PDA Crash at Competition model");
     }
   }

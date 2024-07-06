@@ -1,5 +1,6 @@
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:torn_pda/main.dart';
 
 class AnimatedIndexedStack extends StatefulWidget {
   final int index;
@@ -90,6 +91,8 @@ class AnimatedIndexedStackState extends State<AnimatedIndexedStack> with SingleT
           "Index number: $_index. Error: $e");
       FirebaseCrashlytics.instance.recordError(e.toString(), null);
       widget.errorCallback();
+      logToUser("PDA Crash at AnimatedIndexedStack. Children number: ${widget.children.length}. "
+          "Index number: $_index. Error: $e");
     }
     return const SizedBox.shrink();
   }

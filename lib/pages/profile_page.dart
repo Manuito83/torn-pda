@@ -82,6 +82,7 @@ enum ProfileNotification {
   medical,
   booster,
   rankedWar,
+  raceStart,
 }
 
 enum NotificationType {
@@ -164,6 +165,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late DateTime _hospitalReleaseTime;
   late DateTime _jailReleaseTime;
   late DateTime _rankedWarTime;
+  late DateTime _raceStartTime;
 
   late int _hospitalNotificationAhead;
   late int _hospitalTimerAhead;
@@ -174,6 +176,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late int _rankedWarNotificationAhead;
   late int _rankedWarTimerAhead;
   late int _rankedWarAlarmAhead;
+  late int _raceStartNotificationAhead;
+  late int _raceStartTimerAhead;
+  late int _raceStartAlarmAhead;
 
   bool _travelNotificationsPending = false;
   bool _energyNotificationsPending = false;
@@ -185,6 +190,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _hospitalNotificationsPending = false;
   bool _jailNotificationsPending = false;
   bool _rankedWarNotificationsPending = false;
+  bool _raceStartNotificationsPending = false;
 
   late NotificationType _travelNotificationType;
   late NotificationType _energyNotificationType;
@@ -196,6 +202,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late NotificationType _hospitalNotificationType;
   late NotificationType _jailNotificationType;
   late NotificationType _rankedWarNotificationType;
+  late NotificationType _raceStartNotificationType;
 
   int? _customEnergyTrigger;
   int? _customNerveTrigger;
@@ -213,6 +220,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   IconData? _hospitalNotificationIcon;
   IconData? _jailNotificationIcon;
   IconData? _rankedWarNotificationIcon;
+  IconData? _raceStartNotificationIcon;
 
   late bool _alarmSound;
   late bool _alarmVibration;
@@ -314,7 +322,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _resetApiTimer(initCall: true);
     });
 
-    analytics.setCurrentScreen(screenName: 'profile');
+    analytics.logScreenView(screenName: 'profile');
 
     routeWithDrawer = true;
     routeName = "profile`";
@@ -2469,6 +2477,41 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         timerSetString = 'Ranked war timer set for $formattedTimeTimer';
         notificationType = _rankedWarNotificationType;
         notificationIcon = _rankedWarNotificationIcon;
+
+      case ProfileNotification.raceStart:
+        if (_user?.icons?.icon17 != null) {
+          _raceStartTime = _parseRaceTime(_user!.icons!.icon17!.toString())!;
+          secondsToGo = _raceStartTime.difference(DateTime.now()).inSeconds;
+        }
+        notificationsPending = _raceStartNotificationsPending;
+
+        final notificationTime = _raceStartTime.add(Duration(seconds: -_raceStartNotificationAhead));
+        final formattedTime = TimeFormatter(
+          inputTime: notificationTime,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
+        ).formatHourWithDaysElapsed();
+
+        final alarmTime = _raceStartTime.add(Duration(seconds: -_raceStartNotificationAhead));
+        final formattedTimeAlarm = TimeFormatter(
+          inputTime: alarmTime,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
+        ).formatHourWithDaysElapsed();
+
+        final timerTime = _raceStartTime.add(Duration(seconds: -_raceStartNotificationAhead));
+        final formattedTimeTimer = TimeFormatter(
+          inputTime: timerTime,
+          timeFormatSetting: _settingsProvider!.currentTimeFormat,
+          timeZoneSetting: _settingsProvider!.currentTimeZone,
+        ).formatHourWithDaysElapsed();
+
+        notificationSetString = 'Race start notification set for $formattedTime';
+        notificationCancelString = 'Race start notification cancelled!';
+        alarmSetString = 'Race start alarm set for $formattedTimeAlarm';
+        timerSetString = 'Race start timer set for $formattedTimeTimer';
+        notificationType = _raceStartNotificationType;
+        notificationIcon = _raceStartNotificationIcon;
     }
 
     if (secondsToGo == 0 && !percentageError) {
@@ -4303,7 +4346,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       racingActive = true;
       String? racingString;
       Color? gaugeColor;
+      DateTime? raceStartTime;
+
       if (_user!.icons.icon17 != null) {
+        raceStartTime = _parseRaceTime(_user!.icons.icon17);
         racingString = _user!.icons.icon17.replaceAll("Racing - ", "");
         racingString = racingString!.replaceAll("0 days, 0 hours,", "");
         racingString = racingString.replaceAll("0 days,", "");
@@ -4314,28 +4360,57 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       racingWidget = Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Icon(MdiIcons.gauge, color: gaugeColor),
-          const SizedBox(width: 10),
           Flexible(
-            child: Text(
-              racingString!,
-              style: DefaultTextStyle.of(context).style,
+            child: Row(
+              children: [
+                Icon(MdiIcons.gauge, color: gaugeColor),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: Text(
+                    racingString!,
+                    style: DefaultTextStyle.of(context).style,
+                  ),
+                ),
+                const SizedBox(width: 10),
+              ],
             ),
           ),
-          InkWell(
-            borderRadius: BorderRadius.circular(100),
-            onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
-            },
-            onTap: () {
-              _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
-            },
-            child: const Padding(
-              padding: EdgeInsets.only(left: 5),
-              child: Icon(MdiIcons.openInApp, size: 18),
-            ),
+          Row(
+            children: [
+              InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onLongPress: () {
+                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                },
+                onTap: () {
+                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                },
+                child: const Padding(
+                  padding: EdgeInsets.only(left: 5),
+                  child: Icon(MdiIcons.openInApp, size: 24),
+                ),
+              ),
+            ],
           ),
+          if (raceStartTime != null)
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onLongPress: () {
+                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                },
+                onTap: () {
+                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(left: 5),
+                  child: _notificationIcon(ProfileNotification.raceStart),
+                ),
+              ),
+            ),
         ],
       );
     }
@@ -5157,7 +5232,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } catch (e, trace) {
-      log("Error at Profile Events: $e >> $trace");
+      logToUser("PDA Error at Profile Events: $e, $trace");
       FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
@@ -5603,6 +5678,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle = _settingsProvider!.discreteNotifications ? "Full" : 'Here is your life reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.life!.fulltime!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        notificationIconAndroid = "notification_life";
+        notificationIconColor = Colors.red;
       case ProfileNotification.drugs:
         notificationId = 104;
         secondsToNotification = _user!.cooldowns!.drug;
@@ -5614,6 +5691,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your drugs cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.drug!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        notificationIconAndroid = "notification_drugs";
+        notificationIconColor = Colors.green;
       case ProfileNotification.medical:
         notificationId = 105;
         secondsToNotification = _user!.cooldowns!.medical;
@@ -5625,6 +5704,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your medical cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.medical!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        notificationIconAndroid = "notification_medical";
+        notificationIconColor = Colors.yellow;
       case ProfileNotification.booster:
         notificationId = 106;
         secondsToNotification = _user!.cooldowns!.booster;
@@ -5636,6 +5717,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your booster cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.booster!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
+        notificationIconAndroid = "notification_booster";
+        notificationIconColor = Colors.orange;
       case ProfileNotification.hospital:
         notificationId = 107;
         secondsToNotification = _hospitalReleaseTime.difference(DateTime.now()).inSeconds - _hospitalNotificationAhead;
@@ -5646,6 +5729,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle =
             _settingsProvider!.discreteNotifications ? "App" : 'You are about to be released from hospital!';
         notificationPayload += 'hospital';
+        notificationIconAndroid = "notification_hospital";
+        notificationIconColor = Colors.yellow;
       case ProfileNotification.jail:
         notificationId = 108;
         secondsToNotification = _jailReleaseTime.difference(DateTime.now()).inSeconds - _jailNotificationAhead;
@@ -5656,6 +5741,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSubtitle =
             _settingsProvider!.discreteNotifications ? "App" : 'You are about to be released from jail!';
         notificationPayload += 'jail';
+        notificationIconAndroid = "notification_events";
+        notificationIconColor = Colors.purple;
       case ProfileNotification.rankedWar:
         notificationId = 109;
         secondsToNotification = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarNotificationAhead;
@@ -5665,6 +5752,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationTitle = _settingsProvider!.discreteNotifications ? "W" : 'Ranked War';
         notificationSubtitle = _settingsProvider!.discreteNotifications ? "App" : 'Ranked war is about to start!';
         notificationPayload += 'war';
+        notificationIconAndroid = "notification_assists";
+        notificationIconColor = Colors.red;
+      case ProfileNotification.raceStart:
+        notificationId = 110;
+        secondsToNotification = _raceStartTime.difference(DateTime.now()).inSeconds - _raceStartNotificationAhead;
+        channelTitle = 'Manual race start';
+        channelSubtitle = 'Manual race start';
+        channelDescription = 'Manual notifications for race start';
+        notificationTitle = _settingsProvider!.discreteNotifications ? "R" : 'Race Start';
+        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Start" : 'Lights out and here we go!';
+        notificationPayload += 'raceStart';
+        notificationIconAndroid = "notification_racing";
+        notificationIconColor = Colors.blue;
     }
 
     final modifier = await getNotificationChannelsModifiers();
@@ -5739,6 +5839,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool hospital = false;
     bool jail = false;
     bool war = false;
+    bool raceStart = false;
 
     final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -5764,6 +5865,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           jail = true;
         } else if (notification.payload!.contains('war')) {
           war = true;
+        } else if (notification.payload!.contains('raceStart')) {
+          raceStart = true;
         }
       }
     }
@@ -5780,6 +5883,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _hospitalNotificationsPending = hospital;
         _jailNotificationsPending = jail;
         _rankedWarNotificationsPending = war;
+        _raceStartNotificationsPending = raceStart;
       });
     }
   }
@@ -5806,6 +5910,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         await flutterLocalNotificationsPlugin.cancel(108);
       case ProfileNotification.rankedWar:
         await flutterLocalNotificationsPlugin.cancel(109);
+      case ProfileNotification.raceStart:
+        await flutterLocalNotificationsPlugin.cancel(110);
     }
 
     _retrievePendingNotifications();
@@ -6287,6 +6393,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _rankedWarAlarmAhead = await Prefs().getRankedWarAlarmAhead();
     _rankedWarTimerAhead = await Prefs().getRankedWarTimerAhead();
 
+    final raceStart = await Prefs().getRaceStartNotificationType();
+    _raceStartNotificationAhead = await Prefs().getRaceStartNotificationAhead();
+    _raceStartAlarmAhead = await Prefs().getRaceStartAlarmAhead();
+    _raceStartTimerAhead = await Prefs().getRaceStartTimerAhead();
+
     _alarmSound = await Prefs().getManualAlarmSound();
     _alarmVibration = await Prefs().getManualAlarmVibration();
 
@@ -6415,6 +6526,17 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _rankedWarNotificationIcon = Icons.timer_outlined;
       }
 
+      if (raceStart == '0') {
+        _raceStartNotificationType = NotificationType.notification;
+        _raceStartNotificationIcon = Icons.chat_bubble_outline;
+      } else if (raceStart == '1') {
+        _raceStartNotificationType = NotificationType.alarm;
+        _raceStartNotificationIcon = Icons.notifications_none;
+      } else if (raceStart == '2') {
+        _raceStartNotificationType = NotificationType.timer;
+        _raceStartNotificationIcon = Icons.timer_outlined;
+      }
+
       _eventsExpController.expanded = expandEvents;
       _eventsShowNumber = eventsNumber;
       _messagesExpController.expanded = expandMessages;
@@ -6495,6 +6617,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hour = alarmTime.hour;
         minute = alarmTime.minute;
         message = 'Torn PDA War';
+        Duration difference = currentTime.difference(alarmTime);
+        moreThan24Hours = difference.inMinutes.abs() > 1439;
+      case ProfileNotification.raceStart:
+        final alarmTime = _raceStartTime.add(Duration(minutes: -_raceStartAlarmAhead));
+        hour = alarmTime.hour;
+        minute = alarmTime.minute;
+        message = 'Torn PDA Race Start';
         Duration difference = currentTime.difference(alarmTime);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
     }
@@ -6604,6 +6733,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       case ProfileNotification.rankedWar:
         totalSeconds = _rankedWarTime.difference(DateTime.now()).inSeconds - _rankedWarTimerAhead;
         message = 'Torn PDA War';
+      case ProfileNotification.raceStart:
+        totalSeconds = _raceStartTime.difference(DateTime.now()).inSeconds - _raceStartTimerAhead;
+        message = 'Torn PDA Race Start';
     }
 
     final AndroidIntent intent = AndroidIntent(
@@ -7298,5 +7430,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     });
     // Afterwards, ensure that it does not show again if it's the same one
     _settingsProvider!.changeOCrimeDisregarded = _ocTime.millisecondsSinceEpoch;
+  }
+
+  DateTime? _parseRaceTime(String input) {
+    final raceStartRegex =
+        RegExp(r"Waiting for a race to start - (\d+ days?,)? (\d+ hours?,)? (\d+) minutes and (\d+) seconds");
+    final match = raceStartRegex.firstMatch(input);
+    if (match != null) {
+      int days = int.tryParse(match.group(1)?.replaceAll(RegExp(r'[^0-9]'), '') ?? '0') ?? 0;
+      int hours = int.tryParse(match.group(2)?.replaceAll(RegExp(r'[^0-9]'), '') ?? '0') ?? 0;
+      int minutes = int.tryParse(match.group(3) ?? '0') ?? 0;
+      int seconds = int.tryParse(match.group(4) ?? '0') ?? 0;
+      return DateTime.now().add(Duration(days: days, hours: hours, minutes: minutes, seconds: seconds));
+    }
+    return null;
   }
 }

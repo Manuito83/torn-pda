@@ -116,6 +116,12 @@ class FirestoreHelper {
     });
   }
 
+  Future<void> changeForeignRestockNotificationOnlyCurrentCountry(bool? enabled) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "foreignRestockNotificationOnlyCurrentCountry": enabled,
+    });
+  }
+
   Future<DocumentSnapshot> getStockInformation(String codeName) async {
     return _firestore.collection("stocks-main").doc(codeName).get();
   }
@@ -137,6 +143,16 @@ class FirestoreHelper {
       // to TRUE for users that were already in the DB. New users (or upon API reload) will have
       // the field created normally
       "nerveLastCheckFull": true,
+    });
+  }
+
+  Future<void> subscribeToLifeNotification(bool? subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "lifeNotification": subscribe,
+      // Life was implemented in v3.4.3, so we need to manually create this field and set it
+      // to TRUE for users that were already in the DB. New users (or upon API reload) will have
+      // the field created normally
+      "lifeLastCheckFull": true,
     });
   }
 

@@ -145,7 +145,7 @@ class WarController extends GetxController {
             member.respectGain = t.respectGain;
             member.fairFight = t.fairFight;
           }
-          member.lifeSort = _getLifeSort(member);
+          member.hospitalSort = membersSortHospitalTime(member);
           break;
         }
       }
@@ -230,7 +230,7 @@ class WarController extends GetxController {
         if (allAttacksSuccess is AttackModel) {
           _getRespectFF(allAttacksSuccess, member, oldRespect: member.respectGain, oldFF: member.fairFight);
         }
-        member.lifeSort = _getLifeSort(member);
+        member.hospitalSort = membersSortHospitalTime(member);
 
         _assignSpiedStats(member);
 
@@ -458,6 +458,8 @@ class WarController extends GetxController {
           f.members![apiMemberId]!.name = apiMember.name;
 
           _assignSpiedStats(f.members![apiMemberId]!);
+
+          f.members![apiMemberId]!.hospitalSort = membersSortHospitalTime(f.members![apiMemberId]!);
 
           if (allAttacksSuccess is AttackModel) {
             _getRespectFF(
@@ -811,6 +813,10 @@ class WarController extends GetxController {
         currentSort = WarSortType.lifeDes;
       case 'lifeAsc':
         currentSort = WarSortType.lifeAsc;
+      case 'hospitalDes':
+        currentSort = WarSortType.hospitalDes;
+      case 'hospitalAsc':
+        currentSort = WarSortType.hospitalAsc;
       case 'statsDes':
         currentSort = WarSortType.statsDes;
       case 'statsAsc':
@@ -857,7 +863,7 @@ class WarController extends GetxController {
 
     // Save sorting
     late String sortToSave;
-    switch (currentSort!) {
+    switch (currentSort ??= WarSortType.nameAsc) {
       case WarSortType.levelDes:
         sortToSave = 'levelDes';
       case WarSortType.levelAsc:
@@ -874,6 +880,10 @@ class WarController extends GetxController {
         sortToSave = 'lifeDes';
       case WarSortType.lifeAsc:
         sortToSave = 'lifeAsc';
+      case WarSortType.hospitalDes:
+        sortToSave = 'hospitalDes';
+      case WarSortType.hospitalAsc:
+        sortToSave = 'hospitalAsc';
       case WarSortType.statsDes:
         sortToSave = 'statsDes';
       case WarSortType.statsAsc:
@@ -965,12 +975,11 @@ class WarController extends GetxController {
     update();
   }
 
-  int? _getLifeSort(Member member) {
-    if (member.status!.state != "Hospital") {
-      return member.lifeCurrent;
-    } else {
-      return -(member.status!.until! - DateTime.now().millisecondsSinceEpoch / 1000).round();
+  int membersSortHospitalTime(Member m) {
+    if (m.status!.state == "Hospital") {
+      return m.status!.until!;
     }
+    return 0;
   }
 
   void _assignSpiedStats(Member member) {

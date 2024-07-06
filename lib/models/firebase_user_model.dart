@@ -7,10 +7,13 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool discrete = false;
   bool? travelNotification = false;
   bool? foreignRestockNotification = false;
+  bool? foreignRestockNotificationOnlyCurrentCountry = false;
   bool? energyNotification = false;
   bool energyLastCheckFull = true;
   bool? nerveNotification = false;
   bool nerveLastCheckFull = true;
+  bool? lifeNotification = false;
+  bool lifeLastCheckFull = true;
   List lootAlerts = [];
   bool? lootRangersAlerts = false;
   bool? hospitalNotification = false;
@@ -55,10 +58,13 @@ class FirebaseUserModel extends OwnProfileExtended {
       "discrete": discrete,
       "travelNotification": travelNotification,
       "foreignRestockNotification": foreignRestockNotification,
+      "foreignRestockNotificationOnlyCurrentCountry": foreignRestockNotificationOnlyCurrentCountry,
       "energyNotification": energyNotification,
       "energyLastCheckFull": energyLastCheckFull,
       "nerveNotification": nerveNotification,
       "nerveLastCheckFull": nerveLastCheckFull,
+      "lifeNotification": lifeNotification,
+      "lifeLastCheckFull": lifeLastCheckFull,
       "lootAlerts": lootAlerts,
       "lootRangersNotification": lootRangersAlerts,
       "hospitalNotification": hospitalNotification,
@@ -89,10 +95,13 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..discrete = data["discrete"] ?? false
       ..travelNotification = data["travelNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
+      ..foreignRestockNotificationOnlyCurrentCountry = data["foreignRestockNotificationOnlyCurrentCountry"] ?? false
       ..energyNotification = data["energyNotification"] ?? false
       ..energyLastCheckFull = data["energyLastCheckFull"] ?? false
       ..nerveNotification = data["nerveNotification"] ?? false
       ..nerveLastCheckFull = data["nerveLastCheckFull"] ?? false
+      ..lifeNotification = data["lifeNotification"] ?? false
+      ..lifeLastCheckFull = data["lifeLastCheckFull"] ?? false
       ..lootAlerts = data["lootAlerts"] ?? []
       ..lootRangersAlerts = data["lootRangersNotification"] ?? false
       ..hospitalNotification = data["hospitalNotification"] ?? false

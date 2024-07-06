@@ -154,6 +154,10 @@ class Prefs {
   final String _kRankedWarNotificationAhead = "pda_rankedWarNotificationAhead";
   final String _kRankedWarAlarmAhead = "pda_rankedWarAlarmAhead";
   final String _kRankedWarTimerAhead = "pda_rankedWarTimesAhead";
+  final String _kRaceStartNotificationType = "pda_raceStartNotificationType";
+  final String _kRaceStartNotificationAhead = "pda_raceStartNotificationAhead";
+  final String _kRaceStartAlarmAhead = "pda_raceStartAlarmAhead";
+  final String _kRaceStartTimerAhead = "pda_raceStartTimesAhead";
 
   // Profile options
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
@@ -176,6 +180,7 @@ class Prefs {
   final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
+  final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
@@ -271,6 +276,9 @@ class Prefs {
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
+
+  // Notification actions
+  final String _kLifeNotificationTapAction = "pda_lifeNotificationTapAction";
 
   // Items
   final String _kItemsSort = "pda_itemssSort";
@@ -1377,6 +1385,17 @@ class Prefs {
   }
 
   // *************
+  Future<int> getYataStatsEnabledStatus() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kYataStatsEnabledStatus) ?? 1;
+  }
+
+  Future<bool> setYataStatsEnabledStatus(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kYataStatsEnabledStatus, value);
+  }
+
+  // *************
   Future<String> getFriendlyFactions() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString(_kFriendlyFactions) ?? "";
@@ -1784,6 +1803,49 @@ class Prefs {
   Future<bool> setRankedWarTimerAhead(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kRankedWarTimerAhead, value);
+  }
+
+  //
+
+  // Ranked War notification
+  Future<String> getRaceStartNotificationType() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kRaceStartNotificationType) ?? '0';
+  }
+
+  Future<bool> setRaceStartNotificationType(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kRaceStartNotificationType, value);
+  }
+
+  Future<int> getRaceStartNotificationAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRaceStartNotificationAhead) ?? 60;
+  }
+
+  Future<bool> setRaceStartNotificationAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRaceStartNotificationAhead, value);
+  }
+
+  Future<int> getRaceStartAlarmAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRaceStartAlarmAhead) ?? 1;
+  }
+
+  Future<bool> setRaceStartAlarmAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRaceStartAlarmAhead, value);
+  }
+
+  Future<int> getRaceStartTimerAhead() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRaceStartTimerAhead) ?? 60;
+  }
+
+  Future<bool> setRaceStartTimerAhead(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRaceStartTimerAhead, value);
   }
 
   //
@@ -3095,6 +3157,20 @@ class Prefs {
   Future<bool> setFullScreenIncludesPDAButtonTap(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kFullScreenIncludesPDAButtonTap, value);
+  }
+
+  /// --------------------------------
+  /// Methods for notification actions
+  /// --------------------------------
+
+  Future<String> getLifeNotificationTapAction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kLifeNotificationTapAction) ?? 'itemsOwn';
+  }
+
+  Future<bool> setLifeNotificationTapAction(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kLifeNotificationTapAction, value);
   }
 
   /// ----------------------------
