@@ -1106,8 +1106,15 @@ class WebViewProvider extends ChangeNotifier {
 
   void _callAssessMethods() {
     final tab = _tabList[_currentTab];
+
+    // Gym and Hunting for Energy
     if (tab.currentUrl!.contains("gym.php") || tab.currentUrl!.contains("index.php?page=hunting")) {
-      tab.webViewKey?.currentState?.assessEnergyWarning(tab.currentUrl.toString());
+      tab.webViewKey?.currentState?.assessGymAndHuntingEnergyWarning(tab.currentUrl.toString());
+    }
+
+    // Travel Agency for Energy, Nerve and Life
+    if (tab.currentUrl!.contains("travelagency.php")) {
+      tab.webViewKey?.currentState?.assessTravelAgencyEnergyNerveLifeWarning(tab.currentUrl.toString());
     }
   }
 

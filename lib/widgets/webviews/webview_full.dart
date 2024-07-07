@@ -26,6 +26,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
@@ -205,6 +206,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Widget _vaultExpandable = const SizedBox.shrink();
   DateTime _vaultTriggeredTime = DateTime.now().subtract(const Duration(minutes: 1));
   DateTime? _vaultOnResourceTriggerTime; // Null check afterwards (avoid false positives)
+
+  DateTime? _assessGymAndHuntingEnergyWarningTriggerTime;
+  DateTime? _assessTravelAgencyEnergyNerveLifeWarningTriggerTime;
 
   var _cityEnabled = false;
   var _cityIconActive = false;
@@ -1391,6 +1395,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
               final document = parse(html);
               _assessGeneral(document);
+
+              assessGymAndHuntingEnergyWarning(uri.toString());
+              assessTravelAgencyEnergyNerveLifeWarning(uri.toString());
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -4011,9 +4018,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  // ASSESS GYM
-  Future assessEnergyWarning(String targetUrl) async {
+  // ASSESS GYM AND HUNTING WARNINGS FOR ENERGY
+  Future assessGymAndHuntingEnergyWarning(String targetUrl) async {
     if (!mounted) return;
+
+    if (_assessGymAndHuntingEnergyWarningTriggerTime != null &&
+        DateTime.now().difference(_assessGymAndHuntingEnergyWarningTriggerTime!).inSeconds < 2) return;
+    _assessGymAndHuntingEnergyWarningTriggerTime = DateTime.now();
+
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
     final easyUrl = targetUrl.replaceAll('#', '');
@@ -4045,6 +4057,258 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             );
           }
         }
+      }
+    }
+  }
+
+  // ASSESS GYM AND HUNTING WARNINGS FOR ENERGY
+  Future assessTravelAgencyEnergyNerveLifeWarning(String targetUrl) async {
+    if (!mounted) return;
+
+    if (_assessTravelAgencyEnergyNerveLifeWarningTriggerTime != null &&
+        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 2) return;
+    _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
+
+    final easyUrl = targetUrl.replaceAll('#', '');
+    if (easyUrl.contains('www.torn.com/travelagency.php')) {
+      final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
+      if (stats is! BarsAndStatusModel) return;
+
+      final List<Widget> warnRows = [];
+
+      final energyCheck = _settingsProvider.travelEnergyExcessWarning;
+      if (energyCheck) {
+        final energyUserSelectedThreshold = _settingsProvider.travelEnergyExcessWarningThreshold ~/ 10 * 10;
+        final energyCurrent = stats.energy!.current!;
+        final energyMax = stats.energy!.maximum!;
+        final energyWarningOnlyWhenAboveMax = energyUserSelectedThreshold > 100;
+        final energyThresholdPercentage = (energyUserSelectedThreshold / 100) * energyMax;
+
+        if ((energyWarningOnlyWhenAboveMax && energyCurrent > energyMax) ||
+            (!energyWarningOnlyWhenAboveMax && energyCurrent >= energyThresholdPercentage)) {
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/map/gym.png', width: 24),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'Energy is too high '
+                            '(${energyUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$energyUserSelectedThreshold%" : "> max"})!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    child: Icon(MdiIcons.magnify, color: _themeProvider.mainText),
+                    onTap: () {
+                      _loadUrl("https://www.torn.com/gym.php");
+                      toastification.dismissAll();
+                    },
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final nerveCheck = _settingsProvider.travelNerveExcessWarning;
+      if (nerveCheck) {
+        final nerveUserSelectedThreshold = _settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10;
+        final nerveCurrent = stats.nerve!.current!;
+        final nerveMax = stats.nerve!.maximum!;
+        final nerveWarningOnlyWhenAboveMax = nerveUserSelectedThreshold > 100;
+        final nerveThresholdPercentage = (nerveUserSelectedThreshold / 100) * nerveMax;
+
+        if ((nerveWarningOnlyWhenAboveMax && nerveCurrent > nerveMax) ||
+            (!nerveWarningOnlyWhenAboveMax && nerveCurrent >= nerveThresholdPercentage)) {
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/home/crimes.png', width: 24, color: Colors.red),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'Nerve is too high '
+                            '(${nerveUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$nerveUserSelectedThreshold%" : "> max"})!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    child: Icon(MdiIcons.magnify, color: _themeProvider.mainText),
+                    onTap: () {
+                      _loadUrl("https://www.torn.com/loader.php?sid=crimes");
+                      toastification.dismissAll();
+                    },
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final lifeCheck = _settingsProvider.travelLifeExcessWarning;
+      if (lifeCheck) {
+        final lifeUserSelectedThreshold = _settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10;
+        final lifeCurrent = stats.life!.current!;
+        final lifeMax = stats.life!.maximum!;
+        final lifeWarningOnlyWhenAboveMax = lifeUserSelectedThreshold > 100;
+        final lifeThresholdPercentage = (lifeUserSelectedThreshold / 100) * lifeMax;
+
+        if ((lifeWarningOnlyWhenAboveMax && lifeCurrent > lifeMax) ||
+            (!lifeWarningOnlyWhenAboveMax && lifeCurrent >= lifeThresholdPercentage)) {
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/heart.png', width: 24, color: Colors.blue),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'Life is too high '
+                            '(${lifeUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$lifeUserSelectedThreshold%" : "> max"})!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    child: Icon(MdiIcons.magnify, color: _themeProvider.mainText),
+                    onTap: () {
+                      if (_settingsProvider.travelLifeExcessWarningRedirect == "ownItems") {
+                        _loadUrl("https://www.torn.com/item.php#medical-items");
+                      }
+                      if (_settingsProvider.travelLifeExcessWarningRedirect == "factionItems") {
+                        _loadUrl("https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical");
+                      }
+                      toastification.dismissAll();
+                    },
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      if (warnRows.isNotEmpty) {
+        toastification.showCustom(
+          autoCloseDuration: const Duration(seconds: 8),
+          alignment: Alignment.center,
+          builder: (BuildContext context, ToastificationItem holder) {
+            return GestureDetector(
+              onTap: () {
+                toastification.dismiss(holder);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: _themeProvider.cardColor,
+                  border: Border.all(
+                    color: Colors.orange.shade800,
+                    width: 2,
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: const Text(
+                            'This could be a waste!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    ...warnRows,
+                    SizedBox(height: 20),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  toastification.dismiss(holder);
+                                },
+                                child: Text(
+                                  "CLOSE",
+                                  style: TextStyle(color: _themeProvider.mainText!, fontSize: 10),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    side: BorderSide(color: _themeProvider.mainText!, width: 1.0),
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  toastification.dismiss(holder);
+                                  _settingsProvider.travelEnergyExcessWarning = false;
+                                  _settingsProvider.travelNerveExcessWarning = false;
+                                  _settingsProvider.travelLifeExcessWarning = false;
+                                },
+                                child: Text(
+                                  "DISABLE",
+                                  style: TextStyle(color: _themeProvider.mainText!, fontSize: 10),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    side: BorderSide(color: _themeProvider.mainText!, width: 1.0),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
       }
     }
   }

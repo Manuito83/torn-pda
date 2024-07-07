@@ -168,6 +168,16 @@ class Prefs {
   final String _kWarnAboutChains = "pda_warnAboutChains";
   final String _kWarnAboutExcessEnergy = "pda_warnAboutExcessEnergy";
   final String _kWarnAboutExcessEnergyThreshold = "pda_warnAboutExcessEnergyThreshold";
+
+  // Travel Agency warnings
+  final String _kTravelEnergyExcessWarning = "pda_travelEnergyExcessWarning";
+  final String _kTravelEnergyExcessWarningThreshold = "pda_travelEnergyExcessWarningThreshold";
+  final String _kTravelNerveExcessWarning = "pda_travelNerveExcessWarning";
+  final String _kTravelNerveExcessWarningThreshold = "pda_travelNerveExcessWarningThreshold";
+  final String _kTravelLifeExcessWarning = "pda_travelLifeExcessWarning";
+  final String _kTravelLifeExcessWarningThreshold = "pda_travelLifeExcessWarningThreshold";
+  final String _kTravelLifeExcessWarningRedirect = "pda_travelLifeExcessWarningRedirect";
+
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
   final String _kMessagesShowNumber = "pda_messagesShowNumber";
@@ -1949,6 +1959,80 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kWarnAboutExcessEnergyThreshold, value);
   }
+
+  // -- Travel Agency Warnings
+
+  Future<bool> getTravelEnergyExcessWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTravelEnergyExcessWarning) ?? true;
+  }
+
+  Future<bool> setTravelEnergyExcessWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTravelEnergyExcessWarning, value);
+  }
+
+  Future<int> getTravelEnergyExcessWarningThreshold() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTravelEnergyExcessWarningThreshold) ?? 50;
+  }
+
+  Future<bool> setTravelEnergyExcessWarningThreshold(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTravelEnergyExcessWarningThreshold, value);
+  }
+
+  Future<bool> getTravelNerveExcessWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTravelNerveExcessWarning) ?? true;
+  }
+
+  Future<bool> setTravelNerveExcessWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTravelNerveExcessWarning, value);
+  }
+
+  Future<int> getTravelNerveExcessWarningThreshold() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTravelNerveExcessWarningThreshold) ?? 50;
+  }
+
+  Future<bool> setTravelNerveExcessWarningThreshold(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTravelNerveExcessWarningThreshold, value);
+  }
+
+  Future<bool> getTravelLifeExcessWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTravelLifeExcessWarning) ?? true;
+  }
+
+  Future<bool> setTravelLifeExcessWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTravelLifeExcessWarning, value);
+  }
+
+  Future<int> getTravelLifeExcessWarningThreshold() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTravelLifeExcessWarningThreshold) ?? 50;
+  }
+
+  Future<bool> setTravelLifeExcessWarningThreshold(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTravelLifeExcessWarningThreshold, value);
+  }
+
+  Future<String> getTravelLifeExcessWarningRedirect() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTravelLifeExcessWarningRedirect) ?? 'ownItems';
+  }
+
+  Future<bool> setTravelLifeExcessWarningRedirect(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTravelLifeExcessWarningRedirect, value);
+  }
+
+  // -- Terminal
 
   Future<bool> getTerminalEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
