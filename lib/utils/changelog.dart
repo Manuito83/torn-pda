@@ -46,7 +46,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '01 AUG 2024'
         ..features = [
           "Added Travel Agency expenditure warning for energy, nerve and life (can be disabled)",
-          "Fixed webview word search when in full screen mode",
+          "Fixed browser text search in full screen mode",
         ],
     );
 
