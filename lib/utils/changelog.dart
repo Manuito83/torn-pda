@@ -45,7 +45,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.4.4'
         ..date = '01 AUG 2024'
         ..features = [
-          "Added Travel Agency expenditure warning for energy, nerve and life (can be disabled)",
+          "Added Travel Agency expenditure warning for bars and cooldowns (can be disabled)",
           "Fixed browser text search in full screen mode",
         ],
     );
