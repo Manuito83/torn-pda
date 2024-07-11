@@ -653,11 +653,19 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _travelLifeExcessWarningRedirect = "ownItems";
-  String get travelLifeExcessWarningRedirect => _travelLifeExcessWarningRedirect;
-  set travelLifeExcessWarningRedirect(String choice) {
-    _travelLifeExcessWarningRedirect = choice;
-    Prefs().setTravelLifeExcessWarningRedirect(_travelLifeExcessWarningRedirect);
+  var _travelDrugCooldownWarning = true;
+  bool get travelDrugCooldownWarning => _travelDrugCooldownWarning;
+  set travelDrugCooldownWarning(bool choice) {
+    _travelDrugCooldownWarning = choice;
+    Prefs().setTravelDrugCooldownWarning(_travelDrugCooldownWarning);
+    notifyListeners();
+  }
+
+  var _travelBoosterCooldownWarning = true;
+  bool get travelBoosterCooldownWarning => _travelBoosterCooldownWarning;
+  set travelBoosterCooldownWarning(bool choice) {
+    _travelBoosterCooldownWarning = choice;
+    Prefs().setTravelBoosterCooldownWarning(_travelBoosterCooldownWarning);
     notifyListeners();
   }
 
@@ -1050,7 +1058,8 @@ class SettingsProvider extends ChangeNotifier {
     _travelNerveExcessWarningThreshold = await Prefs().getTravelNerveExcessWarningThreshold();
     _travelLifeExcessWarning = await Prefs().getTravelLifeExcessWarning();
     _travelLifeExcessWarningThreshold = await Prefs().getTravelLifeExcessWarningThreshold();
-    _travelLifeExcessWarningRedirect = await Prefs().getTravelLifeExcessWarningRedirect();
+    _travelDrugCooldownWarning = await Prefs().getTravelDrugCooldownWarning();
+    _travelBoosterCooldownWarning = await Prefs().getTravelBoosterCooldownWarning();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
 

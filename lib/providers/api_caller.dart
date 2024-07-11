@@ -594,7 +594,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return BarsAndStatusModel.fromJson(apiResult as Map<String, dynamic>);
+        return BarsStatusCooldownsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -882,7 +882,7 @@ class ApiCallerController extends GetxController {
       case ApiSelection.chainStatus:
         url += 'faction/?selections=chain';
       case ApiSelection.barsAndPlayerStatus:
-        url += 'user/?selections=bars,profile,travel';
+        url += 'user/?selections=bars,profile,travel,cooldowns';
       case ApiSelection.items:
         url += 'torn/?selections=items';
       case ApiSelection.inventory:

@@ -413,7 +413,7 @@ class ChainStatusProvider extends ChangeNotifier {
     _barsAndStatusModel = myBars;
 
     // Update status color
-    if (myBars is BarsAndStatusModel) {
+    if (myBars is BarsStatusCooldownsModel) {
       updatePlayerStatusColor(
         myBars.status!.color!,
         myBars.status!.state!,

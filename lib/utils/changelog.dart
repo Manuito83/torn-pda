@@ -39,13 +39,14 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.4.4 - Build 433 - 07/07/2024
+    // v3.4.4 - Build 434 - 11/07/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.4.4'
         ..date = '01 AUG 2024'
         ..features = [
           "Added Travel Agency expenditure warning for energy, nerve and life (can be disabled)",
+          "Fixed webview word search when in full screen mode",
         ],
     );
 

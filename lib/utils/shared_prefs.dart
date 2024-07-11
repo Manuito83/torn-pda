@@ -176,7 +176,8 @@ class Prefs {
   final String _kTravelNerveExcessWarningThreshold = "pda_travelNerveExcessWarningThreshold";
   final String _kTravelLifeExcessWarning = "pda_travelLifeExcessWarning";
   final String _kTravelLifeExcessWarningThreshold = "pda_travelLifeExcessWarningThreshold";
-  final String _kTravelLifeExcessWarningRedirect = "pda_travelLifeExcessWarningRedirect";
+  final String _kTravelDrugCooldownWarning = "pda_travelDrugCooldownWarning";
+  final String _kTravelBoosterCooldownWarning = "pda_travelBoosterCooldownWarning";
 
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
@@ -2022,14 +2023,24 @@ class Prefs {
     return prefs.setInt(_kTravelLifeExcessWarningThreshold, value);
   }
 
-  Future<String> getTravelLifeExcessWarningRedirect() async {
+  Future<bool> getTravelDrugCooldownWarning() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelLifeExcessWarningRedirect) ?? 'ownItems';
+    return prefs.getBool(_kTravelDrugCooldownWarning) ?? true;
   }
 
-  Future<bool> setTravelLifeExcessWarningRedirect(String value) async {
+  Future<bool> setTravelDrugCooldownWarning(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelLifeExcessWarningRedirect, value);
+    return prefs.setBool(_kTravelDrugCooldownWarning, value);
+  }
+
+  Future<bool> getTravelBoosterCooldownWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTravelBoosterCooldownWarning) ?? true;
+  }
+
+  Future<bool> setTravelBoosterCooldownWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTravelBoosterCooldownWarning, value);
   }
 
   // -- Terminal

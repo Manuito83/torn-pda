@@ -1190,61 +1190,68 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ),
             ],
           ),
-        if (_settingsProvider.travelLifeExcessWarning)
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Flexible(
-                  child: const Padding(
-                    padding: EdgeInsets.only(left: 25),
-                    child: Text(
-                      "Redirect to",
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                ),
-                DropdownButton<String>(
-                  value: _settingsProvider.travelLifeExcessWarningRedirect,
-                  items: const [
-                    DropdownMenuItem(
-                      value: "ownItems",
-                      child: SizedBox(
-                        width: 110,
-                        child: Text(
-                          "Own items",
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: "factionItems",
-                      child: SizedBox(
-                        width: 110,
-                        child: Text(
-                          "Faction items",
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) async {
-                    setState(() {
-                      if (value == null) return;
-                      _settingsProvider.travelLifeExcessWarningRedirect = value;
-                    });
-                  },
-                ),
-              ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Drug cooldown warning"),
+              Switch(
+                value: _settingsProvider.travelDrugCooldownWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelDrugCooldownWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "If enabled, you'll get a warning when you access the Travel Agency with no drug cooldown time "
+            ", just in case you forgot",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
           ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Booster cooldown warning"),
+              Switch(
+                value: _settingsProvider.travelBoosterCooldownWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelBoosterCooldownWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "If enabled, you'll get a warning when you access the Travel Agency with no booster cooldown time "
+            ", just in case you forgot",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

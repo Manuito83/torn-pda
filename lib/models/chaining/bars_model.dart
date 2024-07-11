@@ -4,11 +4,11 @@
 
 import 'dart:convert';
 
-BarsAndStatusModel barsAndStatusModelFromJson(String str) => BarsAndStatusModel.fromJson(json.decode(str));
+BarsStatusCooldownsModel barsAndStatusModelFromJson(String str) => BarsStatusCooldownsModel.fromJson(json.decode(str));
 
-String barsAndStatusModelToJson(BarsAndStatusModel data) => json.encode(data.toJson());
+String barsAndStatusModelToJson(BarsStatusCooldownsModel data) => json.encode(data.toJson());
 
-class BarsAndStatusModel {
+class BarsStatusCooldownsModel {
   int? serverTime;
   String? rank;
   int? level;
@@ -42,8 +42,9 @@ class BarsAndStatusModel {
   LastAction? lastAction;
   Competition? competition;
   Travel? travel;
+  Cooldowns? cooldowns;
 
-  BarsAndStatusModel({
+  BarsStatusCooldownsModel({
     this.serverTime,
     this.rank,
     this.level,
@@ -77,9 +78,10 @@ class BarsAndStatusModel {
     this.lastAction,
     this.competition,
     this.travel,
+    this.cooldowns,
   });
 
-  factory BarsAndStatusModel.fromJson(Map<String, dynamic> json) => BarsAndStatusModel(
+  factory BarsStatusCooldownsModel.fromJson(Map<String, dynamic> json) => BarsStatusCooldownsModel(
         serverTime: json["server_time"],
         rank: json["rank"],
         level: json["level"],
@@ -117,6 +119,7 @@ class BarsAndStatusModel {
         lastAction: json["last_action"] == null ? null : LastAction.fromJson(json["last_action"]),
         competition: json["competition"] == null ? null : Competition.fromJson(json["competition"]),
         travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
+        cooldowns: Cooldowns.fromJson(json["cooldowns"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -153,6 +156,7 @@ class BarsAndStatusModel {
         "last_action": lastAction?.toJson(),
         "competition": competition?.toJson(),
         "travel": travel?.toJson(),
+        "cooldowns": cooldowns?.toJson(),
       };
 }
 
@@ -473,5 +477,29 @@ class Travel {
         "timestamp": timestamp,
         "departed": departed,
         "time_left": timeLeft,
+      };
+}
+
+class Cooldowns {
+  Cooldowns({
+    this.drug,
+    this.medical,
+    this.booster,
+  });
+
+  int? drug;
+  int? medical;
+  int? booster;
+
+  factory Cooldowns.fromJson(Map<String, dynamic> json) => Cooldowns(
+        drug: json["drug"],
+        medical: json["medical"],
+        booster: json["booster"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "drug": drug,
+        "medical": medical,
+        "booster": booster,
       };
 }

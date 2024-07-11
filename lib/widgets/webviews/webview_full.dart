@@ -4031,7 +4031,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
       final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
-      if (stats is BarsAndStatusModel) {
+      if (stats is BarsStatusCooldownsModel) {
         var message = "";
         if (stats.chain!.current! > 10 && stats.chain!.cooldown == 0) {
           message = 'Caution: your faction is chaining!';
@@ -4072,9 +4072,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/travelagency.php')) {
       final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
-      if (stats is! BarsAndStatusModel) return;
+      if (stats is! BarsStatusCooldownsModel) return;
 
       final List<Widget> warnRows = [];
+      final List<Widget> cooldownRows = [];
 
       final energyCheck = _settingsProvider.travelEnergyExcessWarning;
       if (energyCheck) {
@@ -4108,7 +4109,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     ),
                   ),
                   GestureDetector(
-                    child: Icon(MdiIcons.magnify, color: _themeProvider.mainText),
+                    child: Image.asset('images/icons/map/gym.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
                       _loadUrl("https://www.torn.com/gym.php");
                       toastification.dismissAll();
@@ -4153,7 +4154,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     ),
                   ),
                   GestureDetector(
-                    child: Icon(MdiIcons.magnify, color: _themeProvider.mainText),
+                    child: Image.asset('images/icons/home/crimes.png', width: 24, color: _themeProvider.mainText),
                     onTap: () {
                       _loadUrl("https://www.torn.com/loader.php?sid=crimes");
                       toastification.dismissAll();
@@ -4197,18 +4198,31 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       ],
                     ),
                   ),
-                  GestureDetector(
-                    child: Icon(MdiIcons.magnify, color: _themeProvider.mainText),
-                    onTap: () {
-                      if (_settingsProvider.travelLifeExcessWarningRedirect == "ownItems") {
-                        _loadUrl("https://www.torn.com/item.php#medical-items");
-                      }
-                      if (_settingsProvider.travelLifeExcessWarningRedirect == "factionItems") {
-                        _loadUrl("https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical");
-                      }
-                      toastification.dismissAll();
-                    },
-                  )
+                  Row(
+                    children: [
+                      GestureDetector(
+                        child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
+                        onTap: () {
+                          _loadUrl("https://www.torn.com/item.php#medical-items");
+                          toastification.dismissAll();
+                        },
+                      ),
+                      if (stats.faction?.factionId != 0)
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            GestureDetector(
+                              child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
+                              onTap: () {
+                                _loadUrl(
+                                    "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical");
+                                toastification.dismissAll();
+                              },
+                            )
+                          ],
+                        ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -4216,7 +4230,116 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
       }
 
-      if (warnRows.isNotEmpty) {
+      final drugsCooldownCheck = _settingsProvider.travelDrugCooldownWarning;
+      if (drugsCooldownCheck) {
+        if (stats.cooldowns!.drug == 0) {
+          cooldownRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/cooldowns/drug5.png', width: 24, color: Colors.grey),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'No drugs cooldown!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
+                        onTap: () {
+                          _loadUrl("https://www.torn.com/item.php#drugs-items");
+                          toastification.dismissAll();
+                        },
+                      ),
+                      if (stats.faction?.factionId != 0)
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            GestureDetector(
+                              child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
+                              onTap: () {
+                                _loadUrl(
+                                    "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs");
+                                toastification.dismissAll();
+                              },
+                            )
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final boosterCooldownCheck = _settingsProvider.travelBoosterCooldownWarning;
+      if (boosterCooldownCheck) {
+        if (stats.cooldowns!.booster == 0) {
+          cooldownRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/cooldowns/booster5.png', width: 24, color: Colors.grey),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'No booster cooldown!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
+                        onTap: () {
+                          _loadUrl("https://www.torn.com/item.php");
+                          toastification.dismissAll();
+                        },
+                      ),
+                      if (stats.faction?.factionId != 0)
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            GestureDetector(
+                              child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
+                              onTap: () {
+                                _loadUrl("https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0");
+                                toastification.dismissAll();
+                              },
+                            )
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      if (warnRows.isNotEmpty || cooldownRows.isNotEmpty) {
         toastification.showCustom(
           autoCloseDuration: const Duration(seconds: 8),
           alignment: Alignment.center,
@@ -4254,6 +4377,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     ),
                     SizedBox(height: 20),
                     ...warnRows,
+                    if (warnRows.isNotEmpty && cooldownRows.isNotEmpty)
+                      SizedBox(
+                        width: 50,
+                        child: Divider(),
+                      ),
+                    ...cooldownRows,
                     SizedBox(height: 20),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
