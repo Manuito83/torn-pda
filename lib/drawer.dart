@@ -767,10 +767,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com/item.php#medical-items';
       } else if (_settingsProvider.lifeNotificationTapAction == "itemsFaction") {
         launchBrowser = true;
-        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#armoury-medical';
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
       } else if (_settingsProvider.lifeNotificationTapAction == "factionMain") {
         launchBrowser = true;
-        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/';
+        browserUrl = 'https://www.torn.com/factions.php';
       }
     } else if (energy) {
       launchBrowser = true;
@@ -984,10 +984,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           browserUrl = 'https://www.torn.com/item.php#medical-items';
         } else if (_settingsProvider.lifeNotificationTapAction == "itemsFaction") {
           launchBrowser = true;
-          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#armoury-medical';
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
         } else if (_settingsProvider.lifeNotificationTapAction == "factionMain") {
           launchBrowser = true;
-          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/';
+          browserUrl = 'https://www.torn.com/factions.php';
         }
       } else if (payload.contains('drugs')) {
         launchBrowser = true;
