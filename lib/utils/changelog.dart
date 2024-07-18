@@ -47,6 +47,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Added Travel Agency expenditure warning for bars and cooldowns (can be disabled)",
           "Fixed browser text search in full screen mode",
+          "Fixed faction link to medical items for life notification",
         ],
     );
 
