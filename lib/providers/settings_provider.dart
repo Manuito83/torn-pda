@@ -87,6 +87,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _webviewCacheEnabledRemoteConfig = "user";
+  String get webviewCacheEnabledRemoteConfig => _webviewCacheEnabledRemoteConfig;
+  set webviewCacheEnabledRemoteConfig(String enabled) {
+    _webviewCacheEnabledRemoteConfig = enabled;
+    notifyListeners();
+  }
+
   var _androidBrowserScale = 0;
   int get androidBrowserScale => _androidBrowserScale;
   set setAndroidBrowserScale(int scale) {

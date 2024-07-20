@@ -679,30 +679,59 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 children: <Widget>[
                   const Text("Cache enabled"),
                   Switch(
-                    value: _settingsProvider.webviewCacheEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.webviewCacheEnabled = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    value: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                        ? _settingsProvider.webviewCacheEnabled
+                        : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
+                            ? true
+                            : false,
+                    onChanged: _settingsProvider.webviewCacheEnabledRemoteConfig != "user"
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _settingsProvider.webviewCacheEnabled = value;
+                            });
+                          },
+                    activeTrackColor: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                        ? Colors.lightGreenAccent
+                        : Colors.grey[700],
+                    activeColor:
+                        _settingsProvider.webviewCacheEnabledRemoteConfig == "user" ? Colors.green : Colors.grey[700],
+                    inactiveThumbColor:
+                        _settingsProvider.webviewCacheEnabledRemoteConfig == "user" ? null : Colors.grey[800],
                   ),
                 ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                "Enable webview cache to improve performance (recommended). Disabling this might be useful if "
-                "you experience issues with Torn's website cache, such as images loading incorrectly, increased "
-                "app cached data, chat issues, etc. NOTE: this will only take effect after you restart the app.",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              child: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                  ? Text(
+                      "Enable webview cache to improve performance (recommended). Disabling this might be useful if "
+                      "you experience issues with Torn's website cache, such as images loading incorrectly, increased "
+                      "app cached data, chat issues, etc. NOTE: this will only take effect after you restart the app.",
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    )
+                  : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
+                      ? Text(
+                          "Cache is enabled from PDA and can't be changed right now",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        )
+                      : Text(
+                          "Cache is disabled from PDA and can't be changed right now",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
