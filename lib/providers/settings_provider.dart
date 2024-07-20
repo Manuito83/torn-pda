@@ -5,6 +5,7 @@ import 'dart:convert';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
@@ -37,6 +38,10 @@ enum BrowserRefreshSetting {
 class SettingsProvider extends ChangeNotifier {
   StreamController willPopShouldOpenDrawerStream = StreamController.broadcast();
   StreamController willPopShouldGoBackStream = StreamController.broadcast();
+
+  String deviceBrand = "";
+  String deviceModel = "";
+  String deviceSoftware = "";
 
   var _currentBrowser = BrowserSetting.app;
   BrowserSetting get currentBrowser => _currentBrowser;
@@ -1112,6 +1117,8 @@ class SettingsProvider extends ChangeNotifier {
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 
     _downloadActionShare = await Prefs().getDownloadActionShare();
+
+    await WebviewConfig().generateUserAgentForUser();
 
     notifyListeners();
   }
