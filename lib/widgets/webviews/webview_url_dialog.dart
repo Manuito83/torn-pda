@@ -21,6 +21,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -54,6 +55,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
   ThemeProvider? _themeProvider;
   late ShortcutsProvider _shortcutsProvider;
   late SettingsProvider _settingsProvider;
+  late WebViewProvider _webviewProvider;
 
   final _customURLController = TextEditingController();
   final _customURLKey = GlobalKey<FormState>();
@@ -71,6 +73,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _webviewProvider = Provider.of<WebViewProvider>(context, listen: false);
   }
 
   @override
@@ -435,6 +438,9 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
+                            if (_webviewProvider.currentUiMode == UiMode.fullScreen) {
+                              _webviewProvider.setCurrentUiMode(UiMode.window, context);
+                            }
                             widget.callFindInPage!();
                           },
                         ),

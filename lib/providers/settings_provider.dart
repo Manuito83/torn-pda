@@ -5,6 +5,7 @@ import 'dart:convert';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
@@ -37,6 +38,10 @@ enum BrowserRefreshSetting {
 class SettingsProvider extends ChangeNotifier {
   StreamController willPopShouldOpenDrawerStream = StreamController.broadcast();
   StreamController willPopShouldGoBackStream = StreamController.broadcast();
+
+  String deviceBrand = "";
+  String deviceModel = "";
+  String deviceSoftware = "";
 
   var _currentBrowser = BrowserSetting.app;
   BrowserSetting get currentBrowser => _currentBrowser;
@@ -79,6 +84,13 @@ class SettingsProvider extends ChangeNotifier {
   set webviewCacheEnabled(bool enabled) {
     _webviewCacheEnabled = enabled;
     Prefs().setWebviewCacheEnabled(enabled);
+    notifyListeners();
+  }
+
+  var _webviewCacheEnabledRemoteConfig = "user";
+  String get webviewCacheEnabledRemoteConfig => _webviewCacheEnabledRemoteConfig;
+  set webviewCacheEnabledRemoteConfig(String enabled) {
+    _webviewCacheEnabledRemoteConfig = enabled;
     notifyListeners();
   }
 
@@ -605,6 +617,70 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _travelEnergyExcessWarning = true;
+  bool get travelEnergyExcessWarning => _travelEnergyExcessWarning;
+  set travelEnergyExcessWarning(bool choice) {
+    _travelEnergyExcessWarning = choice;
+    Prefs().setTravelEnergyExcessWarning(_travelEnergyExcessWarning);
+    notifyListeners();
+  }
+
+  var _travelEnergyExcessWarningThreshold = 50;
+  int get travelEnergyExcessWarningThreshold => _travelEnergyExcessWarningThreshold;
+  set travelEnergyExcessWarningThreshold(int choice) {
+    _travelEnergyExcessWarningThreshold = choice;
+    Prefs().setTravelEnergyExcessWarningThreshold(_travelEnergyExcessWarningThreshold);
+    notifyListeners();
+  }
+
+  var _travelNerveExcessWarning = true;
+  bool get travelNerveExcessWarning => _travelNerveExcessWarning;
+  set travelNerveExcessWarning(bool choice) {
+    _travelNerveExcessWarning = choice;
+    Prefs().setTravelNerveExcessWarning(_travelNerveExcessWarning);
+    notifyListeners();
+  }
+
+  var _travelNerveExcessWarningThreshold = 50;
+  int get travelNerveExcessWarningThreshold => _travelNerveExcessWarningThreshold;
+  set travelNerveExcessWarningThreshold(int choice) {
+    _travelNerveExcessWarningThreshold = choice;
+    Prefs().setTravelNerveExcessWarningThreshold(_travelNerveExcessWarningThreshold);
+    notifyListeners();
+  }
+
+  var _travelLifeExcessWarning = true;
+  bool get travelLifeExcessWarning => _travelLifeExcessWarning;
+  set travelLifeExcessWarning(bool choice) {
+    _travelLifeExcessWarning = choice;
+    Prefs().setTravelLifeExcessWarning(_travelLifeExcessWarning);
+    notifyListeners();
+  }
+
+  var _travelLifeExcessWarningThreshold = 50;
+  int get travelLifeExcessWarningThreshold => _travelLifeExcessWarningThreshold;
+  set travelLifeExcessWarningThreshold(int choice) {
+    _travelLifeExcessWarningThreshold = choice;
+    Prefs().setTravelLifeExcessWarningThreshold(_travelLifeExcessWarningThreshold);
+    notifyListeners();
+  }
+
+  var _travelDrugCooldownWarning = true;
+  bool get travelDrugCooldownWarning => _travelDrugCooldownWarning;
+  set travelDrugCooldownWarning(bool choice) {
+    _travelDrugCooldownWarning = choice;
+    Prefs().setTravelDrugCooldownWarning(_travelDrugCooldownWarning);
+    notifyListeners();
+  }
+
+  var _travelBoosterCooldownWarning = true;
+  bool get travelBoosterCooldownWarning => _travelBoosterCooldownWarning;
+  set travelBoosterCooldownWarning(bool choice) {
+    _travelBoosterCooldownWarning = choice;
+    Prefs().setTravelBoosterCooldownWarning(_travelBoosterCooldownWarning);
+    notifyListeners();
+  }
+
   var _warnAboutChains = true;
   bool get warnAboutChains => _warnAboutChains;
   set changeWarnAboutChains(bool choice) {
@@ -988,6 +1064,15 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutExcessEnergyThreshold = await Prefs().getWarnAboutExcessEnergyThreshold();
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
+    _travelEnergyExcessWarning = await Prefs().getTravelEnergyExcessWarning();
+    _travelEnergyExcessWarningThreshold = await Prefs().getTravelEnergyExcessWarningThreshold();
+    _travelNerveExcessWarning = await Prefs().getTravelNerveExcessWarning();
+    _travelNerveExcessWarningThreshold = await Prefs().getTravelNerveExcessWarningThreshold();
+    _travelLifeExcessWarning = await Prefs().getTravelLifeExcessWarning();
+    _travelLifeExcessWarningThreshold = await Prefs().getTravelLifeExcessWarningThreshold();
+    _travelDrugCooldownWarning = await Prefs().getTravelDrugCooldownWarning();
+    _travelBoosterCooldownWarning = await Prefs().getTravelBoosterCooldownWarning();
+
     _terminalEnabled = await Prefs().getTerminalEnabled();
 
     _rankedWarsInMenu = await Prefs().getRankedWarsInMenu();
@@ -1039,6 +1124,8 @@ class SettingsProvider extends ChangeNotifier {
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 
     _downloadActionShare = await Prefs().getDownloadActionShare();
+
+    await WebviewConfig().generateUserAgentForUser();
 
     notifyListeners();
   }

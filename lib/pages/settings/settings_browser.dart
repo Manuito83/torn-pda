@@ -133,7 +133,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
-                          _gym(),
+                          _energyExpenditureWarning(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
+                          _travelExpenditureWarning(),
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
@@ -675,30 +679,59 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 children: <Widget>[
                   const Text("Cache enabled"),
                   Switch(
-                    value: _settingsProvider.webviewCacheEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.webviewCacheEnabled = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    value: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                        ? _settingsProvider.webviewCacheEnabled
+                        : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
+                            ? true
+                            : false,
+                    onChanged: _settingsProvider.webviewCacheEnabledRemoteConfig != "user"
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _settingsProvider.webviewCacheEnabled = value;
+                            });
+                          },
+                    activeTrackColor: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                        ? Colors.lightGreenAccent
+                        : Colors.grey[700],
+                    activeColor:
+                        _settingsProvider.webviewCacheEnabledRemoteConfig == "user" ? Colors.green : Colors.grey[700],
+                    inactiveThumbColor:
+                        _settingsProvider.webviewCacheEnabledRemoteConfig == "user" ? null : Colors.grey[800],
                   ),
                 ],
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                "Enable webview cache to improve performance (recommended). Disabling this might be useful if "
-                "you experience issues with Torn's website cache, such as images loading incorrectly, increased "
-                "app cached data, chat issues, etc. NOTE: this will only take effect after you restart the app.",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
+              child: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                  ? Text(
+                      "Enable webview cache to improve performance (recommended). Disabling this might be useful if "
+                      "you experience issues with Torn's website cache, such as images loading incorrectly, increased "
+                      "app cached data, chat issues, etc. NOTE: this will only take effect after you restart the app.",
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    )
+                  : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
+                      ? Text(
+                          "Cache is enabled from PDA and can't be changed right now",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        )
+                      : Text(
+                          "Cache is disabled from PDA and can't be changed right now",
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -826,15 +859,18 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
-  Column _gym() {
+  Column _energyExpenditureWarning() {
     return Column(
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'ENERGY',
-              style: TextStyle(fontSize: 10),
+            Flexible(
+              child: Text(
+                'GYM ENERGY EXPENDITURE WARNING',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 10),
+              ),
             ),
           ],
         ),
@@ -942,6 +978,309 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ),
             ],
           ),
+      ],
+    );
+  }
+
+  Column _travelExpenditureWarning() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                'TRAVEL EXPENDITURE WARNING',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 10),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Energy excess warning"),
+              Switch(
+                value: _settingsProvider.travelEnergyExcessWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelEnergyExcessWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "If enabled, you'll get a warning when you access the Travel Agency with your Energy Bar above a certain "
+            "threshold to avoid a possible waste of energy during your trip (i.e.: you might want to use it in the "
+            "gym or similar before boarding)",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        if (_settingsProvider.travelEnergyExcessWarning)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Text(
+                      "Threshold",
+                      style: TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          _settingsProvider.travelEnergyExcessWarningThreshold <= 100
+                              ? "${_settingsProvider.travelEnergyExcessWarningThreshold ~/ 10 * 10}%"
+                              : "only > max",
+                          style: const TextStyle(
+                            fontSize: 12,
+                          ),
+                        ),
+                        Slider(
+                          min: 0,
+                          max: 110,
+                          divisions: 11,
+                          value: _settingsProvider.travelEnergyExcessWarningThreshold.toDouble(),
+                          onChanged: (double value) {
+                            setState(() {
+                              _settingsProvider.travelEnergyExcessWarningThreshold = value.floor();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Nerve excess warning"),
+              Switch(
+                value: _settingsProvider.travelNerveExcessWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelNerveExcessWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "If enabled, you'll get a warning when you access the Travel Agency with your Nerve Bar above a certain "
+            "threshold to avoid a possible waste of nerve during your trip (i.e.: you might want to do some crimes "
+            "or similar before boarding)",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        if (_settingsProvider.travelNerveExcessWarning)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Text(
+                      "Threshold",
+                      style: TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          _settingsProvider.travelNerveExcessWarningThreshold <= 100
+                              ? "${_settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10}%"
+                              : "only > max",
+                          style: const TextStyle(
+                            fontSize: 12,
+                          ),
+                        ),
+                        Slider(
+                          min: 0,
+                          max: 110,
+                          divisions: 11,
+                          value: _settingsProvider.travelNerveExcessWarningThreshold.toDouble(),
+                          onChanged: (double value) {
+                            setState(() {
+                              _settingsProvider.travelNerveExcessWarningThreshold = value.floor();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Life excess warning"),
+              Switch(
+                value: _settingsProvider.travelLifeExcessWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelLifeExcessWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "If enabled, you'll get a warning when you access the Travel Agency with your Life Bar above a certain "
+            "threshold to avoid a possible waste of life during your trip (i.e.: you might want to fill some blood "
+            "bags or similar before boarding)",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        if (_settingsProvider.travelLifeExcessWarning)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 25),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Text(
+                      "Threshold",
+                      style: TextStyle(
+                        fontSize: 12,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Text(
+                          _settingsProvider.travelLifeExcessWarningThreshold <= 100
+                              ? "${_settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10}%"
+                              : "only > max",
+                          style: const TextStyle(
+                            fontSize: 12,
+                          ),
+                        ),
+                        Slider(
+                          min: 0,
+                          max: 110,
+                          divisions: 11,
+                          value: _settingsProvider.travelLifeExcessWarningThreshold.toDouble(),
+                          onChanged: (double value) {
+                            setState(() {
+                              _settingsProvider.travelLifeExcessWarningThreshold = value.floor();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Drug cooldown warning"),
+              Switch(
+                value: _settingsProvider.travelDrugCooldownWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelDrugCooldownWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "If enabled, you'll get a warning when you access the Travel Agency with no drug cooldown time "
+            ", just in case you forgot",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Booster cooldown warning"),
+              Switch(
+                value: _settingsProvider.travelBoosterCooldownWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelBoosterCooldownWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text(
+            "If enabled, you'll get a warning when you access the Travel Agency with no booster cooldown time "
+            ", just in case you forgot",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

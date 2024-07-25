@@ -26,6 +26,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
@@ -206,6 +207,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   DateTime _vaultTriggeredTime = DateTime.now().subtract(const Duration(minutes: 1));
   DateTime? _vaultOnResourceTriggerTime; // Null check afterwards (avoid false positives)
 
+  DateTime? _assessGymAndHuntingEnergyWarningTriggerTime;
+  DateTime? _assessTravelAgencyEnergyNerveLifeWarningTriggerTime;
+
   var _cityEnabled = false;
   var _cityIconActive = false;
   bool _cityPreferencesLoaded = false;
@@ -382,23 +386,33 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _findController.addListener(onFindInputTextChange);
 
     _initialWebViewSettings = InAppWebViewSettings(
-      cacheEnabled: _settingsProvider.webviewCacheEnabled,
+      cacheEnabled: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+          ? _settingsProvider.webviewCacheEnabled
+          : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
+              ? true
+              : false,
       transparentBackground: true,
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
       javaScriptCanOpenWindowsAutomatically: true,
       userAgent: Platform.isAndroid
-          ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
-              "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
+          ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
+              "Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
           : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-              "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
+              "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
       /// and deactivate it dynamically, where onLoadResource stops triggering!
       //useShouldInterceptAjaxRequest: false,
       mixedContentMode: MixedContentMode.MIXED_CONTENT_ALWAYS_ALLOW,
-      //cacheMode: CacheMode.LOAD_NO_CACHE,
+      cacheMode: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+          ? _settingsProvider.webviewCacheEnabled
+              ? CacheMode.LOAD_DEFAULT
+              : CacheMode.LOAD_NO_CACHE
+          : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
+              ? CacheMode.LOAD_DEFAULT
+              : CacheMode.LOAD_NO_CACHE,
       safeBrowsingEnabled: false,
       //useHybridComposition: true,
       supportMultipleWindows: true,
@@ -1391,6 +1405,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
               final document = parse(html);
               _assessGeneral(document);
+
+              assessGymAndHuntingEnergyWarning(uri.toString());
+              assessTravelAgencyEnergyNerveLifeWarning(uri.toString());
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -4011,15 +4028,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  // ASSESS GYM
-  Future assessEnergyWarning(String targetUrl) async {
+  // ASSESS GYM AND HUNTING WARNINGS FOR ENERGY
+  Future assessGymAndHuntingEnergyWarning(String targetUrl) async {
     if (!mounted) return;
+
+    if (_assessGymAndHuntingEnergyWarningTriggerTime != null &&
+        DateTime.now().difference(_assessGymAndHuntingEnergyWarningTriggerTime!).inSeconds < 2) return;
+    _assessGymAndHuntingEnergyWarningTriggerTime = DateTime.now();
+
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
       final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
-      if (stats is BarsAndStatusModel) {
+      if (stats is BarsStatusCooldownsModel) {
         var message = "";
         if (stats.chain!.current! > 10 && stats.chain!.cooldown == 0) {
           message = 'Caution: your faction is chaining!';
@@ -4045,6 +4067,389 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             );
           }
         }
+      }
+    }
+  }
+
+  // ASSESS GYM AND HUNTING WARNINGS FOR ENERGY
+  Future assessTravelAgencyEnergyNerveLifeWarning(String targetUrl) async {
+    if (!mounted) return;
+
+    if (_assessTravelAgencyEnergyNerveLifeWarningTriggerTime != null &&
+        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 2) return;
+    _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
+
+    final easyUrl = targetUrl.replaceAll('#', '');
+    if (easyUrl.contains('www.torn.com/travelagency.php')) {
+      final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
+      if (stats is! BarsStatusCooldownsModel) return;
+
+      final List<Widget> warnRows = [];
+      final List<Widget> cooldownRows = [];
+
+      final energyCheck = _settingsProvider.travelEnergyExcessWarning;
+      if (energyCheck) {
+        final energyUserSelectedThreshold = _settingsProvider.travelEnergyExcessWarningThreshold ~/ 10 * 10;
+        final energyCurrent = stats.energy!.current!;
+        final energyMax = stats.energy!.maximum!;
+        final energyWarningOnlyWhenAboveMax = energyUserSelectedThreshold > 100;
+        final energyThresholdPercentage = (energyUserSelectedThreshold / 100) * energyMax;
+
+        if ((energyWarningOnlyWhenAboveMax && energyCurrent > energyMax) ||
+            (!energyWarningOnlyWhenAboveMax && energyCurrent >= energyThresholdPercentage)) {
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/map/gym.png', width: 24),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'Energy is too high '
+                            '(${energyUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$energyUserSelectedThreshold%" : "> max"})!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    child: Image.asset('images/icons/map/gym.png', width: 24, color: _themeProvider.mainText),
+                    onTap: () {
+                      _loadUrl("https://www.torn.com/gym.php");
+                      toastification.dismissAll();
+                    },
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final nerveCheck = _settingsProvider.travelNerveExcessWarning;
+      if (nerveCheck) {
+        final nerveUserSelectedThreshold = _settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10;
+        final nerveCurrent = stats.nerve!.current!;
+        final nerveMax = stats.nerve!.maximum!;
+        final nerveWarningOnlyWhenAboveMax = nerveUserSelectedThreshold > 100;
+        final nerveThresholdPercentage = (nerveUserSelectedThreshold / 100) * nerveMax;
+
+        if ((nerveWarningOnlyWhenAboveMax && nerveCurrent > nerveMax) ||
+            (!nerveWarningOnlyWhenAboveMax && nerveCurrent >= nerveThresholdPercentage)) {
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/home/crimes.png', width: 24, color: Colors.red),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'Nerve is too high '
+                            '(${nerveUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$nerveUserSelectedThreshold%" : "> max"})!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GestureDetector(
+                    child: Image.asset('images/icons/home/crimes.png', width: 24, color: _themeProvider.mainText),
+                    onTap: () {
+                      _loadUrl("https://www.torn.com/loader.php?sid=crimes");
+                      toastification.dismissAll();
+                    },
+                  )
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final lifeCheck = _settingsProvider.travelLifeExcessWarning;
+      if (lifeCheck) {
+        final lifeUserSelectedThreshold = _settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10;
+        final lifeCurrent = stats.life!.current!;
+        final lifeMax = stats.life!.maximum!;
+        final lifeWarningOnlyWhenAboveMax = lifeUserSelectedThreshold > 100;
+        final lifeThresholdPercentage = (lifeUserSelectedThreshold / 100) * lifeMax;
+
+        if ((lifeWarningOnlyWhenAboveMax && lifeCurrent > lifeMax) ||
+            (!lifeWarningOnlyWhenAboveMax && lifeCurrent >= lifeThresholdPercentage)) {
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/heart.png', width: 24, color: Colors.blue),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'Life is too high '
+                            '(${lifeUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$lifeUserSelectedThreshold%" : "> max"})!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
+                        onTap: () {
+                          _loadUrl("https://www.torn.com/item.php#medical-items");
+                          toastification.dismissAll();
+                        },
+                      ),
+                      if (stats.faction?.factionId != 0)
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            GestureDetector(
+                              child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
+                              onTap: () {
+                                _loadUrl(
+                                    "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical");
+                                toastification.dismissAll();
+                              },
+                            )
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final drugsCooldownCheck = _settingsProvider.travelDrugCooldownWarning;
+      if (drugsCooldownCheck) {
+        if (stats.cooldowns!.drug == 0) {
+          cooldownRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/cooldowns/drug5.png', width: 24, color: Colors.grey),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'No drugs cooldown!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
+                        onTap: () {
+                          _loadUrl("https://www.torn.com/item.php#drugs-items");
+                          toastification.dismissAll();
+                        },
+                      ),
+                      if (stats.faction?.factionId != 0)
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            GestureDetector(
+                              child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
+                              onTap: () {
+                                _loadUrl(
+                                    "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs");
+                                toastification.dismissAll();
+                              },
+                            )
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final boosterCooldownCheck = _settingsProvider.travelBoosterCooldownWarning;
+      if (boosterCooldownCheck) {
+        if (stats.cooldowns!.booster == 0) {
+          cooldownRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('images/icons/cooldowns/booster5.png', width: 24, color: Colors.grey),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'No booster cooldown!',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        child: Icon(Icons.inventory_2_outlined, size: 24, color: _themeProvider.mainText),
+                        onTap: () {
+                          _loadUrl("https://www.torn.com/item.php");
+                          toastification.dismissAll();
+                        },
+                      ),
+                      if (stats.faction?.factionId != 0)
+                        Row(
+                          children: [
+                            SizedBox(width: 10),
+                            GestureDetector(
+                              child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
+                              onTap: () {
+                                _loadUrl("https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0");
+                                toastification.dismissAll();
+                              },
+                            )
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      if (warnRows.isNotEmpty || cooldownRows.isNotEmpty) {
+        toastification.showCustom(
+          autoCloseDuration: const Duration(seconds: 8),
+          alignment: Alignment.center,
+          builder: (BuildContext context, ToastificationItem holder) {
+            return GestureDetector(
+              onTap: () {
+                toastification.dismiss(holder);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: _themeProvider.cardColor,
+                  border: Border.all(
+                    color: Colors.orange.shade800,
+                    width: 2,
+                  ),
+                ),
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Expanded(
+                          child: const Text(
+                            'This could be a waste!',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 20),
+                    ...warnRows,
+                    if (warnRows.isNotEmpty && cooldownRows.isNotEmpty)
+                      SizedBox(
+                        width: 50,
+                        child: Divider(),
+                      ),
+                    ...cooldownRows,
+                    SizedBox(height: 20),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceAround,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  toastification.dismiss(holder);
+                                },
+                                child: Text(
+                                  "CLOSE",
+                                  style: TextStyle(color: _themeProvider.mainText!, fontSize: 10),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    side: BorderSide(color: _themeProvider.mainText!, width: 1.0),
+                                  ),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  toastification.dismiss(holder);
+                                  _settingsProvider.travelEnergyExcessWarning = false;
+                                  _settingsProvider.travelNerveExcessWarning = false;
+                                  _settingsProvider.travelLifeExcessWarning = false;
+                                  _settingsProvider.travelDrugCooldownWarning = false;
+                                  _settingsProvider.travelBoosterCooldownWarning = false;
+                                },
+                                child: Text(
+                                  "DISABLE",
+                                  style: TextStyle(color: _themeProvider.mainText!, fontSize: 10),
+                                ),
+                                style: TextButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    side: BorderSide(color: _themeProvider.mainText!, width: 1.0),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
       }
     }
   }

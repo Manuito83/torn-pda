@@ -39,6 +39,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.4.4 - Build 435 - 20/07/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.4.4'
+        ..date = '01 AUG 2024'
+        ..features = [
+          "Added Travel Agency expenditure warning for bars and cooldowns (can be disabled)",
+          "Fixed browser text search in full screen mode",
+          "Fixed faction link to medical items for life notification",
+        ],
+    );
+
     // v3.4.3 - Build 432 - 03/07/2024
     itemList.add(
       ChangeLogItem()

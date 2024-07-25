@@ -114,7 +114,7 @@ class _StatsChartState extends State<StatsChart> {
                       color: success ? Colors.green[600] : Colors.red[600],
                       border: Border.all(
                         color: success ? Colors.green.shade800 : Colors.red.shade800,
-                        width: 2, // Adjust the width of the frame as needed
+                        width: 2,
                       ),
                     ),
                     padding: const EdgeInsets.all(16),

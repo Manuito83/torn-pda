@@ -93,14 +93,16 @@ class ApiError {
   int? errorId;
   String errorReason = "";
   String pdaErrorDetails = "";
-  ApiError({this.errorId = 0, this.pdaErrorDetails = ""}) {
+  String tornErrorDetails = "";
+
+  ApiError({this.errorId = 0, this.pdaErrorDetails = "", this.tornErrorDetails = ""}) {
     switch (errorId) {
       // Torn PDA codes
       case 100:
         errorReason = 'connection timed out';
       // Torn PDA codes
       case 101:
-        errorReason = 'issue with data model';
+        errorReason = 'issue with PDA data model';
         pdaErrorDetails = pdaErrorDetails;
       // Torn codes
       case 0:
@@ -131,15 +133,23 @@ class ApiError {
       case 12:
         errorReason = 'key read error: Error reading key from Database';
       case 13:
-        errorReason = "key is temporary disabled due to inactivity (owner hasn't been online for more than 7 days).";
+        errorReason = "key is temporary disabled due to inactivity (owner hasn't been online for more than 7 days)";
       case 14:
-        errorReason = 'daily read limit reached.';
+        errorReason = 'daily read limit reached';
       case 15:
-        errorReason = 'an error code specifically for testing purposes that has no dedicated meaning.';
+        errorReason = 'an error code specifically for testing purposes that has no dedicated meaning';
       case 16:
-        errorReason = 'access level of this key is not high enough: Torn PDA request at least a Limited key.';
+        errorReason = 'access level of this key is not high enough: Torn PDA request at least a Limited key';
       case 17:
-        errorReason = 'backend error occurred, please try again.';
+        errorReason = 'backend error occurred, please try again';
+      case 18:
+        errorReason = 'API key has been paused by the owner';
+      default:
+        if (tornErrorDetails.isNotEmpty) {
+          errorReason = tornErrorDetails;
+        } else {
+          errorReason = 'unkown';
+        }
     }
   }
 }
@@ -594,7 +604,7 @@ class ApiCallerController extends GetxController {
     });
     if (apiResult is! ApiError) {
       try {
-        return BarsAndStatusModel.fromJson(apiResult as Map<String, dynamic>);
+        return BarsStatusCooldownsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
@@ -882,7 +892,7 @@ class ApiCallerController extends GetxController {
       case ApiSelection.chainStatus:
         url += 'faction/?selections=chain';
       case ApiSelection.barsAndPlayerStatus:
-        url += 'user/?selections=bars,profile,travel';
+        url += 'user/?selections=bars,profile,travel,cooldowns';
       case ApiSelection.items:
         url += 'torn/?selections=items';
       case ApiSelection.inventory:
@@ -941,7 +951,7 @@ class ApiCallerController extends GetxController {
         // We limit to a bit more here (it will be shown to the user)
         String error = response.body;
         if (error.isEmpty) {
-          error = "Torn API is returning an empty string, please try again in a while. You can check "
+          error = "Torn API is returning empty information, please try again in a while. You can check "
               "if there are issues with the API directly in Torn, by visiting https://api.torn.com and trying "
               "a request with your API key";
         }
@@ -955,7 +965,8 @@ class ApiCallerController extends GetxController {
       if (jsonResponse.isNotEmpty && response.statusCode == 200) {
         if (jsonResponse['error'] != null) {
           final code = jsonResponse['error']['code'];
-          return ApiError(errorId: code);
+          final tornReason = jsonResponse['error']['error'];
+          return ApiError(errorId: code, tornErrorDetails: tornReason);
         }
         // Otherwise, return a good json response
         return jsonResponse;
