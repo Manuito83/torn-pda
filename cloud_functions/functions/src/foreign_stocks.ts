@@ -14,6 +14,11 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 const fetch = require("node-fetch");
 
+const runtimeOpts512 = {
+  timeoutSeconds: 120,
+  memory: "512MB" as "512MB",
+}
+
 // API URLs
 const YATA_API_URL = 'https://yata.yt/api/v1/travel/export/';
 const PROMETHEUS_API_URL = 'https://api.prombot.co.uk/api/travel';
@@ -52,8 +57,8 @@ async function getPrometheusStocks() {
 }
 
 // Function to update a stock in Firestore
-async function updateStock(stockData: any, timestamp: number, source: string) {
-  const codeName = `${stockData.country}-${stockData.name}`;
+async function updateStock(currentStockData: any, timestamp: number, source: string) {
+  const codeName = `${currentStockData.country}-${currentStockData.name}`;
   const docRef = admin.firestore().collection("stocks-main").doc(codeName);
 
   try {
@@ -67,7 +72,7 @@ async function updateStock(stockData: any, timestamp: number, source: string) {
       debugLog(`Updating stock in Firestore: ${codeName} from ${source}`);
 
       let newPeriodicMap = dbStockData.periodicMap || {};
-      newPeriodicMap[timestamp] = stockData.quantity;
+      newPeriodicMap[timestamp] = currentStockData.quantity;
 
       // If more than 1.5 day has passed (216 iterations each 10 minutes, delete oldest)
       if (Object.keys(newPeriodicMap).length > 216) {
@@ -79,14 +84,14 @@ async function updateStock(stockData: any, timestamp: number, source: string) {
       // from empty to restock can be calculated later
       // 1000 in 10 minutes to avoid false positives (people filtering out)
       let lastEmpty = dbStockData.lastEmpty || 0;
-      if (stockData.quantity === 0 && (dbStockData.quantity || 0) > 0 && (dbStockData.quantity || 0) < 1000) {
+      if (currentStockData.quantity === 0 && (dbStockData.quantity || 0) > 0 && (dbStockData.quantity || 0) < 1000) {
         lastEmpty = timestamp;
       }
 
       // Get the last array for restocked timestamps
       let restockElapsed = dbStockData.restockElapsed || [];
       // If item has been restocked or if there is also an existing lastEmpty
-      if ((dbStockData.quantity || 0) === 0 && stockData.quantity > 0 && dbStockData.lastEmpty) {
+      if ((dbStockData.quantity || 0) === 0 && currentStockData.quantity > 0 && dbStockData.lastEmpty) {
         restockElapsed.push(timestamp - dbStockData.lastEmpty);
         // Allow maximum of 15 restocks
         if (restockElapsed.length > 15) {
@@ -96,12 +101,12 @@ async function updateStock(stockData: any, timestamp: number, source: string) {
 
       // Update the stock in Firestore
       await docRef.set({
-        id: stockData.id,
-        country: stockData.country,
-        name: stockData.name,
+        id: currentStockData.id,
+        country: currentStockData.country,
+        name: currentStockData.name,
         codeName: codeName,
-        cost: stockData.cost,
-        quantity: stockData.quantity,
+        cost: currentStockData.cost,
+        quantity: currentStockData.quantity,
         update: timestamp,
         source: source,
         periodicMap: newPeriodicMap,
@@ -120,8 +125,8 @@ async function updateStock(stockData: any, timestamp: number, source: string) {
 }
 
 // Function to update restock information in Realtime DB
-async function updateRestock(stockData: any, timestamp: number, source: string) {
-  const codeName = `${stockData.country}-${stockData.name}`;
+async function updateRestock(currentStockData: any, timestamp: number, source: string) {
+  const codeName = `${currentStockData.country}-${currentStockData.name}`;
   const firebaseAdmin = require("firebase-admin");
   const db = firebaseAdmin.database();
 
@@ -138,12 +143,13 @@ async function updateRestock(stockData: any, timestamp: number, source: string) 
       restockTimestamp = savedData.restock || 0;
 
       // We will only update the restock timestamp if we have a restock otherwise, we leave the last known restock time
-      if (savedData.quantity === 0 && stockData.quantity > 0) {
+      // but we continue the xecution since it will be necessary to update the current quantity in any case (so that
+      // we can detect restocks in the next calls in the future)
+      if (savedData.quantity === 0 && currentStockData.quantity > 0) {
         restockTimestamp = timestamp;
         debugLog(`Restock detected for ${codeName} at ${restockTimestamp}`);
       } else {
-        debugLog(`Restock for item ${codeName} already was already up-to-date`);
-        return;
+        debugLog(`Restock for item ${codeName} already was already up-to-date (at ${restockTimestamp})`);
       }
     }
     // If the stock is not known yet (new stock), register it for the first time 
@@ -153,7 +159,7 @@ async function updateRestock(stockData: any, timestamp: number, source: string) 
     }
 
     let country = "";
-    switch (stockData.country) {
+    switch (currentStockData.country) {
       case "arg":
         country = "Argentina";
         break;
@@ -191,10 +197,10 @@ async function updateRestock(stockData: any, timestamp: number, source: string) 
 
     const stock: any = {
       country: country,
-      name: stockData.name,
+      name: currentStockData.name,
       codeName: codeName,
       restock: restockTimestamp,
-      quantity: stockData.quantity,
+      quantity: currentStockData.quantity,
       source: source,
     };
 
@@ -228,7 +234,9 @@ async function getExistingStockData(codeName: string, database: string) {
 
 export const foreignStocksGroup = {
 
-  checkStocks: functions.region('us-east4').pubsub
+  checkStocks: functions.region('us-east4')
+    .runWith(runtimeOpts512)
+    .pubsub
     .schedule("*/10 * * * *")
     .onRun(async () => {
       try {
@@ -258,9 +266,9 @@ export const foreignStocksGroup = {
 
           // 3. Process data from the most recent source
           const updatePromises = [];
-          for (const stock of mostRecentData.stocks) {
-            stock.country = countryName;
-            updatePromises.push(updateStock(stock, mostRecentData.update, mostRecentSource));
+          for (const mostRecentStock of mostRecentData.stocks) {
+            mostRecentStock.country = countryName;
+            updatePromises.push(updateStock(mostRecentStock, mostRecentData.update, mostRecentSource));
           }
           await Promise.all(updatePromises);
 
