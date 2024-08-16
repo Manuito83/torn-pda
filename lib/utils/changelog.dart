@@ -39,6 +39,16 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.4.5 - Build 436 - 16/08/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.4.5'
+        ..date = '15 SEP 2024'
+        ..features = [
+          "Fixed other reported issues",
+        ],
+    );
+
     // v3.4.4 - Build 435 - 20/07/2024
     itemList.add(
       ChangeLogItem()
@@ -533,7 +543,7 @@ class ChangeLogState extends State<ChangeLog> {
     String feat2_9_5_4 = "";
     if (Platform.isAndroid) feat2_9_5_4 = "Fixed website Google login";
     if (Platform.isIOS) feat2_9_5_4 = "Fixed alternative website login";
-    const String feat2_9_5_5 = "Fixed discrete notifications option (Settings) missing on iOS";
+    const String feat2_9_5_5 = "Fixed discreet notifications option (Settings) missing on iOS";
     const String feat2_9_5_6 = "Fixed log copy to clipboard";
     const String feat2_9_5_7 = "Fixed issue with missing shortcuts";
     const String feat2_9_5_8 = "Increased timeout with YATA to improve communication";
@@ -571,7 +581,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v2_9_2 = ChangeLogItem();
     v2_9_2.version = 'Torn PDA v2.9.2';
     v2_9_2.date = '05 NOV 2022';
-    const String feat2_9_2_1 = "Added discrete option for alerts and notifications";
+    const String feat2_9_2_1 = "Added discreet option for alerts and notifications";
     const String feat2_9_2_2 = "War: added option to filter out traveling targets";
     const String feat2_9_2_3 = "Fixed browser refresh rate";
     const String feat2_9_2_4 = "Fixed some API parsing issues";

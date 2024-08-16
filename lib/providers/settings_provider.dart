@@ -181,11 +181,11 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _discreteNotifications = false;
-  bool get discreteNotifications => _discreteNotifications;
-  set discreteNotifications(bool value) {
-    _discreteNotifications = value;
-    Prefs().setDiscreteNotifications(value);
+  var _discreetNotifications = false;
+  bool get discreetNotifications => _discreetNotifications;
+  set discreetNotifications(bool value) {
+    _discreetNotifications = value;
+    Prefs().setDiscreetNotifications(value);
     notifyListeners();
   }
 
@@ -1040,7 +1040,7 @@ class SettingsProvider extends ChangeNotifier {
       _naturalNerveBarSource = NaturalNerveBarSource.off;
     }
 
-    _discreteNotifications = await Prefs().getDiscreteNotifications();
+    _discreetNotifications = await Prefs().getDiscreetNotifications();
 
     _showDateInClock = await Prefs().getShowDateInClock();
     _showSecondsInClock = await Prefs().getShowSecondsInClock();

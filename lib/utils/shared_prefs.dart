@@ -72,7 +72,7 @@ class Prefs {
   final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
   final String _kDarkThemeToSync = "tornLite_themeToSync";
   final String _kVibrationPattern = "pda_vibrationPattern";
-  final String _kDiscreteNotifications = "pda_discreteNotifications";
+  final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
@@ -887,16 +887,16 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for discrete notifications
+  /// Methods for discreet notifications
   /// ----------------------------
-  Future<bool> getDiscreteNotifications() async {
+  Future<bool> getDiscreetNotifications() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDiscreteNotifications) ?? false;
+    return prefs.getBool(_kDiscreetNotifications) ?? false;
   }
 
-  Future<bool> setDiscreteNotifications(bool value) async {
+  Future<bool> setDiscreetNotifications(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDiscreteNotifications, value);
+    return prefs.setBool(_kDiscreetNotifications, value);
   }
 
   /// ----------------------------

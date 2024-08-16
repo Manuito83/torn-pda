@@ -1508,14 +1508,14 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
     String place = "";
     if (_member.status!.state == "Hospital") {
       place = "#h#";
-      notificationTitle = context.read<SettingsProvider>().discreteNotifications ? "WT" : "War target";
-      notificationSubtitle = context.read<SettingsProvider>().discreteNotifications
+      notificationTitle = context.read<SettingsProvider>().discreetNotifications ? "WT" : "War target";
+      notificationSubtitle = context.read<SettingsProvider>().discreetNotifications
           ? " "
           : "${_member.name} is about to be released from hospital!";
     } else if (_member.status!.state == "Jail") {
       place = "#j#";
-      notificationTitle = context.read<SettingsProvider>().discreteNotifications ? "WT" : "";
-      notificationSubtitle = context.read<SettingsProvider>().discreteNotifications
+      notificationTitle = context.read<SettingsProvider>().discreetNotifications ? "WT" : "";
+      notificationSubtitle = context.read<SettingsProvider>().discreetNotifications
           ? " "
           : "${_member.name} is about to be released from jail!";
     } else {

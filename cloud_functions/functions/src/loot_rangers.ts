@@ -103,8 +103,8 @@ export const lootRangersGroup = {
         let fullSubtitle = `Attack order: ${orderArray.join(', ')}`;
         console.log(fullSubtitle);
 
-        let discreteTitle = "LR";
-        let discreteSubtitle = "";
+        let discreetTitle = "LR";
+        let discreetSubtitle = "";
 
         const attackTime = `${hours}:${minutes}`;
 
@@ -112,8 +112,8 @@ export const lootRangersGroup = {
           promises.push(
             sendNotificationToUser(
               subscribers[key].token,
-              subscribers[key].discrete ? discreteTitle : fullTitle,
-              subscribers[key].discrete ? discreteSubtitle : fullSubtitle,
+              subscribers[key].discrete ? discreetTitle : fullTitle,
+              subscribers[key].discrete ? discreetSubtitle : fullSubtitle,
               "notification_loot",
               "#FF0000",
               "Alerts loot",
