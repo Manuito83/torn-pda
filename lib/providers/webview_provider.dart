@@ -57,6 +57,8 @@ class TabDetails {
   List<String?> historyForward = <String?>[];
   bool isChainingBrowser = false;
   DateTime? lastUsedTime;
+  bool isLocked = false;
+  bool isLockFull = false;
 }
 
 class SleepingWebView {
@@ -449,6 +451,8 @@ class WebViewProvider extends ChangeNotifier {
           chatRemovalActive: wv.chatRemovalActive,
           historyBack: wv.historyBack,
           historyForward: wv.historyForward,
+          isLocked: wv.isLocked,
+          isLockFull: wv.isLockFull,
         );
       } else {
         addHiddenTab(
@@ -457,6 +461,8 @@ class WebViewProvider extends ChangeNotifier {
           chatRemovalActive: wv.chatRemovalActive,
           historyBack: wv.historyBack,
           historyForward: wv.historyForward,
+          isLocked: wv.isLocked,
+          isLockFull: wv.isLockFull,
         );
       }
     }
@@ -493,6 +499,8 @@ class WebViewProvider extends ChangeNotifier {
     bool isChainingBrowser = false,
     ChainingPayload? chainingPayload,
     bool allowDownloads = true,
+    bool isLocked = false,
+    bool isLockFull = false,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     final key = GlobalKey<WebViewFullState>();
@@ -528,7 +536,9 @@ class WebViewProvider extends ChangeNotifier {
         ..chatRemovalActiveTab = chatRemovalActive
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[]
-        ..isChainingBrowser = isChainingBrowser,
+        ..isChainingBrowser = isChainingBrowser
+        ..isLocked = isLocked
+        ..isLockFull = isLockFull,
     );
     notifyListeners();
     _callAssessMethods();
@@ -543,6 +553,8 @@ class WebViewProvider extends ChangeNotifier {
     bool? chatRemovalActive,
     List<String?>? historyBack,
     List<String?>? historyForward,
+    bool isLocked = false,
+    bool isLockFull = false,
   }) {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     _tabList.add(
@@ -551,7 +563,9 @@ class WebViewProvider extends ChangeNotifier {
         ..pageTitle = pageTitle
         ..chatRemovalActiveTab = chatRemovalActive
         ..historyBack = historyBack ?? <String>[]
-        ..historyForward = historyForward ?? <String>[],
+        ..historyForward = historyForward ?? <String>[]
+        ..isLocked = isLocked
+        ..isLockFull = isLockFull,
     );
     _saveTabs();
   }
@@ -679,6 +693,30 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
+  void rebuildUnresponsiveWebView({required isChainingBrowser, required chainingPayload}) {
+    final crashedTab = _tabList[_currentTab];
+
+    // Reconnect the controller and widgets with a new key
+    final newKey = GlobalKey<WebViewFullState>();
+
+    crashedTab.webView = WebViewFull(
+      customUrl: crashedTab.currentUrl,
+      key: newKey,
+      useTabs: true,
+      chatRemovalActive: crashedTab.chatRemovalActiveTab,
+      isChainingBrowser: isChainingBrowser,
+      chainingPayload: chainingPayload,
+      allowDownloads: true,
+    );
+
+    _tabList[_currentTab].webView = crashedTab.webView;
+    _tabList[_currentTab].webViewKey = newKey;
+
+    _callAssessMethods();
+    notifyListeners();
+    _saveCurrentActiveTabPosition();
+  }
+
   void pauseCurrentWebview() {
     if (_tabList.isEmpty) return;
     log("Pausing current webview!");
@@ -698,7 +736,7 @@ class WebViewProvider extends ChangeNotifier {
       if (_tabList.isEmpty) return;
       final currentTab = _tabList[_currentTab];
       // NOTE: IOS only stops the current active webview
-      currentTab.webViewKey?.currentState?.webView?.pauseTimers();
+      currentTab.webViewKey?.currentState?.webViewController?.pauseTimers();
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
@@ -710,7 +748,7 @@ class WebViewProvider extends ChangeNotifier {
       if (_tabList.isEmpty) return;
 
       final currentTab = _tabList[_currentTab];
-      currentTab.webViewKey?.currentState?.webView?.resumeTimers();
+      currentTab.webViewKey?.currentState?.webViewController?.resumeTimers();
 
       if (Platform.isAndroid) {
         // Android pauses the ones that are not in use
@@ -871,6 +909,42 @@ class WebViewProvider extends ChangeNotifier {
       duration: const Duration(seconds: 1),
       contentPadding: const EdgeInsets.all(10),
     );
+  }
+
+  void toggleTabLock({required TabDetails tab, forceLock = false, isLockFull = false}) {
+    final currentIndex = _tabList.indexOf(tab);
+    if (currentIndex == 0) return;
+
+    final activeKey = _tabList[_currentTab].webView?.key;
+    _tabList.remove(tab);
+
+    if (forceLock) {
+      tab.isLocked = true;
+    } else {
+      tab.isLocked = !tab.isLocked;
+    }
+
+    tab.isLockFull = isLockFull;
+
+    int insertIndex = _tabList.lastIndexWhere((t) => t.isLocked);
+    insertIndex = insertIndex < 1 ? 1 : insertIndex + 1;
+    _tabList.insert(insertIndex, tab);
+
+    // Restore the active tab
+    for (var i = 0; i < _tabList.length; i++) {
+      if (_tabList[i].webView?.key == activeKey) {
+        activateTab(i);
+        break;
+      }
+    }
+
+    // Handle vertical menu index
+    if (verticalMenuIsOpen && verticalMenuCurrentIndex == currentIndex) {
+      verticalMenuCurrentIndex = _tabList.indexOf(tab);
+    }
+
+    _saveTabs();
+    notifyListeners();
   }
 
   void addToHistoryBack({required TabDetails tab, required String? url}) {
@@ -1066,7 +1140,9 @@ class WebViewProvider extends ChangeNotifier {
             ..pageTitle = _tabList[i].pageTitle
             ..chatRemovalActive = _tabList[i].chatRemovalActiveTab
             ..historyBack = _tabList[i].historyBack
-            ..historyForward = _tabList[i].historyForward,
+            ..historyForward = _tabList[i].historyForward
+            ..isLocked = _tabList[i].isLocked
+            ..isLockFull = _tabList[i].isLockFull,
         );
       }
     }

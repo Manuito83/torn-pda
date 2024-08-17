@@ -262,6 +262,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showTabLockWarnings = true;
+  bool get showTabLockWarnings => _showTabLockWarnings;
+  set showTabLockWarnings(bool value) {
+    _showTabLockWarnings = value;
+    Prefs().setShowTabLockWarnings(_showTabLockWarnings);
+    notifyListeners();
+  }
+
   var _fullScreenRemovesWidgets = true;
   bool get fullScreenRemovesWidgets => _fullScreenRemovesWidgets;
   set fullScreenRemovesWidgets(bool value) {
@@ -885,7 +893,7 @@ class SettingsProvider extends ChangeNotifier {
   set debugMessages(bool value) {
     _debugMessages = value;
     logAndShowToUser = value;
-    Prefs().setDebugMessages(_debugMessages);
+    Prefs().setDebugMessages(logAndShowToUser);
     notifyListeners();
   }
 
@@ -957,6 +965,7 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
+    _showTabLockWarnings = await Prefs().getShowTabLockWarnings();
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
     _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
     _fullScreenExtraCloseButton = await Prefs().getFullScreenExtraCloseButton();

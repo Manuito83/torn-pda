@@ -45,6 +45,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.4.5'
         ..date = '15 SEP 2024'
         ..features = [
+          "Browser tabs can now be locked (see Tips)",
+          "Improved browser reload capability if frozen",
           "Fixed other reported issues",
         ],
     );

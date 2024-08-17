@@ -720,6 +720,27 @@ class TipsPageState extends State<TipsPage> {
             "If you are using the 'bottom-bar' or 'dialog' styles: tab and hold the CLOSE button, then slide up or down.",
       ),
     );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Lock tabs",
+        expandedValue: "You can lock your tabs (except for the first one) by using the lock icon in the vertical "
+            "tab menu (shown if you double-tap a tab).\n\n"
+            "There two ways in which you can lock your tabs.\n\n"
+            //
+            "POSITIONAL LOCK:\n\n"
+            "Activated by a single tap in the lock icon: this will lock your tab so that I can't be moved "
+            "(you can still exchange it's position with other locked tabs) or closed. The tab will move "
+            "to the first position available in your tab list, and a small orange lock icon will appear.\n\n"
+            //
+            "FULL LOCK:\n\n"
+            "Activated by a long-press in the lock icon: on top of the behavior you get with the "
+            "positional lock, your tab will be locked in the current website/section you are visiting "
+            "and you will not be able to browser to other web sections. \n\n"
+            "Note: you will be able to reload the page and still be able to browser through the pages of "
+            "multi-page sections (e.g.: forums, hospital, jail, items...) and such.\n\n"
+            "When the full lock is active, a red lock will appear in your tab.",
+      ),
+    );
     return tips;
   }
 

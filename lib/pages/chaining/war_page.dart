@@ -1738,7 +1738,6 @@ class WarTargetsListState extends State<WarTargetsList> {
 
     // Sorting function for pinned and non-pinned members
     void sortMembers(List<WarCard> members) async {
-      print(widget.warController.currentSort);
       switch (widget.warController.currentSort) {
         case WarSortType.levelDes:
           members.sort((a, b) => b.memberModel.level!.compareTo(a.memberModel.level!));

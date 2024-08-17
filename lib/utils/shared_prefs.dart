@@ -78,6 +78,7 @@ class Prefs {
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
+  final String _kFirstTabLockAlerted = "pda_firstTabLockAlerted";
   final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
@@ -271,6 +272,7 @@ class Prefs {
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
+  final String _kShowTabLockWarnings = "pda_showTabLockWarnings";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
   final String _kFullScreenExplanationShown = "pda_fullScreenExplanationShown";
@@ -1281,6 +1283,20 @@ class Prefs {
   Future<bool> setExcessTabsAlerted(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExcessTabsAlerted, value);
+  }
+
+  /// ----------------------------
+  /// Methods for excess first tab lock
+  /// ----------------------------
+
+  Future<bool> getFirstTabLockAlerted() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFirstTabLockAlerted) ?? false;
+  }
+
+  Future<bool> setFirstTabLockAlerted(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFirstTabLockAlerted, value);
   }
 
   /// ----------------------------
@@ -3070,6 +3086,16 @@ class Prefs {
   Future<int> getTabsHideBarColor() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
+  }
+
+  Future<bool> getShowTabLockWarnings() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowTabLockWarnings) ?? true;
+  }
+
+  Future<bool> setShowTabLockWarnings(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowTabLockWarnings, value);
   }
 
   Future<bool> getUseTabsIcons() async {

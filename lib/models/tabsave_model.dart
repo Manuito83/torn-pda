@@ -35,6 +35,8 @@ class TabsSave {
     this.chatRemovalActive,
     this.historyBack,
     this.historyForward,
+    this.isLocked = false,
+    this.isLockFull = false,
   });
 
   GlobalKey? tabKey;
@@ -43,6 +45,8 @@ class TabsSave {
   bool? chatRemovalActive;
   List<String?>? historyBack;
   List<String?>? historyForward;
+  bool isLocked;
+  bool isLockFull;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
         tabKey: json["tabKey"],
@@ -51,6 +55,8 @@ class TabsSave {
         chatRemovalActive: json["chat"],
         historyBack: json["historyBack"] == null ? null : List<String>.from(json["historyBack"].map((x) => x)),
         historyForward: json["historyForward"] == null ? null : List<String>.from(json["historyForward"].map((x) => x)),
+        isLocked: json["isLocked"] ?? false,
+        isLockFull: json["isLockFull"] ?? false,
       );
 
   Map<String, dynamic> toJson() => {
@@ -60,5 +66,7 @@ class TabsSave {
         "chat": chatRemovalActive,
         "historyBack": historyBack == null ? null : List<dynamic>.from(historyBack!.map((x) => x)),
         "historyForward": historyForward == null ? null : List<dynamic>.from(historyForward!.map((x) => x)),
+        "isLocked": isLocked,
+        "isLockFull": isLockFull,
       };
 }

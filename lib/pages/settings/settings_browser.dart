@@ -1782,6 +1782,38 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ],
             ),
           ),
+        if (_settingsProvider.useTabsFullBrowser)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Text("Show tab lock warnings"),
+                Switch(
+                  value: _settingsProvider.showTabLockWarnings,
+                  onChanged: (value) {
+                    setState(() {
+                      _settingsProvider.showTabLockWarnings = value;
+                    });
+                  },
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+          child: Text(
+            'If enabled, a short message with a lock icon will appear whenever the lock status of a tab is changed or '
+            'when the app is impeeding navigation or tab movement due to its lock condition',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

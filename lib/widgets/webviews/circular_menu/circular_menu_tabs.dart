@@ -1,5 +1,8 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:toastification/toastification.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/multitab_detector.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
@@ -154,7 +157,24 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
                 widget.webViewProvider!.verticalMenuCurrentIndex = widget.tabIndex;
               } else if (numTaps == 3) {
                 // Triple tab
-                widget.webViewProvider!.removeTab(position: widget.tabIndex);
+                if (!widget.webViewProvider!.tabList[widget.tabIndex].isLocked) {
+                  widget.webViewProvider!.removeTab(position: widget.tabIndex);
+                } else {
+                  if (context.read<SettingsProvider>().showTabLockWarnings) {
+                    toastification.show(
+                      alignment: Alignment.bottomCenter,
+                      title: Icon(
+                        Icons.lock,
+                        color: widget.webViewProvider!.tabList[widget.tabIndex].isLockFull ? Colors.red : Colors.orange,
+                      ),
+                      autoCloseDuration: Duration(seconds: 2),
+                      animationDuration: Duration(milliseconds: 0),
+                      showProgressBar: false,
+                      style: ToastificationStyle.simple,
+                      borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+                    );
+                  }
+                }
               }
             });
           },
