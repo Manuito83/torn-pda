@@ -106,20 +106,18 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
 
                         try {
                             promisesFaction.push(
-                                sendNotificationToUser(
-                                    subscribers[key].token,
-                                    title,
-                                    body,
-                                    "notification_retals",
-                                    "#FF0000",
-                                    "Alerts retals",
-                                    "",
-                                    "",
-                                    "-1",
-                                    "-1",
-                                    subscribers[key].vibration,
-                                    "sword_clash.aiff"
-                                )
+                                sendNotificationToUser({
+                                    token: subscribers[key].token,
+                                    title: title,
+                                    body: body,
+                                    icon: "notification_retals",
+                                    color: "#FF0000",
+                                    channelId: "Alerts retals",
+                                    assistId: "-1",
+                                    bulkDetails: "-1",
+                                    vibration: subscribers[key].vibration,
+                                    sound: "sword_clash.aiff"
+                                })
                             );
                         } catch (e) {
                             // Entity not found?
@@ -408,23 +406,21 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
             }
 
             lastSubscriber = subscribers[key].uid;
-            promisesFaction.push(
-                sendNotificationToUser(
-                    subscribers[key].token,
-                    title,
-                    body,
-                    "notification_retals",
-                    "#FF0000",
-                    "Alerts retals",
-                    "",
-                    "",
-                    lastRetalAttackerId,
-                    numberOrRetals.toString(),
-                    subscribers[key].vibration,
-                    "sword_clash.aiff"
-                )
-            );
 
+            promisesFaction.push(
+                sendNotificationToUser({
+                    token: subscribers[key].token,
+                    title: title,
+                    body: body,
+                    icon: "notification_retals",
+                    color: "#FF0000",
+                    channelId: "Alerts retals",
+                    assistId: lastRetalAttackerId,
+                    bulkDetails: numberOrRetals.toString(),
+                    vibration: subscribers[key].vibration,
+                    sound: "sword_clash.aiff"
+                })
+            );
         }
 
         functions.logger.info(`Retals faction ${ownFactionId}: ${subscribers.length} players`);

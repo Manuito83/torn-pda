@@ -26,19 +26,15 @@ export const troubleshootingGroup = {
             id = userData.id;
 
             promises.push(
-                sendNotificationToUser(
-                    userData.token,
-                    "Test notification",
-                    "This is a test from the server to assess if Torn PDA alerts can reach you",
-                    "notification_icon",
-                    "#FFFFFF",
-                    "Alerts test",
-                    "",
-                    "",
-                    "",
-                    "",
-                    "medium",
-                )
+                sendNotificationToUser({
+                    token: userData.token,
+                    title: "Test notification",
+                    body: "This is a test from the server to assess if Torn PDA alerts can reach you",
+                    icon: "notification_icon",
+                    color: "#FFFFFF",
+                    channelId: "Alerts test",
+                    vibration: "medium",
+                })
             );
 
             functions.logger.info(`Test notification sent to ${name} [${callingUser.data().playerId}]`);

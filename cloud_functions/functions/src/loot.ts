@@ -141,20 +141,17 @@ export const lootGroup = {
                             }
 
                             promises.push(
-                                sendNotificationToUser(
-                                    subscribers[key].token,
-                                    title,
-                                    body,
-                                    "notification_loot",
-                                    "#FF0000",
-                                    "Alerts loot",
-                                    "",
-                                    "",
-                                    npcId,
-                                    "",
-                                    subscribers[key].vibration,
-                                    "sword_clash.aiff"
-                                )
+                                sendNotificationToUser({
+                                    token: subscribers[key].token,
+                                    title: title,
+                                    body: body,
+                                    icon: "notification_loot",
+                                    color: "#FF0000",
+                                    channelId: "Alerts loot",
+                                    assistId: npcId,
+                                    vibration: subscribers[key].vibration,
+                                    sound: "sword_clash.aiff"
+                                })
                             );
 
                             usersNotified++;

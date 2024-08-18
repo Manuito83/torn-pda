@@ -102,20 +102,18 @@ export const factionAssistGroup = {
             }
 
             promises.push(
-                sendNotificationToUser(
-                    thisMember.token,
-                    title,
-                    body,
-                    "notification_assist",
-                    "#FF0000",
-                    "Alerts assists",
-                    "",
-                    "",
-                    attackId,
-                    bulkDetails,
-                    thisMember.vibration,
-                    "sword_clash.aiff"
-                )
+                sendNotificationToUser({
+                    token: thisMember.token,
+                    title: title,
+                    body: body,
+                    icon: "notification_assist",
+                    color: "#FF0000",
+                    channelId: "Alerts assists",
+                    assistId: attackId,
+                    bulkDetails: bulkDetails,
+                    vibration: thisMember.vibration,
+                    sound: "sword_clash.aiff",
+                })
             );
 
             membersNotified++;

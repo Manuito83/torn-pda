@@ -75,20 +75,17 @@ export const refillsGroup = {
               }
 
               promises.push(
-                sendNotificationToUser(
-                  thisUser.token,
-                  title,
-                  body,
-                  "notification_refills",
-                  "#0000FF",
-                  "Alerts refills",
-                  "",
-                  "",
-                  "",
-                  "",
-                  thisUser.vibration,
-                )
+                sendNotificationToUser({
+                  token: thisUser.token,
+                  title: title,
+                  body: body,
+                  icon: "notification_refills",
+                  color: "#0000FF",
+                  channelId: "Alerts refills",
+                  vibration: thisUser.vibration,
+                })
               );
+
               nothingSelected++;
 
               // This covers the normal case. User with an existing refillsRequested array that that is not empty 
@@ -128,19 +125,15 @@ export const refillsGroup = {
 
               if (sendNotification) {
                 promises.push(
-                  sendNotificationToUser(
-                    thisUser.token,
-                    notificationTitle,
-                    notificationBody,
-                    "notification_refills",
-                    "#0000FF",
-                    "Alerts refills",
-                    "",
-                    "",
-                    "",
-                    "",
-                    thisUser.vibration,
-                  )
+                  sendNotificationToUser({
+                    token: thisUser.token,
+                    title: notificationTitle,
+                    body: notificationBody,
+                    icon: "notification_refills",
+                    color: "#0000FF",
+                    channelId: "Alerts refills",
+                    vibration: thisUser.vibration,
+                  })
                 );
                 sent++;
               }

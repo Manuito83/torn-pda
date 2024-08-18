@@ -23,19 +23,15 @@ export const staleGroup = {
 
       usersWhoAreStale.map((user) => {
         promises.push(
-          sendNotificationToUser(
-            user.token,
-            "Automatic alerts have been deactivated!",
-            "Your alerts have been turned off due to inactivity, please use Torn PDA again to reactivate! If you think this is an error, contact us!",
-            "notification_icon",
-            "#FFFFFF",
-            "Alerts stale user",
-            "",
-            "",
-            "",
-            "",
-            "medium",
-          )
+          sendNotificationToUser({
+            token: user.token,
+            title: "Automatic alerts have been deactivated!",
+            body: "Your alerts have been turned off due to inactivity, please use Torn PDA again to reactivate! If you think this is an error, contact us!",
+            icon: "notification_icon",
+            color: "#FFFFFF",
+            channelId: "Alerts stale user",
+            vibration: "medium",
+          })
         );
         promises.push(
           admin
