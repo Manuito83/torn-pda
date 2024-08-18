@@ -5,7 +5,7 @@
  * 2. Determines most recent source: for each country, it compares the timestamps from YATA and Prometheus to determine which provider has the most up-to-date data
  * 3. Updates Stocks/Restocks
  *    - It updates stocks in Firestore and restocks in Realtime Database using the data from the most recent source
- *    - It only updates an item if the incoming timestamp is newer than the existing timestamp in the databas
+ *    - It only updates an item if the incoming timestamp is newer than the existing timestamp in the database
  * 4. Adds Missing Items: after processing the most recent source, it checks the less recent source for any missing items (items not present in the database). 
  *    It then adds these missing items to the database.
  */
@@ -15,7 +15,7 @@ import * as admin from "firebase-admin";
 const fetch = require("node-fetch");
 
 const runtimeOpts512 = {
-  timeoutSeconds: 120,
+  timeoutSeconds: 180,
   memory: "512MB" as "512MB",
 }
 
@@ -32,10 +32,21 @@ function debugLog(message: string) {
   }
 }
 
+// Helper function to perform fetch with a timeout
+async function fetchWithTimeout(url, options = {}, timeout = 8000) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeout);
+  const response = await fetch(url, {
+    ...options,
+    signal: controller.signal
+  }).finally(() => clearTimeout(id));
+  return response;
+}
+
 // Function to get data from YATA API
 async function getYataStocks() {
   try {
-    const response = await fetch(YATA_API_URL);
+    const response = await fetchWithTimeout(YATA_API_URL, {}, 8000);
     const data = await response.json();
     return data.stocks;
   } catch (e) {
@@ -47,7 +58,7 @@ async function getYataStocks() {
 // Function to get data from Prometheus API
 async function getPrometheusStocks() {
   try {
-    const response = await fetch(PROMETHEUS_API_URL);
+    const response = await fetchWithTimeout(PROMETHEUS_API_URL, {}, 5000);
     const data = await response.json();
     return data.stocks;
   } catch (e) {
@@ -245,65 +256,47 @@ export const foreignStocksGroup = {
         const yataStocks = await getYataStocks();
         const prometheusStocks = await getPrometheusStocks();
 
-        // 1. Process each country
-        for (const countryName in yataStocks) {
+        // 1. Process each country concurrently
+        const countryPromises = Object.keys(yataStocks).map(async (countryName) => {
           const yataCountryData = yataStocks[countryName];
           const prometheusCountryData = prometheusStocks[countryName];
 
           // 2. Determine the most recent source for the country
-          let mostRecentSource = null;
-          let mostRecentData = null;
-
-          if (yataCountryData.update > prometheusCountryData.update) {
-            mostRecentSource = 'YATA';
-            mostRecentData = yataCountryData;
-          } else {
-            mostRecentSource = 'Prometheus';
-            mostRecentData = prometheusCountryData;
-          }
+          let mostRecentSource = yataCountryData.update > prometheusCountryData.update ? 'YATA' : 'Prometheus';
+          let mostRecentData = mostRecentSource === 'YATA' ? yataCountryData : prometheusCountryData;
 
           debugLog(`Most recent data source for ${countryName}: ${mostRecentSource}`);
 
           // 3. Process data from the most recent source
-          const updatePromises = [];
-          for (const mostRecentStock of mostRecentData.stocks) {
-            mostRecentStock.country = countryName;
-            updatePromises.push(updateStock(mostRecentStock, mostRecentData.update, mostRecentSource));
-          }
+          const updatePromises = mostRecentData.stocks.map(stock => {
+            stock.country = countryName;
+            return updateStock(stock, mostRecentData.update, mostRecentSource);
+          });
           await Promise.all(updatePromises);
 
           // 4. Process data from the less recent source to add any missing items
           debugLog(`----- Checking for missing stocks in ${mostRecentSource === 'YATA' ? 'Prometheus' : 'YATA'} -----`);
           let itemsAdded = 0;
 
-          if (mostRecentSource === 'YATA') {
-            for (const stock of prometheusCountryData.stocks) {
-              const codeName = `${countryName}-${stock.name}`;
-              const existingData = await getExistingStockData(codeName, 'Firestore');
-              if (!existingData) {
-                stock.country = countryName;
-                await updateStock(stock, prometheusCountryData.update, 'Prometheus');
-                itemsAdded++;
-                debugLog(`Added missing stock ${codeName} from Prometheus`);
-              }
+          const lessRecentSource = mostRecentSource === 'YATA' ? 'Prometheus' : 'YATA';
+          const lessRecentData = lessRecentSource === 'YATA' ? yataCountryData : prometheusCountryData;
+          const missingPromises = lessRecentData.stocks.map(async (stock) => {
+            const codeName = `${countryName}-${stock.name}`;
+            const existingData = await getExistingStockData(codeName, 'Firestore');
+            if (!existingData) {
+              stock.country = countryName;
+              await updateStock(stock, lessRecentData.update, lessRecentSource);
+              itemsAdded++;
+              debugLog(`Added missing stock ${codeName} from ${lessRecentSource}`);
             }
-
-          } else {
-            for (const stock of yataCountryData.stocks) {
-              const codeName = `${countryName}-${stock.name}`;
-              const existingData = await getExistingStockData(codeName, 'Firestore');
-              if (!existingData) {
-                stock.country = countryName;
-                await updateStock(stock, yataCountryData.update, 'YATA');
-                itemsAdded++;
-                debugLog(`Added missing stock ${codeName} from YATA`);
-              }
-            }
-          }
+          });
+          await Promise.all(missingPromises);
           if (itemsAdded === 0) {
             debugLog(`No new items found`);
           }
-        }
+        });
+
+        await Promise.all(countryPromises);
 
       } catch (e) {
         functions.logger.warn(`ERROR in checkStocks: \n${e}`);
@@ -319,64 +312,47 @@ export const foreignStocksGroup = {
         const yataStocks = await getYataStocks();
         const prometheusStocks = await getPrometheusStocks();
 
-        // 1. Process each country
-        for (const countryName in yataStocks) {
+        // 1. Process each country concurrently
+        const countryPromises = Object.keys(yataStocks).map(async (countryName) => {
           const yataCountryData = yataStocks[countryName];
           const prometheusCountryData = prometheusStocks[countryName];
 
           // 2. Determine the most recent source for the country
-          let mostRecentSource = null;
-          let mostRecentData = null;
-
-          if (yataCountryData.update > prometheusCountryData.update) {
-            mostRecentSource = 'YATA';
-            mostRecentData = yataCountryData;
-          } else {
-            mostRecentSource = 'Prometheus';
-            mostRecentData = prometheusCountryData;
-          }
+          let mostRecentSource = yataCountryData.update > prometheusCountryData.update ? 'YATA' : 'Prometheus';
+          let mostRecentData = mostRecentSource === 'YATA' ? yataCountryData : prometheusCountryData;
 
           debugLog(`Most recent data source for ${countryName}: ${mostRecentSource}`);
 
           // 3. Process data from the most recent source
-          const updatePromises = [];
-          for (const stock of mostRecentData.stocks) {
+          const updatePromises = mostRecentData.stocks.map(stock => {
             stock.country = countryName;
-            updatePromises.push(updateRestock(stock, mostRecentData.update, mostRecentSource));
-          }
+            return updateRestock(stock, mostRecentData.update, mostRecentSource);
+          });
           await Promise.all(updatePromises);
 
           // 4. Process data from the less recent source to add any missing items
           debugLog(`----- Checking for missing restocks in ${mostRecentSource === 'YATA' ? 'Prometheus' : 'YATA'} -----`);
           let itemsAdded = 0;
 
-          if (mostRecentSource === 'YATA') {
-            for (const stock of prometheusCountryData.stocks) {
-              const codeName = `${countryName}-${stock.name}`;
-              const existingData = await getExistingStockData(codeName, 'RealtimeDB');
-              if (!existingData) {
-                stock.country = countryName;
-                await updateRestock(stock, prometheusCountryData.update, 'Prometheus');
-                itemsAdded++;
-                debugLog(`Added missing restock ${codeName} from Prometheus`);
-              }
+          const lessRecentSource = mostRecentSource === 'YATA' ? 'Prometheus' : 'YATA';
+          const lessRecentData = lessRecentSource === 'YATA' ? yataCountryData : prometheusCountryData;
+          const missingPromises = lessRecentData.stocks.map(async (stock) => {
+            const codeName = `${countryName}-${stock.name}`;
+            const existingData = await getExistingStockData(codeName, 'RealtimeDB');
+            if (!existingData) {
+              stock.country = countryName;
+              await updateRestock(stock, lessRecentData.update, lessRecentSource);
+              itemsAdded++;
+              debugLog(`Added missing restock ${codeName} from ${lessRecentSource}`);
             }
-          } else {
-            for (const stock of yataCountryData.stocks) {
-              const codeName = `${countryName}-${stock.name}`;
-              const existingData = await getExistingStockData(codeName, 'RealtimeDB');
-              if (!existingData) {
-                stock.country = countryName;
-                await updateRestock(stock, yataCountryData.update, 'YATA');
-                itemsAdded++;
-                debugLog(`Added missing restock ${codeName} from YATA`);
-              }
-            }
-          }
+          });
+          await Promise.all(missingPromises);
           if (itemsAdded === 0) {
             debugLog(`No new items found`);
           }
-        }
+        });
+
+        await Promise.all(countryPromises);
 
       } catch (e) {
         functions.logger.warn(`ERROR STOCKS FILL \n${e}`);
