@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +9,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -63,18 +63,15 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
               onPressed: _isTestingNotification
                   ? null
                   : () async {
-                      try {
-                        setState(() {
-                          _isTestingNotification = true;
-                        });
+                      bool success = false;
 
-                        final HttpsCallable callable = FirebaseFunctions.instanceFor(
-                          region: 'us-east4',
-                        ).httpsCallable(
-                          'troubleshooting-sendTroubleshootingAutoNotification',
-                        );
-                        await callable.call();
+                      setState(() {
+                        _isTestingNotification = true;
+                      });
 
+                      success = await firebaseFunctions.sendAlertsTroubleshootingTest();
+
+                      if (success) {
                         BotToast.showText(
                           text: "Request sent, please wait for a few seconds...",
                           textStyle: const TextStyle(
@@ -85,9 +82,11 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
                           duration: const Duration(seconds: 5),
                           contentPadding: const EdgeInsets.all(10),
                         );
-                      } catch (e) {
+                      }
+
+                      if (!success) {
                         BotToast.showText(
-                          text: "There was a problem sendind the request, no communicationn with the server!",
+                          text: "There was a problem sending the request, no communicationn with the server!",
                           textStyle: const TextStyle(
                             fontSize: 14,
                             color: Colors.white,

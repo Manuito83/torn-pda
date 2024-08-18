@@ -196,6 +196,12 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts retals';
     channelName = 'Alerts retals';
     channelDescription = 'Automatic alerts for retals';
+  } else if (channel.contains("Alerts test")) {
+    notificationIcon = "notification_icon";
+    notificationColor = Colors.grey;
+    channelId = 'Alerts test';
+    channelName = 'Alerts test';
+    channelDescription = 'Alerts troubleshooting notification';
   }
 
   if (Platform.isAndroid) {
@@ -346,6 +352,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
   List<AndroidNotificationChannel> channels = [];
 
   final modifier = await getNotificationChannelsModifiers(mod: mod);
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts test ${modifier.channelIdModifier}',
+      'Alerts test ${modifier.channelIdModifier}',
+      description: 'Alerts troubleshooting notification',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
 
   channels.add(
     AndroidNotificationChannel(
