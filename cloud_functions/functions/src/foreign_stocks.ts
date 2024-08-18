@@ -14,9 +14,9 @@ import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 const fetch = require("node-fetch");
 
-const runtimeOpts512 = {
-  timeoutSeconds: 180,
-  memory: "512MB" as "512MB",
+const runtimeOpts1024 = {
+  timeoutSeconds: 240,
+  memory: "1GB" as "1GB",
 }
 
 // API URLs
@@ -246,7 +246,7 @@ async function getExistingStockData(codeName: string, database: string) {
 export const foreignStocksGroup = {
 
   checkStocks: functions.region('us-east4')
-    .runWith(runtimeOpts512)
+    .runWith(runtimeOpts1024)
     .pubsub
     .schedule("*/10 * * * *")
     .onRun(async () => {
