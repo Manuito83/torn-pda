@@ -11,13 +11,13 @@ export const staleGroup = {
 
       const currentDateInMillis = Date.now();
 
-      // This pull the users who haven't open the app for 7 days
+      // This pull the users who haven't open the app for 10 days
       const usersWhoAreStale = (
         await admin
           .firestore()
           .collection("players")
           .where("active", "==", true)
-          .where("lastActive", "<=", currentDateInMillis - aDayInMilliseconds * 6)
+          .where("lastActive", "<=", currentDateInMillis - aDayInMilliseconds * 9)
           .get()
       ).docs.map((d) => d.data());
 
@@ -60,7 +60,7 @@ export const staleGroup = {
 
       const currentDateInMillis = Date.now();
 
-      // This pull the users who have not open the app for 30 days
+      // This pull the total users
       const totalUsers = (
         await admin
           .firestore()
@@ -68,10 +68,10 @@ export const staleGroup = {
           .get()
       ).docs.map((d) => d.data());
 
-      functions.logger.warn(`Total users: ${totalUsers.length}`);
+      functions.logger.warn(`Total app users: ${totalUsers.length}`);
 
       // This pull the users who haven't open the app for 60 days
-      const usersWhoUninstalled = (
+      const usersWithNoUse60Days = (
         await admin
           .firestore()
           .collection("players")
@@ -80,13 +80,13 @@ export const staleGroup = {
           .get()
       ).docs.map((d) => d.data());
 
-      functions.logger.warn(`Active users: ${totalUsers.length - usersWhoUninstalled.length}`);
-      functions.logger.warn(`Users to delete: ${usersWhoUninstalled.length}`);
+      functions.logger.warn(`Active users: ${totalUsers.length - usersWithNoUse60Days.length}`);
+      functions.logger.warn(`Users to delete: ${usersWithNoUse60Days.length}`);
 
       // *******
       // CAUTION
       // *******
-      usersWhoUninstalled.map((user) => {
+      usersWithNoUse60Days.map((user) => {
         promises.push(
           admin
             .firestore()

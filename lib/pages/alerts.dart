@@ -1,28 +1,21 @@
-// Dart imports:
-import 'dart:io';
-
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/pages/alerts/alerts_tsm_dialog.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
-import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
@@ -1110,7 +1103,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
       actions: <Widget>[
         IconButton(
           icon: const Icon(
-            MdiIcons.hammer,
+            Icons.handyman,
           ),
           onPressed: () {
             showDialog(
@@ -1215,93 +1208,25 @@ class AlertsSettingsState extends State<AlertsSettings> {
           fontSize: 18,
         ),
       ),
-      content: const SingleChildScrollView(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.all(8.0),
-              child: Text(
-                "If you are having issues receiving alerts, this will try to reset your server-based "
-                "configuration and notifications channels. "
-                "\n\nYou won't lose any settings or configurations. "
-                "If it doesn't solve the problem, however, you can contact us directly in Discord."
-                "\n\nTap Reset below to proceed.",
-                style: TextStyle(fontSize: 15),
-              ),
-            ),
-          ],
-        ),
+      content: AlertsTsmDialog(
+        firebaseUserModel: _firebaseUserModel,
+        reassignFirebaseUserModelCallback: _reassignUserAfterTsm,
       ),
       actions: [
-        TextButton(
-          child: const Text("Reset"),
-          onPressed: () async {
-            Navigator.of(context).pop();
-
-            try {
-              final userProv = context.read<UserDetailsProvider>();
-
-              // We save the key because the API call will reset it
-              final savedKey = userProv.basic!.userApiKey;
-
-              final dynamic myProfile = await Get.find<ApiCallerController>().getOwnProfileBasic();
-
-              if (myProfile is OwnProfileBasic) {
-                myProfile
-                  ..userApiKey = savedKey
-                  ..userApiKeyValid = true;
-
-                FirebaseUserModel? fb = await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
-                setState(() {
-                  _firebaseUserModel = fb;
-                });
-                await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
-
-                if (Platform.isAndroid) {
-                  final alertsVibration = await Prefs().getVibrationPattern();
-                  // Deletes current channels and create new ones
-                  reconfigureNotificationChannels(mod: alertsVibration);
-                  // Update channel preferences
-                  firestore.setVibrationPattern(alertsVibration);
-                }
-
-                BotToast.showText(
-                  text: "Reset successful",
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.green[800]!,
-                  duration: const Duration(seconds: 5),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-
-                return;
-              }
-            } catch (e) {
-              // Same message below
-            }
-
-            BotToast.showText(
-              text: "There was an error updating the database, try again later!",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.orange[800]!,
-              duration: const Duration(seconds: 5),
-              contentPadding: const EdgeInsets.all(10),
-            );
-          },
-        ),
         TextButton(
           child: const Text("Close"),
           onPressed: () {
             Navigator.of(context).pop();
           },
-        )
+        ),
       ],
     );
+  }
+
+  void _reassignUserAfterTsm(FirebaseUserModel fb) {
+    setState(() {
+      _firebaseUserModel = fb;
+    });
   }
 
   AlertDialog _retalsGeneralExplanation() {

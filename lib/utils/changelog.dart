@@ -39,14 +39,15 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.4.5 - Build 436 - 16/08/2024
+    // v3.4.5 - Build 437 - 18/08/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.4.5'
         ..date = '15 SEP 2024'
         ..features = [
           "Browser tabs can now be locked (see Tips)",
-          "Improved browser reload capability if frozen",
+          "Improved troubleshooting steps for issues with Alerts",
+          "Improved browser reload capability when frozen",
           "Fixed other reported issues",
         ],
     );
