@@ -1493,7 +1493,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                           ],
                           onToggle: (index) {
                             bool syncToast = false;
-                            if (_settingsProvider.syncTornWebTheme) {
+                            if (_settingsProvider.syncDeviceTheme) {
                               final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
                               if (brightness == Brightness.dark && index == 0 ||
                                   brightness == Brightness.light && index == 1 ||
