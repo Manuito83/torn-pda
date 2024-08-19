@@ -6221,7 +6221,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         crimesExist = true;
       }
       if (_miscModel!.bootlegging != null) {
-        crimesString += '\nSBootlegging: ${_miscModel!.bootlegging}';
+        crimesString += '\nBootlegging: ${_miscModel!.bootlegging}';
         crimesExist = true;
       }
       if (_miscModel!.graffiti != null) {
@@ -6246,6 +6246,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
       if (_miscModel!.disposal != null) {
         crimesString += '\nDisposal: ${_miscModel!.disposal}';
+        crimesExist = true;
+      }
+      if (_miscModel!.cracking != null) {
+        crimesString += '\nCracking: ${_miscModel!.cracking}';
         crimesExist = true;
       }
       if (_miscModel!.forgery != null) {
