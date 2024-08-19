@@ -741,6 +741,17 @@ class TipsPageState extends State<TipsPage> {
             "When the full lock is active, a red lock will appear in your tab.",
       ),
     );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Custom tab name",
+        expandedValue: "You can give your tabs (except for the main one) a custom name by using the "
+            "text/paragraph icon in the vertical tab menu.\n\n"
+            "You can also choose whether this custom name will be shown in the tab (default) and/or as a replacement "
+            "to the page title (which is shown in the default browser style).\n\n"
+            "Please note that this name will be lost if you close the tab. This could be particularly useful, however, "
+            "in combination with the tab locking feature (explained above), so that you can organize your tabs better.",
+      ),
+    );
     return tips;
   }
 
