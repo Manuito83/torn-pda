@@ -59,6 +59,9 @@ class TabDetails {
   DateTime? lastUsedTime;
   bool isLocked = false;
   bool isLockFull = false;
+  String customName = "";
+  bool customNameInTitle = false;
+  bool customNameInTab = true;
 }
 
 class SleepingWebView {
@@ -453,6 +456,9 @@ class WebViewProvider extends ChangeNotifier {
           historyForward: wv.historyForward,
           isLocked: wv.isLocked,
           isLockFull: wv.isLockFull,
+          customName: wv.customName,
+          customNameInTitle: wv.customNameInTitle,
+          customNameInTab: wv.customNameInTab,
         );
       } else {
         addHiddenTab(
@@ -463,6 +469,9 @@ class WebViewProvider extends ChangeNotifier {
           historyForward: wv.historyForward,
           isLocked: wv.isLocked,
           isLockFull: wv.isLockFull,
+          customName: wv.customName,
+          customNameInTitle: wv.customNameInTitle,
+          customNameInTab: wv.customNameInTab,
         );
       }
     }
@@ -501,6 +510,9 @@ class WebViewProvider extends ChangeNotifier {
     bool allowDownloads = true,
     bool isLocked = false,
     bool isLockFull = false,
+    String customName = "",
+    bool customNameInTitle = false,
+    bool customNameInTab = true,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     final key = GlobalKey<WebViewFullState>();
@@ -538,7 +550,10 @@ class WebViewProvider extends ChangeNotifier {
         ..historyForward = historyForward ?? <String>[]
         ..isChainingBrowser = isChainingBrowser
         ..isLocked = isLocked
-        ..isLockFull = isLockFull,
+        ..isLockFull = isLockFull
+        ..customName = customName
+        ..customNameInTitle = customNameInTitle
+        ..customNameInTab = customNameInTab,
     );
     notifyListeners();
     _callAssessMethods();
@@ -555,6 +570,9 @@ class WebViewProvider extends ChangeNotifier {
     List<String?>? historyForward,
     bool isLocked = false,
     bool isLockFull = false,
+    String customName = "",
+    bool customNameInTitle = false,
+    bool customNameInTab = true,
   }) {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     _tabList.add(
@@ -565,7 +583,10 @@ class WebViewProvider extends ChangeNotifier {
         ..historyBack = historyBack ?? <String>[]
         ..historyForward = historyForward ?? <String>[]
         ..isLocked = isLocked
-        ..isLockFull = isLockFull,
+        ..isLockFull = isLockFull
+        ..customName = customName
+        ..customNameInTitle = customNameInTitle
+        ..customNameInTab = customNameInTab,
     );
     _saveTabs();
   }
@@ -947,6 +968,20 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setTabCustomName({
+    required TabDetails tab,
+    required String customName,
+    required bool customNameInTitle,
+    required bool customNameInTab,
+  }) {
+    tab.customName = customName;
+    tab.customNameInTitle = customNameInTitle;
+    tab.customNameInTab = customNameInTab;
+
+    _saveTabs();
+    notifyListeners();
+  }
+
   void addToHistoryBack({required TabDetails tab, required String? url}) {
     tab.historyBack.add(url);
     if (tab.historyBack.length > 25) {
@@ -1142,7 +1177,10 @@ class WebViewProvider extends ChangeNotifier {
             ..historyBack = _tabList[i].historyBack
             ..historyForward = _tabList[i].historyForward
             ..isLocked = _tabList[i].isLocked
-            ..isLockFull = _tabList[i].isLockFull,
+            ..isLockFull = _tabList[i].isLockFull
+            ..customName = _tabList[i].customName
+            ..customNameInTitle = _tabList[i].customNameInTitle
+            ..customNameInTab = _tabList[i].customNameInTab,
         );
       }
     }

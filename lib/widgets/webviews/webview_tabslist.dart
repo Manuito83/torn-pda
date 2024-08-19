@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/responsive_text.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart';
 import 'package:torn_pda/widgets/webviews/tabs_lock_dialog.dart';
+import 'package:torn_pda/widgets/webviews/tabs_name_dialog.dart';
 
 class TabsList extends StatefulWidget {
   const TabsList({super.key});
@@ -69,6 +72,9 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
           _webViewProvider!.tabList[i].currentUrl!.contains("https://www.torn.com/forums.php#/"
               "p=threads&f=67&t=16163503&b=0&a=0");
 
+      bool tabCustomNameShown =
+          _webViewProvider!.tabList[i].customName.isNotEmpty && _webViewProvider!.tabList[i].customNameInTab;
+
       tabs.add(
         Visibility(
           key: UniqueKey(),
@@ -99,35 +105,67 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                         Stack(
                           children: [
                             Padding(
-                              padding: _webViewProvider!.useTabIcons
-                                  ? const EdgeInsets.all(10.0)
-                                  : const EdgeInsets.symmetric(horizontal: 5),
-                              child: _webViewProvider!.useTabIcons
-                                  ? SizedBox(width: 26, height: 20, child: _webViewProvider!.getIcon(i, context))
-                                  : SizedBox(
-                                      height: 40,
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Container(
-                                            constraints: const BoxConstraints(
-                                              maxWidth: 100,
-                                              minWidth: 34,
-                                            ),
-                                            child: Text(
-                                              _webViewProvider!.tabList[i].pageTitle!,
-                                              overflow: TextOverflow.clip,
-                                              maxLines: 2,
+                              padding: tabCustomNameShown
+                                  // If we use custom names, we allow the container to move the box a little bit upwards
+                                  ? EdgeInsets.fromLTRB(
+                                      8,
+                                      _webViewProvider!.tabList[i].isLocked || tabCustomNameShown ? 1 : 3,
+                                      8,
+                                      _webViewProvider!.tabList[i].isLocked || tabCustomNameShown ? 7 : 5,
+                                    )
+                                  // Otherwise, it will be icons or page title
+                                  : _webViewProvider!.useTabIcons
+                                      ? const EdgeInsets.all(10.0)
+                                      : const EdgeInsets.symmetric(horizontal: 5),
+                              child:
+                                  // Using custom names
+                                  tabCustomNameShown
+                                      ? Container(
+                                          width: 30,
+                                          height: 32,
+                                          child: Center(
+                                            child: ResponsiveText(
+                                              text: _webViewProvider!.tabList[i].customName,
+                                              maxLines: 3,
+                                              maxFontSize: 11,
+                                              minFontSize: 8,
                                               textAlign: TextAlign.center,
                                               style: TextStyle(
-                                                fontSize: 12,
-                                                color: isManuito ? Colors.pink : _themeProvider.mainText,
+                                                height: 0.9,
+                                                fontWeight: FontWeight.bold,
                                               ),
                                             ),
                                           ),
-                                        ],
-                                      ),
-                                    ),
+                                        )
+                                      // Using icons:
+                                      : _webViewProvider!.useTabIcons
+                                          ? SizedBox(
+                                              width: 26,
+                                              height: 20,
+                                              child: _webViewProvider!.getIcon(i, context),
+                                            )
+                                          // Using page titles
+                                          : SizedBox(
+                                              height: 40,
+                                              child: Column(
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Container(
+                                                    constraints: const BoxConstraints(maxWidth: 100, minWidth: 34),
+                                                    child: Text(
+                                                      _webViewProvider!.tabList[i].pageTitle!,
+                                                      overflow: TextOverflow.clip,
+                                                      maxLines: 2,
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: isManuito ? Colors.pink : _themeProvider.mainText,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                             ),
                             if (_webViewProvider!.tabList[i].isLocked)
                               Positioned(
@@ -141,6 +179,19 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                               _webViewProvider!.tabList[i].isLocked
                                           ? Colors.orange
                                           : _themeProvider.mainText,
+                                  size: 9,
+                                ),
+                              ),
+                            if (_webViewProvider!.tabList[i].customName.isNotEmpty)
+                              Positioned(
+                                bottom: 1,
+                                left: 1,
+                                child: Icon(
+                                  MdiIcons.text,
+                                  color: (_themeProvider.currentTheme == AppTheme.extraDark ||
+                                          _themeProvider.currentTheme == AppTheme.dark)
+                                      ? Colors.lime[100]
+                                      : Color.fromARGB(255, 107, 97, 2),
                                   size: 9,
                                 ),
                               ),
@@ -256,10 +307,38 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               : null,
                           boxShadow: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
                               ? [
-                                  BoxShadow(
-                                    color: Colors.orange,
-                                    blurRadius: 4,
-                                  ),
+                                  BoxShadow(color: Colors.orange, blurRadius: 4),
+                                ]
+                              : null,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: CircularMenuItem(
+                          icon: MdiIcons.text,
+                          onTap: () async {
+                            _webViewProvider!.verticalMenuClose();
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return EditTabDialog(
+                                  tabDetails: _webViewProvider!.tabList[i],
+                                  onSave: (customName, customNameInTitle, customNameInTab) {
+                                    _webViewProvider!.setTabCustomName(
+                                      tab: _webViewProvider!.tabList[i],
+                                      customName: customName,
+                                      customNameInTitle: customNameInTitle,
+                                      customNameInTab: customNameInTab,
+                                    );
+                                  },
+                                );
+                              },
+                            );
+                          },
+                          iconColor: _webViewProvider!.tabList[i].customName.isNotEmpty ? Colors.lime : null,
+                          boxShadow: _webViewProvider!.tabList[i].customName.isNotEmpty
+                              ? [
+                                  BoxShadow(color: Colors.lime, blurRadius: 4),
                                 ]
                               : null,
                         ),

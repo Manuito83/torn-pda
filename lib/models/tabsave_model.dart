@@ -37,6 +37,9 @@ class TabsSave {
     this.historyForward,
     this.isLocked = false,
     this.isLockFull = false,
+    this.customName = "",
+    this.customNameInTitle = false,
+    this.customNameInTab = true,
   });
 
   GlobalKey? tabKey;
@@ -47,6 +50,9 @@ class TabsSave {
   List<String?>? historyForward;
   bool isLocked;
   bool isLockFull;
+  String customName;
+  bool customNameInTitle;
+  bool customNameInTab;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
         tabKey: json["tabKey"],
@@ -57,6 +63,9 @@ class TabsSave {
         historyForward: json["historyForward"] == null ? null : List<String>.from(json["historyForward"].map((x) => x)),
         isLocked: json["isLocked"] ?? false,
         isLockFull: json["isLockFull"] ?? false,
+        customName: json["customName"] ?? "",
+        customNameInTitle: json["customNameInTitle"] ?? false,
+        customNameInTab: json["customNameInTab"] ?? true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -68,5 +77,8 @@ class TabsSave {
         "historyForward": historyForward == null ? null : List<dynamic>.from(historyForward!.map((x) => x)),
         "isLocked": isLocked,
         "isLockFull": isLockFull,
+        "customName": customName,
+        "customNameInTitle": customNameInTitle,
+        "customNameInTab": customNameInTab,
       };
 }

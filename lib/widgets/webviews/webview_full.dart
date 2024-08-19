@@ -2327,36 +2327,53 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 tooltipBackgroundColor: _themeProvider.secondBackground!,
                 descTextStyle: const TextStyle(fontSize: 13),
                 tooltipPadding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    if (assistPossible)
-                      Flexible(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "ASSIST",
-                              overflow: TextOverflow.fade,
-                              style: TextStyle(fontSize: 9, color: Colors.orange),
-                            ),
-                            Text(
-                              _pageTitle!,
-                              overflow: TextOverflow.fade,
-                              style: const TextStyle(fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
+                child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
+                        _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
+                    ? Row(
+                        children: [
+                          Icon(
+                            MdiIcons.text,
+                            size: 14,
+                            color: Colors.lime,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            _webViewProvider.tabList[_webViewProvider.currentTab].customName,
+                            overflow: TextOverflow.fade,
+                            style: const TextStyle(fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
+                          ),
+                        ],
                       )
-                    else
-                      Flexible(
-                        child: Text(
-                          _pageTitle!,
-                          overflow: TextOverflow.fade,
-                          style: const TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                    : Row(
+                        children: [
+                          if (assistPossible)
+                            Flexible(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "ASSIST",
+                                    overflow: TextOverflow.fade,
+                                    style: TextStyle(fontSize: 9, color: Colors.orange),
+                                  ),
+                                  Text(
+                                    _pageTitle!,
+                                    overflow: TextOverflow.fade,
+                                    style: const TextStyle(fontSize: 14, color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Flexible(
+                              child: Text(
+                                _pageTitle!,
+                                overflow: TextOverflow.fade,
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
               ),
             ),
           ),

@@ -586,7 +586,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
         onTap: () => _webViewProvider.verticalMenuClose(),
         child: Container(
           color: Colors.transparent,
-          height: _webViewProvider.verticalMenuIsOpen ? 350 : 40,
+          height: _webViewProvider.verticalMenuIsOpen ? 390 : 40,
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: [
