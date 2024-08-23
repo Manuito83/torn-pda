@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Custom Gym Ratios
-// @version      2.4 (updated by Manuito)
+// @version      2.5 (updated by Kwack)
 // @description  Monitors battle stat ratios and provides warnings if they approach levels that would preclude access to special gyms
 // @author       RGiskard [1953860], assistance by Xiphias [187717] - Torn PDA adaptation v1 [Manuito]
 // @match      	 torn.com/gym.php
@@ -42,18 +42,18 @@ function loadGym() {
 	};
 
 	var getStats = function ($doc) {
-		var ReplaceStatValueAndReturnCleanNumber = function (elementId) {
-			var $statTotalElement = $doc.find('#' + elementId);
+		var ReplaceStatValueAndReturnCleanNumber = function (query) {
+			var $statTotalElement = $doc.find(query);
 			if ($statTotalElement.size() === 0) throw 'No element found with id "' + elementId + '".';
 			var numericalValue = cleanNumber($statTotalElement.text());
 			return numericalValue;
 		};
 		$doc = $($doc || document);
 		return {
-			strength: ReplaceStatValueAndReturnCleanNumber('strength-val'),
-			defense: ReplaceStatValueAndReturnCleanNumber('defense-val'),
-			speed: ReplaceStatValueAndReturnCleanNumber('speed-val'),
-			dexterity: ReplaceStatValueAndReturnCleanNumber('dexterity-val'),
+			strength: ReplaceStatValueAndReturnCleanNumber("[class*=gymContent__] [class*=strength__] [class*=propertyValue__]"),
+			defense: ReplaceStatValueAndReturnCleanNumber("[class*=gymContent__] [class*=defense__] [class*=propertyValue__]"),
+			speed: ReplaceStatValueAndReturnCleanNumber("[class*=gymContent__] [class*=speed__] [class*=propertyValue__]"),
+			dexterity: ReplaceStatValueAndReturnCleanNumber("[class*=gymContent__] [class*=dexterity__] [class*=propertyValue__]"),
 		};
 	};
 
@@ -138,11 +138,11 @@ function loadGym() {
 			return;
 		}
 
-		var $statContainers = $('[class^="gymContent__"], [class*=" gymContent__"]').find('li');
+		var $statContainers = $('[class*="gymContent__"]').find('li');
 
 		if (currentBuild == noBuildKeyValue.value) {
 			// Clear the training info in case it exists.
-			$statContainers.each(function (index, element) {
+			$statContainers.each(function (_, element) {
 				var $statInfoDiv = $(element).find('[class^="description__"], [class*=" description__"]');
 				var $insertedElement = $statInfoDiv.find('.gymstatus');
 				$insertedElement.remove();
@@ -189,7 +189,7 @@ function loadGym() {
 		var distanceFromComboGymMin = minPrimaryComboSum - stats[comboGymKeyValuePair.stat1] - stats[comboGymKeyValuePair.stat2];
 		var distanceToComboGymMax = maxSecondaryComboSum - stats[comboGymKeyValuePair.secondarystat1] - stats[comboGymKeyValuePair.secondarystat2];
 
-		$statContainers.each(function (index, element) {
+		$statContainers.each(function (_, element) {
 			var $element = $(element);
 			var title = $element.find('[class^="title__"], [class*=" title__"]');
 			var stat = $element.attr('zStat');
