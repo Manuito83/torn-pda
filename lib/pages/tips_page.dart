@@ -427,7 +427,7 @@ class TipsPageState extends State<TipsPage> {
                   "app, but they all share the same functionality today (including chaining).\n\n"
                   "The 'default' style makes use of the app bar (positioned at the top or at the bottom, "
                   "depending on the user settings) to show the page title and main icons. Be aware that in this "
-                  "style, you need to swipe left/right across the title bar if you wish to browser forward or back. "
+                  "style, you need to swipe left/right across the title bar if you wish to browse forward or back. "
                   "Or, alternatively (valid for all styles) you can double tap the active tab to gain access to "
                   "back/forward navigation as well.\n\n"
                   "The 'bottom' bar style places a smaller bar at the bottom to gain some space, but does not show "
@@ -735,8 +735,8 @@ class TipsPageState extends State<TipsPage> {
             "FULL LOCK:\n\n"
             "Activated by a long-press in the lock icon: on top of the behavior you get with the "
             "positional lock, your tab will be locked in the current website/section you are visiting "
-            "and you will not be able to browser to other web sections. \n\n"
-            "Note: you will be able to reload the page and still be able to browser through the pages of "
+            "and you will not be able to browse to other web sections. \n\n"
+            "Note: you will be able to reload the page and still be able to browse through the pages of "
             "multi-page sections (e.g.: forums, hospital, jail, items...) and such.\n\n"
             "When the full lock is active, a red lock will appear in your tab.",
       ),
