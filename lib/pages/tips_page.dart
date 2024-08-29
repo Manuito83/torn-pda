@@ -728,7 +728,7 @@ class TipsPageState extends State<TipsPage> {
             "There two ways in which you can lock your tabs.\n\n"
             //
             "POSITIONAL LOCK:\n\n"
-            "Activated by a single tap in the lock icon: this will lock your tab so that I can't be moved "
+            "Activated by a single tap in the lock icon: this will lock your tab so that it can't be moved "
             "(you can still exchange it's position with other locked tabs) or closed. The tab will move "
             "to the first position available in your tab list, and a small orange lock icon will appear.\n\n"
             //
