@@ -1826,7 +1826,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           toastification.show(
             alignment: Alignment.bottomCenter,
             title: Icon(Icons.lock, color: Colors.red),
-            autoCloseDuration: Duration(seconds: 2),
+            autoCloseDuration: Duration(seconds: 1),
             animationDuration: Duration(milliseconds: 0),
             showProgressBar: false,
             style: ToastificationStyle.simple,

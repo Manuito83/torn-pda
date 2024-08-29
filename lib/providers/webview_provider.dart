@@ -932,36 +932,36 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
+  /// [forceLock] can be used to always lock (e.g.: upon a long-press)
   void toggleTabLock({required TabDetails tab, forceLock = false, isLockFull = false}) {
     final currentIndex = _tabList.indexOf(tab);
     if (currentIndex == 0) return;
 
-    final activeKey = _tabList[_currentTab].webView?.key;
-    _tabList.remove(tab);
+    final wasLocked = tab.isLocked;
 
-    if (forceLock) {
-      tab.isLocked = true;
-    } else {
-      tab.isLocked = !tab.isLocked;
-    }
-
+    tab.isLocked = forceLock || !tab.isLocked;
     tab.isLockFull = isLockFull;
 
-    int insertIndex = _tabList.lastIndexWhere((t) => t.isLocked);
-    insertIndex = insertIndex < 1 ? 1 : insertIndex + 1;
-    _tabList.insert(insertIndex, tab);
+    if (!wasLocked && tab.isLocked || wasLocked && !tab.isLocked) {
+      final activeKey = _tabList[_currentTab].webView?.key;
+      _tabList.remove(tab);
 
-    // Restore the active tab
-    for (var i = 0; i < _tabList.length; i++) {
-      if (_tabList[i].webView?.key == activeKey) {
-        activateTab(i);
-        break;
+      int insertIndex = _tabList.lastIndexWhere((t) => t.isLocked);
+      insertIndex = insertIndex < 1 ? 1 : insertIndex + 1;
+      _tabList.insert(insertIndex, tab);
+
+      // Restore the active tab
+      for (var i = 0; i < _tabList.length; i++) {
+        if (_tabList[i].webView?.key == activeKey) {
+          activateTab(i);
+          break;
+        }
       }
-    }
 
-    // Handle vertical menu index
-    if (verticalMenuIsOpen && verticalMenuCurrentIndex == currentIndex) {
-      verticalMenuCurrentIndex = _tabList.indexOf(tab);
+      // Handle vertical menu index
+      if (verticalMenuIsOpen && verticalMenuCurrentIndex == currentIndex) {
+        verticalMenuCurrentIndex = _tabList.indexOf(tab);
+      }
     }
 
     _saveTabs();

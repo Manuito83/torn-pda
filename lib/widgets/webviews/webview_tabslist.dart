@@ -233,11 +233,9 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               );
                             }
 
-                            _webViewProvider!.toggleTabLock(tab: _webViewProvider!.tabList[i]);
-                            _webViewProvider!.verticalMenuClose();
-
-                            if (_webViewProvider!.tabList[i].isLocked &&
+                            if (!_webViewProvider!.tabList[i].isLocked &&
                                 context.read<SettingsProvider>().showTabLockWarnings) {
+                              toastification.dismissAll();
                               toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
@@ -251,13 +249,17 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                     Text("Positional Lock"),
                                   ],
                                 ),
-                                autoCloseDuration: Duration(seconds: 2),
+                                autoCloseDuration: Duration(milliseconds: 1500),
                                 animationDuration: Duration(milliseconds: 0),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
                                 borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
                               );
                             }
+
+                            // Make the change after alerting, so that we take the correct index (before changing it)
+                            _webViewProvider!.toggleTabLock(tab: _webViewProvider!.tabList[i]);
+                            _webViewProvider!.verticalMenuClose();
                           },
                           onLongPress: () async {
                             final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
@@ -272,14 +274,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               );
                             }
 
-                            _webViewProvider!.toggleTabLock(
-                              tab: _webViewProvider!.tabList[i],
-                              forceLock: true, // Long press always locks full
-                              isLockFull: !_webViewProvider!.tabList[i].isLockFull,
-                            );
-                            _webViewProvider!.verticalMenuClose();
-
                             if (context.read<SettingsProvider>().showTabLockWarnings) {
+                              toastification.dismissAll();
                               toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
@@ -287,19 +283,27 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                   children: [
                                     Icon(
                                       Icons.lock,
-                                      color: _webViewProvider!.tabList[i].isLockFull ? Colors.red : Colors.orange,
+                                      color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red,
                                     ),
                                     SizedBox(height: 10),
-                                    Text(_webViewProvider!.tabList[i].isLockFull ? "Full Lock" : "Positional Lock"),
+                                    Text(_webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock"),
                                   ],
                                 ),
-                                autoCloseDuration: Duration(seconds: 2),
+                                autoCloseDuration: Duration(milliseconds: 1500),
                                 animationDuration: Duration(milliseconds: 0),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
                                 borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
                               );
                             }
+
+                            // Make the change after alerting, so that we take the correct index (before changing it)
+                            _webViewProvider!.toggleTabLock(
+                              tab: _webViewProvider!.tabList[i],
+                              forceLock: true, // Long press always locks full
+                              isLockFull: !_webViewProvider!.tabList[i].isLockFull,
+                            );
+                            _webViewProvider!.verticalMenuClose();
                           },
                           color: _webViewProvider!.tabList[i].isLockFull ? Colors.red[700] : null,
                           iconColor: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
