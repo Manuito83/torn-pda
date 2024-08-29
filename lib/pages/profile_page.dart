@@ -3553,6 +3553,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var disposal = "";
     var cracking = "";
     var forgery = "";
+    var scamming = "";
     hunting = _miscModel!.hunting ?? "";
     racing = _miscModel!.racing ?? "";
     reviving = _miscModel!.reviving ?? "";
@@ -3567,6 +3568,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     disposal = _miscModel!.disposal ?? "";
     cracking = _miscModel!.cracking ?? "";
     forgery = _miscModel!.forgery ?? "";
+    scamming = _miscModel!.scamming ?? "";
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -3578,7 +3580,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hustling.isNotEmpty ||
         disposal.isNotEmpty ||
         cracking.isNotEmpty ||
-        forgery.isNotEmpty) {
+        forgery.isNotEmpty ||
+        scamming.isNotEmpty) {
       crimesExist = true;
     }
 
@@ -4229,6 +4232,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     child: Text('Forgery: '),
                                   ),
                                   SelectableText(forgery),
+                                ],
+                              ),
+                            if (scamming.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Scamming: '),
+                                  ),
+                                  SelectableText(scamming),
                                 ],
                               ),
                           ],
@@ -6254,6 +6267,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
       if (_miscModel!.forgery != null) {
         crimesString += '\nForgery: ${_miscModel!.forgery}';
+        crimesExist = true;
+      }
+      if (_miscModel!.scamming != null) {
+        crimesString += '\nScamming: ${_miscModel!.scamming}';
         crimesExist = true;
       }
 

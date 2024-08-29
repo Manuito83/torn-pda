@@ -47,6 +47,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Browser tabs can now be locked (see Tips)",
           "Browser tabs can now be given a custom name (see Tips)",
+          "Added Forgery crime to Misc tab in Profile",
           "Improved troubleshooting steps for issues with Alerts",
           "Improved browser reload capability when frozen",
           "Fixed other reported issues",
