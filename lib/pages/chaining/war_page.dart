@@ -49,6 +49,8 @@ class WarOptions {
     switch (description) {
       case "Manage Spies":
         iconData = MdiIcons.incognito;
+      case "Share stats":
+      // Own icon in widget
       case "Hidden targets":
         iconData = Icons.undo_outlined;
       case "Nuke revive":
@@ -126,6 +128,7 @@ class WarPageState extends State<WarPage> {
 
   final _popupOptionsChoices = <WarOptions>[
     WarOptions(description: "Manage Spies"),
+    WarOptions(description: "Share stats"),
     WarOptions(description: "Hidden targets"),
     WarOptions(description: "Nuke revive"),
     WarOptions(description: "UHC revive"),
@@ -657,9 +660,9 @@ class WarPageState extends State<WarPage> {
           tooltipPadding: const EdgeInsets.all(20),
           child: IconButton(
             icon: Image.asset(
-              'images/icons/faction.png',
-              width: 18,
-              height: 18,
+              'images/icons/faction_add.png',
+              width: 20,
+              height: 20,
               color: Colors.white,
             ),
             onPressed: () {
@@ -680,7 +683,7 @@ class WarPageState extends State<WarPage> {
           descTextStyle: const TextStyle(fontSize: 13),
           tooltipPadding: const EdgeInsets.all(20),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
+            padding: const EdgeInsets.fromLTRB(3, 0, 6, 0),
             child: GetBuilder<WarController>(
               builder: (w) {
                 if (w.updating) {
@@ -807,6 +810,9 @@ class WarPageState extends State<WarPage> {
                   },
                 );
                 break;
+              case "Share stats":
+                _w.shareStats(context);
+                break;
               case "Hidden targets":
                 _showHiddenMembersDialogs(context);
                 break;
@@ -910,6 +916,26 @@ class WarPageState extends State<WarPage> {
                           ],
                         ),
                       ),
+                    ],
+                  ),
+                );
+              }
+              // Share stats
+              if (choice.description!.contains("Share stats")) {
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Icon(
+                          Icons.share,
+                          size: 24,
+                          color: _themeProvider!.mainText,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Share stats")),
                     ],
                   ),
                 );
@@ -1736,95 +1762,9 @@ class WarTargetsListState extends State<WarTargetsList> {
       }
     }
 
-    // Sorting function for pinned and non-pinned members
-    void sortMembers(List<WarCard> members) async {
-      switch (widget.warController.currentSort) {
-        case WarSortType.levelDes:
-          members.sort((a, b) => b.memberModel.level!.compareTo(a.memberModel.level!));
-        case WarSortType.levelAsc:
-          members.sort((a, b) => a.memberModel.level!.compareTo(b.memberModel.level!));
-        case WarSortType.respectDes:
-          members.sort((a, b) => b.memberModel.respectGain!.compareTo(a.memberModel.respectGain!));
-        case WarSortType.respectAsc:
-          members.sort((a, b) => a.memberModel.respectGain!.compareTo(b.memberModel.respectGain!));
-        case WarSortType.nameDes:
-          members.sort((a, b) => b.memberModel.name!.toLowerCase().compareTo(a.memberModel.name!.toLowerCase()));
-        case WarSortType.nameAsc:
-          members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));
-        case WarSortType.lifeDes:
-          members.sort((a, b) => b.memberModel.lifeCurrent!.compareTo(a.memberModel.lifeCurrent!));
-        case WarSortType.lifeAsc:
-          members.sort((a, b) => a.memberModel.lifeCurrent!.compareTo(b.memberModel.lifeCurrent!));
-        case WarSortType.hospitalDes:
-          members.sort((a, b) {
-            return b.memberModel.hospitalSort!.compareTo(a.memberModel.hospitalSort!);
-          });
-        case WarSortType.hospitalAsc:
-          members.sort((a, b) {
-            // First sort by hospitalSort
-            if (a.memberModel.hospitalSort! > 0 && b.memberModel.hospitalSort! > 0) {
-              return a.memberModel.hospitalSort!.compareTo(b.memberModel.hospitalSort!);
-            } else if (a.memberModel.hospitalSort! > 0) {
-              return -1;
-            } else if (b.memberModel.hospitalSort! > 0) {
-              return 1;
-            } else {
-              // If both hospitalSort values are 0, sort by name
-              return a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase());
-            }
-          });
-        case WarSortType.statsDes:
-          members.sort((a, b) => b.memberModel.statsSort!.compareTo(a.memberModel.statsSort!));
-        case WarSortType.statsAsc:
-          members.sort((a, b) => a.memberModel.statsSort!.compareTo(b.memberModel.statsSort!));
-        case WarSortType.onlineDes:
-          members.sort((a, b) => b.memberModel.lastAction!.timestamp!.compareTo(a.memberModel.lastAction!.timestamp!));
-        case WarSortType.onlineAsc:
-          members.sort((a, b) => a.memberModel.lastAction!.timestamp!.compareTo(b.memberModel.lastAction!.timestamp!));
-        case WarSortType.colorDes:
-          members.sort(
-            (a, b) => b.memberModel.personalNoteColor!
-                .toLowerCase()
-                .compareTo(a.memberModel.personalNoteColor!.toLowerCase()),
-          );
-        case WarSortType.colorAsc:
-          members.sort(
-            (a, b) => a.memberModel.personalNoteColor!
-                .toLowerCase()
-                .compareTo(b.memberModel.personalNoteColor!.toLowerCase()),
-          );
-        case WarSortType.notesDes:
-          members.sort(
-            (a, b) => b.memberModel.personalNote!.toLowerCase().compareTo(a.memberModel.personalNote!.toLowerCase()),
-          );
-        case WarSortType.notesAsc:
-          members.sort((a, b) {
-            if (a.memberModel.personalNote!.isEmpty && b.memberModel.personalNote!.isNotEmpty) {
-              return 1;
-            } else if (a.memberModel.personalNote!.isNotEmpty && b.memberModel.personalNote!.isEmpty) {
-              return -1;
-            } else if (a.memberModel.personalNote!.isEmpty && b.memberModel.personalNote!.isEmpty) {
-              return 0;
-            } else {
-              return a.memberModel.personalNote!.toLowerCase().compareTo(b.memberModel.personalNote!.toLowerCase());
-            }
-          });
-        case WarSortType.bounty:
-          for (var m in members) {
-            m.memberModel.bountyAmount ??= 0;
-          }
-          members.sort((a, b) {
-            return b.memberModel.bountyAmount!.compareTo(a.memberModel.bountyAmount!);
-          });
-        default:
-          members.sort((a, b) => a.memberModel.name!.toLowerCase().compareTo(b.memberModel.name!.toLowerCase()));
-          break;
-      }
-    }
-
     // Apply sorting to both lists
-    sortMembers(pinnedMembers);
-    sortMembers(nonPinnedMembers);
+    widget.warController.sortWarCards(pinnedMembers);
+    widget.warController.sortWarCards(nonPinnedMembers);
 
     // Combine the sorted lists
     filteredCards = [...pinnedMembers, ...nonPinnedMembers];

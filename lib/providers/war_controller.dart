@@ -2,8 +2,10 @@ import 'dart:developer';
 import 'dart:math' as math;
 import 'dart:developer' as dev;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -17,8 +19,10 @@ import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
+import 'package:torn_pda/widgets/chaining/war_card.dart';
 
 class WarCardDetails {
   int? cardPosition;
@@ -1187,6 +1191,191 @@ class WarController extends GetxController {
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Assess Pending Notifications");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
+  }
+
+  // Sorting function for MemberModel lists to be used in shareStats
+  int compareMembers(Member a, Member b, WarSortType sortType) {
+    switch (sortType) {
+      case WarSortType.levelDes:
+        return b.level!.compareTo(a.level!);
+      case WarSortType.levelAsc:
+        return a.level!.compareTo(b.level!);
+      case WarSortType.respectDes:
+        return b.respectGain!.compareTo(a.respectGain!);
+      case WarSortType.respectAsc:
+        return a.respectGain!.compareTo(b.respectGain!);
+      case WarSortType.nameDes:
+        return b.name!.toLowerCase().compareTo(a.name!.toLowerCase());
+      case WarSortType.nameAsc:
+        return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+      case WarSortType.lifeDes:
+        return b.lifeCurrent!.compareTo(a.lifeCurrent!);
+      case WarSortType.lifeAsc:
+        return a.lifeCurrent!.compareTo(b.lifeCurrent!);
+      case WarSortType.hospitalDes:
+        return b.hospitalSort!.compareTo(a.hospitalSort!);
+      case WarSortType.hospitalAsc:
+        if (a.hospitalSort! > 0 && b.hospitalSort! > 0) {
+          return a.hospitalSort!.compareTo(b.hospitalSort!);
+        } else if (a.hospitalSort! > 0) {
+          return -1;
+        } else if (b.hospitalSort! > 0) {
+          return 1;
+        } else {
+          return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+        }
+      case WarSortType.statsDes:
+        return b.statsSort!.compareTo(a.statsSort!);
+      case WarSortType.statsAsc:
+        return a.statsSort!.compareTo(b.statsSort!);
+      case WarSortType.onlineDes:
+        return b.lastAction!.timestamp!.compareTo(a.lastAction!.timestamp!);
+      case WarSortType.onlineAsc:
+        return a.lastAction!.timestamp!.compareTo(b.lastAction!.timestamp!);
+      case WarSortType.colorDes:
+        return b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase());
+      case WarSortType.colorAsc:
+        return a.personalNoteColor!.toLowerCase().compareTo(b.personalNoteColor!.toLowerCase());
+      case WarSortType.notesDes:
+        return b.personalNote!.toLowerCase().compareTo(a.personalNote!.toLowerCase());
+      case WarSortType.notesAsc:
+        if (a.personalNote!.isEmpty && b.personalNote!.isNotEmpty) {
+          return 1;
+        } else if (a.personalNote!.isNotEmpty && b.personalNote!.isEmpty) {
+          return -1;
+        } else if (a.personalNote!.isEmpty && b.personalNote!.isEmpty) {
+          return 0;
+        } else {
+          return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
+        }
+      case WarSortType.bounty:
+        int aBounty = a.bountyAmount ?? 0;
+        int bBounty = b.bountyAmount ?? 0;
+        return bBounty.compareTo(aBounty);
+      default:
+        return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+    }
+  }
+
+  void sortMembers(List<Member> members) {
+    members.sort((a, b) => compareMembers(a, b, currentSort ?? WarSortType.levelDes));
+  }
+
+  void sortWarCards(List<WarCard> warCards) {
+    warCards.sort((a, b) => compareMembers(a.memberModel, b.memberModel, currentSort ?? WarSortType.levelDes));
+  }
+
+  void shareStats(BuildContext context) async {
+    try {
+      StringBuffer statsBuffer = StringBuffer();
+      final spyController = Get.find<SpiesController>();
+
+      List<Member> pinnedMembers = [];
+      List<Member> nonPinnedMembers = [];
+
+      for (final faction in factions) {
+        for (final memberId in faction.members!.keys) {
+          final member = faction.members![memberId];
+          if (member != null && member.hidden != true) {
+            if (member.pinned) {
+              pinnedMembers.add(member);
+            } else {
+              nonPinnedMembers.add(member);
+            }
+          }
+        }
+      }
+
+      sortMembers(pinnedMembers);
+      sortMembers(nonPinnedMembers);
+      List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
+
+      for (final member in sortedMembers) {
+        statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+
+        // Check if there are exact stats available
+        bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
+            (member.statsSpd != null && member.statsSpd != -1) ||
+            (member.statsDef != null && member.statsDef != -1) ||
+            (member.statsDex != null && member.statsDex != -1) ||
+            (member.statsExactTotal != null && member.statsExactTotal != -1);
+
+        if (hasExactStats) {
+          statsBuffer.writeln("* Spied stats *");
+
+          // Strength
+          statsBuffer.writeln(
+              "Strength: ${member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '?'}${member.statsStrUpdated != null && member.statsStrUpdated != -1 ? " (${spyController.statsOld(member.statsStrUpdated!)})" : ""}");
+
+          // Speed
+          statsBuffer.writeln(
+              "Speed: ${member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '?'}${member.statsSpdUpdated != null && member.statsSpdUpdated != -1 ? " (${spyController.statsOld(member.statsSpdUpdated!)})" : ""}");
+
+          // Defense
+          statsBuffer.writeln(
+              "Defense: ${member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '?'}${member.statsDefUpdated != null && member.statsDefUpdated != -1 ? " (${spyController.statsOld(member.statsDefUpdated!)})" : ""}");
+
+          // Dexterity
+          statsBuffer.writeln(
+              "Dexterity: ${member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '?'}${member.statsDexUpdated != null && member.statsDexUpdated != -1 ? " (${spyController.statsOld(member.statsDexUpdated!)})" : ""}");
+
+          // Total
+          statsBuffer.writeln(
+              "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+        } else if (member.statsEstimated != null && member.statsEstimated!.isNotEmpty) {
+          // Show estimated stats if no exact stats are available and estimated stats are not empty
+          statsBuffer.writeln("* Estimated stats: ${member.statsEstimated} *");
+
+          // Additional estimated details
+          statsBuffer.writeln("Xanax taken: ${member.memberXanax}");
+          statsBuffer.writeln("Refills: ${member.memberRefill}");
+          statsBuffer.writeln("Enhancers used: ${member.memberEnhancement}");
+          statsBuffer.writeln("Energy drinks (Cans): ${member.memberCans}");
+
+          // Calculate SSL probability
+          String sslProbability;
+          int xanaxAndEcstasy = (member.memberXanax ?? 0) + (member.memberEcstasy ?? 0);
+          int lsd = member.memberLsd ?? 0;
+
+          if (xanaxAndEcstasy > 150) {
+            sslProbability = "none";
+          } else if (xanaxAndEcstasy <= 150 && lsd < 50) {
+            sslProbability = "low";
+          } else if (xanaxAndEcstasy <= 150 && lsd >= 50 && lsd < 100) {
+            sslProbability = "medium";
+          } else if (xanaxAndEcstasy <= 150 && lsd >= 100) {
+            sslProbability = "high";
+          } else {
+            sslProbability = "unknown";
+          }
+
+          statsBuffer.writeln("SSL probability: $sslProbability");
+        } else {
+          statsBuffer.writeln("Unknown stats!");
+        }
+
+        statsBuffer.writeln("");
+      }
+
+      if (statsBuffer.isEmpty) {
+        statsBuffer.writeln("No visible war targets with stats available.");
+      }
+
+      String stats = statsBuffer.toString();
+
+      await Share.share(
+        stats,
+        sharePositionOrigin: Rect.fromLTWH(
+          0,
+          0,
+          MediaQuery.of(context).size.width,
+          MediaQuery.of(context).size.height / 2,
+        ),
+      );
+    } catch (e, t) {
+      FirebaseCrashlytics.instance.log("PDA Crash at War Stats Share");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
     }
   }
 }
