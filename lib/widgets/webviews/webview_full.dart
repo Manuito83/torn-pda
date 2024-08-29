@@ -172,6 +172,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   bool _firstLoadRevertBackground = true;
   bool _firstLoadRestoreDownloads = true;
 
+  // Allow navigation once even with a full locked page
+  bool _forceAllowWhenLocked = false;
+
   URLRequest? _initialUrl;
   String? _pageTitle = "";
   String _currentUrl = '';
@@ -1812,6 +1815,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   bool _lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
     if (incomingUrl == null) return false;
+
+    if (_forceAllowWhenLocked) {
+      return false;
+    }
+
     if (_webViewProvider.tabList[_webViewProvider.currentTab].isLocked &&
         _webViewProvider.tabList[_webViewProvider.currentTab].isLockFull) {
       // Let it load the first page (_currentUrl will be empty)
@@ -1820,11 +1828,37 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (_currentUrl.contains(incomingUrl.path)) {
           return false;
         }
+
         if (_settingsProvider.showTabLockWarnings) {
           toastification.show(
+            closeOnClick: true,
             alignment: Alignment.bottomCenter,
-            title: Icon(Icons.lock, color: Colors.red),
-            autoCloseDuration: Duration(seconds: 1),
+            title: Container(
+              color: Colors.transparent,
+              child: Column(
+                children: [
+                  Icon(Icons.lock, color: Colors.red),
+                  SizedBox(height: 20),
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    child: Text(
+                      "Override!",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    onTap: () {
+                      toastification.dismissAll();
+                      _forceAllowWhenLocked = true;
+                      webViewController!.loadUrl(urlRequest: URLRequest(url: incomingUrl));
+                      // Allow navigation for a couple of seconds
+                      Future.delayed(Duration(seconds: 2), () {
+                        _forceAllowWhenLocked = false;
+                      });
+                    },
+                  )
+                ],
+              ),
+            ),
+            autoCloseDuration: Duration(seconds: 3),
             animationDuration: Duration(milliseconds: 0),
             showProgressBar: false,
             style: ToastificationStyle.simple,
