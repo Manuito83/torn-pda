@@ -164,66 +164,64 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   @override
   Widget build(BuildContext context) {
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          _launchShowCases(_);
-          return Slidable(
-            startActionPane: ActionPane(
-              motion: const DrawerMotion(),
+      builder: (_) {
+        _launchShowCases(_);
+        return Slidable(
+          startActionPane: ActionPane(
+            motion: const DrawerMotion(),
+            children: [
+              SlidableAction(
+                label: 'Hide',
+                backgroundColor: Colors.blue,
+                icon: MdiIcons.eyeRemoveOutline,
+                onPressed: (context) {
+                  widget.memberHiddenCallback(widget.foreignStock);
+                },
+              ),
+            ],
+          ),
+          child: Card(
+            shape: RoundedRectangleBorder(
+              side: BorderSide(
+                color: widget.activeRestocks!.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
+                width: 1.5,
+              ),
+              borderRadius: BorderRadius.circular(4.0),
+            ),
+            child: Row(
               children: [
-                SlidableAction(
-                  label: 'Hide',
-                  backgroundColor: Colors.blue,
-                  icon: MdiIcons.eyeRemoveOutline,
-                  onPressed: (context) {
-                    widget.memberHiddenCallback(widget.foreignStock);
-                  },
+                Showcase(
+                  key: _showcaseHideStock,
+                  title: 'Swipe to hide',
+                  description: "\nSwipe right to hide stocks you don't want to see.\n\nYou can restore them "
+                      "later at any time by using the 'eye' icon in the app bar.",
+                  targetPadding: const EdgeInsets.all(10),
+                  disableMovingAnimation: true,
+                  textColor: _themeProvider.mainText!,
+                  tooltipBackgroundColor: _themeProvider.secondBackground!,
+                  descTextStyle: const TextStyle(fontSize: 13),
+                  tooltipPadding: const EdgeInsets.all(20),
+                  child: const SizedBox(height: 80),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ExpandablePanel(
+                      collapsed: Container(),
+                      controller: _expandableController,
+                      theme: const ExpandableThemeData(
+                        hasIcon: false,
+                      ),
+                      header: _header(),
+                      expanded: _footer(),
+                    ),
+                  ),
                 ),
               ],
             ),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                side: BorderSide(
-                  color: widget.activeRestocks!.keys.contains(_codeName) ? Colors.blue : Colors.transparent,
-                  width: 1.5,
-                ),
-                borderRadius: BorderRadius.circular(4.0),
-              ),
-              child: Row(
-                children: [
-                  Showcase(
-                    key: _showcaseHideStock,
-                    title: 'Swipe to hide',
-                    description: "\nSwipe right to hide stocks you don't want to see.\n\nYou can restore them "
-                        "later at any time by using the 'eye' icon in the app bar.",
-                    targetPadding: const EdgeInsets.all(10),
-                    disableMovingAnimation: true,
-                    textColor: _themeProvider.mainText!,
-                    tooltipBackgroundColor: _themeProvider.secondBackground!,
-                    descTextStyle: const TextStyle(fontSize: 13),
-                    tooltipPadding: const EdgeInsets.all(20),
-                    child: const SizedBox(height: 80),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ExpandablePanel(
-                        collapsed: Container(),
-                        controller: _expandableController,
-                        theme: const ExpandableThemeData(
-                          hasIcon: false,
-                        ),
-                        header: _header(),
-                        expanded: _footer(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

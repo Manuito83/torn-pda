@@ -63,34 +63,32 @@ class StakeoutsPageState extends State<StakeoutsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          _launchShowCases(_);
-          return Scaffold(
-            backgroundColor: _themeProvider.canvas,
-            drawer: const Drawer(),
-            appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
-            bottomNavigationBar: !_settingsProvider.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(_),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                child: MediaQuery.orientationOf(context) == Orientation.portrait
-                    ? _mainColumn()
-                    : SingleChildScrollView(
-                        child: _mainColumn(),
-                      ),
-              ),
+      builder: (_) {
+        _launchShowCases(_);
+        return Scaffold(
+          backgroundColor: _themeProvider.canvas,
+          drawer: const Drawer(),
+          appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
+          bottomNavigationBar: !_settingsProvider.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(_),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: MediaQuery.orientationOf(context) == Orientation.portrait
+                  ? _mainColumn()
+                  : SingleChildScrollView(
+                      child: _mainColumn(),
+                    ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

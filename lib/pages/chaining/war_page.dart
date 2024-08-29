@@ -166,40 +166,38 @@ class WarPageState extends State<WarPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          if (_w.showCaseStart) {
-            // Delaying also (even Duration.zero works) to avoid state conflicts with build
-            Future.delayed(const Duration(seconds: 1), () async {
-              ShowCaseWidget.of(_).startShowCase([_showCaseAddFaction, _showCaseUpdate]);
-              _w.showCaseStart = false;
-            });
-          }
-          return Scaffold(
-            backgroundColor: _themeProvider!.canvas,
-            drawer: const Drawer(),
-            appBar: _settingsProvider!.appBarTop ? buildAppBar(_) : null,
-            bottomNavigationBar: !_settingsProvider!.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(_),
-                  )
-                : null,
-            body: Container(
-              color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                child: MediaQuery.orientationOf(context) == Orientation.portrait
-                    ? _mainColumn()
-                    : SingleChildScrollView(
-                        child: _mainColumn(),
-                      ),
-              ),
+      builder: (_) {
+        if (_w.showCaseStart) {
+          // Delaying also (even Duration.zero works) to avoid state conflicts with build
+          Future.delayed(const Duration(seconds: 1), () async {
+            ShowCaseWidget.of(_).startShowCase([_showCaseAddFaction, _showCaseUpdate]);
+            _w.showCaseStart = false;
+          });
+        }
+        return Scaffold(
+          backgroundColor: _themeProvider!.canvas,
+          drawer: const Drawer(),
+          appBar: _settingsProvider!.appBarTop ? buildAppBar(_) : null,
+          bottomNavigationBar: !_settingsProvider!.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(_),
+                )
+              : null,
+          body: Container(
+            color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+              child: MediaQuery.orientationOf(context) == Orientation.portrait
+                  ? _mainColumn()
+                  : SingleChildScrollView(
+                      child: _mainColumn(),
+                    ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

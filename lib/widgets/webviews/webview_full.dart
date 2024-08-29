@@ -479,14 +479,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          if (_webViewProvider.browserShowInForeground) {
-            launchShowCases(_);
-          }
-          return buildScaffold(context);
-        },
-      ),
+      builder: (_) {
+        if (_webViewProvider.browserShowInForeground) {
+          launchShowCases(_);
+        }
+        return buildScaffold(context);
+      },
     );
   }
 

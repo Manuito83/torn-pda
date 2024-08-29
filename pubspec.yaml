@@ -88,10 +88,7 @@ dependencies:
   rxdart: 0.27.7
   share_plus: 9.0.0
   shared_preferences: 2.2.3
-  showcaseview: 
-    git: 
-      url: https://github.com/chandrabezzo/flutter_showcaseview
-      ref: bugfix/text-theme/removed-3.22
+  showcaseview: 3.0.0
   sliding_up_panel: 2.0.0+1
   timeline_tile: 2.0.0
   timezone: 0.9.1

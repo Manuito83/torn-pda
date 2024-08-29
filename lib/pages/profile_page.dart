@@ -386,158 +386,156 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          _launchShowCases(_);
-          return Scaffold(
-            backgroundColor: _themeProvider!.canvas,
-            drawer: const Drawer(),
-            appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider!.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            floatingActionButton: Stack(
-              children: [
-                buildSpeedDial(),
-              ],
-            ),
-            body: Container(
-              color: _themeProvider!.canvas,
-              child: FutureBuilder(
-                future: _apiFetched,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiGoodData) {
-                      return RefreshIndicator(
-                        onRefresh: () async {
-                          _resetApiTimer(initCall: true);
-                          await Future.delayed(const Duration(seconds: 1));
-                        },
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: <Widget>[
-                              _headerIcons(),
-                              Column(
-                                children: _returnSections(),
-                              ),
-                              const SizedBox(height: 70),
-                            ],
-                          ),
+      builder: (_) {
+        _launchShowCases(_);
+        return Scaffold(
+          backgroundColor: _themeProvider!.canvas,
+          drawer: const Drawer(),
+          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider!.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          floatingActionButton: Stack(
+            children: [
+              buildSpeedDial(),
+            ],
+          ),
+          body: Container(
+            color: _themeProvider!.canvas,
+            child: FutureBuilder(
+              future: _apiFetched,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_apiGoodData) {
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _resetApiTimer(initCall: true);
+                        await Future.delayed(const Duration(seconds: 1));
+                      },
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            _headerIcons(),
+                            Column(
+                              children: _returnSections(),
+                            ),
+                            const SizedBox(height: 70),
+                          ],
                         ),
-                      );
-                    } else {
-                      return RefreshIndicator(
-                        onRefresh: () async {
-                          _fetchApi();
-                          await Future.delayed(const Duration(seconds: 1));
-                        },
-                        child: SingleChildScrollView(
-                          // Physics so that page can be refreshed even with no scroll
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              const SizedBox(height: 50),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                child: _shortcutsCarrousel(),
-                              ),
-                              const SizedBox(height: 50),
-                              const Text(
-                                'OOPS!',
-                                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'There was an error: ${_apiError!.errorReason}',
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    if (_apiError!.pdaErrorDetails.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 20),
-                                        child: Column(
-                                          children: [
-                                            if (_apiError!.errorId != 9)
-                                              Column(
-                                                children: [
-                                                  const Text(
-                                                    'Error details:',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                  const SizedBox(height: 5),
-                                                  Text(
-                                                    _apiError!.pdaErrorDetails,
-                                                    style: const TextStyle(
-                                                      fontStyle: FontStyle.italic,
-                                                      fontSize: 10,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ],
-                                              ),
-                                            if (_apiError!.errorId == 9)
-                                              Text(
-                                                "The API has been manually disabled by the developers. "
-                                                "This normally lasts just a few minutes\n\n"
-                                                "Otherwise, you can head to the forums of Discord to see if there "
-                                                "is any more information available.",
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(color: Colors.red[700]),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Torn PDA is retrying automatically. '
-                                      "If you have good Internet connectivity, it might be an issue with Torn's API.",
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'You can still try to access Torn through shortcuts or the main '
-                                      'menu icon below.',
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 50),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
+                      ),
+                    );
                   } else {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text('Fetching data...'),
-                          SizedBox(height: 30),
-                          Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: CircularProgressIndicator(),
-                          ),
-                        ],
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _fetchApi();
+                        await Future.delayed(const Duration(seconds: 1));
+                      },
+                      child: SingleChildScrollView(
+                        // Physics so that page can be refreshed even with no scroll
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            const SizedBox(height: 50),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: _shortcutsCarrousel(),
+                            ),
+                            const SizedBox(height: 50),
+                            const Text(
+                              'OOPS!',
+                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'There was an error: ${_apiError!.errorReason}',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  if (_apiError!.pdaErrorDetails.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 20),
+                                      child: Column(
+                                        children: [
+                                          if (_apiError!.errorId != 9)
+                                            Column(
+                                              children: [
+                                                const Text(
+                                                  'Error details:',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Text(
+                                                  _apiError!.pdaErrorDetails,
+                                                  style: const TextStyle(
+                                                    fontStyle: FontStyle.italic,
+                                                    fontSize: 10,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          if (_apiError!.errorId == 9)
+                                            Text(
+                                              "The API has been manually disabled by the developers. "
+                                              "This normally lasts just a few minutes\n\n"
+                                              "Otherwise, you can head to the forums of Discord to see if there "
+                                              "is any more information available.",
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(color: Colors.red[700]),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  const SizedBox(height: 20),
+                                  const Text(
+                                    'Torn PDA is retrying automatically. '
+                                    "If you have good Internet connectivity, it might be an issue with Torn's API.",
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  const Text(
+                                    'You can still try to access Torn through shortcuts or the main '
+                                    'menu icon below.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 50),
+                          ],
+                        ),
                       ),
                     );
                   }
-                },
-              ),
+                } else {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text('Fetching data...'),
+                        SizedBox(height: 30),
+                        Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              },
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
