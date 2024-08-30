@@ -1838,23 +1838,33 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               child: Column(
                 children: [
                   Icon(Icons.lock, color: Colors.red),
-                  SizedBox(height: 20),
+                  SizedBox(height: 30),
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
-                    child: Text(
-                      "Override!",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                      decoration: BoxDecoration(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(4.0),
+                        border: Border.all(color: Colors.blue),
+                      ),
+                      child: Text(
+                        "Override!",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue,
+                        ),
+                      ),
                     ),
                     onTap: () {
                       toastification.dismissAll();
                       _forceAllowWhenLocked = true;
                       webViewController!.loadUrl(urlRequest: URLRequest(url: incomingUrl));
-                      // Allow navigation for a couple of seconds
                       Future.delayed(Duration(seconds: 2), () {
                         _forceAllowWhenLocked = false;
                       });
                     },
-                  )
+                  ),
                 ],
               ),
             ),
