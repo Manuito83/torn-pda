@@ -1356,24 +1356,33 @@ class WarController extends GetxController {
         statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
 
         if (hasExactStats) {
-          statsBuffer.writeln("* Spied stats *");
-          statsBuffer.writeln(
-              "Strength: ${member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '?'}${member.statsStrUpdated != null && member.statsStrUpdated != -1 ? " (${spyController.statsOld(member.statsStrUpdated!)})" : ""}");
-          statsBuffer.writeln(
-              "Speed: ${member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '?'}${member.statsSpdUpdated != null && member.statsSpdUpdated != -1 ? " (${spyController.statsOld(member.statsSpdUpdated!)})" : ""}");
-          statsBuffer.writeln(
-              "Defense: ${member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '?'}${member.statsDefUpdated != null && member.statsDefUpdated != -1 ? " (${spyController.statsOld(member.statsDefUpdated!)})" : ""}");
-          statsBuffer.writeln(
-              "Dexterity: ${member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '?'}${member.statsDexUpdated != null && member.statsDexUpdated != -1 ? " (${spyController.statsOld(member.statsDexUpdated!)})" : ""}");
-          statsBuffer.writeln(
-              "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+          if (statsShareShowOnlyTotals) {
+            statsBuffer.writeln(
+                "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+          } else {
+            statsBuffer.writeln("* Spied stats *");
+            statsBuffer.writeln(
+                "Strength: ${member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '?'}${member.statsStrUpdated != null && member.statsStrUpdated != -1 ? " (${spyController.statsOld(member.statsStrUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Speed: ${member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '?'}${member.statsSpdUpdated != null && member.statsSpdUpdated != -1 ? " (${spyController.statsOld(member.statsSpdUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Defense: ${member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '?'}${member.statsDefUpdated != null && member.statsDefUpdated != -1 ? " (${spyController.statsOld(member.statsDefUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Dexterity: ${member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '?'}${member.statsDexUpdated != null && member.statsDexUpdated != -1 ? " (${spyController.statsOld(member.statsDexUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+          }
         } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
-          statsBuffer.writeln("* Estimated stats: ${member.statsEstimated} *");
-          statsBuffer.writeln("Xanax taken: ${member.memberXanax ?? ''}");
-          statsBuffer.writeln("Refills: ${member.memberRefill ?? ''}");
-          statsBuffer.writeln("Enhancers used: ${member.memberEnhancement ?? ''}");
-          statsBuffer.writeln("Energy drinks (Cans): ${member.memberCans ?? ''}");
-          statsBuffer.writeln("SSL probability: ${calculateSSLProbability(member)}");
+          if (statsShareShowOnlyTotals) {
+            statsBuffer.writeln("Estimated stats: ${member.statsEstimated}");
+          } else {
+            statsBuffer.writeln("* Estimated stats: ${member.statsEstimated} *");
+            statsBuffer.writeln("Xanax taken: ${member.memberXanax ?? ''}");
+            statsBuffer.writeln("Refills: ${member.memberRefill ?? ''}");
+            statsBuffer.writeln("Enhancers used: ${member.memberEnhancement ?? ''}");
+            statsBuffer.writeln("Energy drinks (Cans): ${member.memberCans ?? ''}");
+            statsBuffer.writeln("SSL probability: ${calculateSSLProbability(member)}");
+          }
         } else {
           statsBuffer.writeln("Unknown stats!");
         }
