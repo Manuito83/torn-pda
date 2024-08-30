@@ -801,6 +801,7 @@ class WarPageState extends State<WarPage> {
             switch (selection.description) {
               case "Manage Spies":
                 showDialog(
+                  barrierDismissible: false,
                   useRootNavigator: false,
                   context: context,
                   builder: (BuildContext context) {

@@ -533,6 +533,7 @@ class SettingsPageState extends State<SettingsPage> {
                 icon: const Icon(MdiIcons.incognito),
                 onPressed: () {
                   showDialog(
+                    barrierDismissible: false,
                     useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
