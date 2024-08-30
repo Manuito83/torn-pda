@@ -92,6 +92,38 @@ class WarController extends GetxController {
     _midnightXReviveActive = value;
   }
 
+  bool _statsShareIncludeHiddenTargets = true;
+  bool get statsShareIncludeHiddenTargets => _statsShareIncludeHiddenTargets;
+  set statsShareIncludeHiddenTargets(bool value) {
+    _statsShareIncludeHiddenTargets = value;
+    Prefs().setStatsShareIncludeHiddenTargets(value);
+    update();
+  }
+
+  bool _statsShareShowOnlyTotals = false;
+  bool get statsShareShowOnlyTotals => _statsShareShowOnlyTotals;
+  set statsShareShowOnlyTotals(bool value) {
+    _statsShareShowOnlyTotals = value;
+    Prefs().setStatsShareShowOnlyTotals(value);
+    update();
+  }
+
+  bool _statsShareShowEstimatesIfNoSpyAvailable = true;
+  bool get statsShareShowEstimatesIfNoSpyAvailable => _statsShareShowEstimatesIfNoSpyAvailable;
+  set statsShareShowEstimatesIfNoSpyAvailable(bool value) {
+    _statsShareShowEstimatesIfNoSpyAvailable = value;
+    Prefs().setStatsShareShowEstimatesIfNoSpyAvailable(value);
+    update();
+  }
+
+  bool _statsShareIncludeTargetsWithNoStatsAvailable = false;
+  bool get statsShareIncludeTargetsWithNoStatsAvailable => _statsShareIncludeTargetsWithNoStatsAvailable;
+  set statsShareIncludeTargetsWithNoStatsAvailable(bool value) {
+    _statsShareIncludeTargetsWithNoStatsAvailable = value;
+    Prefs().setStatsShareIncludeTargetsWithNoStatsAvailable(value);
+    update();
+  }
+
   bool toggleAddUserActive = false;
 
   String playerLocation = "";
@@ -799,6 +831,11 @@ class WarController extends GetxController {
     wtfReviveActive = await Prefs().getUseWtfRevive();
     midnightXReviveActive = await Prefs().getUseMidnightXRevive();
 
+    _statsShareIncludeHiddenTargets = await Prefs().getStatsShareIncludeHiddenTargets();
+    _statsShareShowOnlyTotals = await Prefs().getStatsShareShowOnlyTotals();
+    _statsShareShowEstimatesIfNoSpyAvailable = await Prefs().getStatsShareShowEstimatesIfNoSpyAvailable();
+    _statsShareIncludeTargetsWithNoStatsAvailable = await Prefs().getStatsShareIncludeTargetsWithNoStatsAvailable();
+
     // Get sorting
     final String targetSort = await Prefs().getWarMembersSort();
     switch (targetSort) {
@@ -1295,48 +1332,47 @@ class WarController extends GetxController {
       List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
 
       for (final member in sortedMembers) {
-        statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
-
-        // Check if there are exact stats available
+        // Determine if the member has any stats (spied or estimated)
         bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
             (member.statsSpd != null && member.statsSpd != -1) ||
             (member.statsDef != null && member.statsDef != -1) ||
             (member.statsDex != null && member.statsDex != -1) ||
             (member.statsExactTotal != null && member.statsExactTotal != -1);
 
+        bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
+
+        // Skip member if no stats are available and we shouldn't show estimates
+        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats)) {
+          if (!statsShareIncludeTargetsWithNoStatsAvailable) {
+            continue; // Skip member if no stats and we don't include targets without stats
+          } else {
+            statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+            statsBuffer.writeln("Unknown stats!");
+            statsBuffer.writeln("");
+            continue;
+          }
+        }
+
+        statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+
         if (hasExactStats) {
           statsBuffer.writeln("* Spied stats *");
-
-          // Strength
           statsBuffer.writeln(
               "Strength: ${member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '?'}${member.statsStrUpdated != null && member.statsStrUpdated != -1 ? " (${spyController.statsOld(member.statsStrUpdated!)})" : ""}");
-
-          // Speed
           statsBuffer.writeln(
               "Speed: ${member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '?'}${member.statsSpdUpdated != null && member.statsSpdUpdated != -1 ? " (${spyController.statsOld(member.statsSpdUpdated!)})" : ""}");
-
-          // Defense
           statsBuffer.writeln(
               "Defense: ${member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '?'}${member.statsDefUpdated != null && member.statsDefUpdated != -1 ? " (${spyController.statsOld(member.statsDefUpdated!)})" : ""}");
-
-          // Dexterity
           statsBuffer.writeln(
               "Dexterity: ${member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '?'}${member.statsDexUpdated != null && member.statsDexUpdated != -1 ? " (${spyController.statsOld(member.statsDexUpdated!)})" : ""}");
-
-          // Total
           statsBuffer.writeln(
               "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
-        } else if (member.statsEstimated != null && member.statsEstimated!.isNotEmpty) {
-          // Show estimated stats if no exact stats are available and estimated stats are not empty
+        } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
           statsBuffer.writeln("* Estimated stats: ${member.statsEstimated} *");
-
-          // Additional estimated details
-          statsBuffer.writeln("Xanax taken: ${member.memberXanax}");
-          ("Refills: ${member.memberRefill}");
-          ("Enhancers used: ${member.memberEnhancement}");
-          ("Energy drinks (Cans): ${member.memberCans}");
-
-          // Calculate SSL probability
+          statsBuffer.writeln("Xanax taken: ${member.memberXanax ?? ''}");
+          statsBuffer.writeln("Refills: ${member.memberRefill ?? ''}");
+          statsBuffer.writeln("Enhancers used: ${member.memberEnhancement ?? ''}");
+          statsBuffer.writeln("Energy drinks (Cans): ${member.memberCans ?? ''}");
           statsBuffer.writeln("SSL probability: ${calculateSSLProbability(member)}");
         } else {
           statsBuffer.writeln("Unknown stats!");
@@ -1372,27 +1408,38 @@ class WarController extends GetxController {
     try {
       final List<List<String>> csvData = [];
 
-      csvData.add([
-        'Name',
-        'ID',
-        'Faction Name',
-        'Type of Stats',
-        'Strength',
-        'Strength Updated',
-        'Speed',
-        'Speed Updated',
-        'Defense',
-        'Defense Updated',
-        'Dexterity',
-        'Dexterity Updated',
-        'Total',
-        'Total Updated',
-        'Xanax',
-        'Refills',
-        'Enhancers',
-        'Energy Drinks',
-        'SSL Probability',
-      ]);
+      if (statsShareShowOnlyTotals) {
+        csvData.add([
+          'Name',
+          'ID',
+          'Faction Name',
+          'Type of Stats',
+          'Total',
+          'Total Updated',
+        ]);
+      } else {
+        csvData.add([
+          'Name',
+          'ID',
+          'Faction Name',
+          'Type of Stats',
+          'Strength',
+          'Strength Updated',
+          'Speed',
+          'Speed Updated',
+          'Defense',
+          'Defense Updated',
+          'Dexterity',
+          'Dexterity Updated',
+          'Total',
+          'Total Updated',
+          'Xanax',
+          'Refills',
+          'Enhancers',
+          'Energy Drinks',
+          'SSL Probability',
+        ]);
+      }
 
       List<Member> pinnedMembers = [];
       List<Member> nonPinnedMembers = [];
@@ -1400,7 +1447,9 @@ class WarController extends GetxController {
       for (final faction in factions) {
         for (final memberId in faction.members!.keys) {
           final member = faction.members![memberId];
-          if (member != null && member.hidden != true) {
+          if (member != null) {
+            if (member.hidden == true && !statsShareIncludeHiddenTargets) continue;
+
             if (member.pinned) {
               pinnedMembers.add(member);
             } else {
@@ -1415,69 +1464,55 @@ class WarController extends GetxController {
       List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
 
       for (final member in sortedMembers) {
-        final List<String> rowData = [
-          member.name ?? '',
-          member.memberId?.toString() ?? '',
-          member.factionName ?? '',
-          '', // Type of Stats
-          '', // Strength
-          '', // Strength Updated
-          '', // Speed
-          '', // Speed Updated
-          '', // Defense
-          '', // Defense Updated
-          '', // Dexterity
-          '', // Dexterity Updated
-          '', // Total
-          '', // Total Updated
-          '', // Xanax
-          '', // Refills
-          '', // Enhancers
-          '', // Energy Drinks
-          '', // SSL Probability
-        ];
-
         bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
             (member.statsSpd != null && member.statsSpd != -1) ||
             (member.statsDef != null && member.statsDef != -1) ||
             (member.statsDex != null && member.statsDex != -1) ||
             (member.statsExactTotal != null && member.statsExactTotal != -1);
 
+        bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
+
+        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats)) {
+          if (!statsShareIncludeTargetsWithNoStatsAvailable) {
+            continue; // Skip member if no stats and we don't include targets without stats
+          }
+        }
+
+        final List<String> rowData = [
+          member.name ?? '',
+          member.memberId?.toString() ?? '',
+          member.factionName ?? '',
+          '', // Type of Stats
+          '', // Total
+          '', // Total Updated
+        ];
+
         if (hasExactStats) {
           rowData[3] = 'Spied';
-          rowData[4] = member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '';
-          rowData[5] = member.statsStrUpdated != null && member.statsStrUpdated != -1
-              ? spyController.statsOld(member.statsStrUpdated!)
-              : '';
-          rowData[6] = member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '';
-          rowData[7] = member.statsSpdUpdated != null && member.statsSpdUpdated != -1
-              ? spyController.statsOld(member.statsSpdUpdated!)
-              : '';
-          rowData[8] = member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '';
-          rowData[9] = member.statsDefUpdated != null && member.statsDefUpdated != -1
-              ? spyController.statsOld(member.statsDefUpdated!)
-              : '';
-          rowData[10] = member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '';
-          rowData[11] = member.statsDexUpdated != null && member.statsDexUpdated != -1
-              ? spyController.statsOld(member.statsDexUpdated!)
-              : '';
-          rowData[12] = member.statsExactTotal != null && member.statsExactTotal != -1
+          rowData[4] = member.statsExactTotal != null && member.statsExactTotal != -1
               ? formatBigNumbers(member.statsExactTotal!)
-              : '';
-          rowData[13] =
+              : '?';
+          rowData[5] =
               member.statsExactUpdated != null && member.statsExactUpdated != -1 && member.statsExactUpdated! > 0
                   ? spyController.statsOld(member.statsExactUpdated!)
                   : '';
-        } else if (member.statsEstimated != null && member.statsEstimated!.isNotEmpty) {
+        } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
           rowData[3] = 'Estimated';
           rowData[4] = member.statsEstimated!;
-          rowData[14] = member.memberXanax?.toString() ?? ''; // Xanax
-          rowData[15] = member.memberRefill?.toString() ?? ''; // Refills
-          rowData[16] = member.memberEnhancement?.toString() ?? ''; // Enhancers
-          rowData[17] = member.memberCans?.toString() ?? ''; // Energy Drinks
-          rowData[18] = calculateSSLProbability(member);
+          rowData[5] = ''; // No Total Updated for estimated stats
+
+          if (!statsShareShowOnlyTotals) {
+            rowData.addAll([
+              member.memberXanax?.toString() ?? '',
+              member.memberRefill?.toString() ?? '',
+              member.memberEnhancement?.toString() ?? '',
+              member.memberCans?.toString() ?? '',
+              calculateSSLProbability(member),
+            ]);
+          }
         } else {
           rowData[3] = 'Unknown';
+          rowData[4] = '?';
         }
 
         csvData.add(rowData);

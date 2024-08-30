@@ -245,6 +245,12 @@ class Prefs {
   final String _kUseWtfRevive = "pda_useWtfRevive";
   final String _kUseMidnightXRevive = "pda_useMidnightXRevive";
 
+  // Chaining stats sharing
+  final String _kStatsShareIncludeHiddenTargets = "pda_statsShareIncludeHiddenTargets";
+  final String _kStatsShareShowOnlyTotals = "pda_statsShareShowOnlyTotals";
+  final String _kStatsShareShowEstimatesIfNoSpyAvailable = "pda_statsShareShowEstimatesIfNoSpyAvailable";
+  final String _kStatsShareIncludeTargetsWithNoStatsAvailable = "pda_statsShareIncludeTargetsWithNoStatsAvailable";
+
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
@@ -2232,6 +2238,55 @@ class Prefs {
   Future<bool> setUseMidnightXevive(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseMidnightXRevive, value);
+  }
+
+  /// ---------------------------------------
+  /// Methods for stats sharing configuration
+  /// ---------------------------------------
+  Future<bool> getStatsShareIncludeHiddenTargets() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareIncludeHiddenTargets) ?? true;
+  }
+
+  Future<bool> setStatsShareIncludeHiddenTargets(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareIncludeHiddenTargets, value);
+  }
+
+  //
+
+  Future<bool> getStatsShareShowOnlyTotals() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareShowOnlyTotals) ?? false;
+  }
+
+  Future<bool> setStatsShareShowOnlyTotals(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareShowOnlyTotals, value);
+  }
+
+  //
+
+  Future<bool> getStatsShareShowEstimatesIfNoSpyAvailable() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareShowEstimatesIfNoSpyAvailable) ?? true;
+  }
+
+  Future<bool> setStatsShareShowEstimatesIfNoSpyAvailable(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareShowEstimatesIfNoSpyAvailable, value);
+  }
+
+  //
+
+  Future<bool> getStatsShareIncludeTargetsWithNoStatsAvailable() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareIncludeTargetsWithNoStatsAvailable) ?? false;
+  }
+
+  Future<bool> setStatsShareIncludeTargetsWithNoStatsAvailable(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, value);
   }
 
   /// ----------------------------

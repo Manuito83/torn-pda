@@ -32,7 +32,6 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
               },
               child: Text("Generate CSV"),
             ),
-            /*
             Padding(
               padding: const EdgeInsets.all(5.0),
               child: Divider(),
@@ -43,9 +42,11 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
                 'Include hidden targets',
                 style: TextStyle(fontSize: 13),
               ),
-              value: true, // TODO
+              value: _w.statsShareIncludeHiddenTargets,
               onChanged: (bool value) {
-                //
+                setState(() {
+                  _w.statsShareIncludeHiddenTargets = value;
+                });
               },
             ),
             SwitchListTile(
@@ -53,9 +54,11 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
                 'Show only totals',
                 style: TextStyle(fontSize: 13),
               ),
-              value: true, // TODO
+              value: _w.statsShareShowOnlyTotals,
               onChanged: (bool value) {
-                //
+                setState(() {
+                  _w.statsShareShowOnlyTotals = value;
+                });
               },
             ),
             SwitchListTile(
@@ -63,9 +66,11 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
                 'Show estimates if spied stats are not available',
                 style: TextStyle(fontSize: 13),
               ),
-              value: true, // TODO
+              value: _w.statsShareShowEstimatesIfNoSpyAvailable,
               onChanged: (bool value) {
-                //
+                setState(() {
+                  _w.statsShareShowEstimatesIfNoSpyAvailable = value;
+                });
               },
             ),
             SwitchListTile(
@@ -73,12 +78,13 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
                 'Include targets with no stats available',
                 style: TextStyle(fontSize: 13),
               ),
-              value: true, // TODO
+              value: _w.statsShareIncludeTargetsWithNoStatsAvailable,
               onChanged: (bool value) {
-                //
+                setState(() {
+                  _w.statsShareIncludeTargetsWithNoStatsAvailable = value;
+                });
               },
             ),
-            */
           ],
         ),
       ),
