@@ -1,10 +1,13 @@
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:developer' as dev;
+import 'package:csv/csv.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
@@ -1329,28 +1332,12 @@ class WarController extends GetxController {
 
           // Additional estimated details
           statsBuffer.writeln("Xanax taken: ${member.memberXanax}");
-          statsBuffer.writeln("Refills: ${member.memberRefill}");
-          statsBuffer.writeln("Enhancers used: ${member.memberEnhancement}");
-          statsBuffer.writeln("Energy drinks (Cans): ${member.memberCans}");
+          ("Refills: ${member.memberRefill}");
+          ("Enhancers used: ${member.memberEnhancement}");
+          ("Energy drinks (Cans): ${member.memberCans}");
 
           // Calculate SSL probability
-          String sslProbability;
-          int xanaxAndEcstasy = (member.memberXanax ?? 0) + (member.memberEcstasy ?? 0);
-          int lsd = member.memberLsd ?? 0;
-
-          if (xanaxAndEcstasy > 150) {
-            sslProbability = "none";
-          } else if (xanaxAndEcstasy <= 150 && lsd < 50) {
-            sslProbability = "low";
-          } else if (xanaxAndEcstasy <= 150 && lsd >= 50 && lsd < 100) {
-            sslProbability = "medium";
-          } else if (xanaxAndEcstasy <= 150 && lsd >= 100) {
-            sslProbability = "high";
-          } else {
-            sslProbability = "unknown";
-          }
-
-          statsBuffer.writeln("SSL probability: $sslProbability");
+          statsBuffer.writeln("SSL probability: ${calculateSSLProbability(member)}");
         } else {
           statsBuffer.writeln("Unknown stats!");
         }
@@ -1376,6 +1363,161 @@ class WarController extends GetxController {
     } catch (e, t) {
       FirebaseCrashlytics.instance.log("PDA Crash at War Stats Share");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+    }
+  }
+
+  Future<void> generateCSV(BuildContext context) async {
+    final spyController = Get.find<SpiesController>();
+
+    try {
+      final List<List<String>> csvData = [];
+
+      csvData.add([
+        'Name',
+        'ID',
+        'Faction Name',
+        'Type of Stats',
+        'Strength',
+        'Strength Updated',
+        'Speed',
+        'Speed Updated',
+        'Defense',
+        'Defense Updated',
+        'Dexterity',
+        'Dexterity Updated',
+        'Total',
+        'Total Updated',
+        'Xanax',
+        'Refills',
+        'Enhancers',
+        'Energy Drinks',
+        'SSL Probability',
+      ]);
+
+      List<Member> pinnedMembers = [];
+      List<Member> nonPinnedMembers = [];
+
+      for (final faction in factions) {
+        for (final memberId in faction.members!.keys) {
+          final member = faction.members![memberId];
+          if (member != null && member.hidden != true) {
+            if (member.pinned) {
+              pinnedMembers.add(member);
+            } else {
+              nonPinnedMembers.add(member);
+            }
+          }
+        }
+      }
+
+      sortMembers(pinnedMembers);
+      sortMembers(nonPinnedMembers);
+      List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
+
+      for (final member in sortedMembers) {
+        final List<String> rowData = [
+          member.name ?? '',
+          member.memberId?.toString() ?? '',
+          member.factionName ?? '',
+          '', // Type of Stats
+          '', // Strength
+          '', // Strength Updated
+          '', // Speed
+          '', // Speed Updated
+          '', // Defense
+          '', // Defense Updated
+          '', // Dexterity
+          '', // Dexterity Updated
+          '', // Total
+          '', // Total Updated
+          '', // Xanax
+          '', // Refills
+          '', // Enhancers
+          '', // Energy Drinks
+          '', // SSL Probability
+        ];
+
+        bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
+            (member.statsSpd != null && member.statsSpd != -1) ||
+            (member.statsDef != null && member.statsDef != -1) ||
+            (member.statsDex != null && member.statsDex != -1) ||
+            (member.statsExactTotal != null && member.statsExactTotal != -1);
+
+        if (hasExactStats) {
+          rowData[3] = 'Spied';
+          rowData[4] = member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '';
+          rowData[5] = member.statsStrUpdated != null && member.statsStrUpdated != -1
+              ? spyController.statsOld(member.statsStrUpdated!)
+              : '';
+          rowData[6] = member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '';
+          rowData[7] = member.statsSpdUpdated != null && member.statsSpdUpdated != -1
+              ? spyController.statsOld(member.statsSpdUpdated!)
+              : '';
+          rowData[8] = member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '';
+          rowData[9] = member.statsDefUpdated != null && member.statsDefUpdated != -1
+              ? spyController.statsOld(member.statsDefUpdated!)
+              : '';
+          rowData[10] = member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '';
+          rowData[11] = member.statsDexUpdated != null && member.statsDexUpdated != -1
+              ? spyController.statsOld(member.statsDexUpdated!)
+              : '';
+          rowData[12] = member.statsExactTotal != null && member.statsExactTotal != -1
+              ? formatBigNumbers(member.statsExactTotal!)
+              : '';
+          rowData[13] =
+              member.statsExactUpdated != null && member.statsExactUpdated != -1 && member.statsExactUpdated! > 0
+                  ? spyController.statsOld(member.statsExactUpdated!)
+                  : '';
+        } else if (member.statsEstimated != null && member.statsEstimated!.isNotEmpty) {
+          rowData[3] = 'Estimated';
+          rowData[4] = member.statsEstimated!;
+          rowData[14] = member.memberXanax?.toString() ?? ''; // Xanax
+          rowData[15] = member.memberRefill?.toString() ?? ''; // Refills
+          rowData[16] = member.memberEnhancement?.toString() ?? ''; // Enhancers
+          rowData[17] = member.memberCans?.toString() ?? ''; // Energy Drinks
+          rowData[18] = calculateSSLProbability(member);
+        } else {
+          rowData[3] = 'Unknown';
+        }
+
+        csvData.add(rowData);
+      }
+
+      final String csvString = const ListToCsvConverter().convert(csvData);
+
+      // Save the CSV content to a temporary file
+      final directory = await getTemporaryDirectory();
+      final String path = '${directory.path}/stats.csv';
+      final File file = File(path);
+      await file.writeAsString(csvString);
+
+      // Create an XFile from the file path and share it
+      final XFile xFile = XFile(path);
+
+      await Share.shareXFiles([xFile], text: 'War targets stats');
+
+      // Clean the temporary file
+      await file.delete();
+    } catch (e, t) {
+      FirebaseCrashlytics.instance.log("PDA Crash at War Stats CSV Generation");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+    }
+  }
+
+  String calculateSSLProbability(Member member) {
+    int xanaxAndEcstasy = (member.memberXanax ?? 0) + (member.memberEcstasy ?? 0);
+    int lsd = member.memberLsd ?? 0;
+
+    if (xanaxAndEcstasy > 150) {
+      return "none";
+    } else if (xanaxAndEcstasy <= 150 && lsd < 50) {
+      return "low";
+    } else if (xanaxAndEcstasy <= 150 && lsd >= 50 && lsd < 100) {
+      return "medium";
+    } else if (xanaxAndEcstasy <= 150 && lsd >= 100) {
+      return "high";
+    } else {
+      return "unknown";
     }
   }
 }

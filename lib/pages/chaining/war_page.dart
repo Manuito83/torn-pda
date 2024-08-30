@@ -32,6 +32,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
+import 'package:torn_pda/widgets/chaining/share_stats_dialog.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
@@ -810,7 +811,12 @@ class WarPageState extends State<WarPage> {
                 );
                 break;
               case "Share stats":
-                _w.shareStats(context);
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return ShareStatsDialog();
+                  },
+                );
                 break;
               case "Hidden targets":
                 _showHiddenMembersDialogs(context);

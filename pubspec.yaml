@@ -32,6 +32,7 @@ dependencies:
   connectivity_plus: 5.0.2
   cookie_jar: 3.0.1
   crypto: 3.0.3
+  csv: 6.0.0
   cupertino_icons: 1.0.2
   dart_ping: 8.0.1
   dart_ping_ios: 3.0.0
