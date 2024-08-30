@@ -1806,7 +1806,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
           child: Text(
             'If enabled, a short message with a lock icon will appear whenever the lock status of a tab is changed or '
-            'when the app is impeeding navigation or tab movement due to its lock condition',
+            'when the app is impeeding navigation or tab movement due to its lock condition. NOTE: without warning, '
+            'you will NOT be able to override navigation with full locks!',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
