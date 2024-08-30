@@ -218,7 +218,7 @@ class SpiesController extends GetxController {
         return false;
       }
     } catch (e) {
-      if (!_isCancelled) log(e.toString());
+      if (!_isCancelled) log("Error fetching Yata spies: $e");
       return false;
     }
 
@@ -248,7 +248,7 @@ class SpiesController extends GetxController {
         }
       }
     } catch (e) {
-      if (!_isCancelled) log(e.toString());
+      if (!_isCancelled) log("Error fetching TornStats spies: $e");
     }
 
     return false;
