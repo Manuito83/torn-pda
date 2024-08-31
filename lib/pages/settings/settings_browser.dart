@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -23,6 +24,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   const SettingsBrowserPage({super.key});
@@ -1783,38 +1785,90 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         if (_settingsProvider.useTabsFullBrowser)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                const Text("Show tab lock warnings"),
-                Switch(
-                  value: _settingsProvider.showTabLockWarnings,
-                  onChanged: (value) {
-                    setState(() {
-                      _settingsProvider.showTabLockWarnings = value;
-                    });
-                  },
-                  activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+          Column(
+            children: [
+              const SizedBox(height: 30),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'TAB LOCKS',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Text("Show tab lock warnings"),
+                    Switch(
+                      value: _settingsProvider.showTabLockWarnings,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.showTabLockWarnings = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  'If enabled, a short message with a lock icon will appear whenever the lock status of a tab is changed or '
+                  'when the app is impeeding navigation or tab movement due to its lock condition. NOTE: without warning, '
+                  'you will NOT be able to override navigation with full locks!',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
           ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
-          child: Text(
-            'If enabled, a short message with a lock icon will appear whenever the lock status of a tab is changed or '
-            'when the app is impeeding navigation or tab movement due to its lock condition. NOTE: without warning, '
-            'you will NOT be able to override navigation with full locks!',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
+        if (_settingsProvider.useTabsFullBrowser)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Navigation exceptions for locked tabs")),
+                    ElevatedButton(
+                      child: Icon(MdiIcons.lockRemoveOutline),
+                      onPressed: () async {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => LockedTabsNavigationExceptionsPage(
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                child: Text(
+                  'By default, tabs with a full lock will not allow you to browse between different pages. However, '
+                  'you can add exceptions by using this dialog',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
           ),
-        ),
       ],
     );
   }

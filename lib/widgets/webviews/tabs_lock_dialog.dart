@@ -59,10 +59,14 @@ class TabsLockDialog extends StatelessWidget {
                       "FULL LOCK:\n\n"
                       "Activated by a long-press in the lock icon: on top of the behavior you get with the "
                       "positional lock, your tab will be locked in the current website/section you are visiting "
-                      "and you will not be able to browse to other web sections. \n\n"
-                      "Note: you will be able to reload the page and still be able to browse through the pages of "
-                      "multi-page sections (e.g.: forums, hospital, jail, items...) and such.\n\n"
-                      "When the full lock is active, a red lock will appear in your tab.",
+                      "and you will not be able to browse to other web sections. You will be able to reload the page and "
+                      "still be able to browse through the pages of multi-page sections "
+                      "(e.g.: forums, hospital, jail, items...) and such.\n\n"
+                      "When the full lock is active, a red lock will appear in your tab.\n\n"
+                      "Note: there are a couple of ways to override this behavior without unlocking the tab. You can either "
+                      "tap the 'override!' button in the warning dialog that shows if you try to browse with a full lock, or "
+                      "you can configure exceptions in Settings / Advanced Browser Settings, to allow navigation between "
+                      "specific pairs or URLs.",
                       style: TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 16.0),

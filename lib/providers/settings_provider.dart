@@ -270,6 +270,19 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<List<String>> _lockedTabsNavigationExceptions = [];
+  List<List<String>> get lockedTabsNavigationExceptions => _lockedTabsNavigationExceptions;
+  void addLockedTabNavigationException(String url1, String url2) {
+    _lockedTabsNavigationExceptions.add([url1, url2]);
+    Prefs().setLockedTabsNavigationExceptions(json.encode(_lockedTabsNavigationExceptions));
+    notifyListeners();
+  }
+
+  void removeLockedTabNavigationException(int index) {
+    _lockedTabsNavigationExceptions.removeAt(index);
+    notifyListeners();
+  }
+
   var _fullScreenRemovesWidgets = true;
   bool get fullScreenRemovesWidgets => _fullScreenRemovesWidgets;
   set fullScreenRemovesWidgets(bool value) {
@@ -966,6 +979,10 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
     _showTabLockWarnings = await Prefs().getShowTabLockWarnings();
+
+    List<dynamic> jsonList = json.decode(await Prefs().getLockedTabsNavigationExceptions());
+    _lockedTabsNavigationExceptions = jsonList.map((item) => List<String>.from(item)).toList();
+
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
     _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
     _fullScreenExtraCloseButton = await Prefs().getFullScreenExtraCloseButton();

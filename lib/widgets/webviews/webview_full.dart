@@ -1822,10 +1822,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return false;
     }
 
+    if (_currentUrl.isEmpty) return false;
+
     if (_webViewProvider.tabList[_webViewProvider.currentTab].isLocked &&
         _webViewProvider.tabList[_webViewProvider.currentTab].isLockFull) {
       // Let it load the first page (_currentUrl will be empty)
       if (_currentUrl.isNotEmpty) {
+        // Check navigation exceptions
+        for (var pair in _settingsProvider.lockedTabsNavigationExceptions) {
+          final url1 = pair[0].trim();
+          final url2 = pair[1].trim();
+
+          if (url1.isEmpty || url2.isEmpty) continue;
+
+          // Allow navigation if the current URL matches one of the URLs in the pair
+          // and the incoming URL matches the other in the same pair
+          if ((_currentUrl.contains(url1) && incomingUrl.toString().contains(url2)) ||
+              (_currentUrl.contains(url2) && incomingUrl.toString().contains(url1))) {
+            return false;
+          }
+        }
+
         // Allow movement across sections like hospital, forums, etc.
         if (_currentUrl.contains(incomingUrl.path)) {
           return false;
@@ -1861,7 +1878,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     onTap: () {
                       toastification.dismissAll();
                       _forceAllowWhenLocked = true;
-                      webViewController!.loadUrl(urlRequest: URLRequest(url: incomingUrl));
+                      webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri.uri(incomingUrl)));
                       Future.delayed(Duration(seconds: 2), () {
                         _forceAllowWhenLocked = false;
                       });

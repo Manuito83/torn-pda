@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 
 // Package imports:
 import 'package:shared_preferences/shared_preferences.dart';
@@ -279,6 +280,7 @@ class Prefs {
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kShowTabLockWarnings = "pda_showTabLockWarnings";
+  final String _kFullLockedTabsNavigationExceptions = "pda_fullLockedTabsNavigationExceptions";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
   final String _kFullScreenExplanationShown = "pda_fullScreenExplanationShown";
@@ -3152,6 +3154,25 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowTabLockWarnings, value);
   }
+
+  // -- LockedTabsNavigationExceptions
+  final List<List<String>> _defaultFullLockedTabsNavigationExceptions = [
+    ["https://www.torn.com/item.php", "https://www.torn.com/loader.php?sid=itemsMods"],
+    ["https://www.torn.com/item.php", "https://www.torn.com/page.php?sid=ammo"],
+  ];
+
+  Future<String> getLockedTabsNavigationExceptions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFullLockedTabsNavigationExceptions) ??
+        json.encode(_defaultFullLockedTabsNavigationExceptions);
+  }
+
+  Future<bool> setLockedTabsNavigationExceptions(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFullLockedTabsNavigationExceptions, value);
+  }
+
+  // --
 
   Future<bool> getUseTabsIcons() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
