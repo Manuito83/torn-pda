@@ -1274,15 +1274,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               return NavigationActionPolicy.CANCEL;
             }
 
-            // If a tab is fully locked, cancel navigation
-            final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
-            if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
-
             if (_settingsProvider.hitInMiniProfileOpensNewTab) {
               if (await _hitShouldOpenNewTab(c, action)) {
                 return NavigationActionPolicy.CANCEL;
               }
             }
+
+            // If a tab is fully locked, cancel navigation
+            // Note: the mini profiles consideration (above) should come first
+            final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
+            if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
