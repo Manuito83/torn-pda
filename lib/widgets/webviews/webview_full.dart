@@ -298,6 +298,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   PullToRefreshController? _pullToRefreshController;
 
   bool _findInPageActive = false;
+  bool _wasFullScreenActiveWhenFindActivated = false;
   final _findController = TextEditingController();
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
@@ -2205,6 +2206,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               setState(() {
                 _findInPageActive = false;
               });
+
+              if (_wasFullScreenActiveWhenFindActivated) {
+                _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+                _wasFullScreenActiveWhenFindActivated = false;
+              }
+
               _findController.text = "";
               _findInteractionController.clearMatches();
               _findFirstSubmitted = false;
@@ -4110,10 +4117,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _chainWidgetController.expanded ? _chainWidgetController.expanded = false : _chainWidgetController.expanded = true;
   }
 
-  void _activateFindInPage() {
+  void _activateFindInPage(bool wasFullScreenActive) {
     setState(() {
       _findInPageActive = true;
     });
+    _wasFullScreenActiveWhenFindActivated = wasFullScreenActive;
     _findFocus.requestFocus();
   }
 

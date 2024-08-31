@@ -51,6 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added Scamming crime to Misc tab in Profile",
           "Improved troubleshooting steps for issues with Alerts",
           "Improved browser reload capability when frozen",
+          "Fixed browser not returning to full screen after web search",
           "Fixed other reported issues",
         ],
     );
