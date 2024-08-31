@@ -59,8 +59,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.4.5';
-const String androidCompilation = '439';
-const String iosCompilation = '439';
+const String androidCompilation = '440';
+const String iosCompilation = '440';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
