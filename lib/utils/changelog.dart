@@ -49,6 +49,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Browser tabs can now be given a custom name (see Tips)",
           "War targets' stats can now be shared (top gear icon)",
           "Added Scamming crime to Misc tab in Profile",
+          "Added faction applications to alerts events filters",
           "Improved troubleshooting steps for issues with Alerts",
           "Improved browser reload capability when frozen",
           "Fixed browser not returning to full screen after web search",

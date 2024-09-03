@@ -1859,7 +1859,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
                 child: Text(
                   'By default, tabs with a full lock will not allow you to browse between different pages. However, '
-                  'you can add exceptions by using this dialog',
+                  'you can add exceptions by using this section. Make sure you review and understand how URLs need '
+                  'to be configured',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,

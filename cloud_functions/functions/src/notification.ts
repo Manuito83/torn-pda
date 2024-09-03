@@ -913,6 +913,14 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             }
           }
 
+          if (filters.includes('faction_applications')) {
+            if (newEventsDescriptions[i].includes('has applied to join your faction')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
         }
       }
 
