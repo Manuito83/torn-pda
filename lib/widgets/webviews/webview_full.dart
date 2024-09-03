@@ -174,6 +174,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Allow navigation once even with a full locked page
   bool _forceAllowWhenLocked = false;
+  DateTime? _lastLockToastShown;
 
   URLRequest? _initialUrl;
   String? _pageTitle = "";
@@ -1849,50 +1850,53 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
 
         if (_settingsProvider.showTabLockWarnings) {
-          toastification.show(
-            closeOnClick: true,
-            alignment: Alignment.bottomCenter,
-            title: Container(
-              color: Colors.transparent,
-              child: Column(
-                children: [
-                  Icon(Icons.lock, color: Colors.red),
-                  SizedBox(height: 30),
-                  GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                      decoration: BoxDecoration(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(4.0),
-                        border: Border.all(color: Colors.blue),
-                      ),
-                      child: Text(
-                        "Override!",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blue,
+          if (_lastLockToastShown == null || DateTime.now().difference(_lastLockToastShown!).inSeconds > 2) {
+            _lastLockToastShown = DateTime.now();
+            toastification.show(
+              closeOnClick: true,
+              alignment: Alignment.bottomCenter,
+              title: Container(
+                color: Colors.transparent,
+                child: Column(
+                  children: [
+                    Icon(Icons.lock, color: Colors.red),
+                    SizedBox(height: 30),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(4.0),
+                          border: Border.all(color: Colors.blue),
+                        ),
+                        child: Text(
+                          "Override!",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
                         ),
                       ),
+                      onTap: () {
+                        toastification.dismissAll();
+                        _forceAllowWhenLocked = true;
+                        webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri.uri(incomingUrl)));
+                        Future.delayed(Duration(seconds: 2), () {
+                          _forceAllowWhenLocked = false;
+                        });
+                      },
                     ),
-                    onTap: () {
-                      toastification.dismissAll();
-                      _forceAllowWhenLocked = true;
-                      webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri.uri(incomingUrl)));
-                      Future.delayed(Duration(seconds: 2), () {
-                        _forceAllowWhenLocked = false;
-                      });
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            autoCloseDuration: Duration(seconds: 3),
-            animationDuration: Duration(milliseconds: 0),
-            showProgressBar: false,
-            style: ToastificationStyle.simple,
-            borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-          );
+              autoCloseDuration: Duration(seconds: 3),
+              animationDuration: Duration(milliseconds: 0),
+              showProgressBar: false,
+              style: ToastificationStyle.simple,
+              borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+            );
+          }
         }
 
         return true;
