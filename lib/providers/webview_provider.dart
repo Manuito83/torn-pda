@@ -94,6 +94,10 @@ class WebViewProvider extends ChangeNotifier {
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
+  // Controls successive toastification activations for full lock awareness, since
+  // using [toastification.dismissAll()] leaves quite a long gap until next activation is possible
+  DateTime? lastLockToastShown;
+
   bool _bottomBarStyleEnabled = false;
   bool get bottomBarStyleEnabled => _bottomBarStyleEnabled;
   set bottomBarStyleEnabled(bool value) {

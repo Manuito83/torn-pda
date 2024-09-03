@@ -174,7 +174,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Allow navigation once even with a full locked page
   bool _forceAllowWhenLocked = false;
-  DateTime? _lastLockToastShown;
 
   URLRequest? _initialUrl;
   String? _pageTitle = "";
@@ -1850,8 +1849,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         }
 
         if (_settingsProvider.showTabLockWarnings) {
-          if (_lastLockToastShown == null || DateTime.now().difference(_lastLockToastShown!).inSeconds > 2) {
-            _lastLockToastShown = DateTime.now();
+          if (_webViewProvider.lastLockToastShown == null ||
+              DateTime.now().difference(_webViewProvider.lastLockToastShown!).inSeconds > 2) {
+            _webViewProvider.lastLockToastShown = DateTime.now();
             toastification.show(
               closeOnClick: true,
               alignment: Alignment.bottomCenter,
