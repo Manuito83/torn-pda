@@ -1147,7 +1147,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          "${(_settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10)}%",
+                          _settingsProvider.travelNerveExcessWarningThreshold >= 110
+                              ? "> max"
+                              : "${(_settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10)}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
@@ -1221,7 +1223,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          "${(_settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10)}%",
+                          _settingsProvider.travelLifeExcessWarningThreshold >= 110
+                              ? "> max"
+                              : "${(_settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10)}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
