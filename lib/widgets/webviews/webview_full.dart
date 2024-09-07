@@ -4230,14 +4230,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
       final energyCheck = _settingsProvider.travelEnergyExcessWarning;
       if (energyCheck) {
-        final energyUserSelectedThreshold = _settingsProvider.travelEnergyExcessWarningThreshold ~/ 10 * 10;
-        final energyCurrent = stats.energy!.current!;
-        final energyMax = stats.energy!.maximum!;
-        final energyWarningOnlyWhenAboveMax = energyUserSelectedThreshold > 100;
-        final energyThresholdPercentage = (energyUserSelectedThreshold / 100) * energyMax;
+        final energyMin = _settingsProvider.travelEnergyRangeWarningThreshold.start ~/ 10 * 10;
+        final energyMax = _settingsProvider.travelEnergyRangeWarningThreshold.end ~/ 10 * 10;
 
-        if ((energyWarningOnlyWhenAboveMax && energyCurrent > energyMax) ||
-            (!energyWarningOnlyWhenAboveMax && energyCurrent >= energyThresholdPercentage)) {
+        final energyCurrent = stats.energy!.current!;
+        final energyMaxUser = stats.energy!.maximum!;
+
+        final isMaxOverThreshold = energyMax >= 110;
+
+        final energyMinThreshold = (energyMin / 100) * energyMaxUser;
+        final energyMaxThreshold = isMaxOverThreshold ? double.infinity : (energyMax / 100) * energyMaxUser;
+
+        if (energyCurrent >= energyMinThreshold && energyCurrent <= energyMaxThreshold) {
           warnRows.add(
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -4253,7 +4257,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         Flexible(
                           child: Text(
                             'Energy is too high '
-                            '(${energyUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$energyUserSelectedThreshold%" : "> max"})!',
+                            '(${energyMax <= 100 ? "$energyMin% - $energyMax%" : "> $energyMin%"})!',
                           ),
                         ),
                       ],

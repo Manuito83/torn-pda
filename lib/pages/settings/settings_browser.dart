@@ -1021,9 +1021,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
-            "If enabled, you'll get a warning when you access the Travel Agency with your Energy Bar above a certain "
+            "If enabled, you'll get a warning when you access the Travel Agency with your Energy Bar between a certain "
             "threshold to avoid a possible waste of energy during your trip (i.e.: you might want to use it in the "
-            "gym or similar before boarding)",
+            "gym or similar before boarding). Values above max can be avoided if you don't want the warning to trigger "
+            "while you are stacking.",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -1040,7 +1041,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     const Text(
-                      "Threshold",
+                      "Range",
                       style: TextStyle(
                         fontSize: 12,
                       ),
@@ -1048,21 +1049,26 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          _settingsProvider.travelEnergyExcessWarningThreshold <= 100
-                              ? "${_settingsProvider.travelEnergyExcessWarningThreshold ~/ 10 * 10}%"
-                              : "only > max",
+                          _settingsProvider.travelEnergyRangeWarningThreshold.end >= 110
+                              ? "> ${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}%"
+                              : "${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}% to ${_settingsProvider.travelEnergyRangeWarningThreshold.end.round()}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
                         ),
-                        Slider(
+                        RangeSlider(
                           min: 0,
                           max: 110,
                           divisions: 11,
-                          value: _settingsProvider.travelEnergyExcessWarningThreshold.toDouble(),
-                          onChanged: (double value) {
+                          values: _settingsProvider.travelEnergyRangeWarningThreshold,
+                          onChanged: (RangeValues values) {
                             setState(() {
-                              _settingsProvider.travelEnergyExcessWarningThreshold = value.floor();
+                              double startValue = values.start.roundToDouble();
+                              double endValue = values.end.roundToDouble();
+
+                              if (endValue - startValue >= 10) {
+                                _settingsProvider.travelEnergyRangeWarningThreshold = RangeValues(startValue, endValue);
+                              }
                             });
                           },
                         ),

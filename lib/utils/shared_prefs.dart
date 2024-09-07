@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:convert';
 
 // Package imports:
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefs {
@@ -173,7 +174,8 @@ class Prefs {
 
   // Travel Agency warnings
   final String _kTravelEnergyExcessWarning = "pda_travelEnergyExcessWarning";
-  final String _kTravelEnergyExcessWarningThreshold = "pda_travelEnergyExcessWarningThreshold";
+  final String _kTravelEnergyRangeWarningThresholdMin = 'travelEnergyRangeWarningThresholdMin';
+  final String _kTravelEnergyRangeWarningThresholdMax = 'travelEnergyRangeWarningThresholdMax';
   final String _kTravelNerveExcessWarning = "pda_travelNerveExcessWarning";
   final String _kTravelNerveExcessWarningThreshold = "pda_travelNerveExcessWarningThreshold";
   final String _kTravelLifeExcessWarning = "pda_travelLifeExcessWarning";
@@ -1997,14 +1999,18 @@ class Prefs {
     return prefs.setBool(_kTravelEnergyExcessWarning, value);
   }
 
-  Future<int> getTravelEnergyExcessWarningThreshold() async {
+  Future<RangeValues> getTravelEnergyRangeWarningRange() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTravelEnergyExcessWarningThreshold) ?? 50;
+    final int min = prefs.getInt(_kTravelEnergyRangeWarningThresholdMin) ?? 10;
+    final int max = prefs.getInt(_kTravelEnergyRangeWarningThresholdMax) ?? 100;
+    return RangeValues(min.toDouble(), max == 110 ? 110 : max.toDouble());
   }
 
-  Future<bool> setTravelEnergyExcessWarningThreshold(int value) async {
+  Future<bool> setTravelEnergyRangeWarningRange(int min, int max) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTravelEnergyExcessWarningThreshold, value);
+    final bool minSet = await prefs.setInt(_kTravelEnergyRangeWarningThresholdMin, min);
+    final bool maxSet = await prefs.setInt(_kTravelEnergyRangeWarningThresholdMax, max >= 110 ? 110 : max);
+    return minSet && maxSet;
   }
 
   Future<bool> getTravelNerveExcessWarning() async {

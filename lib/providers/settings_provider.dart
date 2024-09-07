@@ -646,11 +646,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _travelEnergyExcessWarningThreshold = 50;
-  int get travelEnergyExcessWarningThreshold => _travelEnergyExcessWarningThreshold;
-  set travelEnergyExcessWarningThreshold(int choice) {
-    _travelEnergyExcessWarningThreshold = choice;
-    Prefs().setTravelEnergyExcessWarningThreshold(_travelEnergyExcessWarningThreshold);
+  RangeValues _travelEnergyRangeWarningThreshold = RangeValues(10, 100);
+  RangeValues get travelEnergyRangeWarningThreshold => _travelEnergyRangeWarningThreshold;
+  set travelEnergyRangeWarningThreshold(RangeValues range) {
+    _travelEnergyRangeWarningThreshold = range;
+    Prefs().setTravelEnergyRangeWarningRange(
+      _travelEnergyRangeWarningThreshold.start.toInt(),
+      _travelEnergyRangeWarningThreshold.end >= 110 ? 110 : _travelEnergyRangeWarningThreshold.end.toInt(),
+    );
     notifyListeners();
   }
 
@@ -1090,8 +1093,7 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutExcessEnergyThreshold = await Prefs().getWarnAboutExcessEnergyThreshold();
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
-    _travelEnergyExcessWarning = await Prefs().getTravelEnergyExcessWarning();
-    _travelEnergyExcessWarningThreshold = await Prefs().getTravelEnergyExcessWarningThreshold();
+    _travelEnergyRangeWarningThreshold = await Prefs().getTravelEnergyRangeWarningRange();
     _travelNerveExcessWarning = await Prefs().getTravelNerveExcessWarning();
     _travelNerveExcessWarningThreshold = await Prefs().getTravelNerveExcessWarningThreshold();
     _travelLifeExcessWarning = await Prefs().getTravelLifeExcessWarning();
