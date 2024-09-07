@@ -39,11 +39,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.4.5 - Build 442 - 07/09/2024
+    // v3.5.0 - Build 443 - 07/09/2024
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.4.5'
-        ..date = '15 SEP 2024'
+        ..version = 'Torn PDA v3.5.0'
+        ..date = '12 SEP 2024'
         ..features = [
           "Browser tabs can now be locked (see Tips)",
           "Browser tabs can now be given a custom name (see Tips)",
@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added Scamming crime to Misc tab in Profile",
           "Added faction applications to alerts events filters",
           "Added min/max range to the travel expenditure warning (reset to default)",
-          "Increased time selection for manual hospital notifications",
+          "Increased time selection for manual hospital release notifications",
           "Improved troubleshooting steps for issues with Alerts",
           "Improved browser reload capability when frozen",
           "Fixed browser not returning to full screen after web search",

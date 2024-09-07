@@ -19,6 +19,7 @@ import 'package:torn_pda/pages/settings/friendly_factions.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -27,7 +28,9 @@ import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
-  const SettingsBrowserPage({super.key});
+  final UserDetailsProvider userDetailsProvider;
+
+  const SettingsBrowserPage({required this.userDetailsProvider, super.key});
 
   @override
   SettingsBrowserPageState createState() => SettingsBrowserPageState();
@@ -985,6 +988,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Column _travelExpenditureWarning() {
+    final currentEnergyMax = widget.userDetailsProvider.basic?.energy?.maximum ?? -1;
+    final currentNerveMax = widget.userDetailsProvider.basic?.nerve?.maximum ?? -1;
+    final currentLifeMax = widget.userDetailsProvider.basic?.life?.maximum ?? -1;
+
     return Column(
       children: [
         const Row(
@@ -1061,6 +1068,18 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           max: 110,
                           divisions: 11,
                           values: _settingsProvider.travelEnergyRangeWarningThreshold,
+                          labels: RangeLabels(
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.start,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.end,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                          ),
                           onChanged: (RangeValues values) {
                             setState(() {
                               double startValue = values.start.roundToDouble();
@@ -1128,9 +1147,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          _settingsProvider.travelNerveExcessWarningThreshold <= 100
-                              ? "${_settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10}%"
-                              : "only > max",
+                          "${(_settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10)}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
@@ -1140,9 +1157,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           max: 110,
                           divisions: 11,
                           value: _settingsProvider.travelNerveExcessWarningThreshold.toDouble(),
+                          label: _buildSingleLabel(
+                              _settingsProvider.travelNerveExcessWarningThreshold.toDouble(), currentNerveMax, "N"),
                           onChanged: (double value) {
                             setState(() {
-                              _settingsProvider.travelNerveExcessWarningThreshold = value.floor();
+                              _settingsProvider.travelNerveExcessWarningThreshold = (value.round() ~/ 10 * 10);
                             });
                           },
                         ),
@@ -1202,9 +1221,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          _settingsProvider.travelLifeExcessWarningThreshold <= 100
-                              ? "${_settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10}%"
-                              : "only > max",
+                          "${(_settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10)}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
@@ -1214,9 +1231,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           max: 110,
                           divisions: 11,
                           value: _settingsProvider.travelLifeExcessWarningThreshold.toDouble(),
+                          label: _buildSingleLabel(
+                              _settingsProvider.travelLifeExcessWarningThreshold.toDouble(), currentLifeMax, "L"),
                           onChanged: (double value) {
                             setState(() {
-                              _settingsProvider.travelLifeExcessWarningThreshold = value.floor();
+                              _settingsProvider.travelLifeExcessWarningThreshold = (value.round() ~/ 10 * 10);
                             });
                           },
                         ),
@@ -1291,6 +1310,28 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ],
     );
+  }
+
+  String _buildSingleLabel(double percentage, int currentMax, String type) {
+    if (percentage >= 110) {
+      return "> max\n> $currentMax $type";
+    } else if (currentMax == -1) {
+      return "${percentage.round()}%";
+    } else {
+      final realValue = (percentage / 100 * currentMax).round();
+      return "${percentage.round()}%\n$realValue $type";
+    }
+  }
+
+  String _buildRangeLabel(double percentage, int currentMax, String type) {
+    if (percentage >= 110) {
+      return "> max\n> $currentMax $type";
+    } else if (currentMax == -1) {
+      return "${percentage.round()}%";
+    } else {
+      final realValue = (percentage / 100 * currentMax).round();
+      return "${percentage.round()}%\n$realValue $type";
+    }
   }
 
   Column _textScale(BuildContext context) {

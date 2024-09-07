@@ -867,7 +867,7 @@ class ApiCallerController extends GetxController {
       case ApiSelection.travel:
         url += 'user/?selections=money,travel';
       case ApiSelection.ownBasic:
-        url += 'user/?selections=profile,battlestats';
+        url += 'user/?selections=profile,battlestats,bars';
       case ApiSelection.ownExtended:
         url += 'user/?selections=profile,bars,networth,cooldowns,notifications,'
             'travel,icons,money,education,messages';

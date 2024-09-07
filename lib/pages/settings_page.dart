@@ -122,7 +122,7 @@ class SettingsPageState extends State<SettingsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.setCurrentScreen(screenName: 'settings');
+    analytics.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
     routeName = "settings";
@@ -304,7 +304,7 @@ class SettingsPageState extends State<SettingsPage> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => const SettingsBrowserPage(),
+                        builder: (BuildContext context) => SettingsBrowserPage(userDetailsProvider: _userProvider),
                       ),
                     );
                   },
