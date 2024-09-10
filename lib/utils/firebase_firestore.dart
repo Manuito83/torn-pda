@@ -81,9 +81,9 @@ class FirestoreHelper {
     return _firebaseUserModel;
   }
 
-  Future<void> toggleDiscrete(bool discrete) async {
+  Future<void> toggleDiscreet(bool discreet) async {
     await _firestore.collection("players").doc(_uid).update({
-      "discrete": discrete,
+      "discrete": discreet, // We need to accept this typo (discreet)
     });
   }
 

@@ -18,10 +18,20 @@ enum SpiesSource {
 class SpiesController extends GetxController {
   final UserController _u = Get.put(UserController());
 
+  http.Client? _httpClient;
+  bool _isCancelled = false;
+
   @override
   onInit() {
     super.onInit();
     _restoreSpies();
+    _httpClient = http.Client();
+  }
+
+  @override
+  void onClose() {
+    _httpClient?.close();
+    super.onClose();
   }
 
   SpiesSource? _spiesSource;
@@ -187,8 +197,12 @@ class SpiesController extends GetxController {
   Future<bool> fetchYataSpies() async {
     List<YataSpyModel> spies = <YataSpyModel>[];
     try {
+      _isCancelled = false;
       final String yataURL = 'https://yata.yt/api/v1/spies/?key=${_u.alternativeYataKey}';
-      final resp = await http.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 60));
+      final resp = await _httpClient!.get(Uri.parse(yataURL)).timeout(const Duration(seconds: 120));
+
+      if (_isCancelled) return false;
+
       if (resp.statusCode == 200) {
         final dynamic spiesJson = json.decode(resp.body);
         if (spiesJson != null) {
@@ -204,20 +218,27 @@ class SpiesController extends GetxController {
         return false;
       }
     } catch (e) {
-      log(e.toString());
+      if (!_isCancelled) log("Error fetching Yata spies: $e");
       return false;
     }
 
-    yataSpiesTime = DateTime.now();
-    yataSpies = spies;
+    if (!_isCancelled) {
+      yataSpiesTime = DateTime.now();
+      yataSpies = spies;
+      return true;
+    }
 
-    return true;
+    return false;
   }
 
   Future<bool> fetchTornStatsSpies() async {
     try {
+      _isCancelled = false;
       final String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/faction/spies';
-      final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 60));
+      final resp = await _httpClient!.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 120));
+
+      if (_isCancelled) return false;
+
       if (resp.statusCode == 200) {
         final TornStatsSpiesModel spyJson = tornStatsSpiesModelFromJson(resp.body);
         if (!spyJson.message!.contains("Error")) {
@@ -227,10 +248,16 @@ class SpiesController extends GetxController {
         }
       }
     } catch (e) {
-      log(e.toString());
+      if (!_isCancelled) log("Error fetching TornStats spies: $e");
     }
 
     return false;
+  }
+
+  void cancelRequests() {
+    _isCancelled = true;
+    _httpClient?.close();
+    _httpClient = http.Client();
   }
 
   // Allow name lookup for YATA as old spies will be missing the ID

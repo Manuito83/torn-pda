@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:cloud_functions/cloud_functions.dart';
 
@@ -40,6 +41,24 @@ class _FirebaseFunctions {
 
     // Data comes with number of people notified
     return results.data;
+  }
+
+  Future<bool> sendAlertsTroubleshootingTest() async {
+    //################
+    // ALERTS TROUBLESHOOTING MESSAGES
+    final HttpsCallable callable = FirebaseFunctions.instanceFor(
+      region: 'us-east4',
+    ).httpsCallable(
+      'troubleshooting-sendTroubleshootingAutoNotification',
+    );
+
+    try {
+      final HttpsCallableResult results = await callable.call();
+      return results.data;
+    } catch (e) {
+      log(e.toString());
+      return false;
+    }
   }
 
   //###################

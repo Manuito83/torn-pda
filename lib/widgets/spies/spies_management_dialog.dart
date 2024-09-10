@@ -227,20 +227,21 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               child: _spiesList(),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(right: 15),
-                child: TextButton(
-                  child: const Text("Close"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
+          if (!_fetchActive)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 15),
+                  child: TextButton(
+                    child: const Text("Close"),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
         ],
       ),
     );
@@ -279,7 +280,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                 children: [
                   Text("Updating ${_spyController.spiesSource == SpiesSource.yata ? "YATA" : "Torn Stats"}..."),
                   Text(
-                    "(time limit is 60 seconds)",
+                    "(time limit is 2 minutes)",
                     style: TextStyle(
                       fontSize: 14,
                     ),
@@ -290,6 +291,26 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
           Padding(
             padding: const EdgeInsets.all(30),
             child: Center(child: CircularProgressIndicator()),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 15),
+                child: TextButton(
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.orange),
+                  ),
+                  onPressed: () {
+                    _spyController.cancelRequests();
+                    setState(() {
+                      _fetchActive = false;
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
         ],
       ),

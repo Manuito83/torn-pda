@@ -1,9 +1,14 @@
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:developer' as dev;
+import 'package:csv/csv.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -17,8 +22,10 @@ import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
+import 'package:torn_pda/widgets/chaining/war_card.dart';
 
 class WarCardDetails {
   int? cardPosition;
@@ -83,6 +90,38 @@ class WarController extends GetxController {
   set midnightXReviveActive(bool value) {
     Prefs().setUseMidnightXevive(value);
     _midnightXReviveActive = value;
+  }
+
+  bool _statsShareIncludeHiddenTargets = true;
+  bool get statsShareIncludeHiddenTargets => _statsShareIncludeHiddenTargets;
+  set statsShareIncludeHiddenTargets(bool value) {
+    _statsShareIncludeHiddenTargets = value;
+    Prefs().setStatsShareIncludeHiddenTargets(value);
+    update();
+  }
+
+  bool _statsShareShowOnlyTotals = false;
+  bool get statsShareShowOnlyTotals => _statsShareShowOnlyTotals;
+  set statsShareShowOnlyTotals(bool value) {
+    _statsShareShowOnlyTotals = value;
+    Prefs().setStatsShareShowOnlyTotals(value);
+    update();
+  }
+
+  bool _statsShareShowEstimatesIfNoSpyAvailable = true;
+  bool get statsShareShowEstimatesIfNoSpyAvailable => _statsShareShowEstimatesIfNoSpyAvailable;
+  set statsShareShowEstimatesIfNoSpyAvailable(bool value) {
+    _statsShareShowEstimatesIfNoSpyAvailable = value;
+    Prefs().setStatsShareShowEstimatesIfNoSpyAvailable(value);
+    update();
+  }
+
+  bool _statsShareIncludeTargetsWithNoStatsAvailable = false;
+  bool get statsShareIncludeTargetsWithNoStatsAvailable => _statsShareIncludeTargetsWithNoStatsAvailable;
+  set statsShareIncludeTargetsWithNoStatsAvailable(bool value) {
+    _statsShareIncludeTargetsWithNoStatsAvailable = value;
+    Prefs().setStatsShareIncludeTargetsWithNoStatsAvailable(value);
+    update();
   }
 
   bool toggleAddUserActive = false;
@@ -792,6 +831,11 @@ class WarController extends GetxController {
     wtfReviveActive = await Prefs().getUseWtfRevive();
     midnightXReviveActive = await Prefs().getUseMidnightXRevive();
 
+    _statsShareIncludeHiddenTargets = await Prefs().getStatsShareIncludeHiddenTargets();
+    _statsShareShowOnlyTotals = await Prefs().getStatsShareShowOnlyTotals();
+    _statsShareShowEstimatesIfNoSpyAvailable = await Prefs().getStatsShareShowEstimatesIfNoSpyAvailable();
+    _statsShareIncludeTargetsWithNoStatsAvailable = await Prefs().getStatsShareIncludeTargetsWithNoStatsAvailable();
+
     // Get sorting
     final String targetSort = await Prefs().getWarMembersSort();
     switch (targetSort) {
@@ -1187,6 +1231,337 @@ class WarController extends GetxController {
     } catch (e, trace) {
       FirebaseCrashlytics.instance.log("PDA Crash at Assess Pending Notifications");
       FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+    }
+  }
+
+  // Sorting function for MemberModel lists to be used in shareStats
+  int compareMembers(Member a, Member b, WarSortType sortType) {
+    switch (sortType) {
+      case WarSortType.levelDes:
+        return b.level!.compareTo(a.level!);
+      case WarSortType.levelAsc:
+        return a.level!.compareTo(b.level!);
+      case WarSortType.respectDes:
+        return b.respectGain!.compareTo(a.respectGain!);
+      case WarSortType.respectAsc:
+        return a.respectGain!.compareTo(b.respectGain!);
+      case WarSortType.nameDes:
+        return b.name!.toLowerCase().compareTo(a.name!.toLowerCase());
+      case WarSortType.nameAsc:
+        return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+      case WarSortType.lifeDes:
+        return b.lifeCurrent!.compareTo(a.lifeCurrent!);
+      case WarSortType.lifeAsc:
+        return a.lifeCurrent!.compareTo(b.lifeCurrent!);
+      case WarSortType.hospitalDes:
+        return b.hospitalSort!.compareTo(a.hospitalSort!);
+      case WarSortType.hospitalAsc:
+        if (a.hospitalSort! > 0 && b.hospitalSort! > 0) {
+          return a.hospitalSort!.compareTo(b.hospitalSort!);
+        } else if (a.hospitalSort! > 0) {
+          return -1;
+        } else if (b.hospitalSort! > 0) {
+          return 1;
+        } else {
+          return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+        }
+      case WarSortType.statsDes:
+        return b.statsSort!.compareTo(a.statsSort!);
+      case WarSortType.statsAsc:
+        return a.statsSort!.compareTo(b.statsSort!);
+      case WarSortType.onlineDes:
+        return b.lastAction!.timestamp!.compareTo(a.lastAction!.timestamp!);
+      case WarSortType.onlineAsc:
+        return a.lastAction!.timestamp!.compareTo(b.lastAction!.timestamp!);
+      case WarSortType.colorDes:
+        return b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase());
+      case WarSortType.colorAsc:
+        return a.personalNoteColor!.toLowerCase().compareTo(b.personalNoteColor!.toLowerCase());
+      case WarSortType.notesDes:
+        return b.personalNote!.toLowerCase().compareTo(a.personalNote!.toLowerCase());
+      case WarSortType.notesAsc:
+        if (a.personalNote!.isEmpty && b.personalNote!.isNotEmpty) {
+          return 1;
+        } else if (a.personalNote!.isNotEmpty && b.personalNote!.isEmpty) {
+          return -1;
+        } else if (a.personalNote!.isEmpty && b.personalNote!.isEmpty) {
+          return 0;
+        } else {
+          return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
+        }
+      case WarSortType.bounty:
+        int aBounty = a.bountyAmount ?? 0;
+        int bBounty = b.bountyAmount ?? 0;
+        return bBounty.compareTo(aBounty);
+      default:
+        return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+    }
+  }
+
+  void sortMembers(List<Member> members) {
+    members.sort((a, b) => compareMembers(a, b, currentSort ?? WarSortType.levelDes));
+  }
+
+  void sortWarCards(List<WarCard> warCards) {
+    warCards.sort((a, b) => compareMembers(a.memberModel, b.memberModel, currentSort ?? WarSortType.levelDes));
+  }
+
+  void shareStats(BuildContext context) async {
+    try {
+      StringBuffer statsBuffer = StringBuffer();
+      final spyController = Get.find<SpiesController>();
+
+      List<Member> pinnedMembers = [];
+      List<Member> nonPinnedMembers = [];
+
+      for (final faction in factions) {
+        for (final memberId in faction.members!.keys) {
+          final member = faction.members![memberId];
+          if (member != null && member.hidden != true) {
+            if (member.pinned) {
+              pinnedMembers.add(member);
+            } else {
+              nonPinnedMembers.add(member);
+            }
+          }
+        }
+      }
+
+      sortMembers(pinnedMembers);
+      sortMembers(nonPinnedMembers);
+      List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
+
+      for (final member in sortedMembers) {
+        // Determine if the member has any stats (spied or estimated)
+        bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
+            (member.statsSpd != null && member.statsSpd != -1) ||
+            (member.statsDef != null && member.statsDef != -1) ||
+            (member.statsDex != null && member.statsDex != -1) ||
+            (member.statsExactTotal != null && member.statsExactTotal != -1);
+
+        bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
+
+        // Skip member if no stats are available and we shouldn't show estimates
+        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats)) {
+          if (!statsShareIncludeTargetsWithNoStatsAvailable) {
+            continue; // Skip member if no stats and we don't include targets without stats
+          } else {
+            statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+            statsBuffer.writeln("Unknown stats!");
+            statsBuffer.writeln("");
+            continue;
+          }
+        }
+
+        statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+
+        if (hasExactStats) {
+          if (statsShareShowOnlyTotals) {
+            statsBuffer.writeln(
+                "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+          } else {
+            statsBuffer.writeln("* Spied stats *");
+            statsBuffer.writeln(
+                "Strength: ${member.statsStr != null && member.statsStr != -1 ? formatBigNumbers(member.statsStr!) : '?'}${member.statsStrUpdated != null && member.statsStrUpdated != -1 ? " (${spyController.statsOld(member.statsStrUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Speed: ${member.statsSpd != null && member.statsSpd != -1 ? formatBigNumbers(member.statsSpd!) : '?'}${member.statsSpdUpdated != null && member.statsSpdUpdated != -1 ? " (${spyController.statsOld(member.statsSpdUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Defense: ${member.statsDef != null && member.statsDef != -1 ? formatBigNumbers(member.statsDef!) : '?'}${member.statsDefUpdated != null && member.statsDefUpdated != -1 ? " (${spyController.statsOld(member.statsDefUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Dexterity: ${member.statsDex != null && member.statsDex != -1 ? formatBigNumbers(member.statsDex!) : '?'}${member.statsDexUpdated != null && member.statsDexUpdated != -1 ? " (${spyController.statsOld(member.statsDexUpdated!)})" : ""}");
+            statsBuffer.writeln(
+                "Total: ${member.statsExactTotal != null && member.statsExactTotal != -1 ? formatBigNumbers(member.statsExactTotal!) : '?'}${member.statsExactUpdated != null && member.statsExactUpdated != -1 ? " (${spyController.statsOld(member.statsExactUpdated!)})" : ""}");
+          }
+        } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
+          if (statsShareShowOnlyTotals) {
+            statsBuffer.writeln("Estimated stats: ${member.statsEstimated}");
+          } else {
+            statsBuffer.writeln("* Estimated stats: ${member.statsEstimated} *");
+            statsBuffer.writeln("Xanax taken: ${member.memberXanax ?? ''}");
+            statsBuffer.writeln("Refills: ${member.memberRefill ?? ''}");
+            statsBuffer.writeln("Enhancers used: ${member.memberEnhancement ?? ''}");
+            statsBuffer.writeln("Energy drinks (Cans): ${member.memberCans ?? ''}");
+            statsBuffer.writeln("SSL probability: ${calculateSSLProbability(member)}");
+          }
+        } else {
+          statsBuffer.writeln("Unknown stats!");
+        }
+
+        statsBuffer.writeln("");
+      }
+
+      if (statsBuffer.isEmpty) {
+        statsBuffer.writeln("No visible war targets with stats available.");
+      }
+
+      String stats = statsBuffer.toString();
+
+      await Share.share(
+        stats,
+        sharePositionOrigin: Rect.fromLTWH(
+          0,
+          0,
+          MediaQuery.of(context).size.width,
+          MediaQuery.of(context).size.height / 2,
+        ),
+      );
+    } catch (e, t) {
+      FirebaseCrashlytics.instance.log("PDA Crash at War Stats Share");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+    }
+  }
+
+  Future<void> generateCSV(BuildContext context) async {
+    final spyController = Get.find<SpiesController>();
+
+    try {
+      final List<List<String>> csvData = [];
+
+      if (statsShareShowOnlyTotals) {
+        csvData.add([
+          'Name',
+          'ID',
+          'Faction Name',
+          'Type of Stats',
+          'Total',
+          'Total Updated',
+        ]);
+      } else {
+        csvData.add([
+          'Name',
+          'ID',
+          'Faction Name',
+          'Type of Stats',
+          'Strength',
+          'Strength Updated',
+          'Speed',
+          'Speed Updated',
+          'Defense',
+          'Defense Updated',
+          'Dexterity',
+          'Dexterity Updated',
+          'Total',
+          'Total Updated',
+          'Xanax',
+          'Refills',
+          'Enhancers',
+          'Energy Drinks',
+          'SSL Probability',
+        ]);
+      }
+
+      List<Member> pinnedMembers = [];
+      List<Member> nonPinnedMembers = [];
+
+      for (final faction in factions) {
+        for (final memberId in faction.members!.keys) {
+          final member = faction.members![memberId];
+          if (member != null) {
+            if (member.hidden == true && !statsShareIncludeHiddenTargets) continue;
+
+            if (member.pinned) {
+              pinnedMembers.add(member);
+            } else {
+              nonPinnedMembers.add(member);
+            }
+          }
+        }
+      }
+
+      sortMembers(pinnedMembers);
+      sortMembers(nonPinnedMembers);
+      List<Member> sortedMembers = [...pinnedMembers, ...nonPinnedMembers];
+
+      for (final member in sortedMembers) {
+        bool hasExactStats = (member.statsStr != null && member.statsStr != -1) ||
+            (member.statsSpd != null && member.statsSpd != -1) ||
+            (member.statsDef != null && member.statsDef != -1) ||
+            (member.statsDex != null && member.statsDex != -1) ||
+            (member.statsExactTotal != null && member.statsExactTotal != -1);
+
+        bool hasEstimatedStats = member.statsEstimated != null && member.statsEstimated!.isNotEmpty;
+
+        if (!hasExactStats && (!statsShareShowEstimatesIfNoSpyAvailable || !hasEstimatedStats)) {
+          if (!statsShareIncludeTargetsWithNoStatsAvailable) {
+            continue; // Skip member if no stats and we don't include targets without stats
+          }
+        }
+
+        final List<String> rowData = [
+          member.name ?? '',
+          member.memberId?.toString() ?? '',
+          member.factionName ?? '',
+          '', // Type of Stats
+          '', // Total
+          '', // Total Updated
+        ];
+
+        if (hasExactStats) {
+          rowData[3] = 'Spied';
+          rowData[4] = member.statsExactTotal != null && member.statsExactTotal != -1
+              ? formatBigNumbers(member.statsExactTotal!)
+              : '?';
+          rowData[5] =
+              member.statsExactUpdated != null && member.statsExactUpdated != -1 && member.statsExactUpdated! > 0
+                  ? spyController.statsOld(member.statsExactUpdated!)
+                  : '';
+        } else if (statsShareShowEstimatesIfNoSpyAvailable && hasEstimatedStats) {
+          rowData[3] = 'Estimated';
+          rowData[4] = member.statsEstimated!;
+          rowData[5] = ''; // No Total Updated for estimated stats
+
+          if (!statsShareShowOnlyTotals) {
+            rowData.addAll([
+              member.memberXanax?.toString() ?? '',
+              member.memberRefill?.toString() ?? '',
+              member.memberEnhancement?.toString() ?? '',
+              member.memberCans?.toString() ?? '',
+              calculateSSLProbability(member),
+            ]);
+          }
+        } else {
+          rowData[3] = 'Unknown';
+          rowData[4] = '?';
+        }
+
+        csvData.add(rowData);
+      }
+
+      final String csvString = const ListToCsvConverter().convert(csvData);
+
+      // Save the CSV content to a temporary file
+      final directory = await getTemporaryDirectory();
+      final String path = '${directory.path}/stats.csv';
+      final File file = File(path);
+      await file.writeAsString(csvString);
+
+      // Create an XFile from the file path and share it
+      final XFile xFile = XFile(path);
+
+      await Share.shareXFiles([xFile], text: 'War targets stats');
+
+      // Clean the temporary file
+      await file.delete();
+    } catch (e, t) {
+      FirebaseCrashlytics.instance.log("PDA Crash at War Stats CSV Generation");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+    }
+  }
+
+  String calculateSSLProbability(Member member) {
+    int xanaxAndEcstasy = (member.memberXanax ?? 0) + (member.memberEcstasy ?? 0);
+    int lsd = member.memberLsd ?? 0;
+
+    if (xanaxAndEcstasy > 150) {
+      return "none";
+    } else if (xanaxAndEcstasy <= 150 && lsd < 50) {
+      return "low";
+    } else if (xanaxAndEcstasy <= 150 && lsd >= 50 && lsd < 100) {
+      return "medium";
+    } else if (xanaxAndEcstasy <= 150 && lsd >= 100) {
+      return "high";
+    } else {
+      return "unknown";
     }
   }
 }

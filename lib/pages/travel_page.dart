@@ -908,7 +908,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     var notificationTitle = await Prefs().getTravelNotificationTitle();
     var notificationSubtitle = await Prefs().getTravelNotificationBody();
 
-    if (_settingsProvider!.discreteNotifications) {
+    if (_settingsProvider!.discreetNotifications) {
       notificationTitle = "T";
       notificationSubtitle = " ";
     }

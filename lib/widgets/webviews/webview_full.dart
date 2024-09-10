@@ -162,7 +162,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   // DEBUG SCRIPT INJECTION (logs)
   final bool _debugScriptsInjection = false;
 
-  InAppWebViewController? webView;
+  InAppWebViewController? webViewController;
   var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
@@ -171,6 +171,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   bool _firstLoadRevertBackground = true;
   bool _firstLoadRestoreDownloads = true;
+
+  // Allow navigation once even with a full locked page
+  bool _forceAllowWhenLocked = false;
 
   URLRequest? _initialUrl;
   String? _pageTitle = "";
@@ -295,6 +298,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   PullToRefreshController? _pullToRefreshController;
 
   bool _findInPageActive = false;
+  bool _wasFullScreenActiveWhenFindActivated = false;
   final _findController = TextEditingController();
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
@@ -396,10 +400,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       useShouldOverrideUrlLoading: true,
       javaScriptCanOpenWindowsAutomatically: true,
       userAgent: Platform.isAndroid
-          ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 "
-              "Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
-          : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-              "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
+          ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.88 "
+              "Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
+          : "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+              "CriOS/128.0.6613.98 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
@@ -449,7 +453,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   @override
   void dispose() {
     try {
-      webView?.dispose();
+      webViewController?.dispose();
       _findController.dispose();
       _chainWidgetController.dispose();
       WidgetsBinding.instance.removeObserver(this);
@@ -465,9 +469,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-        webView?.pauseTimers();
+        webViewController?.pauseTimers();
       } else {
-        webView?.resumeTimers();
+        webViewController?.resumeTimers();
       }
     }
   }
@@ -479,14 +483,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          if (_webViewProvider.browserShowInForeground) {
-            launchShowCases(_);
-          }
-          return buildScaffold(context);
-        },
-      ),
+      builder: (_) {
+        if (_webViewProvider.browserShowInForeground) {
+          launchShowCases(_);
+        }
+        return buildScaffold(context);
+      },
     );
   }
 
@@ -948,7 +950,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   header: const SizedBox.shrink(),
                   expanded: _crimesActive
                       ? CrimesWidget(
-                          controller: webView,
+                          controller: webViewController,
                         )
                       : const SizedBox.shrink(),
                 )
@@ -984,7 +986,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsActive
                       ? QuickItemsWidget(
-                          inAppWebViewController: webView,
+                          inAppWebViewController: webViewController,
                           faction: false,
                         )
                       : const SizedBox.shrink(),
@@ -1003,7 +1005,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsFactionActive
                       ? QuickItemsWidget(
-                          inAppWebViewController: webView,
+                          inAppWebViewController: webViewController,
                           faction: true,
                         )
                       : const SizedBox.shrink(),
@@ -1046,7 +1048,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   header: const SizedBox.shrink(),
                   expanded: _crimesActive
                       ? CrimesWidget(
-                          controller: webView,
+                          controller: webViewController,
                         )
                       : const SizedBox.shrink(),
                 )
@@ -1064,7 +1066,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsActive
                       ? QuickItemsWidget(
-                          inAppWebViewController: webView,
+                          inAppWebViewController: webViewController,
                           faction: false,
                         )
                       : const SizedBox.shrink(),
@@ -1083,7 +1085,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   header: const SizedBox.shrink(),
                   expanded: _quickItemsFactionActive
                       ? QuickItemsWidget(
-                          inAppWebViewController: webView,
+                          inAppWebViewController: webViewController,
                           faction: true,
                         )
                       : const SizedBox.shrink(),
@@ -1155,7 +1157,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           initialSettings: _initialWebViewSettings,
           // EVENTS
           onWebViewCreated: (c) async {
-            webView = c;
+            webViewController = c;
 
             // Clear cache (except for cookies) for each new session
             if (!_settingsProvider.webviewCacheEnabled) {
@@ -1169,14 +1171,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
-              await webView!.addUserScripts(userScripts: handlersScriptsToAdd);
+              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
-              await webView!.addUserScripts(userScripts: scriptsToAdd);
+              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
                   "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
@@ -1184,7 +1186,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
 
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
-            webView!.addJavaScriptHandler(
+            webViewController!.addJavaScriptHandler(
               handlerName: 'copyToClipboard',
               callback: (args) {
                 String copy = args.toString();
@@ -1197,7 +1199,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             );
 
             // Theme change received from web
-            webView!.addJavaScriptHandler(
+            webViewController!.addJavaScriptHandler(
               handlerName: 'webThemeChange',
               callback: (args) {
                 if (!_settingsProvider.syncTornWebTheme) return;
@@ -1233,12 +1235,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               },
             );
 
-            _addLoadoutChangeHandler(webView!);
+            _addLoadoutChangeHandler(webViewController!);
 
-            _addScriptApiHandlers(webView!);
+            _addScriptApiHandlers(webViewController!);
           },
-          shouldOverrideUrlLoading: (c, request) async {
-            final incomingUrl = request.request.url.toString();
+          shouldOverrideUrlLoading: (c, action) async {
+            final incomingUrl = action.request.url.toString();
 
             // Handle external schemes
             if (!incomingUrl.startsWith("http:") &&
@@ -1273,24 +1275,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             }
 
             if (_settingsProvider.hitInMiniProfileOpensNewTab) {
-              if (await _hitShouldOpenNewTab(c, request)) {
+              if (await _hitShouldOpenNewTab(c, action)) {
                 return NavigationActionPolicy.CANCEL;
               }
             }
+
+            // If a tab is fully locked, cancel navigation
+            // Note: the mini profiles consideration (above) should come first
+            final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
+            if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
             if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
-              await webView!.addUserScripts(userScripts: handlersScriptsToAdd);
+              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
-              await webView!.addUserScripts(userScripts: scriptsToAdd);
+              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
 
               // DEBUG
               if (_debugScriptsInjection) {
@@ -1326,7 +1333,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             // Check for content-type header to prevent loading of non-JS files.
             // Add anyway if there's no header, as it's probably a userscript.
             if (incomingUrl.endsWith(".user.js") &&
-                (request.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
+                (action.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
               // First look for existing script with this url
               final existingScript = _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == incomingUrl);
               late String message;
@@ -1399,7 +1406,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             try {
               _currentUrl = uri.toString();
 
-              final html = await webView!.getHtml();
+              final html = await webViewController!.getHtml();
 
               hideChatOnLoad();
 
@@ -1423,7 +1430,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
             try {
               if (_settingsProvider.removeAirplane) {
-                webView!.evaluateJavascript(source: travelRemovePlaneJS());
+                webViewController!.evaluateJavascript(source: travelRemovePlaneJS());
               }
 
               hideChatOnLoad();
@@ -1496,7 +1503,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (final script in scriptsToAdd) {
-                await webView!.evaluateJavascript(
+                await webViewController!.evaluateJavascript(
                   source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
                 );
               }
@@ -1519,7 +1526,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _addExtraHeightForPullToRefresh();
               }
 
-              final html = await webView!.getHtml();
+              final html = await webViewController!.getHtml();
               final document = parse(html);
 
               // Force to show title
@@ -1539,7 +1546,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               // This is used in case the user presses reload. We need to wait for the page
               // load to be finished in order to scroll
               if (_scrollAfterLoad) {
-                webView!.scrollTo(x: _scrollX!, y: _scrollY!);
+                webViewController!.scrollTo(x: _scrollX!, y: _scrollY!);
                 _scrollAfterLoad = false;
               }
 
@@ -1598,12 +1605,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _tradesOnResourceTriggerTime = DateTime.now();
 
                 _tradesTriggered = true;
-                final html = await webView!.getHtml();
+                final html = await webViewController!.getHtml();
                 final document = parse(html);
                 final pageTitle = (await _getPageTitle(document))!.toLowerCase();
                 if (Platform.isIOS) {
                   // iOS needs this check because the full trade URL won't trigger in onLoadStop
-                  _currentUrl = (await webView!.getUrl()).toString();
+                  _currentUrl = (await webViewController!.getUrl()).toString();
                 }
                 _assessTrades(document, pageTitle);
               }
@@ -1618,7 +1625,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 _vaultOnResourceTriggerTime = DateTime.now();
 
                 if (!_vaultTriggered) {
-                  final html = await webView!.getHtml();
+                  final html = await webViewController!.getHtml();
                   final document = parse(html);
                   final pageTitle = (await _getPageTitle(document))!.toLowerCase();
                   _assessVault(doc: document, pageTitle: pageTitle);
@@ -1644,11 +1651,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                 // iOS needs URL report in jail pages
                 if (Platform.isIOS) {
-                  final uri = await webView!.getUrl();
+                  final uri = await webViewController!.getUrl();
                   _reportUrlVisit(uri);
                 }
 
-                final html = await webView!.getHtml();
+                final html = await webViewController!.getHtml();
                 dom.Document document = parse(html);
 
                 late List<dom.Element> query;
@@ -1660,7 +1667,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   } else {
                     await Future.delayed(const Duration(seconds: 1));
                     if (!mounted) break;
-                    final updatedHtml = await webView!.getHtml();
+                    final updatedHtml = await webViewController!.getHtml();
                     document = parse(updatedHtml);
                   }
                 }
@@ -1680,11 +1687,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                 // iOS needs URL report in jail pages
                 if (Platform.isIOS) {
-                  final uri = await webView!.getUrl();
+                  final uri = await webViewController!.getUrl();
                   _reportUrlVisit(uri);
                 }
 
-                final html = await webView!.getHtml();
+                final html = await webViewController!.getHtml();
                 dom.Document document = parse(html);
 
                 late List<dom.Element> query;
@@ -1696,7 +1703,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   } else {
                     await Future.delayed(const Duration(seconds: 1));
                     if (!mounted) break;
-                    final updatedHtml = await webView!.getHtml();
+                    final updatedHtml = await webViewController!.getHtml();
                     document = parse(updatedHtml);
                   }
                 }
@@ -1719,7 +1726,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
                 // We are not reporting the URL if we change tabs
                 // (it does not work on desktop either)
-                final uri = await webView!.getUrl();
+                final uri = await webViewController!.getUrl();
                 _currentUrl = uri.toString();
 
                 if (_currentUrl.contains('tab=armoury') && !_quickItemsFactionTriggered) {
@@ -1761,7 +1768,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
             } else if (request.url.toString().startsWith("blob:")) {
-              final response = await webView?.callAsyncJavaScript(
+              final response = await webViewController?.callAsyncJavaScript(
                   functionBody: "return fetch(url).then(r => r.text());", arguments: {"url": request.url.toString()});
               if (response == null || response.value == null) return;
               await _downloadData(response.value, fileName: request.suggestedFilename);
@@ -1806,6 +1813,96 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         ),
       ],
     );
+  }
+
+  bool _lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
+    if (incomingUrl == null) return false;
+
+    if (_forceAllowWhenLocked) {
+      return false;
+    }
+
+    if (_currentUrl.isEmpty) return false;
+
+    if (_webViewProvider.tabList[_webViewProvider.currentTab].isLocked &&
+        _webViewProvider.tabList[_webViewProvider.currentTab].isLockFull) {
+      // Let it load the first page (_currentUrl will be empty)
+      if (_currentUrl.isNotEmpty) {
+        // Check navigation exceptions
+        for (var pair in _settingsProvider.lockedTabsNavigationExceptions) {
+          final url1 = pair[0].trim();
+          final url2 = pair[1].trim();
+
+          if (url1.isEmpty || url2.isEmpty) continue;
+
+          // Allow navigation if the current URL matches one of the URLs in the pair
+          // and the incoming URL matches the other in the same pair
+          if ((_currentUrl.contains(url1) && incomingUrl.toString().contains(url2)) ||
+              (_currentUrl.contains(url2) && incomingUrl.toString().contains(url1))) {
+            return false;
+          }
+        }
+
+        // Allow movement across sections like hospital, forums, etc.
+        if (_currentUrl.contains(incomingUrl.path)) {
+          return false;
+        }
+
+        if (_settingsProvider.showTabLockWarnings) {
+          if (_webViewProvider.lastLockToastShown == null ||
+              DateTime.now().difference(_webViewProvider.lastLockToastShown!).inSeconds > 2) {
+            _webViewProvider.lastLockToastShown = DateTime.now();
+            toastification.show(
+              closeOnClick: true,
+              alignment: Alignment.bottomCenter,
+              title: Container(
+                color: Colors.transparent,
+                child: Column(
+                  children: [
+                    Icon(Icons.lock, color: Colors.red),
+                    SizedBox(height: 30),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                        decoration: BoxDecoration(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(4.0),
+                          border: Border.all(color: Colors.blue),
+                        ),
+                        child: Text(
+                          "Override!",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ),
+                      onTap: () {
+                        toastification.dismissAll();
+                        _forceAllowWhenLocked = true;
+                        webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri.uri(incomingUrl)));
+                        Future.delayed(Duration(seconds: 2), () {
+                          _forceAllowWhenLocked = false;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              autoCloseDuration: Duration(seconds: 3),
+              animationDuration: Duration(milliseconds: 0),
+              showProgressBar: false,
+              style: ToastificationStyle.simple,
+              borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+            );
+          }
+        }
+
+        return true;
+      }
+    }
+    return false;
   }
 
   void evaluateGreasyForMockVM(WebUri? uri, InAppWebViewController c) {
@@ -1859,7 +1956,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         return false;
       }
 
-      final html = await webView?.getHtml();
+      final html = await webViewController?.getHtml();
       if (html == null || html.isEmpty) return false;
       final document = parse(html);
       final miniProfile = document.querySelector("[class*='profile-mini-_wrapper_']");
@@ -1909,7 +2006,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   _addExtraHeightForPullToRefresh() {
-    webView!.evaluateJavascript(source: addHeightForPullToRefresh());
+    webViewController!.evaluateJavascript(source: addHeightForPullToRefresh());
   }
 
   void _addLoadoutChangeHandler(InAppWebViewController webView) {
@@ -1961,7 +2058,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future removeAllUserScripts() async {
-    await webView!.removeAllUserScripts();
+    await webViewController!.removeAllUserScripts();
   }
 
   Future assessErrorCases({dom.Document? document}) async {
@@ -1970,7 +2067,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     if (document == null) {
-      final html = await webView?.getHtml();
+      final html = await webViewController?.getHtml();
       if (html == null || html.isEmpty) return;
       document = parse(html);
     }
@@ -2017,7 +2114,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _loginErrorRetrySeconds++;
       await Future.delayed(Duration(seconds: _loginErrorRetrySeconds));
 
-      final newDoc = parse(await webView!.getHtml());
+      final newDoc = parse(await webViewController!.getHtml());
       if (newDoc.querySelectorAll("[class*='logInWrap_']").isEmpty ||
           newDoc.body!.innerHtml.contains("failures from your IP address")) return;
 
@@ -2030,7 +2127,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
 
       if (loginResponse.success) {
-        webView!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+        webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
         await Future.delayed(const Duration(seconds: 4));
         _loginErrorRetrySeconds = 0;
       } else {
@@ -2091,10 +2188,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
-      webView!.evaluateJavascript(
+      webViewController!.evaluateJavascript(
         source: chatHighlightJS(highlights: hlMap),
       );
-      webView!.injectCSSCode(
+      webViewController!.injectCSSCode(
         source: css,
       );
     }
@@ -2103,19 +2200,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   void hideChatOnLoad() {
     if ((_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) ||
         _webViewProvider.chatRemovalWhileFullScreen) {
-      webView!.evaluateJavascript(source: removeChatOnLoadStartJS());
+      webViewController!.evaluateJavascript(source: removeChatOnLoadStartJS());
     }
   }
 
   void hideChatWhileFullScreen() {
     _localChatRemoveActiveBeforeFullScreen = _localChatRemovalActive;
-    webView!.evaluateJavascript(source: removeChatJS());
+    webViewController!.evaluateJavascript(source: removeChatJS());
   }
 
   void showChatAfterFullScreen() {
     _localChatRemovalActive = _localChatRemoveActiveBeforeFullScreen;
     if (!_localChatRemovalActive) {
-      webView!.evaluateJavascript(source: restoreChatJS());
+      webViewController!.evaluateJavascript(source: restoreChatJS());
     }
   }
 
@@ -2131,6 +2228,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               setState(() {
                 _findInPageActive = false;
               });
+
+              if (_wasFullScreenActiveWhenFindActivated) {
+                _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+                _wasFullScreenActiveWhenFindActivated = false;
+              }
+
               _findController.text = "";
               _findInteractionController.clearMatches();
               _findFirstSubmitted = false;
@@ -2252,9 +2355,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                   } else {
                     // But we can change and go back to previous page in certain
                     // situations (e.g. when going for the vault while trading)
-                    final backPossible = await webView!.canGoBack();
+                    final backPossible = await webViewController!.canGoBack();
                     if (backPossible) {
-                      webView!.goBack();
+                      webViewController!.goBack();
                     } else {
                       if (!mounted) return;
                       Navigator.pop(context);
@@ -2272,7 +2375,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               context: context,
               builder: (BuildContext context) {
                 return WebviewShortcutsDialog(
-                  inAppWebView: webView,
+                  inAppWebView: webViewController,
                 );
               },
             );
@@ -2295,36 +2398,53 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 tooltipBackgroundColor: _themeProvider.secondBackground!,
                 descTextStyle: const TextStyle(fontSize: 13),
                 tooltipPadding: const EdgeInsets.all(20),
-                child: Row(
-                  children: [
-                    if (assistPossible)
-                      Flexible(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              "ASSIST",
-                              overflow: TextOverflow.fade,
-                              style: TextStyle(fontSize: 9, color: Colors.orange),
-                            ),
-                            Text(
-                              _pageTitle!,
-                              overflow: TextOverflow.fade,
-                              style: const TextStyle(fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
+                child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
+                        _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
+                    ? Row(
+                        children: [
+                          Icon(
+                            MdiIcons.text,
+                            size: 14,
+                            color: Colors.lime,
+                          ),
+                          SizedBox(width: 6),
+                          Text(
+                            _webViewProvider.tabList[_webViewProvider.currentTab].customName,
+                            overflow: TextOverflow.fade,
+                            style: const TextStyle(fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
+                          ),
+                        ],
                       )
-                    else
-                      Flexible(
-                        child: Text(
-                          _pageTitle!,
-                          overflow: TextOverflow.fade,
-                          style: const TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                    : Row(
+                        children: [
+                          if (assistPossible)
+                            Flexible(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    "ASSIST",
+                                    overflow: TextOverflow.fade,
+                                    style: TextStyle(fontSize: 9, color: Colors.orange),
+                                  ),
+                                  Text(
+                                    _pageTitle!,
+                                    overflow: TextOverflow.fade,
+                                    style: const TextStyle(fontSize: 14, color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            )
+                          else
+                            Flexible(
+                              child: Text(
+                                _pageTitle!,
+                                overflow: TextOverflow.fade,
+                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                              ),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -2359,8 +2479,25 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 child: Icon(Icons.refresh,
                     color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white),
                 onTap: () async {
-                  _scrollX = await webView!.getScrollX();
-                  _scrollY = await webView!.getScrollY();
+                  try {
+                    // Check if the webview is active
+                    await webViewController!.getUrl();
+                  } on FlutterError catch (e) {
+                    if (e.message.contains("was used after being disposed")) {
+                      _webViewProvider.rebuildUnresponsiveWebView(
+                        isChainingBrowser: _isChainingBrowser,
+                        chainingPayload: _chainingPayload,
+                      );
+
+                      logToUser(
+                        "Found crashed browser, trying to rebuild!",
+                        duration: 5,
+                      );
+                    }
+                  }
+
+                  _scrollX = await webViewController!.getScrollX();
+                  _scrollY = await webViewController!.getScrollY();
                   await _reload();
                   _scrollAfterLoad = true;
 
@@ -2397,9 +2534,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (widget.useTabs) {
       _webViewProvider.tryGoBack();
     } else {
-      final bool success = await webView!.canGoBack();
+      final bool success = await webViewController!.canGoBack();
       if (success) {
-        await webView!.goBack();
+        await webViewController!.goBack();
       }
     }
   }
@@ -2409,9 +2546,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (widget.useTabs) {
       _webViewProvider.tryGoForward();
     } else {
-      final bool success = await webView!.canGoForward();
+      final bool success = await webViewController!.canGoForward();
       if (success) {
-        await webView!.goForward();
+        await webViewController!.goForward();
       }
     }
   }
@@ -2523,7 +2660,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (anySectionTriggered) {
       dom.Document doc;
       var pageTitle = "";
-      final html = await webView!.getHtml();
+      final html = await webViewController!.getHtml();
       if (html == null) return;
 
       doc = parse(html);
@@ -2634,7 +2771,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // However, if we come from Trades, we'll also change
     // the back button behavior to ensure we are returning to Trades
     else {
-      final history = (await webView!.getCopyBackForwardList())!;
+      final history = (await webViewController!.getCopyBackForwardList())!;
       // Check if we have more than a single page in history (otherwise we don't come from Trades)
       if (history.currentIndex! > 0) {
         if (history.list![history.currentIndex! - 1].url.toString().contains('trade.php')) {
@@ -2659,7 +2796,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     if (h4 == null && showTitle) {
-      title = (await webView!.getTitle())!;
+      title = (await webViewController!.getTitle())!;
       if (title.contains(' |')) {
         title = title.split(' |')[0];
       }
@@ -2709,7 +2846,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _insertTravelFillMaxButtons() async {
-    await webView!.evaluateJavascript(source: buyMaxAbroadJS());
+    await webViewController!.evaluateJavascript(source: buyMaxAbroadJS());
   }
 
   Future _sendStockInformation(dom.Document document) async {
@@ -2871,7 +3008,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 color: Colors.orange,
               ),
               onTap: () async {
-                await webView!.evaluateJavascript(source: travelReturnHomeJS());
+                await webViewController!.evaluateJavascript(source: travelReturnHomeJS());
                 Future.delayed(const Duration(seconds: 3)).then((value) {
                   if (mounted) {
                     setState(() {
@@ -2981,7 +3118,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Try to get the page title after the section loads
     if (_currentUrl.contains('trade') && pageTitle.isEmpty) {
       await Future.delayed(const Duration(milliseconds: 1500));
-      final html = await webView!.getHtml();
+      final html = await webViewController!.getHtml();
       document = parse(html);
       pageTitle = (await _getPageTitle(document))!.toLowerCase();
     }
@@ -3003,7 +3140,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
       // This is a trade that was just finished (step=view instead of step=logview)
       // We hide the widget to avoid sides getting mixed up
-      String? html = await webView!.getHtml();
+      String? html = await webViewController!.getHtml();
       if (html != null && html.contains("The trade was accepted by")) {
         final nameBar = document.querySelector(".right .title-black")?.innerHtml ?? "";
         if (nameBar.contains("items traded")) {
@@ -3059,7 +3196,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     try {
       if (totalFinds.isEmpty) {
         await Future.delayed(const Duration(milliseconds: 1500));
-        final updatedHtml = await webView!.getHtml();
+        final updatedHtml = await webViewController!.getHtml();
         final updatedDoc = parse(updatedHtml);
         document = updatedDoc;
       }
@@ -3129,7 +3266,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           _tradesExpandable = TradesWidget(
             themeProv: _themeProvider,
             userProv: _userProvider,
-            webView: webView,
+            webView: webViewController,
           );
         });
       }
@@ -3256,8 +3393,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         if (doc != null && pageTitle.isNotEmpty) {
           _assessTrades(doc, pageTitle);
         } else {
-          _currentUrl = (await webView!.getUrl()).toString();
-          final html = await webView!.getHtml();
+          _currentUrl = (await webViewController!.getUrl()).toString();
+          final html = await webViewController!.getHtml();
           final d = parse(html);
           final t = (await _getPageTitle(d))!.toLowerCase();
           _assessTrades(d, t);
@@ -3314,7 +3451,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       } else {
         await Future.delayed(const Duration(milliseconds: 500));
         if (!mounted) break;
-        final updatedHtml = await webView!.getHtml();
+        final updatedHtml = await webViewController!.getHtml();
         doc = parse(updatedHtml);
       }
     }
@@ -3380,7 +3517,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _vaultEnabled = await Prefs().getVaultEnabled();
     // Reset _vaultTriggered so that we can call _assessVault() again
     _vaultTriggered = false;
-    final html = await webView!.getHtml();
+    final html = await webViewController!.getHtml();
     final document = parse(html);
     final pageTitle = (await _getPageTitle(document))!.toLowerCase();
     _assessVault(doc: document, pageTitle: pageTitle, fromReassess: true);
@@ -3432,7 +3569,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       } else {
         await Future.delayed(const Duration(seconds: 1));
         if (!mounted) break;
-        final updatedHtml = await webView!.getHtml();
+        final updatedHtml = await webViewController!.getHtml();
         document = parse(updatedHtml);
       }
     }
@@ -3478,14 +3615,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               _cityItemsFound = itemsFound;
               _errorCityApi = false;
               _cityExpandable = CityWidget(
-                controller: webView,
+                controller: webViewController,
                 cityItems: _cityItemsFound,
                 error: _errorCityApi,
               );
             });
           }
         }
-        webView!.evaluateJavascript(source: highlightCityItemsJS());
+        webViewController!.evaluateJavascript(source: highlightCityItemsJS());
       } else {
         if (mounted) {
           setState(() {
@@ -3560,7 +3697,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future _assessBazaarOthers(dom.Document document) async {
     final easyUrl = _currentUrl.replaceAll('#', '');
     if (easyUrl.contains('bazaar.php?userId=')) {
-      await webView!.evaluateJavascript(source: addOthersBazaarFillButtonsJS());
+      await webViewController!.evaluateJavascript(source: addOthersBazaarFillButtonsJS());
     }
   }
 
@@ -3574,8 +3711,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         child: GestureDetector(
           onTap: () async {
             _bazaarFillActive
-                ? await webView!.evaluateJavascript(source: removeOwnBazaarFillButtonsJS())
-                : await webView!.evaluateJavascript(source: addOwnBazaarFillButtonsJS());
+                ? await webViewController!.evaluateJavascript(source: removeOwnBazaarFillButtonsJS())
+                : await webViewController!.evaluateJavascript(source: addOwnBazaarFillButtonsJS());
 
             if (mounted) {
               setState(() {
@@ -3699,54 +3836,57 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _assessProfileAgeToWords() {
-    if (_currentUrl.contains("www.torn.com/profiles.php?")) webView?.evaluateJavascript(source: ageToWordsOnProfile());
+    if (_currentUrl.contains("www.torn.com/profiles.php?")) {
+      webViewController?.evaluateJavascript(source: ageToWordsOnProfile());
+    }
   }
 
   void _assessBugReportsWarning() {
     if (_currentUrl.contains("forums.php#/p=newthread&f=19&b=0&a=0") && !_bugReportsWarningPrompted) {
       _bugReportsWarningPrompted = true;
       showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-                title: const Text("WARNING"),
-                content: Scrollbar(
-                  thumbVisibility: true,
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 12),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        const Text("Torn PDA is a third-party application, and is not developed by Torn."),
-                        const SizedBox(height: 10),
-                        const Text("Please do not report PDA bugs here, as they will be closed by Torn staff. Any bugs "
-                            "caused by the app should be reported to the developers via one of the buttons at"
-                            "the bottom."),
-                        const SizedBox(height: 10),
-                        Text("Make sure that you have tested in "
-                            "${Platform.isIOS ? "Safari" : "your system browser"}"
-                            " first to see whether the issue persists. If you're not sure, reach out to us below."),
-                        const SizedBox(height: 30),
-                        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                          TextButton(
-                            child: const Text("Forum Thread"),
-                            onPressed: () {
-                              _loadUrl("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503");
-                              Navigator.of(context).pop();
-                            },
-                          ),
-                          TextButton(
-                              child: const Text("Discord"),
-                              onPressed: () => launchUrl(Uri.parse("https://discord.gg/vyP23kJ"),
-                                  mode: LaunchMode.externalApplication)),
-                          TextButton(
-                            child: const Text("Close"),
-                            onPressed: () => Navigator.of(context).pop(),
-                          ),
-                        ])
-                      ]),
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("WARNING"),
+          content: Scrollbar(
+            thumbVisibility: true,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text("Torn PDA is a third-party application, and is not developed by Torn."),
+                  const SizedBox(height: 10),
+                  const Text("Please do not report PDA bugs here, as they will be closed by Torn staff. Any bugs "
+                      "caused by the app should be reported to the developers via one of the buttons at"
+                      "the bottom."),
+                  const SizedBox(height: 10),
+                  Text("Make sure that you have tested in "
+                      "${Platform.isIOS ? "Safari" : "your system browser"}"
+                      " first to see whether the issue persists. If you're not sure, reach out to us below."),
+                  const SizedBox(height: 30),
+                  Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                    TextButton(
+                      child: const Text("Forum Thread"),
+                      onPressed: () {
+                        _loadUrl("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503");
+                        Navigator.of(context).pop();
+                      },
                     ),
-                  ),
-                ),
-              ));
+                    TextButton(
+                        child: const Text("Discord"),
+                        onPressed: () =>
+                            launchUrl(Uri.parse("https://discord.gg/vyP23kJ"), mode: LaunchMode.externalApplication)),
+                    TextButton(
+                      child: const Text("Close"),
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                  ])
+                ]),
+              ),
+            ),
+          ),
+        ),
+      );
     }
   }
 
@@ -3847,7 +3987,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   Future _assessBarsRedirect(dom.Document document) async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
-      webView?.evaluateJavascript(source: barsDoubleClickRedirect());
+      webViewController?.evaluateJavascript(source: barsDoubleClickRedirect());
     }
   }
 
@@ -3862,7 +4002,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
           ),
           onTap: () async {
-            webView!.evaluateJavascript(source: removeChatJS());
+            webViewController!.evaluateJavascript(source: removeChatJS());
             _webViewProvider.reportChatRemovalChange(true, false);
             setState(() {
               _localChatRemovalActive = true;
@@ -3870,7 +4010,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
-            webView!.evaluateJavascript(source: removeChatJS());
+            webViewController!.evaluateJavascript(source: removeChatJS());
             _webViewProvider.reportChatRemovalChange(true, true);
             setState(() {
               _localChatRemovalActive = true;
@@ -3900,7 +4040,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             color: Colors.orange[500],
           ),
           onTap: () async {
-            webView!.evaluateJavascript(source: restoreChatJS());
+            webViewController!.evaluateJavascript(source: restoreChatJS());
             _webViewProvider.reportChatRemovalChange(false, false);
             setState(() {
               _localChatRemovalActive = false;
@@ -3908,7 +4048,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _webViewProvider.verticalMenuClose();
           },
           onLongPress: () async {
-            webView!.evaluateJavascript(source: restoreChatJS());
+            webViewController!.evaluateJavascript(source: restoreChatJS());
             _webViewProvider.reportChatRemovalChange(false, true);
             setState(() {
               _localChatRemovalActive = false;
@@ -3938,11 +4078,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     if (Platform.isAndroid) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-        url: webView!.getUrl().toString(),
+        url: webViewController!.getUrl().toString(),
         apiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
-      await webView!.addUserScripts(userScripts: scriptsToAdd);
+      await webViewController!.addUserScripts(userScripts: scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
@@ -3953,16 +4093,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         log("Added scripts in Android reload: $addList");
       }
 
-      webView!.reload();
+      webViewController!.reload();
     } else if (Platform.isIOS) {
-      final currentURI = await webView!.getUrl();
+      final currentURI = await webViewController!.getUrl();
       _loadUrl(currentURI.toString());
     }
   }
 
   Future reloadFromOutside() async {
-    _scrollX = await webView!.getScrollX();
-    _scrollY = await webView!.getScrollY();
+    _scrollX = await webViewController!.getScrollX();
+    _scrollY = await webViewController!.getScrollY();
     await _reload();
     _scrollAfterLoad = true;
 
@@ -3980,14 +4120,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
-    final url = await webView!.getUrl();
+    final url = await webViewController!.getUrl();
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _pageTitle,
           url: url.toString(),
-          inAppWebview: webView,
+          inAppWebview: webViewController,
           callFindInPage: _activateFindInPage,
           userProvider: _userProvider,
         );
@@ -3999,10 +4139,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     _chainWidgetController.expanded ? _chainWidgetController.expanded = false : _chainWidgetController.expanded = true;
   }
 
-  void _activateFindInPage() {
+  void _activateFindInPage(bool wasFullScreenActive) {
     setState(() {
       _findInPageActive = true;
     });
+    _wasFullScreenActiveWhenFindActivated = wasFullScreenActive;
     _findFocus.requestFocus();
   }
 
@@ -4089,14 +4230,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
       final energyCheck = _settingsProvider.travelEnergyExcessWarning;
       if (energyCheck) {
-        final energyUserSelectedThreshold = _settingsProvider.travelEnergyExcessWarningThreshold ~/ 10 * 10;
-        final energyCurrent = stats.energy!.current!;
-        final energyMax = stats.energy!.maximum!;
-        final energyWarningOnlyWhenAboveMax = energyUserSelectedThreshold > 100;
-        final energyThresholdPercentage = (energyUserSelectedThreshold / 100) * energyMax;
+        final energyMin = _settingsProvider.travelEnergyRangeWarningThreshold.start ~/ 10 * 10;
+        final energyMax = _settingsProvider.travelEnergyRangeWarningThreshold.end ~/ 10 * 10;
 
-        if ((energyWarningOnlyWhenAboveMax && energyCurrent > energyMax) ||
-            (!energyWarningOnlyWhenAboveMax && energyCurrent >= energyThresholdPercentage)) {
+        final energyCurrent = stats.energy!.current!;
+        final energyMaxUser = stats.energy!.maximum!;
+
+        final isMaxOverThreshold = energyMax >= 110;
+
+        final energyMinThreshold = (energyMin / 100) * energyMaxUser;
+        final energyMaxThreshold = isMaxOverThreshold ? double.infinity : (energyMax / 100) * energyMaxUser;
+
+        if (energyCurrent >= energyMinThreshold && energyCurrent <= energyMaxThreshold) {
           warnRows.add(
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -4112,7 +4257,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                         Flexible(
                           child: Text(
                             'Energy is too high '
-                            '(${energyUserSelectedThreshold ~/ 10 * 10 <= 100 ? "$energyUserSelectedThreshold%" : "> max"})!',
+                            '(${energyMax <= 100 ? "$energyMin% - $energyMax%" : "> $energyMin%"})!',
                           ),
                         ),
                       ],
@@ -4461,7 +4606,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (_jailModel == null || _jailExpandable is! JailWidget) {
       setState(() {
         _jailExpandable = JailWidget(
-          webview: webView,
+          webview: webViewController,
           fireScriptCallback: _fireJailScriptCallback,
           playerName: _userProvider!.basic!.name!.toUpperCase(),
         );
@@ -4478,7 +4623,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (jailModel == null) return;
 
     _jailModel = jailModel;
-    webView!.evaluateJavascript(
+    webViewController!.evaluateJavascript(
       source: jailJS(
         filtersEnabled: _jailModel!.filtersEnabled,
         levelMin: _jailModel!.levelMin,
@@ -4502,7 +4647,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (_bountiesModel == null || _bountiesExpandable is! BountiesWidget) {
       setState(() {
         _bountiesExpandable = BountiesWidget(
-          webview: webView,
+          webview: webViewController,
           fireScriptCallback: _fireBountiesScriptCallback,
         );
       });
@@ -4518,7 +4663,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (bountiesModel == null) return;
 
     _bountiesModel = bountiesModel;
-    webView!.evaluateJavascript(
+    webViewController!.evaluateJavascript(
       source: bountiesJS(
         levelMax: _bountiesModel!.levelMax,
         removeNotAvailable: _bountiesModel!.removeRed,
@@ -4628,7 +4773,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // On iOS, when using the new menu icon for OC, the html doc does not respond for some reason
       // We just wait a second and then add the script (should not be noticeable)
       await Future.delayed(const Duration(milliseconds: 1000));
-      webView!.evaluateJavascript(source: ocNNB(members: membersString, playerID: _u.playerId));
+      webViewController!.evaluateJavascript(source: ocNNB(members: membersString, playerID: _u.playerId));
     } catch (e) {
       BotToast.showText(
         text: "Could not load NNB from $_ocSource: $e",
@@ -4675,7 +4820,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// Called from parent though GlobalKey state
   /// Do not call this directly, do it through the webview provider to ensure that the tab is also updated
   Future<void> cancelChainingBrowser() async {
-    final html = await webView!.getHtml();
+    final html = await webViewController!.getHtml();
     final dom.Document document = parse(html);
     _pageTitle = await _getPageTitle(document);
     // Reports page title so that tab names are updated immediately
@@ -4690,20 +4835,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   /// since it will always pause the current webview
   void pauseThisWebview() {
     if (Platform.isAndroid) {
-      webView?.pause();
+      webViewController?.pause();
     }
   }
 
   Future<void> resumeThisWebview() async {
     if (Platform.isAndroid) {
-      webView?.resume();
+      webViewController?.resume();
     } else if (Platform.isIOS) {
-      webView?.resumeTimers();
+      webViewController?.resumeTimers();
     }
 
     // WkWebView on iOS might fail and return null after heavy load (memory, tabs, etc)
     try {
-      Uri? resumedUrl = await webView?.getUrl();
+      Uri? resumedUrl = await webViewController?.getUrl();
       if (resumedUrl == null) {
         log("Reviving webView!");
         _webViewProvider.reviveUrl();
@@ -4734,7 +4879,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         apiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
-      await webView!.addUserScripts(userScripts: scriptsToAdd);
+      await webViewController!.addUserScripts(userScripts: scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
@@ -4747,7 +4892,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
 
     final uri = WebUri(inputUrl);
-    webView!.loadUrl(urlRequest: URLRequest(url: uri));
+    webViewController!.loadUrl(urlRequest: URLRequest(url: uri));
   }
 
   String reportCurrentUrl() {
@@ -4760,26 +4905,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Future<void> _revertTransparentBackground() async {
     if (_firstLoadRevertBackground) {
-      final InAppWebViewSettings newSettings = (await webView!.getSettings())!;
+      final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
       newSettings.transparentBackground = false;
-      webView!.setSettings(settings: newSettings);
+      webViewController!.setSettings(settings: newSettings);
       _firstLoadRevertBackground = false;
     }
   }
 
   Future<void> _revertDownloads() async {
     if (_firstLoadRestoreDownloads) {
-      final InAppWebViewSettings newSettings = (await webView!.getSettings())!;
+      final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
       newSettings.useOnDownloadStart = true;
-      webView!.setSettings(settings: newSettings);
+      webViewController!.setSettings(settings: newSettings);
       _firstLoadRestoreDownloads = false;
     }
   }
 
   Future<void> setBrowserTextScale(int value) async {
-    final InAppWebViewSettings newSettings = (await webView!.getSettings())!;
+    final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
     newSettings.minimumFontSize = value;
-    webView!.setSettings(settings: newSettings);
+    webViewController!.setSettings(settings: newSettings);
   }
 
   void _showLongPressCard(String? src, Uri? url) {
@@ -5628,17 +5773,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     await InAppWebViewController.clearAllCache();
     CookieManager cookieManager = CookieManager.instance();
     cookieManager.deleteAllCookies();
-    webView!.evaluateJavascript(
+    webViewController!.evaluateJavascript(
       source: '''
         localStorage.clear();
         console.log("Cleared cache and local storage!");
       ''',
     );
-    webView!.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
+    webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
   }
 
   _requestTornThemeChange({required bool dark}) {
-    webView!.evaluateJavascript(
+    webViewController!.evaluateJavascript(
       source: '''
         var event = new CustomEvent("onChangeTornMode", {
           detail: { checked: $dark }

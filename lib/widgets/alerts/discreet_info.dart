@@ -1,12 +1,12 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
 
-class DiscreteInfo extends StatefulWidget {
+class DiscreetInfo extends StatefulWidget {
   @override
-  DiscreteInfoState createState() => DiscreteInfoState();
+  DiscreetInfoState createState() => DiscreetInfoState();
 }
 
-class DiscreteInfoState extends State<DiscreteInfo> {
+class DiscreetInfoState extends State<DiscreetInfo> {
   @override
   void initState() {
     super.initState();
@@ -15,7 +15,7 @@ class DiscreteInfoState extends State<DiscreteInfo> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text("Discrete notifications"),
+      title: const Text("Discreet notifications"),
       content: const Scrollbar(
         thumbVisibility: true,
         child: SingleChildScrollView(
@@ -27,7 +27,7 @@ class DiscreteInfoState extends State<DiscreteInfo> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Discrete notifications are designed for environments (work, school...) where the standard "
+                      "Discreet notifications are designed for environments (work, school...) where the standard "
                       "notification text (i.e.: referencing loot, drugs, etc.) would not be appropriate."
                       "\n\nInstead, you will receive a much shorter text, as explained below."
                       "\n\nBe aware that you might lose some key information in the notification "
@@ -36,7 +36,7 @@ class DiscreteInfoState extends State<DiscreteInfo> {
                     ),
                     SizedBox(height: 20),
                     Text(
-                      "Examples notification titles and bodies if discrete notifications are enabled:",
+                      "Examples notification titles and bodies if discreet notifications are enabled:",
                       style: TextStyle(fontSize: 13),
                     ),
                   ],

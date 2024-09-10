@@ -457,7 +457,7 @@ class LootPageState extends State<LootPage> {
                         });
                         _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
 
-                        if (_settingsProvider.discreteNotifications) {
+                        if (_settingsProvider.discreetNotifications) {
                           _scheduleNotification(
                             levelDateTime,
                             int.parse('400$npcId$levelNumber'),
@@ -778,7 +778,7 @@ class LootPageState extends State<LootPage> {
                 timeZoneSetting: _settingsProvider.currentTimeZone,
               ).formatHour;
 
-              if (_settingsProvider.discreteNotifications) {
+              if (_settingsProvider.discreetNotifications) {
                 _scheduleNotification(
                   DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
                   499,

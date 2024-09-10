@@ -438,10 +438,12 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                           ),
                           onPressed: () {
                             Navigator.of(context).pop();
+                            bool wasFullScreenActive = false;
                             if (_webviewProvider.currentUiMode == UiMode.fullScreen) {
+                              wasFullScreenActive = true;
                               _webviewProvider.setCurrentUiMode(UiMode.window, context);
                             }
-                            widget.callFindInPage!();
+                            widget.callFindInPage!(wasFullScreenActive);
                           },
                         ),
                       ),

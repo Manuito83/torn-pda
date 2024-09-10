@@ -181,11 +181,11 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _discreteNotifications = false;
-  bool get discreteNotifications => _discreteNotifications;
-  set discreteNotifications(bool value) {
-    _discreteNotifications = value;
-    Prefs().setDiscreteNotifications(value);
+  var _discreetNotifications = false;
+  bool get discreetNotifications => _discreetNotifications;
+  set discreetNotifications(bool value) {
+    _discreetNotifications = value;
+    Prefs().setDiscreetNotifications(value);
     notifyListeners();
   }
 
@@ -259,6 +259,27 @@ class SettingsProvider extends ChangeNotifier {
   set changeTabsHideBarColor(int value) {
     _tabsHideBarColor = value;
     Prefs().setTabsHideBarColor(_tabsHideBarColor);
+    notifyListeners();
+  }
+
+  var _showTabLockWarnings = true;
+  bool get showTabLockWarnings => _showTabLockWarnings;
+  set showTabLockWarnings(bool value) {
+    _showTabLockWarnings = value;
+    Prefs().setShowTabLockWarnings(_showTabLockWarnings);
+    notifyListeners();
+  }
+
+  List<List<String>> _lockedTabsNavigationExceptions = [];
+  List<List<String>> get lockedTabsNavigationExceptions => _lockedTabsNavigationExceptions;
+  void addLockedTabNavigationException(String url1, String url2) {
+    _lockedTabsNavigationExceptions.add([url1, url2]);
+    Prefs().setLockedTabsNavigationExceptions(json.encode(_lockedTabsNavigationExceptions));
+    notifyListeners();
+  }
+
+  void removeLockedTabNavigationException(int index) {
+    _lockedTabsNavigationExceptions.removeAt(index);
     notifyListeners();
   }
 
@@ -625,11 +646,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _travelEnergyExcessWarningThreshold = 50;
-  int get travelEnergyExcessWarningThreshold => _travelEnergyExcessWarningThreshold;
-  set travelEnergyExcessWarningThreshold(int choice) {
-    _travelEnergyExcessWarningThreshold = choice;
-    Prefs().setTravelEnergyExcessWarningThreshold(_travelEnergyExcessWarningThreshold);
+  RangeValues _travelEnergyRangeWarningThreshold = RangeValues(10, 100);
+  RangeValues get travelEnergyRangeWarningThreshold => _travelEnergyRangeWarningThreshold;
+  set travelEnergyRangeWarningThreshold(RangeValues range) {
+    _travelEnergyRangeWarningThreshold = range;
+    Prefs().setTravelEnergyRangeWarningRange(
+      _travelEnergyRangeWarningThreshold.start.toInt(),
+      _travelEnergyRangeWarningThreshold.end >= 110 ? 110 : _travelEnergyRangeWarningThreshold.end.toInt(),
+    );
     notifyListeners();
   }
 
@@ -885,7 +909,7 @@ class SettingsProvider extends ChangeNotifier {
   set debugMessages(bool value) {
     _debugMessages = value;
     logAndShowToUser = value;
-    Prefs().setDebugMessages(_debugMessages);
+    Prefs().setDebugMessages(logAndShowToUser);
     notifyListeners();
   }
 
@@ -957,6 +981,11 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
+    _showTabLockWarnings = await Prefs().getShowTabLockWarnings();
+
+    List<dynamic> jsonList = json.decode(await Prefs().getLockedTabsNavigationExceptions());
+    _lockedTabsNavigationExceptions = jsonList.map((item) => List<String>.from(item)).toList();
+
     _fullScreenRemovesWidgets = await Prefs().getFullScreenRemovesWidgets();
     _fullScreenRemovesChat = await Prefs().getFullScreenRemovesChat();
     _fullScreenExtraCloseButton = await Prefs().getFullScreenExtraCloseButton();
@@ -1040,7 +1069,7 @@ class SettingsProvider extends ChangeNotifier {
       _naturalNerveBarSource = NaturalNerveBarSource.off;
     }
 
-    _discreteNotifications = await Prefs().getDiscreteNotifications();
+    _discreetNotifications = await Prefs().getDiscreetNotifications();
 
     _showDateInClock = await Prefs().getShowDateInClock();
     _showSecondsInClock = await Prefs().getShowSecondsInClock();
@@ -1064,8 +1093,7 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutExcessEnergyThreshold = await Prefs().getWarnAboutExcessEnergyThreshold();
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
-    _travelEnergyExcessWarning = await Prefs().getTravelEnergyExcessWarning();
-    _travelEnergyExcessWarningThreshold = await Prefs().getTravelEnergyExcessWarningThreshold();
+    _travelEnergyRangeWarningThreshold = await Prefs().getTravelEnergyRangeWarningRange();
     _travelNerveExcessWarning = await Prefs().getTravelNerveExcessWarning();
     _travelNerveExcessWarningThreshold = await Prefs().getTravelNerveExcessWarningThreshold();
     _travelLifeExcessWarning = await Prefs().getTravelLifeExcessWarning();

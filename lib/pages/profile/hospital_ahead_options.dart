@@ -278,6 +278,19 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: 600,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "10 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         Prefs().setHospitalNotificationAhead(value!);
@@ -337,6 +350,19 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             width: 120,
             child: Text(
               "5 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 10,
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "10 minutes before",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -416,6 +442,19 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             width: 80,
             child: Text(
               "5 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 600,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "10 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,

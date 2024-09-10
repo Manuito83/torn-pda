@@ -174,111 +174,109 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
           left: assessSafeAreaSide(dialog, "left"),
           right: assessSafeAreaSide(dialog, "right"),
           child: ShowCaseWidget(
-            builder: Builder(
-              builder: (_) {
-                if (_webViewProvider.browserShowInForeground) {
-                  _launchShowCases(_);
-                }
-                return Scaffold(
-                  // Dialog displaces the webview up by default
-                  resizeToAvoidBottomInset:
-                      !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
-                  backgroundColor: _themeProvider.statusBar,
-                  body: Stack(
-                    alignment: Alignment.bottomCenter,
-                    children: [
-                      FutureBuilder(
-                        future: providerInitialised,
-                        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                          if (snapshot.connectionState == ConnectionState.done) {
-                            final allWebViews = <Widget>[];
-                            for (final tab in _webViewProvider.tabList) {
-                              if (tab.webView == null) {
-                                allWebViews.add(const SizedBox.shrink());
-                              } else {
-                                allWebViews.add(tab.webView!);
-                              }
-                            }
-
-                            if (allWebViews.isEmpty) _closeWithError();
-
-                            if (!secondaryInitialised) {
-                              _initialiseSecondary();
-                              secondaryInitialised = true;
-                            }
-
-                            if (_settingsProvider.useTabsFullBrowser) {
-                              try {
-                                return AnimatedIndexedStack(
-                                  index: _webViewProvider.currentTab,
-                                  duration: 100,
-                                  errorCallback: _closeWithError,
-                                  children: allWebViews,
-                                );
-                              } catch (e) {
-                                FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
-                                FirebaseCrashlytics.instance.recordError(e.toString(), null);
-                                logToUser("PDA Crash at StackView (webview with tabs): $e");
-                                _closeWithError();
-                              }
+            builder: (_) {
+              if (_webViewProvider.browserShowInForeground) {
+                _launchShowCases(_);
+              }
+              return Scaffold(
+                // Dialog displaces the webview up by default
+                resizeToAvoidBottomInset:
+                    !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+                backgroundColor: _themeProvider.statusBar,
+                body: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    FutureBuilder(
+                      future: providerInitialised,
+                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          final allWebViews = <Widget>[];
+                          for (final tab in _webViewProvider.tabList) {
+                            if (tab.webView == null) {
+                              allWebViews.add(const SizedBox.shrink());
                             } else {
-                              try {
-                                return AnimatedIndexedStack(
-                                  index: 0,
-                                  duration: 100,
-                                  errorCallback: _closeWithError,
-                                  children: [
-                                    allWebViews[0],
-                                  ],
-                                );
-                              } catch (e) {
-                                FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
-                                FirebaseCrashlytics.instance.recordError(e.toString(), null);
-                                logToUser("PDA Crash at StackView (webview with no tabs): $e");
-                                _closeWithError();
-                              }
+                              allWebViews.add(tab.webView!);
+                            }
+                          }
+
+                          if (allWebViews.isEmpty) _closeWithError();
+
+                          if (!secondaryInitialised) {
+                            _initialiseSecondary();
+                            secondaryInitialised = true;
+                          }
+
+                          if (_settingsProvider.useTabsFullBrowser) {
+                            try {
+                              return AnimatedIndexedStack(
+                                index: _webViewProvider.currentTab,
+                                duration: 100,
+                                errorCallback: _closeWithError,
+                                children: allWebViews,
+                              );
+                            } catch (e) {
+                              FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
+                              FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                              logToUser("PDA Crash at StackView (webview with tabs): $e");
+                              _closeWithError();
                             }
                           } else {
-                            return const Center(child: CircularProgressIndicator());
+                            try {
+                              return AnimatedIndexedStack(
+                                index: 0,
+                                duration: 100,
+                                errorCallback: _closeWithError,
+                                children: [
+                                  allWebViews[0],
+                                ],
+                              );
+                            } catch (e) {
+                              FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
+                              FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                              logToUser("PDA Crash at StackView (webview with no tabs): $e");
+                              _closeWithError();
+                            }
                           }
-                          return const SizedBox.shrink();
+                        } else {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom:
+                            _webViewProvider.bottomBarStyleEnabled && _webViewProvider.currentUiMode == UiMode.window
+                                ? _webViewProvider.browserBottomBarStylePlaceTabsAtBottom
+                                    ? 0
+                                    : 38
+                                : 0,
+                      ),
+                      child: FutureBuilder(
+                        future: providerInitialised,
+                        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done &&
+                              _settingsProvider.useTabsFullBrowser) {
+                            // Don't hide to hide tabs on fullscreen, or we might not be able to return to the app!
+                            if (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window) {
+                              return Divider(
+                                color: Color(_settingsProvider.tabsHideBarColor),
+                                thickness: 4,
+                                height: 4,
+                              );
+                            } else {
+                              return _bottomNavBar(_);
+                            }
+                          } else {
+                            return const SizedBox.shrink();
+                          }
                         },
                       ),
-                      Padding(
-                        padding: EdgeInsets.only(
-                          bottom:
-                              _webViewProvider.bottomBarStyleEnabled && _webViewProvider.currentUiMode == UiMode.window
-                                  ? _webViewProvider.browserBottomBarStylePlaceTabsAtBottom
-                                      ? 0
-                                      : 38
-                                  : 0,
-                        ),
-                        child: FutureBuilder(
-                          future: providerInitialised,
-                          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                            if (snapshot.connectionState == ConnectionState.done &&
-                                _settingsProvider.useTabsFullBrowser) {
-                              // Don't hide to hide tabs on fullscreen, or we might not be able to return to the app!
-                              if (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window) {
-                                return Divider(
-                                  color: Color(_settingsProvider.tabsHideBarColor),
-                                  thickness: 4,
-                                  height: 4,
-                                );
-                              } else {
-                                return _bottomNavBar(_);
-                              }
-                            } else {
-                              return const SizedBox.shrink();
-                            }
-                          },
-                        ),
-                      )
-                    ],
-                  ),
-                );
-              },
-            ),
+                    )
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -586,7 +584,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
         onTap: () => _webViewProvider.verticalMenuClose(),
         child: Container(
           color: Colors.transparent,
-          height: _webViewProvider.verticalMenuIsOpen ? 350 : 40,
+          height: _webViewProvider.verticalMenuIsOpen ? 390 : 40,
           child: Stack(
             alignment: Alignment.bottomCenter,
             children: [

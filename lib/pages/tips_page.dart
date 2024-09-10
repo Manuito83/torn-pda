@@ -427,7 +427,7 @@ class TipsPageState extends State<TipsPage> {
                   "app, but they all share the same functionality today (including chaining).\n\n"
                   "The 'default' style makes use of the app bar (positioned at the top or at the bottom, "
                   "depending on the user settings) to show the page title and main icons. Be aware that in this "
-                  "style, you need to swipe left/right across the title bar if you wish to browser forward or back. "
+                  "style, you need to swipe left/right across the title bar if you wish to browse forward or back. "
                   "Or, alternatively (valid for all styles) you can double tap the active tab to gain access to "
                   "back/forward navigation as well.\n\n"
                   "The 'bottom' bar style places a smaller bar at the bottom to gain some space, but does not show "
@@ -718,6 +718,42 @@ class TipsPageState extends State<TipsPage> {
         expandedValue: "You can temporarily hide tabs so that they don't take space."
             "\n\nIf you are using the 'default' browser style: tap and hold the title bar, then slide up or down.\n\n"
             "If you are using the 'bottom-bar' or 'dialog' styles: tab and hold the CLOSE button, then slide up or down.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Lock tabs",
+        expandedValue: "You can lock your tabs (except for the first one) by using the lock icon in the vertical "
+            "tab menu (shown if you double-tap a tab).\n\n"
+            "There two ways in which you can lock your tabs.\n\n"
+            //
+            "POSITIONAL LOCK:\n\n"
+            "Activated by a single tap in the lock icon: this will lock your tab so that it can't be moved "
+            "(you can still exchange it's position with other locked tabs) or closed. The tab will move "
+            "to the first position available in your tab list, and a small orange lock icon will appear.\n\n"
+            //
+            "FULL LOCK:\n\n"
+            "Activated by a long-press in the lock icon: on top of the behavior you get with the "
+            "positional lock, your tab will be locked in the current website/section you are visiting "
+            "and you will not be able to browse to other web sections. You will be able to reload the page and "
+            "still be able to browse through the pages of multi-page sections "
+            "(e.g.: forums, hospital, jail, items...) and such.\n\n"
+            "When the full lock is active, a red lock will appear in your tab.\n\n"
+            "Note: there are a couple of ways to override this behavior without unlocking the tab. You can either "
+            "tap the 'override!' button in the warning dialog that shows if you try to browse with a full lock, or "
+            "you can configure exceptions in Settings / Advanced Browser Settings, to allow navigation between "
+            "specific pairs or URLs.",
+      ),
+    );
+    tips.add(
+      ExpandableTip(
+        headerValue: "Custom tab name",
+        expandedValue: "You can give your tabs (except for the main one) a custom name by using the "
+            "text/paragraph icon in the vertical tab menu.\n\n"
+            "You can also choose whether this custom name will be shown in the tab (default) and/or as a replacement "
+            "to the page title (which is shown in the default browser style).\n\n"
+            "Please note that this name will be lost if you close the tab. This could be particularly useful, however, "
+            "in combination with the tab locking feature (explained above), so that you can organize your tabs better.",
       ),
     );
     return tips;

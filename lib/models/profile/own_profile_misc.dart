@@ -48,6 +48,7 @@ class OwnProfileMisc {
     this.disposal,
     this.cracking,
     this.forgery,
+    this.scamming,
     //
     this.cityBank,
     this.educationCompleted,
@@ -95,6 +96,7 @@ class OwnProfileMisc {
   String? disposal;
   String? cracking;
   String? forgery;
+  String? scamming;
   //
   CityBank? cityBank;
   List<int>? educationCompleted;
@@ -140,6 +142,7 @@ class OwnProfileMisc {
         disposal: json["disposal"],
         cracking: json["cracking"],
         forgery: json["forgery"],
+        scamming: json["scamming"],
         cityBank: json["city_bank"] == null ? null : CityBank.fromJson(json["city_bank"]),
         educationCompleted:
             json["education_completed"] == null ? null : List<int>.from(json["education_completed"].map((x) => x)),
@@ -188,6 +191,7 @@ class OwnProfileMisc {
         "disposal": disposal,
         "cracking": cracking,
         "forgery": forgery,
+        "scamming": scamming,
         "city_bank": cityBank?.toJson(),
         "education_completed":
             educationCompleted == null ? null : List<dynamic>.from(educationCompleted!.map((x) => x)),

@@ -5,6 +5,8 @@
 // Dart imports:
 import 'dart:convert';
 
+import 'package:torn_pda/models/chaining/bars_model.dart';
+
 OwnProfileBasic ownProfileBasicFromJson(String str) => OwnProfileBasic.fromJson(json.decode(str));
 
 String ownProfileBasicToJson(OwnProfileBasic data) => json.encode(data.toJson());
@@ -40,7 +42,6 @@ class OwnProfileBasic {
     this.defenseModifier,
     this.speedModifier,
     this.dexterityModifier,
-    this.life,
     this.status,
     this.job,
     this.faction,
@@ -52,6 +53,10 @@ class OwnProfileBasic {
     this.defenseInfo,
     this.speedInfo,
     this.dexterityInfo,
+    this.happy,
+    this.life,
+    this.energy,
+    this.nerve,
   });
 
   // For state management
@@ -84,7 +89,6 @@ class OwnProfileBasic {
   int? defenseModifier;
   int? speedModifier;
   int? dexterityModifier;
-  Life? life;
   Status? status;
   Job? job;
   Faction? faction;
@@ -96,6 +100,10 @@ class OwnProfileBasic {
   List<String>? defenseInfo;
   List<String>? speedInfo;
   List<String>? dexterityInfo;
+  PersonalBars? happy;
+  PersonalBars? life;
+  PersonalBars? energy;
+  PersonalBars? nerve;
 
   factory OwnProfileBasic.fromJson(Map<String, dynamic> json) => OwnProfileBasic(
         userApiKey: json["userApiKey"] ?? '',
@@ -127,7 +135,6 @@ class OwnProfileBasic {
         defenseModifier: json["defense_modifier"],
         speedModifier: json["speed_modifier"],
         dexterityModifier: json["dexterity_modifier"],
-        life: json["life"] == null ? null : Life.fromJson(json["life"]),
         status: json["status"] == null ? null : Status.fromJson(json["status"]),
         job: json["job"] == null ? null : Job.fromJson(json["job"]),
         faction: json["faction"] == null ? null : Faction.fromJson(json["faction"]),
@@ -146,6 +153,10 @@ class OwnProfileBasic {
         defenseInfo: json["defense_info"] == null ? null : List<String>.from(json["defense_info"].map((x) => x)),
         speedInfo: json["speed_info"] == null ? null : List<String>.from(json["speed_info"].map((x) => x)),
         dexterityInfo: json["dexterity_info"] == null ? null : List<String>.from(json["dexterity_info"].map((x) => x)),
+        happy: json["happy"] == null ? null : PersonalBars.fromJson(json["happy"]),
+        life: json["life"] == null ? null : PersonalBars.fromJson(json["life"]),
+        energy: json["energy"] == null ? null : PersonalBars.fromJson(json["energy"]),
+        nerve: json["nerve"] == null ? null : PersonalBars.fromJson(json["nerve"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -177,7 +188,6 @@ class OwnProfileBasic {
         "defense_modifier": defenseModifier,
         "speed_modifier": speedModifier,
         "dexterity_modifier": dexterityModifier,
-        "life": life?.toJson(),
         "status": status?.toJson(),
         "job": job?.toJson(),
         "faction": faction?.toJson(),
@@ -189,6 +199,10 @@ class OwnProfileBasic {
         "defense_info": defenseInfo == null ? null : List<dynamic>.from(defenseInfo!.map((x) => x)),
         "speed_info": speedInfo == null ? null : List<dynamic>.from(speedInfo!.map((x) => x)),
         "dexterity_info": dexterityInfo == null ? null : List<dynamic>.from(dexterityInfo!.map((x) => x)),
+        "happy": happy?.toJson(),
+        "life": life?.toJson(),
+        "energy": energy?.toJson(),
+        "nerve": nerve?.toJson(),
       };
 }
 

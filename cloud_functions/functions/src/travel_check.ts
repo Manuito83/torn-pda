@@ -57,20 +57,16 @@ export const travelGroup = {
           }
 
           promises.push(
-            sendNotificationToUser(
-              thisUser.token,
-              title,
-              body,
-              "notification_travel",
-              "#2196F3",
-              "Alerts travel",
-              "",
-              "",
-              "",
-              "",
-              thisUser.vibration,
-              "aircraft_seatbelt.aiff"
-            )
+            sendNotificationToUser({
+              token: thisUser.token,
+              title: title,
+              body: body,
+              icon: "notification_travel",
+              color: "#2196F3",
+              channelId: "Alerts travel",
+              vibration: thisUser.vibration,
+              sound: "aircraft_seatbelt.aiff"
+            })
           );
 
           promises.push(

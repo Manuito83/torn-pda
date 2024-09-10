@@ -1,7 +1,9 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 
 // Package imports:
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Prefs {
@@ -72,12 +74,13 @@ class Prefs {
   final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
   final String _kDarkThemeToSync = "tornLite_themeToSync";
   final String _kVibrationPattern = "pda_vibrationPattern";
-  final String _kDiscreteNotifications = "pda_discreteNotifications";
+  final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
   final String _kExcessTabsAlerted = "pda_excessTabsAlerted";
+  final String _kFirstTabLockAlerted = "pda_firstTabLockAlerted";
   final String _kOnBackButtonAppExit = "pda_onBackButtonAppExit";
   final String _kDebugMessages = "pda_debugMessages";
   final String _kLoadBarBrowser = "pda_loadBarBrowser";
@@ -171,7 +174,8 @@ class Prefs {
 
   // Travel Agency warnings
   final String _kTravelEnergyExcessWarning = "pda_travelEnergyExcessWarning";
-  final String _kTravelEnergyExcessWarningThreshold = "pda_travelEnergyExcessWarningThreshold";
+  final String _kTravelEnergyRangeWarningThresholdMin = 'travelEnergyRangeWarningThresholdMin';
+  final String _kTravelEnergyRangeWarningThresholdMax = 'travelEnergyRangeWarningThresholdMax';
   final String _kTravelNerveExcessWarning = "pda_travelNerveExcessWarning";
   final String _kTravelNerveExcessWarningThreshold = "pda_travelNerveExcessWarningThreshold";
   final String _kTravelLifeExcessWarning = "pda_travelLifeExcessWarning";
@@ -244,6 +248,12 @@ class Prefs {
   final String _kUseWtfRevive = "pda_useWtfRevive";
   final String _kUseMidnightXRevive = "pda_useMidnightXRevive";
 
+  // Chaining stats sharing
+  final String _kStatsShareIncludeHiddenTargets = "pda_statsShareIncludeHiddenTargets";
+  final String _kStatsShareShowOnlyTotals = "pda_statsShareShowOnlyTotals";
+  final String _kStatsShareShowEstimatesIfNoSpyAvailable = "pda_statsShareShowEstimatesIfNoSpyAvailable";
+  final String _kStatsShareIncludeTargetsWithNoStatsAvailable = "pda_statsShareIncludeTargetsWithNoStatsAvailable";
+
   // Vault sharing
   final String _kVaultShareEnabled = "pda_vaultShareEnabled";
   final String _kVaultShareCurrent = "pda_vaultShareCurrent";
@@ -271,6 +281,8 @@ class Prefs {
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
+  final String _kShowTabLockWarnings = "pda_showTabLockWarnings";
+  final String _kFullLockedTabsNavigationExceptions = "pda_fullLockedTabsNavigationExceptions";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
   final String _kFullScreenExplanationShown = "pda_fullScreenExplanationShown";
@@ -887,16 +899,16 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for discrete notifications
+  /// Methods for discreet notifications
   /// ----------------------------
-  Future<bool> getDiscreteNotifications() async {
+  Future<bool> getDiscreetNotifications() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDiscreteNotifications) ?? false;
+    return prefs.getBool(_kDiscreetNotifications) ?? false;
   }
 
-  Future<bool> setDiscreteNotifications(bool value) async {
+  Future<bool> setDiscreetNotifications(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDiscreteNotifications, value);
+    return prefs.setBool(_kDiscreetNotifications, value);
   }
 
   /// ----------------------------
@@ -1281,6 +1293,20 @@ class Prefs {
   Future<bool> setExcessTabsAlerted(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kExcessTabsAlerted, value);
+  }
+
+  /// ----------------------------
+  /// Methods for excess first tab lock
+  /// ----------------------------
+
+  Future<bool> getFirstTabLockAlerted() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFirstTabLockAlerted) ?? false;
+  }
+
+  Future<bool> setFirstTabLockAlerted(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFirstTabLockAlerted, value);
   }
 
   /// ----------------------------
@@ -1973,14 +1999,18 @@ class Prefs {
     return prefs.setBool(_kTravelEnergyExcessWarning, value);
   }
 
-  Future<int> getTravelEnergyExcessWarningThreshold() async {
+  Future<RangeValues> getTravelEnergyRangeWarningRange() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTravelEnergyExcessWarningThreshold) ?? 50;
+    final int min = prefs.getInt(_kTravelEnergyRangeWarningThresholdMin) ?? 10;
+    final int max = prefs.getInt(_kTravelEnergyRangeWarningThresholdMax) ?? 100;
+    return RangeValues(min.toDouble(), max == 110 ? 110 : max.toDouble());
   }
 
-  Future<bool> setTravelEnergyExcessWarningThreshold(int value) async {
+  Future<bool> setTravelEnergyRangeWarningRange(int min, int max) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTravelEnergyExcessWarningThreshold, value);
+    final bool minSet = await prefs.setInt(_kTravelEnergyRangeWarningThresholdMin, min);
+    final bool maxSet = await prefs.setInt(_kTravelEnergyRangeWarningThresholdMax, max >= 110 ? 110 : max);
+    return minSet && maxSet;
   }
 
   Future<bool> getTravelNerveExcessWarning() async {
@@ -2216,6 +2246,55 @@ class Prefs {
   Future<bool> setUseMidnightXevive(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseMidnightXRevive, value);
+  }
+
+  /// ---------------------------------------
+  /// Methods for stats sharing configuration
+  /// ---------------------------------------
+  Future<bool> getStatsShareIncludeHiddenTargets() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareIncludeHiddenTargets) ?? true;
+  }
+
+  Future<bool> setStatsShareIncludeHiddenTargets(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareIncludeHiddenTargets, value);
+  }
+
+  //
+
+  Future<bool> getStatsShareShowOnlyTotals() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareShowOnlyTotals) ?? false;
+  }
+
+  Future<bool> setStatsShareShowOnlyTotals(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareShowOnlyTotals, value);
+  }
+
+  //
+
+  Future<bool> getStatsShareShowEstimatesIfNoSpyAvailable() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareShowEstimatesIfNoSpyAvailable) ?? true;
+  }
+
+  Future<bool> setStatsShareShowEstimatesIfNoSpyAvailable(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareShowEstimatesIfNoSpyAvailable, value);
+  }
+
+  //
+
+  Future<bool> getStatsShareIncludeTargetsWithNoStatsAvailable() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kStatsShareIncludeTargetsWithNoStatsAvailable) ?? false;
+  }
+
+  Future<bool> setStatsShareIncludeTargetsWithNoStatsAvailable(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, value);
   }
 
   /// ----------------------------
@@ -3071,6 +3150,35 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
   }
+
+  Future<bool> getShowTabLockWarnings() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowTabLockWarnings) ?? true;
+  }
+
+  Future<bool> setShowTabLockWarnings(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowTabLockWarnings, value);
+  }
+
+  // -- LockedTabsNavigationExceptions
+  final List<List<String>> _defaultFullLockedTabsNavigationExceptions = [
+    ["https://www.torn.com/item.php", "https://www.torn.com/loader.php?sid=itemsMods"],
+    ["https://www.torn.com/item.php", "https://www.torn.com/page.php?sid=ammo"],
+  ];
+
+  Future<String> getLockedTabsNavigationExceptions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFullLockedTabsNavigationExceptions) ??
+        json.encode(_defaultFullLockedTabsNavigationExceptions);
+  }
+
+  Future<bool> setLockedTabsNavigationExceptions(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFullLockedTabsNavigationExceptions, value);
+  }
+
+  // --
 
   Future<bool> getUseTabsIcons() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

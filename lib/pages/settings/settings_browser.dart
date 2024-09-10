@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -18,14 +19,18 @@ import 'package:torn_pda/pages/settings/friendly_factions.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
-  const SettingsBrowserPage({super.key});
+  final UserDetailsProvider userDetailsProvider;
+
+  const SettingsBrowserPage({required this.userDetailsProvider, super.key});
 
   @override
   SettingsBrowserPageState createState() => SettingsBrowserPageState();
@@ -983,6 +988,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Column _travelExpenditureWarning() {
+    final currentEnergyMax = widget.userDetailsProvider.basic?.energy?.maximum ?? -1;
+    final currentNerveMax = widget.userDetailsProvider.basic?.nerve?.maximum ?? -1;
+    final currentLifeMax = widget.userDetailsProvider.basic?.life?.maximum ?? -1;
+
     return Column(
       children: [
         const Row(
@@ -1019,9 +1028,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
           child: Text(
-            "If enabled, you'll get a warning when you access the Travel Agency with your Energy Bar above a certain "
+            "If enabled, you'll get a warning when you access the Travel Agency with your Energy Bar between a certain "
             "threshold to avoid a possible waste of energy during your trip (i.e.: you might want to use it in the "
-            "gym or similar before boarding)",
+            "gym or similar before boarding). Values above max can be avoided if you don't want the warning to trigger "
+            "while you are stacking.",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -1038,7 +1048,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     const Text(
-                      "Threshold",
+                      "Range",
                       style: TextStyle(
                         fontSize: 12,
                       ),
@@ -1046,21 +1056,38 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          _settingsProvider.travelEnergyExcessWarningThreshold <= 100
-                              ? "${_settingsProvider.travelEnergyExcessWarningThreshold ~/ 10 * 10}%"
-                              : "only > max",
+                          _settingsProvider.travelEnergyRangeWarningThreshold.end >= 110
+                              ? "> ${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}%"
+                              : "${_settingsProvider.travelEnergyRangeWarningThreshold.start.round()}% to ${_settingsProvider.travelEnergyRangeWarningThreshold.end.round()}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
                         ),
-                        Slider(
+                        RangeSlider(
                           min: 0,
                           max: 110,
                           divisions: 11,
-                          value: _settingsProvider.travelEnergyExcessWarningThreshold.toDouble(),
-                          onChanged: (double value) {
+                          values: _settingsProvider.travelEnergyRangeWarningThreshold,
+                          labels: RangeLabels(
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.start,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                            _buildRangeLabel(
+                              _settingsProvider.travelEnergyRangeWarningThreshold.end,
+                              currentEnergyMax,
+                              "E",
+                            ),
+                          ),
+                          onChanged: (RangeValues values) {
                             setState(() {
-                              _settingsProvider.travelEnergyExcessWarningThreshold = value.floor();
+                              double startValue = values.start.roundToDouble();
+                              double endValue = values.end.roundToDouble();
+
+                              if (endValue - startValue >= 10) {
+                                _settingsProvider.travelEnergyRangeWarningThreshold = RangeValues(startValue, endValue);
+                              }
                             });
                           },
                         ),
@@ -1120,9 +1147,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          _settingsProvider.travelNerveExcessWarningThreshold <= 100
-                              ? "${_settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10}%"
-                              : "only > max",
+                          _settingsProvider.travelNerveExcessWarningThreshold >= 110
+                              ? "> max"
+                              : "${(_settingsProvider.travelNerveExcessWarningThreshold ~/ 10 * 10)}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
@@ -1132,9 +1159,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           max: 110,
                           divisions: 11,
                           value: _settingsProvider.travelNerveExcessWarningThreshold.toDouble(),
+                          label: _buildSingleLabel(
+                              _settingsProvider.travelNerveExcessWarningThreshold.toDouble(), currentNerveMax, "N"),
                           onChanged: (double value) {
                             setState(() {
-                              _settingsProvider.travelNerveExcessWarningThreshold = value.floor();
+                              _settingsProvider.travelNerveExcessWarningThreshold = (value.round() ~/ 10 * 10);
                             });
                           },
                         ),
@@ -1194,9 +1223,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     Row(
                       children: [
                         Text(
-                          _settingsProvider.travelLifeExcessWarningThreshold <= 100
-                              ? "${_settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10}%"
-                              : "only > max",
+                          _settingsProvider.travelLifeExcessWarningThreshold >= 110
+                              ? "> max"
+                              : "${(_settingsProvider.travelLifeExcessWarningThreshold ~/ 10 * 10)}%",
                           style: const TextStyle(
                             fontSize: 12,
                           ),
@@ -1206,9 +1235,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           max: 110,
                           divisions: 11,
                           value: _settingsProvider.travelLifeExcessWarningThreshold.toDouble(),
+                          label: _buildSingleLabel(
+                              _settingsProvider.travelLifeExcessWarningThreshold.toDouble(), currentLifeMax, "L"),
                           onChanged: (double value) {
                             setState(() {
-                              _settingsProvider.travelLifeExcessWarningThreshold = value.floor();
+                              _settingsProvider.travelLifeExcessWarningThreshold = (value.round() ~/ 10 * 10);
                             });
                           },
                         ),
@@ -1283,6 +1314,28 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         ),
       ],
     );
+  }
+
+  String _buildSingleLabel(double percentage, int currentMax, String type) {
+    if (percentage >= 110) {
+      return "> max\n> $currentMax $type";
+    } else if (currentMax == -1) {
+      return "${percentage.round()}%";
+    } else {
+      final realValue = (percentage / 100 * currentMax).round();
+      return "${percentage.round()}%\n$realValue $type";
+    }
+  }
+
+  String _buildRangeLabel(double percentage, int currentMax, String type) {
+    if (percentage >= 110) {
+      return "> max\n> $currentMax $type";
+    } else if (currentMax == -1) {
+      return "${percentage.round()}%";
+    } else {
+      final realValue = (percentage / 100 * currentMax).round();
+      return "${percentage.round()}%\n$realValue $type";
+    }
   }
 
   Column _textScale(BuildContext context) {
@@ -1781,6 +1834,92 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ),
               ],
             ),
+          ),
+        if (_settingsProvider.useTabsFullBrowser)
+          Column(
+            children: [
+              const SizedBox(height: 30),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'TAB LOCKS',
+                    style: TextStyle(fontSize: 10),
+                  ),
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    const Text("Show tab lock warnings"),
+                    Switch(
+                      value: _settingsProvider.showTabLockWarnings,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.showTabLockWarnings = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  'If enabled, a short message with a lock icon will appear whenever the lock status of a tab is changed or '
+                  'when the app is impeeding navigation or tab movement due to its lock condition. NOTE: without warning, '
+                  'you will NOT be able to override navigation with full locks!',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        if (_settingsProvider.useTabsFullBrowser)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Navigation exceptions for locked tabs")),
+                    ElevatedButton(
+                      child: Icon(MdiIcons.lockRemoveOutline),
+                      onPressed: () async {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => LockedTabsNavigationExceptionsPage(
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                child: Text(
+                  'By default, tabs with a full lock will not allow you to browse between different pages. However, '
+                  'you can add exceptions by using this section. Make sure you review and understand how URLs need '
+                  'to be configured',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
           ),
       ],
     );

@@ -4,7 +4,7 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 class FirebaseUserModel extends OwnProfileExtended {
   String? token;
   String? uid;
-  bool discrete = false;
+  bool discreet = false;
   bool? travelNotification = false;
   bool? foreignRestockNotification = false;
   bool? foreignRestockNotificationOnlyCurrentCountry = false;
@@ -55,7 +55,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "level": level,
       "token": token,
       "status": status,
-      "discrete": discrete,
+      "discrete": discreet, // We need to accept this typo (discreet)
       "travelNotification": travelNotification,
       "foreignRestockNotification": foreignRestockNotification,
       "foreignRestockNotificationOnlyCurrentCountry": foreignRestockNotificationOnlyCurrentCountry,
@@ -92,7 +92,7 @@ class FirebaseUserModel extends OwnProfileExtended {
 
   static FirebaseUserModel fromMap(Map data) {
     return FirebaseUserModel()
-      ..discrete = data["discrete"] ?? false
+      ..discreet = data["discrete"] ?? false // We need to accept this typo (discreet)
       ..travelNotification = data["travelNotification"] ?? false
       ..foreignRestockNotification = data["foreignRestockNotification"] ?? false
       ..foreignRestockNotificationOnlyCurrentCountry = data["foreignRestockNotificationOnlyCurrentCountry"] ?? false

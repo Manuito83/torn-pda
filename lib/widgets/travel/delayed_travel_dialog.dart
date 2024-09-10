@@ -325,7 +325,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     String notificationSubtitle = "Remember to bring you ${widget.stockName} import papers!";
     final int notificationId = int.parse("211${widget.countryId}${widget.itemId}");
 
-    if (_settingsProvider.discreteNotifications) {
+    if (_settingsProvider.discreetNotifications) {
       notificationTitle = "Scheduled";
       notificationSubtitle = "Departure";
     }

@@ -103,27 +103,25 @@ export const lootRangersGroup = {
         let fullSubtitle = `Attack order: ${orderArray.join(', ')}`;
         console.log(fullSubtitle);
 
-        let discreteTitle = "LR";
-        let discreteSubtitle = "";
+        let discreetTitle = "LR";
+        let discreetSubtitle = "";
 
         const attackTime = `${hours}:${minutes}`;
 
         for (const key of Array.from(subscribers.keys())) {
           promises.push(
-            sendNotificationToUser(
-              subscribers[key].token,
-              subscribers[key].discrete ? discreteTitle : fullTitle,
-              subscribers[key].discrete ? discreteSubtitle : fullSubtitle,
-              "notification_loot",
-              "#FF0000",
-              "Alerts loot",
-              "",
-              "",
-              orderArray.join(","),
-              attackTime,
-              subscribers[key].vibration,
-              "sword_clash.aiff"
-            ).catch((e) => {
+            sendNotificationToUser({
+              token: subscribers[key].token,
+              title: subscribers[key].discrete ? discreetTitle : fullTitle,
+              body: subscribers[key].discrete ? discreetSubtitle : fullSubtitle,
+              icon: "notification_loot",
+              color: "#FF0000",
+              channelId: "Alerts loot",
+              assistId: orderArray.join(","),
+              bulkDetails: attackTime,
+              vibration: subscribers[key].vibration,
+              sound: "sword_clash.aiff"
+            }).catch((e) => {
               functions.logger.warn(`ERROR LOOT RANGERS SEND for ${subscribers[key].uid}\n${e}`);
             })
           );

@@ -271,6 +271,32 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Faction applications"),
+                  Switch(
+                    value: _firebaseUserModel!.eventsFilter.contains('faction_applications'),
+                    onChanged: (value) {
+                      if (value) {
+                        setState(() {
+                          firestore.addToEventsFilter('faction_applications');
+                        });
+                      } else {
+                        setState(() {
+                          firestore.removeFromEventsFilter('faction_applications');
+                        });
+                      }
+                    },
+                    activeTrackColor: Colors.redAccent[100],
+                    activeColor: Colors.red,
+                    inactiveThumbColor: Colors.green[100],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

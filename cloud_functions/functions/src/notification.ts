@@ -4,6 +4,21 @@ import * as functions from "firebase-functions";
 // Using non-ESM string-strip-html@8.5.0
 import { stripHtml } from "string-strip-html";
 
+interface NotificationParams {
+  token: string;
+  title: string;
+  body: string;
+  icon?: string;
+  color?: string;
+  channelId?: string;
+  tornMessageId?: string;
+  tornTradeId?: string;
+  assistId?: string;
+  bulkDetails?: string;
+  vibration: string;
+  sound?: string;
+}
+
 export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
   const promises: Promise<any>[] = [];
@@ -22,19 +37,15 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_energy",
-          "#00FF00",
-          "Alerts energy",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_energy",
+          color: "#00FF00",
+          channelId: "Alerts energy",
+          vibration: subscriber.vibration,
+        })
       );
       promises.push(
         admin
@@ -87,19 +98,15 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_nerve",
-          "#FF0000",
-          "Alerts nerve",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_nerve",
+          color: "#FF0000",
+          channelId: "Alerts nerve",
+          vibration: subscriber.vibration,
+        })
       );
       promises.push(
         admin
@@ -152,19 +159,15 @@ export async function sendLifeNotification(userStats: any, subscriber: any) {
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_life",
-          "#FF0000",
-          "Alerts life",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_life",
+          color: "#FF0000",
+          channelId: "Alerts life",
+          vibration: subscriber.vibration,
+        })
       );
       promises.push(
         admin
@@ -271,19 +274,15 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
         }
 
         promises.push(
-          sendNotificationToUser(
-            subscriber.token,
+          sendNotificationToUser({
+            token: subscriber.token,
             title,
             body,
-            'notification_hospital',
-            '#FFFF00',
-            "Alerts hospital",
-            "",
-            "",
-            "",
-            "",
-            subscriber.vibration,
-          )
+            icon: 'notification_hospital',
+            color: '#FFFF00',
+            channelId: "Alerts hospital",
+            vibration: subscriber.vibration,
+          })
         );
       }
     }
@@ -315,19 +314,15 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
         }
 
         promises.push(
-          sendNotificationToUser(
-            subscriber.token,
+          sendNotificationToUser({
+            token: subscriber.token,
             title,
             body,
-            'notification_hospital',
-            '#FFFF00',
-            "Alerts hospital",
-            "",
-            "",
-            "",
-            "",
-            subscriber.vibration,
-          )
+            icon: 'notification_hospital',
+            color: '#FFFF00',
+            channelId: "Alerts hospital",
+            vibration: subscriber.vibration,
+          })
         );
       }
     }
@@ -358,19 +353,15 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
         }
 
         promises.push(
-          sendNotificationToUser(
-            subscriber.token,
+          sendNotificationToUser({
+            token: subscriber.token,
             title,
             body,
-            'notification_hospital',
-            '#FFFF00',
-            "Alerts hospital",
-            "",
-            "",
-            "",
-            "",
-            subscriber.vibration,
-          )
+            icon: 'notification_hospital',
+            color: '#FFFF00',
+            channelId: "Alerts hospital",
+            vibration: subscriber.vibration,
+          })
         );
       }
     }
@@ -416,19 +407,15 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_drugs",
-          "#FF00c3",
-          "Alerts drugs",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_drugs",
+          color: "#FF00c3",
+          channelId: "Alerts drugs",
+          vibration: subscriber.vibration,
+        })
       );
       promises.push(
         admin
@@ -481,19 +468,15 @@ export async function sendMedicalNotification(userStats: any, subscriber: any) {
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_medical",
-          "#FF00c3",
-          "Alerts medical",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_medical",
+          color: "#FF00c3",
+          channelId: "Alerts medical",
+          vibration: subscriber.vibration,
+        })
       );
       promises.push(
         admin
@@ -546,19 +529,15 @@ export async function sendBoosterNotification(userStats: any, subscriber: any) {
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_booster",
-          "#FF00c3",
-          "Alerts booster",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_booster",
+          color: "#FF00c3",
+          channelId: "Alerts booster",
+          vibration: subscriber.vibration,
+        })
       );
       promises.push(
         admin
@@ -611,19 +590,15 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_racing",
-          "#FF9900",
-          "Alerts racing",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_racing",
+          color: "#FF9900",
+          channelId: "Alerts racing",
+          vibration: subscriber.vibration,
+        })
       );
       promises.push(
         admin
@@ -762,19 +737,16 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_messages",
-          "#7B1FA2",
-          "Alerts messages",
-          tornMessageId,
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_messages",
+          color: "#7B1FA2",
+          channelId: "Alerts messages",
+          tornMessageId: tornMessageId,
+          vibration: subscriber.vibration,
+        })
       );
     }
 
@@ -941,6 +913,14 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             }
           }
 
+          if (filters.includes('faction_applications')) {
+            if (newEventsDescriptions[i].includes('has applied to join your faction')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
         }
       }
 
@@ -976,19 +956,15 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
         }
 
         promises.push(
-          sendNotificationToUser(
-            subscriber.token,
+          sendNotificationToUser({
+            token: subscriber.token,
             title,
             body,
-            "notification_events",
-            "#5B1FA2",
-            "Alerts events",
-            "",
-            "",
-            "",
-            "",
-            subscriber.vibration,
-          )
+            icon: "notification_events",
+            color: "#5B1FA2",
+            channelId: "Alerts events",
+            vibration: subscriber.vibration,
+          })
         );
       }
 
@@ -1049,19 +1025,16 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
         }
 
         promises.push(
-          sendNotificationToUser(
-            subscriber.token,
+          sendNotificationToUser({
+            token: subscriber.token,
             title,
             body,
-            "notification_trades",
-            "#389500",
-            "Alerts trades",
-            "",
-            tradeId,
-            "",
-            "",
-            subscriber.vibration,
-          )
+            icon: "notification_trades",
+            color: "#389500",
+            channelId: "Alerts trades",
+            tornTradeId: tradeId,
+            vibration: subscriber.vibration,
+          })
         );
       }
 
@@ -1150,19 +1123,15 @@ export async function sendForeignRestockNotification(userStats: any, dbStocks: a
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_travel",
-          "#389500",
-          "Alerts restocks",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_travel",
+          color: "#389500",
+          channelId: "Alerts restocks",
+          vibration: subscriber.vibration,
+        })
       );
     }
 
@@ -1260,19 +1229,15 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
       }
 
       promises.push(
-        sendNotificationToUser(
-          subscriber.token,
-          title,
-          body,
-          "notification_stock_market",
-          "#389500",
-          "Alerts stocks",
-          "",
-          "",
-          "",
-          "",
-          subscriber.vibration,
-        )
+        sendNotificationToUser({
+          token: subscriber.token,
+          title: title,
+          body: body,
+          icon: "notification_stock_market",
+          color: "#389500",
+          channelId: "Alerts stocks",
+          vibration: subscriber.vibration,
+        })
       );
 
     }
@@ -1284,20 +1249,20 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
   return Promise.all(promises);
 }
 
-export async function sendNotificationToUser(
-  token: string,
-  title: string,
-  body: string,
-  icon: string,
-  color: string,
-  channelId: string,
-  tornMessageId: string = "",
-  tornTradeId: string = "",
-  assistId: string = "",
-  bulkDetails: string = "",
-  vibration: string,
-  sound: string = "slow_spring_board.aiff",
-): Promise<any> {
+export async function sendNotificationToUser({
+  token,
+  title,
+  body,
+  icon,
+  color,
+  channelId,
+  tornMessageId = "",
+  tornTradeId = "",
+  assistId = "",
+  bulkDetails = "",
+  vibration,
+  sound = "slow_spring_board.aiff",
+}: NotificationParams): Promise<any> {
 
   // Give a space to mach channel ids in the app
   let vibrationPattern = vibration;

@@ -53,75 +53,72 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
     bool anyExists = _anyExists();
 
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          _launchShowCases(_);
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: GestureDetector(
-              child: GetBuilder<StakeoutsController>(
-                builder: (s) {
-                  // No need to initialise stakeouts as it's a permanent controller
-                  return GetBuilder<WarController>(
-                    // Initialise WarController as it isn't used elsewhere in this class
-                    init: WarController(),
-                    builder: (w) {
-                      anyExists = _anyExists();
-                      for (final Stakeout s in s.stakeouts) {
-                        if (s.id == widget.profileId.toString()) {
-                          anyExists = true;
-                          continue;
-                        }
+      builder: (_) {
+        _launchShowCases(_);
+        return Padding(
+          padding: const EdgeInsets.only(right: 10),
+          child: GestureDetector(
+            child: GetBuilder<StakeoutsController>(
+              builder: (s) {
+                // No need to initialise stakeouts as it's a permanent controller
+                return GetBuilder<WarController>(
+                  // Initialise WarController as it isn't used elsewhere in this class
+                  init: WarController(),
+                  builder: (w) {
+                    anyExists = _anyExists();
+                    for (final Stakeout s in s.stakeouts) {
+                      if (s.id == widget.profileId.toString()) {
+                        anyExists = true;
+                        continue;
                       }
+                    }
 
-                      for (final FactionModel w in w.factions) {
-                        if (w.id == widget.factionId) {
-                          anyExists = true;
-                          continue;
-                        }
+                    for (final FactionModel w in w.factions) {
+                      if (w.id == widget.factionId) {
+                        anyExists = true;
+                        continue;
                       }
+                    }
 
-                      return Showcase(
-                        key: _showcaseButton,
-                        title: 'Did you know?',
-                        description:
-                            '\nYou can tap this icon to add or remove ${widget.playerName} or any other player '
-                            'from several of your lists (including entire factions in War!).\n\nIt will also allow '
-                            "you to quickly copy the player's ID and the profile's page link.\n\n"
-                            'A green icon means the player is not in any of your lists, while an orange icon means '
-                            'he/she is at least associated with one of them.\n\nTry it out!',
-                        targetPadding: const EdgeInsets.all(10),
-                        disableMovingAnimation: true,
-                        textColor: _themeProvider.mainText!,
-                        tooltipBackgroundColor: _themeProvider.secondBackground!,
-                        descTextStyle: const TextStyle(fontSize: 13),
-                        tooltipPadding: const EdgeInsets.all(20),
-                        child: Icon(
-                          Icons.person,
-                          color: anyExists ? Colors.orange : Colors.green,
-                          size: 18,
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-              onTap: () async {
-                return showDialog<void>(
-                  context: context,
-                  builder: (context) {
-                    return ProfileCheckAddDialog(
-                      profileId: widget.profileId,
-                      playerName: widget.playerName,
-                      factionId: widget.factionId,
+                    return Showcase(
+                      key: _showcaseButton,
+                      title: 'Did you know?',
+                      description: '\nYou can tap this icon to add or remove ${widget.playerName} or any other player '
+                          'from several of your lists (including entire factions in War!).\n\nIt will also allow '
+                          "you to quickly copy the player's ID and the profile's page link.\n\n"
+                          'A green icon means the player is not in any of your lists, while an orange icon means '
+                          'he/she is at least associated with one of them.\n\nTry it out!',
+                      targetPadding: const EdgeInsets.all(10),
+                      disableMovingAnimation: true,
+                      textColor: _themeProvider.mainText!,
+                      tooltipBackgroundColor: _themeProvider.secondBackground!,
+                      descTextStyle: const TextStyle(fontSize: 13),
+                      tooltipPadding: const EdgeInsets.all(20),
+                      child: Icon(
+                        Icons.person,
+                        color: anyExists ? Colors.orange : Colors.green,
+                        size: 18,
+                      ),
                     );
                   },
                 );
               },
             ),
-          );
-        },
-      ),
+            onTap: () async {
+              return showDialog<void>(
+                context: context,
+                builder: (context) {
+                  return ProfileCheckAddDialog(
+                    profileId: widget.profileId,
+                    playerName: widget.playerName,
+                    factionId: widget.factionId,
+                  );
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

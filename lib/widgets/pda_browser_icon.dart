@@ -6,7 +6,10 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/widgets/status_color_counter.dart';
 
 class PdaBrowserIcon extends StatelessWidget {
+  final Color? color;
+
   const PdaBrowserIcon({
+    this.color,
     super.key,
   });
 
@@ -32,7 +35,11 @@ class PdaBrowserIcon extends StatelessWidget {
             },
           ),
           GestureDetector(
-            child: Image.asset('images/icons/torn_pda_browser.png', width: 25),
+            child: Image.asset(
+              'images/icons/torn_pda_browser.png',
+              width: 25,
+              color: color,
+            ),
             onTap: () {
               context.read<WebViewProvider>().pdaIconActivation(
                     shortTap: true,

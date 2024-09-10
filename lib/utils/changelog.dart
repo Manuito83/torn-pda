@@ -39,6 +39,26 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.5.0 - Build 444 - 07/09/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.5.0'
+        ..date = '12 SEP 2024'
+        ..features = [
+          "Browser tabs can now be locked (see Tips)",
+          "Browser tabs can now be given a custom name (see Tips)",
+          "War targets' stats can now be shared (top gear icon)",
+          "Added Scamming crime to Misc tab in Profile",
+          "Added faction applications to alerts events filters",
+          "Added min/max range to the travel expenditure warning (reset to default)",
+          "Increased time selection for manual hospital release notifications",
+          "Improved troubleshooting steps for issues with Alerts",
+          "Improved browser reload capability when frozen",
+          "Fixed browser not returning to full screen after web search",
+          "Fixed other reported issues",
+        ],
+    );
+
     // v3.4.4 - Build 435 - 20/07/2024
     itemList.add(
       ChangeLogItem()
@@ -533,7 +553,7 @@ class ChangeLogState extends State<ChangeLog> {
     String feat2_9_5_4 = "";
     if (Platform.isAndroid) feat2_9_5_4 = "Fixed website Google login";
     if (Platform.isIOS) feat2_9_5_4 = "Fixed alternative website login";
-    const String feat2_9_5_5 = "Fixed discrete notifications option (Settings) missing on iOS";
+    const String feat2_9_5_5 = "Fixed discreet notifications option (Settings) missing on iOS";
     const String feat2_9_5_6 = "Fixed log copy to clipboard";
     const String feat2_9_5_7 = "Fixed issue with missing shortcuts";
     const String feat2_9_5_8 = "Increased timeout with YATA to improve communication";
@@ -571,7 +591,7 @@ class ChangeLogState extends State<ChangeLog> {
     final v2_9_2 = ChangeLogItem();
     v2_9_2.version = 'Torn PDA v2.9.2';
     v2_9_2.date = '05 NOV 2022';
-    const String feat2_9_2_1 = "Added discrete option for alerts and notifications";
+    const String feat2_9_2_1 = "Added discreet option for alerts and notifications";
     const String feat2_9_2_2 = "War: added option to filter out traveling targets";
     const String feat2_9_2_3 = "Fixed browser refresh rate";
     const String feat2_9_2_4 = "Fixed some API parsing issues";

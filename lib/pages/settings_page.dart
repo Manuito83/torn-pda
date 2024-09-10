@@ -43,7 +43,7 @@ import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/alerts/discrete_info.dart';
+import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_delete_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_restore_dialog.dart';
@@ -122,7 +122,7 @@ class SettingsPageState extends State<SettingsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.setCurrentScreen(screenName: 'settings');
+    analytics.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
     routeName = "settings";
@@ -304,7 +304,7 @@ class SettingsPageState extends State<SettingsPage> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => const SettingsBrowserPage(),
+                        builder: (BuildContext context) => SettingsBrowserPage(userDetailsProvider: _userProvider),
                       ),
                     );
                   },
@@ -533,6 +533,7 @@ class SettingsPageState extends State<SettingsPage> {
                 icon: const Icon(MdiIcons.incognito),
                 onPressed: () {
                   showDialog(
+                    barrierDismissible: false,
                     useRootNavigator: false,
                     context: context,
                     builder: (BuildContext context) {
@@ -1924,7 +1925,7 @@ class SettingsPageState extends State<SettingsPage> {
                   children: [
                     const Flexible(
                       child: Text(
-                        "Discrete notifications",
+                        "Discreet notifications",
                       ),
                     ),
                     IconButton(
@@ -1934,7 +1935,7 @@ class SettingsPageState extends State<SettingsPage> {
                           useRootNavigator: false,
                           context: context,
                           builder: (BuildContext context) {
-                            return DiscreteInfo();
+                            return DiscreetInfo();
                           },
                         );
                       },
@@ -1943,11 +1944,11 @@ class SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               Switch(
-                value: _settingsProvider.discreteNotifications,
+                value: _settingsProvider.discreetNotifications,
                 onChanged: (value) {
                   setState(() {
-                    _settingsProvider.discreteNotifications = value;
-                    firestore.toggleDiscrete(value);
+                    _settingsProvider.discreetNotifications = value;
+                    firestore.toggleDiscreet(value);
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,

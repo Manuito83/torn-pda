@@ -209,9 +209,10 @@ class TargetsPageState extends State<TargetsPage> {
                   final updateResult = await _targetsProvider.updateAllTargets();
                   if (mounted) {
                     if (updateResult.success) {
+                      _targetsProvider.sortTargets(_targetsProvider.currentSort);
                       BotToast.showText(
                         text: updateResult.numberSuccessful > 0
-                            ? 'Successfully updated '
+                            ? 'Successfully updated and sorted '
                                 '${updateResult.numberSuccessful} targets!'
                             : 'No targets to update!',
                         textStyle: const TextStyle(

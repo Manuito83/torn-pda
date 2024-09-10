@@ -386,158 +386,156 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
     return ShowCaseWidget(
-      builder: Builder(
-        builder: (_) {
-          _launchShowCases(_);
-          return Scaffold(
-            backgroundColor: _themeProvider!.canvas,
-            drawer: const Drawer(),
-            appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
-            bottomNavigationBar: !_settingsProvider!.appBarTop
-                ? SizedBox(
-                    height: AppBar().preferredSize.height,
-                    child: buildAppBar(),
-                  )
-                : null,
-            floatingActionButton: Stack(
-              children: [
-                buildSpeedDial(),
-              ],
-            ),
-            body: Container(
-              color: _themeProvider!.canvas,
-              child: FutureBuilder(
-                future: _apiFetched,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    if (_apiGoodData) {
-                      return RefreshIndicator(
-                        onRefresh: () async {
-                          _resetApiTimer(initCall: true);
-                          await Future.delayed(const Duration(seconds: 1));
-                        },
-                        child: SingleChildScrollView(
-                          child: Column(
-                            children: <Widget>[
-                              _headerIcons(),
-                              Column(
-                                children: _returnSections(),
-                              ),
-                              const SizedBox(height: 70),
-                            ],
-                          ),
+      builder: (_) {
+        _launchShowCases(_);
+        return Scaffold(
+          backgroundColor: _themeProvider!.canvas,
+          drawer: const Drawer(),
+          appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
+          bottomNavigationBar: !_settingsProvider!.appBarTop
+              ? SizedBox(
+                  height: AppBar().preferredSize.height,
+                  child: buildAppBar(),
+                )
+              : null,
+          floatingActionButton: Stack(
+            children: [
+              buildSpeedDial(),
+            ],
+          ),
+          body: Container(
+            color: _themeProvider!.canvas,
+            child: FutureBuilder(
+              future: _apiFetched,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_apiGoodData) {
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _resetApiTimer(initCall: true);
+                        await Future.delayed(const Duration(seconds: 1));
+                      },
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: <Widget>[
+                            _headerIcons(),
+                            Column(
+                              children: _returnSections(),
+                            ),
+                            const SizedBox(height: 70),
+                          ],
                         ),
-                      );
-                    } else {
-                      return RefreshIndicator(
-                        onRefresh: () async {
-                          _fetchApi();
-                          await Future.delayed(const Duration(seconds: 1));
-                        },
-                        child: SingleChildScrollView(
-                          // Physics so that page can be refreshed even with no scroll
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              const SizedBox(height: 50),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 10),
-                                child: _shortcutsCarrousel(),
-                              ),
-                              const SizedBox(height: 50),
-                              const Text(
-                                'OOPS!',
-                                style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
-                                child: Column(
-                                  children: [
-                                    Text(
-                                      'There was an error: ${_apiError!.errorReason}',
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    if (_apiError!.pdaErrorDetails.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 20),
-                                        child: Column(
-                                          children: [
-                                            if (_apiError!.errorId != 9)
-                                              Column(
-                                                children: [
-                                                  const Text(
-                                                    'Error details:',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                  const SizedBox(height: 5),
-                                                  Text(
-                                                    _apiError!.pdaErrorDetails,
-                                                    style: const TextStyle(
-                                                      fontStyle: FontStyle.italic,
-                                                      fontSize: 10,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ],
-                                              ),
-                                            if (_apiError!.errorId == 9)
-                                              Text(
-                                                "The API has been manually disabled by the developers. "
-                                                "This normally lasts just a few minutes\n\n"
-                                                "Otherwise, you can head to the forums of Discord to see if there "
-                                                "is any more information available.",
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(color: Colors.red[700]),
-                                              ),
-                                          ],
-                                        ),
-                                      ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'Torn PDA is retrying automatically. '
-                                      "If you have good Internet connectivity, it might be an issue with Torn's API.",
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(height: 20),
-                                    const Text(
-                                      'You can still try to access Torn through shortcuts or the main '
-                                      'menu icon below.',
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 50),
-                            ],
-                          ),
-                        ),
-                      );
-                    }
+                      ),
+                    );
                   } else {
-                    return const Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text('Fetching data...'),
-                          SizedBox(height: 30),
-                          Padding(
-                            padding: EdgeInsets.all(8.0),
-                            child: CircularProgressIndicator(),
-                          ),
-                        ],
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        _fetchApi();
+                        await Future.delayed(const Duration(seconds: 1));
+                      },
+                      child: SingleChildScrollView(
+                        // Physics so that page can be refreshed even with no scroll
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            const SizedBox(height: 50),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              child: _shortcutsCarrousel(),
+                            ),
+                            const SizedBox(height: 50),
+                            const Text(
+                              'OOPS!',
+                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
+                              child: Column(
+                                children: [
+                                  Text(
+                                    'There was an error: ${_apiError!.errorReason}',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  if (_apiError!.pdaErrorDetails.isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 20),
+                                      child: Column(
+                                        children: [
+                                          if (_apiError!.errorId != 9)
+                                            Column(
+                                              children: [
+                                                const Text(
+                                                  'Error details:',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 5),
+                                                Text(
+                                                  _apiError!.pdaErrorDetails,
+                                                  style: const TextStyle(
+                                                    fontStyle: FontStyle.italic,
+                                                    fontSize: 10,
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ],
+                                            ),
+                                          if (_apiError!.errorId == 9)
+                                            Text(
+                                              "The API has been manually disabled by the developers. "
+                                              "This normally lasts just a few minutes\n\n"
+                                              "Otherwise, you can head to the forums of Discord to see if there "
+                                              "is any more information available.",
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(color: Colors.red[700]),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  const SizedBox(height: 20),
+                                  const Text(
+                                    'Torn PDA is retrying automatically. '
+                                    "If you have good Internet connectivity, it might be an issue with Torn's API.",
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 20),
+                                  const Text(
+                                    'You can still try to access Torn through shortcuts or the main '
+                                    'menu icon below.',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 50),
+                          ],
+                        ),
                       ),
                     );
                   }
-                },
-              ),
+                } else {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text('Fetching data...'),
+                        SizedBox(height: 30),
+                        Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+              },
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
@@ -3553,6 +3551,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var disposal = "";
     var cracking = "";
     var forgery = "";
+    var scamming = "";
     hunting = _miscModel!.hunting ?? "";
     racing = _miscModel!.racing ?? "";
     reviving = _miscModel!.reviving ?? "";
@@ -3567,6 +3566,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     disposal = _miscModel!.disposal ?? "";
     cracking = _miscModel!.cracking ?? "";
     forgery = _miscModel!.forgery ?? "";
+    scamming = _miscModel!.scamming ?? "";
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -3578,7 +3578,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         hustling.isNotEmpty ||
         disposal.isNotEmpty ||
         cracking.isNotEmpty ||
-        forgery.isNotEmpty) {
+        forgery.isNotEmpty ||
+        scamming.isNotEmpty) {
       crimesExist = true;
     }
 
@@ -4229,6 +4230,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                     child: Text('Forgery: '),
                                   ),
                                   SelectableText(forgery),
+                                ],
+                              ),
+                            if (scamming.isNotEmpty)
+                              Row(
+                                children: [
+                                  const SizedBox(
+                                    width: 130,
+                                    child: Text('Scamming: '),
+                                  ),
+                                  SelectableText(scamming),
                                 ],
                               ),
                           ],
@@ -5638,9 +5649,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual travel';
         channelSubtitle = 'Manual travel';
         channelDescription = 'Manual notifications for travel';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "T" : await Prefs().getTravelNotificationTitle();
+        notificationTitle = _settingsProvider!.discreetNotifications ? "T" : await Prefs().getTravelNotificationTitle();
         notificationSubtitle =
-            _settingsProvider!.discreteNotifications ? " " : await Prefs().getTravelNotificationBody();
+            _settingsProvider!.discreetNotifications ? " " : await Prefs().getTravelNotificationBody();
         notificationPayload += 'travel';
         notificationIconAndroid = "notification_travel";
         notificationIconColor = Colors.blue;
@@ -5650,8 +5661,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual energy';
         channelSubtitle = 'Manual energy';
         channelDescription = 'Manual notifications for energy';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "E" : 'Energy bar';
-        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Full" : 'Here is your energy reminder!';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "E" : 'Energy bar';
+        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Full" : 'Here is your energy reminder!';
         final myTimeStamp = (_energyNotificationTime!.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_energy";
@@ -5662,8 +5673,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual nerve';
         channelSubtitle = 'Manual nerve';
         channelDescription = 'Manual notifications for nerve';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "N" : 'Nerve bar';
-        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Full" : 'Here is your nerve reminder!';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "N" : 'Nerve bar';
+        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Full" : 'Here is your nerve reminder!';
         final myTimeStamp = (_nerveNotificationTime!.millisecondsSinceEpoch / 1000).floor();
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_nerve";
@@ -5674,8 +5685,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual life';
         channelSubtitle = 'Manual life';
         channelDescription = 'Manual notifications for life';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "Lf" : 'Life bar';
-        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Full" : 'Here is your life reminder!';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "Lf" : 'Life bar';
+        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Full" : 'Here is your life reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.life!.fulltime!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_life";
@@ -5686,9 +5697,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual drugs';
         channelSubtitle = 'Manual drugs';
         channelDescription = 'Manual notifications for drugs';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "D" : 'Drug Cooldown';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "D" : 'Drug Cooldown';
         notificationSubtitle =
-            _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your drugs cooldown reminder!';
+            _settingsProvider!.discreetNotifications ? "Exp" : 'Here is your drugs cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.drug!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_drugs";
@@ -5699,9 +5710,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual medical';
         channelSubtitle = 'Manual medical';
         channelDescription = 'Manual notifications for medical';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "Med" : 'Medical Cooldown';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "Med" : 'Medical Cooldown';
         notificationSubtitle =
-            _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your medical cooldown reminder!';
+            _settingsProvider!.discreetNotifications ? "Exp" : 'Here is your medical cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.medical!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_medical";
@@ -5712,9 +5723,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual booster';
         channelSubtitle = 'Manual booster';
         channelDescription = 'Manual notifications for booster';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "B" : 'Booster Cooldown';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "B" : 'Booster Cooldown';
         notificationSubtitle =
-            _settingsProvider!.discreteNotifications ? "Exp" : 'Here is your booster cooldown reminder!';
+            _settingsProvider!.discreetNotifications ? "Exp" : 'Here is your booster cooldown reminder!';
         final myTimeStamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor() + _user!.cooldowns!.booster!;
         notificationPayload += '${profileNotification.string}-$myTimeStamp';
         notificationIconAndroid = "notification_booster";
@@ -5725,9 +5736,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual hospital';
         channelSubtitle = 'Manual hospital';
         channelDescription = 'Manual notifications for hospital';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "H" : 'Hospital release';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "H" : 'Hospital release';
         notificationSubtitle =
-            _settingsProvider!.discreteNotifications ? "App" : 'You are about to be released from hospital!';
+            _settingsProvider!.discreetNotifications ? "App" : 'You are about to be released from hospital!';
         notificationPayload += 'hospital';
         notificationIconAndroid = "notification_hospital";
         notificationIconColor = Colors.yellow;
@@ -5737,9 +5748,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual jail';
         channelSubtitle = 'Manual jail';
         channelDescription = 'Manual notifications for jail';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "J" : 'Jail release';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "J" : 'Jail release';
         notificationSubtitle =
-            _settingsProvider!.discreteNotifications ? "App" : 'You are about to be released from jail!';
+            _settingsProvider!.discreetNotifications ? "App" : 'You are about to be released from jail!';
         notificationPayload += 'jail';
         notificationIconAndroid = "notification_events";
         notificationIconColor = Colors.purple;
@@ -5749,8 +5760,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual war';
         channelSubtitle = 'Manual war';
         channelDescription = 'Manual notifications for war';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "W" : 'Ranked War';
-        notificationSubtitle = _settingsProvider!.discreteNotifications ? "App" : 'Ranked war is about to start!';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "W" : 'Ranked War';
+        notificationSubtitle = _settingsProvider!.discreetNotifications ? "App" : 'Ranked war is about to start!';
         notificationPayload += 'war';
         notificationIconAndroid = "notification_assists";
         notificationIconColor = Colors.red;
@@ -5760,8 +5771,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         channelTitle = 'Manual race start';
         channelSubtitle = 'Manual race start';
         channelDescription = 'Manual notifications for race start';
-        notificationTitle = _settingsProvider!.discreteNotifications ? "R" : 'Race Start';
-        notificationSubtitle = _settingsProvider!.discreteNotifications ? "Start" : 'Lights out and here we go!';
+        notificationTitle = _settingsProvider!.discreetNotifications ? "R" : 'Race Start';
+        notificationSubtitle = _settingsProvider!.discreetNotifications ? "Start" : 'Lights out and here we go!';
         notificationPayload += 'raceStart';
         notificationIconAndroid = "notification_racing";
         notificationIconColor = Colors.blue;
@@ -6221,7 +6232,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         crimesExist = true;
       }
       if (_miscModel!.bootlegging != null) {
-        crimesString += '\nSBootlegging: ${_miscModel!.bootlegging}';
+        crimesString += '\nBootlegging: ${_miscModel!.bootlegging}';
         crimesExist = true;
       }
       if (_miscModel!.graffiti != null) {
@@ -6248,8 +6259,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         crimesString += '\nDisposal: ${_miscModel!.disposal}';
         crimesExist = true;
       }
+      if (_miscModel!.cracking != null) {
+        crimesString += '\nCracking: ${_miscModel!.cracking}';
+        crimesExist = true;
+      }
       if (_miscModel!.forgery != null) {
         crimesString += '\nForgery: ${_miscModel!.forgery}';
+        crimesExist = true;
+      }
+      if (_miscModel!.scamming != null) {
+        crimesString += '\nScamming: ${_miscModel!.scamming}';
         crimesExist = true;
       }
 

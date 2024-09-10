@@ -11,6 +11,7 @@ import { refillsGroup } from "./refills";
 import { factionAssistGroup } from "./faction_assist";
 import { retalsGroup } from "./retals";
 import { prefsBackupGroup } from "./prefs_backup";
+import { troubleshootingGroup } from "./troubleshooting_notification";
 //import { testGroup } from "./tests";
 //import { helperGroup } from "./helpers";
 
@@ -33,5 +34,6 @@ export const refills = refillsGroup;
 export const factionAssist = factionAssistGroup;
 export const retals = retalsGroup;
 export const prefsBackup = prefsBackupGroup;
+export const troubleshooting = troubleshootingGroup;
 //export const tests = testGroup;
 //export const helper = helperGroup;

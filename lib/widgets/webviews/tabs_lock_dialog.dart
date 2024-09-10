@@ -3,32 +3,8 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
-class TabsHideReminderDialog extends StatefulWidget {
-  const TabsHideReminderDialog({super.key});
-
-  @override
-  TabsHideReminderDialogState createState() => TabsHideReminderDialogState();
-}
-
-class TabsHideReminderDialogState extends State<TabsHideReminderDialog> {
-  int _countdown = 8;
-
-  @override
-  void initState() {
-    super.initState();
-    _startCountdown();
-  }
-
-  void _startCountdown() {
-    Future.delayed(const Duration(seconds: 1), () {
-      if (_countdown > 0) {
-        setState(() {
-          _countdown--;
-        });
-        _startCountdown();
-      }
-    });
-  }
+class TabsLockDialog extends StatelessWidget {
+  const TabsLockDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +14,10 @@ class TabsHideReminderDialogState extends State<TabsHideReminderDialog> {
         borderRadius: BorderRadius.circular(16),
       ),
       elevation: 0.0,
+      contentPadding: const EdgeInsets.only(
+        top: 2.0,
+        bottom: 2.0,
+      ),
       backgroundColor: Colors.transparent,
       content: SingleChildScrollView(
         child: Stack(
@@ -64,24 +44,40 @@ class TabsHideReminderDialogState extends State<TabsHideReminderDialog> {
                 ),
                 child: Column(
                   children: [
-                    const Text("You have hidden your tabs!\n"),
+                    const Text("You locked your first tab!\n"),
                     const Text(
-                      "Just a quick reminder (in case you still have not reviewed the Tips section): swiping up/down "
-                      "the title bar will hide/show your tab bar, so that you can enjoy more space when needed!\n\n"
-                      "This feature can be completely disabled in Settings.",
-                      style: TextStyle(fontSize: 13),
+                      "But how does it work...?\n\n"
+                      //
+                      "You can lock your tabs (except for the first one) by using the lock icon in the tab menu.\n\n"
+                      "There two ways in which you can lock your tabs.\n\n"
+                      //
+                      "POSITIONAL LOCK:\n\n"
+                      "Activated by a single tap in the lock icon: this will lock your tab so that it can't be moved "
+                      "(you can still exchange it's position with other locked tabs) or closed. The tab will move "
+                      "to the first position available in your tab list, and a small orange lock icon will appear.\n\n"
+                      //
+                      "FULL LOCK:\n\n"
+                      "Activated by a long-press in the lock icon: on top of the behavior you get with the "
+                      "positional lock, your tab will be locked in the current website/section you are visiting "
+                      "and you will not be able to browse to other web sections. You will be able to reload the page and "
+                      "still be able to browse through the pages of multi-page sections "
+                      "(e.g.: forums, hospital, jail, items...) and such.\n\n"
+                      "When the full lock is active, a red lock will appear in your tab.\n\n"
+                      "Note: there are a couple of ways to override this behavior without unlocking the tab. You can either "
+                      "tap the 'override!' button in the warning dialog that shows if you try to browse with a full lock, or "
+                      "you can configure exceptions in Settings / Advanced Browser Settings, to allow navigation between "
+                      "specific pairs or URLs.",
+                      style: TextStyle(fontSize: 14),
                     ),
                     const SizedBox(height: 16.0),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         TextButton(
-                          child: Text(_countdown > 0 ? "Close ($_countdown)" : "Close"),
-                          onPressed: _countdown > 0
-                              ? null
-                              : () {
-                                  Navigator.of(context).pop();
-                                },
+                          child: const Text("Close"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
                         ),
                       ],
                     ),
@@ -101,7 +97,7 @@ class TabsHideReminderDialogState extends State<TabsHideReminderDialog> {
                   child: const SizedBox(
                     height: 28,
                     width: 28,
-                    child: Icon(MdiIcons.tabRemove),
+                    child: Icon(MdiIcons.lock),
                   ),
                 ),
               ),
