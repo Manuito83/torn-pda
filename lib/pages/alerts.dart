@@ -52,7 +52,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
       firestore.getUserProfile(),
       _getFactionApiAccess(),
     ]);
-    analytics.setCurrentScreen(screenName: 'alerts');
+    analytics.logScreenView(screenName: 'alerts');
 
     routeWithDrawer = true;
     routeName = "alerts";

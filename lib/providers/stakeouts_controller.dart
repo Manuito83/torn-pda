@@ -494,7 +494,7 @@ class StakeoutsController extends GetxController {
       final bool landedNow = tornProfile.status!.state != "Traveling";
       if (!alertStakeout.landedLast && landedNow) {
         alerts.add("${alertStakeout.name} has landed!");
-        icons.add(const Icon(MdiIcons.airplaneLanding, color: Colors.blue));
+        icons.add(Icon(MdiIcons.airplaneLanding, color: Colors.blue));
       }
     }
 
@@ -502,7 +502,7 @@ class StakeoutsController extends GetxController {
       final bool onlineNow = tornProfile.lastAction!.status == "Online";
       if (!alertStakeout.onlineLast && onlineNow) {
         alerts.add("${alertStakeout.name} is online!");
-        icons.add(const Icon(MdiIcons.circle, color: Colors.green));
+        icons.add(Icon(MdiIcons.circle, color: Colors.green));
       }
     }
 
@@ -514,7 +514,7 @@ class StakeoutsController extends GetxController {
           Container(
             child: Transform.rotate(
               angle: 90 * math.pi / 180,
-              child: const Icon(MdiIcons.glassStange, color: Colors.red),
+              child: Icon(MdiIcons.glassStange, color: Colors.red),
             ),
           ),
         );
@@ -613,7 +613,7 @@ class CustomWidgetState extends State<CustomWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[
                 IconButton(
-                  icon: const Icon(MdiIcons.cctv),
+                  icon: Icon(MdiIcons.cctv),
                   onPressed: () async {
                     final s = Get.put(StakeoutsController());
                     s.callbackBrowser('https://www.torn.com/profiles.php?XID=${widget.stakeoutId}');

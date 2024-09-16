@@ -122,7 +122,7 @@ class TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(MdiIcons.commentTextOutline),
+          icon: Icon(MdiIcons.commentTextOutline),
           onPressed: () {
             _showNotificationTextDialog();
           },

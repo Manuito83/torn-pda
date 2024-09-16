@@ -530,7 +530,7 @@ class SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               IconButton(
-                icon: const Icon(MdiIcons.incognito),
+                icon: Icon(MdiIcons.incognito),
                 onPressed: () {
                   showDialog(
                     barrierDismissible: false,

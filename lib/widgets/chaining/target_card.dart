@@ -138,7 +138,7 @@ class TargetCardState extends State<TargetCard> {
                               children: [
                                 if (_target!.status!.state!.contains("Federal") ||
                                     _target!.status!.state!.contains("Fallen"))
-                                  const Icon(MdiIcons.graveStone, size: 18)
+                                  Icon(MdiIcons.graveStone, size: 18)
                                 else
                                   _attackIcon(),
                                 const Padding(
@@ -589,7 +589,7 @@ class TargetCardState extends State<TargetCard> {
       } else {
         _lifeTicker?.cancel();
         lifeText = "OUT";
-        hospitalWarning = const Icon(
+        hospitalWarning = Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,

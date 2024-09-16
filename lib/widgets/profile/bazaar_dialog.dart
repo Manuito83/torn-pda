@@ -47,12 +47,12 @@ class BazaarDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(MdiIcons.storefrontOutline, size: 22),
+                  Icon(MdiIcons.storefrontOutline, size: 22),
                   const SizedBox(width: 6),
                   const Text("Bazaar open"),
                   const SizedBox(width: 6),
                   GestureDetector(
-                    child: const Icon(MdiIcons.openInApp, size: 18),
+                    child: Icon(MdiIcons.openInApp, size: 18),
                     onTap: () {
                       Navigator.of(context).pop();
                       openTapCallback();

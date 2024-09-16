@@ -383,7 +383,7 @@ class WarPageState extends State<WarPage> {
         totalSwitches: 2,
         animate: true,
         animationDuration: 500,
-        customIcons: const [
+        customIcons: [
           Icon(
             MdiIcons.check,
             size: 12,
@@ -455,7 +455,7 @@ class WarPageState extends State<WarPage> {
         totalSwitches: 1,
         animate: true,
         animationDuration: 500,
-        customIcons: const [
+        customIcons: [
           Icon(
             MdiIcons.mapMarker,
             size: 12,
@@ -529,7 +529,7 @@ class WarPageState extends State<WarPage> {
         totalSwitches: 2,
         animate: true,
         animationDuration: 500,
-        customIcons: const [
+        customIcons: [
           Icon(
             MdiIcons.airplane,
             size: 12,
@@ -1036,7 +1036,7 @@ class WarPageState extends State<WarPage> {
           },
         ),
         IconButton(
-          icon: const Icon(MdiIcons.earth),
+          icon: Icon(MdiIcons.earth),
           onPressed: () {
             Navigator.of(context).push(
               MaterialPageRoute(

@@ -1,3 +1,6 @@
+analyzer:
+  errors:
+    no_wildcard_variable_uses: ignore
 include: package:lints/recommended.yaml
 
 linter:

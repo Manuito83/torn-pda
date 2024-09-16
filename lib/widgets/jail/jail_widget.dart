@@ -563,7 +563,7 @@ class JailWidgetState extends State<JailWidget> {
               ),
             ),
             GestureDetector(
-              child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+              child: Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
               onTap: () {
                 showDialog<void>(
                   context: context,

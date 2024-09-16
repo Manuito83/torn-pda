@@ -282,16 +282,16 @@ class TradesWidgetState extends State<TradesWidget> {
       if (!hasProperty) {
         return const SizedBox.shrink();
       } else {
-        return const Row(
+        return Row(
           children: [
-            SizedBox(width: 5),
-            Text('(+', style: TextStyle(color: Colors.white)),
+            const SizedBox(width: 5),
+            const Text('(+', style: TextStyle(color: Colors.white)),
             Icon(
               MdiIcons.home,
               color: Colors.white,
               size: 14,
             ),
-            Text(')', style: TextStyle(color: Colors.white)),
+            const Text(')', style: TextStyle(color: Colors.white)),
           ],
         );
       }
@@ -849,7 +849,7 @@ class TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(MdiIcons.home, size: 18, color: Colors.white),
+            Icon(MdiIcons.home, size: 18, color: Colors.white),
             const SizedBox(width: 5),
             Text(
               propertyName,
@@ -894,7 +894,7 @@ class TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
+            Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
             const SizedBox(width: 5),
             Text(
               shareName,

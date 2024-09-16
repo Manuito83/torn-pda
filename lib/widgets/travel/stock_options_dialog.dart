@@ -185,7 +185,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                                 _callBackValues();
                               }
                             },
-                            child: const Icon(MdiIcons.minus),
+                            child: Icon(MdiIcons.minus),
                           ),
                           const SizedBox(width: 10),
                           OutlinedButton(
@@ -197,7 +197,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                                 _callBackValues();
                               }
                             },
-                            child: const Icon(MdiIcons.plus),
+                            child: Icon(MdiIcons.plus),
                           ),
                         ],
                       )

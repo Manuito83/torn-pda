@@ -185,7 +185,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               children: [
                 Row(
                   children: [
-                    const Icon(MdiIcons.earth, size: 14),
+                    Icon(MdiIcons.earth, size: 14),
                     SizedBox(width: 4),
                     const Text("Remote load/update"),
                   ],
@@ -206,7 +206,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               children: [
                 Row(
                   children: [
-                    const Icon(MdiIcons.lightningBoltOutline, size: 16),
+                    Icon(MdiIcons.lightningBoltOutline, size: 16),
                     SizedBox(width: 4),
                     const Text("Injection time"),
                   ],
@@ -332,14 +332,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                 Container(
                     width: 20,
                     child: GestureDetector(
-                      child: const Icon(MdiIcons.arrowLeft),
+                      child: Icon(MdiIcons.arrowLeft),
                       onTap: () {
                         _tabController.animateTo(0);
                       },
                     )),
                 Row(
                   children: [
-                    const Icon(MdiIcons.earth),
+                    Icon(MdiIcons.earth),
                     const SizedBox(width: 6),
                     Text(widget.editExisting ? "Remote script update" : "Remote script load"),
                   ],
@@ -433,27 +433,27 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                             widget.editScript!.updateStatus = UserScriptUpdateStatus.error;
                           } else {
                             try {
-                            final String newVersion = resultModel!.version;
-                            final String oldVersion = widget.editScript!.version;
-                            final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
-                            final String finalMessage = !success
-                                ? (message ?? "An unknown error occurred")
-                                : isOlderVersion
-                                    ? "Newer version found: $newVersion\nPlease review changes and save!"
-                                    : "No newer version found";
-                            log(finalMessage);
-                            BotToast.showText(
-                              align: Alignment(0, 0),
-                              clickClose: true,
-                              text: finalMessage,
-                              textStyle: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              contentColor: success && isOlderVersion ? Colors.green : Colors.orange[700]!,
-                              duration: const Duration(seconds: 4),
-                              contentPadding: const EdgeInsets.all(10),
-                            );
+                              final String newVersion = resultModel!.version;
+                              final String oldVersion = widget.editScript!.version;
+                              final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
+                              final String finalMessage = !success
+                                  ? (message ?? "An unknown error occurred")
+                                  : isOlderVersion
+                                      ? "Newer version found: $newVersion\nPlease review changes and save!"
+                                      : "No newer version found";
+                              log(finalMessage);
+                              BotToast.showText(
+                                align: Alignment(0, 0),
+                                clickClose: true,
+                                text: finalMessage,
+                                textStyle: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.white,
+                                ),
+                                contentColor: success && isOlderVersion ? Colors.green : Colors.orange[700]!,
+                                duration: const Duration(seconds: 4),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
                             } catch (e) {
                               log("An error occured in script ${widget.editScript!.name}: $e");
                               BotToast.showText(
@@ -577,7 +577,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           final bool couldParseHeader = _userScriptsProvider.updateUserScript(
                               widget.editScript!,
                               _remoteNameController.text,
-                              UserScriptTime.values.byName(_remoteRunTimeController.text ),
+                              UserScriptTime.values.byName(_remoteRunTimeController.text),
                               _remoteSourceController.text,
                               true,
                               true);
@@ -624,7 +624,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       if (!widget.editExisting) {
         try {
           final metaMap = UserScriptModel.parseHeader(inputSource);
-          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(metaMap, name: inputName, source: inputSource, time: inputTime));
+          _userScriptsProvider.addUserScriptByModel(
+              UserScriptModel.fromMetaMap(metaMap, name: inputName, source: inputSource, time: inputTime));
         } on Exception catch (e) {
           if (e.toString().contains("No header found")) {
             BotToast.showText(

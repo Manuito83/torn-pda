@@ -367,7 +367,7 @@ class TargetsPageState extends State<TargetsPage> {
               if (_yataButtonEnabled!) {
                 if (_yataButtonInProgress) {
                   return IconButton(
-                    icon: const Icon(MdiIcons.alphaYCircleOutline),
+                    icon: Icon(MdiIcons.alphaYCircleOutline),
                     onPressed: () async {
                       setState(() {
                         _yataButtonInProgress = false;

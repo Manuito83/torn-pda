@@ -1275,7 +1275,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       } else {
         _redStatusTicker?.cancel();
         lifeText = "OUT";
-        hospitalJailWarning = const Icon(
+        hospitalJailWarning = Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,

@@ -3284,7 +3284,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     if (_tradesIconActive) {
       return PopupMenuButton<VaultsOptions>(
         icon: Icon(
-          MdiIcons.cashUsdOutline,
+          MdiIcons.cash100,
           color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
         ),
         onSelected: _openVaultsOptions,
@@ -5304,7 +5304,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: GestureDetector(
-          child: const Icon(MdiIcons.linkVariant),
+          child: Icon(MdiIcons.linkVariant),
           onTap: () {
             _chainWidgetController.expanded
                 ? _chainWidgetController.expanded = false
@@ -5345,7 +5345,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           child: InkWell(
             customBorder: const CircleBorder(),
             splashColor: Colors.orange,
-            child: const Icon(MdiIcons.playPause, color: Colors.white),
+            child: Icon(MdiIcons.playPause, color: Colors.white),
             onTap: _nextButtonPressed ? null : nextChainAttack,
             onLongPress: () => _webViewProvider.cancelChainingBrowser(),
           ),
@@ -5356,7 +5356,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   Widget _endAttackButton() {
     return IconButton(
-      icon: const Icon(MdiIcons.stop, color: Colors.white),
+      icon: Icon(MdiIcons.stop, color: Colors.white),
       onPressed: () {
         _webViewProvider.cancelChainingBrowser();
       },
@@ -5734,7 +5734,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           MdiIcons.notebookOutline,
                           color: Colors.white,
                           size: 16,

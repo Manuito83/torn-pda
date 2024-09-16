@@ -68,7 +68,7 @@ class EventIcons extends StatelessWidget {
         size: 20,
       );
     } else if (message.contains('A stock dividend from')) {
-      insideIcon = const Icon(
+      insideIcon = Icon(
         MdiIcons.bankTransfer,
         color: Colors.green,
         size: 20,
@@ -124,7 +124,7 @@ class EventIcons extends StatelessWidget {
         message.contains('withdraw your check from the bank') ||
         message.contains('Your bank investment has ended') ||
         message.contains('You were given \$')) {
-      insideIcon = const Icon(
+      insideIcon = Icon(
         MdiIcons.cash100,
         color: Colors.green,
         size: 20,
@@ -188,7 +188,7 @@ class EventIcons extends StatelessWidget {
         size: 20,
       );
     } else if (message.contains('from your bazaar for')) {
-      insideIcon = const Icon(
+      insideIcon = Icon(
         MdiIcons.store,
         color: Colors.green,
         size: 20,

@@ -221,7 +221,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       ),
       actions: [
         GestureDetector(
-          child: const Icon(
+          child: Icon(
             MdiIcons.openInApp,
           ),
           onTap: () {

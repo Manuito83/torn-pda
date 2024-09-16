@@ -226,7 +226,7 @@ class CrimesOptionsState extends State<CrimesOptions> {
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Row(
                 children: <Widget>[
-                  const Icon(MdiIcons.fingerprint),
+                  Icon(MdiIcons.fingerprint),
                   const SizedBox(width: 10),
                   Text('$catName'),
                   const SizedBox(width: 10),

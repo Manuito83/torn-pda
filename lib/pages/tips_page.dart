@@ -127,7 +127,7 @@ class TipsPageState extends State<TipsPage> {
     _deepLinksTipsList = buildDeepLinksTips();
     _userScriptsTipsList = buildUserScriptsTipsList();
 
-    analytics.setCurrentScreen(screenName: 'tips');
+    analytics.logScreenView(screenName: 'tips');
 
     routeWithDrawer = true;
     routeName = "tips";

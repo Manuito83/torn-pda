@@ -524,7 +524,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     try {
       // Check initial link if app was in cold state (terminated)
-      final appLink = await _appLinks.getInitialAppLink();
+      final appLink = await _appLinks.getInitialLink();
       if (appLink != null) {
         log('getInitialAppLink: $appLink');
         _deepLinkHandle(appLink.toString());
@@ -1486,7 +1486,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                           totalSwitches: 3,
                           animate: true,
                           animationDuration: 500,
-                          icons: const [
+                          icons: [
                             FontAwesome.sun_o,
                             FontAwesome.moon_o,
                             MdiIcons.ghost,
@@ -1706,21 +1706,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case 1:
         return const Icon(Icons.local_airport);
       case 2:
-        return const Icon(MdiIcons.linkVariant);
+        return Icon(MdiIcons.linkVariant);
       case 3:
-        return const Icon(MdiIcons.knifeMilitary);
+        return Icon(MdiIcons.knifeMilitary);
       case 4:
         return const Icon(Icons.people);
       case 5:
-        return const Icon(MdiIcons.cctv);
+        return Icon(MdiIcons.cctv);
       case 6:
-        return const Icon(MdiIcons.trophy);
+        return Icon(MdiIcons.trophy);
       case 7:
-        return const Icon(MdiIcons.packageVariantClosed);
+        return Icon(MdiIcons.packageVariantClosed);
       case 8:
         return const Icon(MaterialCommunityIcons.sword_cross);
       case 9:
-        return const Icon(MdiIcons.bankTransfer);
+        return Icon(MdiIcons.bankTransfer);
       case 10:
         return const Icon(Icons.notifications_active);
       case 11:
@@ -2136,7 +2136,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(MdiIcons.chartLine, color: Colors.green),

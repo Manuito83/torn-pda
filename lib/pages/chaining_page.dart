@@ -216,18 +216,18 @@ class ChainingPageState extends State<ChainingPage> {
 
     switch (_currentPage) {
       case 0:
-        analytics.setCurrentScreen(screenName: 'targets');
+        analytics.logScreenView(screenName: 'targets');
       case 1:
-        analytics.setCurrentScreen(screenName: 'attacks');
+        analytics.logScreenView(screenName: 'attacks');
       case 2:
-        analytics.setCurrentScreen(screenName: 'war');
+        analytics.logScreenView(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
       case 3:
         if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled) {
-          analytics.setCurrentScreen(screenName: 'retals');
+          analytics.logScreenView(screenName: 'retals');
           _r.retrieveRetals(context);
         }
     }
@@ -241,20 +241,20 @@ class ChainingPageState extends State<ChainingPage> {
 
     switch (index) {
       case 0:
-        analytics.setCurrentScreen(screenName: 'targets');
+        analytics.logScreenView(screenName: 'targets');
         Prefs().setChainingCurrentPage(_currentPage);
       case 1:
-        analytics.setCurrentScreen(screenName: 'attacks');
+        analytics.logScreenView(screenName: 'attacks');
         Prefs().setChainingCurrentPage(_currentPage);
       case 2:
-        analytics.setCurrentScreen(screenName: 'war');
+        analytics.logScreenView(screenName: 'war');
         if (!_settingsProvider.showCases.contains("war")) {
           Get.find<WarController>().launchShowCaseAddFaction();
           _settingsProvider.addShowCase = "war";
         }
         Prefs().setChainingCurrentPage(_currentPage);
       case 3:
-        analytics.setCurrentScreen(screenName: 'retals');
+        analytics.logScreenView(screenName: 'retals');
         Prefs().setChainingCurrentPage(_currentPage);
         _r.retrieveRetals(context);
     }

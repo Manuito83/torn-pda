@@ -1834,7 +1834,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   Widget _arrivalTime() {
     return Row(
       children: [
-        const Icon(MdiIcons.airplaneLanding, size: 12),
+        Icon(MdiIcons.airplaneLanding, size: 12),
         const SizedBox(width: 2),
         if (_flyingToThisCountry)
           if (_landedInWidgetCountry)
@@ -2054,11 +2054,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(
-                          MdiIcons.cashUsdOutline,
+                          MdiIcons.cash100,
                           color: Colors.green,
                         ),
                       ),

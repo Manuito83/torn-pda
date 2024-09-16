@@ -1866,7 +1866,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   // Open chaining section
                                   widget.callBackSection(2);
                                 },
-                                child: const Icon(
+                                child: Icon(
                                   MdiIcons.linkVariant,
                                   color: Colors.blue,
                                   size: 22,
@@ -3015,7 +3015,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', shortTap: true);
                 },
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(right: 5),
                   child: Icon(MdiIcons.openInApp, size: 18),
                 ),
@@ -3298,7 +3298,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: "https://www.torn.com/messages.php", shortTap: true);
                 },
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(right: 5),
                   child: Icon(MdiIcons.openInApp, size: 18),
                 ),
@@ -3635,7 +3635,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       onTap: () async {
                         _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                       },
-                      child: const Icon(
+                      child: Icon(
                         MdiIcons.alphaPCircleOutline,
                         color: Colors.blueAccent,
                       ),
@@ -3741,7 +3741,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         onTap: () async {
                           _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                         },
-                        child: const Icon(
+                        child: Icon(
                           MdiIcons.alphaPCircleOutline,
                           color: Colors.blueAccent,
                         ),
@@ -4267,8 +4267,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             },
             child: dense!
                 ? const Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
-                : const Icon(
-                    MdiIcons.cashUsdOutline,
+                : Icon(
+                    MdiIcons.cash100,
                     color: Colors.green,
                   ),
           ),
@@ -4398,7 +4398,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
                 },
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(left: 5),
                   child: Icon(MdiIcons.openInApp, size: 24),
                 ),
@@ -4433,7 +4433,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       factionCrimesActive = true;
       factionCrimes = Row(
         children: [
-          const Icon(MdiIcons.fingerprint),
+          Icon(MdiIcons.fingerprint),
           const SizedBox(width: 10),
           Flexible(
             child: Text(
@@ -4456,7 +4456,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               onTap: () {
                 _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.only(right: 5),
                 child: Icon(MdiIcons.openInApp, size: 18),
               ),
@@ -4467,7 +4467,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       factionCrimesActive = true;
       factionCrimes = Row(
         children: [
-          const Icon(MdiIcons.fingerprint),
+          Icon(MdiIcons.fingerprint),
           const SizedBox(width: 10),
           Flexible(
             child: Text(
@@ -4484,7 +4484,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               onTap: () {
                 _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.only(right: 5),
                 child: Icon(MdiIcons.openInApp, size: 18),
               ),
@@ -4539,7 +4539,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       bankWidget = Row(
         children: <Widget>[
-          const Icon(MdiIcons.bankOutline),
+          Icon(MdiIcons.bankOutline),
           const SizedBox(width: 10),
           Flexible(
             child: RichText(
@@ -4598,7 +4598,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       educationWidget = Row(
         children: <Widget>[
-          const Icon(MdiIcons.schoolOutline),
+          Icon(MdiIcons.schoolOutline),
           const SizedBox(width: 10),
           Flexible(
             child: RichText(
@@ -4635,7 +4635,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         educationActive = true;
         educationWidget = Row(
           children: <Widget>[
-            const Icon(MdiIcons.schoolOutline),
+            Icon(MdiIcons.schoolOutline),
             const SizedBox(width: 10),
             Flexible(
               child: Text(
@@ -4670,7 +4670,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       donatorWidget = Row(
         children: <Widget>[
-          const Icon(MdiIcons.starOutline),
+          Icon(MdiIcons.starOutline),
           const SizedBox(width: 10),
           Flexible(
             child: Text(
@@ -5437,7 +5437,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: const Icon(
+            child: Icon(
               MdiIcons.cityVariantOutline,
               color: Colors.black,
             ),
@@ -5463,7 +5463,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: const Icon(
+            child: Icon(
               MdiIcons.accountSwitchOutline,
               color: Colors.black,
             ),
@@ -6909,11 +6909,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(
-                          MdiIcons.cashUsdOutline,
+                          MdiIcons.cash100,
                           color: Colors.green,
                         ),
                       ),
@@ -7033,7 +7033,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(
@@ -7414,7 +7414,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 shortTap: true,
               );
             },
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.only(left: 5),
               child: Icon(MdiIcons.openInApp, size: 18),
             ),

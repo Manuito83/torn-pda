@@ -120,7 +120,7 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(MdiIcons.commentTextOutline),
+          icon: Icon(MdiIcons.commentTextOutline),
           onPressed: () {
             _showNotificationTextDialog();
           },

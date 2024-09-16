@@ -177,12 +177,12 @@ class AwardCardState extends State<AwardCard> {
                       : null,
                   child: _pinActive
                       ? _pinProvider.pinnedNames.contains(award.name)
-                          ? const Icon(
+                          ? Icon(
                               MdiIcons.pin,
                               color: Colors.green,
                               size: 20,
                             )
-                          : const Icon(
+                          : Icon(
                               MdiIcons.pinOutline,
                               size: 20,
                             )
