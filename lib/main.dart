@@ -346,8 +346,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         systemNavigationBarColor: _themeProvider.statusBar,
         systemNavigationBarIconBrightness: Brightness.light,
         statusBarIconBrightness: Brightness.light,
+
         // iOS
-        statusBarBrightness: Brightness.dark,
+        statusBarBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
+            ? _themeProvider.currentTheme == AppTheme.light
+                ? Brightness.light
+                : Brightness.dark
+            : Brightness.dark,
       ),
     );
 

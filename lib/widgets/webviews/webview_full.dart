@@ -1227,8 +1227,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                       systemNavigationBarColor: _themeProvider.statusBar,
                       systemNavigationBarIconBrightness: Brightness.light,
                       statusBarIconBrightness: Brightness.light,
-                      // iOS
-                      statusBarBrightness: Brightness.dark,
                     ),
                   );
                 });

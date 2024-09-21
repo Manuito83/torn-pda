@@ -367,13 +367,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Note: orientation here is taken BEFORE the change
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
-          statusBarColor: _themeProvider!.statusBar,
-          systemNavigationBarColor: _themeProvider!.statusBar,
-          systemNavigationBarIconBrightness: Brightness.light,
-          statusBarIconBrightness: Brightness.light,
-          // iOS
-          statusBarBrightness: Brightness.dark,
-        ),
+            statusBarColor: _themeProvider!.statusBar,
+            systemNavigationBarColor: _themeProvider!.statusBar,
+            systemNavigationBarIconBrightness: Brightness.light,
+            statusBarIconBrightness: Brightness.light,
+
+            // iOS
+            statusBarBrightness: _webViewProvider.browserShowInForeground
+                ? Brightness.dark
+                : MediaQuery.orientationOf(context) == Orientation.landscape
+                    ? _themeProvider!.currentTheme == AppTheme.light
+                        ? Brightness.light
+                        : Brightness.dark
+                    : Brightness.dark),
       );
     });
   }
@@ -1548,8 +1554,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                                   systemNavigationBarColor: _themeProvider!.statusBar,
                                   systemNavigationBarIconBrightness: Brightness.light,
                                   statusBarIconBrightness: Brightness.light,
-                                  // iOS
-                                  statusBarBrightness: Brightness.dark,
                                 ),
                               );
                             });
