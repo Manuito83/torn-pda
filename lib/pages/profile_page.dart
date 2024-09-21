@@ -6243,6 +6243,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         crimesString += '\nShoplifting: ${_miscModel!.shoplifting}';
         crimesExist = true;
       }
+      if (_miscModel!.pickpocketing != null) {
+        crimesString += '\nPickpocketing: ${_miscModel!.pickpocketing}';
+        crimesExist = true;
+      }
       if (_miscModel!.cardSkimming != null) {
         crimesString += '\nCard Skimming: ${_miscModel!.cardSkimming}';
         crimesExist = true;
