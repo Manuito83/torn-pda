@@ -4257,7 +4257,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _cashWallet({bool? dense}) {
-    if (_user!.networth!["wallet"] != null) {
+    if (_user!.moneyOnHand != null) {
       final moneyFormat = NumberFormat("#,##0", "en_US");
       return Row(
         children: [
@@ -4274,7 +4274,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
           const SizedBox(width: 5),
           SelectableText(
-            '\$${moneyFormat.format(_user!.networth!["wallet"])}',
+            '\$${moneyFormat.format(_user!.moneyOnHand)}',
             style: TextStyle(
               fontSize: dense ? 13 : 14,
               fontWeight: dense ? FontWeight.bold : FontWeight.normal,
@@ -4762,10 +4762,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final moneySources = <Widget>[];
     final moneyQuantities = <Widget>[];
 
+    final timestamp = DateTime.fromMillisecondsSinceEpoch(_user!.networth!['timestamp']!.round() * 1000);
+    final formattedTimestamp = TimeFormatter(
+        inputTime: timestamp,
+        timeFormatSetting: _settingsProvider!.currentTimeFormat,
+        timeZoneSetting: _settingsProvider!.currentTimeZone).formatHourWithDaysElapsed();
+
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
       String source;
-      if (v.key == 'total' || v.key == 'parsetime') {
+      if (v.key == 'total' || v.key == 'parsetime' || v.key == 'timestamp') {
         continue;
       } else if (v.key == 'piggybank') {
         source = 'Piggy Bank';
@@ -4838,6 +4844,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               SizedBox(height: 10),
               ...moneySources,
+              SizedBox(height: 10),
+              Text(
+                'Updated at: ',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                )
+              )
             ],
           ),
           Column(
@@ -4852,6 +4865,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               SizedBox(height: 10),
               ...moneyQuantities,
+              SizedBox(height: 10),
+              Text(
+                formattedTimestamp,
+                style: TextStyle(
+                  color: _themeProvider!.mainText,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],
@@ -4875,7 +4896,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         collapsed: Padding(
           padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
           child: Text(
-            '\$${moneyFormat.format(total)}',
+            '\$${moneyFormat.format(total)} (updated $formattedTimestamp)',
             softWrap: true,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
