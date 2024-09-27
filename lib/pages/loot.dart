@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 // ignore: unused_import
 import 'dart:developer';
 import 'dart:io';
@@ -38,6 +39,7 @@ import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
+import 'package:windows_notification/notification_message.dart';
 
 enum LootTimeType {
   dateTime,
@@ -94,7 +96,7 @@ class LootPageState extends State<LootPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _getInitialLootInformation = _getLoot();
     _getLootRangers();
-    analytics.logScreenView(screenName: 'loot');
+    analytics?.logScreenView(screenName: 'loot');
 
     routeWithDrawer = true;
     routeName = "loot";
@@ -428,7 +430,7 @@ class LootPageState extends State<LootPage> {
             }
 
             Widget notificationIcon;
-            if (!isPast && !isCurrent) {
+            if (!Platform.isWindows && (!isPast && !isCurrent)) {
               bool isPending = false;
               for (final id in _activeNotificationsIds) {
                 if (id == int.parse('400$npcId$levelNumber')) {
@@ -655,8 +657,8 @@ class LootPageState extends State<LootPage> {
       return npcWidget;
     } catch (e, t) {
       logToUser("Error loading @npcCards: $e");
-      FirebaseCrashlytics.instance.log("PDA Crash @npcCards");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash @npcCards");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
       return const SizedBox.shrink();
     }
   }
@@ -700,8 +702,8 @@ class LootPageState extends State<LootPage> {
       }
     } catch (e, t) {
       logToUser("Error loading @lootRangers: $e");
-      FirebaseCrashlytics.instance.log("PDA Crash @lootRangers");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash @lootRangers");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
       _lootRangersTime = 0;
       _lootRangersIdOrder.clear();
       _lootRangersNameOrder.clear();
@@ -936,8 +938,13 @@ class LootPageState extends State<LootPage> {
                     },
                   ),
                 ),
-                const SizedBox(width: 15),
-                notificationIcon,
+                if (!Platform.isWindows)
+                  Row(
+                    children: [
+                      const SizedBox(width: 15),
+                      notificationIcon,
+                    ],
+                  ),
               ],
             ),
         ],
@@ -1027,19 +1034,35 @@ class LootPageState extends State<LootPage> {
   Future<bool> _fetchDatabase() async {
     try {
       // Get current NPCs
-      final String dbNpcsResult =
-          (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
+      String dbNpcsResult = "";
+      if (!Platform.isWindows) {
+        dbNpcsResult = (await FirebaseDatabase.instance.ref().child("loot/npcs").once()).snapshot.value as String;
+      } else {
+        dbNpcsResult = (await http.get(Uri.parse("https://torn-pda-manuito.firebaseio.com/loot/npcs.json"))).body;
+      }
+
       _npcIds = dbNpcsResult.replaceAll(" ", "").split(",");
 
       // Get their hospital out times
-      Map<dynamic, dynamic> dbHopsResult =
-          (await FirebaseDatabase.instance.ref().child("loot/hospital").once()).snapshot.value as Map<dynamic, dynamic>;
+      Map<dynamic, dynamic> dbHopsResult = {};
+      if (!Platform.isWindows) {
+        dbHopsResult = (await FirebaseDatabase.instance.ref().child("loot/hospital").once()).snapshot.value
+            as Map<dynamic, dynamic>;
+      } else {
+        var response = await http.get(Uri.parse("https://torn-pda-manuito.firebaseio.com/loot/hospital.json"));
+        dbHopsResult = jsonDecode(response.body) as Map<dynamic, dynamic>;
+      }
       dbHopsResult.forEach((key, value) {
         _dbLootInfo[key.toString()] = value;
       });
 
-      _dbLootRangersEnabled =
-          (await FirebaseDatabase.instance.ref().child("loot/lootRangersActive").once()).snapshot.value as bool?;
+      if (!Platform.isWindows) {
+        _dbLootRangersEnabled =
+            (await FirebaseDatabase.instance.ref().child("loot/lootRangersActive").once()).snapshot.value as bool?;
+      } else {
+        var response = await http.get(Uri.parse("https://torn-pda-manuito.firebaseio.com/loot/lootRangersActive.json"));
+        _dbLootRangersEnabled = jsonDecode(response.body) as bool;
+      }
 
       return true;
     } catch (e) {
@@ -1261,6 +1284,8 @@ class LootPageState extends State<LootPage> {
   }
 
   Future _retrievePendingNotifications() async {
+    if (Platform.isWindows) return;
+
     try {
       final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -1276,6 +1301,8 @@ class LootPageState extends State<LootPage> {
   }
 
   Future _cancelPassedNotifications() async {
+    if (Platform.isWindows) return;
+
     try {
       final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 

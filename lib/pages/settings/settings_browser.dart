@@ -2658,14 +2658,14 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
         switch (value) {
           case 0:
-            analytics.setUserProperty(name: "browser_style", value: "default");
+            analytics?.setUserProperty(name: "browser_style", value: "default");
             _webViewProvider.bottomBarStyleEnabled = false;
           case 1:
-            analytics.setUserProperty(name: "browser_style", value: "bottom_bar");
+            analytics?.setUserProperty(name: "browser_style", value: "bottom_bar");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 1;
           case 2:
-            analytics.setUserProperty(name: "browser_style", value: "dialog");
+            analytics?.setUserProperty(name: "browser_style", value: "dialog");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 2;
         }

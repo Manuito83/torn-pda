@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -97,7 +98,7 @@ class AwardsPageState extends State<AwardsPage> {
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
 
-    analytics.logScreenView(screenName: 'awards');
+    analytics?.logScreenView(screenName: 'awards');
 
     routeWithDrawer = true;
     routeName = "awards";
@@ -854,8 +855,10 @@ class AwardsPageState extends State<AwardsPage> {
           // Populate models list
           _allAwards.add(singleAward);
         } catch (e, trace) {
-          FirebaseCrashlytics.instance.log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
-          FirebaseCrashlytics.instance.recordError(e, null);
+          if (!Platform.isWindows) {
+            FirebaseCrashlytics.instance.log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
+          }
+          if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, null);
           logToUser("PDA Error at YATA AWARD: $e, $trace");
         }
       }); // FINISH FOR EACH SINGLE-AWARD

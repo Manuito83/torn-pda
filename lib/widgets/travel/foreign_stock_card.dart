@@ -3,6 +3,7 @@ import 'dart:async';
 import "dart:collection";
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' as math;
 
 // Package imports:
@@ -520,35 +521,36 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                    child: CheckboxListTile(
-                      checkColor: Colors.white,
-                      activeColor: Colors.blue,
-                      value: widget.activeRestocks!.keys.contains(_codeName) ? true : false,
-                      title: const Text(
-                        "Restock alert (auto)",
-                        style: TextStyle(
-                          fontSize: 12,
+                  if (!Platform.isWindows)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blue,
+                        value: widget.activeRestocks!.keys.contains(_codeName) ? true : false,
+                        title: const Text(
+                          "Restock alert (auto)",
+                          style: TextStyle(
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
-                      subtitle: Text(
-                        "Get notified whenever ${widget.foreignStock.name} is restocked in "
-                        "${widget.foreignStock.countryFullName}",
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontStyle: FontStyle.italic,
+                        subtitle: Text(
+                          "Get notified whenever ${widget.foreignStock.name} is restocked in "
+                          "${widget.foreignStock.countryFullName}",
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
+                        onChanged: (ticked) async {
+                          if (ticked!) {
+                            await _addToActiveRestockAlerts();
+                          } else {
+                            await _removeToActiveRestockAlerts();
+                          }
+                        },
                       ),
-                      onChanged: (ticked) async {
-                        if (ticked!) {
-                          await _addToActiveRestockAlerts();
-                        } else {
-                          await _removeToActiveRestockAlerts();
-                        }
-                      },
                     ),
-                  ),
                 ],
               ),
             );

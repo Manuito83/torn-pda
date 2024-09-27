@@ -303,7 +303,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
-  final _findInteractionController = FindInteractionController();
+  final _findInteractionController = null;
 
   bool _omitTabHistory = false;
 
@@ -435,19 +435,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
     );
 
-    _pullToRefreshController = PullToRefreshController(
-      settings: PullToRefreshSettings(
-        color: Colors.orange[800],
-        size: PullToRefreshSize.DEFAULT,
-        backgroundColor: _themeProvider.secondBackground,
-        enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
-        slingshotDistance: 300,
-        distanceToTriggerSync: 300,
-      ),
-      onRefresh: () async {
-        await _reload();
-      },
-    );
+    _pullToRefreshController = Platform.isWindows
+        ? null
+        : PullToRefreshController(
+            settings: PullToRefreshSettings(
+              color: Colors.orange[800],
+              size: PullToRefreshSize.DEFAULT,
+              backgroundColor: _themeProvider.secondBackground,
+              enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
+              slingshotDistance: 300,
+              distanceToTriggerSync: 300,
+            ),
+            onRefresh: () async {
+              await _reload();
+            },
+          );
   }
 
   @override
@@ -459,8 +461,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       WidgetsBinding.instance.removeObserver(this);
       super.dispose();
     } catch (e) {
-      FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
       logToUser("PDA Crash at WebviewFull dispose: $e");
     }
   }
@@ -2246,6 +2248,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webViewController!.evaluateJavascript(
         source: chatHighlightJS(highlights: hlMap),
       );
+      // TODO: not supported by Windows, replace with JS?
       webViewController!.injectCSSCode(
         source: css,
       );
@@ -2954,8 +2957,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
 
           if (error.isNotEmpty) {
-            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
-            FirebaseCrashlytics.instance.recordError(error, null);
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
             logToUser("Error sending Foreign Stocks to YATA");
           }
         }
@@ -2983,8 +2986,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
 
           if (error.isNotEmpty) {
-            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
-            FirebaseCrashlytics.instance.recordError(error, null);
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
             logToUser("Error sending Foreign Stocks to Prometheus");
           }
         }

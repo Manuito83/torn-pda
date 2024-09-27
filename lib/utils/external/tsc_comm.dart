@@ -1,6 +1,7 @@
 // Package imports:
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart' as http;
@@ -51,8 +52,8 @@ class TSCComm {
     } catch (e, trace) {
       tscModel = TscResponse(success: false, message: "Model error", spy: null);
       if (response != null) {
-        FirebaseCrashlytics.instance.log("TSC Crash: $e, trace: $trace");
-        FirebaseCrashlytics.instance.recordError("HTTP Response: ${response.body}", null);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.log("TSC Crash: $e, trace: $trace");
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("HTTP Response: ${response.body}", null);
         log("PDA Crash at TSC response: $e, trace: $trace");
         log("HTTP Response: ${response.body}");
       }

@@ -322,7 +322,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _resetApiTimer(initCall: true);
     });
 
-    analytics.logScreenView(screenName: 'profile');
+    analytics?.logScreenView(screenName: 'profile');
 
     routeWithDrawer = true;
     routeName = "profile`";
@@ -2147,6 +2147,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     double size = 22,
     NotificationType? forcedTravelIcon,
   }) {
+    if (Platform.isWindows) return SizedBox.shrink();
+
     int? secondsToGo = 0;
     bool percentageError = false;
     late bool notificationsPending;
@@ -4946,7 +4948,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             );
           }
 
-          _checkIfNotificationsAreCurrent();
+          if (!Platform.isWindows) _checkIfNotificationsAreCurrent();
         } else {
           if (_apiGoodData && _apiRetries < 8) {
             _apiRetries++;
@@ -5244,8 +5246,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e, trace) {
       logToUser("PDA Error at Profile Events: $e, $trace");
-      FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
@@ -5629,6 +5631,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _scheduleNotification(ProfileNotification profileNotification) async {
+    if (Platform.isWindows) return;
+
     int? secondsToNotification;
     late String channelTitle;
     String? channelSubtitle;
@@ -5840,6 +5844,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _retrievePendingNotifications() async {
+    if (Platform.isWindows) return;
+
     bool travel = false;
     bool energy = false;
     bool nerve = false;

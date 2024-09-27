@@ -108,7 +108,7 @@ class TacPageState extends State<TacPage> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
 
-    analytics.logScreenView(screenName: 'tac');
+    analytics?.logScreenView(screenName: 'tac');
 
     routeWithDrawer = true;
     routeName = "chaining_tac";

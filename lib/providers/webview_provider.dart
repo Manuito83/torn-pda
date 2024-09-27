@@ -763,8 +763,8 @@ class WebViewProvider extends ChangeNotifier {
       // NOTE: IOS only stops the current active webview
       currentTab.webViewKey?.currentState?.webViewController?.pauseTimers();
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
@@ -789,8 +789,8 @@ class WebViewProvider extends ChangeNotifier {
         }
       }
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Resuming Webviews");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Resuming Webviews");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
@@ -1301,7 +1301,7 @@ class WebViewProvider extends ChangeNotifier {
 
     final browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
-      analytics.logScreenView(screenName: 'browser_full');
+      analytics?.logScreenView(screenName: 'browser_full');
 
       String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
 
