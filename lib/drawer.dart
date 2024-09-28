@@ -57,8 +57,6 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
-import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
@@ -224,7 +222,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _finishedWithChangelog = _handleChangelog();
       _changelogCompleter.complete(_finishedWithChangelog);
 
-      _finishedWithPreferences = _loadInitPreferences();
+      mainSettingsLoaded = _finishedWithPreferences = _loadInitPreferences();
       _preferencesCompleter.complete(_finishedWithPreferences);
     });
 
@@ -1860,14 +1858,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       });
 
-      // Native user status check and auth time check
-      final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
-      final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
-      await nativeUser.loadPreferences();
-      await nativeAuth.loadPreferences();
-      if (nativeUser.isNativeUserEnabled()) {
-        nativeAuth.authStatus = NativeAuthStatus.loggedIn;
-      }
       // ------------------------
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
