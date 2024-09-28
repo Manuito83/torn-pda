@@ -39,6 +39,24 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.5.1 - Build 445 - 28/09/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.5.0'
+        ..date = '01 OCT 2024'
+        ..features = [
+          "Added configurable tap actions for cooldown alerts",
+          "Added support for basic HTTP authentication",
+          if (Platform.isIOS) "Added icon theme support on iOS 18",
+          "Fixed networth and wallet money in Profile [Kwack]",
+          "Fixed pickpocketing missing when sharing scores",
+          if (Platform.isIOS) "Fixed status bar theme on iOS",
+          "Fixed split screen setup when the app is launched",
+          "Improved mouse compatibility",
+          "Updated platform and packages",
+        ],
+    );
+
     // v3.5.0 - Build 444 - 07/09/2024
     itemList.add(
       ChangeLogItem()

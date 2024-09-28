@@ -87,10 +87,6 @@ class SleepingWebView {
 }
 
 class WebViewProvider extends ChangeNotifier {
-  WebViewProvider() {
-    _restorePreferences();
-  }
-
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
@@ -1550,7 +1546,7 @@ class WebViewProvider extends ChangeNotifier {
     return boxWidget;
   }
 
-  void _restorePreferences() async {
+  Future restorePreferences() async {
     _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
 
     String splitType = await Prefs().getSplitScreenWebview();

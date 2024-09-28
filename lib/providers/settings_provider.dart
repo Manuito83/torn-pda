@@ -371,6 +371,30 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _drugsNotificationTapAction = "ownItems";
+  get drugsNotificationTapAction => _drugsNotificationTapAction;
+  set drugsNotificationTapAction(value) {
+    _drugsNotificationTapAction = value;
+    Prefs().setDrugsNotificationTapAction(_drugsNotificationTapAction);
+    notifyListeners();
+  }
+
+  var _medicalNotificationTapAction = "ownItems";
+  get medicalNotificationTapAction => _medicalNotificationTapAction;
+  set medicalNotificationTapAction(value) {
+    _medicalNotificationTapAction = value;
+    Prefs().setMedicalNotificationTapAction(_medicalNotificationTapAction);
+    notifyListeners();
+  }
+
+  var _boosterNotificationTapAction = "ownItems";
+  get boosterNotificationTapAction => _boosterNotificationTapAction;
+  set boosterNotificationTapAction(value) {
+    _boosterNotificationTapAction = value;
+    Prefs().setBoosterNotificationTapAction(_boosterNotificationTapAction);
+    notifyListeners();
+  }
+
   var _fullScreenByDeepLinkTap = false;
   bool get fullScreenByDeepLinkTap => _fullScreenByDeepLinkTap;
   set fullScreenByDeepLinkTap(bool value) {
@@ -1001,6 +1025,9 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
 
     _lifeNotificationTapAction = await Prefs().getLifeNotificationTapAction();
+    _drugsNotificationTapAction = await Prefs().getDrugsNotificationTapAction();
+    _medicalNotificationTapAction = await Prefs().getMedicalNotificationTapAction();
+    _boosterNotificationTapAction = await Prefs().getBoosterNotificationTapAction();
 
     final refresh = await Prefs().getBrowserRefreshMethod();
     switch (refresh) {
