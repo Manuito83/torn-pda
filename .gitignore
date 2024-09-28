@@ -1,3 +1,7 @@
+# PDA specifics
+/lib/config/
+/lib/torn-pda-native/
+
 # Miscellaneous
 *.class
 *.lock
@@ -76,18 +80,33 @@
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
 
+# Windows
+**/windows/flutter/ephemeral/
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+**/windows/flutter/generated_plugins.cmake
+
+# Linux
+**/linux/flutter/ephemeral/
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+**/linux/flutter/generated_plugins.cmake
+
 # Web related
 lib/generated_plugin_registrant.dart
 
-# Exceptions to above rules.
+# Exceptions to above rules
 /android/key.properties
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !**/ios/**/default.mode1v3
 !**/ios/**/default.mode2v3
 !**/ios/**/default.pbxuser
 !**/ios/**/default.perspectivev3
-/lib/config/
-/lib/torn-pda-native/
+!/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
+!/dev/ci/**/Gemfile.lock
+!.vscode/settings.json
+
+# IDE
 android/.idea/.gitignore
 android/.idea/gradle.xml
 android/.idea/misc.xml
@@ -95,6 +114,8 @@ android/.idea/modules.xml
 android/.idea/vcs.xml
 lib/firebase_options.dart
 ios/firebase_app_id_file.json
+
+# Crash
 /~/
 .crashlytics/dump_syms.exe
 .crashlytics/libgcc_s_seh-1.dll
