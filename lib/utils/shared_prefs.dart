@@ -302,6 +302,9 @@ class Prefs {
 
   // Notification actions
   final String _kLifeNotificationTapAction = "pda_lifeNotificationTapAction";
+  final String _kDrugsNotificationTapAction = "pda_drugsNotificationTapAction";
+  final String _kMedicalNotificationTapAction = "pda_medicalNotificationTapAction";
+  final String _kBoosterNotificationTapAction = "pda_BoosterNotificationTapAction";
 
   // Items
   final String _kItemsSort = "pda_itemssSort";
@@ -3374,6 +3377,42 @@ class Prefs {
   Future<bool> setLifeNotificationTapAction(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kLifeNotificationTapAction, value);
+  }
+
+  //
+
+  Future<String> getDrugsNotificationTapAction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDrugsNotificationTapAction) ?? 'itemsOwn';
+  }
+
+  Future<bool> setDrugsNotificationTapAction(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDrugsNotificationTapAction, value);
+  }
+
+  //
+
+  Future<String> getMedicalNotificationTapAction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kMedicalNotificationTapAction) ?? 'itemsOwn';
+  }
+
+  Future<bool> setMedicalNotificationTapAction(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kMedicalNotificationTapAction, value);
+  }
+
+  //
+
+  Future<String> getBoosterNotificationTapAction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kBoosterNotificationTapAction) ?? 'itemsOwn';
+  }
+
+  Future<bool> setBoosterNotificationTapAction(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kBoosterNotificationTapAction, value);
   }
 
   /// ----------------------------

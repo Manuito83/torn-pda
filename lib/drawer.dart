@@ -785,14 +785,38 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
     } else if (drugs) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#drugs-items";
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.drugsNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#drugs-items';
+      } else if (_settingsProvider.drugsNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs';
+      }
     } else if (medical) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#medical-items";
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.medicalNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#medical-items';
+      } else if (_settingsProvider.medicalNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
+      }
     } else if (booster) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#boosters-items";
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.boosterNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#boosters-items';
+      } else if (_settingsProvider.boosterNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters';
+      }
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
@@ -999,14 +1023,29 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           browserUrl = 'https://www.torn.com/factions.php';
         }
       } else if (payload.contains('drugs')) {
-        launchBrowser = true;
-        browserUrl = 'https://www.torn.com/item.php#drugs-items';
+        if (_settingsProvider.drugsNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#drugs-items';
+        } else if (_settingsProvider.drugsNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs';
+        }
       } else if (payload.contains('medical')) {
-        launchBrowser = true;
-        browserUrl = 'https://www.torn.com/item.php#medical-items';
+        if (_settingsProvider.medicalNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#medical-items';
+        } else if (_settingsProvider.medicalNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
+        }
       } else if (payload.contains('booster')) {
-        launchBrowser = true;
-        browserUrl = 'https://www.torn.com/item.php#boosters-items';
+        if (_settingsProvider.boosterNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#boosters-items';
+        } else if (_settingsProvider.boosterNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters';
+        }
       } else if (payload.contains('hospital')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com';
