@@ -60,9 +60,9 @@ import 'package:windows_notification/windows_notification.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.5.0';
-const String androidCompilation = '444';
-const String iosCompilation = '444';
+const String appVersion = '3.5.1';
+const String androidCompilation = '447';
+const String iosCompilation = '447';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;

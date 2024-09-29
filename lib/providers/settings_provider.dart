@@ -1120,6 +1120,7 @@ class SettingsProvider extends ChangeNotifier {
     _warnAboutExcessEnergyThreshold = await Prefs().getWarnAboutExcessEnergyThreshold();
     _warnAboutChains = await Prefs().getWarnAboutChains();
 
+    _travelEnergyExcessWarning = await Prefs().getTravelEnergyExcessWarning();
     _travelEnergyRangeWarningThreshold = await Prefs().getTravelEnergyRangeWarningRange();
     _travelNerveExcessWarning = await Prefs().getTravelNerveExcessWarning();
     _travelNerveExcessWarningThreshold = await Prefs().getTravelNerveExcessWarningThreshold();
