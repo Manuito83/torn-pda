@@ -43,6 +43,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
   late WebViewProvider _webViewProvider;
 
   final _scrollController = ScrollController();
+  final _scrollControllerRetalsGeneral = ScrollController();
+  final _scrollControllerRetalsNotification = ScrollController();
+  final _scrollControllerRetalsDonor = ScrollController();
 
   @override
   void initState() {
@@ -61,6 +64,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _scrollControllerRetalsGeneral.dispose();
+    _scrollControllerRetalsNotification.dispose();
+    _scrollControllerRetalsDonor.dispose();
     super.dispose();
   }
 
@@ -1476,8 +1482,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
     return AlertDialog(
       title: const Text("Retaliation alerts"),
       content: Scrollbar(
+        controller: _scrollControllerRetalsGeneral,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollControllerRetalsGeneral,
           child: Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Column(
@@ -1549,9 +1557,11 @@ class AlertsSettingsState extends State<AlertsSettings> {
   AlertDialog _retalsNotificationExplanation() {
     return AlertDialog(
       title: const Text("Retaliation notification"),
-      content: const Scrollbar(
+      content: Scrollbar(
+        controller: _scrollControllerRetalsNotification,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollControllerRetalsNotification,
           child: Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
@@ -1590,9 +1600,11 @@ class AlertsSettingsState extends State<AlertsSettings> {
   AlertDialog _retalsDonorExplanation() {
     return AlertDialog(
       title: const Text("Retaliation API Faction permissions donor"),
-      content: const Scrollbar(
+      content: Scrollbar(
+        controller: _scrollControllerRetalsDonor,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollControllerRetalsDonor,
           child: Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(

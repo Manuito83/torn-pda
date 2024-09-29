@@ -340,6 +340,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final GlobalKey _showCasePlayPauseChain = GlobalKey();
   final GlobalKey _showCaseTradeOptions = GlobalKey();
 
+  final _scrollControllerBugsReport = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -458,6 +460,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webViewController?.dispose();
       _findController.dispose();
       _chainWidgetController.dispose();
+      _scrollControllerBugsReport.dispose();
       WidgetsBinding.instance.removeObserver(this);
       super.dispose();
     } catch (e) {
@@ -3907,8 +3910,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         builder: (_) => AlertDialog(
           title: const Text("WARNING"),
           content: Scrollbar(
+            controller: _scrollControllerBugsReport,
             thumbVisibility: true,
             child: SingleChildScrollView(
+              controller: _scrollControllerBugsReport,
               child: Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

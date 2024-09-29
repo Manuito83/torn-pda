@@ -89,6 +89,8 @@ class AwardsPageState extends State<AwardsPage> {
     AwardsSort(type: AwardsSortType.daysDes),
   ];
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -102,6 +104,12 @@ class AwardsPageState extends State<AwardsPage> {
 
     routeWithDrawer = true;
     routeName = "awards";
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -130,6 +138,7 @@ class AwardsPageState extends State<AwardsPage> {
                 if (snapshot.connectionState == ConnectionState.done) {
                   if (_apiSuccess) {
                     return Scrollbar(
+                      controller: _scrollController,
                       child: Column(
                         children: [
                           Expanded(
@@ -294,6 +303,7 @@ class AwardsPageState extends State<AwardsPage> {
 
   ListView _awardsListView() {
     return ListView.builder(
+      controller: _scrollController,
       // We need to paint more pixels in advance for to avoid jerks in the scrollbar
       cacheExtent: 10000,
       itemCount: _allAwardsCards.length,

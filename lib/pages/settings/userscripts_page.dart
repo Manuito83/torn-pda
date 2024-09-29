@@ -34,6 +34,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   bool _firstTimeNotAccepted = false;
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -62,6 +64,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "userscripts") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -667,8 +675,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     return AlertDialog(
       title: const Text("DISCLAIMER"),
       content: Scrollbar(
+        controller: _scrollController,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Column(

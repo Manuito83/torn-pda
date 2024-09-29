@@ -373,6 +373,16 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         builder: BotToastInit(),
         navigatorObservers: [BotToastNavigatorObserver()],
+        scrollBehavior: !Platform.isWindows
+            ? null
+            : const MaterialScrollBehavior().copyWith(
+                dragDevices: {
+                  PointerDeviceKind.mouse,
+                  PointerDeviceKind.touch,
+                  PointerDeviceKind.stylus,
+                  PointerDeviceKind.unknown,
+                },
+              ),
         home: FutureBuilder(
           future: _mainBrowserPreferencesLoaded,
           builder: (context, snapshot) {

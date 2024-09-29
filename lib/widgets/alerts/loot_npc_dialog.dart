@@ -32,11 +32,19 @@ class LootAlertsDialogState extends State<LootAlertsDialog> {
 
   Future? _npcsInitialised;
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _firebaseUserModel = widget.userModel;
     _npcsInitialised = _initialiseNpcs();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,8 +54,10 @@ class LootAlertsDialogState extends State<LootAlertsDialog> {
       content: SizedBox(
         width: double.maxFinite,
         child: Scrollbar(
+          controller: _scrollController,
           thumbVisibility: true,
           child: SingleChildScrollView(
+            controller: _scrollController,
             child: Column(
               children: [
                 const Text(

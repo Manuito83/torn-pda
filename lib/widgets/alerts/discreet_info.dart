@@ -7,18 +7,28 @@ class DiscreetInfo extends StatefulWidget {
 }
 
 class DiscreetInfoState extends State<DiscreetInfo> {
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Discreet notifications"),
-      content: const Scrollbar(
+      content: Scrollbar(
+        controller: _scrollController,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(

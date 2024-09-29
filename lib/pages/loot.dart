@@ -39,7 +39,6 @@ import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
-import 'package:windows_notification/notification_message.dart';
 
 enum LootTimeType {
   dateTime,
