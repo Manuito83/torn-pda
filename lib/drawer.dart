@@ -57,8 +57,6 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
-import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
-import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
@@ -224,7 +222,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _finishedWithChangelog = _handleChangelog();
       _changelogCompleter.complete(_finishedWithChangelog);
 
-      _finishedWithPreferences = _loadInitPreferences();
+      mainSettingsLoaded = _finishedWithPreferences = _loadInitPreferences();
       _preferencesCompleter.complete(_finishedWithPreferences);
     });
 
@@ -367,13 +365,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Note: orientation here is taken BEFORE the change
       SystemChrome.setSystemUIOverlayStyle(
         SystemUiOverlayStyle(
-          statusBarColor: _themeProvider!.statusBar,
-          systemNavigationBarColor: _themeProvider!.statusBar,
-          systemNavigationBarIconBrightness: Brightness.light,
-          statusBarIconBrightness: Brightness.light,
-          // iOS
-          statusBarBrightness: Brightness.dark,
-        ),
+            statusBarColor: _themeProvider!.statusBar,
+            systemNavigationBarColor: _themeProvider!.statusBar,
+            systemNavigationBarIconBrightness: Brightness.light,
+            statusBarIconBrightness: Brightness.light,
+
+            // iOS
+            statusBarBrightness: _webViewProvider.browserShowInForeground
+                ? Brightness.dark
+                : MediaQuery.orientationOf(context) == Orientation.landscape
+                    ? _themeProvider!.currentTheme == AppTheme.light
+                        ? Brightness.light
+                        : Brightness.dark
+                    : Brightness.dark),
       );
     });
   }
@@ -524,7 +528,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     try {
       // Check initial link if app was in cold state (terminated)
-      final appLink = await _appLinks.getInitialAppLink();
+      final appLink = await _appLinks.getInitialLink();
       if (appLink != null) {
         log('getInitialAppLink: $appLink');
         _deepLinkHandle(appLink.toString());
@@ -779,14 +783,38 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowser = true;
       browserUrl = "https://www.torn.com/gym.php";
     } else if (drugs) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#drugs-items";
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.drugsNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#drugs-items';
+      } else if (_settingsProvider.drugsNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs';
+      }
     } else if (medical) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#medical-items";
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.medicalNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#medical-items';
+      } else if (_settingsProvider.medicalNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
+      }
     } else if (booster) {
-      launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#boosters-items";
+      // Important: await preferences before using SettingsProvider (in case app is launching)
+      await _changelogCompleter.future;
+
+      if (_settingsProvider.boosterNotificationTapAction == "itemsOwn") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/item.php#boosters-items';
+      } else if (_settingsProvider.boosterNotificationTapAction == "itemsFaction") {
+        launchBrowser = true;
+        browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters';
+      }
     } else if (refills) {
       launchBrowser = true;
       browserUrl = "https://www.torn.com/points.php";
@@ -993,14 +1021,29 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           browserUrl = 'https://www.torn.com/factions.php';
         }
       } else if (payload.contains('drugs')) {
-        launchBrowser = true;
-        browserUrl = 'https://www.torn.com/item.php#drugs-items';
+        if (_settingsProvider.drugsNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#drugs-items';
+        } else if (_settingsProvider.drugsNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs';
+        }
       } else if (payload.contains('medical')) {
-        launchBrowser = true;
-        browserUrl = 'https://www.torn.com/item.php#medical-items';
+        if (_settingsProvider.medicalNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#medical-items';
+        } else if (_settingsProvider.medicalNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
+        }
       } else if (payload.contains('booster')) {
-        launchBrowser = true;
-        browserUrl = 'https://www.torn.com/item.php#boosters-items';
+        if (_settingsProvider.boosterNotificationTapAction == "itemsOwn") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/item.php#boosters-items';
+        } else if (_settingsProvider.boosterNotificationTapAction == "itemsFaction") {
+          launchBrowser = true;
+          browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters';
+        }
       } else if (payload.contains('hospital')) {
         launchBrowser = true;
         browserUrl = 'https://www.torn.com';
@@ -1486,7 +1529,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                           totalSwitches: 3,
                           animate: true,
                           animationDuration: 500,
-                          icons: const [
+                          icons: [
                             FontAwesome.sun_o,
                             FontAwesome.moon_o,
                             MdiIcons.ghost,
@@ -1548,8 +1591,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                                   systemNavigationBarColor: _themeProvider!.statusBar,
                                   systemNavigationBarIconBrightness: Brightness.light,
                                   statusBarIconBrightness: Brightness.light,
-                                  // iOS
-                                  statusBarBrightness: Brightness.dark,
                                 ),
                               );
                             });
@@ -1706,21 +1747,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case 1:
         return const Icon(Icons.local_airport);
       case 2:
-        return const Icon(MdiIcons.linkVariant);
+        return Icon(MdiIcons.linkVariant);
       case 3:
-        return const Icon(MdiIcons.knifeMilitary);
+        return Icon(MdiIcons.knifeMilitary);
       case 4:
         return const Icon(Icons.people);
       case 5:
-        return const Icon(MdiIcons.cctv);
+        return Icon(MdiIcons.cctv);
       case 6:
-        return const Icon(MdiIcons.trophy);
+        return Icon(MdiIcons.trophy);
       case 7:
-        return const Icon(MdiIcons.packageVariantClosed);
+        return Icon(MdiIcons.packageVariantClosed);
       case 8:
         return const Icon(MaterialCommunityIcons.sword_cross);
       case 9:
-        return const Icon(MdiIcons.bankTransfer);
+        return Icon(MdiIcons.bankTransfer);
       case 10:
         return const Icon(Icons.notifications_active);
       case 11:
@@ -1817,14 +1858,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       });
 
-      // Native user status check and auth time check
-      final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
-      final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
-      await nativeUser.loadPreferences();
-      await nativeAuth.loadPreferences();
-      if (nativeUser.isNativeUserEnabled()) {
-        nativeAuth.authStatus = NativeAuthStatus.loggedIn;
-      }
       // ------------------------
 
       // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
@@ -2136,7 +2169,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(MdiIcons.chartLine, color: Colors.green),

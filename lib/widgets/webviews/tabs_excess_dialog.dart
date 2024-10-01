@@ -71,7 +71,7 @@ class TabsExcessDialog extends StatelessWidget {
                 child: CircleAvatar(
                   backgroundColor: themeProvider.mainText,
                   radius: 22,
-                  child: const SizedBox(
+                  child: SizedBox(
                     height: 28,
                     width: 28,
                     child: Icon(MdiIcons.tabRemove),

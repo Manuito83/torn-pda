@@ -232,7 +232,7 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: _inputCashGain ? const Icon(MdiIcons.percent) : const Icon(MdiIcons.cash),
+                          icon: _inputCashGain ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
                           onPressed: () {
                             setState(() {
                               _inputCashGain = !_inputCashGain;
@@ -388,7 +388,7 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: _inputCashLoss ? const Icon(MdiIcons.percent) : const Icon(MdiIcons.cash),
+                          icon: _inputCashLoss ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
                           onPressed: () {
                             setState(() {
                               _inputCashLoss = !_inputCashLoss;

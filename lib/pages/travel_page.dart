@@ -72,7 +72,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
     _ticker = Timer.periodic(const Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics.setCurrentScreen(screenName: 'travel');
+    analytics.logScreenView(screenName: 'travel');
 
     routeWithDrawer = true;
     routeName = "travel";

@@ -158,7 +158,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                           textAlign: TextAlign.center,
                         ),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             MdiIcons.cameraPlusOutline,
                             size: 30,
                           ),
@@ -209,7 +209,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
       ),
       actions: <Widget>[
         IconButton(
-          icon: const Icon(MdiIcons.cameraPlusOutline),
+          icon: Icon(MdiIcons.cameraPlusOutline),
           color: _s.stakeouts.length >= 15 ? Colors.grey : Colors.white,
           onPressed: () {
             if (_s.stakeouts.length >= 15) {
@@ -392,7 +392,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                     child: CircleAvatar(
                       backgroundColor: Colors.black,
                       radius: 24,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 28,
                         width: 28,
                         child: Icon(

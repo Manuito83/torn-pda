@@ -691,7 +691,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                                 statusP.statusColorIsShown ? 12 : 0,
                                               ),
                                               child: _webViewProvider.currentUiMode == UiMode.window
-                                                  ? const Icon(MdiIcons.dotsHorizontal)
+                                                  ? Icon(MdiIcons.dotsHorizontal)
                                                   : Icon(
                                                       MdiIcons.dotsHorizontalCircleOutline,
                                                       color: Colors.orange[800],

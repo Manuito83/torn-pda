@@ -132,7 +132,7 @@ class SharePriceCardState extends State<SharePriceCard> {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(MdiIcons.vectorPolylineEdit),
+            icon: Icon(MdiIcons.vectorPolylineEdit),
             onPressed: () {
               _showSharePriceDialog();
             },

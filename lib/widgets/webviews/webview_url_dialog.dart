@@ -126,7 +126,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
                           ),
-                          child: const Row(
+                          child: Row(
                             children: [
                               Icon(MdiIcons.fencing, size: 20),
                               SizedBox(width: 5),
@@ -492,7 +492,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: const Icon(MdiIcons.minus),
+                                    child: Icon(MdiIcons.minus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         final InAppWebViewSettings newOptions =
@@ -514,7 +514,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: const Icon(MdiIcons.refresh),
+                                    child: Icon(MdiIcons.refresh),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         final InAppWebViewSettings newOptions =
@@ -530,7 +530,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: const Icon(MdiIcons.plus),
+                                    child: Icon(MdiIcons.plus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         final InAppWebViewSettings newSettings =

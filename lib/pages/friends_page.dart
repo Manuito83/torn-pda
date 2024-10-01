@@ -56,7 +56,7 @@ class FriendsPageState extends State<FriendsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
-    analytics.setCurrentScreen(screenName: 'friends');
+    analytics.logScreenView(screenName: 'friends');
 
     routeWithDrawer = true;
     routeName = "friends";
@@ -103,8 +103,8 @@ class FriendsPageState extends State<FriendsPage> {
               minWidth: 1.0,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                  backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
+                  shape: WidgetStateProperty.all<OutlinedBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                       side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -126,8 +126,8 @@ class FriendsPageState extends State<FriendsPage> {
               minWidth: 1.0,
               child: ElevatedButton(
                 style: ButtonStyle(
-                  backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider.secondBackground),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                  backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
+                  shape: WidgetStateProperty.all<OutlinedBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(18),
                       side: const BorderSide(width: 2, color: Colors.blueGrey),

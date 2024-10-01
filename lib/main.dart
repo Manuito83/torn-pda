@@ -58,9 +58,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.5.0';
-const String androidCompilation = '444';
-const String iosCompilation = '444';
+const String appVersion = '3.5.1';
+const String androidCompilation = '447';
+const String iosCompilation = '447';
 
 // TODO (App release)
 const bool pointFunctionsEmulatorToLocal = false;
@@ -83,6 +83,8 @@ final StreamController<String?> selectNotificationStream = StreamController<Stri
 bool exactAlarmsPermissionAndroid = false;
 
 bool syncTheme = false;
+
+Future? mainSettingsLoaded;
 
 class ReceivedNotification {
   ReceivedNotification({
@@ -253,6 +255,9 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
+
+  late Future _mainBrowserPreferencesLoaded;
+
   late Widget _mainBrowser;
 
   @override
@@ -260,7 +265,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
 
     // Handle home widget
     if (Platform.isAndroid) {
@@ -290,23 +295,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeMetrics() async {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
-      final bool splitNowActive = _webViewProvider.webViewSplitActive;
-      final bool splitUserEnabled = _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
-      final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
-
-      if (!splitNowActive && splitUserEnabled && screenIsWide) {
-        _webViewProvider.webViewSplitActive = true;
-        _webViewProvider.browserForegroundWithSplitTransition();
-      } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
-        _webViewProvider.webViewSplitActive = false;
-        if (_webViewProvider.splitScreenRevertsToApp) {
-          _webViewProvider.browserShowInForeground = false;
-        } else {
-          _webViewProvider.browserShowInForeground = true;
-        }
-      }
-    });
+    // Assess the split screen condition after the device or window metrics change
+    _setSplitScreenPosition();
   }
 
   @override
@@ -346,8 +336,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         systemNavigationBarColor: _themeProvider.statusBar,
         systemNavigationBarIconBrightness: Brightness.light,
         statusBarIconBrightness: Brightness.light,
+
         // iOS
-        statusBarBrightness: Brightness.dark,
+        statusBarBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
+            ? _themeProvider.currentTheme == AppTheme.light
+                ? Brightness.light
+                : Brightness.dark
+            : Brightness.dark,
       ),
     );
 
@@ -367,63 +362,72 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         builder: BotToastInit(),
         navigatorObservers: [BotToastNavigatorObserver()],
-        home: Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
-          // Build standard or split-screen home
-          Widget home = Stack(
-            children: [
-              homeDrawer,
-              _mainBrowser,
-              const AppBorder(),
-            ],
-          );
+        home: FutureBuilder(
+          future: _mainBrowserPreferencesLoaded,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState != ConnectionState.done) {
+              return Container(color: _themeProvider.secondBackground);
+            }
 
-          if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
-              wProvider.webViewSplitActive &&
-              screenIsWide) {
-            home = Stack(
-              children: [
-                Row(
-                  children: [
-                    Flexible(child: homeDrawer),
-                    Flexible(child: _mainBrowser),
-                  ],
-                ),
-                const AppBorder(),
-              ],
-            );
-          } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
-              wProvider.webViewSplitActive &&
-              screenIsWide) {
-            home = Stack(
-              children: [
-                Row(
-                  children: [
-                    Flexible(child: _mainBrowser),
-                    Flexible(child: homeDrawer),
-                  ],
-                ),
-                const AppBorder(),
-              ],
-            );
-          }
+            return Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
+              // Build standard or split-screen home
+              Widget home = Stack(
+                children: [
+                  homeDrawer,
+                  _mainBrowser,
+                  const AppBorder(),
+                ],
+              );
 
-          return PopScope(
-            // Only exit app if user allows and we are not in the browser
-            canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
-            onPopInvoked: (didPop) async {
-              if (didPop) return;
-              // If we can't pop, decide if we open the drawer or go backwards in the browser
-              final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
-              if (w.browserShowInForeground) {
-                // Browser is in front, delegate the call
-                w.tryGoBack();
-              } else {
-                _openDrawerIfPossible();
+              if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
+                  wProvider.webViewSplitActive &&
+                  screenIsWide) {
+                home = Stack(
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(child: homeDrawer),
+                        Flexible(child: _mainBrowser),
+                      ],
+                    ),
+                    const AppBorder(),
+                  ],
+                );
+              } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
+                  wProvider.webViewSplitActive &&
+                  screenIsWide) {
+                home = Stack(
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(child: _mainBrowser),
+                        Flexible(child: homeDrawer),
+                      ],
+                    ),
+                    const AppBorder(),
+                  ],
+                );
               }
-            },
-            child: home,
-          );
-        }),
+
+              return PopScope(
+                // Only exit app if user allows and we are not in the browser
+                canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
+                onPopInvokedWithResult: (didPop, result) async {
+                  if (didPop) return;
+                  // If we can't pop, decide if we open the drawer or go backwards in the browser
+                  final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+                  if (w.browserShowInForeground) {
+                    // Browser is in front, delegate the call
+                    w.tryGoBack();
+                  } else {
+                    _openDrawerIfPossible();
+                  }
+                },
+                child: home,
+              );
+            });
+          },
+        ),
       ),
     );
   }
@@ -435,6 +439,46 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       s.willPopShouldOpenDrawerStream.add(true);
     } else {
       s.willPopShouldGoBackStream.add(true);
+    }
+  }
+
+  void _setSplitScreenPosition() {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      final bool splitNowActive = _webViewProvider.webViewSplitActive;
+      final bool splitUserEnabled = _webViewProvider.splitScreenPosition != WebViewSplitPosition.off;
+      final bool screenIsWide = MediaQuery.sizeOf(context).width >= 800;
+
+      if (!splitNowActive && splitUserEnabled && screenIsWide) {
+        _webViewProvider.webViewSplitActive = true;
+        _webViewProvider.browserForegroundWithSplitTransition();
+      } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
+        _webViewProvider.webViewSplitActive = false;
+        if (_webViewProvider.splitScreenRevertsToApp) {
+          _webViewProvider.browserShowInForeground = false;
+        } else {
+          _webViewProvider.browserShowInForeground = true;
+        }
+      }
+    });
+  }
+
+  /// This is mostly needed in case we start the app with split screen or directly with the browser as main view
+  Future _loadMainBrowserPreferences() async {
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    await _webViewProvider.restorePreferences();
+
+    // Assess the split screen condition right after launch, in case the device is already in wide screen
+    // position (needed for Android & Windows). This is also needed if the screen is splitted in order to avoid
+    // loading the Drawer and disposing it immediately while its prefs are being retrieved
+    _setSplitScreenPosition();
+
+    // Native user status check and auth time check
+    final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
+    final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+    await nativeUser.loadPreferences();
+    await nativeAuth.loadPreferences();
+    if (nativeUser.isNativeUserEnabled()) {
+      nativeAuth.authStatus = NativeAuthStatus.loggedIn;
     }
   }
 }

@@ -377,7 +377,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           },
         ),
         IconButton(
-          icon: const Icon(MdiIcons.eyeRemoveOutline),
+          icon: Icon(MdiIcons.eyeRemoveOutline),
           onPressed: _hiddenStocks.isEmpty
               ? null
               : () {
@@ -443,7 +443,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
-                    child: const Icon(
+                    child: Icon(
                       MdiIcons.filterVariant,
                       size: 30,
                     ),

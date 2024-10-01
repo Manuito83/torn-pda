@@ -94,7 +94,7 @@ class LootPageState extends State<LootPage> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _getInitialLootInformation = _getLoot();
     _getLootRangers();
-    analytics.setCurrentScreen(screenName: 'loot');
+    analytics.logScreenView(screenName: 'loot');
 
     routeWithDrawer = true;
     routeName = "loot";
@@ -237,7 +237,7 @@ class LootPageState extends State<LootPage> {
           const SizedBox.shrink(),
         if (_apiSuccess)
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               MdiIcons.timerSandEmpty,
             ),
             onPressed: () {

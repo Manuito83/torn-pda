@@ -141,7 +141,7 @@ class JailRecordDialog extends StatelessWidget {
               child: CircleAvatar(
                 backgroundColor: themeProvider.secondBackground,
                 radius: 22,
-                child: const SizedBox(
+                child: SizedBox(
                   height: 34,
                   width: 34,
                   child: Icon(MdiIcons.alarmPanelOutline),

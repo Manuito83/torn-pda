@@ -567,7 +567,7 @@ class RetalCardState extends State<RetalCard> {
       } else {
         _lifeTicker?.cancel();
         lifeText = "OUT";
-        hospitalWarning = const Icon(
+        hospitalWarning = Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,

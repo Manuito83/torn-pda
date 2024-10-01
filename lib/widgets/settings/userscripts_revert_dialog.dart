@@ -121,7 +121,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                 child: CircleAvatar(
                   backgroundColor: _themeProvider.secondBackground,
                   radius: 22,
-                  child: const SizedBox(
+                  child: SizedBox(
                     height: 34,
                     width: 34,
                     child: Icon(MdiIcons.backupRestore),

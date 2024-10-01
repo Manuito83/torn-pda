@@ -245,7 +245,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                   children: [
                     if (script.updateStatus == UserScriptUpdateStatus.noRemote)
                       GestureDetector(
-                        child: const Icon(
+                        child: Icon(
                           MdiIcons.alphaC,
                           color: Colors.grey,
                           size: 20,
@@ -321,7 +321,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           })
                     else if (script.updateStatus == UserScriptUpdateStatus.error)
                       GestureDetector(
-                          child: const Icon(MdiIcons.earthRemove, color: Colors.red, size: 20),
+                          child: Icon(MdiIcons.earthRemove, color: Colors.red, size: 20),
                           onTap: () async {
                             BotToast.showText(
                               text: "An error occurred while checking for updates. Please try again later.",
@@ -347,7 +347,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               ))
                     else
                       GestureDetector(
-                        child: const Icon(MdiIcons.helpCircle, color: Colors.blue, size: 20),
+                        child: Icon(MdiIcons.helpCircle, color: Colors.blue, size: 20),
                         onTap: () async {
                           BotToast.showText(
                             text: "The update status of this script could not be determined.",
@@ -421,7 +421,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(
+          icon: Icon(
             MdiIcons.backupRestore,
           ),
           onPressed: () async {

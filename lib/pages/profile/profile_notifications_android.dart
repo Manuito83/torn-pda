@@ -297,7 +297,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
                       },
                     ),
                     GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
+                      child: Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,
@@ -353,7 +353,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
                       },
                     ),
                     GestureDetector(
-                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
+                      child: Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,

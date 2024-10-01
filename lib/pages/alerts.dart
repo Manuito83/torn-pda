@@ -52,7 +52,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
       firestore.getUserProfile(),
       _getFactionApiAccess(),
     ]);
-    analytics.setCurrentScreen(screenName: 'alerts');
+    analytics.logScreenView(screenName: 'alerts');
 
     routeWithDrawer = true;
     routeName = "alerts";
@@ -166,96 +166,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
-                      if (_firebaseUserModel!.lifeNotification!)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Flexible(
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.keyboard_arrow_right_outlined),
-                                    Flexible(
-                                      child: const Padding(
-                                        padding: EdgeInsets.only(left: 10),
-                                        child: Text(
-                                          "Notification tap opens",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              DropdownButton<String>(
-                                value: _settingsProvider.lifeNotificationTapAction,
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: "app",
-                                    child: SizedBox(
-                                      width: 110,
-                                      child: Text(
-                                        "App",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "itemsOwn",
-                                    child: SizedBox(
-                                      width: 110,
-                                      child: Text(
-                                        "Own items",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "itemsFaction",
-                                    child: SizedBox(
-                                      width: 110,
-                                      child: Text(
-                                        "Faction items",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: "factionMain",
-                                    child: SizedBox(
-                                      width: 110,
-                                      child: Text(
-                                        "Faction page",
-                                        textAlign: TextAlign.right,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                onChanged: (value) async {
-                                  setState(() {
-                                    _settingsProvider.lifeNotificationTapAction = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
+                      if (_firebaseUserModel!.lifeNotification!) _lifeTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
                         child: CheckboxListTile(
@@ -384,6 +295,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      if (_firebaseUserModel!.drugsNotification!) _drugsTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: CheckboxListTile(
@@ -407,6 +319,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      if (_firebaseUserModel!.medicalNotification!) _medicalTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: CheckboxListTile(
@@ -430,6 +343,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      if (_firebaseUserModel!.boosterNotification!) _boosterTapSelector(),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: CheckboxListTile(
@@ -1077,6 +991,335 @@ class AlertsSettingsState extends State<AlertsSettings> {
             }
           },
         ),
+      ),
+    );
+  }
+
+  Widget _lifeTapSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Flexible(
+            child: Row(
+              children: [
+                Icon(Icons.keyboard_arrow_right_outlined),
+                Flexible(
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text(
+                      "Notification tap opens",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            value: _settingsProvider.lifeNotificationTapAction,
+            items: const [
+              DropdownMenuItem(
+                value: "app",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "App",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsOwn",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Own items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsFaction",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Faction items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "factionMain",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Faction page",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) async {
+              setState(() {
+                _settingsProvider.lifeNotificationTapAction = value;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _drugsTapSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Flexible(
+            child: Row(
+              children: [
+                Icon(Icons.keyboard_arrow_right_outlined),
+                Flexible(
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text(
+                      "Notification tap opens",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            value: _settingsProvider.drugsNotificationTapAction,
+            items: const [
+              DropdownMenuItem(
+                value: "app",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "App",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsOwn",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Own items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsFaction",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Faction items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) async {
+              setState(() {
+                _settingsProvider.drugsNotificationTapAction = value;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _medicalTapSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Flexible(
+            child: Row(
+              children: [
+                Icon(Icons.keyboard_arrow_right_outlined),
+                Flexible(
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text(
+                      "Notification tap opens",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            value: _settingsProvider.medicalNotificationTapAction,
+            items: const [
+              DropdownMenuItem(
+                value: "app",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "App",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsOwn",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Own items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsFaction",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Faction items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) async {
+              setState(() {
+                _settingsProvider.medicalNotificationTapAction = value;
+              });
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _boosterTapSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Flexible(
+            child: Row(
+              children: [
+                Icon(Icons.keyboard_arrow_right_outlined),
+                Flexible(
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text(
+                      "Notification tap opens",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            value: _settingsProvider.boosterNotificationTapAction,
+            items: const [
+              DropdownMenuItem(
+                value: "app",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "App",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsOwn",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Own items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "itemsFaction",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Faction items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) async {
+              setState(() {
+                _settingsProvider.boosterNotificationTapAction = value;
+              });
+            },
+          ),
+        ],
       ),
     );
   }

@@ -20,108 +20,106 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  android_intent_plus: 5.0.2
-  animations: 2.0.2
+  android_intent_plus: ^5.1.0
+  animations: ^2.0.11
   app_badge_plus: 1.1.5
-  app_links: 4.0.1
+  app_links: ^6.3.2
   app_settings: 5.1.1
-  audioplayers: 6.0.0
+  audioplayers: ^6.1.0
   bot_toast: 4.1.3
-  cloud_firestore: 4.16.1
-  cloud_functions: 4.7.1
-  connectivity_plus: 5.0.2
-  cookie_jar: 3.0.1
-  crypto: 3.0.3
+  cloud_firestore: ^5.4.0
+  cloud_functions: ^5.1.0
+  connectivity_plus: ^6.0.5
+  cookie_jar: ^4.0.8
+  crypto: ^3.0.5
   csv: 6.0.0
-  cupertino_icons: 1.0.2
-  dart_ping: 8.0.1
-  dart_ping_ios: 3.0.0
+  cupertino_icons: ^1.0.8
+  dart_ping: ^9.0.1
+  dart_ping_ios: ^4.0.2
   dbcrypt: 2.0.0
-  dio: 5.0.3
-  device_info_plus: 9.1.2
-  dotted_border: 2.0.0+2
-  easy_rich_text: 2.0.0
+  dio: ^5.7.0
+  device_info_plus: ^10.1.2
+  dotted_border: ^2.1.0
+  easy_rich_text: ^2.1.0
   expandable: 5.0.1
   ## ffi ^ to avoid strut errors
   ## ffi: ^1.0.0
-  firebase_analytics: 10.10.1
-  firebase_auth: 4.19.1
-  firebase_core: 2.29.0
-  firebase_crashlytics: 3.5.1
-  firebase_database: 10.5.1
-  firebase_messaging: 14.8.1
-  firebase_remote_config: 4.4.1
-  fl_chart: 0.68.0
-  flex_color_picker: 3.5.0
-  flutter_font_icons: 2.2.5
-  #flutter_inappwebview: 6.0.0
-  flutter_local_notifications: 17.1.2
-  flutter_native_splash: 2.4.0
-  flutter_secure_storage: 9.2.1
-  flutter_slidable: 3.0.1
+  firebase_analytics: ^11.3.0
+  firebase_auth: ^5.2.0
+  firebase_core: ^3.4.0
+  firebase_crashlytics: ^4.1.0
+  firebase_database: ^11.1.1
+  firebase_messaging: ^15.1.2
+  firebase_remote_config: ^5.1.0
+  fl_chart: ^0.69.0
+  flex_color_picker: ^3.5.1
+  flutter_font_icons: ^2.2.7
+  flutter_inappwebview: 6.1.2
+  #flutter_inappwebview: any
+  flutter_local_notifications: ^17.2.2
+  flutter_native_splash: ^2.4.1
+  flutter_secure_storage: ^9.2.2
+  flutter_slidable: ^3.1.1
   flutter_speed_dial: 7.0.0
   flutter_xlider: 3.5.0
   workmanager: 0.5.2
-  font_awesome_flutter: 10.4.0
+  font_awesome_flutter: ^10.7.0
   # Temporary as per https://github.com/jonataslaw/getx/issues/3100
-  get:
-    git:
-      url: https://github.com/Aniketkhote/getx.git
-      ref: master
+  get: ^5.0.0-release-candidate-9.2.1
   home_widget:
     git:
       url: https://github.com/Manuito83/home_widget.git
       ## TODO: merge pda-dev into pda-stable and change ref
       ref: 8ecac9ede8c4a06a9409848da339f181169300db
   html: 0.15.4
-  http: 0.13.6
-  lints: 2.1.1
+  http: ^1.2.2
+  lints: ^4.0.0
   ## flutter pub run import_sorter:main
   import_sorter: 4.6.0
-  intl: 0.17.0
-  material_design_icons_flutter: 5.0.5955-rc.1 ## Breaking changes in minor versions
-  path_provider: 2.1.3
-  percent_indicator: 4.2.2
+  intl: ^0.19.0
+  material_design_icons_flutter: ^7.0.7296 ## Breaking changes in minor versions
+  path_provider: ^2.1.4
+  percent_indicator: ^4.2.3
   provider: 6.1.2
   pull_to_refresh: 2.0.0
-  quick_actions: 1.0.5
+  quick_actions: ^1.0.7
   receive_intent: 0.2.5
-  rxdart: 0.27.7
-  share_plus: 9.0.0
-  shared_preferences: 2.2.3
+  rxdart: ^0.28.0
+  share_plus: ^10.0.0
+  shared_preferences: ^2.3.2
   showcaseview: 3.0.0
   sliding_up_panel: 2.0.0+1
   timeline_tile: 2.0.0
-  timezone: 0.9.1
-  toastification: 2.0.0
+  timezone: ^0.9.4
+  toastification: ^2.2.0
   toggle_switch: 2.3.0
-  url_launcher: 6.2.1
-  vibration: 1.9.0
-  wakelock_plus: 1.2.4
-  webview_flutter: 4.8.0
+  url_launcher: ^6.3.0
+  vibration: ^2.0.0
+  wakelock_plus: ^1.2.8
+  webview_flutter: ^4.9.0
   collection: 1.18.0
 
-dependency_overrides:
-  flutter_inappwebview:
-    git:
-      url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 22cbcd5d475629e7147745513fe037e826983a5a
-      path: ./flutter_inappwebview
-  flutter_inappwebview_platform_interface:
-    git:
-      url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 22cbcd5d475629e7147745513fe037e826983a5a
-      path: ./flutter_inappwebview_platform_interface
-  flutter_inappwebview_android:
-    git:
-      url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 22cbcd5d475629e7147745513fe037e826983a5a
-      path: ./flutter_inappwebview_android
-  flutter_inappwebview_ios:
-    git:
-      url: https://github.com/Manuito83/flutter_inappwebview.git
-      ref: 22cbcd5d475629e7147745513fe037e826983a5a
-      path: ./flutter_inappwebview_ios
+#dependency_overrides: 
+  #flutter_inappwebview:
+  #  git:
+  #    url: https://github.com/Manuito83/flutter_inappwebview.git
+  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
+  #    path: ./flutter_inappwebview
+  #flutter_inappwebview_platform_interface:
+  #  git:
+  #    url: https://github.com/Manuito83/flutter_inappwebview.git
+  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
+  #    path: ./flutter_inappwebview_platform_interface
+  #flutter_inappwebview_android:
+  #  git:
+  #    url: https://github.com/Manuito83/flutter_inappwebview.git
+  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
+  #    path: ./flutter_inappwebview_android
+  #flutter_inappwebview_ios:
+  #  git:
+  #    url: https://github.com/Manuito83/flutter_inappwebview.git
+  #    ref: 22cbcd5d475629e7147745513fe037e826983a5a
+  #    path: ./flutter_inappwebview_ios
 
 dev_dependencies:
   flutter_launcher_icons: 0.13.1

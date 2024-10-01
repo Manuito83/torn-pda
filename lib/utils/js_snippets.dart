@@ -1298,37 +1298,60 @@ String ocNNB({required String members, required int playerID}) {
 String barsDoubleClickRedirect() {
   return '''
     (function() {
-      
       function addBarsListener() {
         function onEnergyClick(event) {
           window.open("https://www.torn.com/gym.php", "_self");
         }
-        
+
         function onNerveClick(event) {
           window.open("https://www.torn.com/crimes.php", "_self");
         }
-        
+
         var savedFound = document.querySelector(".pdaListenerBarsDoubleClick") !== null;
 
         // Get all bar elements
         let barElements = Array.from(document.querySelectorAll('[class^="bar___"]'));
 
-        // Find the first barElement that contains a class with 'energy___' and 'bar-'
-        let energyBar = barElements.find(el => 
+        // Find the energy bar element
+        let energyBar = barElements.find(el =>
           el.className.includes('energy___') && el.className.includes('bar-')
         );
-        
-        // Find the first barElement that contains a class with 'energy___' and 'bar-'
-        let nerveBar = barElements.find(el => 
+
+        // Find the nerve bar element
+        let nerveBar = barElements.find(el =>
           el.className.includes('nerve___') && el.className.includes('bar-')
         );
-        
+
         if (!savedFound && energyBar !== null && nerveBar !== null) {
           var save = document.querySelector(".content-wrapper");
           save.classList.add("pdaListenerBarsDoubleClick");
-          energyBar.addEventListener("dblclick", onEnergyClick);
-          nerveBar.addEventListener("dblclick", onNerveClick);
-        } 
+
+          // Inject CSS to prevent text selection
+          var style = document.createElement('style');
+          style.type = 'text/css';
+          style.innerHTML = `
+            .pda-bar-element {
+              user-select: none; /* Standard */
+              -webkit-user-select: none; /* Safari and Chrome */
+              -ms-user-select: none; /* IE and Edge */
+              -moz-user-select: none; /* Firefox */
+            }
+          `;
+          document.head.appendChild(style);
+
+          energyBar.classList.add('pda-bar-element');
+          nerveBar.classList.add('pda-bar-element');
+          
+          function preventSelection(event) {
+            event.preventDefault();
+          }
+
+          energyBar.addEventListener('selectstart', preventSelection);
+          nerveBar.addEventListener('selectstart', preventSelection);
+
+          energyBar.addEventListener('dblclick', onEnergyClick);
+          nerveBar.addEventListener('dblclick', onNerveClick);
+        }
       }
 
       let pass = 0;
@@ -1346,7 +1369,6 @@ String barsDoubleClickRedirect() {
         }
 
       }, 300);
-
     })();
   ''';
 }

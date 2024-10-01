@@ -409,7 +409,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       hideChatIcon = Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: const Icon(MdiIcons.chatOutline),
+          child: Icon(MdiIcons.chatOutline),
           onTap: () async {
             _webViewController!.runJavaScript(removeChatJS());
             Prefs().setChatRemovalActive(true);
@@ -443,7 +443,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: const Icon(MdiIcons.refresh),
+          child: Icon(MdiIcons.refresh),
           onTap: () async {
             await _webViewController!.reload();
 
@@ -466,7 +466,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: const Icon(MdiIcons.linkVariant),
+          child: Icon(MdiIcons.linkVariant),
           onTap: () {
             _chainWidgetController.expanded
                 ? _chainWidgetController.expanded = false
@@ -847,7 +847,7 @@ class WebViewPanicState extends State<WebViewPanic> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           MdiIcons.notebookOutline,
                           color: Colors.white,
                           size: 16,

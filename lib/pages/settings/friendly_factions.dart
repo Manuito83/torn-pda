@@ -76,8 +76,8 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider!.secondBackground),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider!.secondBackground),
+                            shape: WidgetStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                                 side: const BorderSide(width: 2, color: Colors.blueGrey),
@@ -99,8 +99,8 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all<Color?>(_themeProvider!.secondBackground),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
+                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider!.secondBackground),
+                            shape: WidgetStateProperty.all<OutlinedBorder>(
                               RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                                 side: const BorderSide(

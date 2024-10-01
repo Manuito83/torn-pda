@@ -1866,7 +1866,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   // Open chaining section
                                   widget.callBackSection(2);
                                 },
-                                child: const Icon(
+                                child: Icon(
                                   MdiIcons.linkVariant,
                                   color: Colors.blue,
                                   size: 22,
@@ -3015,7 +3015,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', shortTap: true);
                 },
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(right: 5),
                   child: Icon(MdiIcons.openInApp, size: 18),
                 ),
@@ -3298,7 +3298,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: "https://www.torn.com/messages.php", shortTap: true);
                 },
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(right: 5),
                   child: Icon(MdiIcons.openInApp, size: 18),
                 ),
@@ -3635,7 +3635,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       onTap: () async {
                         _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                       },
-                      child: const Icon(
+                      child: Icon(
                         MdiIcons.alphaPCircleOutline,
                         color: Colors.blueAccent,
                       ),
@@ -3741,7 +3741,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         onTap: () async {
                           _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
                         },
-                        child: const Icon(
+                        child: Icon(
                           MdiIcons.alphaPCircleOutline,
                           color: Colors.blueAccent,
                         ),
@@ -4257,7 +4257,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _cashWallet({bool? dense}) {
-    if (_user!.networth!["wallet"] != null) {
+    if (_user!.moneyOnHand != null) {
       final moneyFormat = NumberFormat("#,##0", "en_US");
       return Row(
         children: [
@@ -4267,14 +4267,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             },
             child: dense!
                 ? const Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
-                : const Icon(
-                    MdiIcons.cashUsdOutline,
+                : Icon(
+                    MdiIcons.cash100,
                     color: Colors.green,
                   ),
           ),
           const SizedBox(width: 5),
           SelectableText(
-            '\$${moneyFormat.format(_user!.networth!["wallet"])}',
+            '\$${moneyFormat.format(_user!.moneyOnHand)}',
             style: TextStyle(
               fontSize: dense ? 13 : 14,
               fontWeight: dense ? FontWeight.bold : FontWeight.normal,
@@ -4398,7 +4398,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
                 },
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(left: 5),
                   child: Icon(MdiIcons.openInApp, size: 24),
                 ),
@@ -4433,7 +4433,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       factionCrimesActive = true;
       factionCrimes = Row(
         children: [
-          const Icon(MdiIcons.fingerprint),
+          Icon(MdiIcons.fingerprint),
           const SizedBox(width: 10),
           Flexible(
             child: Text(
@@ -4456,7 +4456,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               onTap: () {
                 _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.only(right: 5),
                 child: Icon(MdiIcons.openInApp, size: 18),
               ),
@@ -4467,7 +4467,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       factionCrimesActive = true;
       factionCrimes = Row(
         children: [
-          const Icon(MdiIcons.fingerprint),
+          Icon(MdiIcons.fingerprint),
           const SizedBox(width: 10),
           Flexible(
             child: Text(
@@ -4484,7 +4484,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               onTap: () {
                 _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
               },
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.only(right: 5),
                 child: Icon(MdiIcons.openInApp, size: 18),
               ),
@@ -4539,7 +4539,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       bankWidget = Row(
         children: <Widget>[
-          const Icon(MdiIcons.bankOutline),
+          Icon(MdiIcons.bankOutline),
           const SizedBox(width: 10),
           Flexible(
             child: RichText(
@@ -4598,7 +4598,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       educationWidget = Row(
         children: <Widget>[
-          const Icon(MdiIcons.schoolOutline),
+          Icon(MdiIcons.schoolOutline),
           const SizedBox(width: 10),
           Flexible(
             child: RichText(
@@ -4635,7 +4635,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         educationActive = true;
         educationWidget = Row(
           children: <Widget>[
-            const Icon(MdiIcons.schoolOutline),
+            Icon(MdiIcons.schoolOutline),
             const SizedBox(width: 10),
             Flexible(
               child: Text(
@@ -4670,7 +4670,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       donatorWidget = Row(
         children: <Widget>[
-          const Icon(MdiIcons.starOutline),
+          Icon(MdiIcons.starOutline),
           const SizedBox(width: 10),
           Flexible(
             child: Text(
@@ -4762,10 +4762,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final moneySources = <Widget>[];
     final moneyQuantities = <Widget>[];
 
+    final timestamp = DateTime.fromMillisecondsSinceEpoch(_user!.networth!['timestamp']!.round() * 1000);
+    final formattedTimestamp = TimeFormatter(
+        inputTime: timestamp,
+        timeFormatSetting: _settingsProvider!.currentTimeFormat,
+        timeZoneSetting: _settingsProvider!.currentTimeZone).formatHourWithDaysElapsed();
+
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
       String source;
-      if (v.key == 'total' || v.key == 'parsetime') {
+      if (v.key == 'total' || v.key == 'parsetime' || v.key == 'timestamp') {
         continue;
       } else if (v.key == 'piggybank') {
         source = 'Piggy Bank';
@@ -4838,6 +4844,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               SizedBox(height: 10),
               ...moneySources,
+              SizedBox(height: 10),
+              Text(
+                'Updated at: ',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                )
+              )
             ],
           ),
           Column(
@@ -4852,6 +4865,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               SizedBox(height: 10),
               ...moneyQuantities,
+              SizedBox(height: 10),
+              Text(
+                formattedTimestamp,
+                style: TextStyle(
+                  color: _themeProvider!.mainText,
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ],
@@ -4875,7 +4896,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         collapsed: Padding(
           padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
           child: Text(
-            '\$${moneyFormat.format(total)}',
+            '\$${moneyFormat.format(total)} (updated $formattedTimestamp)',
             softWrap: true,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -5437,7 +5458,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: const Icon(
+            child: Icon(
               MdiIcons.cityVariantOutline,
               color: Colors.black,
             ),
@@ -5463,7 +5484,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             width: 100,
             height: 100,
             color: Colors.transparent,
-            child: const Icon(
+            child: Icon(
               MdiIcons.accountSwitchOutline,
               color: Colors.black,
             ),
@@ -6243,6 +6264,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         crimesString += '\nShoplifting: ${_miscModel!.shoplifting}';
         crimesExist = true;
       }
+      if (_miscModel!.pickpocketing != null) {
+        crimesString += '\nPickpocketing: ${_miscModel!.pickpocketing}';
+        crimesExist = true;
+      }
       if (_miscModel!.cardSkimming != null) {
         crimesString += '\nCard Skimming: ${_miscModel!.cardSkimming}';
         crimesExist = true;
@@ -6909,11 +6934,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(
-                          MdiIcons.cashUsdOutline,
+                          MdiIcons.cash100,
                           color: Colors.green,
                         ),
                       ),
@@ -7033,7 +7058,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: const SizedBox(
+                      child: SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(
@@ -7414,7 +7439,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 shortTap: true,
               );
             },
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.only(left: 5),
               child: Icon(MdiIcons.openInApp, size: 18),
             ),

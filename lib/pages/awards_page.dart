@@ -97,7 +97,7 @@ class AwardsPageState extends State<AwardsPage> {
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
 
-    analytics.setCurrentScreen(screenName: 'awards');
+    analytics.logScreenView(screenName: 'awards');
 
     routeWithDrawer = true;
     routeName = "awards";
