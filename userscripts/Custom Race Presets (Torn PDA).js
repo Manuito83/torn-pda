@@ -33,7 +33,7 @@ var presets = [{
 	numberOfLaps: 1,
 	upgradesAllowed: true,
 	betAmount: 0,
-	waitTime: 1,
+	waitTime: "ASAP",
 	password: "",
 },
 {
@@ -41,7 +41,7 @@ var presets = [{
 	maxDrivers: 100,
 	trackName: "Docks",
 	numberOfLaps: 100,
-	waitTime: 60,
+	waitTime: "Today 23:45 TCT",
 	password: "",
 },
 ];
@@ -66,7 +66,6 @@ function fillPreset(index) {
 	if ("maxDrivers" in race) $('.drivers-max-wrap div.input-wrap input').attr('value', race.maxDrivers);
 	if ("numberOfLaps" in race) $('.laps-wrap > .input-wrap > input').attr('value', race.numberOfLaps);
 	if ("betAmount" in race) $('.bet-wrap > .input-wrap > input').attr('value', race.betAmount);
-	if ("waitTime" in race) $('.time-wrap > .input-wrap > input').attr('value', race.waitTime);
 	if ("password" in race) $('.password-wrap > .input-wrap > input').attr('value', race.password);
 
 	if ("trackName" in race) {
@@ -76,6 +75,10 @@ function fillPreset(index) {
 	if ("upgradesAllowed" in race) {
 		$('#select-allow-upgrades').selectmenu();
 		$('#select-allow-upgrades-menu > li:contains(' + race.upgradesAllowedString + ')').mouseup();
+	}
+	if ("waitTime" in race) {
+		$('#wait-time').selectmenu();
+		$('#wait-time-menu > li:contains(' + race.waitTime + ')').mouseup();
 	}
 }
 
@@ -87,7 +90,6 @@ function scrubPresets() {
 		if ("numberOfLaps" in x) x.numberOfLaps = (x.numberOfLaps > 100) ? 100 : (x.numberOfLaps < 1) ? 1 : x.numberOfLaps;
 		if ("upgradesAllowed" in x) x.upgradesAllowedString = x.upgradesAllowed ? "Allow upgrades" : "Stock cars only";
 		if ("betAmount" in x) x.betAmount = (x.betAmount > 10000000) ? 10000000 : (x.betAmount < 0) ? 0 : x.betAmount;
-		if ("waitTime" in x) x.waitTime = (x.waitTime > 2880) ? 2880 : (x.waitTime < 1) ? 1 : x.waitTime;
 		if ("password" in x && x.password.length > 25) x.password = x.password.substring(0, 26);
 	})
 }
