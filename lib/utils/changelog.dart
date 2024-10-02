@@ -3,17 +3,23 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:toastification/toastification.dart';
 
 class ChangeLogItem {
-  ChangeLogTitleDate main = ChangeLogTitleDate();
   String version = "";
   String date = "";
-  List<String> features = <String>[];
+  List<dynamic> features = [];
   bool showInfoLine = false;
   String infoString = "";
 }
 
-class ChangeLogTitleDate {}
+class ComplexFeature {
+  final String text;
+  final String? explanation;
+  final int? secondsToShow;
+
+  ComplexFeature(this.text, {this.explanation, this.secondsToShow});
+}
 
 class ChangeLog extends StatefulWidget {
   @override
@@ -21,7 +27,7 @@ class ChangeLog extends StatefulWidget {
 }
 
 class ChangeLogState extends State<ChangeLog> {
-  final _changeLogItems = <ChangeLogItem, List<String>>{};
+  final _changeLogItems = <ChangeLogItem, List<dynamic>>{};
   final _scrollController = ScrollController();
 
   @override
@@ -38,6 +44,20 @@ class ChangeLogState extends State<ChangeLog> {
 
   void _createItems() {
     final itemList = <ChangeLogItem>[];
+
+    // v3.5.2 - Build 448 - 02/10/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.5.2'
+        ..date = '15 OCT 2024'
+        ..features = [
+          ComplexFeature(
+            "Added option to reverse swipe navigation direction in browser title",
+            explanation: "Go to Settings / Advanced Browser Settings and look for 'Gestures'",
+            secondsToShow: 5,
+          ),
+        ],
+    );
 
     // v3.5.1 - Build 447 - 28/09/2024
     itemList.add(
@@ -2036,6 +2056,7 @@ class ChangeLogState extends State<ChangeLog> {
 
       // All other lines
       for (final feat in entry.value) {
+        String featDescription = feat is ComplexFeature ? feat.text : feat;
         itemList.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -2044,8 +2065,40 @@ class ChangeLogState extends State<ChangeLog> {
                 _pdaIcon(),
                 const Padding(padding: EdgeInsets.only(right: 12)),
                 Flexible(
-                  child: Text(
-                    feat,
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          featDescription,
+                        ),
+                      ),
+                      if (feat is ComplexFeature && feat.explanation != null)
+                        GestureDetector(
+                          child: Icon(Icons.info_outline),
+                          onTap: () {
+                            toastification.show(
+                              closeOnClick: true,
+                              alignment: Alignment.center,
+                              title: Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Text(
+                                  feat.explanation!,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              autoCloseDuration: Duration(seconds: feat.secondsToShow ?? 5),
+                              animationDuration: Duration(milliseconds: 200),
+                              showProgressBar: false,
+                              style: ToastificationStyle.flat,
+                              closeButtonShowType: CloseButtonShowType.none,
+                              icon: Icon(Icons.info_outline),
+                              borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+                            );
+                          },
+                        ),
+                    ],
                   ),
                 ),
               ],

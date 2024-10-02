@@ -123,6 +123,14 @@ class SettingsProvider extends ChangeNotifier {
     Prefs().setIosDisallowOverscroll(_iosDisallowOverscroll);
   }
 
+  var _browserReverseNavigationSwipe = false;
+  bool get browserReverseNavitagtionSwipe => _browserReverseNavigationSwipe;
+  set browserReverseNavigationSwipe(bool value) {
+    _browserReverseNavigationSwipe = value;
+    Prefs().setBrowserReverseNavigationSwipe(_browserReverseNavigationSwipe);
+    notifyListeners();
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {
@@ -997,8 +1005,10 @@ class SettingsProvider extends ChangeNotifier {
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
     _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
 
+    // Gestures
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
     _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();
+    _browserReverseNavigationSwipe = await Prefs().getBrowserReverseNavigationSwipe();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 

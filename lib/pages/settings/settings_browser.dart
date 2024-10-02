@@ -156,16 +156,16 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                 _linkPreview(),
                               ],
                             ),
-                          if (Platform.isIOS)
-                            Column(
-                              children: [
-                                const SizedBox(height: 15),
-                                const Divider(),
-                                const SizedBox(height: 10),
-                                _pinchGesture(),
-                                _iosDisallowOverScroll(),
-                              ],
-                            ),
+                          Column(
+                            children: [
+                              const SizedBox(height: 15),
+                              const Divider(),
+                              const SizedBox(height: 10),
+                              if (Platform.isIOS) _pinchGesture(),
+                              if (Platform.isIOS) _iosDisallowOverScroll(),
+                              _reverseNavigationSwipe(),
+                            ],
+                          ),
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
@@ -509,7 +509,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           "Manage scripts",
                         ),
                         IconButton(
-                          icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                          icon: Icon(MdiIcons.script),
                           onPressed: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
@@ -649,6 +649,48 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 'Certain iOS versions (e.g.: iOS 16) might have issues with Torn overs-scrolling horizontally. '
                 'By using this option you might get rid of such behavior. NOTE: this will restrict pull-to-refresh '
                 'to work only from swipes at the top part of the browser.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Column _reverseNavigationSwipe() {
+    return Column(
+      children: [
+        Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Reverse navigation swipe"),
+                  Switch(
+                    value: _settingsProvider.browserReverseNavitagtionSwipe,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.browserReverseNavigationSwipe = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                'By default, swiping left-to-right in the page title navigates backwards, and right-to-left navigates '
+                ' forwards. Enable this option to reverse the swipe direction',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,

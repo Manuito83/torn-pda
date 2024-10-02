@@ -94,8 +94,12 @@ class Prefs {
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
+
+  // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
+  final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
+
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
@@ -1078,6 +1082,8 @@ class Prefs {
     return prefs.setInt(_kAndroidBrowserTextScale, value);
   }
 
+  // Settings - Browser Gestures
+
   Future<bool> getIosBrowserPinch() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kIosBrowserPinch) ?? false;
@@ -1096,6 +1102,16 @@ class Prefs {
   Future<bool> setIosDisallowOverscroll(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kIosDisallowOverscroll, value);
+  }
+
+  Future<bool> getBrowserReverseNavigationSwipe() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserReverseNavigationSwipe) ?? false;
+  }
+
+  Future<bool> setBrowserReverseNavigationSwipe(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserReverseNavigationSwipe, value);
   }
 
   /// ----------------------------
