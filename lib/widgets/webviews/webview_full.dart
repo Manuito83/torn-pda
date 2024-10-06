@@ -472,6 +472,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (Platform.isWindows) return;
+
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
         webViewController?.pauseTimers();
@@ -836,7 +838,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 ),
                               ],
                             ),
-                          if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                          if (!Platform.isWindows &&
+                              (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
                               _userProvider!.basic?.faction?.factionId != 0)
                             Text(
@@ -2385,7 +2388,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
     }
 
-    final bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+    final bool assistPossible = !Platform.isWindows &&
+        (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
         _userProvider!.basic?.faction?.factionId != 0;
 
@@ -2573,10 +2577,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
                   }
 
-                  _scrollX = await webViewController!.getScrollX();
-                  _scrollY = await webViewController!.getScrollY();
+                  if (!Platform.isWindows) {
+                    _scrollX = await webViewController!.getScrollX();
+                    _scrollY = await webViewController!.getScrollY();
+                  }
+
                   await _reload();
-                  _scrollAfterLoad = true;
+
+                  if (!Platform.isWindows) {
+                    _scrollAfterLoad = true;
+                  }
 
                   BotToast.showText(
                     text: "Reloading...",
@@ -2870,7 +2880,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool showTitle = false,
   }) async {
     String? title = '';
-    final h4 = document.querySelector(".content-title > h4");
+
+    dom.Element? h4 = document.querySelector(".content-title > h4");
+    // Some desktop views might incorporate different elements for the title
+    h4 ??= document.querySelector("[class^='titleContainer___'] h4");
+
     if (h4 != null) {
       title = pda_parser.HtmlParser.fix(h4.innerHtml.substring(0).trim());
     }
@@ -4158,7 +4172,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
 
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isWindows) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: webViewController!.getUrl().toString(),
         apiKey: _userProvider?.basic?.userApiKey ?? "",

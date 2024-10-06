@@ -753,6 +753,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void pauseAllWebviews() {
+    if (Platform.isWindows) return;
     try {
       if (_tabList.isEmpty) return;
       final currentTab = _tabList[_currentTab];

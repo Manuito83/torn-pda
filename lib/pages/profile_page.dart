@@ -371,6 +371,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (Platform.isWindows) return;
+
     if (state == AppLifecycleState.resumed) {
       _resetApiTimer(initCall: true);
     } else if (state == AppLifecycleState.paused) {
@@ -4766,9 +4768,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     final timestamp = DateTime.fromMillisecondsSinceEpoch(_user!.networth!['timestamp']!.round() * 1000);
     final formattedTimestamp = TimeFormatter(
-        inputTime: timestamp,
-        timeFormatSetting: _settingsProvider!.currentTimeFormat,
-        timeZoneSetting: _settingsProvider!.currentTimeZone).formatHourWithDaysElapsed();
+            inputTime: timestamp,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone)
+        .formatHourWithDaysElapsed();
 
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
@@ -4847,12 +4850,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 10),
               ...moneySources,
               SizedBox(height: 10),
-              Text(
-                'Updated at: ',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                )
-              )
+              Text('Updated at: ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ))
             ],
           ),
           Column(

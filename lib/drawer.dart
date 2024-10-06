@@ -389,6 +389,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (Platform.isWindows) return;
+
     if (state == AppLifecycleState.paused) {
       // Stop stakeouts
       _s.stopTimer();

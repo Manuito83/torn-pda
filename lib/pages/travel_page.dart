@@ -87,6 +87,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (Platform.isWindows) return;
+
     if (state == AppLifecycleState.resumed) {
       _updateInformation();
     }
