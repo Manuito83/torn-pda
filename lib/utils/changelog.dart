@@ -3,17 +3,29 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:toastification/toastification.dart';
 
 class ChangeLogItem {
-  ChangeLogTitleDate main = ChangeLogTitleDate();
   String version = "";
   String date = "";
-  List<String> features = <String>[];
+  List<dynamic> features = [];
   bool showInfoLine = false;
   String infoString = "";
 }
 
-class ChangeLogTitleDate {}
+class ComplexFeature {
+  final String text;
+  final String? explanation;
+  final int? secondsToShow;
+  final bool closeButton;
+
+  ComplexFeature(
+    this.text, {
+    this.explanation,
+    this.secondsToShow,
+    this.closeButton = false,
+  });
+}
 
 class ChangeLog extends StatefulWidget {
   @override
@@ -21,7 +33,7 @@ class ChangeLog extends StatefulWidget {
 }
 
 class ChangeLogState extends State<ChangeLog> {
-  final _changeLogItems = <ChangeLogItem, List<String>>{};
+  final _changeLogItems = <ChangeLogItem, List<dynamic>>{};
   final _scrollController = ScrollController();
 
   @override
@@ -38,6 +50,28 @@ class ChangeLogState extends State<ChangeLog> {
 
   void _createItems() {
     final itemList = <ChangeLogItem>[];
+
+    // v3.5.2 - Build 448 - 02/10/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.5.2'
+        ..date = '15 OCT 2024'
+        ..features = [
+          ComplexFeature(
+            "Added option to reverse swipe navigation direction in browser title",
+            explanation: "Go to Settings / Advanced Browser Settings\n\nLook for 'Gestures'",
+          ),
+          if (Platform.isAndroid)
+            ComplexFeature(
+              "Improved app widget functionality",
+              explanation: "Go to Settings / Home Screen Widget\n\n"
+                  "An additional short layout with not shortcuts has been added\n\n"
+                  "You can now choose the behavior when tapping on cooldowns and whether to browse to your own "
+                  "items or to your faction's armoury",
+              closeButton: true,
+            ),
+        ],
+    );
 
     // v3.5.1 - Build 447 - 28/09/2024
     itemList.add(
@@ -2036,6 +2070,7 @@ class ChangeLogState extends State<ChangeLog> {
 
       // All other lines
       for (final feat in entry.value) {
+        String featDescription = feat is ComplexFeature ? feat.text : feat;
         itemList.add(
           Padding(
             padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
@@ -2044,8 +2079,16 @@ class ChangeLogState extends State<ChangeLog> {
                 _pdaIcon(),
                 const Padding(padding: EdgeInsets.only(right: 12)),
                 Flexible(
-                  child: Text(
-                    feat,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          featDescription,
+                        ),
+                      ),
+                      if (feat is ComplexFeature && feat.explanation != null) _complexFeatureToast(feat),
+                    ],
                   ),
                 ),
               ],
@@ -2056,6 +2099,39 @@ class ChangeLogState extends State<ChangeLog> {
       itemNumber++;
     }
     return itemList;
+  }
+
+  Padding _complexFeatureToast(ComplexFeature feat) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: GestureDetector(
+        child: Icon(Icons.info_outline),
+        onTap: () {
+          toastification.show(
+            closeOnClick: true,
+            alignment: Alignment.center,
+            title: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                feat.explanation!,
+                maxLines: 10,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            autoCloseDuration: feat.secondsToShow == null ? null : Duration(seconds: feat.secondsToShow!),
+            animationDuration: Duration(milliseconds: 200),
+            showProgressBar: false,
+            style: ToastificationStyle.flat,
+            closeButtonShowType:
+                feat.closeButton || feat.secondsToShow == null ? CloseButtonShowType.always : CloseButtonShowType.none,
+            icon: Icon(Icons.info_outline),
+            borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+          );
+        },
+      ),
+    );
   }
 
   Widget _pdaIcon() {

@@ -2374,8 +2374,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         _userProvider!.basic?.faction?.factionId != 0;
 
     return CustomAppBar(
-      onHorizontalDragEnd: (DragEndDetails details) async {
-        await _goBackOrForward(details);
+      onHorizontalDragEnd: (DragEndDetails details) {
+        _goBackOrForward(details);
       },
       onPanEnd: _settingsProvider.useTabsHideFeature && _settingsProvider.useTabsFullBrowser
           ? (DragEndDetails details) async {
@@ -2579,11 +2579,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         : const SizedBox.shrink();
   }
 
-  Future _goBackOrForward(DragEndDetails details) async {
-    if (details.primaryVelocity! < 0) {
-      await _tryGoForward();
-    } else if (details.primaryVelocity! > 0) {
-      await _tryGoBack();
+  _goBackOrForward(DragEndDetails details) async {
+    bool rightToLeft = details.primaryVelocity! < 0;
+    bool leftToRight = details.primaryVelocity! > 0;
+
+    if (rightToLeft) {
+      _settingsProvider.browserReverseNavitagtionSwipe ? _tryGoBack() : _tryGoForward();
+    } else if (leftToRight) {
+      _settingsProvider.browserReverseNavitagtionSwipe ? _tryGoForward() : _tryGoBack();
     }
   }
 

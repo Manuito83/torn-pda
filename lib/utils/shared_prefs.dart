@@ -94,8 +94,12 @@ class Prefs {
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
+
+  // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
+  final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
+
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
@@ -359,8 +363,11 @@ class Prefs {
 
   // Appwidget
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
+  final String _kAppwidgetRemoveShortcutsOneRowLayout = "pda_appwidgetRemoveShortcutsOneRowLayout";
   final String _kAppwidgetMoneyEnabled = "pda_appwidgetMoneyEnabled";
   final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
+  final String _kAppwidgetCooldownTapOpensBrowser = "pda__appwidgetCooldownTapOpensBrowser";
+  final String _kAppwidgetCooldownTapOpensBrowserDestination = "pda__appwidgetCooldownTapOpensBrowserDestination";
 
   // Permissions
   final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
@@ -1078,6 +1085,8 @@ class Prefs {
     return prefs.setInt(_kAndroidBrowserTextScale, value);
   }
 
+  // Settings - Browser Gestures
+
   Future<bool> getIosBrowserPinch() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kIosBrowserPinch) ?? false;
@@ -1096,6 +1105,16 @@ class Prefs {
   Future<bool> setIosDisallowOverscroll(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kIosDisallowOverscroll, value);
+  }
+
+  Future<bool> getBrowserReverseNavigationSwipe() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserReverseNavigationSwipe) ?? false;
+  }
+
+  Future<bool> setBrowserReverseNavigationSwipe(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserReverseNavigationSwipe, value);
   }
 
   /// ----------------------------
@@ -3483,6 +3502,20 @@ class Prefs {
     return prefs.setBool(_kAppwidgetDarkMode, value);
   }
 
+  // ---
+
+  Future<bool> getAppwidgetRemoveShortcutsOneRowLayout() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetRemoveShortcutsOneRowLayout) ?? false;
+  }
+
+  Future<bool> setAppwidgetRemoveShortcutsOneRowLayout(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetRemoveShortcutsOneRowLayout, value);
+  }
+
+  // ---
+
   Future<bool> getAppwidgetMoneyEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kAppwidgetMoneyEnabled) ?? true;
@@ -3491,6 +3524,28 @@ class Prefs {
   Future<bool> setAppwidgetMoneyEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kAppwidgetMoneyEnabled, value);
+  }
+
+  // ---
+
+  Future<bool> getAppwidgetCooldownTapOpensBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetCooldownTapOpensBrowser) ?? true;
+  }
+
+  Future<bool> setAppwidgetCooldownTapOpensBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetCooldownTapOpensBrowser, value);
+  }
+
+  Future<String> getAppwidgetCooldownTapOpensBrowserDestination() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAppwidgetCooldownTapOpensBrowserDestination) ?? "own";
+  }
+
+  Future<bool> setAppwidgetCooldownTapOpensBrowserDestination(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAppwidgetCooldownTapOpensBrowserDestination, value);
   }
 
   // ---
