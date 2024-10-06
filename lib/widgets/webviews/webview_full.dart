@@ -2251,10 +2251,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webViewController!.evaluateJavascript(
         source: chatHighlightJS(highlights: hlMap),
       );
-      // TODO: not supported by Windows, replace with JS?
-      webViewController!.injectCSSCode(
-        source: css,
-      );
+
+      if (!Platform.isWindows) {
+        webViewController!.injectCSSCode(
+          source: css,
+        );
+      } else {
+        // Inject CSS using JavaScript
+        final String jsToInjectCSS = '''
+          (function() {
+            var style = document.createElement('style');
+            style.type = 'text/css';
+            style.innerHTML = `$css`;
+            document.head.appendChild(style);
+          })();
+        ''';
+
+        webViewController!.evaluateJavascript(
+          source: jsToInjectCSS,
+        );
+      }
     }
   }
 
