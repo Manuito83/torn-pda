@@ -483,13 +483,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       browserUrl = shortcutUrl;
     } else if (intent.data!.contains("pdaWidget://drug:clicked")) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#drugs:items";
+      browserUrl = "https://www.torn.com/item.php#drugs-items";
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
+        browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs";
+      }
     } else if (intent.data!.contains("pdaWidget://medical:clicked")) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#medical:items";
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
+        browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical";
+      }
     } else if (intent.data!.contains("pdaWidget://booster:clicked")) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#boosters:items";
+      browserUrl = "https://www.torn.com/item.php#boosters-items";
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
+        browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters";
+      }
     } else if (intent.data!.contains("pdaWidget://chain:box:clicked")) {
       _callSectionFromOutside(2); // Chaining
       return;

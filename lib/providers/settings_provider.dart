@@ -961,11 +961,35 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _appwidgetRemoveShortcutsOneRowLayout = false;
+  bool get appwidgetRemoveShortcutsOneRowLayout => _appwidgetRemoveShortcutsOneRowLayout;
+  set appwidgetRemoveShortcutsOneRowLayout(bool value) {
+    _appwidgetRemoveShortcutsOneRowLayout = value;
+    Prefs().setAppwidgetRemoveShortcutsOneRowLayout(value);
+    notifyListeners();
+  }
+
   var _appwidgetMoneyEnabled = false;
   bool get appwidgetMoneyEnabled => _appwidgetMoneyEnabled;
   set appwidgetMoneyEnabled(bool value) {
     _appwidgetMoneyEnabled = value;
     Prefs().setAppwidgetMoneyEnabled(value);
+    notifyListeners();
+  }
+
+  var _appwidgetCooldownTapOpenBrowser = false;
+  bool get appwidgetCooldownTapOpenBrowser => _appwidgetCooldownTapOpenBrowser;
+  set appwidgetCooldownTapOpenBrowser(bool value) {
+    _appwidgetCooldownTapOpenBrowser = value;
+    Prefs().setAppwidgetCooldownTapOpensBrowser(value);
+    notifyListeners();
+  }
+
+  var _appwidgetCooldownTapOpenBrowserDestination = "own";
+  String get appwidgetCooldownTapOpenBrowserDestination => _appwidgetCooldownTapOpenBrowserDestination;
+  set appwidgetCooldownTapOpenBrowserDestination(String value) {
+    _appwidgetCooldownTapOpenBrowserDestination = value;
+    Prefs().setAppwidgetCooldownTapOpensBrowserDestination(value);
     notifyListeners();
   }
 
@@ -1185,7 +1209,10 @@ class SettingsProvider extends ChangeNotifier {
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
+    _appwidgetRemoveShortcutsOneRowLayout = await Prefs().getAppwidgetRemoveShortcutsOneRowLayout();
     _appwidgetMoneyEnabled = await Prefs().getAppwidgetMoneyEnabled();
+    _appwidgetCooldownTapOpenBrowser = await Prefs().getAppwidgetCooldownTapOpensBrowser();
+    _appwidgetCooldownTapOpenBrowserDestination = await Prefs().getAppwidgetCooldownTapOpensBrowserDestination();
 
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 

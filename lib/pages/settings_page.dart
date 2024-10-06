@@ -2147,6 +2147,43 @@ class SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Remove shortcuts from short layout",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.appwidgetRemoveShortcutsOneRowLayout,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetRemoveShortcutsOneRowLayout = value;
+                    HomeWidget.saveWidgetData<bool>('removeShortcutsOneRowLayout', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'By default, the short, one-row layout, accomodates a couple of shortcuts by sacrificing the chaining '
+            'information and moving the reload icon to the top. By enabling this, this particular layout will not '
+            'include shortcuts in order to make more space for the chaining bar',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
         const SizedBox(height: 5),
         Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
@@ -2174,8 +2211,48 @@ class SettingsPageState extends State<SettingsPage> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Text(
+                'This is only applicable for the tall widget layout',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Cooldown tap launches browser",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.appwidgetCooldownTapOpenBrowser,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetCooldownTapOpenBrowser = value;
+                    HomeWidget.saveWidgetData<bool>('cooldown_tap_opens_browser', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'This is only applicable for the tall widget layout',
+            'If enabled, a tap on any of the cooldown icons will launch the app and browser to your personal '
+            'or faction items. Otherwise, you will be shown the cooldown time remaining',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -2183,6 +2260,7 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        if (_settingsProvider.appwidgetCooldownTapOpenBrowser) _appWidgetCooldownTapDestinationSelector(),
       ],
     );
   }
@@ -3625,6 +3703,71 @@ class SettingsPageState extends State<SettingsPage> {
           _shortcutsProvider.changeShortcutMenu(value!);
         });
       },
+    );
+  }
+
+  Widget _appWidgetCooldownTapDestinationSelector() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 0, 20, 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Flexible(
+            child: Row(
+              children: [
+                Icon(Icons.keyboard_arrow_right_outlined),
+                Flexible(
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 10),
+                    child: Text(
+                      "Cooldown tap opens",
+                      style: TextStyle(
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          DropdownButton<String>(
+            value: _settingsProvider.appwidgetCooldownTapOpenBrowserDestination,
+            items: const [
+              DropdownMenuItem(
+                value: "own",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Own items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              DropdownMenuItem(
+                value: "faction",
+                child: SizedBox(
+                  width: 110,
+                  child: Text(
+                    "Faction items",
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            onChanged: (value) async {
+              setState(() {
+                _settingsProvider.appwidgetCooldownTapOpenBrowserDestination = value!;
+              });
+            },
+          ),
+        ],
+      ),
     );
   }
 }

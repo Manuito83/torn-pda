@@ -17,8 +17,14 @@ class ComplexFeature {
   final String text;
   final String? explanation;
   final int? secondsToShow;
+  final bool closeButton;
 
-  ComplexFeature(this.text, {this.explanation, this.secondsToShow});
+  ComplexFeature(
+    this.text, {
+    this.explanation,
+    this.secondsToShow,
+    this.closeButton = false,
+  });
 }
 
 class ChangeLog extends StatefulWidget {
@@ -53,9 +59,17 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           ComplexFeature(
             "Added option to reverse swipe navigation direction in browser title",
-            explanation: "Go to Settings / Advanced Browser Settings and look for 'Gestures'",
-            secondsToShow: 5,
+            explanation: "Go to Settings / Advanced Browser Settings\n\nLook for 'Gestures'",
           ),
+          if (Platform.isAndroid)
+            ComplexFeature(
+              "Improved app widget functionality",
+              explanation: "Go to Settings / Home Screen Widget\n\n"
+                  "An additional short layout with not shortcuts has been added\n\n"
+                  "You can now choose the behavior when tapping on cooldowns and whether to browse to your own "
+                  "items or to your faction's armoury",
+              closeButton: true,
+            ),
         ],
     );
 
@@ -2066,38 +2080,14 @@ class ChangeLogState extends State<ChangeLog> {
                 const Padding(padding: EdgeInsets.only(right: 12)),
                 Flexible(
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Flexible(
                         child: Text(
                           featDescription,
                         ),
                       ),
-                      if (feat is ComplexFeature && feat.explanation != null)
-                        GestureDetector(
-                          child: Icon(Icons.info_outline),
-                          onTap: () {
-                            toastification.show(
-                              closeOnClick: true,
-                              alignment: Alignment.center,
-                              title: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  feat.explanation!,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              autoCloseDuration: Duration(seconds: feat.secondsToShow ?? 5),
-                              animationDuration: Duration(milliseconds: 200),
-                              showProgressBar: false,
-                              style: ToastificationStyle.flat,
-                              closeButtonShowType: CloseButtonShowType.none,
-                              icon: Icon(Icons.info_outline),
-                              borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-                            );
-                          },
-                        ),
+                      if (feat is ComplexFeature && feat.explanation != null) _complexFeatureToast(feat),
                     ],
                   ),
                 ),
@@ -2109,6 +2099,39 @@ class ChangeLogState extends State<ChangeLog> {
       itemNumber++;
     }
     return itemList;
+  }
+
+  Padding _complexFeatureToast(ComplexFeature feat) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 5),
+      child: GestureDetector(
+        child: Icon(Icons.info_outline),
+        onTap: () {
+          toastification.show(
+            closeOnClick: true,
+            alignment: Alignment.center,
+            title: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                feat.explanation!,
+                maxLines: 10,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            autoCloseDuration: feat.secondsToShow == null ? null : Duration(seconds: feat.secondsToShow!),
+            animationDuration: Duration(milliseconds: 200),
+            showProgressBar: false,
+            style: ToastificationStyle.flat,
+            closeButtonShowType:
+                feat.closeButton || feat.secondsToShow == null ? CloseButtonShowType.always : CloseButtonShowType.none,
+            icon: Icon(Icons.info_outline),
+            borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+          );
+        },
+      ),
+    );
   }
 
   Widget _pdaIcon() {
