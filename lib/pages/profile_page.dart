@@ -390,7 +390,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _launchShowCases(_);
         return Scaffold(
           backgroundColor: _themeProvider!.canvas,
-          drawer: const Drawer(),
+          drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
+          endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
           appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider!.appBarTop
               ? SizedBox(
@@ -644,8 +645,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (_webViewProvider.webViewSplitActive &&
-                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.splitScreenAndBrowserLeft()) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -4764,9 +4764,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     final timestamp = DateTime.fromMillisecondsSinceEpoch(_user!.networth!['timestamp']!.round() * 1000);
     final formattedTimestamp = TimeFormatter(
-        inputTime: timestamp,
-        timeFormatSetting: _settingsProvider!.currentTimeFormat,
-        timeZoneSetting: _settingsProvider!.currentTimeZone).formatHourWithDaysElapsed();
+            inputTime: timestamp,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone)
+        .formatHourWithDaysElapsed();
 
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
@@ -4845,12 +4846,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               SizedBox(height: 10),
               ...moneySources,
               SizedBox(height: 10),
-              Text(
-                'Updated at: ',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                )
-              )
+              Text('Updated at: ',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ))
             ],
           ),
           Column(

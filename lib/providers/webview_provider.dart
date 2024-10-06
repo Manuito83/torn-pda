@@ -1561,4 +1561,8 @@ class WebViewProvider extends ChangeNotifier {
 
     _splitScreenRevertsToApp = await Prefs().getSplitScreenRevertsToApp();
   }
+
+  bool splitScreenAndBrowserLeft() {
+    return webViewSplitActive && splitScreenPosition == WebViewSplitPosition.left;
+  }
 }

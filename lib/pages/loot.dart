@@ -201,8 +201,7 @@ class LootPageState extends State<LootPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (_webViewProvider.webViewSplitActive &&
-                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.splitScreenAndBrowserLeft()) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();

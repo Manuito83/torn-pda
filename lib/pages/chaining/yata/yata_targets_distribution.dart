@@ -29,11 +29,13 @@ class YataTargetsDistribution extends StatefulWidget {
 class YataTargetsDistributionState extends State<YataTargetsDistribution> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
+  late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
     routeWithDrawer = false;
     routeName = "yata_targets_distribution";
@@ -57,7 +59,8 @@ class YataTargetsDistributionState extends State<YataTargetsDistribution> {
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
-          drawer: const Drawer(),
+          drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
+          endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
