@@ -65,6 +65,7 @@ const String androidCompilation = '447';
 const String iosCompilation = '447';
 
 // TODO (App release)
+// Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
 const bool pointFunctionsEmulatorToLocal = false;
 
 // TODO (App release)
