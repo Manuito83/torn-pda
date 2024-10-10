@@ -1,4 +1,5 @@
 // Package imports:
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart' as http;
 
 // Project imports:
@@ -43,16 +44,20 @@ class TornExchangeComm {
             },
             body: tornExchangeOutModelToJson(outModel),
           )
-          .timeout(const Duration(seconds: 7));
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         inModel = tornExchangeInModelFromJson(response.body);
       } else {
         // Errors will return as 400
         inModel.serverError = true;
+        inModel.serverErrorReason = response.reasonPhrase ?? response.body;
       }
-    } catch (e) {
+    } catch (e, t) {
       inModel.serverError = true;
+      inModel.serverErrorReason = "$e. $t";
+      FirebaseCrashlytics.instance.log("PDA TornExchange comm error");
+      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
     }
 
     return inModel;

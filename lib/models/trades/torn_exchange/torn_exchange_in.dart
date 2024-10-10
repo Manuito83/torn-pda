@@ -20,6 +20,7 @@ class TornExchangeInModel {
 
   // Not in JSON
   bool serverError;
+  String serverErrorReason;
 
   TornExchangeInModel({
     this.sellerName = "",
@@ -31,6 +32,7 @@ class TornExchangeInModel {
     this.imageUrl = const [],
     this.marketPrices = const [],
     this.serverError = false,
+    this.serverErrorReason = "",
   });
 
   factory TornExchangeInModel.fromJson(Map<String, dynamic> json) => TornExchangeInModel(
