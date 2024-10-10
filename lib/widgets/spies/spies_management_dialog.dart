@@ -16,8 +16,15 @@ class SpiesManagementDialog extends StatefulWidget {
 
 class SpiesManagementDialogState extends State<SpiesManagementDialog> {
   final SpiesController _spyController = Get.find<SpiesController>();
+  final _scrollController = ScrollController();
 
   bool _fetchActive = false;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -555,11 +562,13 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
           SizedBox(height: 6),
           Flexible(
             child: Scrollbar(
+              controller: _scrollController,
               thumbVisibility: true,
               trackVisibility: true,
               interactive: true,
               thickness: 6,
               child: ListView.builder(
+                controller: _scrollController,
                 shrinkWrap: true,
                 itemCount: spiesCards.length,
                 itemBuilder: (context, index) {

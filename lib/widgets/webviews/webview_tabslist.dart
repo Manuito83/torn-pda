@@ -414,6 +414,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
 
     return ReorderableListView(
       proxyDecorator: _proxyDecorator,
+      buildDefaultDragHandles: false,
       scrollDirection: Axis.horizontal,
       children: tabs,
       onReorder: (start, end) {

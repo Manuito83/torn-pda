@@ -57,6 +57,8 @@ class RetalsPageState extends State<RetalsPage> {
     RetalsOptions(description: "Manage Spies"),
   ];
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -69,6 +71,7 @@ class RetalsPageState extends State<RetalsPage> {
   @override
   Future dispose() async {
     Get.delete<RetalsController>();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -361,9 +364,11 @@ class RetalsPageState extends State<RetalsPage> {
   AlertDialog _disclaimerDialog() {
     return AlertDialog(
       title: const Text("Retaliation"),
-      content: const Scrollbar(
+      content: Scrollbar(
+        controller: _scrollController,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(

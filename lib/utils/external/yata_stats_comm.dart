@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/yata/yata_stats_response_model.dart';
@@ -21,8 +22,8 @@ class YataStatsComm {
           yataModel = YataStatsResponse.fromJson(jsonDecode(response.body));
           return yataModel;
         } catch (e, trace) {
-          FirebaseCrashlytics.instance.log("Yata Stats Crash at Model: $e, trace: $trace");
-          FirebaseCrashlytics.instance.recordError("HTTP Response: ${response.body}", null);
+          if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Yata Stats Crash at Model: $e, trace: $trace");
+          if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("HTTP Response: ${response.body}", null);
           log("YATA Stats Crash at Model: $e, trace: $trace");
           return YataStatsResponse(
             success: false,
@@ -57,7 +58,7 @@ class YataStatsComm {
         );
       }
     } on TimeoutException catch (e) {
-      FirebaseCrashlytics.instance.log("YATA Stats Timeout: $e");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("YATA Stats Timeout: $e");
       log("Yata Stats Timeout: $e");
       return YataStatsResponse(
         success: false,
@@ -68,8 +69,8 @@ class YataStatsComm {
       );
     } catch (e, trace) {
       if (response != null) {
-        FirebaseCrashlytics.instance.log("Yata Stats (global): $e, trace: $trace");
-        FirebaseCrashlytics.instance.recordError("HTTP Response: ${response.body}", null);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Yata Stats (global): $e, trace: $trace");
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("HTTP Response: ${response.body}", null);
         log("PDA Crash at YATA Stats (global): $e, trace: $trace");
         log("HTTP Response: ${response.body}");
       }

@@ -8,23 +8,38 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
-class TSCInfoDialog extends StatelessWidget {
+class TSCInfoDialog extends StatefulWidget {
   final SettingsProvider settingsProvider;
   final ThemeProvider themeProvider;
 
-  const TSCInfoDialog({
-    Key? key,
+  TSCInfoDialog({
+    super.key,
     required this.settingsProvider,
     required this.themeProvider,
-  }) : super(key: key);
+  });
+
+  @override
+  State<TSCInfoDialog> createState() => _TSCInfoDialogState();
+}
+
+class _TSCInfoDialogState extends State<TSCInfoDialog> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text("Torn Spies Central"),
       content: Scrollbar(
+        controller: _scrollController,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollController,
           child: Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
@@ -80,7 +95,7 @@ class TSCInfoDialog extends StatelessWidget {
                   ],
                   defaultStyle: TextStyle(
                     fontSize: 14,
-                    color: themeProvider.mainText,
+                    color: widget.themeProvider.mainText,
                   ),
                 ),
               ],
@@ -89,11 +104,11 @@ class TSCInfoDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        if (settingsProvider.tscEnabledStatus != 1)
+        if (widget.settingsProvider.tscEnabledStatus != 1)
           TextButton(
             child: const Text("Enable"),
             onPressed: () {
-              settingsProvider.tscEnabledStatus = 1;
+              widget.settingsProvider.tscEnabledStatus = 1;
               Navigator.of(context).pop();
             },
           ),

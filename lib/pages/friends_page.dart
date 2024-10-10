@@ -56,7 +56,7 @@ class FriendsPageState extends State<FriendsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       Provider.of<FriendsProvider>(context, listen: false).setFilterText('');
     });
-    analytics.logScreenView(screenName: 'friends');
+    analytics?.logScreenView(screenName: 'friends');
 
     routeWithDrawer = true;
     routeName = "friends";

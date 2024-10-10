@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -1136,8 +1137,8 @@ class WarPageState extends State<WarPage> {
         });
       }
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
       logToUser("PDA Error at War Quick Update: $e, $trace");
     }
   }

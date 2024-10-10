@@ -26,9 +26,17 @@ class CrimesWidget extends StatefulWidget {
 class CrimesWidgetState extends State<CrimesWidget> {
   late CrimesProvider _crimesProvider;
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,7 +57,9 @@ class CrimesWidgetState extends State<CrimesWidget> {
                     3,
               ),
               child: Scrollbar(
+                controller: _scrollController,
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     spacing: 5,

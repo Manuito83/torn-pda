@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -34,7 +36,7 @@ class SharePriceCardState extends State<SharePriceCard> {
               hasIcon: false,
             ),
             collapsed: Container(),
-            expanded: expanded(),
+            expanded: Platform.isWindows ? SizedBox.shrink() : expanded(),
             header: header(),
           ),
         ),
@@ -117,7 +119,7 @@ class SharePriceCardState extends State<SharePriceCard> {
                       ),
                     ],
                   ),
-                const Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
+                Platform.isWindows ? SizedBox.shrink() : const Icon(Icons.arrow_drop_down_circle_outlined, size: 16),
               ],
             ),
           ],

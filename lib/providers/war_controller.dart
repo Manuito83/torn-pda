@@ -1152,6 +1152,8 @@ class WarController extends GetxController {
   }
 
   void assessPendingNotifications() async {
+    if (Platform.isWindows) return;
+
     try {
       // Get the current active notifications
       List<PendingNotificationRequest> active = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
@@ -1229,8 +1231,8 @@ class WarController extends GetxController {
 
       update();
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Assess Pending Notifications");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Assess Pending Notifications");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
@@ -1406,8 +1408,8 @@ class WarController extends GetxController {
         ),
       );
     } catch (e, t) {
-      FirebaseCrashlytics.instance.log("PDA Crash at War Stats Share");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at War Stats Share");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
     }
   }
 
@@ -1543,8 +1545,8 @@ class WarController extends GetxController {
       // Clean the temporary file
       await file.delete();
     } catch (e, t) {
-      FirebaseCrashlytics.instance.log("PDA Crash at War Stats CSV Generation");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at War Stats CSV Generation");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
     }
   }
 

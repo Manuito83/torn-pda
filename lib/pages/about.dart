@@ -33,7 +33,7 @@ class AboutPageState extends State<AboutPage> {
   @override
   void initState() {
     super.initState();
-    analytics.logScreenView(screenName: 'about');
+    analytics?.logScreenView(screenName: 'about');
 
     routeWithDrawer = true;
     routeName = "about";

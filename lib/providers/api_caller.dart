@@ -361,7 +361,7 @@ class ApiCallerController extends GetxController {
         // Need to initialize Firebase in the isolate for Crashlytics (Api Caller) to work in this isolate
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -378,7 +378,7 @@ class ApiCallerController extends GetxController {
       try {
         return TravelModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -395,7 +395,7 @@ class ApiCallerController extends GetxController {
       try {
         return OwnProfileBasic.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -413,7 +413,7 @@ class ApiCallerController extends GetxController {
       try {
         return OwnProfileExtended.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -436,7 +436,7 @@ class ApiCallerController extends GetxController {
         }
         return eventsList;
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -453,7 +453,7 @@ class ApiCallerController extends GetxController {
       try {
         return OwnPersonalStatsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -470,7 +470,7 @@ class ApiCallerController extends GetxController {
       try {
         return OwnProfileMisc.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -487,7 +487,7 @@ class ApiCallerController extends GetxController {
       try {
         return OtherProfileModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -504,7 +504,7 @@ class ApiCallerController extends GetxController {
       try {
         return BasicProfileModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -521,7 +521,7 @@ class ApiCallerController extends GetxController {
       try {
         return TargetModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -538,7 +538,7 @@ class ApiCallerController extends GetxController {
       try {
         return AttackModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -555,7 +555,7 @@ class ApiCallerController extends GetxController {
       try {
         return AttackFullModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -572,7 +572,7 @@ class ApiCallerController extends GetxController {
       try {
         return FactionAttacksModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -589,7 +589,7 @@ class ApiCallerController extends GetxController {
       try {
         return ChainModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -606,7 +606,7 @@ class ApiCallerController extends GetxController {
       try {
         return BarsStatusCooldownsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -623,7 +623,7 @@ class ApiCallerController extends GetxController {
       try {
         return ItemsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -641,7 +641,7 @@ class ApiCallerController extends GetxController {
       try {
         return InventoryModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -659,7 +659,7 @@ class ApiCallerController extends GetxController {
       try {
         return TornEducationModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -676,7 +676,7 @@ class ApiCallerController extends GetxController {
       try {
         return FactionModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -700,7 +700,7 @@ class ApiCallerController extends GetxController {
         //log('isolateDecodeFactionCrimes executed in ${stopwatch.elapsed}');
         return processedModel;
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -717,7 +717,7 @@ class ApiCallerController extends GetxController {
       try {
         return FriendModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -734,7 +734,7 @@ class ApiCallerController extends GetxController {
       try {
         return PropertyModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -751,7 +751,7 @@ class ApiCallerController extends GetxController {
       try {
         return StockMarketModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -768,7 +768,7 @@ class ApiCallerController extends GetxController {
       try {
         return StockMarketUserModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -785,7 +785,7 @@ class ApiCallerController extends GetxController {
       try {
         return MarketItemModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -802,7 +802,7 @@ class ApiCallerController extends GetxController {
       try {
         return UserPerksModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -819,7 +819,7 @@ class ApiCallerController extends GetxController {
       try {
         return RankedWarsModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -836,7 +836,7 @@ class ApiCallerController extends GetxController {
       try {
         return CompanyEmployees.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
       }
     } else {
@@ -942,7 +942,7 @@ class ApiCallerController extends GetxController {
         // Analytics limits at 100 chars
         final String platform = Platform.isAndroid ? "a" : "i";
         final String versionError = "$appVersion$platform $e";
-        analytics.logEvent(
+        analytics?.logEvent(
           name: 'api_reply_error',
           parameters: {
             'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,
@@ -972,7 +972,7 @@ class ApiCallerController extends GetxController {
         return jsonResponse;
       } else {
         log("Api code ${response.statusCode}: ${response.body}");
-        analytics.logEvent(
+        analytics?.logEvent(
           name: 'api_status_error',
           parameters: {
             'status_code': response.statusCode,
@@ -1001,7 +1001,7 @@ class ApiCallerController extends GetxController {
       // Analytics limits at 100 chars
       final String platform = Platform.isAndroid ? "a" : "i";
       final String versionError = "$appVersion$platform: $e";
-      analytics.logEvent(
+      analytics?.logEvent(
         name: 'api_call_error',
         parameters: {
           'error': versionError.length > 99 ? versionError.substring(0, 99) : versionError,

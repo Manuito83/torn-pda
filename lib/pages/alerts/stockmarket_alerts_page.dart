@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -66,7 +68,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       routeWithDrawer = true;
     }
     _stocksInitialised = _initialiseStocks();
-    analytics.logScreenView(screenName: 'stockMarket');
+    analytics?.logScreenView(screenName: 'stockMarket');
   }
 
   @override
@@ -113,8 +115,13 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                             child: SingleChildScrollView(
                               child: Column(
                                 children: <Widget>[
-                                  _alertActivator(),
-                                  const Divider(),
+                                  if (!Platform.isWindows)
+                                    Column(
+                                      children: [
+                                        _alertActivator(),
+                                        const Divider(),
+                                      ],
+                                    ),
                                   const Text("Traded Companies"),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -232,21 +239,22 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           },
         ),
         const SizedBox(width: 5),
-        IconButton(
-          icon: const Icon(
-            Icons.settings,
+        if (!Platform.isWindows)
+          IconButton(
+            icon: const Icon(
+              Icons.settings,
+            ),
+            onPressed: () async {
+              return showDialog(
+                useRootNavigator: false,
+                context: context,
+                barrierDismissible: true,
+                builder: (BuildContext context) {
+                  return SharePriceOptions(_themeProvider, _settingsP, widget.stockMarketInMenuCallback);
+                },
+              );
+            },
           ),
-          onPressed: () async {
-            return showDialog(
-              useRootNavigator: false,
-              context: context,
-              barrierDismissible: true,
-              builder: (BuildContext context) {
-                return SharePriceOptions(_themeProvider, _settingsP, widget.stockMarketInMenuCallback);
-              },
-            );
-          },
-        ),
       ],
     );
   }

@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:collection';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -136,8 +137,8 @@ class ShortcutsProvider extends ChangeNotifier {
           }
         }
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.log("PDA Crash at Shortcuts initialization");
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Shortcuts initialization");
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         logToUser("PDA Error at Shortcuts initialization: $e, $trace");
       }
     }

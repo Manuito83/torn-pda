@@ -88,7 +88,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     super.initState();
     _loadedApiItems = _getAllItems();
     _searchController.addListener(onSearchInputTextChange);
-    analytics.logScreenView(screenName: 'items');
+    analytics?.logScreenView(screenName: 'items');
 
     routeWithDrawer = true;
     routeName = "items";

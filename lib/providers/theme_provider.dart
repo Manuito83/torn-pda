@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 
@@ -122,7 +124,7 @@ class ThemeProvider extends ChangeNotifier {
 
   Future<void> _restoreSharedPreferences() async {
     final String restoredTheme = await Prefs().getAppTheme();
-    await analytics.setUserProperty(name: "theme", value: restoredTheme);
+    if (!Platform.isWindows) await analytics?.setUserProperty(name: "theme", value: restoredTheme);
     switch (restoredTheme) {
       case 'light':
         _currentTheme = AppTheme.light;

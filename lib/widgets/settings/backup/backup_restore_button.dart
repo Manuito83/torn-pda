@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -207,8 +209,8 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
       message = "Settings imported successfully!";
     } catch (e, trace) {
       message = "Error importing settings: $e";
-      FirebaseCrashlytics.instance.log("PDA Crash at Importing Other User Settings");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Importing Other User Settings");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
       logToUser("PDA Crash at Importing Other User Settings: $e, $trace");
     }
 

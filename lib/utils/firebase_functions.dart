@@ -1,11 +1,86 @@
 import 'dart:convert';
-import 'dart:developer';
-
+import 'dart:io' show Platform;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:http/http.dart' as http;
 import 'package:cloud_functions/cloud_functions.dart';
 
 final firebaseFunctions = _FirebaseFunctions();
 
 class _FirebaseFunctions {
+  final String region = 'us-east4';
+
+  Future<String> _getProjectId() async {
+    FirebaseApp app = Firebase.app();
+    return app.options.projectId;
+  }
+
+  /// Helper function to call Cloud Functions via HTTP for Windows
+  ///
+  /// Faction Assist and Cloud Backups expect [data] in different formats (TODO... correct?)
+  /// To maintain compatibility with Android/iOS we can specify whether to wrap the [data] field as a JSON string
+  /// or send it as an object
+  ///
+  /// - [functionName]: The name of the Cloud Function to call
+  /// - [data]: The data to send to the Cloud Function
+  /// - [wrapDataAsJsonString]: Whether to wrap the 'data' field as a JSON string.
+  Future<dynamic> _callHttpFunctionForDesktop(
+    String functionName,
+    Map<String, dynamic> data, {
+    bool wrapDataAsJsonString = true,
+  }) async {
+    String projectId = await _getProjectId();
+
+    String url = 'https://$region-$projectId.cloudfunctions.net/$functionName';
+
+    // CAUTION! DEBUG: Use local emulator URL if in debug mode
+    /*
+    if (kDebugMode) {
+      url = "http://localhost:5001/$projectId/$region/$functionName";
+    }
+    */
+
+    // Retrieve the Firebase Auth ID token
+    String? idToken = await FirebaseAuth.instance.currentUser!.getIdToken();
+
+    Map<String, String> headers = {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $idToken',
+    };
+
+    // Decide whether to wrap [data] as a JSON string or send as an object
+    final requestBody = wrapDataAsJsonString ? json.encode({'data': json.encode(data)}) : json.encode({'data': data});
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: headers,
+      body: requestBody,
+    );
+
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final Map<String, dynamic> responseData = json.decode(response.body);
+      if (responseData.containsKey('result')) {
+        final dynamic result = responseData['result'];
+        if (result is String) {
+          // Parse the JSON string into a Map
+          final Map<String, dynamic> parsedResult = json.decode(result);
+          return parsedResult;
+        } else if (result is Map<String, dynamic>) {
+          return result;
+        } else if (result is int || result is bool) {
+          // Return the result directly if it's a primitive type
+          return result;
+        } else {
+          throw Exception('Unexpected result type: ${result.runtimeType}');
+        }
+      } else {
+        throw Exception('Invalid response from Cloud Function');
+      }
+    } else {
+      throw Exception('Error calling Cloud Function: ${response.statusCode} ${response.body}');
+    }
+  }
+
   Future<int> sendAttackAssistMessage({
     required String attackId,
     String? attackName = "",
@@ -18,15 +93,9 @@ class _FirebaseFunctions {
     String drinks = "unk",
     String exactStats = "",
   }) async {
-    //################
-    // ASSIST MESSAGES
-    final HttpsCallable callable = FirebaseFunctions.instanceFor(
-      region: 'us-east4',
-    ).httpsCallable(
-      'factionAssist-sendAssistMessage',
-    );
+    final String functionName = 'factionAssist-sendAssistMessage';
 
-    final HttpsCallableResult results = await callable.call(<String, dynamic>{
+    Map<String, dynamic> data = {
       'attackId': attackId,
       'attackName': attackName,
       'attackLevel': attackLevel,
@@ -37,42 +106,44 @@ class _FirebaseFunctions {
       'refills': refills,
       'drinks': drinks,
       'exactStats': exactStats,
-    });
+    };
 
-    // Data comes with number of people notified
-    return results.data;
-  }
+    if (Platform.isWindows) {
+      final result = await _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+      return result as int;
+    } else {
+      // Android / iOS
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
 
-  Future<bool> sendAlertsTroubleshootingTest() async {
-    //################
-    // ALERTS TROUBLESHOOTING MESSAGES
-    final HttpsCallable callable = FirebaseFunctions.instanceFor(
-      region: 'us-east4',
-    ).httpsCallable(
-      'troubleshooting-sendTroubleshootingAutoNotification',
-    );
-
-    try {
-      final HttpsCallableResult results = await callable.call();
+      final HttpsCallableResult results = await callable.call(data);
       return results.data;
-    } catch (e) {
-      log(e.toString());
-      return false;
     }
   }
 
-  //###################
-  // PREFERENCES BACKUP
+  Future<bool> sendAlertsTroubleshootingTest() async {
+    final String functionName = 'troubleshooting-sendTroubleshootingAutoNotification';
+
+    if (Platform.isWindows) {
+      final result = await _callHttpFunctionForDesktop(functionName, {});
+      return result as bool;
+    } else {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
+
+      final HttpsCallableResult results = await callable.call();
+      return results.data;
+    }
+  }
+
   Future<Map<String, dynamic>> saveUserPrefs({
     required String apiKey,
     required int userId,
     required Map<String, dynamic> prefs,
   }) async {
-    final HttpsCallable callable = FirebaseFunctions.instanceFor(
-      region: 'us-east4',
-    ).httpsCallable(
-      'prefsBackup-saveUserPrefs',
-    );
+    final String functionName = 'prefsBackup-saveUserPrefs';
 
     Map<String, dynamic> data = {
       'key': apiKey,
@@ -80,55 +151,65 @@ class _FirebaseFunctions {
       'prefs': prefs,
     };
 
-    String jsonData = json.encode(data);
+    if (Platform.isWindows) {
+      final result = await _callHttpFunctionForDesktop(functionName, data);
+      return result as Map<String, dynamic>;
+    } else {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
 
-    final HttpsCallableResult results = await callable.call(jsonData);
-
-    return json.decode(results.data);
+      final HttpsCallableResult results = await callable.call(json.encode(data));
+      return json.decode(results.data);
+    }
   }
 
   Future<Map<String, dynamic>> getUserPrefs({
     required String apiKey,
     required int userId,
   }) async {
-    final HttpsCallable callable = FirebaseFunctions.instanceFor(
-      region: 'us-east4',
-    ).httpsCallable(
-      'prefsBackup-getUserPrefs',
-    );
+    final String functionName = 'prefsBackup-getUserPrefs';
 
     Map<String, dynamic> data = {
       'key': apiKey,
       'id': userId,
     };
 
-    String jsonData = json.encode(data);
+    if (Platform.isWindows) {
+      final result = await _callHttpFunctionForDesktop(functionName, data);
+      return result as Map<String, dynamic>;
+    } else {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
 
-    final HttpsCallableResult results = await callable.call(jsonData);
-
-    return json.decode(results.data);
+      final HttpsCallableResult results = await callable.call(json.encode(data));
+      return json.decode(results.data);
+    }
   }
 
   Future<Map<String, dynamic>> deleteUserPrefs({
     required String apiKey,
     required int userId,
   }) async {
-    final HttpsCallable callable = FirebaseFunctions.instanceFor(
-      region: 'us-east4',
-    ).httpsCallable(
-      'prefsBackup-deleteUserPrefs',
-    );
+    final String functionName = 'prefsBackup-deleteUserPrefs';
 
     Map<String, dynamic> data = {
       'key': apiKey,
       'id': userId,
     };
 
-    String jsonData = json.encode(data);
+    if (Platform.isWindows) {
+      final result = await _callHttpFunctionForDesktop(functionName, data);
+      return result as Map<String, dynamic>;
+    } else {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
 
-    final HttpsCallableResult results = await callable.call(jsonData);
-
-    return json.decode(results.data);
+      final HttpsCallableResult results = await callable.call(json.encode(data));
+      return json.decode(results.data);
+    }
   }
 
   Future<Map<String, dynamic>> saveOwnBackupShare({
@@ -138,11 +219,7 @@ class _FirebaseFunctions {
     required String ownSharePassword,
     required List<String> prefs,
   }) async {
-    final HttpsCallable callable = FirebaseFunctions.instanceFor(
-      region: 'us-east4',
-    ).httpsCallable(
-      'prefsBackup-setOwnSharePrefs',
-    );
+    final String functionName = 'prefsBackup-setOwnSharePrefs';
 
     Map<String, dynamic> data = {
       'key': apiKey,
@@ -152,32 +229,40 @@ class _FirebaseFunctions {
       'ownSharePrefs': prefs,
     };
 
-    String jsonData = json.encode(data);
+    if (Platform.isWindows) {
+      final result = await _callHttpFunctionForDesktop(functionName, data);
+      return result as Map<String, dynamic>;
+    } else {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
 
-    final HttpsCallableResult results = await callable.call(jsonData);
-
-    return json.decode(results.data);
+      final HttpsCallableResult results = await callable.call(json.encode(data));
+      return json.decode(results.data);
+    }
   }
 
   Future<Map<String, dynamic>> getImportShare({
     required int shareId,
     required String sharePassword,
   }) async {
-    final HttpsCallable callable = FirebaseFunctions.instanceFor(
-      region: 'us-east4',
-    ).httpsCallable(
-      'prefsBackup-getImportShare',
-    );
+    final String functionName = 'prefsBackup-getImportShare';
 
     Map<String, dynamic> data = {
       'shareId': shareId,
       'sharePassword': sharePassword,
     };
 
-    String jsonData = json.encode(data);
+    if (Platform.isWindows) {
+      final result = await _callHttpFunctionForDesktop(functionName, data);
+      return result as Map<String, dynamic>;
+    } else {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
 
-    final HttpsCallableResult results = await callable.call(jsonData);
-
-    return json.decode(results.data);
+      final HttpsCallableResult results = await callable.call(json.encode(data));
+      return json.decode(results.data);
+    }
   }
 }
