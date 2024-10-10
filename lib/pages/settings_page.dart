@@ -228,15 +228,14 @@ class SettingsPageState extends State<SettingsPage> {
                       const Divider(),
                       const SizedBox(height: 5),
                       // Cloud functions are not supported on Windows
-                      if (!Platform.isWindows)
-                        Column(
-                          children: [
-                            _saveSettingsSection(),
-                            const SizedBox(height: 15),
-                            const Divider(),
-                            const SizedBox(height: 5),
-                          ],
-                        ),
+                      Column(
+                        children: [
+                          _saveSettingsSection(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                        ],
+                      ),
                       _troubleshootingSection(),
                       const SizedBox(height: 50),
                     ],

@@ -838,8 +838,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 ),
                               ],
                             ),
-                          if (!Platform.isWindows &&
-                              (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+                          if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
                               _userProvider!.basic?.faction?.factionId != 0)
                             Text(
@@ -2387,8 +2386,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       );
     }
 
-    final bool assistPossible = !Platform.isWindows &&
-        (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
+    final bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
         _userProvider!.basic?.faction?.factionId != 0;
 

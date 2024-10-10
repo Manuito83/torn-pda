@@ -117,138 +117,135 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    if (!Platform.isWindows)
-                      if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
-                          widget.userProvider!.basic!.faction!.factionId != 0)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(MdiIcons.fencing, size: 20),
-                                SizedBox(width: 5),
-                                Flexible(
-                                  child: Text(
-                                    'FACTION ASSISTANCE',
-                                    style: TextStyle(fontSize: 12),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            onPressed: () async {
-                              BotToast.showText(
-                                text: "Requesting assistance from faction members!",
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.green,
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-
-                              Navigator.of(context).pop();
-
-                              final String attackId = widget.url.split("user2ID=")[1];
-                              final t =
-                                  await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
-                              dynamic attackAssistMessageArg;
-                              if (t is OtherProfileModel) {
-                                final SpiesController spyController = Get.find<SpiesController>();
-
-                                YataSpyModel? spy;
-
-                                switch (spyController.spiesSource) {
-                                  case SpiesSource.yata:
-                                    spy = spyController.getYataSpy(userId: attackId, name: t.name);
-                                    break;
-                                  case SpiesSource.tornStats:
-                                    spy = spyController.getTornStatsSpy(userId: attackId)?.toYataModel();
-                                    break;
-                                  case null:
-                                    break;
-                                }
-                                String? exactStats;
-
-                                if (spy != null) {
-                                  final total = formatBigNumbers(spy.total!);
-                                  final str = formatBigNumbers(spy.strength!);
-                                  final spd = formatBigNumbers(spy.speed!);
-                                  final def = formatBigNumbers(spy.defense!);
-                                  final dex = formatBigNumbers(spy.dexterity!);
-                                  exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
-                                      "updated ${readTimestamp(spy.update!)}";
-                                }
-                                String estimatedStats = StatsCalculator.calculateStats(
-                                  criminalRecordTotal: t.criminalrecord!.total,
-                                  level: t.level,
-                                  networth: t.personalstats!.networth,
-                                  rank: t.rank,
-                                );
-
-                                estimatedStats += "\n- Xanax: ${t.personalstats!.xantaken}";
-                                estimatedStats += "\n- Refills (E): ${t.personalstats!.refills}";
-                                estimatedStats += "\n- Drinks (E): ${t.personalstats!.energydrinkused}";
-                                estimatedStats += "\n(tap to get a comparison with you)";
-                                attackAssistMessageArg = (
-                                  attackId: attackId,
-                                  attackName: t.name,
-                                  attackLevel: t.level.toString(),
-                                  attackLife: "${t.life!.current}/${t.life!.maximum}",
-                                  attackAge: t.age.toString(),
-                                  estimatedStats: estimatedStats,
-                                  exactStats: exactStats ?? "",
-                                  xanax: t.personalstats!.xantaken.toString(),
-                                  refills: t.personalstats!.refills.toString(),
-                                  drinks: t.personalstats!.energydrinkused.toString(),
-                                );
-                              } else {
-                                attackAssistMessageArg = (attackId: attackId);
-                              }
-                              final int membersNotified = await firebaseFunctions.sendAttackAssistMessage(
-                                attackId: attackAssistMessageArg.attackId,
-                                attackName: attackAssistMessageArg.attackName,
-                                attackLevel: attackAssistMessageArg.attackLevel,
-                                attackLife: attackAssistMessageArg.attackLife,
-                                attackAge: attackAssistMessageArg.attackAge,
-                                estimatedStats: attackAssistMessageArg.estimatedStats,
-                                xanax: attackAssistMessageArg.xanax,
-                                refills: attackAssistMessageArg.refills,
-                                drinks: attackAssistMessageArg.drinks,
-                                exactStats: attackAssistMessageArg.exactStats,
-                              );
-
-                              String membersMessage =
-                                  "$membersNotified faction member${membersNotified == 1 ? " has" : "s have"} been notified!";
-                              Color? membersColor = Colors.green;
-
-                              if (membersNotified == 0) {
-                                membersMessage = "No faction member could be notified (not using Torn PDA or "
-                                    "assists messages deactivated)!";
-                                membersColor = Colors.orange[700];
-                              } else if (membersNotified == -1) {
-                                membersMessage =
-                                    "There was a problem locating your faction's details, please try again!";
-                                membersColor = Colors.orange[700];
-                              }
-
-                              BotToast.showText(
-                                text: membersMessage,
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: membersColor!,
-                                duration: const Duration(seconds: 5),
-                                contentPadding: const EdgeInsets.all(10),
-                              );
-                            },
+                    if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
+                        widget.userProvider!.basic!.faction!.factionId != 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
                           ),
+                          child: Row(
+                            children: [
+                              Icon(MdiIcons.fencing, size: 20),
+                              SizedBox(width: 5),
+                              Flexible(
+                                child: Text(
+                                  'FACTION ASSISTANCE',
+                                  style: TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                          ),
+                          onPressed: () async {
+                            BotToast.showText(
+                              text: "Requesting assistance from faction members!",
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.green,
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+
+                            Navigator.of(context).pop();
+
+                            final String attackId = widget.url.split("user2ID=")[1];
+                            final t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
+                            dynamic attackAssistMessageArg;
+                            if (t is OtherProfileModel) {
+                              final SpiesController spyController = Get.find<SpiesController>();
+
+                              YataSpyModel? spy;
+
+                              switch (spyController.spiesSource) {
+                                case SpiesSource.yata:
+                                  spy = spyController.getYataSpy(userId: attackId, name: t.name);
+                                  break;
+                                case SpiesSource.tornStats:
+                                  spy = spyController.getTornStatsSpy(userId: attackId)?.toYataModel();
+                                  break;
+                                case null:
+                                  break;
+                              }
+                              String? exactStats;
+
+                              if (spy != null) {
+                                final total = formatBigNumbers(spy.total!);
+                                final str = formatBigNumbers(spy.strength!);
+                                final spd = formatBigNumbers(spy.speed!);
+                                final def = formatBigNumbers(spy.defense!);
+                                final dex = formatBigNumbers(spy.dexterity!);
+                                exactStats = "$total (STR $str, SPD $spd, DEF $def, DEX $dex), "
+                                    "updated ${readTimestamp(spy.update!)}";
+                              }
+                              String estimatedStats = StatsCalculator.calculateStats(
+                                criminalRecordTotal: t.criminalrecord!.total,
+                                level: t.level,
+                                networth: t.personalstats!.networth,
+                                rank: t.rank,
+                              );
+
+                              estimatedStats += "\n- Xanax: ${t.personalstats!.xantaken}";
+                              estimatedStats += "\n- Refills (E): ${t.personalstats!.refills}";
+                              estimatedStats += "\n- Drinks (E): ${t.personalstats!.energydrinkused}";
+                              estimatedStats += "\n(tap to get a comparison with you)";
+                              attackAssistMessageArg = (
+                                attackId: attackId,
+                                attackName: t.name,
+                                attackLevel: t.level.toString(),
+                                attackLife: "${t.life!.current}/${t.life!.maximum}",
+                                attackAge: t.age.toString(),
+                                estimatedStats: estimatedStats,
+                                exactStats: exactStats ?? "",
+                                xanax: t.personalstats!.xantaken.toString(),
+                                refills: t.personalstats!.refills.toString(),
+                                drinks: t.personalstats!.energydrinkused.toString(),
+                              );
+                            } else {
+                              attackAssistMessageArg = (attackId: attackId);
+                            }
+                            final int membersNotified = await firebaseFunctions.sendAttackAssistMessage(
+                              attackId: attackAssistMessageArg.attackId,
+                              attackName: attackAssistMessageArg.attackName,
+                              attackLevel: attackAssistMessageArg.attackLevel,
+                              attackLife: attackAssistMessageArg.attackLife,
+                              attackAge: attackAssistMessageArg.attackAge,
+                              estimatedStats: attackAssistMessageArg.estimatedStats,
+                              xanax: attackAssistMessageArg.xanax,
+                              refills: attackAssistMessageArg.refills,
+                              drinks: attackAssistMessageArg.drinks,
+                              exactStats: attackAssistMessageArg.exactStats,
+                            );
+
+                            String membersMessage =
+                                "$membersNotified faction member${membersNotified == 1 ? " has" : "s have"} been notified!";
+                            Color? membersColor = Colors.green;
+
+                            if (membersNotified == 0) {
+                              membersMessage = "No faction member could be notified (not using Torn PDA or "
+                                  "assists messages deactivated)!";
+                              membersColor = Colors.orange[700];
+                            } else if (membersNotified == -1) {
+                              membersMessage = "There was a problem locating your faction's details, please try again!";
+                              membersColor = Colors.orange[700];
+                            }
+
+                            BotToast.showText(
+                              text: membersMessage,
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: membersColor!,
+                              duration: const Duration(seconds: 5),
+                              contentPadding: const EdgeInsets.all(10),
+                            );
+                          },
                         ),
+                      ),
                     const SizedBox(height: 5),
                     Row(
                       children: [
