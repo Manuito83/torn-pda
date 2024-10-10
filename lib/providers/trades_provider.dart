@@ -37,6 +37,7 @@ class TradesContainer {
   String tornExchangeTotalMoney = "";
   String tornExchangeProfit = "";
   bool tornExchangeServerError = false;
+  String tornExchangeServerErrorReason = "";
   List<TornExchangeItem> tornExchangeItems = <TornExchangeItem>[];
   List<String> tornExchangeNames = [];
   List<int> tornExchangePrices = [];
@@ -147,7 +148,8 @@ class TradesProvider extends ChangeNotifier {
             tradesContainer
               ..tornExchangeActive = true
               ..tornExchangeProfitActive = tornExchangeProfitActive
-              ..tornExchangeServerError = tornExchangeIn.serverError;
+              ..tornExchangeServerError = tornExchangeIn.serverError
+              ..tornExchangeServerErrorReason = tornExchangeIn.serverErrorReason;
           } else {
             // We'll return an error like above if there's something wrong coming from Torn Exchange here
             try {
@@ -192,7 +194,8 @@ class TradesProvider extends ChangeNotifier {
               tradesContainer
                 ..tornExchangeActive = true
                 ..tornExchangeProfitActive = tornExchangeProfitActive
-                ..tornExchangeServerError = tornExchangeIn.serverError;
+                ..tornExchangeServerError = tornExchangeIn.serverError
+                ..tornExchangeServerErrorReason = tornExchangeIn.serverErrorReason;
             }
           }
         }

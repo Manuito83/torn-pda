@@ -1158,698 +1158,697 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     return Stack(
       children: [
         InAppWebView(
-            windowId: widget.windowId,
-            initialUrlRequest: _initialUrl,
-            pullToRefreshController: _pullToRefreshController,
-            findInteractionController: _findInteractionController,
-            initialSettings: _initialWebViewSettings,
-            // EVENTS
-            onWebViewCreated: (c) async {
-              webViewController = c;
+          windowId: widget.windowId,
+          initialUrlRequest: _initialUrl,
+          pullToRefreshController: _pullToRefreshController,
+          findInteractionController: _findInteractionController,
+          initialSettings: _initialWebViewSettings,
+          // EVENTS
+          onWebViewCreated: (c) async {
+            webViewController = c;
 
-              // Clear cache (except for cookies) for each new session
-              if (!_settingsProvider.webviewCacheEnabled) {
-                await InAppWebViewController.clearAllCache();
-              }
+            // Clear cache (except for cookies) for each new session
+            if (!_settingsProvider.webviewCacheEnabled) {
+              await InAppWebViewController.clearAllCache();
+            }
 
-              _terminalProvider.terminal = "Terminal";
+            _terminalProvider.terminal = "Terminal";
 
-              // Userscripts initial load
-              if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
-                UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                  apiKey: _userProvider?.basic?.userApiKey ?? "",
-                );
-                await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
-
-                UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-                  url: _initialUrl!.url.toString(),
-                  apiKey: _userProvider?.basic?.userApiKey ?? "",
-                  time: UserScriptTime.start,
-                );
-                await webViewController!.addUserScripts(userScripts: scriptsToAdd);
-              } else if (Platform.isIOS && widget.windowId != null) {
-                _terminalProvider.addInstruction(
-                    "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
-                    "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
-              }
-
-              // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
-              webViewController!.addJavaScriptHandler(
-                handlerName: 'copyToClipboard',
-                callback: (args) {
-                  String copy = args.toString();
-                  if (copy.startsWith("[")) {
-                    copy = copy.replaceFirst("[", "");
-                    copy = copy.substring(0, copy.length - 1);
-                  }
-                  Clipboard.setData(ClipboardData(text: copy));
-                },
+            // Userscripts initial load
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
+              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
-              // Theme change received from web
-              webViewController!.addJavaScriptHandler(
-                handlerName: 'webThemeChange',
-                callback: (args) {
-                  if (!_settingsProvider.syncTornWebTheme) return;
-                  if (args.contains("dark")) {
-                    // Only change to dark themes if we are currently in light (the web will respond with a
-                    // theme change event when we initiate the change, and it could revert to the default dark)
-                    if (_themeProvider.currentTheme == AppTheme.light) {
-                      if (_settingsProvider.darkThemeToSyncFromWeb == "dark") {
-                        _themeProvider.changeTheme = AppTheme.dark;
-                        log("Web theme changed to dark!");
-                      } else {
-                        _themeProvider.changeTheme = AppTheme.extraDark;
-                        log("Web theme changed to extra dark!");
-                      }
+              UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+                url: _initialUrl!.url.toString(),
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                time: UserScriptTime.start,
+              );
+              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+            } else if (Platform.isIOS && widget.windowId != null) {
+              _terminalProvider.addInstruction(
+                  "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
+                  "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+            }
+
+            // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
+            webViewController!.addJavaScriptHandler(
+              handlerName: 'copyToClipboard',
+              callback: (args) {
+                String copy = args.toString();
+                if (copy.startsWith("[")) {
+                  copy = copy.replaceFirst("[", "");
+                  copy = copy.substring(0, copy.length - 1);
+                }
+                Clipboard.setData(ClipboardData(text: copy));
+              },
+            );
+
+            // Theme change received from web
+            webViewController!.addJavaScriptHandler(
+              handlerName: 'webThemeChange',
+              callback: (args) {
+                if (!_settingsProvider.syncTornWebTheme) return;
+                if (args.contains("dark")) {
+                  // Only change to dark themes if we are currently in light (the web will respond with a
+                  // theme change event when we initiate the change, and it could revert to the default dark)
+                  if (_themeProvider.currentTheme == AppTheme.light) {
+                    if (_settingsProvider.darkThemeToSyncFromWeb == "dark") {
+                      _themeProvider.changeTheme = AppTheme.dark;
+                      log("Web theme changed to dark!");
+                    } else {
+                      _themeProvider.changeTheme = AppTheme.extraDark;
+                      log("Web theme changed to extra dark!");
                     }
-                  } else if (args.contains("light")) {
-                    _themeProvider.changeTheme = AppTheme.light;
-                    log("Web theme changed to light!");
                   }
+                } else if (args.contains("light")) {
+                  _themeProvider.changeTheme = AppTheme.light;
+                  log("Web theme changed to light!");
+                }
 
-                  setState(() {
-                    SystemChrome.setSystemUIOverlayStyle(
-                      SystemUiOverlayStyle(
-                        statusBarColor: _themeProvider.statusBar,
-                        systemNavigationBarColor: _themeProvider.statusBar,
-                        systemNavigationBarIconBrightness: Brightness.light,
-                        statusBarIconBrightness: Brightness.light,
-                      ),
-                    );
-                  });
-                },
-              );
-
-              _addLoadoutChangeHandler(webViewController!);
-
-              _addScriptApiHandlers(webViewController!);
-            },
-            shouldOverrideUrlLoading: (c, action) async {
-              final incomingUrl = action.request.url.toString();
-
-              // Handle external schemes
-              if (!incomingUrl.startsWith("http:") &&
-                  !incomingUrl.startsWith("https:") &&
-                  !incomingUrl.startsWith("tornpda:")) {
-                try {
-                  await launchUrl(Uri.parse(incomingUrl), mode: LaunchMode.externalApplication);
-                } catch (e) {
-                  log("Error launching intent: $e");
-
-                  // Extract the scheme from the URI
-                  String errorMessage = "Cannot find a compatible app for this link!";
-                  String scheme = Uri.parse(incomingUrl).scheme;
-
-                  if (scheme.isNotEmpty) {
-                    errorMessage = "Cannot find a compatible app for link $scheme:";
-                  }
-
-                  BotToast.showText(
-                    text: errorMessage,
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
+                setState(() {
+                  SystemChrome.setSystemUIOverlayStyle(
+                    SystemUiOverlayStyle(
+                      statusBarColor: _themeProvider.statusBar,
+                      systemNavigationBarColor: _themeProvider.statusBar,
+                      systemNavigationBarIconBrightness: Brightness.light,
+                      statusBarIconBrightness: Brightness.light,
                     ),
-                    contentColor: Colors.orange,
-                    duration: const Duration(seconds: 4),
-                    contentPadding: const EdgeInsets.all(10),
-                    clickClose: true,
                   );
+                });
+              },
+            );
+
+            _addLoadoutChangeHandler(webViewController!);
+
+            _addScriptApiHandlers(webViewController!);
+          },
+          shouldOverrideUrlLoading: (c, action) async {
+            final incomingUrl = action.request.url.toString();
+
+            // Handle external schemes
+            if (!incomingUrl.startsWith("http:") &&
+                !incomingUrl.startsWith("https:") &&
+                !incomingUrl.startsWith("tornpda:")) {
+              try {
+                await launchUrl(Uri.parse(incomingUrl), mode: LaunchMode.externalApplication);
+              } catch (e) {
+                log("Error launching intent: $e");
+
+                // Extract the scheme from the URI
+                String errorMessage = "Cannot find a compatible app for this link!";
+                String scheme = Uri.parse(incomingUrl).scheme;
+
+                if (scheme.isNotEmpty) {
+                  errorMessage = "Cannot find a compatible app for link $scheme:";
                 }
-                return NavigationActionPolicy.CANCEL;
-              }
 
-              if (_settingsProvider.hitInMiniProfileOpensNewTab) {
-                if (await _hitShouldOpenNewTab(c, action)) {
-                  return NavigationActionPolicy.CANCEL;
-                }
-              }
-
-              // If a tab is fully locked, cancel navigation
-              // Note: the mini profiles consideration (above) should come first
-              final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
-              if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
-
-              if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
-                // Userscripts load before webpage begins loading
-                UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                  apiKey: _userProvider?.basic?.userApiKey ?? "",
-                );
-                await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
-
-                UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-                  url: incomingUrl,
-                  apiKey: _userProvider?.basic?.userApiKey ?? "",
-                  time: UserScriptTime.start,
-                );
-                await webViewController!.addUserScripts(userScripts: scriptsToAdd);
-
-                // DEBUG
-                if (_debugScriptsInjection) {
-                  final addList = [];
-                  for (final s in scriptsToAdd) {
-                    addList.add(s.groupName);
-                  }
-                  log("Added normal scripts in shouldOverride: $addList");
-                  log("Added handlers scripts in shouldOverride: $handlersScriptsToAdd");
-                }
-              }
-
-              if (incomingUrl.contains("http://")) {
-                _loadUrl(incomingUrl.replaceAll("http:", "https:"));
-                return NavigationActionPolicy.ALLOW;
-              }
-
-              // Profiles images in Torn (also used in the forums) come with a ?v= parameter at the end which makes
-              // the WKWebview download the image instantly (or load a null page if downloads are disabled). So we
-              // just get rid of the ?v= parameter and load it again without it
-              if (incomingUrl.contains("profileimages.torn.com")) {
-                final correctedUrl = incomingUrl.replaceAll(RegExp(r'\?v=\d+'), '');
-                if (incomingUrl != correctedUrl) {
-                  // The incomingUrl contains the ?v= part, so we cancel the navigation.
-                  _loadUrl(correctedUrl);
-                  return NavigationActionPolicy.CANCEL;
-                } else {
-                  // The incomingUrl does not contain the ?v= part (probably as we reloaded it), so we allow it.
-                  return NavigationActionPolicy.ALLOW;
-                }
-              }
-
-              // Check for content-type header to prevent loading of non-JS files.
-              // Add anyway if there's no header, as it's probably a userscript.
-              if (incomingUrl.endsWith(".user.js") &&
-                  (action.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
-                // First look for existing script with this url
-                final existingScript =
-                    _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == incomingUrl);
-                late String message;
-                if (existingScript != null) {
-                  message = "UserScript already exists, opening dialog...";
-                  showDialog(
-                      context: context,
-                      builder: (_) => UserScriptsAddDialog(
-                            editExisting: true,
-                            editScript: existingScript,
-                            defaultPage: 1,
-                            // No need for default URL as it already exists in the script object
-                          ));
-                } else {
-                  message = "UserScript detected, opening dialog...";
-                  showDialog(
-                      builder: (_) => UserScriptsAddDialog(
-                            editExisting: false,
-                            defaultUrl: incomingUrl,
-                            defaultPage: 1,
-                          ),
-                      context: context);
-                }
                 BotToast.showText(
-                  text: message,
+                  text: errorMessage,
                   textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.blue,
-                  duration: const Duration(seconds: 3),
+                  contentColor: Colors.orange,
+                  duration: const Duration(seconds: 4),
                   contentPadding: const EdgeInsets.all(10),
                   clickClose: true,
                 );
+              }
+              return NavigationActionPolicy.CANCEL;
+            }
+
+            if (_settingsProvider.hitInMiniProfileOpensNewTab) {
+              if (await _hitShouldOpenNewTab(c, action)) {
                 return NavigationActionPolicy.CANCEL;
               }
+            }
 
+            // If a tab is fully locked, cancel navigation
+            // Note: the mini profiles consideration (above) should come first
+            final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
+            if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
+
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+              // Userscripts load before webpage begins loading
+              UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+              );
+              await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
+
+              UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+                url: incomingUrl,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                time: UserScriptTime.start,
+              );
+              await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+
+              // DEBUG
+              if (_debugScriptsInjection) {
+                final addList = [];
+                for (final s in scriptsToAdd) {
+                  addList.add(s.groupName);
+                }
+                log("Added normal scripts in shouldOverride: $addList");
+                log("Added handlers scripts in shouldOverride: $handlersScriptsToAdd");
+              }
+            }
+
+            if (incomingUrl.contains("http://")) {
+              _loadUrl(incomingUrl.replaceAll("http:", "https:"));
               return NavigationActionPolicy.ALLOW;
-            },
-            onCreateWindow: (c, request) async {
-              if (!mounted) return true;
-              // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
-              // to open a window, a new tab is created but we can't see it and looks like a glitch)
-              if (!_settingsProvider.useTabsFullBrowser) {
-                final String url = request.request.url.toString().replaceAll("http:", "https:");
-                _loadUrl(url);
+            }
+
+            // Profiles images in Torn (also used in the forums) come with a ?v= parameter at the end which makes
+            // the WKWebview download the image instantly (or load a null page if downloads are disabled). So we
+            // just get rid of the ?v= parameter and load it again without it
+            if (incomingUrl.contains("profileimages.torn.com")) {
+              final correctedUrl = incomingUrl.replaceAll(RegExp(r'\?v=\d+'), '');
+              if (incomingUrl != correctedUrl) {
+                // The incomingUrl contains the ?v= part, so we cancel the navigation.
+                _loadUrl(correctedUrl);
+                return NavigationActionPolicy.CANCEL;
               } else {
-                // If we are using tabs, add a tab
-                final String url = request.request.url.toString().replaceAll("http:", "https:");
-                _webViewProvider.addTab(url: url, windowId: request.windowId);
-                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                // The incomingUrl does not contain the ?v= part (probably as we reloaded it), so we allow it.
+                return NavigationActionPolicy.ALLOW;
               }
-              return true;
-            },
-            onCloseWindow: (controller) async {
-              await Future.delayed(const Duration(seconds: 2));
-              _webViewProvider.removeTab(calledFromTab: true);
-            },
-            onLoadStart: (c, uri) async {
-              log("Start URL: $uri");
-              //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
+            }
 
-              _webViewProvider.verticalMenuClose();
-              if (!mounted) return;
+            // Check for content-type header to prevent loading of non-JS files.
+            // Add anyway if there's no header, as it's probably a userscript.
+            if (incomingUrl.endsWith(".user.js") &&
+                (action.request.headers?["content-type"]?.contains("text/javascript") ?? true)) {
+              // First look for existing script with this url
+              final existingScript = _userScriptsProvider.userScriptList.firstWhereOrNull((s) => s.url == incomingUrl);
+              late String message;
+              if (existingScript != null) {
+                message = "UserScript already exists, opening dialog...";
+                showDialog(
+                    context: context,
+                    builder: (_) => UserScriptsAddDialog(
+                          editExisting: true,
+                          editScript: existingScript,
+                          defaultPage: 1,
+                          // No need for default URL as it already exists in the script object
+                        ));
+              } else {
+                message = "UserScript detected, opening dialog...";
+                showDialog(
+                    builder: (_) => UserScriptsAddDialog(
+                          editExisting: false,
+                          defaultUrl: incomingUrl,
+                          defaultPage: 1,
+                        ),
+                    context: context);
+              }
+              BotToast.showText(
+                text: message,
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+                clickClose: true,
+              );
+              return NavigationActionPolicy.CANCEL;
+            }
 
-              if (Platform.isAndroid) {
-                _revertTransparentBackground();
+            return NavigationActionPolicy.ALLOW;
+          },
+          onCreateWindow: (c, request) async {
+            if (!mounted) return true;
+            // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
+            // to open a window, a new tab is created but we can't see it and looks like a glitch)
+            if (!_settingsProvider.useTabsFullBrowser) {
+              final String url = request.request.url.toString().replaceAll("http:", "https:");
+              _loadUrl(url);
+            } else {
+              // If we are using tabs, add a tab
+              final String url = request.request.url.toString().replaceAll("http:", "https:");
+              _webViewProvider.addTab(url: url, windowId: request.windowId);
+              _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+            }
+            return true;
+          },
+          onCloseWindow: (controller) async {
+            await Future.delayed(const Duration(seconds: 2));
+            _webViewProvider.removeTab(calledFromTab: true);
+          },
+          onLoadStart: (c, uri) async {
+            log("Start URL: $uri");
+            //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
+
+            _webViewProvider.verticalMenuClose();
+            if (!mounted) return;
+
+            if (Platform.isAndroid) {
+              _revertTransparentBackground();
+            }
+
+            try {
+              _currentUrl = uri.toString();
+
+              final html = await webViewController!.getHtml();
+
+              hideChatOnLoad();
+
+              final document = parse(html);
+              _assessGeneral(document);
+
+              assessGymAndHuntingEnergyWarning(uri.toString());
+              assessTravelAgencyEnergyNerveLifeWarning(uri.toString());
+            } catch (e) {
+              // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+              // the checks performed in this method
+            }
+
+            // Needs to be done as early as possible, but iOS does not like onLoadStart for this script
+            if (Platform.isAndroid) {
+              evaluateGreasyForMockVM(uri, c);
+            }
+          },
+          onProgressChanged: (c, progress) async {
+            if (!mounted) return;
+
+            try {
+              if (_settingsProvider.removeAirplane) {
+                webViewController!.evaluateJavascript(source: travelRemovePlaneJS());
               }
 
-              try {
-                _currentUrl = uri.toString();
+              hideChatOnLoad();
 
-                final html = await webViewController!.getHtml();
-
-                hideChatOnLoad();
-
-                final document = parse(html);
-                _assessGeneral(document);
-
-                assessGymAndHuntingEnergyWarning(uri.toString());
-                assessTravelAgencyEnergyNerveLifeWarning(uri.toString());
-              } catch (e) {
-                // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
-                // the checks performed in this method
+              if (mounted) {
+                setState(() {
+                  _progress = progress / 100;
+                });
               }
+
+              if (progress > 75) {
+                _pullToRefreshController!.endRefreshing();
+
+                // onProgressChanged gets called before onLoadStart, so it works
+                // both to add or remove widgets. It is much faster.
+                _assessSectionsWithWidgets();
+                // We reset here the triggers for the sections that are called every
+                // time so that they can be called again
+                _resetSectionsWithWidgets();
+              }
+            } catch (e) {
+              // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+              // the checks performed in this method
+            }
+          },
+          onLoadStop: (c, uri) async {
+            if (!mounted) return;
+
+            // Ensure that transparent background is set to false after first load
+            // In iOS we do it after load stop, otherwise a white flash is trigger in any case
+            if (Platform.isIOS) {
+              _revertTransparentBackground();
+            }
+
+            // iOS will start a download when we browser to an image with 'open image in new tab'
+            // To prevent this from happening, in those cases we will open a new webview with useOnDownloadRequest
+            // disabled, only to re-enable it later when we have loaded the new tab
+            if (Platform.isIOS && !widget.allowDownloads) {
+              _revertDownloads();
+            }
+
+            try {
+              _currentUrl = uri.toString();
 
               // Needs to be done as early as possible, but iOS does not like onLoadStart for this script
-              if (Platform.isAndroid) {
+              if (Platform.isIOS) {
                 evaluateGreasyForMockVM(uri, c);
               }
-            },
-            onProgressChanged: (c, progress) async {
-              if (!mounted) return;
 
-              try {
-                if (_settingsProvider.removeAirplane) {
-                  webViewController!.evaluateJavascript(source: travelRemovePlaneJS());
+              // Userscripts remove those no longer necessary
+              List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
+                url: uri.toString(),
+              );
+              if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+                for (final group in scriptsToRemove) {
+                  await c.removeUserScriptsByGroupName(groupName: group!);
                 }
-
-                hideChatOnLoad();
-
-                if (mounted) {
-                  setState(() {
-                    _progress = progress / 100;
-                  });
-                }
-
-                if (progress > 75) {
-                  _pullToRefreshController!.endRefreshing();
-
-                  // onProgressChanged gets called before onLoadStart, so it works
-                  // both to add or remove widgets. It is much faster.
-                  _assessSectionsWithWidgets();
-                  // We reset here the triggers for the sections that are called every
-                  // time so that they can be called again
-                  _resetSectionsWithWidgets();
-                }
-              } catch (e) {
-                // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
-                // the checks performed in this method
-              }
-            },
-            onLoadStop: (c, uri) async {
-              if (!mounted) return;
-
-              // Ensure that transparent background is set to false after first load
-              // In iOS we do it after load stop, otherwise a white flash is trigger in any case
-              if (Platform.isIOS) {
-                _revertTransparentBackground();
               }
 
-              // iOS will start a download when we browser to an image with 'open image in new tab'
-              // To prevent this from happening, in those cases we will open a new webview with useOnDownloadRequest
-              // disabled, only to re-enable it later when we have loaded the new tab
-              if (Platform.isIOS && !widget.allowDownloads) {
-                _revertDownloads();
+              // DEBUG
+              if (_debugScriptsInjection) {
+                log("Removed scripts in loadStop: $scriptsToRemove");
               }
 
-              try {
-                _currentUrl = uri.toString();
-
-                // Needs to be done as early as possible, but iOS does not like onLoadStart for this script
-                if (Platform.isIOS) {
-                  evaluateGreasyForMockVM(uri, c);
-                }
-
-                // Userscripts remove those no longer necessary
-                List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
-                  url: uri.toString(),
+              // Userscripts add those that inject at the end
+              UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
+                url: uri.toString(),
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                time: UserScriptTime.end,
+              );
+              // We need to inject directly, otherwise these scripts will only load in the next page visit
+              for (final script in scriptsToAdd) {
+                await webViewController!.evaluateJavascript(
+                  source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
                 );
-                if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
-                  for (final group in scriptsToRemove) {
-                    await c.removeUserScriptsByGroupName(groupName: group!);
+              }
+
+              // DEBUG
+              if (_debugScriptsInjection) {
+                final addList = [];
+                for (final s in scriptsToAdd) {
+                  addList.add(s.groupName);
+                }
+                log("Added scripts in shouldOverride: $addList");
+              }
+
+              hideChatOnLoad();
+              _highlightChat();
+
+              // If we are using pull-to-refresh in a short page (that does not scroll), add a bit of body
+              // height so that the pull-to-refresh triggers properly
+              if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
+                _addExtraHeightForPullToRefresh();
+              }
+
+              final html = await webViewController!.getHtml();
+              final document = parse(html);
+
+              // Force to show title
+              if (!_isChainingBrowser) {
+                _pageTitle = await _getPageTitle(document, showTitle: true);
+              }
+
+              if (widget.useTabs) {
+                // Report title will only be used from onLoadStop, since onResourceLoad might trigger
+                // it too early (before it has changed)
+                _reportPageTitle();
+              }
+
+              _assessTravel(document);
+              _assessGeneral(document);
+
+              // This is used in case the user presses reload. We need to wait for the page
+              // load to be finished in order to scroll
+              if (_scrollAfterLoad) {
+                webViewController!.scrollTo(x: _scrollX!, y: _scrollY!);
+                _scrollAfterLoad = false;
+              }
+
+              if (_settingsProvider.restoreSessionCookie) {
+                if (_currentUrl.contains("torn.com")) {
+                  Cookie? session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
+                  if (session != null) {
+                    Prefs().setWebViewSessionCookie(session.value);
                   }
                 }
+              }
 
-                // DEBUG
-                if (_debugScriptsInjection) {
-                  log("Removed scripts in loadStop: $scriptsToRemove");
-                }
-
-                // Userscripts add those that inject at the end
-                UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
-                  url: uri.toString(),
-                  apiKey: _userProvider?.basic?.userApiKey ?? "",
-                  time: UserScriptTime.end,
-                );
-                // We need to inject directly, otherwise these scripts will only load in the next page visit
-                for (final script in scriptsToAdd) {
-                  await webViewController!.evaluateJavascript(
-                    source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
-                  );
-                }
-
-                // DEBUG
-                if (_debugScriptsInjection) {
-                  final addList = [];
-                  for (final s in scriptsToAdd) {
-                    addList.add(s.groupName);
+              if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTornWebTheme) {
+                if (_currentUrl.contains("www.torn.com")) {
+                  if (_webViewProvider.pendingThemeSync == "light") {
+                    _requestTornThemeChange(dark: false);
+                  } else {
+                    _requestTornThemeChange(dark: true);
                   }
-                  log("Added scripts in shouldOverride: $addList");
+                  _webViewProvider.pendingThemeSync = "";
                 }
+              }
 
-                hideChatOnLoad();
-                _highlightChat();
+              assessErrorCases(document: document);
+            } catch (e) {
+              // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+              // the checks performed in this method
+            }
 
-                // If we are using pull-to-refresh in a short page (that does not scroll), add a bit of body
-                // height so that the pull-to-refresh triggers properly
-                if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
-                  _addExtraHeightForPullToRefresh();
-                }
+            //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
+          },
+          onUpdateVisitedHistory: (c, uri, androidReload) async {
+            if (!mounted) return;
+            _reportUrlVisit(uri);
+            _assessOCnnb(uri.toString()); // Using a more direct call for OCnnb
+            return;
+          },
+          onLoadResource: (c, resource) async {
+            if (!mounted) return;
 
+            try {
+              /// TRADES
+              /// We are calling trades from here because onLoadStop does not
+              /// work inside of Trades for iOS. Also, both in Android and iOS
+              /// we need to catch deletions.
+              // Two possible scenarios.
+              // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
+              //    we check for url once, limiting it to TradesTriggered
+              // 2. For the rest of the cases (updates, additions), we use the resource
+              if (resource.url.toString().contains("trade.php") ||
+                  (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
+                // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                // the webView to freeze for a bit
+                if (_tradesOnResourceTriggerTime != null &&
+                    DateTime.now().difference(_tradesOnResourceTriggerTime!).inSeconds < 2) return;
+                _tradesOnResourceTriggerTime = DateTime.now();
+
+                _tradesTriggered = true;
                 final html = await webViewController!.getHtml();
                 final document = parse(html);
-
-                // Force to show title
-                if (!_isChainingBrowser) {
-                  _pageTitle = await _getPageTitle(document, showTitle: true);
+                final pageTitle = (await _getPageTitle(document))!.toLowerCase();
+                if (Platform.isIOS) {
+                  // iOS needs this check because the full trade URL won't trigger in onLoadStop
+                  _currentUrl = (await webViewController!.getUrl()).toString();
                 }
-
-                if (widget.useTabs) {
-                  // Report title will only be used from onLoadStop, since onResourceLoad might trigger
-                  // it too early (before it has changed)
-                  _reportPageTitle();
-                }
-
-                _assessTravel(document);
-                _assessGeneral(document);
-
-                // This is used in case the user presses reload. We need to wait for the page
-                // load to be finished in order to scroll
-                if (_scrollAfterLoad) {
-                  webViewController!.scrollTo(x: _scrollX!, y: _scrollY!);
-                  _scrollAfterLoad = false;
-                }
-
-                if (_settingsProvider.restoreSessionCookie) {
-                  if (_currentUrl.contains("torn.com")) {
-                    Cookie? session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
-                    if (session != null) {
-                      Prefs().setWebViewSessionCookie(session.value);
-                    }
-                  }
-                }
-
-                if (_webViewProvider.pendingThemeSync.isNotEmpty && _settingsProvider.syncTornWebTheme) {
-                  if (_currentUrl.contains("www.torn.com")) {
-                    if (_webViewProvider.pendingThemeSync == "light") {
-                      _requestTornThemeChange(dark: false);
-                    } else {
-                      _requestTornThemeChange(dark: true);
-                    }
-                    _webViewProvider.pendingThemeSync = "";
-                  }
-                }
-
-                assessErrorCases(document: document);
-              } catch (e) {
-                // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
-                // the checks performed in this method
+                _assessTrades(document, pageTitle);
               }
 
-              //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
-            },
-            onUpdateVisitedHistory: (c, uri, androidReload) async {
-              if (!mounted) return;
-              _reportUrlVisit(uri);
-              _assessOCnnb(uri.toString()); // Using a more direct call for OCnnb
-              return;
-            },
-            onLoadResource: (c, resource) async {
-              if (!mounted) return;
+              // Properties (vault) for initialization and live transactions
+              if (resource.url.toString().contains("properties.php") ||
+                  (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
+                // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                // the webView to freeze for a bit
+                if (_vaultOnResourceTriggerTime != null &&
+                    DateTime.now().difference(_vaultOnResourceTriggerTime!).inSeconds < 2) return;
+                _vaultOnResourceTriggerTime = DateTime.now();
 
-              try {
-                /// TRADES
-                /// We are calling trades from here because onLoadStop does not
-                /// work inside of Trades for iOS. Also, both in Android and iOS
-                /// we need to catch deletions.
-                // Two possible scenarios.
-                // 1. Upon first call, "trade.php" might not always be in the resource. To avoid this,
-                //    we check for url once, limiting it to TradesTriggered
-                // 2. For the rest of the cases (updates, additions), we use the resource
-                if (resource.url.toString().contains("trade.php") ||
-                    (_currentUrl.contains("trade.php") && !_tradesTriggered)) {
-                  // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
-                  // the webView to freeze for a bit
-                  if (_tradesOnResourceTriggerTime != null &&
-                      DateTime.now().difference(_tradesOnResourceTriggerTime!).inSeconds < 2) return;
-                  _tradesOnResourceTriggerTime = DateTime.now();
-
-                  _tradesTriggered = true;
+                if (!_vaultTriggered) {
                   final html = await webViewController!.getHtml();
                   final document = parse(html);
                   final pageTitle = (await _getPageTitle(document))!.toLowerCase();
-                  if (Platform.isIOS) {
-                    // iOS needs this check because the full trade URL won't trigger in onLoadStop
-                    _currentUrl = (await webViewController!.getUrl()).toString();
-                  }
-                  _assessTrades(document, pageTitle);
+                  _assessVault(doc: document, pageTitle: pageTitle);
+                } else {
+                  // If it's triggered, it's because we are inside and we performed an operation
+                  // (deposit or withdrawal). In this case, we need to give a couple of seconds
+                  // so that the new html elements appear and we can analyze them
+                  Future.delayed(const Duration(seconds: 2)).then((value) async {
+                    // Reset _vaultTriggered so that we can call _assessVault() again
+                    _reassessVault();
+                  });
                 }
+              }
 
-                // Properties (vault) for initialization and live transactions
-                if (resource.url.toString().contains("properties.php") ||
-                    (_currentUrl.contains("properties.php") && !_vaultTriggered)) {
-                  // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
-                  // the webView to freeze for a bit
-                  if (_vaultOnResourceTriggerTime != null &&
-                      DateTime.now().difference(_vaultOnResourceTriggerTime!).inSeconds < 2) return;
-                  _vaultOnResourceTriggerTime = DateTime.now();
-
-                  if (!_vaultTriggered) {
-                    final html = await webViewController!.getHtml();
-                    final document = parse(html);
-                    final pageTitle = (await _getPageTitle(document))!.toLowerCase();
-                    _assessVault(doc: document, pageTitle: pageTitle);
-                  } else {
-                    // If it's triggered, it's because we are inside and we performed an operation
-                    // (deposit or withdrawal). In this case, we need to give a couple of seconds
-                    // so that the new html elements appear and we can analyze them
-                    Future.delayed(const Duration(seconds: 2)).then((value) async {
-                      // Reset _vaultTriggered so that we can call _assessVault() again
-                      _reassessVault();
-                    });
-                  }
+              // Jail for initialization and live transactions
+              if (resource.url.toString().contains("jailview.php")) {
+                // Trigger once
+                if (_jailOnResourceTriggerTime != null &&
+                    DateTime.now().difference(_jailOnResourceTriggerTime!).inMilliseconds < 500) {
+                  return;
                 }
+                _jailOnResourceTriggerTime = DateTime.now();
 
-                // Jail for initialization and live transactions
-                if (resource.url.toString().contains("jailview.php")) {
-                  // Trigger once
-                  if (_jailOnResourceTriggerTime != null &&
-                      DateTime.now().difference(_jailOnResourceTriggerTime!).inMilliseconds < 500) {
-                    return;
-                  }
-                  _jailOnResourceTriggerTime = DateTime.now();
-
-                  // iOS needs URL report in jail pages
-                  if (Platform.isIOS) {
-                    final uri = await webViewController!.getUrl();
-                    _reportUrlVisit(uri);
-                  }
-
-                  final html = await webViewController!.getHtml();
-                  dom.Document document = parse(html);
-
-                  late List<dom.Element> query;
-                  for (var i = 0; i < 2; i++) {
-                    if (!mounted) break;
-                    query = document.querySelectorAll(".users-list > li");
-                    if (query.isNotEmpty) {
-                      break;
-                    } else {
-                      await Future.delayed(const Duration(seconds: 1));
-                      if (!mounted) break;
-                      final updatedHtml = await webViewController!.getHtml();
-                      document = parse(updatedHtml);
-                    }
-                  }
-                  if (query.isNotEmpty) {
-                    _assessJail(document);
-                  }
-                }
-
-                // Bounties for initialization and live transactions
-                if (resource.url.toString().contains("bounties.php")) {
-                  // Trigger once
-                  if (_bountiesOnResourceTriggerTime != null &&
-                      DateTime.now().difference(_bountiesOnResourceTriggerTime!).inMilliseconds < 500) {
-                    return;
-                  }
-                  _bountiesOnResourceTriggerTime = DateTime.now();
-
-                  // iOS needs URL report in jail pages
-                  if (Platform.isIOS) {
-                    final uri = await webViewController!.getUrl();
-                    _reportUrlVisit(uri);
-                  }
-
-                  final html = await webViewController!.getHtml();
-                  dom.Document document = parse(html);
-
-                  late List<dom.Element> query;
-                  for (var i = 0; i < 2; i++) {
-                    if (!mounted) break;
-                    query = document.querySelectorAll(".bounties-list > li");
-                    if (query.isNotEmpty) {
-                      break;
-                    } else {
-                      await Future.delayed(const Duration(seconds: 1));
-                      if (!mounted) break;
-                      final updatedHtml = await webViewController!.getHtml();
-                      document = parse(updatedHtml);
-                    }
-                  }
-                  if (query.isNotEmpty) {
-                    _assessBounties(document);
-                  }
-                }
-
-                // Quick items armoury tab (faction)
-                if (resource.initiatorType == "xmlhttprequest" && resource.url.toString().contains("factions.php") ||
-                    (!resource.url.toString().contains("factions.php") && _quickItemsFactionTriggered)) {
-                  // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
-                  // the webView to freeze for a bit
-                  if (_quickItemsFactionOnResourceTriggerTime != null &&
-                      DateTime.now().difference(_quickItemsFactionOnResourceTriggerTime!).inSeconds < 1) {
-                    return;
-                  }
-
-                  _quickItemsFactionOnResourceTriggerTime = DateTime.now();
-
-                  // We are not reporting the URL if we change tabs
-                  // (it does not work on desktop either)
+                // iOS needs URL report in jail pages
+                if (Platform.isIOS) {
                   final uri = await webViewController!.getUrl();
-                  _currentUrl = uri.toString();
+                  _reportUrlVisit(uri);
+                }
 
-                  if (_currentUrl.contains('tab=armoury') && !_quickItemsFactionTriggered) {
-                    _assessFactionQuickItems();
-                  } else if (!_currentUrl.contains('tab=armoury') && _quickItemsFactionTriggered) {
-                    _assessFactionQuickItems(deactivate: true);
+                final html = await webViewController!.getHtml();
+                dom.Document document = parse(html);
+
+                late List<dom.Element> query;
+                for (var i = 0; i < 2; i++) {
+                  if (!mounted) break;
+                  query = document.querySelectorAll(".users-list > li");
+                  if (query.isNotEmpty) {
+                    break;
+                  } else {
+                    await Future.delayed(const Duration(seconds: 1));
+                    if (!mounted) break;
+                    final updatedHtml = await webViewController!.getHtml();
+                    document = parse(updatedHtml);
                   }
                 }
-              } catch (e) {
-                // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
-                // the checks performed in this method
-              }
-
-              return;
-            },
-            onConsoleMessage: (controller, consoleMessage) async {
-              if (consoleMessage.message != "") {
-                if (!consoleMessage.message.contains("Refused to connect to ") &&
-                    !consoleMessage.message.contains("Blocked a frame with origin") &&
-                    !consoleMessage.message.contains("has been blocked by CORS policy") &&
-                    !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
-                    !consoleMessage.message.contains("Error with Permissions-Policy header") &&
-                    !consoleMessage.message.contains("srcset") &&
-                    !consoleMessage.message.contains("Missed ID for Quote saving")) {
-                  _terminalProvider.addInstruction(consoleMessage.message);
-                  log("TORN PDA CONSOLE: ${consoleMessage.message}");
+                if (query.isNotEmpty) {
+                  _assessJail(document);
                 }
               }
-            },
-            onLongPressHitTestResult: (controller, result) async {
-              if (result.extra == null) return;
-              await _assessLongPressOptions(result, controller);
-            },
-            onDownloadStartRequest: (controller, request) async {
-              if (request.mimeType != null && request.mimeType!.contains("image/")) {
-                // We don't want to download images automatically
-                final String u = request.url.toString().replaceAll("http:", "https:");
-                _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
-                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
-                return;
-              } else if (request.url.toString().startsWith("blob:")) {
-                final response = await webViewController?.callAsyncJavaScript(
-                    functionBody: "return fetch(url).then(r => r.text());", arguments: {"url": request.url.toString()});
-                if (response == null || response.value == null) return;
-                await _downloadData(response.value, fileName: request.suggestedFilename);
-              } else {
-                await _downloadRequest(autoRequest: request);
-              }
-            },
-            // Reload webview after memory leak
-            onWebContentProcessDidTerminate: (c) {
-              c.reload();
-            },
-            onReceivedHttpAuthRequest: (c, challenge) async {
-              TextEditingController usernameController = TextEditingController();
-              TextEditingController passwordController = TextEditingController();
 
-              bool proceed = false;
-              await showDialog(
-                context: context,
-                builder: (context) {
-                  return AlertDialog(
-                    title: Text('Authentication Required'),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextField(
-                          controller: usernameController,
-                          decoration: InputDecoration(labelText: 'User'),
-                        ),
-                        TextField(
-                          controller: passwordController,
-                          decoration: InputDecoration(labelText: 'Password'),
-                          obscureText: true,
-                        ),
-                      ],
-                    ),
-                    actions: [
-                      TextButton(
-                        child: Text('Cancel'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
+              // Bounties for initialization and live transactions
+              if (resource.url.toString().contains("bounties.php")) {
+                // Trigger once
+                if (_bountiesOnResourceTriggerTime != null &&
+                    DateTime.now().difference(_bountiesOnResourceTriggerTime!).inMilliseconds < 500) {
+                  return;
+                }
+                _bountiesOnResourceTriggerTime = DateTime.now();
+
+                // iOS needs URL report in jail pages
+                if (Platform.isIOS) {
+                  final uri = await webViewController!.getUrl();
+                  _reportUrlVisit(uri);
+                }
+
+                final html = await webViewController!.getHtml();
+                dom.Document document = parse(html);
+
+                late List<dom.Element> query;
+                for (var i = 0; i < 2; i++) {
+                  if (!mounted) break;
+                  query = document.querySelectorAll(".bounties-list > li");
+                  if (query.isNotEmpty) {
+                    break;
+                  } else {
+                    await Future.delayed(const Duration(seconds: 1));
+                    if (!mounted) break;
+                    final updatedHtml = await webViewController!.getHtml();
+                    document = parse(updatedHtml);
+                  }
+                }
+                if (query.isNotEmpty) {
+                  _assessBounties(document);
+                }
+              }
+
+              // Quick items armoury tab (faction)
+              if (resource.initiatorType == "xmlhttprequest" && resource.url.toString().contains("factions.php") ||
+                  (!resource.url.toString().contains("factions.php") && _quickItemsFactionTriggered)) {
+                // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
+                // the webView to freeze for a bit
+                if (_quickItemsFactionOnResourceTriggerTime != null &&
+                    DateTime.now().difference(_quickItemsFactionOnResourceTriggerTime!).inSeconds < 1) {
+                  return;
+                }
+
+                _quickItemsFactionOnResourceTriggerTime = DateTime.now();
+
+                // We are not reporting the URL if we change tabs
+                // (it does not work on desktop either)
+                final uri = await webViewController!.getUrl();
+                _currentUrl = uri.toString();
+
+                if (_currentUrl.contains('tab=armoury') && !_quickItemsFactionTriggered) {
+                  _assessFactionQuickItems();
+                } else if (!_currentUrl.contains('tab=armoury') && _quickItemsFactionTriggered) {
+                  _assessFactionQuickItems(deactivate: true);
+                }
+              }
+            } catch (e) {
+              // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
+              // the checks performed in this method
+            }
+
+            return;
+          },
+          onConsoleMessage: (controller, consoleMessage) async {
+            if (consoleMessage.message != "") {
+              if (!consoleMessage.message.contains("Refused to connect to ") &&
+                  !consoleMessage.message.contains("Blocked a frame with origin") &&
+                  !consoleMessage.message.contains("has been blocked by CORS policy") &&
+                  !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
+                  !consoleMessage.message.contains("Error with Permissions-Policy header") &&
+                  !consoleMessage.message.contains("srcset") &&
+                  !consoleMessage.message.contains("Missed ID for Quote saving")) {
+                _terminalProvider.addInstruction(consoleMessage.message);
+                log("TORN PDA CONSOLE: ${consoleMessage.message}");
+              }
+            }
+          },
+          onLongPressHitTestResult: (controller, result) async {
+            if (result.extra == null) return;
+            await _assessLongPressOptions(result, controller);
+          },
+          onDownloadStartRequest: (controller, request) async {
+            if (request.mimeType != null && request.mimeType!.contains("image/")) {
+              // We don't want to download images automatically
+              final String u = request.url.toString().replaceAll("http:", "https:");
+              _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
+              _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+              return;
+            } else if (request.url.toString().startsWith("blob:")) {
+              final response = await webViewController?.callAsyncJavaScript(
+                  functionBody: "return fetch(url).then(r => r.text());", arguments: {"url": request.url.toString()});
+              if (response == null || response.value == null) return;
+              await _downloadData(response.value, fileName: request.suggestedFilename);
+            } else {
+              await _downloadRequest(autoRequest: request);
+            }
+          },
+          // Reload webview after memory leak
+          onWebContentProcessDidTerminate: (c) {
+            c.reload();
+          },
+          onReceivedHttpAuthRequest: (c, challenge) async {
+            TextEditingController usernameController = TextEditingController();
+            TextEditingController passwordController = TextEditingController();
+
+            bool proceed = false;
+            await showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text('Authentication Required'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: usernameController,
+                        decoration: InputDecoration(labelText: 'User'),
                       ),
-                      TextButton(
-                        child: Text('Send'),
-                        onPressed: () {
-                          proceed = true;
-                          Navigator.of(context).pop();
-                        },
+                      TextField(
+                        controller: passwordController,
+                        decoration: InputDecoration(labelText: 'Password'),
+                        obscureText: true,
                       ),
                     ],
-                  );
-                },
-              );
-
-              if (proceed) {
-                return HttpAuthResponse(
-                  username: usernameController.text.trim(),
-                  password: passwordController.text.trim(),
-                  action: HttpAuthResponseAction.PROCEED,
-                  permanentPersistence: true,
+                  ),
+                  actions: [
+                    TextButton(
+                      child: Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      child: Text('Send'),
+                      onPressed: () {
+                        proceed = true;
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
                 );
-              }
+              },
+            );
 
+            if (proceed) {
               return HttpAuthResponse(
-                action: HttpAuthResponseAction.CANCEL,
+                username: usernameController.text.trim(),
+                password: passwordController.text.trim(),
+                action: HttpAuthResponseAction.PROCEED,
+                permanentPersistence: true,
               );
             }
-            /*
+
+            return HttpAuthResponse(
+              action: HttpAuthResponseAction.CANCEL,
+            );
+          },
+          /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
               // MAIN AJAX REQUEST RETURN
               return x;
             },
           */
-            ),
+        ),
         // Container that covers Torn's top bar to serve as a gesture detector
         GestureDetector(
           behavior: HitTestBehavior.translucent,

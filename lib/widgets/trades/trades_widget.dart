@@ -133,8 +133,8 @@ class TradesWidgetState extends State<TradesWidget> {
                                     onPressed: () {
                                       String errorString = "";
                                       if (_tradesProv.container.tornExchangeServerError) {
-                                        errorString = "There was an error contacting Torn Exchange, "
-                                            "please try again later!";
+                                        errorString = "There was an error contacting Torn Exchange.\n\n"
+                                            "Details: ${_tradesProv.container.tornExchangeServerErrorReason}";
                                       }
                                       BotToast.showText(
                                         text: errorString,
