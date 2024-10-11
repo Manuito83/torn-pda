@@ -278,6 +278,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullLockNavigationAttemptOpensNewTab = false;
+  bool get fullLockNavigationAttemptOpensNewTab => _fullLockNavigationAttemptOpensNewTab;
+  set fullLockNavigationAttemptOpensNewTab(bool value) {
+    _fullLockNavigationAttemptOpensNewTab = value;
+    Prefs().setFullLockNavigationAttemptOpensNewTab(_fullLockNavigationAttemptOpensNewTab);
+    notifyListeners();
+  }
+
   List<List<String>> _lockedTabsNavigationExceptions = [];
   List<List<String>> get lockedTabsNavigationExceptions => _lockedTabsNavigationExceptions;
   void addLockedTabNavigationException(String url1, String url2) {
@@ -1040,6 +1048,7 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
     _showTabLockWarnings = await Prefs().getShowTabLockWarnings();
+    _fullLockNavigationAttemptOpensNewTab = await Prefs().getFullLockNavigationAttemptOpensNewTab();
 
     List<dynamic> jsonList = json.decode(await Prefs().getLockedTabsNavigationExceptions());
     _lockedTabsNavigationExceptions = jsonList.map((item) => List<String>.from(item)).toList();

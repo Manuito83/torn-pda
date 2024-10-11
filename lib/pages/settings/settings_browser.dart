@@ -1952,6 +1952,37 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   ),
                 ),
               ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Full lock navigation opens a new tab")),
+                    Switch(
+                      value: _settingsProvider.fullLockNavigationAttemptOpensNewTab,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.fullLockNavigationAttemptOpensNewTab = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  'If enabled, a navigation attempt from a tab with a full lock will open a new tab in the background '
+                  '(the tab will be added but the browser will not switch to it automatically)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
             ],
           ),
         if (_settingsProvider.useTabsFullBrowser)

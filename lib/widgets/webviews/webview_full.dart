@@ -174,6 +174,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Allow navigation once even with a full locked page
   bool _forceAllowWhenLocked = false;
+  bool _firstLoadCompleted = false;
+  DateTime? _lastFullLockBackgroundTabOpen;
 
   URLRequest? _initialUrl;
   String? _pageTitle = "";
@@ -1457,6 +1459,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onLoadStop: (c, uri) async {
             if (!mounted) return;
 
+            _firstLoadCompleted = true;
+
             // Ensure that transparent background is set to false after first load
             // In iOS we do it after load stop, otherwise a white flash is trigger in any case
             if (Platform.isIOS) {
@@ -1876,7 +1880,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return false;
     }
 
-    if (_currentUrl.isEmpty) return false;
+    if (!_firstLoadCompleted) return false;
 
     if (_webViewProvider.tabList[_webViewProvider.currentTab].isLocked &&
         _webViewProvider.tabList[_webViewProvider.currentTab].isLockFull) {
@@ -1950,6 +1954,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               style: ToastificationStyle.simple,
               borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
             );
+          }
+        }
+
+        if (_settingsProvider.fullLockNavigationAttemptOpensNewTab) {
+          if (_lastFullLockBackgroundTabOpen == null ||
+              DateTime.now().difference(_lastFullLockBackgroundTabOpen!).inSeconds > 2) {
+            _webViewProvider.addTab(url: incomingUrl.toString());
+            _lastFullLockBackgroundTabOpen = DateTime.now();
           }
         }
 

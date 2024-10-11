@@ -68,6 +68,13 @@ class ChangeLogState extends State<ChangeLog> {
                 "a link, the browser will change to the newly created tab. If you disable this, the new tab "
                 "will be created but you will remain in the current one",
           ),
+          ComplexFeature(
+            "Added option to open background tab from tabs with a full lock",
+            explanation: "Go to Settings / Advanced Browser Settings\n\nLook for 'Tab Locks'\n\n"
+                'If enabled, a navigation attempt from a tab with a full lock will open a new tab in the background '
+                '(the tab will be added but the browser will not switch to it automatically)\n\n'
+                "(disabled by default)",
+          ),
           if (Platform.isAndroid)
             ComplexFeature(
               "Improved home screen widget functionality",
@@ -77,6 +84,7 @@ class ChangeLogState extends State<ChangeLog> {
                   "items or to your faction's armoury",
             ),
           "Improved backwards navigation in certain sections",
+          "Fixed initial load of tabs with a full lock",
           "Fixed energy and nerve bars double click redirects",
         ],
     );

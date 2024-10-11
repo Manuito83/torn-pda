@@ -287,6 +287,7 @@ class Prefs {
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kShowTabLockWarnings = "pda_showTabLockWarnings";
+  final String _kFullLockNavigationAttemptOpensNewTab = "pda_fullLockNavigationAttemptOpensNewTab";
   final String _kFullLockedTabsNavigationExceptions = "pda_fullLockedTabsNavigationExceptions";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
@@ -3192,6 +3193,16 @@ class Prefs {
   Future<bool> setShowTabLockWarnings(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowTabLockWarnings, value);
+  }
+
+  Future<bool> getFullLockNavigationAttemptOpensNewTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullLockNavigationAttemptOpensNewTab) ?? false;
+  }
+
+  Future<bool> setFullLockNavigationAttemptOpensNewTab(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullLockNavigationAttemptOpensNewTab, value);
   }
 
   // -- LockedTabsNavigationExceptions
