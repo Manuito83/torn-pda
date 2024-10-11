@@ -68,7 +68,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   @override
   Widget build(BuildContext context) {
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
@@ -1766,6 +1766,36 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               if (_settingsProvider.useTabsFullBrowser)
                 Column(
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          Flexible(child: const Text("Automatically change to new tab from link")),
+                          Switch(
+                            value: _webViewProvider.automaticChangeToNewTabFromURL,
+                            onChanged: (value) {
+                              _webViewProvider.automaticChangeToNewTabFromURL = value;
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                      child: Text(
+                        "By default, when you open a new tab via the 'open in new tab' option, when long-pressing "
+                        "a link, the browser will change to the newly created tab. If you disable this, the new tab "
+                        "will be created but you will remain in the current page",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(

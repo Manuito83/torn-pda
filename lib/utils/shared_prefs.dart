@@ -282,6 +282,7 @@ class Prefs {
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
+  final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
@@ -3151,6 +3152,16 @@ class Prefs {
   Future<bool> setOnlyLoadTabsWhenUsed(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kOnlyLoadTabsWhenUsed, value);
+  }
+
+  Future<bool> getAutomaticChangeToNewTabFromURL() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAutomaticChangeToNewTabFromURL) ?? true;
+  }
+
+  Future<bool> setAutomaticChangeToNewTabFromURL(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAutomaticChangeToNewTabFromURL, value);
   }
 
   Future<bool> getUseTabsHideFeature() async {

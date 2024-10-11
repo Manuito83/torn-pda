@@ -61,14 +61,20 @@ class ChangeLogState extends State<ChangeLog> {
             "Added option to reverse swipe navigation direction in browser title",
             explanation: "Go to Settings / Advanced Browser Settings\n\nLook for 'Gestures'",
           ),
+          ComplexFeature(
+            "Added option to open new tabs in the background",
+            explanation: "Go to Settings / Advanced Browser Settings\n\nLook for 'Tabs'\n\n"
+                "By default, when you open a new tab via the 'open in new tab' option, when long-pressing "
+                "a link, the browser will change to the newly created tab. If you disable this, the new tab "
+                "will be created but you will remain in the current one",
+          ),
           if (Platform.isAndroid)
             ComplexFeature(
-              "Improved app widget functionality",
+              "Improved home screen widget functionality",
               explanation: "Go to Settings / Home Screen Widget\n\n"
                   "An additional short layout with not shortcuts has been added\n\n"
                   "You can now choose the behavior when tapping on cooldowns and whether to browse to your own "
                   "items or to your faction's armoury",
-              closeButton: true,
             ),
           "Fixed energy and nerve bars double click redirects",
         ],
@@ -2102,6 +2108,7 @@ class ChangeLogState extends State<ChangeLog> {
     return itemList;
   }
 
+  /// If [secondsToShow] is null, the close button will be always shown
   Padding _complexFeatureToast(ComplexFeature feat) {
     return Padding(
       padding: const EdgeInsets.only(left: 5),
@@ -2115,10 +2122,7 @@ class ChangeLogState extends State<ChangeLog> {
               padding: const EdgeInsets.all(8.0),
               child: Text(
                 feat.explanation!,
-                maxLines: 10,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                maxLines: 100,
               ),
             ),
             autoCloseDuration: feat.secondsToShow == null ? null : Duration(seconds: feat.secondsToShow!),

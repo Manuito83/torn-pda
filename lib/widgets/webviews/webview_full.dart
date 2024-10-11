@@ -5093,7 +5093,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 // If we are using tabs, add a tab
                                 final String u = url.toString().replaceAll("http:", "https:");
                                 _webViewProvider.addTab(url: u, allowDownloads: false);
-                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                if (_webViewProvider.automaticChangeToNewTabFromURL) {
+                                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                }
+
                                 textCancel();
                               },
                             ),

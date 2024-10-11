@@ -334,6 +334,14 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _automaticChangeToNewTabFromURL = true;
+  bool get automaticChangeToNewTabFromURL => _automaticChangeToNewTabFromURL;
+  set automaticChangeToNewTabFromURL(bool value) {
+    _automaticChangeToNewTabFromURL = value;
+    Prefs().setAutomaticChangeToNewTabFromURL(_automaticChangeToNewTabFromURL);
+    notifyListeners();
+  }
+
   /// [recallLastSession] should be used to open a browser session where we left it last time
   Future initialiseMain({
     required String? initUrl,
@@ -1548,6 +1556,7 @@ class WebViewProvider extends ChangeNotifier {
 
   Future restorePreferences() async {
     _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
+    _automaticChangeToNewTabFromURL = await Prefs().getAutomaticChangeToNewTabFromURL();
 
     String splitType = await Prefs().getSplitScreenWebview();
     switch (splitType) {
