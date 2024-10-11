@@ -70,6 +70,7 @@ class ChangeLogState extends State<ChangeLog> {
                   "items or to your faction's armoury",
               closeButton: true,
             ),
+          "Fixed energy and nerve bars double click redirects",
         ],
     );
 

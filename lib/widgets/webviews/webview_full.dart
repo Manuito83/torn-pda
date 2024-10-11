@@ -4040,11 +4040,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  // TRAVEL
   Future _assessBarsRedirect(dom.Document document) async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
-      webViewController?.evaluateJavascript(source: barsDoubleClickRedirect());
+      webViewController?.evaluateJavascript(
+        source: barsDoubleClickRedirect(
+          isIOS: Platform.isIOS,
+        ),
+      );
     }
   }
 

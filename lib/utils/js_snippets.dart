@@ -1295,16 +1295,18 @@ String ocNNB({required String members, required int playerID}) {
   ''';
 }
 
-String barsDoubleClickRedirect() {
+/// As of iOS 18...
+/// iOS does not handle 'dblclick' events reliably, so we implement a custom double-click detection
+String barsDoubleClickRedirect({bool isIOS = false}) {
   return '''
     (function() {
       function addBarsListener() {
-        function onEnergyClick(event) {
-          window.open("https://www.torn.com/gym.php", "_self");
+        function onEnergyClick() {
+          window.location.href = "https://www.torn.com/gym.php";
         }
 
-        function onNerveClick(event) {
-          window.open("https://www.torn.com/crimes.php", "_self");
+        function onNerveClick() {
+          window.location.href = "https://www.torn.com/crimes.php";
         }
 
         var savedFound = document.querySelector(".pdaListenerBarsDoubleClick") !== null;
@@ -1326,31 +1328,43 @@ String barsDoubleClickRedirect() {
           var save = document.querySelector(".content-wrapper");
           save.classList.add("pdaListenerBarsDoubleClick");
 
-          // Inject CSS to prevent text selection
-          var style = document.createElement('style');
-          style.type = 'text/css';
-          style.innerHTML = `
-            .pda-bar-element {
-              user-select: none; /* Standard */
-              -webkit-user-select: none; /* Safari and Chrome */
-              -ms-user-select: none; /* IE and Edge */
-              -moz-user-select: none; /* Firefox */
-            }
-          `;
-          document.head.appendChild(style);
+          if ($isIOS) {
+            console.log("aa");
+            let energyClickCount = 0;
+            let nerveClickCount = 0;
 
-          energyBar.classList.add('pda-bar-element');
-          nerveBar.classList.add('pda-bar-element');
-          
-          function preventSelection(event) {
-            event.preventDefault();
+            // Set time interval in milliseconds for detecting double click
+            const doubleClickInterval = 1500;
+
+            energyBar.addEventListener('click', () => {
+              energyClickCount++;
+
+              if (energyClickCount === 1) {
+                setTimeout(() => {
+                  if (energyClickCount >= 2) {
+                    onEnergyClick();
+                  }
+                  energyClickCount = 0; // Reset click count
+                }, doubleClickInterval);
+              }
+            });
+
+            nerveBar.addEventListener('click', () => {
+              nerveClickCount++;
+
+              if (nerveClickCount === 1) {
+                setTimeout(() => {
+                  if (nerveClickCount >= 2) {
+                    onNerveClick();
+                  }
+                  nerveClickCount = 0; // Reset click count
+                }, doubleClickInterval);
+              }
+            });
+          } else {
+            energyBar.addEventListener('dblclick', onEnergyClick);
+            nerveBar.addEventListener('dblclick', onNerveClick);
           }
-
-          energyBar.addEventListener('selectstart', preventSelection);
-          nerveBar.addEventListener('selectstart', preventSelection);
-
-          energyBar.addEventListener('dblclick', onEnergyClick);
-          nerveBar.addEventListener('dblclick', onNerveClick);
         }
       }
 
