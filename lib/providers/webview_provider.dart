@@ -94,6 +94,12 @@ class WebViewProvider extends ChangeNotifier {
   // using [toastification.dismissAll()] leaves quite a long gap until next activation is possible
   DateTime? lastLockToastShown;
 
+  /// URLs that can generate multiple back/forward history entries without actual navigation changes
+  /// (e.g.: personal stats will trigger a new URL load for every change in the page, as URL params change)
+  List<String> urlsWithStuckHistory = [
+    "https://www.torn.com/personalstats.php?",
+  ];
+
   bool _bottomBarStyleEnabled = false;
   bool get bottomBarStyleEnabled => _bottomBarStyleEnabled;
   set bottomBarStyleEnabled(bool value) {
@@ -852,7 +858,7 @@ class WebViewProvider extends ChangeNotifier {
       // by detecting if the URL we are leaving is the same one we are going to. If it is, don't add it as it is
       // still the current page being shown
       if (tab.currentUrl != newUrl) {
-        addToHistoryBack(tab: tab, url: tab.currentUrl);
+        addToHistoryBack(tab: tab, currentUrl: tab.currentUrl, newUrl: newUrl);
       }
     } else {
       tab.initialised = true;
@@ -990,8 +996,21 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addToHistoryBack({required TabDetails tab, required String? url}) {
-    tab.historyBack.add(url);
+  void addToHistoryBack({required TabDetails tab, required String? currentUrl, String? newUrl}) {
+    if (currentUrl == null) return;
+    if (newUrl != null) {
+      // Check if both currentUrl and newUrl are in the stuck list
+      bool currentIsStuck = urlsWithStuckHistory.any((baseUrl) => currentUrl.startsWith(baseUrl));
+      bool newIsStuck = urlsWithStuckHistory.any((baseUrl) => newUrl.startsWith(baseUrl));
+
+      // Only add currentUrl to history if we are not within stuck URLs
+      if (!(currentIsStuck && newIsStuck)) {
+        tab.historyBack.add(currentUrl);
+      }
+    } else {
+      // If newUrl is null (comes from [tryGoForward]), simply add the currentUrl to history
+      tab.historyBack.add(currentUrl);
+    }
     if (tab.historyBack.length > 25) {
       tab.historyBack.removeAt(0);
     }
@@ -1001,22 +1020,6 @@ class WebViewProvider extends ChangeNotifier {
     tab.historyForward.add(url);
     if (tab.historyForward.length > 25) {
       tab.historyForward.removeAt(0);
-    }
-  }
-
-  assessLoginErrorsFromPdaIcon() async {
-    TabDetails tab;
-
-    // This might be executed before the browser is ready, so wait for it
-    if (_tabList.isEmpty) {
-      final start = DateTime.now();
-      while (DateTime.now().difference(start).inMilliseconds < 3000 && _tabList.isEmpty) {
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
-    }
-    if (_tabList.isNotEmpty) {
-      tab = _tabList[_currentTab];
-      tab.webViewKey?.currentState?.assessErrorCases();
     }
   }
 
@@ -1061,7 +1064,7 @@ class WebViewProvider extends ChangeNotifier {
     if (tab.historyForward.isNotEmpty) {
       final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
 
-      addToHistoryBack(tab: tab, url: tab.currentUrl);
+      addToHistoryBack(tab: tab, currentUrl: tab.currentUrl);
 
       tab.historyForward.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
@@ -1091,6 +1094,22 @@ class WebViewProvider extends ChangeNotifier {
         contentPadding: const EdgeInsets.all(10),
       );
       return false;
+    }
+  }
+
+  assessLoginErrorsFromPdaIcon() async {
+    TabDetails tab;
+
+    // This might be executed before the browser is ready, so wait for it
+    if (_tabList.isEmpty) {
+      final start = DateTime.now();
+      while (DateTime.now().difference(start).inMilliseconds < 3000 && _tabList.isEmpty) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+    }
+    if (_tabList.isNotEmpty) {
+      tab = _tabList[_currentTab];
+      tab.webViewKey?.currentState?.assessErrorCases();
     }
   }
 

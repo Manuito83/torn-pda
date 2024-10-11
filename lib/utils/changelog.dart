@@ -76,6 +76,7 @@ class ChangeLogState extends State<ChangeLog> {
                   "You can now choose the behavior when tapping on cooldowns and whether to browse to your own "
                   "items or to your faction's armoury",
             ),
+          "Improved backwards navigation in certain sections",
           "Fixed energy and nerve bars double click redirects",
         ],
     );

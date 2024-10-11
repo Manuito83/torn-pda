@@ -2211,10 +2211,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
     }
 
-    // For certain URLs (e.g. forums in iOS) we might be reporting this twice. Once from onLoadStop and again
-    // from onResourceLoad. The check in the provider (for onLoadStop triggering several times) is not enough
-    // to prevent adding extra pages to history (when it's the first page loading, it's only omitted once).
-    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1) {
+    // For certain URLs (e.g. forums or personal stats in iOS) we might be reporting this twice.
+    // Once from [onUpdateVisitedHistory] and again from [onResourceLoad].
+    // There are also sections such as personal stats that trigger [onUpdateVisitedHistory] several times
+    // when loading and when browsing backwards
+    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1.5) {
       return;
     }
     _urlTriggerTime = DateTime.now();

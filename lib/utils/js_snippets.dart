@@ -1329,7 +1329,6 @@ String barsDoubleClickRedirect({bool isIOS = false}) {
           save.classList.add("pdaListenerBarsDoubleClick");
 
           if ($isIOS) {
-            console.log("aa");
             let energyClickCount = 0;
             let nerveClickCount = 0;
 
