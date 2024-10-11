@@ -51,11 +51,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.5.2 - Build 448 - 02/10/2024
+    // v3.5.2 - Build 448 - 11/10/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.5.2'
-        ..date = '15 OCT 2024'
+        ..date = '20 OCT 2024'
         ..features = [
           ComplexFeature(
             "Added option to reverse swipe navigation direction in browser title",
