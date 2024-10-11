@@ -3552,7 +3552,7 @@ class Prefs {
 
   Future<bool> getAppwidgetCooldownTapOpensBrowser() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAppwidgetCooldownTapOpensBrowser) ?? true;
+    return prefs.getBool(_kAppwidgetCooldownTapOpensBrowser) ?? false;
   }
 
   Future<bool> setAppwidgetCooldownTapOpensBrowser(bool value) async {

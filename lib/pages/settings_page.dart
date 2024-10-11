@@ -2253,7 +2253,8 @@ class SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'If enabled, a tap on any of the cooldown icons will launch the app and browser to your personal '
-            'or faction items. Otherwise, you will be shown the cooldown time remaining',
+            'or faction items. Otherwise, you will be shown the cooldown time remaining. NOTE: you might have '
+            'to try a couple of times after switching this option for the widget to update properly',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
