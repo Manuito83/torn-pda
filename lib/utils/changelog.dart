@@ -83,6 +83,11 @@ class ChangeLogState extends State<ChangeLog> {
                   "You can now choose the behavior when tapping on cooldowns and whether to browse to your own "
                   "items or to your faction's armoury",
             ),
+          ComplexFeature(
+            "Increased time selection for manual loot notifications",
+            explanation: "Go to Loot / Time icon (top right)\n\n"
+                '8 & 10 minutes options have been added',
+          ),
           "Improved backwards navigation in certain sections",
           "Fixed initial load of tabs with a full lock",
           "Fixed energy and nerve bars double click redirects",

@@ -235,6 +235,32 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "6",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "8 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "7",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "10 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         Prefs().setLootNotificationAhead(value!);
