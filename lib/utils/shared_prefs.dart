@@ -73,6 +73,7 @@ class Prefs {
   final String _kSyncTornWebTheme = "tornLite_syncTheme";
   final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
   final String _kDarkThemeToSync = "tornLite_themeToSync";
+  final String _kDynamicAppIcons = "pda_dynamicAppIcons";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kDefaultSection = "pda_defaultSection";
@@ -895,6 +896,19 @@ class Prefs {
   Future<bool> setDarkThemeToSync(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kDarkThemeToSync, value);
+  }
+
+  /// ----------------------------
+  /// Methods for dynamic app icons
+  /// ----------------------------
+  Future<bool> getDynamicAppIcons() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDynamicAppIcons) ?? true;
+  }
+
+  Future<bool> setDynamicAppIcons(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDynamicAppIcons, value);
   }
 
   /// ----------------------------
