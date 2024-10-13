@@ -338,7 +338,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
 
       // Dynamic App Icon depends on Remote Config
-      _setDynamicAppIcon();
+      if (Platform.isIOS) {
+        _setDynamicAppIcon();
+      }
 
       remoteConfig.onConfigUpdated.listen((event) async {
         await remoteConfig.activate();
