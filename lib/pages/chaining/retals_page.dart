@@ -81,7 +81,8 @@ class RetalsPageState extends State<RetalsPage> {
 
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
-      drawer: const Drawer(),
+      drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
+      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar(context) : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -197,8 +198,7 @@ class RetalsPageState extends State<RetalsPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (_webViewProvider.webViewSplitActive &&
-                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.splitScreenAndBrowserLeft()) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();

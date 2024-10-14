@@ -16,12 +16,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '447'
+    flutterVersionCode = '450'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '3.5.1'
+    flutterVersionName = '3.5.2'
 }
 
 def keystoreProperties = new Properties()
@@ -59,8 +59,8 @@ android {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
         // Sets Java compatibility to Java 8
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     signingConfigs {
@@ -104,5 +104,4 @@ dependencies {
     implementation 'androidx.window:window-java:1.0.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
 }
-
 

@@ -324,6 +324,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       "prefs_backup_enabled": true,
       "tornexchange_enabled": true,
       "use_browser_cache": "user", // user, on, off
+      "dynamic_appIcon_enabled": "false",
     });
 
     // Remote Config first fetch and live update
@@ -334,6 +335,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
       _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
       _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+      _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+
+      // Dynamic App Icon depends on Remote Config
+      if (Platform.isIOS) {
+        _setDynamicAppIcon();
+      }
 
       remoteConfig.onConfigUpdated.listen((event) async {
         await remoteConfig.activate();
@@ -342,11 +349,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
         _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+        _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
       });
     });
 
     // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
     context.read<ChainStatusProvider>().initialiseProvider();
+  }
+
+  void _setDynamicAppIcon() {
+    // Dynamic app icon
+    _preferencesCompleter.future.whenComplete(() async {
+      await _changelogCompleter.future;
+      _settingsProvider.appIconChangeBasedOnCondition();
+    });
   }
 
   @override
@@ -483,13 +499,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       browserUrl = shortcutUrl;
     } else if (intent.data!.contains("pdaWidget://drug:clicked")) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#drugs:items";
+      browserUrl = "https://www.torn.com/item.php#drugs-items";
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
+        browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs";
+      }
     } else if (intent.data!.contains("pdaWidget://medical:clicked")) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#medical:items";
+      browserUrl = "https://www.torn.com/item.php#medical-items";
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
+        browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical";
+      }
     } else if (intent.data!.contains("pdaWidget://booster:clicked")) {
       launchBrowser = true;
-      browserUrl = "https://www.torn.com/item.php#boosters:items";
+      browserUrl = "https://www.torn.com/item.php#boosters-items";
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowserDestination == "faction") {
+        browserUrl = "https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=boosters";
+      }
     } else if (intent.data!.contains("pdaWidget://chain:box:clicked")) {
       _callSectionFromOutside(2); // Chaining
       return;

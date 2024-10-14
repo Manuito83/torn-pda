@@ -73,6 +73,7 @@ class Prefs {
   final String _kSyncTornWebTheme = "tornLite_syncTheme";
   final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
   final String _kDarkThemeToSync = "tornLite_themeToSync";
+  final String _kDynamicAppIcons = "pda_dynamicAppIcons";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kDefaultSection = "pda_defaultSection";
@@ -94,8 +95,12 @@ class Prefs {
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
+
+  // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
+  final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
+
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
   final String _kDefaultTimeFormat = "pda_defaultTimeFormat";
@@ -278,10 +283,12 @@ class Prefs {
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
+  final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
   final String _kUseTabsIcons = "pda_useTabsIcons";
   final String _kTabsHideBarColor = "pda_tabsHideBarColor";
   final String _kShowTabLockWarnings = "pda_showTabLockWarnings";
+  final String _kFullLockNavigationAttemptOpensNewTab = "pda_fullLockNavigationAttemptOpensNewTab";
   final String _kFullLockedTabsNavigationExceptions = "pda_fullLockedTabsNavigationExceptions";
   final String _kHideTabs = "pda_hideTabs";
   final String _kReminderAboutHideTabFeature = "pda_reminderAboutHideTabFeature";
@@ -359,8 +366,11 @@ class Prefs {
 
   // Appwidget
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
+  final String _kAppwidgetRemoveShortcutsOneRowLayout = "pda_appwidgetRemoveShortcutsOneRowLayout";
   final String _kAppwidgetMoneyEnabled = "pda_appwidgetMoneyEnabled";
   final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
+  final String _kAppwidgetCooldownTapOpensBrowser = "pda__appwidgetCooldownTapOpensBrowser";
+  final String _kAppwidgetCooldownTapOpensBrowserDestination = "pda__appwidgetCooldownTapOpensBrowserDestination";
 
   // Permissions
   final String _kExactPermissionDialogShownAndroid = "pda_exactPermissionDialogShownAndroid";
@@ -889,6 +899,19 @@ class Prefs {
   }
 
   /// ----------------------------
+  /// Methods for dynamic app icons
+  /// ----------------------------
+  Future<bool> getDynamicAppIcons() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kDynamicAppIcons) ?? true;
+  }
+
+  Future<bool> setDynamicAppIcons(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kDynamicAppIcons, value);
+  }
+
+  /// ----------------------------
   /// Methods for vibration pattern
   /// ----------------------------
   Future<String> getVibrationPattern() async {
@@ -1078,6 +1101,8 @@ class Prefs {
     return prefs.setInt(_kAndroidBrowserTextScale, value);
   }
 
+  // Settings - Browser Gestures
+
   Future<bool> getIosBrowserPinch() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kIosBrowserPinch) ?? false;
@@ -1096,6 +1121,16 @@ class Prefs {
   Future<bool> setIosDisallowOverscroll(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kIosDisallowOverscroll, value);
+  }
+
+  Future<bool> getBrowserReverseNavigationSwipe() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserReverseNavigationSwipe) ?? false;
+  }
+
+  Future<bool> setBrowserReverseNavigationSwipe(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserReverseNavigationSwipe, value);
   }
 
   /// ----------------------------
@@ -3134,6 +3169,16 @@ class Prefs {
     return prefs.setBool(_kOnlyLoadTabsWhenUsed, value);
   }
 
+  Future<bool> getAutomaticChangeToNewTabFromURL() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAutomaticChangeToNewTabFromURL) ?? true;
+  }
+
+  Future<bool> setAutomaticChangeToNewTabFromURL(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAutomaticChangeToNewTabFromURL, value);
+  }
+
   Future<bool> getUseTabsHideFeature() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kUseTabsHideFeature) ?? true;
@@ -3162,6 +3207,16 @@ class Prefs {
   Future<bool> setShowTabLockWarnings(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowTabLockWarnings, value);
+  }
+
+  Future<bool> getFullLockNavigationAttemptOpensNewTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullLockNavigationAttemptOpensNewTab) ?? false;
+  }
+
+  Future<bool> setFullLockNavigationAttemptOpensNewTab(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullLockNavigationAttemptOpensNewTab, value);
   }
 
   // -- LockedTabsNavigationExceptions
@@ -3483,6 +3538,20 @@ class Prefs {
     return prefs.setBool(_kAppwidgetDarkMode, value);
   }
 
+  // ---
+
+  Future<bool> getAppwidgetRemoveShortcutsOneRowLayout() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetRemoveShortcutsOneRowLayout) ?? false;
+  }
+
+  Future<bool> setAppwidgetRemoveShortcutsOneRowLayout(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetRemoveShortcutsOneRowLayout, value);
+  }
+
+  // ---
+
   Future<bool> getAppwidgetMoneyEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kAppwidgetMoneyEnabled) ?? true;
@@ -3491,6 +3560,28 @@ class Prefs {
   Future<bool> setAppwidgetMoneyEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kAppwidgetMoneyEnabled, value);
+  }
+
+  // ---
+
+  Future<bool> getAppwidgetCooldownTapOpensBrowser() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAppwidgetCooldownTapOpensBrowser) ?? false;
+  }
+
+  Future<bool> setAppwidgetCooldownTapOpensBrowser(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAppwidgetCooldownTapOpensBrowser, value);
+  }
+
+  Future<String> getAppwidgetCooldownTapOpensBrowserDestination() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kAppwidgetCooldownTapOpensBrowserDestination) ?? "own";
+  }
+
+  Future<bool> setAppwidgetCooldownTapOpensBrowserDestination(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kAppwidgetCooldownTapOpensBrowserDestination, value);
   }
 
   // ---

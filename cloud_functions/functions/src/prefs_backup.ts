@@ -70,6 +70,11 @@ export const prefsBackupGroup = {
 
     saveUserPrefs: functions.region('us-east4').https.onCall(async (data, context) => {
         try {
+
+            if (!context.auth) {
+                throw new functions.https.HttpsError('unauthenticated', 'The user is not authenticated');
+            }
+
             const inputJson = JSON.parse(data);
             const inputDetails = new UserPrefsSaveInput(inputJson.key, inputJson.id, inputJson.prefs);
 
@@ -128,6 +133,11 @@ export const prefsBackupGroup = {
 
     getUserPrefs: functions.region('us-east4').https.onCall(async (data, context) => {
         try {
+
+            if (!context.auth) {
+                throw new functions.https.HttpsError('unauthenticated', 'The user is not authenticated');
+            }
+
             // Parse the incoming data
             const inputJson = JSON.parse(data);
             const inputDetails = new UserPrefsGetInput(inputJson.key, inputJson.id);
@@ -185,6 +195,10 @@ export const prefsBackupGroup = {
     deleteUserPrefs: functions.region('us-east4').https.onCall(async (data, context) => {
         try {
 
+            if (!context.auth) {
+                throw new functions.https.HttpsError('unauthenticated', 'The user is not authenticated');
+            }
+
             const inputJson = JSON.parse(data);
             const inputDetails = new UserPrefsGetInput(inputJson.key, inputJson.id);
 
@@ -236,6 +250,11 @@ export const prefsBackupGroup = {
 
     setOwnSharePrefs: functions.region('us-east4').https.onCall(async (data, context) => {
         try {
+
+            if (!context.auth) {
+                throw new functions.https.HttpsError('unauthenticated', 'The user is not authenticated');
+            }
+
             // Parse the incoming data
             const inputJson = JSON.parse(data);
             const inputDetails = new OwnSharePrefsSaveInput(
@@ -307,6 +326,11 @@ export const prefsBackupGroup = {
 
     getImportShare: functions.region('us-east4').https.onCall(async (data, context) => {
         try {
+
+            if (!context.auth) {
+                throw new functions.https.HttpsError('unauthenticated', 'The user is not authenticated');
+            }
+
             // Parse the incoming data
             const inputJson = JSON.parse(data);
             const inputDetails = new ImportGetInput(inputJson.shareId, inputJson.sharePassword);

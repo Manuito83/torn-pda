@@ -201,8 +201,7 @@ class LootPageState extends State<LootPage> {
             onPressed: () {
               final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
               if (scaffoldState != null) {
-                if (_webViewProvider.webViewSplitActive &&
-                    _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
+                if (_webViewProvider.splitScreenAndBrowserLeft()) {
                   scaffoldState.openEndDrawer();
                 } else {
                   scaffoldState.openDrawer();
@@ -1163,6 +1162,10 @@ class LootPageState extends State<LootPage> {
           _lootNotificationAhead = 300;
         } else if (notificationAhead == '5') {
           _lootNotificationAhead = 360;
+        } else if (notificationAhead == '6') {
+          _lootNotificationAhead = 480;
+        } else if (notificationAhead == '7') {
+          _lootNotificationAhead = 600;
         }
 
         if (alarmAhead == '0') {
@@ -1175,6 +1178,10 @@ class LootPageState extends State<LootPage> {
           _lootAlarmAhead = 5;
         } else if (alarmAhead == '4') {
           _lootAlarmAhead = 6;
+        } else if (alarmAhead == '5') {
+          _lootAlarmAhead = 8;
+        } else if (alarmAhead == '6') {
+          _lootAlarmAhead = 10;
         }
 
         if (timerAhead == '0') {
@@ -1189,6 +1196,10 @@ class LootPageState extends State<LootPage> {
           _lootTimerAhead = 300;
         } else if (timerAhead == '5') {
           _lootTimerAhead = 360;
+        } else if (timerAhead == '6') {
+          _lootTimerAhead = 480;
+        } else if (timerAhead == '7') {
+          _lootTimerAhead = 600;
         }
       });
 
