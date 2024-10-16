@@ -174,6 +174,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   // Allow navigation once even with a full locked page
   bool _forceAllowWhenLocked = false;
+  bool _firstLoadCompleted = false;
+  DateTime? _lastFullLockBackgroundTabOpen;
 
   URLRequest? _initialUrl;
   String? _pageTitle = "";
@@ -1464,6 +1466,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onLoadStop: (c, uri) async {
             if (!mounted) return;
 
+            _firstLoadCompleted = true;
+
             // Ensure that transparent background is set to false after first load
             // In iOS we do it after load stop, otherwise a white flash is trigger in any case
             if (Platform.isIOS) {
@@ -1883,7 +1887,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       return false;
     }
 
-    if (_currentUrl.isEmpty) return false;
+    if (!_firstLoadCompleted) return false;
 
     if (_webViewProvider.tabList[_webViewProvider.currentTab].isLocked &&
         _webViewProvider.tabList[_webViewProvider.currentTab].isLockFull) {
@@ -1957,6 +1961,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               style: ToastificationStyle.simple,
               borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
             );
+          }
+        }
+
+        if (_settingsProvider.fullLockNavigationAttemptOpensNewTab) {
+          if (_lastFullLockBackgroundTabOpen == null ||
+              DateTime.now().difference(_lastFullLockBackgroundTabOpen!).inSeconds > 2) {
+            _webViewProvider.addTab(url: incomingUrl.toString());
+            _lastFullLockBackgroundTabOpen = DateTime.now();
           }
         }
 
@@ -2218,10 +2230,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       }
     }
 
-    // For certain URLs (e.g. forums in iOS) we might be reporting this twice. Once from onLoadStop and again
-    // from onResourceLoad. The check in the provider (for onLoadStop triggering several times) is not enough
-    // to prevent adding extra pages to history (when it's the first page loading, it's only omitted once).
-    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1) {
+    // For certain URLs (e.g. forums or personal stats in iOS) we might be reporting this twice.
+    // Once from [onUpdateVisitedHistory] and again from [onResourceLoad].
+    // There are also sections such as personal stats that trigger [onUpdateVisitedHistory] several times
+    // when loading and when browsing backwards
+    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1.5) {
       return;
     }
     _urlTriggerTime = DateTime.now();
@@ -4076,11 +4089,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  // TRAVEL
   Future _assessBarsRedirect(dom.Document document) async {
     final inTorn = _currentUrl.contains("torn.com");
     if (inTorn) {
-      webViewController?.evaluateJavascript(source: barsDoubleClickRedirect());
+      webViewController?.evaluateJavascript(
+        source: barsDoubleClickRedirect(
+          isIOS: Platform.isIOS,
+        ),
+      );
     }
   }
 
@@ -5126,7 +5142,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                                 // If we are using tabs, add a tab
                                 final String u = url.toString().replaceAll("http:", "https:");
                                 _webViewProvider.addTab(url: u, allowDownloads: false);
-                                _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                if (_webViewProvider.automaticChangeToNewTabFromURL) {
+                                  _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+                                }
+
                                 textCancel();
                               },
                             ),

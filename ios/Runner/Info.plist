@@ -87,5 +87,42 @@
 	<false/>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
+	<key>CFBundleIcons</key>
+    <dict>
+        <!-- Default app icon -->
+        <key>CFBundlePrimaryIcon</key>
+        <dict>
+            <key>CFBundleIconFiles</key>
+            <array>
+                <string>AppIcon</string>
+            </array>
+            <key>UIPrerenderedIcon</key>
+            <false/>
+        </dict>
+        <key>CFBundleAlternateIcons</key>
+        <dict>
+            <!-- Alternate icon for Halloween -->
+            <key>AppIconHalloween</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIconHalloween</string> 
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+            <!--
+            <key>AppIconChristmas</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIconChristmas</string>
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+            -->
+        </dict>
+    </dict>
 </dict>
 </plist>

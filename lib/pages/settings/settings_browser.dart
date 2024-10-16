@@ -68,7 +68,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   @override
   Widget build(BuildContext context) {
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: true);
     _themeProvider = Provider.of<ThemeProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
@@ -1771,6 +1771,36 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
+                          Flexible(child: const Text("Automatically change to new tab from link")),
+                          Switch(
+                            value: _webViewProvider.automaticChangeToNewTabFromURL,
+                            onChanged: (value) {
+                              _webViewProvider.automaticChangeToNewTabFromURL = value;
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                      child: Text(
+                        "By default, when you open a new tab via the 'open in new tab' option, when long-pressing "
+                        "a link, the browser will change to the newly created tab. If you disable this, the new tab "
+                        "will be created but you will remain in the current page",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
                           const Text("Only load tabs when used"),
                           Switch(
                             value: _webViewProvider.onlyLoadTabsWhenUsed,
@@ -1915,6 +1945,37 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   'If enabled, a short message with a lock icon will appear whenever the lock status of a tab is changed or '
                   'when the app is impeeding navigation or tab movement due to its lock condition. NOTE: without warning, '
                   'you will NOT be able to override navigation with full locks!',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Full lock navigation opens a new tab")),
+                    Switch(
+                      value: _settingsProvider.fullLockNavigationAttemptOpensNewTab,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.fullLockNavigationAttemptOpensNewTab = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  'If enabled, a navigation attempt from a tab with a full lock will open a new tab in the background '
+                  '(the tab will be added but the browser will not switch to it automatically)',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,

@@ -321,13 +321,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       ));
 
       // Remote Config defaults
-
       remoteConfig.setDefaults(const {
         "tsc_enabled": true,
         "yata_stats_enabled": true,
         "prefs_backup_enabled": true,
         "tornexchange_enabled": true,
         "use_browser_cache": "user", // user, on, off
+        "dynamic_appIcon_enabled": "false",
       });
 
       // Remote Config first fetch and live update
@@ -338,6 +338,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
         _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+        _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+
+        // Dynamic App Icon depends on Remote Config
+        if (Platform.isIOS) {
+          _setDynamicAppIcon();
+        }
 
         remoteConfig.onConfigUpdated.listen((event) async {
           await remoteConfig.activate();
@@ -346,12 +352,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
           _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
           _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+          _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
         });
       });
     }
 
     // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
     context.read<ChainStatusProvider>().initialiseProvider();
+  }
+
+  void _setDynamicAppIcon() {
+    // Dynamic app icon
+    _preferencesCompleter.future.whenComplete(() async {
+      await _changelogCompleter.future;
+      _settingsProvider.appIconChangeBasedOnCondition();
+    });
   }
 
   @override

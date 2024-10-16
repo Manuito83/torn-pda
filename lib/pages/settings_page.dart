@@ -215,6 +215,15 @@ class SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
+                      if (Platform.isIOS)
+                        Column(
+                          children: [
+                            _appIconSection(),
+                            const SizedBox(height: 15),
+                            const Divider(),
+                            const SizedBox(height: 5),
+                          ],
+                        ),
                       _miscSection(),
                       const SizedBox(height: 15),
                       const Divider(),
@@ -1729,6 +1738,82 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
+  Column _appIconSection() {
+    return Column(
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'APP ICON',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Dynamic app icons",
+                ),
+              ),
+              Switch(
+                value: !_settingsProvider.dynamicAppIconEnabledRemoteConfig ? false : _settingsProvider.dynamicAppIcons,
+                onChanged: !_settingsProvider.dynamicAppIconEnabledRemoteConfig
+                    ? null
+                    : (enabled) async {
+                        setState(() {
+                          _settingsProvider.dynamicAppIcons = enabled;
+                        });
+
+                        if (enabled) {
+                          // Set an alternate icon
+                          _settingsProvider.appIconChangeBasedOnCondition();
+                        } else {
+                          // Reset to the default icon
+                          _settingsProvider.appIconResetDefault();
+                        }
+                      },
+                activeTrackColor:
+                    _settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.lightGreenAccent : Colors.grey[700],
+                activeColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.green : Colors.grey[700],
+                inactiveThumbColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig ? null : Colors.grey[800],
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Allows Torn PDA to change the main app icon based on certain conditions",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig)
+                Text(
+                  "Deactivated remotely for the time being",
+                  style: TextStyle(
+                    color: Colors.orange[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Column _miscSection() {
     return Column(
       children: [
@@ -2258,7 +2343,8 @@ class SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             'If enabled, a tap on any of the cooldown icons will launch the app and browser to your personal '
-            'or faction items. Otherwise, you will be shown the cooldown time remaining',
+            'or faction items. Otherwise, you will be shown the cooldown time remaining. NOTE: you might have '
+            'to try a couple of times after switching this option for the widget to update properly',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,

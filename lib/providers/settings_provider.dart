@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -275,6 +276,14 @@ class SettingsProvider extends ChangeNotifier {
   set showTabLockWarnings(bool value) {
     _showTabLockWarnings = value;
     Prefs().setShowTabLockWarnings(_showTabLockWarnings);
+    notifyListeners();
+  }
+
+  var _fullLockNavigationAttemptOpensNewTab = false;
+  bool get fullLockNavigationAttemptOpensNewTab => _fullLockNavigationAttemptOpensNewTab;
+  set fullLockNavigationAttemptOpensNewTab(bool value) {
+    _fullLockNavigationAttemptOpensNewTab = value;
+    Prefs().setFullLockNavigationAttemptOpensNewTab(_fullLockNavigationAttemptOpensNewTab);
     notifyListeners();
   }
 
@@ -936,6 +945,21 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _dynamicAppIcons = true;
+  bool get dynamicAppIcons => _dynamicAppIcons;
+  set dynamicAppIcons(bool value) {
+    _dynamicAppIcons = value;
+    Prefs().setDynamicAppIcons(_dynamicAppIcons);
+    notifyListeners();
+  }
+
+  var _dynamicAppIconEnabledRemoteConfig = false;
+  bool get dynamicAppIconEnabledRemoteConfig => _dynamicAppIconEnabledRemoteConfig;
+  set dynamicAppIconEnabledRemoteConfig(bool enabled) {
+    _dynamicAppIconEnabledRemoteConfig = enabled;
+    notifyListeners();
+  }
+
   var _debugMessages = false;
   bool get debugMessages => _debugMessages;
   set debugMessages(bool value) {
@@ -1040,6 +1064,7 @@ class SettingsProvider extends ChangeNotifier {
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
     _tabsHideBarColor = await Prefs().getTabsHideBarColor();
     _showTabLockWarnings = await Prefs().getShowTabLockWarnings();
+    _fullLockNavigationAttemptOpensNewTab = await Prefs().getFullLockNavigationAttemptOpensNewTab();
 
     List<dynamic> jsonList = json.decode(await Prefs().getLockedTabsNavigationExceptions());
     _lockedTabsNavigationExceptions = jsonList.map((item) => List<String>.from(item)).toList();
@@ -1204,6 +1229,8 @@ class SettingsProvider extends ChangeNotifier {
     _syncDeviceTheme = await Prefs().getSyncDeviceTheme();
     _darkThemeToSync = await Prefs().getDarkThemeToSync();
 
+    _dynamicAppIcons = await Prefs().getDynamicAppIcons();
+
     _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
@@ -1221,5 +1248,52 @@ class SettingsProvider extends ChangeNotifier {
     await WebviewConfig().generateUserAgentForUser();
 
     notifyListeners();
+  }
+
+  // Method to change the app icon based on a specific condition (e.g., date)
+  void appIconChangeBasedOnCondition() async {
+    if (!dynamicAppIconEnabledRemoteConfig) {
+      // If remote config is not enabled, reset to default icon
+      appIconResetDefault();
+      return;
+    }
+
+    if (!dynamicAppIcons) return;
+
+    const platform = MethodChannel('tornpda/icon');
+    DateTime now = DateTime.now();
+    String? iconName;
+
+    // Determine the icon based on the current date
+    // TODO: change to (now.month == 10 && now.day >= 25) || (now.month == 11 && now.day <= 1)
+    if ((now.month == 10 && now.day >= 10) || (now.month == 11 && now.day <= 1)) {
+      iconName = "AppIconHalloween";
+    } else {
+      iconName = null; // Default icon
+    }
+
+    try {
+      if (iconName == null) {
+        // If iconName is null, reset to default without passing arguments
+        await platform.invokeMethod('changeIcon');
+      } else {
+        // Pass the iconName if it is not null
+        await platform.invokeMethod('changeIcon', {'iconName': iconName});
+      }
+    } on PlatformException catch (e) {
+      log("Failed to update icon: ${e.message}");
+    }
+  }
+
+  // Method to reset the icon to the default
+  void appIconResetDefault() async {
+    const platform = MethodChannel('tornpda/icon');
+
+    try {
+      // Invoke changeIcon without arguments to reset to the default icon
+      await platform.invokeMethod('changeIcon');
+    } on PlatformException catch (e) {
+      log("Failed to reset icon: ${e.message}");
+    }
   }
 }

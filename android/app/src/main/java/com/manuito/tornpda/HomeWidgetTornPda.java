@@ -567,7 +567,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         boolean cooldownTapOpensApp = prefs.getBoolean("cooldown_tap_opens_browser", false);
         PendingIntent drugIntent;
         if (cooldownTapOpensApp) {
-            drugIntent = getUniquePendingIntent(context, "DrugClicked", "pdaWidget://drug:clicked", 14, drugString);
+            drugIntent = getUniquePendingIntent(context, "DrugClicked", "pdaWidget://drug:clicked", 14);
         } else {
             drugIntent = getUniqueBroadcastPendingIntent(context, Uri.parse("pdaWidget://drug:clicked"), drugString);
         }
@@ -618,7 +618,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         boolean cooldownTapOpensApp = prefs.getBoolean("cooldown_tap_opens_browser", false);
         PendingIntent medicalIntent;
         if (cooldownTapOpensApp) {
-            medicalIntent = getUniquePendingIntent(context, "MedicalClicked", "pdaWidget://medical:clicked", 14, medicalString);
+            medicalIntent = getUniquePendingIntent(context, "MedicalClicked", "pdaWidget://medical:clicked", 15);
         } else {
             medicalIntent = getUniqueBroadcastPendingIntent(context, Uri.parse("pdaWidget://medical:clicked"), medicalString);
         }
@@ -669,7 +669,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         boolean cooldownTapOpensApp = prefs.getBoolean("cooldown_tap_opens_browser", false);
         PendingIntent boosterIntent;
         if (cooldownTapOpensApp) {
-            boosterIntent = getUniquePendingIntent(context, "BoosterClicked", "pdaWidget://booster:clicked", 14, boosterString);
+            boosterIntent = getUniquePendingIntent(context, "BoosterClicked", "pdaWidget://booster:clicked", 16);
         } else {
             boosterIntent = getUniqueBroadcastPendingIntent(context, Uri.parse("pdaWidget://booster:clicked"), boosterString);
         }
@@ -769,24 +769,6 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         Intent intent = new Intent(context, MainActivity.class);
         intent.setAction(action);
         intent.setData(Uri.parse(uri));
-        return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | getImmutableFlag());
-    }
-
-    /**
-     * Overloaded method to include an extra parameter if needed
-     *
-     * @param context     The application context.
-     * @param action      The action string for the intent.
-     * @param uri         The URI string for the intent.
-     * @param requestCode The unique request code for the PendingIntent.
-     * @param extra       An extra string to include in the intent.
-     * @return A unique PendingIntent.
-     */
-    private PendingIntent getUniquePendingIntent(Context context, String action, String uri, int requestCode, String extra) {
-        Intent intent = new Intent(context, MainActivity.class);
-        intent.setAction(action);
-        intent.setData(Uri.parse(uri));
-        intent.putExtra("extra", extra);
         return PendingIntent.getActivity(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT | getImmutableFlag());
     }
 
