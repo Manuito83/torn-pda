@@ -1,4 +1,6 @@
 // Package imports:
+import 'dart:io';
+
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart' as http;
 
@@ -42,8 +44,8 @@ class NukeRevive {
         return true;
       }
     } catch (e) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Nuke Revive Comm");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Nuke Revive Comm");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
     }
 
     return false;

@@ -305,7 +305,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
-  final _findInteractionController = FindInteractionController();
+  final _findInteractionController = null;
 
   bool _omitTabHistory = false;
 
@@ -341,6 +341,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final GlobalKey _showCaseCloseButton = GlobalKey();
   final GlobalKey _showCasePlayPauseChain = GlobalKey();
   final GlobalKey _showCaseTradeOptions = GlobalKey();
+
+  final _scrollControllerBugsReport = ScrollController();
 
   @override
   void initState() {
@@ -437,19 +439,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
     );
 
-    _pullToRefreshController = PullToRefreshController(
-      settings: PullToRefreshSettings(
-        color: Colors.orange[800],
-        size: PullToRefreshSize.DEFAULT,
-        backgroundColor: _themeProvider.secondBackground,
-        enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
-        slingshotDistance: 300,
-        distanceToTriggerSync: 300,
-      ),
-      onRefresh: () async {
-        await _reload();
-      },
-    );
+    _pullToRefreshController = Platform.isWindows
+        ? null
+        : PullToRefreshController(
+            settings: PullToRefreshSettings(
+              color: Colors.orange[800],
+              size: PullToRefreshSize.DEFAULT,
+              backgroundColor: _themeProvider.secondBackground,
+              enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
+              slingshotDistance: 300,
+              distanceToTriggerSync: 300,
+            ),
+            onRefresh: () async {
+              await _reload();
+            },
+          );
   }
 
   @override
@@ -458,17 +462,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webViewController?.dispose();
       _findController.dispose();
       _chainWidgetController.dispose();
+      _scrollControllerBugsReport.dispose();
       WidgetsBinding.instance.removeObserver(this);
       super.dispose();
     } catch (e) {
-      FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
       logToUser("PDA Crash at WebviewFull dispose: $e");
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (Platform.isWindows) return;
+
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
         webViewController?.pauseTimers();
@@ -2258,9 +2265,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webViewController!.evaluateJavascript(
         source: chatHighlightJS(highlights: hlMap),
       );
-      webViewController!.injectCSSCode(
-        source: css,
-      );
+
+      if (!Platform.isWindows) {
+        webViewController!.injectCSSCode(
+          source: css,
+        );
+      } else {
+        // Inject CSS using JavaScript
+        final String jsToInjectCSS = '''
+          (function() {
+            var style = document.createElement('style');
+            style.type = 'text/css';
+            style.innerHTML = `$css`;
+            document.head.appendChild(style);
+          })();
+        ''';
+
+        webViewController!.evaluateJavascript(
+          source: jsToInjectCSS,
+        );
+      }
     }
   }
 
@@ -2563,10 +2587,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
                   }
 
-                  _scrollX = await webViewController!.getScrollX();
-                  _scrollY = await webViewController!.getScrollY();
+                  if (!Platform.isWindows) {
+                    _scrollX = await webViewController!.getScrollX();
+                    _scrollY = await webViewController!.getScrollY();
+                  }
+
                   await _reload();
-                  _scrollAfterLoad = true;
+
+                  if (!Platform.isWindows) {
+                    _scrollAfterLoad = true;
+                  }
 
                   BotToast.showText(
                     text: "Reloading...",
@@ -2860,7 +2890,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool showTitle = false,
   }) async {
     String? title = '';
-    final h4 = document.querySelector(".content-title > h4");
+
+    dom.Element? h4 = document.querySelector(".content-title > h4");
+    // Some desktop views might incorporate different elements for the title
+    h4 ??= document.querySelector("[class^='titleContainer___'] h4");
+
     if (h4 != null) {
       title = pda_parser.HtmlParser.fix(h4.innerHtml.substring(0).trim());
     }
@@ -2969,8 +3003,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
 
           if (error.isNotEmpty) {
-            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
-            FirebaseCrashlytics.instance.recordError(error, null);
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
             logToUser("Error sending Foreign Stocks to YATA");
           }
         }
@@ -2998,8 +3032,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
 
           if (error.isNotEmpty) {
-            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
-            FirebaseCrashlytics.instance.recordError(error, null);
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
             logToUser("Error sending Foreign Stocks to Prometheus");
           }
         }
@@ -3919,8 +3953,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         builder: (_) => AlertDialog(
           title: const Text("WARNING"),
           content: Scrollbar(
+            controller: _scrollControllerBugsReport,
             thumbVisibility: true,
             child: SingleChildScrollView(
+              controller: _scrollControllerBugsReport,
               child: Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -4149,7 +4185,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
 
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isWindows) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: webViewController!.getUrl().toString(),
         apiKey: _userProvider?.basic?.userApiKey ?? "",

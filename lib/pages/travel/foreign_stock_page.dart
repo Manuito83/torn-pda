@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -1069,8 +1070,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           return (apiSuccess: true, apiMessage: "");
         }
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.log("Issue fetching Foreign Stocks");
-        FirebaseCrashlytics.instance.recordError("Provider: $provider, Error: $e", trace);
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Issue fetching Foreign Stocks");
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("Provider: $provider, Error: $e", trace);
         logToUser("Provider: $provider, Error: $e, Trace: $trace");
         return (apiSuccess: false, apiMessage: e.toString());
       }

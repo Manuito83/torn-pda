@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -88,6 +89,8 @@ class AwardsPageState extends State<AwardsPage> {
     AwardsSort(type: AwardsSortType.daysDes),
   ];
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -97,10 +100,16 @@ class AwardsPageState extends State<AwardsPage> {
     _fabHeight = _initFabHeight;
     _getAwardsPayload = _fetchYataAndPopulate();
 
-    analytics.logScreenView(screenName: 'awards');
+    analytics?.logScreenView(screenName: 'awards');
 
     routeWithDrawer = true;
     routeName = "awards";
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -129,6 +138,7 @@ class AwardsPageState extends State<AwardsPage> {
                 if (snapshot.connectionState == ConnectionState.done) {
                   if (_apiSuccess) {
                     return Scrollbar(
+                      controller: _scrollController,
                       child: Column(
                         children: [
                           Expanded(
@@ -293,6 +303,7 @@ class AwardsPageState extends State<AwardsPage> {
 
   ListView _awardsListView() {
     return ListView.builder(
+      controller: _scrollController,
       // We need to paint more pixels in advance for to avoid jerks in the scrollbar
       cacheExtent: 10000,
       itemCount: _allAwardsCards.length,
@@ -853,8 +864,10 @@ class AwardsPageState extends State<AwardsPage> {
           // Populate models list
           _allAwards.add(singleAward);
         } catch (e, trace) {
-          FirebaseCrashlytics.instance.log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
-          FirebaseCrashlytics.instance.recordError(e, null);
+          if (!Platform.isWindows) {
+            FirebaseCrashlytics.instance.log("PDA Crash at YATA AWARD (${value["name"]}). Error: $e");
+          }
+          if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, null);
           logToUser("PDA Error at YATA AWARD: $e, $trace");
         }
       }); // FINISH FOR EACH SINGLE-AWARD

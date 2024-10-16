@@ -72,7 +72,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     _finishedLoadingPreferences = _restorePreferences();
     _retrievePendingNotifications();
     _ticker = Timer.periodic(const Duration(seconds: 10), (Timer t) => _updateInformation());
-    analytics.logScreenView(screenName: 'travel');
+    analytics?.logScreenView(screenName: 'travel');
 
     routeWithDrawer = true;
     routeName = "travel";
@@ -87,6 +87,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (Platform.isWindows) return;
+
     if (state == AppLifecycleState.resumed) {
       _updateInformation();
     }
@@ -940,11 +942,15 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<void> _cancelTravelNotification() async {
+    if (Platform.isWindows) return;
+
     await flutterLocalNotificationsPlugin.cancel(201);
     _retrievePendingNotifications();
   }
 
   Future<void> _retrievePendingNotifications() async {
+    if (Platform.isWindows) return;
+
     final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
     var pending = false;

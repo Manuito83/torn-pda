@@ -294,7 +294,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     ),
                     const SizedBox(height: 4),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -321,7 +321,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -361,7 +361,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         onPressed: _shortcutsProvider.activeShortcuts.isNotEmpty
                             ? () {
@@ -391,7 +391,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -420,7 +420,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     ),
                     if (widget.inAppWebview != null)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                         child: ElevatedButton(
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -448,7 +448,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                       ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,

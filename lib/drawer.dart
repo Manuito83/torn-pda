@@ -8,7 +8,6 @@ import 'dart:math' as math;
 // Package imports:
 import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -117,7 +116,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   final ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
-  final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
 
   DateTime? _deepLinkSubTriggeredTime;
   bool _deepLinkInitOnce = false;
@@ -171,44 +169,46 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _statsController.logCheckIn();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // STARTS QUICK ACTIONS
-      const QuickActions quickActions = QuickActions();
+      if (!Platform.isWindows) {
+        // STARTS QUICK ACTIONS
+        const QuickActions quickActions = QuickActions();
 
-      quickActions.setShortcutItems(<ShortcutItem>[
-        // NOTE: keep the same file name for both platforms
-        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
-        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
-        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
-        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
-      ]);
+        quickActions.setShortcutItems(<ShortcutItem>[
+          // NOTE: keep the same file name for both platforms
+          const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
+          const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
+          const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
+          const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
+        ]);
 
-      quickActions.initialize((String shortcutType) async {
-        if (shortcutType == 'open_torn') {
-          context.read<WebViewProvider>().openBrowserPreference(
-                context: context,
-                url: "https://www.torn.com",
-                browserTapType: BrowserTapType.quickItem,
-              );
-        } else if (shortcutType == 'open_gym') {
-          context.read<WebViewProvider>().openBrowserPreference(
-                context: context,
-                url: "https://www.torn.com/gym.php",
-                browserTapType: BrowserTapType.quickItem,
-              );
-        } else if (shortcutType == 'open_crimes') {
-          context.read<WebViewProvider>().openBrowserPreference(
-                context: context,
-                url: "https://www.torn.com/crimes.php",
-                browserTapType: BrowserTapType.quickItem,
-              );
-        } else if (shortcutType == 'open_travel') {
-          context.read<WebViewProvider>().openBrowserPreference(
-                context: context,
-                url: "https://www.torn.com/travelagency.php",
-                browserTapType: BrowserTapType.quickItem,
-              );
-        }
-      });
+        quickActions.initialize((String shortcutType) async {
+          if (shortcutType == 'open_torn') {
+            context.read<WebViewProvider>().openBrowserPreference(
+                  context: context,
+                  url: "https://www.torn.com",
+                  browserTapType: BrowserTapType.quickItem,
+                );
+          } else if (shortcutType == 'open_gym') {
+            context.read<WebViewProvider>().openBrowserPreference(
+                  context: context,
+                  url: "https://www.torn.com/gym.php",
+                  browserTapType: BrowserTapType.quickItem,
+                );
+          } else if (shortcutType == 'open_crimes') {
+            context.read<WebViewProvider>().openBrowserPreference(
+                  context: context,
+                  url: "https://www.torn.com/crimes.php",
+                  browserTapType: BrowserTapType.quickItem,
+                );
+          } else if (shortcutType == 'open_travel') {
+            context.read<WebViewProvider>().openBrowserPreference(
+                  context: context,
+                  url: "https://www.torn.com/travelagency.php",
+                  browserTapType: BrowserTapType.quickItem,
+                );
+          }
+        });
+      }
     });
     // ENDS QUICK ACTIONS
 
@@ -251,55 +251,57 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _lastMessageReceived = DateTime.now();
     _lastBody = "";
 
-    _messaging.getInitialMessage().then((RemoteMessage? message) {
-      if (message != null && message.data.isNotEmpty) {
-        _onFirebaseBackgroundNotification(message.data);
-      }
-    });
-
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-      if (message.data.isNotEmpty) {
-        _onFirebaseBackgroundNotification(message.data);
-      }
-    });
-
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      // This allows for notifications other than predefined ones in functions
-      if (message.data.isEmpty) {
-        message.data["title"] = message.notification!.title;
-        message.data["body"] = message.notification!.body;
-      }
-
-      // Space messages and skip repeated
-      bool skip = false;
-      if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
-        if (message.data["body"] == _lastBody) {
-          // Skips messages with the same body that come repeated in less than 2 seconds, which is
-          // a glitch for some mobile devices with the app in the foreground!
-          skip = true;
-        } else {
-          // Spaces out several notifications so that all of them show if
-          // the app is open (otherwise only 1 of them shows)
-          concurrent++;
-          await Future.delayed(Duration(seconds: 8 * concurrent));
+    if (!Platform.isWindows) {
+      _messaging.getInitialMessage().then((RemoteMessage? message) {
+        if (message != null && message.data.isNotEmpty) {
+          _onFirebaseBackgroundNotification(message.data);
         }
-      } else {
-        concurrent = 0;
-      }
+      });
 
-      if (!skip) {
-        _lastMessageReceived = DateTime.now();
-        _lastBody = message.data["body"] as String?;
-        // Assigns a different id two alerts that come together (otherwise one
-        // deletes the previous one)
-        notId++;
-        if (notId > 990) notId = 900;
-        // This will eventually fire a local notification
-        showNotification(message.data, notId);
-      } else {
-        return;
-      }
-    });
+      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+        if (message.data.isNotEmpty) {
+          _onFirebaseBackgroundNotification(message.data);
+        }
+      });
+
+      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+        // This allows for notifications other than predefined ones in functions
+        if (message.data.isEmpty) {
+          message.data["title"] = message.notification!.title;
+          message.data["body"] = message.notification!.body;
+        }
+
+        // Space messages and skip repeated
+        bool skip = false;
+        if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
+          if (message.data["body"] == _lastBody) {
+            // Skips messages with the same body that come repeated in less than 2 seconds, which is
+            // a glitch for some mobile devices with the app in the foreground!
+            skip = true;
+          } else {
+            // Spaces out several notifications so that all of them show if
+            // the app is open (otherwise only 1 of them shows)
+            concurrent++;
+            await Future.delayed(Duration(seconds: 8 * concurrent));
+          }
+        } else {
+          concurrent = 0;
+        }
+
+        if (!skip) {
+          _lastMessageReceived = DateTime.now();
+          _lastBody = message.data["body"] as String?;
+          // Assigns a different id two alerts that come together (otherwise one
+          // deletes the previous one)
+          notId++;
+          if (notId > 990) notId = 900;
+          // This will eventually fire a local notification
+          showNotification(message.data, notId);
+        } else {
+          return;
+        }
+      });
+    }
 
     // Handle notifications
     _getBackgroundNotificationSavedData();
@@ -312,46 +314,48 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
 
     // Remote Config settings
-    remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(minutes: 1),
-      minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
-    ));
+    if (!Platform.isWindows) {
+      remoteConfig.setConfigSettings(RemoteConfigSettings(
+        fetchTimeout: const Duration(minutes: 1),
+        minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
+      ));
 
-    // Remote Config defaults
-    remoteConfig.setDefaults(const {
-      "tsc_enabled": true,
-      "yata_stats_enabled": true,
-      "prefs_backup_enabled": true,
-      "tornexchange_enabled": true,
-      "use_browser_cache": "user", // user, on, off
-      "dynamic_appIcon_enabled": "false",
-    });
+      // Remote Config defaults
+      remoteConfig.setDefaults(const {
+        "tsc_enabled": true,
+        "yata_stats_enabled": true,
+        "prefs_backup_enabled": true,
+        "tornexchange_enabled": true,
+        "use_browser_cache": "user", // user, on, off
+        "dynamic_appIcon_enabled": "false",
+      });
 
-    // Remote Config first fetch and live update
-    _preferencesCompleter.future.whenComplete(() async {
-      await remoteConfig.fetchAndActivate();
-      _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-      _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
-      _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
-      _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
-      _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
-      _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
-
-      // Dynamic App Icon depends on Remote Config
-      if (Platform.isIOS) {
-        _setDynamicAppIcon();
-      }
-
-      remoteConfig.onConfigUpdated.listen((event) async {
-        await remoteConfig.activate();
+      // Remote Config first fetch and live update
+      _preferencesCompleter.future.whenComplete(() async {
+        await remoteConfig.fetchAndActivate();
         _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
         _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
         _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
         _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
         _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+
+        // Dynamic App Icon depends on Remote Config
+        if (Platform.isIOS) {
+          _setDynamicAppIcon();
+        }
+
+        remoteConfig.onConfigUpdated.listen((event) async {
+          await remoteConfig.activate();
+          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+          _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+          _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
+          _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+          _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+        });
       });
-    });
+    }
 
     // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
     context.read<ChainStatusProvider>().initialiseProvider();
@@ -400,6 +404,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (Platform.isWindows) return;
+
     if (state == AppLifecycleState.paused) {
       // Stop stakeouts
       _s.stopTimer();
@@ -1688,8 +1694,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (!settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
           continue;
         }
-        if (!settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
-          continue;
+
+        if (!Platform.isWindows) {
+          if (!settingsProvider.stockExchangeInMenu && _drawerItemsList[i] == "Stock Market") {
+            continue;
+          }
+        }
+
+        if (Platform.isWindows) {
+          if (_drawerItemsList[i] == "Alerts") {
+            continue;
+          }
         }
 
         // Adding divider just before SETTINGS
@@ -1863,18 +1878,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
           // Warn user about the possibility of a new UID being regenerated
           // We should not arrive here under normal circumstances, as null users are redirected to Settings
-          BotToast.showText(
-            clickClose: true,
-            text: "A problem was found with your user.\n\n"
-                "Please visit the Alerts page and ensure that your alerts are properly setup!",
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.blue,
-            duration: const Duration(seconds: 6),
-            contentPadding: const EdgeInsets.all(10),
-          );
+          if (!Platform.isWindows) {
+            BotToast.showText(
+              clickClose: true,
+              text: "A problem was found with your user.\n\n"
+                  "Please visit the Alerts page and ensure that your alerts are properly setup!",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue,
+              duration: const Duration(seconds: 6),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
         } else {
           final existingUid = user.uid;
           log("Drawer: Firebase user ID $existingUid");

@@ -122,7 +122,7 @@ class SettingsPageState extends State<SettingsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.logScreenView(screenName: 'settings');
+    analytics?.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
     routeName = "settings";
@@ -236,10 +236,15 @@ class SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
-                      _saveSettingsSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
+                      // Cloud functions are not supported on Windows
+                      Column(
+                        children: [
+                          _saveSettingsSection(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                        ],
+                      ),
                       _troubleshootingSection(),
                       const SizedBox(height: 50),
                     ],
@@ -2497,7 +2502,7 @@ class SettingsPageState extends State<SettingsPage> {
                                       _userToLoad = false;
                                       _apiError = false;
                                     });
-                                    await FirebaseMessaging.instance.deleteToken();
+                                    if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
                                     await firestore.deleteUserProfile();
                                     await firebaseAuth.signOut();
                                     widget.changeUID("");
@@ -3610,9 +3615,10 @@ class SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
-          "Error: $e. Stack: $stack");
-      FirebaseCrashlytics.instance.recordError(e, null);
+      if (!Platform.isWindows)
+        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+            "Error: $e. Stack: $stack");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, null);
     }
   }
 

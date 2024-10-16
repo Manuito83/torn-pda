@@ -39,11 +39,15 @@ class FirestoreHelper {
     // Generate or replace token if it already exists
     // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
     String? token = "";
-    final String currentToken = (await _messaging.getToken())!;
-    if (currentToken.isNotEmpty) {
-      await FirebaseMessaging.instance.deleteToken();
+    if (!Platform.isWindows) {
+      final String currentToken = (await _messaging.getToken())!;
+      if (currentToken.isNotEmpty) {
+        await FirebaseMessaging.instance.deleteToken();
+      }
+      token = (await _messaging.getToken())!;
+    } else {
+      token = "windows";
     }
-    token = (await _messaging.getToken())!;
     log("FCM token: $token");
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.

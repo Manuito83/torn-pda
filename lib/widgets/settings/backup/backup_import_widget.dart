@@ -48,11 +48,26 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
   Widget build(BuildContext context) {
     return Column(children: [
       Text("Available parameters"),
-      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.shortcuts)) _shorcutsMain(),
-      Divider(),
-      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.userscripts)) _userscriptsMain(),
-      Divider(),
-      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.targets)) _targetsMain(),
+      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.shortcuts))
+        Column(
+          children: [
+            _shorcutsMain(),
+          ],
+        ),
+      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.userscripts))
+        Column(
+          children: [
+            Divider(),
+            _userscriptsMain(),
+          ],
+        ),
+      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.targets))
+        Column(
+          children: [
+            Divider(),
+            _targetsMain(),
+          ],
+        ),
     ]);
   }
 
