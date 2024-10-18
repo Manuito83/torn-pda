@@ -126,6 +126,8 @@ class WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.notesDes),
     WarSort(type: WarSortType.notesAsc),
     WarSort(type: WarSortType.bounty),
+    WarSort(type: WarSortType.travelDistanceDesc),
+    WarSort(type: WarSortType.travelDistanceAsc),
   ];
 
   final _popupOptionsChoices = <WarOptions>[
@@ -1213,6 +1215,10 @@ class WarPageState extends State<WarPage> {
         _w.sortTargets(WarSortType.notesAsc);
       case WarSortType.bounty:
         _w.sortTargets(WarSortType.bounty);
+      case WarSortType.travelDistanceDesc:
+        _w.sortTargets(WarSortType.travelDistanceDesc);
+      case WarSortType.travelDistanceAsc:
+        _w.sortTargets(WarSortType.travelDistanceAsc);
       default:
         _w.sortTargets(WarSortType.nameAsc);
         break;

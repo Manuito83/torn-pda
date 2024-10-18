@@ -879,6 +879,10 @@ class WarController extends GetxController {
         currentSort = WarSortType.notesAsc;
       case 'bounty':
         currentSort = WarSortType.bounty;
+      case 'travelDistanceDes':
+        currentSort = WarSortType.travelDistanceDesc;
+      case 'travelDistanceAsc':
+        currentSort = WarSortType.travelDistanceAsc;
     }
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
@@ -946,6 +950,10 @@ class WarController extends GetxController {
         sortToSave = 'notesAsc';
       case WarSortType.bounty:
         sortToSave = 'bounty';
+      case WarSortType.travelDistanceDesc:
+        sortToSave = 'travelDistanceDes';
+      case WarSortType.travelDistanceAsc:
+        sortToSave = 'travelDistanceAsc';
     }
     Prefs().setWarMembersSort(sortToSave);
   }
@@ -1295,6 +1303,13 @@ class WarController extends GetxController {
         int aBounty = a.bountyAmount ?? 0;
         int bBounty = b.bountyAmount ?? 0;
         return bBounty.compareTo(aBounty);
+
+      // Trip distance (time)
+      case WarSortType.travelDistanceAsc:
+        return getTripTime(a).compareTo(getTripTime(b));
+      case WarSortType.travelDistanceDesc:
+        return getTripTime(b).compareTo(getTripTime(a));
+
       default:
         return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
     }
@@ -1564,6 +1579,40 @@ class WarController extends GetxController {
       return "high";
     } else {
       return "unknown";
+    }
+  }
+
+  int getTripTime(Member member) {
+    String destination = "Torn";
+    destination = countryCheck(state: member.status!.state, description: member.status!.description);
+
+    switch (destination) {
+      case 'Torn':
+        return 0;
+      case 'Japan':
+        return 225;
+      case 'Hawaii':
+        return 134;
+      case 'China':
+        return 242;
+      case 'Argentina':
+        return 167;
+      case 'UK':
+        return 159;
+      case 'Cayman':
+        return 35;
+      case 'South Africa':
+        return 297;
+      case 'Switzerland':
+        return 175;
+      case 'Mexico':
+        return 26;
+      case 'UAE':
+        return 271;
+      case 'Canada':
+        return 41;
+      default:
+        return 9999;
     }
   }
 }
