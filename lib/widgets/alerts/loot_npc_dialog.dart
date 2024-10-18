@@ -224,7 +224,7 @@ class NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
                 value: widget.firebaseUserModel!.lootAlerts.contains("${widget.npcAlertModel.id}:4"),
                 onChanged: (value) {
                   setState(() {
-                    firestore.toggleNpcAlert(id: widget.npcAlertModel.id, level: 4, active: value);
+                    FirestoreHelper().toggleNpcAlert(id: widget.npcAlertModel.id, level: 4, active: value);
                   });
                 },
               ),
@@ -246,7 +246,7 @@ class NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
                 value: widget.firebaseUserModel!.lootAlerts.contains("${widget.npcAlertModel.id}:5"),
                 onChanged: (value) {
                   setState(() {
-                    firestore.toggleNpcAlert(id: widget.npcAlertModel.id, level: 5, active: value);
+                    FirestoreHelper().toggleNpcAlert(id: widget.npcAlertModel.id, level: 5, active: value);
                   });
                 },
               ),

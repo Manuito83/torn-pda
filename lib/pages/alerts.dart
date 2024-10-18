@@ -52,7 +52,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _getFirebaseAndTornDetails = Future.wait([
-      firestore.getUserProfile(),
+      FirestoreHelper().getUserProfile(),
       _getFactionApiAccess(),
     ]);
     analytics?.logScreenView(screenName: 'alerts');
@@ -124,7 +124,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.energyNotification = value;
                             });
-                            firestore.subscribeToEnergyNotification(value);
+                            FirestoreHelper().subscribeToEnergyNotification(value);
                           },
                         ),
                       ),
@@ -146,7 +146,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.nerveNotification = value;
                             });
-                            firestore.subscribeToNerveNotification(value);
+                            FirestoreHelper().subscribeToNerveNotification(value);
                           },
                         ),
                       ),
@@ -168,7 +168,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.lifeNotification = value;
                             });
-                            firestore.subscribeToLifeNotification(value);
+                            FirestoreHelper().subscribeToLifeNotification(value);
                           },
                         ),
                       ),
@@ -191,7 +191,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.travelNotification = value;
                             });
-                            firestore.subscribeToTravelNotification(value);
+                            FirestoreHelper().subscribeToTravelNotification(value);
                           },
                         ),
                       ),
@@ -214,7 +214,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.foreignRestockNotification = value;
                             });
-                            firestore.subscribeToForeignRestockNotification(value);
+                            FirestoreHelper().subscribeToForeignRestockNotification(value);
                           },
                         ),
                       ),
@@ -248,7 +248,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                     setState(() {
                                       _firebaseUserModel?.foreignRestockNotificationOnlyCurrentCountry = value;
                                     });
-                                    firestore.changeForeignRestockNotificationOnlyCurrentCountry(value);
+                                    FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(value);
                                   },
                                 ),
                               ),
@@ -274,7 +274,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.hospitalNotification = value;
                             });
-                            firestore.subscribeToHospitalNotification(value);
+                            FirestoreHelper().subscribeToHospitalNotification(value);
                           },
                         ),
                       ),
@@ -297,7 +297,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.drugsNotification = value;
                             });
-                            firestore.subscribeToDrugsNotification(value);
+                            FirestoreHelper().subscribeToDrugsNotification(value);
                           },
                         ),
                       ),
@@ -321,7 +321,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.medicalNotification = value;
                             });
-                            firestore.subscribeToMedicalNotification(value);
+                            FirestoreHelper().subscribeToMedicalNotification(value);
                           },
                         ),
                       ),
@@ -345,7 +345,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.boosterNotification = value;
                             });
-                            firestore.subscribeToBoosterNotification(value);
+                            FirestoreHelper().subscribeToBoosterNotification(value);
                           },
                         ),
                       ),
@@ -421,7 +421,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.lootRangersAlerts = value;
                             });
-                            firestore.subscribeToLootRangersNotification(value);
+                            FirestoreHelper().subscribeToLootRangersNotification(value);
                           },
                         ),
                       ),
@@ -443,7 +443,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.racingNotification = value;
                             });
-                            firestore.subscribeToRacingNotification(value);
+                            FirestoreHelper().subscribeToRacingNotification(value);
                           },
                         ),
                       ),
@@ -465,7 +465,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.messagesNotification = value;
                             });
-                            firestore.subscribeToMessagesNotification(value);
+                            FirestoreHelper().subscribeToMessagesNotification(value);
                           },
                         ),
                       ),
@@ -487,7 +487,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.eventsNotification = value;
                             });
-                            firestore.subscribeToEventsNotification(value);
+                            FirestoreHelper().subscribeToEventsNotification(value);
                           },
                         ),
                       ),
@@ -542,7 +542,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.refillsNotification = value;
                             });
-                            firestore.subscribeToRefillsNotification(value);
+                            FirestoreHelper().subscribeToRefillsNotification(value);
                           },
                         ),
                       ),
@@ -674,7 +674,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   setState(() {
                                     _firebaseUserModel?.refillsTime = value;
                                   });
-                                  firestore.setRefillTime(value);
+                                  FirestoreHelper().setRefillTime(value);
                                 },
                               ),
                             ],
@@ -766,7 +766,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.factionAssistMessage = value;
                             });
-                            firestore.toggleFactionAssistMessage(value);
+                            FirestoreHelper().toggleFactionAssistMessage(value);
                           },
                         ),
                       ),
@@ -820,7 +820,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                               setState(() {
                                 _firebaseUserModel?.retalsNotification = enabled;
                               });
-                              firestore.toggleRetaliationNotification(enabled);
+                              FirestoreHelper().toggleRetaliationNotification(enabled);
                               return;
                             }
 
@@ -828,7 +828,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                               setState(() {
                                 _firebaseUserModel?.retalsNotification = enabled;
                               });
-                              firestore.toggleRetaliationNotification(enabled);
+                              FirestoreHelper().toggleRetaliationNotification(enabled);
 
                               // Makes sure to scroll down so that the new 2 options are visible
                               _scrollController.animateTo(
@@ -844,7 +844,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 setState(() {
                                   _firebaseUserModel?.retalsNotification = enabled;
                                 });
-                                firestore.toggleRetaliationNotification(enabled, host: false);
+                                FirestoreHelper().toggleRetaliationNotification(enabled, host: false);
                                 message = "You have no faction API permissions (talk to your leadership about it).\n\n"
                                     "This alert has been activated, but it won't work unless someone with proper "
                                     "permissions in your faction activates it as well.";
@@ -979,7 +979,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   setState(() {
                                     _firebaseUserModel?.retalsNotificationDonor = enabled;
                                   });
-                                  firestore.toggleRetaliationDonor(enabled);
+                                  FirestoreHelper().toggleRetaliationDonor(enabled);
                                 },
                               ),
                             ],

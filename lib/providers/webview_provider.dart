@@ -90,6 +90,9 @@ class WebViewProvider extends ChangeNotifier {
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
+  // Windows user data folder
+  late WebViewEnvironment webViewEnvironment;
+
   // Controls successive toastification activations for full lock awareness, since
   // using [toastification.dismissAll()] leaves quite a long gap until next activation is possible
   DateTime? lastLockToastShown;
@@ -781,6 +784,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void resumeAllWebviews() {
     try {
+      if (Platform.isWindows) return;
       if (_tabList.isEmpty) return;
 
       final currentTab = _tabList[_currentTab];

@@ -434,6 +434,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _spiesSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -668,6 +669,7 @@ class SettingsPageState extends State<SettingsPage> {
         ),
         if (_settingsProvider.tscEnabledStatusRemoteConfig)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -762,6 +764,7 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         if (_settingsProvider.yataStatsEnabledStatusRemoteConfig)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -828,6 +831,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _ocSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -873,6 +877,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _apiRateSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1030,6 +1035,7 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         if (_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -1190,6 +1196,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _troubleshootingSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1340,6 +1347,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _externalPartnersSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1390,6 +1398,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _shortcutsSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1492,6 +1501,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _screenConfigurationSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1720,17 +1730,21 @@ class SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "Specifies which of the two dark themes is activated in the app when the web or your device themes "
-                  "(depending on the options above) are switched to dark",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
+              Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "Specifies which of the two dark themes is activated in the app when the web or your device themes "
+                      "(depending on the options above) are switched to dark",
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),
@@ -1740,6 +1754,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _appIconSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1816,6 +1831,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _miscSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1943,6 +1959,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _revivingServicesSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1995,6 +2012,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _notificationsSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -2039,7 +2057,7 @@ class SettingsPageState extends State<SettingsPage> {
                 onChanged: (value) {
                   setState(() {
                     _settingsProvider.discreetNotifications = value;
-                    firestore.toggleDiscreet(value);
+                    FirestoreHelper().toggleDiscreet(value);
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -2203,6 +2221,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _appWidgetSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -2503,7 +2522,7 @@ class SettingsPageState extends State<SettingsPage> {
                                       _apiError = false;
                                     });
                                     if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
-                                    await firestore.deleteUserProfile();
+                                    await FirestoreHelper().deleteUserProfile();
                                     await firebaseAuth.signOut();
                                     widget.changeUID("");
                                   },
@@ -3341,7 +3360,7 @@ class SettingsPageState extends State<SettingsPage> {
         // Deletes current channels and create new ones
         reconfigureNotificationChannels(mod: value);
         // Update channel preferences
-        firestore.setVibrationPattern(value);
+        FirestoreHelper().setVibrationPattern(value);
         Prefs().setVibrationPattern(value!);
         setState(() {
           _vibrationValue = value;
@@ -3570,22 +3589,27 @@ class SettingsPageState extends State<SettingsPage> {
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
-          final user = await firebaseAuth.getUID();
-          // Only sign in if there is currently no user registered (to avoid duplicates)
-          if (user == null || (user is User && user.uid.isEmpty)) {
-            final User mFirebaseUser = await (firebaseAuth.signInAnon());
-            firestore.setUID(mFirebaseUser.uid);
-            // Returns UID to Drawer so that it can be passed to settings
-            widget.changeUID(mFirebaseUser.uid);
-            log("Settings: signed in with UID ${mFirebaseUser.uid}");
-          } else {
-            log("Settings: existing user UID $user");
-          }
+          if (!Platform.isWindows) {
+            // See note in [firebase_auth.dart]
+            final user = await firebaseAuth.getUID();
+            // Only sign in if there is currently no user registered (to avoid duplicates)
+            if (user == null || (user is User && user.uid.isEmpty)) {
+              final User mFirebaseUser = await (firebaseAuth.signInAnon());
+              FirestoreHelper().setUID(mFirebaseUser.uid);
+              // Returns UID to Drawer so that it can be passed to settings
+              widget.changeUID(mFirebaseUser.uid);
+              log("Settings: signed in with UID ${mFirebaseUser.uid}");
+            } else {
+              log("Settings: existing user UID $user");
+            }
 
-          await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
-          await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
-          if (Platform.isAndroid) {
-            firestore.setVibrationPattern(_vibrationValue);
+            await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
+            await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+            if (Platform.isAndroid) {
+              FirestoreHelper().setVibrationPattern(_vibrationValue);
+            }
+          } else {
+            log("Windows: skipping Firestore sign up!");
           }
 
           // Signal stat counter initialization
@@ -3615,10 +3639,11 @@ class SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e, stack) {
-      if (!Platform.isWindows)
+      if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
             "Error: $e. Stack: $stack");
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, null);
+        FirebaseCrashlytics.instance.recordError(e, null);
+      }
     }
   }
 

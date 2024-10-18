@@ -593,7 +593,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     if (!widget.activeRestocks!.keys.contains(_codeName)) {
       Map<String, dynamic> tempMap = widget.activeRestocks!;
       tempMap.addAll({_codeName: time});
-      firestore.updateActiveRestockAlerts(tempMap).then((success) async {
+      FirestoreHelper().updateActiveRestockAlerts(tempMap).then((success) async {
         if (success) {
           setState(() {
             widget.activeRestocks!.addAll({_codeName: time});
@@ -623,7 +623,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     if (widget.activeRestocks!.keys.contains(_codeName)) {
       Map<String, dynamic> tempMap = widget.activeRestocks!;
       tempMap.removeWhere((key, value) => key == _codeName);
-      firestore.updateActiveRestockAlerts(tempMap).then((success) {
+      FirestoreHelper().updateActiveRestockAlerts(tempMap).then((success) {
         if (success) {
           setState(() {
             widget.activeRestocks!.removeWhere((key, value) => key == _codeName);
@@ -1001,7 +1001,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   Future _getFooterInformation() async {
     try {
       // Get the stock
-      final firestoreData = await firestore.getStockInformation(_codeName);
+      final firestoreData = await FirestoreHelper().getStockInformation(_codeName);
 
       // Chart date
       final responseMap = firestoreData.get('periodicMap');

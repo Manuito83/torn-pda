@@ -1163,20 +1163,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           initialUrlRequest: _initialUrl,
           pullToRefreshController: _pullToRefreshController,
           findInteractionController: _findInteractionController,
+          webViewEnvironment: _webViewProvider.webViewEnvironment,
           initialSettings: _initialWebViewSettings,
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
 
             // Clear cache (except for cookies) for each new session
-            if (!_settingsProvider.webviewCacheEnabled) {
+            if (!_settingsProvider.webviewCacheEnabled && !Platform.isWindows) {
               await InAppWebViewController.clearAllCache();
             }
 
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
@@ -1292,7 +1293,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
@@ -5882,7 +5883,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   clearCacheAndReload() async {
-    await InAppWebViewController.clearAllCache();
+    if (!Platform.isWindows) {
+      await InAppWebViewController.clearAllCache();
+    }
     CookieManager cookieManager = CookieManager.instance();
     cookieManager.deleteAllCookies();
     webViewController!.evaluateJavascript(

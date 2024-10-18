@@ -477,7 +477,7 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                                   }
                                 }
                                 // Upload
-                                success = await firestore.addStockMarketShare(widget.stock.acronym, action);
+                                success = await FirestoreHelper().addStockMarketShare(widget.stock.acronym, action);
                               } else {
                                 // Return with no validation
                                 return;

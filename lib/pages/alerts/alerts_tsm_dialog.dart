@@ -170,16 +170,16 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
                             ..userApiKeyValid = true;
 
                           FirebaseUserModel? fb =
-                              await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
+                              await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
                           widget.reassignFirebaseUserModelCallback(fb);
-                          await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+                          await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
 
                           if (Platform.isAndroid) {
                             final alertsVibration = await Prefs().getVibrationPattern();
                             // Deletes current channels and create new ones
                             reconfigureNotificationChannels(mod: alertsVibration);
                             // Update channel preferences
-                            firestore.setVibrationPattern(alertsVibration);
+                            FirestoreHelper().setVibrationPattern(alertsVibration);
                           }
 
                           BotToast.showText(

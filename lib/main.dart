@@ -19,6 +19,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
@@ -186,6 +187,7 @@ Future<void> main() async {
   // ## FIREBASE
   // Before any of the Firebase services can be used, FlutterFire needs to be initialized
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   if (!Platform.isWindows) {
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
@@ -194,17 +196,17 @@ Future<void> main() async {
         FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
       }
       // Only 'true' intended for debugging, otherwise leave in false
-      if (!Platform.isWindows) await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
+      await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
     }
     // Pass all uncaught errors from the framework to Crashlytics
-    if (!Platform.isWindows) FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
 
     // ! Consider disabling for public release - Enable in beta to get plugins' method channel errors in Crashlytics
     // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
     // https://docs.flutter.dev/testing/errors#errors-not-caught-by-flutter
 
     PlatformDispatcher.instance.onError = (error, stack) {
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
       return false;
     };
   }
@@ -488,6 +490,34 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Future _loadMainBrowserPreferences() async {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     await _webViewProvider.restorePreferences();
+
+    /// DOC
+    ///
+    /// Before initializing the WebView, call the WebViewEnvironment.getAvailableVersion() static method to
+    /// check whether the required WebView2 Runtime is installed or not on the user system.
+    ///
+    /// TODO: alert users?
+    ///
+    /// WebView2 Runtime is ship in box with Windows 11, but it may not be installed on Windows 10 devices.
+    ///
+    /// If it isn't installed, the method will return null, so consider how to distribute the WebView2 Runtime.
+    ///
+    /// Option 1: tell user to install WebView2 Runtime from this page:
+    /// https://developer.microsoft.com/en-us/microsoft-edge/webview2/?form=MA13LH
+    ///
+    /// Option 2: choose one of the distribution method described in detail here:
+    /// https://docs.microsoft.com/en-us/microsoft-edge/webview2/concepts/distribution
+    ///
+    /// Also, on Windows Platform, we should create a WebViewEnvironment with a custom user data folder, as
+    /// the default one is where the .exe goes (which is read-only).
+    if (Platform.isWindows) {
+      final localAppData = Platform.environment['APPDATA'];
+      _webViewProvider.webViewEnvironment = await WebViewEnvironment.create(
+        settings: WebViewEnvironmentSettings(
+          userDataFolder: '$localAppData\\com.manuito\\torn_pda\\webview_windows',
+        ),
+      );
+    }
 
     // Assess the split screen condition right after launch, in case the device is already in wide screen
     // position (needed for Android & Windows). This is also needed if the screen is splitted in order to avoid

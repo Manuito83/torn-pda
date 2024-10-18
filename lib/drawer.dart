@@ -149,7 +149,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   int notId = 900;
 
   // Platform channel with MainActivity.java
-  static const platform = MethodChannel('tornpda.channel');
+  MethodChannel? platformAndroid = Platform.isAndroid ? MethodChannel('tornpda.channel') : null;
 
   // Intent receiver subscription
   StreamSubscription? _intentListenerSub;
@@ -657,7 +657,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             // "cancelAll()" there without affecting scheduled notifications, which is
             // a problem with the local plugin)
             if (not.id == 0) {
-              await platform.invokeMethod('cancelNotifications');
+              await platformAndroid!.invokeMethod('cancelNotifications');
             }
             // This cancels the Firebase alerts that have been triggered locally
             else {
@@ -1863,48 +1863,52 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _activeDrawerIndex = int.parse(defaultSection);
 
       // Firestore get auth and init
-      FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-        // Only execute once, otherwise we risk creating users in a row below
-        if (_drawerUserChecked) return;
-        _drawerUserChecked = true;
+      if (!Platform.isWindows) {
+        // See note in [firebase_auth.dart]
+        FirebaseAuth.instance.authStateChanges().listen((User? user) async {
+          // Only execute once, otherwise we risk creating users in a row below
+          if (_drawerUserChecked) return;
+          _drawerUserChecked = true;
 
-        if (user == null) {
-          log("Drawer: Firebase user is null, signing in!");
-          // Upload information to Firebase (this includes the token)
-          final User newAnonUser = await firebaseAuth.signInAnon() as User;
-          firestore.setUID(newAnonUser.uid);
-          _updateFirebaseDetails();
-          _userUID = newAnonUser.uid;
+          if (user == null) {
+            log("Drawer: Firebase user is null, signing in!");
+            // Upload information to Firebase (this includes the token)
+            final User newAnonUser = await firebaseAuth.signInAnon() as User;
+            FirestoreHelper().setUID(newAnonUser.uid);
+            _updateFirebaseDetails();
+            _userUID = newAnonUser.uid;
 
-          // Warn user about the possibility of a new UID being regenerated
-          // We should not arrive here under normal circumstances, as null users are redirected to Settings
-          if (!Platform.isWindows) {
-            BotToast.showText(
-              clickClose: true,
-              text: "A problem was found with your user.\n\n"
-                  "Please visit the Alerts page and ensure that your alerts are properly setup!",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.blue,
-              duration: const Duration(seconds: 6),
-              contentPadding: const EdgeInsets.all(10),
-            );
+            // Warn user about the possibility of a new UID being regenerated
+            // We should not arrive here under normal circumstances, as null users are redirected to Settings
+            if (!Platform.isWindows) {
+              BotToast.showText(
+                clickClose: true,
+                text: "A problem was found with your user.\n\n"
+                    "Please visit the Alerts page and ensure that your alerts are properly setup!",
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.blue,
+                duration: const Duration(seconds: 6),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            }
+          } else {
+            final existingUid = user.uid;
+            log("Drawer: Firebase user ID $existingUid");
+            FirestoreHelper().setUID(existingUid);
+            _userUID = existingUid;
           }
-        } else {
-          final existingUid = user.uid;
-          log("Drawer: Firebase user ID $existingUid");
-          firestore.setUID(existingUid);
-          _userUID = existingUid;
-        }
-      });
+        });
 
-      // ------------------------
-
-      // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
-      // since some people might leave the app opened for weeks in the background)
-      _updateLastActiveTime();
+        // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
+        // since some people might leave the app opened for weeks in the background)
+        // Completer to ensure that we have a valid UID and avoid any race condition!!
+        FirestoreHelper().uidCompleter.future.whenComplete(() {
+          _updateLastActiveTime();
+        });
+      }
 
       checkForScriptUpdates();
     }
@@ -1936,7 +1940,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       final dTimeStamp = now - _settingsProvider.lastAppUse;
       final duration = Duration(milliseconds: dTimeStamp);
 
-      // If the recorded check is over 2 days, upload it to Firestore. 2 days allow for several
+      // If the recorded check is over 2 days, upload it to FirestoreHelper(). 2 days allow for several
       // retries, even if Firebase makes inactive at 7 days (2 days here + 5 advertised)
       // Also update full user in case something is missing!
       if (duration.inDays > 2 || _forceFireUserReload) {
@@ -1958,12 +1962,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         ..userApiKey = savedKey
         ..userApiKeyValid = true;
 
-      await firestore.uploadUsersProfileDetail(prof, userTriggered: true);
+      await FirestoreHelper().uploadUsersProfileDetail(prof, userTriggered: true);
     }
 
     // Uploads last active time to Firebase
     final now = DateTime.now().millisecondsSinceEpoch;
-    final success = await firestore.uploadLastActiveTime(now);
+    final success = await FirestoreHelper().uploadLastActiveTime(now);
     if (success) {
       _settingsProvider.updateLastUsed = now;
     }

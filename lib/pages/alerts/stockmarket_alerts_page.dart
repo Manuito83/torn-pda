@@ -278,7 +278,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           setState(() {
             _fbUser?.stockMarketNotification = value;
           });
-          firestore.subscribeToStockMarketNotification(value);
+          FirestoreHelper().subscribeToStockMarketNotification(value);
         },
       ),
     );
@@ -319,7 +319,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
       // the alerts pages, like in other cases
       if (widget.calledFromMenu) {
-        _fbUser = await firestore.getUserProfile(); // We are NOT getting updated stocks every time
+        _fbUser = await FirestoreHelper().getUserProfile(); // We are NOT getting updated stocks every time
       }
 
       final allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
