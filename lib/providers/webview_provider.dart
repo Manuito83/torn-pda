@@ -91,7 +91,7 @@ class WebViewProvider extends ChangeNotifier {
   List<TabDetails> get tabList => _tabList;
 
   // Windows user data folder
-  late WebViewEnvironment webViewEnvironment;
+  WebViewEnvironment? webViewEnvironment;
 
   // Controls successive toastification activations for full lock awareness, since
   // using [toastification.dismissAll()] leaves quite a long gap until next activation is possible
