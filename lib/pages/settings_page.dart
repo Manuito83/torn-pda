@@ -1612,6 +1612,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _themeSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1712,6 +1713,7 @@ class SettingsPageState extends State<SettingsPage> {
         ),
         if (_settingsProvider.syncTornWebTheme)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
@@ -1730,21 +1732,17 @@ class SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
               ),
-              Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      "Specifies which of the two dark themes is activated in the app when the web or your device themes "
-                      "(depending on the options above) are switched to dark",
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "Specifies which of the two dark themes is activated in the app when the web or your device themes "
+                  "(depending on the options above) are switched to dark",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
                   ),
-                ],
+                ),
               ),
             ],
           ),
@@ -3595,7 +3593,7 @@ class SettingsPageState extends State<SettingsPage> {
             // Only sign in if there is currently no user registered (to avoid duplicates)
             if (user == null || (user is User && user.uid.isEmpty)) {
               final User mFirebaseUser = await (firebaseAuth.signInAnon());
-              FirestoreHelper().setUID(mFirebaseUser.uid);
+              await FirestoreHelper().setUID(mFirebaseUser.uid);
               // Returns UID to Drawer so that it can be passed to settings
               widget.changeUID(mFirebaseUser.uid);
               log("Settings: signed in with UID ${mFirebaseUser.uid}");

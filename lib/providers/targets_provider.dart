@@ -59,6 +59,13 @@ class TargetsProvider extends ChangeNotifier {
     restorePreferences();
   }
 
+  @override
+  void dispose() {
+    _targets.clear();
+    _oldTargetsList.clear();
+    super.dispose();
+  }
+
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
   Future<AddTargetResult> addTarget({
@@ -67,45 +74,53 @@ class TargetsProvider extends ChangeNotifier {
     String? notes = '',
     String? notesColor = '',
   }) async {
-    for (final tar in _targets) {
-      if (tar.playerId.toString() == targetId) {
+    try {
+      // Validate target doesn't exist
+      if (_targets.any((tar) => tar.playerId.toString() == targetId)) {
         return AddTargetResult(
           success: false,
           errorReason: 'Target already exists!',
         );
       }
-    }
 
-    final dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: targetId);
+      final dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: targetId);
 
-    if (myNewTargetModel is TargetModel) {
-      _getRespectFF(attacks, myNewTargetModel);
-      _getTargetFaction(myNewTargetModel);
-      myNewTargetModel.personalNote = notes;
-      myNewTargetModel.personalNoteColor = notesColor;
-      myNewTargetModel.hospitalSort = targetsSortHospitalTime(myNewTargetModel);
+      if (myNewTargetModel is TargetModel) {
+        _getRespectFF(attacks, myNewTargetModel);
+        _getTargetFaction(myNewTargetModel);
+        myNewTargetModel.personalNote = notes;
+        myNewTargetModel.personalNoteColor = notesColor;
+        myNewTargetModel.hospitalSort = targetsSortHospitalTime(myNewTargetModel);
 
-      // Parse bounty ammount if it exists
-      if (myNewTargetModel.basicicons?.icon13 != null) {
-        myNewTargetModel.bountyAmount = _getBountyAmount(myNewTargetModel);
+        // Parse bounty ammount if it exists
+        if (myNewTargetModel.basicicons?.icon13 != null) {
+          myNewTargetModel.bountyAmount = _getBountyAmount(myNewTargetModel);
+        }
+
+        _targets.add(myNewTargetModel);
+        await await _saveTargetsSharedPrefs();
+        sortTargets(currentSort);
+        notifyListeners();
+
+        return AddTargetResult(
+          success: true,
+          targetId: myNewTargetModel.playerId.toString(),
+          targetName: myNewTargetModel.name,
+        );
+      } else {
+        // myNewTargetModel is ApiError
+        final myError = myNewTargetModel as ApiError;
+        notifyListeners();
+        return AddTargetResult(
+          success: false,
+          errorReason: myError.errorReason,
+        );
       }
-
-      _targets.add(myNewTargetModel);
-      sortTargets(currentSort);
-      notifyListeners();
-      _saveTargetsSharedPrefs();
-      return AddTargetResult(
-        success: true,
-        targetId: myNewTargetModel.playerId.toString(),
-        targetName: myNewTargetModel.name,
-      );
-    } else {
-      // myNewTargetModel is ApiError
-      final myError = myNewTargetModel as ApiError;
+    } catch (e) {
       notifyListeners();
       return AddTargetResult(
         success: false,
-        errorReason: myError.errorReason,
+        errorReason: e.toString(),
       );
     }
   }
@@ -190,7 +205,7 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void setTargetNote(TargetModel? changedTarget, String? note, String? color) {
+  void setTargetNote(TargetModel? changedTarget, String? note, String? color) async {
     // We are not updating the target directly, but instead looping for the correct one because
     // after an attack the targets get updated several times: if the user wants to change the note
     // right after the attack, the good target might have been replaced and the note does not get
@@ -199,7 +214,7 @@ class TargetsProvider extends ChangeNotifier {
       if (tar.playerId == changedTarget!.playerId) {
         tar.personalNote = note;
         tar.personalNoteColor = color;
-        _saveTargetsSharedPrefs();
+        await _saveTargetsSharedPrefs();
         notifyListeners();
         break;
       }
@@ -237,7 +252,7 @@ class TargetsProvider extends ChangeNotifier {
           newTarget.bountyAmount = _getBountyAmount(myUpdatedTargetModel);
         }
 
-        _saveTargetsSharedPrefs();
+        await _saveTargetsSharedPrefs();
         return true;
       } else {
         // myUpdatedTargetModel is ApiError
@@ -289,7 +304,7 @@ class TargetsProvider extends ChangeNotifier {
             _targets[i].bountyAmount = _getBountyAmount(myUpdatedTargetModel);
           }
 
-          _saveTargetsSharedPrefs();
+          await _saveTargetsSharedPrefs();
           numberSuccessful++;
         } else {
           // myUpdatedTargetModel is ApiError
@@ -358,7 +373,7 @@ class TargetsProvider extends ChangeNotifier {
               }
 
               _updateResultAnimation(_targets[targetIndex], true);
-              _saveTargetsSharedPrefs();
+              await _saveTargetsSharedPrefs();
             } else {
               tar.isUpdating = false;
               _updateResultAnimation(tar, false);
@@ -391,14 +406,21 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void deleteTarget(TargetModel target) {
-    _oldTargetsList = List<TargetModel>.from(_targets);
-    _targets.remove(target);
-    notifyListeners();
-    _saveTargetsSharedPrefs();
+  Future deleteTarget(TargetModel target) async {
+    _oldTargetsList = List.from(_targets);
+    final wasRemoved = _targets.remove(target);
+
+    if (wasRemoved) {
+      await await _saveTargetsSharedPrefs();
+      notifyListeners();
+      return true;
+    } else {
+      _oldTargetsList.clear();
+      return false;
+    }
   }
 
-  void deleteTargetById(String? removedId) {
+  void deleteTargetById(String? removedId) async {
     _oldTargetsList = List<TargetModel>.from(_targets);
     for (final tar in _targets) {
       if (tar.playerId.toString() == removedId) {
@@ -407,7 +429,7 @@ class TargetsProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
-    _saveTargetsSharedPrefs();
+    await _saveTargetsSharedPrefs();
   }
 
   void restoredDeleted() {
@@ -417,9 +439,9 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   /// CAREFUL!
-  void wipeAllTargets() {
+  void wipeAllTargets() async {
     _targets.clear();
-    _saveTargetsSharedPrefs();
+    await await _saveTargetsSharedPrefs();
     notifyListeners();
   }
 
@@ -434,7 +456,7 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void sortTargets(TargetSortType? sortType) {
+  void sortTargets(TargetSortType? sortType) async {
     currentSort = sortType;
     switch (sortType!) {
       case TargetSortType.levelDes:
@@ -508,7 +530,7 @@ class TargetsProvider extends ChangeNotifier {
         });
     }
     _saveSortSharedPrefs();
-    _saveTargetsSharedPrefs();
+    await _saveTargetsSharedPrefs();
     notifyListeners();
   }
 
@@ -528,12 +550,12 @@ class TargetsProvider extends ChangeNotifier {
     return targetsBackupModelToJson(TargetsBackupModel(targetBackup: output));
   }
 
-  void _saveTargetsSharedPrefs() {
+  Future _saveTargetsSharedPrefs() async {
     List<String> newPrefs = <String>[];
     for (final tar in _targets) {
       newPrefs.add(targetModelToJson(tar));
     }
-    Prefs().setTargetsList(newPrefs);
+    await Prefs().setTargetsList(newPrefs);
   }
 
   void _saveSortSharedPrefs() {
@@ -546,7 +568,7 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.respectDes:
         sortToSave = 'respectDes';
       case TargetSortType.respectAsc:
-        sortToSave = 'respectDes';
+        sortToSave = 'respectAsc';
       case TargetSortType.ffDes:
         sortToSave = 'ffDes';
       case TargetSortType.ffAsc:
@@ -606,7 +628,7 @@ class TargetsProvider extends ChangeNotifier {
     }
 
     if (needToSave) {
-      _saveTargetsSharedPrefs();
+      await _saveTargetsSharedPrefs();
     }
 
     // Target sort
@@ -650,7 +672,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   // SERVER BACKUP RESTORE
-  restoreTargetsFromServerSave({required List<String> backup, required bool overwritte}) {
+  restoreTargetsFromServerSave({required List<String> backup, required bool overwritte}) async {
     if (overwritte) {
       _targets.clear();
     }
@@ -664,7 +686,7 @@ class TargetsProvider extends ChangeNotifier {
       _targets.add(targetModelFromJson(lala));
     }
 
-    _saveTargetsSharedPrefs();
+    await _saveTargetsSharedPrefs();
     notifyListeners();
   }
 
@@ -696,7 +718,9 @@ class TargetsProvider extends ChangeNotifier {
         if (response.body.contains("Player not found")) {
           return YataTargetsImportModel()..errorPlayer = true;
         } else {
-          return YataTargetsImportModel()..errorConnection = true;
+          return YataTargetsImportModel()
+            ..errorConnection = true
+            ..errorReason = response.statusCode.toString();
         }
       }
     } catch (e) {

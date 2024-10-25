@@ -17,6 +17,7 @@ class YataTargetsImportModel {
   // State
   bool errorConnection = false;
   bool errorPlayer = false;
+  String errorReason = "";
 
   Map<String, YataImportTarget>? targets;
 

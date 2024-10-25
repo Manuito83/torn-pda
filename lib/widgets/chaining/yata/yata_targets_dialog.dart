@@ -306,11 +306,12 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
 
   Future<void> _startImport() async {
     // We add all targets coming from YATA
+    final dynamic attacks = await _targetsProvider.getAttacks();
     for (var i = 0; i <= widget.onlyYata.length - 1; i++) {
       if (mounted) {
         final importResult = await _targetsProvider.addTarget(
           targetId: widget.onlyYata[i].id,
-          attacks: await _targetsProvider.getAttacks(),
+          attacks: attacks,
           notes: widget.onlyYata[i].noteYata,
           notesColor: _localColorCode(widget.onlyYata[i].colorYata),
         );
@@ -324,7 +325,7 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
           }
         }
         // Avoid issues with API limits
-        if (widget.onlyYata.length > 70) {
+        if (widget.onlyYata.length > 60) {
           await Future.delayed(const Duration(seconds: 1), () {});
         }
       }

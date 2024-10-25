@@ -381,6 +381,9 @@ class TargetsPageState extends State<TargetsPage> {
                           error = "We could not find your user in Yata, do you have an account?";
                         } else {
                           error = "There was an error contacting YATA, please try again later!";
+                          if (yataTargets.errorReason.isNotEmpty) {
+                            error += "\n\nError code is ${yataTargets.errorReason}";
+                          }
                         }
                         BotToast.showText(
                           text: error,

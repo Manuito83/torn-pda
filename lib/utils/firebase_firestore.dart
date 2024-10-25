@@ -32,7 +32,9 @@ class FirestoreHelper {
   String? _uid;
   Future setUID(String userUID) async {
     _uid = userUID;
-    uidCompleter.complete();
+    if (!uidCompleter.isCompleted) {
+      uidCompleter.complete();
+    }
   }
 
   // Settings, when user initialized after API key validated
@@ -53,11 +55,11 @@ class FirestoreHelper {
     // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
     String? token = "";
     if (!Platform.isWindows) {
-      final String currentToken = (await _messaging.getToken())!;
+      final String currentToken = (await _getToken());
       if (currentToken.isNotEmpty) {
-        await FirebaseMessaging.instance.deleteToken();
+        await _messaging.deleteToken();
       }
-      token = (await _messaging.getToken())!;
+      token = (await _getToken());
     } else {
       token = "windows";
     }
@@ -380,5 +382,14 @@ class FirestoreHelper {
     await _firestore.collection("players").doc(_uid).update({
       "lootRangersNotification": subscribe,
     });
+  }
+
+  // Note: Messaging might return error on iOS emulators
+  Future<String> _getToken() async {
+    final String? currentToken = await _messaging.getToken().onError((error, stackTrace) {
+      return "error";
+    });
+    log("TOKEN ERROR!");
+    return currentToken ?? "error";
   }
 }
