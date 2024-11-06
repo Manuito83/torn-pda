@@ -513,10 +513,10 @@ class _StatsChartState extends State<StatsChart> {
 
   Map<String, double> calculateSumOfStats() {
     return {
-      'Strength': widget.statsData!.data!.map((stat) => stat.strength!).reduce((a, b) => a + b).toDouble(),
-      'Speed': widget.statsData!.data!.map((stat) => stat.speed!).reduce((a, b) => a + b).toDouble(),
-      'Defense': widget.statsData!.data!.map((stat) => stat.defense!).reduce((a, b) => a + b).toDouble(),
-      'Dexterity': widget.statsData!.data!.map((stat) => stat.dexterity!).reduce((a, b) => a + b).toDouble(),
+      'Strength': widget.statsData!.data!.last.strength!.toDouble(),
+      'Speed': widget.statsData!.data!.last.speed!.toDouble(),
+      'Defense': widget.statsData!.data!.last.defense!.toDouble(),
+      'Dexterity': widget.statsData!.data!.last.dexterity!.toDouble(),
     };
   }
 
