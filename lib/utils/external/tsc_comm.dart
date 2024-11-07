@@ -86,7 +86,7 @@ class TSCComm {
       }
     } catch (e, trace) {
       String message;
-      if (e.runtimeType == TimeoutException) {
+      if (e is TimeoutException) {
         message = "Request timed out.";
       } else {
         message = "Model error";
