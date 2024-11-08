@@ -1,128 +1,90 @@
 // ==UserScript==
-// @name         Bazaar Auto Price
-// @namespace    tos
-// @version      0.9 (updated by Kwack)
-// @description  Auto set bazaar prices on money input field click.
-// @author       tos, Lugburz
-// @match        https://www.torn.com/bazaar.php
+// @name         Item Market Auto Price
+// @namespace    dev.kwack.torn.imarket-auto-price
+// @version      1.0.0
+// @description  Automatically set the price of items relative to the current market
+// @author       Kwack [2190604]
+// @match        https://www.torn.com/page.php?sid=ItemMarket
 // @connect      api.torn.com
 // ==/UserScript==
 
-let apikey = '###PDA-APIKEY###';
+// @ts-check
 
-let torn_api = async (args) => {
-	const a = args.split('.')
-	if (a.length !== 3) throw (`Bad argument in torn_api(args, key): ${args}`)
-	return new Promise((resolve, reject) => {
-		let streamURL = `https://api.torn.com/${a[0]}/${a[1]}?selections=${a[2]}&key=${apikey}`;
-		// Reject if key isn't set.
-		$.getJSON(streamURL)
-			.done((result) => {
-				if (result.error != undefined) {
-					reject(result.error);
-				} else {
-					resolve(result);
-				}
-			})
-			.fail(function (jqxhr, textStatus, error) {
-				var err = textStatus + ', ' + error;
-				reject(err);
-			});
+/**
+ * @type {number}
+ * @readonly
+ * The price to undercut the current lowest item on the market by.
+ * If you wish to match the lowest price, set this to 0.
+ * If you wish to be $1 higher than the current price, set this to -1.
+ * Please note that the script will not set a price lower than 1.
+ */
+/* **EDIT NUMBER BELOW** */
+const diff = 5;
+/* **EDIT NUMBER ABOVE** */
+
+/**
+ * @type {string}
+ * @readonly
+ * The current PDA API key. Do not modify this unless you're not using PDA.
+ */
+const key = "###PDA-APIKEY###";
+
+/**
+ * Calls the API and returns the lowest priced item currently on the market.
+ * @param {string} itemId - the item ID to check
+ * @returns {Promise<number>} the lowest price for the item
+ */
+function getLowestPrice(itemId) {
+	const baseURL = "https://api.torn.com/v2/market";
+	const searchParams = new URLSearchParams({ selections: "itemmarket", key, id: itemId, offset: "0" });
+	const url = new URL(`?${searchParams.toString()}`, baseURL);
+	return fetch(url).then((res) => res.json()).then((data) => {
+		if ("error" in data) throw new Error(data.error.error);
+		const price = data?.itemmarket?.listings?.[0]?.price;
+		if (typeof price === "number" && price >= 1) return price;
+		throw new Error(`Invalid price: ${price}`);
 	});
 }
 
-var event = new Event('keyup');
-var APIERROR = false;
-
-async function lmp(itemID) {
-	if (APIERROR === true) return 'API key error'
-	const prices = await torn_api(`market.${itemID}.bazaar`)
-	if (prices.error) { APIERROR = true; return 'API key error' }
-	const lowest_market_price = prices['bazaar'][0].cost
-	return Math.max(lowest_market_price - 5, 2)
+/**
+ * Updates the input field directly and then emits the event to trick React into updating its state. Pinched from TornTools.
+ * @param {HTMLInputElement} input 
+ * @param {string | number} value 
+ * @returns {void}
+ * @see https://github.com/Mephiles/torntools_extension/blob/54db1d1dbe2dc84e3267d56815e0dedce36e4bf1/extension/scripts/global/functions/torn.js#L1573
+ */
+function updateInput(input, value) {
+	input.value = `${value}`;
+	// Needed to trigger React to update its state
+	input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-// HACK to simulate input value change
-// https://github.com/facebook/react/issues/11488#issuecomment-347775628
-function reactInputHack(inputjq, value) {
-	// get js object from jquery
-	const input = $(inputjq).get(0);
-
-	let lastValue = 0;
-	input.value = value;
-	let event = new Event('input', { bubbles: true });
-	// hack React15
-	event.simulated = true;
-	// hack React16
-	let tracker = input._valueTracker;
-	if (tracker) {
-		tracker.setValue(lastValue);
-	}
-	input.dispatchEvent(event);
+/**
+ * Takes an input and sets the price to the current lowest price minus the diff
+ * @param {HTMLInputElement} input 
+ */
+async function addPrice(input) {
+	if (!(input instanceof HTMLInputElement)) throw new Error("Input is not an HTMLInputElement");
+	const row = input.closest("div[class*=itemRowWrapper]");
+	const image = row?.querySelector("img");
+	if (!image) throw new Error("Could not find image element");
+	const itemId = image.src?.match(/\/images\/items\/([\d]+)\//)?.[1];
+	if (!itemId) throw new Error("Could not find item ID");
+	const currentLowestPrice = await getLowestPrice(itemId);
+	if (!currentLowestPrice) throw new Error("Could not get lowest price");
+	// Sets price to either 1 or the current lowest price minus 5, whichever is higher. This prevents negative prices
+	const priceToSet = Math.max(1, currentLowestPrice - diff);
+	updateInput(input, priceToSet);
 }
 
-function addOneFocusHandler(elem, itemID) {
-	$(elem).on('focus', function (e) {
-		this.value = '';
-		if (this.value === '') {
-			lmp(itemID).then((price) => {
-				//this.value = price;
-				reactInputHack(this, price);
-				this.dispatchEvent(event);
-				if (price) $(elem).off('focus');
-			});
-		}
+function main() {
+	$(document).on("click", "div[class*=itemRowWrapper] div.input-money-group input.input-money:not([type=hidden])", (e) => {
+		const input = e.target;
+		addPrice(input).catch((e) => {
+			console.error(e);
+			input.style.outline = "2px solid red";
+		})
 	});
 }
 
-let bazaarObserver = new MutationObserver((mutations) => {
-	for (const mutation of mutations) {
-		for (const node of mutation.addedNodes) {
-			if (typeof node.classList !== 'undefined' && node.classList) {
-				let input = $(node).find('[class^=priceInput]');
-				if ($(input).size() > 0) {
-					// Manage items
-					$(input).each(function () {
-						const img = $(this).parent().parent().find('img');
-						const itemID = $(img).attr('src').split('items/')[1].split('/medium')[0];
-						addOneFocusHandler($(this), itemID);
-					});
-				} else {
-					// Add items
-					input = node.querySelector('.input-money[type=text]');
-					const img = node.querySelector('img');
-					if (input && img) {
-						const itemID = img.src.split('items/')[1].split('/medium')[0].split('/large.png')[0];
-						addOneFocusHandler($(input), itemID);
-
-						// input amount
-						const input_amount = $(node).find('div.amount').find('.clear-all[type=text]');
-						const inv_amount = $(node).find('div.name-wrap').find('span.t-hide').text();
-						const amount = inv_amount == '' ? 1 : inv_amount.replace('x', '').trim();
-						$(input_amount).on('focus', function () {
-							reactInputHack(input_amount, amount);
-						});
-					}
-				}
-			}
-		}
-	}
-});
-
-// Sleep and wait for elements to load
-async function sleep(ms) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-var waitForElementsAndRun = setInterval(() => {
-	if (document.querySelector("#bazaarRoot") !== null) {
-		clearInterval(waitForElementsAndRun);
-		// Main logic    
-		var wrapper = document.querySelector('#bazaarRoot');
-		try {
-			bazaarObserver.observe(wrapper, { subtree: true, childList: true });
-		} catch (e) {
-			// wrapper not found
-		}
-	}
-}, 300);
+main();
