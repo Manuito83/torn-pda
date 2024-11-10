@@ -78,7 +78,7 @@ async function addPrice(input) {
 }
 
 function main() {
-	$(document).on("click", "div[class*=itemRowWrapper] div.input-money-group input.input-money:not([type=hidden])", (e) => {
+	$(document).on("click", "div[class*=itemRowWrapper] div[class*=priceInputWrapper] > div.input-money-group > input.input-money:not([type=hidden])", (e) => {
 		const input = e.target;
 		addPrice(input).catch((e) => {
 			console.error(e);
