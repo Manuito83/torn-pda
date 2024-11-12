@@ -12,6 +12,7 @@ import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/pages/alerts/alerts_tsm_dialog.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -985,6 +986,42 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             ],
                           ),
                         ),
+                      GetBuilder(
+                        init: SendbirdController(),
+                        builder: (sendbird) {
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                            child: CheckboxListTile(
+                              checkColor: Colors.white,
+                              activeColor: Colors.blueGrey,
+                              value: sendbird.sendBirdNotificationsEnabled,
+                              title: Row(
+                                children: [
+                                  const Padding(
+                                    padding: EdgeInsets.only(right: 5),
+                                    child: Text(
+                                      "Torn chat messages",
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              subtitle: const Text(
+                                "Enable notifications for TORN chat messages",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                              onChanged: (enabled) async {
+                                sendbird.sendBirdNotificationsToogle(enabled: enabled!);
+                              },
+                            ),
+                          );
+                        },
+                      ),
                       const SizedBox(height: 60),
                     ],
                   ),

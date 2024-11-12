@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
@@ -19,6 +20,7 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -39,6 +41,7 @@ import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -55,6 +58,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:windows_notification/windows_notification.dart';
@@ -70,7 +74,7 @@ const String iosCompilation = '450';
 const bool pointFunctionsEmulatorToLocal = false;
 
 // TODO (App release)
-const bool enableWakelockForDebug = false;
+const bool enableWakelockForDebug = true;
 
 bool logAndShowToUser = false;
 
@@ -109,9 +113,10 @@ class ReceivedNotification {
   final String payload;
 }
 
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
-    if (message.data["channelId"].contains("Alerts stocks") == true) {
+    if (message.data["channelId"]?.contains("Alerts stocks") == true) {
       // Reload isolate (as we are reading from background)
       await Prefs().reload();
       final oldData = await Prefs().getDataStockMarket();
@@ -122,6 +127,19 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         newData = "$oldData${message.notification!.body}";
       }
       Prefs().setDataStockMarket(newData);
+    }
+
+    if (message.data["sendbird"] != null) {
+      Map<String, dynamic> sendbirdData = jsonDecode(message.data["sendbird"]);
+      String channelUrl = sendbirdData['channel']['channel_url'];
+
+      String sender = "";
+      String msg = "";
+      List<String> parts = message.data["message"].split(":");
+      sender = parts.isNotEmpty ? parts[0].trim() : "";
+      msg = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
+
+      await showSendbirdNotification(sender, msg, channelUrl);
     }
   } catch (e) {
     if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");
@@ -152,6 +170,13 @@ Future<void> main() async {
   // [isInDebugMode] sends notifications each time a task is performed
   if (Platform.isAndroid) Workmanager().initialize(pdaWidget_backgroundUpdate);
 
+  Get.put(AudioController(), permanent: true);
+  Get.put(SpiesController(), permanent: true);
+  Get.put(ApiCallerController(), permanent: true);
+  Get.put(WarController(), permanent: true);
+  final sb = Get.put(SendbirdController(), permanent: true);
+  await sb.register();
+
   // Flutter Local Notifications
   if (!Platform.isWindows) {
     if (Platform.isAndroid) {
@@ -173,13 +198,46 @@ Future<void> main() async {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-        final String? payload = notificationResponse.payload;
+        String? payload = notificationResponse.payload;
+
+        // Handle reply action on Sendbird notifications (while on background and foreground)
+        if (notificationResponse.id == 666) {
+          if (notificationResponse.actionId == "sb_reply_action") {
+            // Reply message
+            final message = notificationResponse.input ?? "";
+
+            // Get channel URL from notification payload
+            final payload = notificationResponse.payload;
+            Map<String, dynamic> decodedPayload = jsonDecode(payload ?? "{}");
+            final String channelUrl = decodedPayload["channelUrl"] ?? "";
+
+            // Send reply message
+            if (message.isNotEmpty && channelUrl.isNotEmpty) {
+              SendbirdController sb = Get.find<SendbirdController>();
+              sb.sendMessage(channelUrl: channelUrl, message: message);
+            }
+          }
+
+          // Reassign payload so that the browser opens in Drawwer
+          payload = "sendbird";
+        }
+
         if (notificationResponse.payload != null) {
           log('Notification payload: $payload');
           selectNotificationStream.add(payload);
         }
       },
     );
+
+    // Check if app was launched by tapping a notification (from killed state)
+    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+      // Handle tap
+      await Prefs().setBringBrowserForwardOnStart(true);
+      Future.delayed(Duration(seconds: 3)).then((value) {
+        handleNotificationTap(notificationAppLaunchDetails!.notificationResponse);
+      });
+    }
   }
 
   // END # Flutter Local Notifications
@@ -217,11 +275,6 @@ Future<void> main() async {
     DartPingIOS.register();
   }
 
-  Get.put(AudioController(), permanent: true);
-  Get.put(SpiesController(), permanent: true);
-  Get.put(ApiCallerController(), permanent: true);
-  Get.put(WarController(), permanent: true);
-
   HttpOverrides.global = MyHttpOverrides();
 
   // iOS settings for AudioPlayer are managed through the controller
@@ -230,6 +283,9 @@ Future<void> main() async {
       android: AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
     ),
   );
+
+  // Get env variables
+  await dotenv.load(fileName: ".env", isOptional: true);
 
   runApp(
     MultiProvider(

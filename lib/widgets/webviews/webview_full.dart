@@ -1163,7 +1163,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           initialUrlRequest: _initialUrl,
           pullToRefreshController: _pullToRefreshController,
           findInteractionController: _findInteractionController,
-          webViewEnvironment: _webViewProvider.webViewEnvironment,  // Only assigned in Windows
+          webViewEnvironment: _webViewProvider.webViewEnvironment, // Only assigned in Windows
           initialSettings: _initialWebViewSettings,
           // EVENTS
           onWebViewCreated: (c) async {

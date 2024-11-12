@@ -30,6 +30,7 @@ import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -3605,6 +3606,12 @@ class SettingsPageState extends State<SettingsPage> {
             await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
             if (Platform.isAndroid) {
               FirestoreHelper().setVibrationPattern(_vibrationValue);
+            }
+
+            // Sendbird notifications
+            final sbController = Get.find<SendbirdController>();
+            if (sbController.sendBirdNotificationsEnabled) {
+              sbController.register();
             }
           } else {
             log("Windows: skipping Firestore sign up!");

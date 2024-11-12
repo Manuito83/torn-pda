@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/*,@raw/slow_spring_board,@raw/aircraft_seatbelt,@raw/sword_clash,@raw/car_start"
+    tools:keep="@drawable/*,@raw/slow_spring_board,@raw/aircraft_seatbelt,@raw/sword_clash,@raw/car_start,@raw/keyboard"
 />

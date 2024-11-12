@@ -387,6 +387,16 @@ class Prefs {
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
   final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
 
+  // FCM token
+  final String _kFCMToken = "pda_fcmToken";
+
+  // Sendbird notifications
+  final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
+  final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
+  final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
+
+  final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -3680,5 +3690,63 @@ class Prefs {
   Future<bool> setSplitScreenRevertsToApp(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kSplitScreenRevertsToApp, value);
+  }
+
+  /// ----------------------------
+  /// FCM Token
+  /// ----------------------------
+  Future<String> getFCMToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFCMToken) ?? "";
+  }
+
+  Future<bool> setFCMToken(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFCMToken, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Sendbird notifications
+  /// ----------------------------
+  Future<bool> getSendbirdNotificationsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSendbirdnotificationsEnabled) ?? true;
+  }
+
+  Future<bool> setSendbirdNotificationsEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSendbirdnotificationsEnabled, value);
+  }
+
+  Future<String> getSendbirdSessionToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kSendbirdSessionToken) ?? "";
+  }
+
+  Future<bool> setSendbirdSessionToken(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kSendbirdSessionToken, value);
+  }
+
+  Future<int> getSendbirdTokenTimestamp() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kSendbirdTokenTimestamp) ?? 0;
+  }
+
+  Future<bool> setSendbirdTokenTimestamp(int timestamp) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kSendbirdTokenTimestamp, timestamp);
+  }
+
+  //
+
+  Future<bool> getBringBrowserForwardOnStart() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBringBrowserForwardOnStart) ?? false;
+  }
+
+  Future<bool> setBringBrowserForwardOnStart(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBringBrowserForwardOnStart, value);
   }
 }
