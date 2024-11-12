@@ -16,6 +16,9 @@
 .VSCodeCounter/
 .fvm
 
+# ENV
+.envs
+
 # IntelliJ related
 *.iml
 *.ipr
