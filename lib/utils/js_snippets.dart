@@ -90,6 +90,7 @@ String buyMaxAbroadJS() {
         `);
         
         for(let buy_btn of market.querySelectorAll(".buy")){
+          if (buy_btn.parentElement.querySelector(".max-buy") !== null) continue;
           let max_span = doc.createElement('span');
           max_span.innerHTML = '<a class="max-buy">FILL</a>';
           buy_btn.parentElement.appendChild(max_span);
