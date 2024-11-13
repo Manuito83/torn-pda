@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 /// Fixes malformed HTML in Events
 ///
@@ -42,27 +43,64 @@ String fixHrefAttributes(String message) {
   return message;
 }
 
-Widget buildEventMessageWidget(String message, FontWeight fontWeight, Function launchBrowser) {
+String processEventMessage(String message) {
+  String newMessage = message;
+
+  Map<String, String> corrections = {
+    'View the details here!': 'view',
+    'Please click here to continue.': 'view',
+    'Please click here.': 'view',
+    'Please click here to collect your funds.': 'Collect',
+  };
+
+  corrections.forEach((error, correction) {
+    newMessage = newMessage.replaceAll(error, correction);
+  });
+
+  // Convert [view] to (view) while preserving links
+  RegExp bracketedViewExp = RegExp(
+    r'\[\s*(<a\b[^>]*?>\s*view\s*<\/a>|\bview\b)\s*\]',
+    caseSensitive: false,
+  );
+
+  newMessage = newMessage.replaceAllMapped(bracketedViewExp, (match) {
+    String content = match.group(1) ?? '';
+    return '($content)';
+  });
+
+  return newMessage;
+}
+
+Widget buildEventMessageWidget(
+  String message,
+  FontWeight fontWeight,
+  Function launchBrowser,
+  ThemeProvider themeProvider,
+) {
   String fixedMessage = fixHrefAttributes(message);
   List<InlineSpan> spans = [];
 
-  RegExp exp = RegExp(r'<a\b[^>]*?href\s*=\s*"(.*?)"[^>]*>(.*?)<\/a>', caseSensitive: false);
+  // Regular expression for detecting <a> tags
+  RegExp linkExp = RegExp(r'<a\b[^>]*?href\s*=\s*"(.*?)"[^>]*>(.*?)<\/a>', caseSensitive: false);
 
   int currentIndex = 0;
 
-  Iterable<RegExpMatch> matches = exp.allMatches(fixedMessage);
+  // Find all <a> tags in the message
+  Iterable<RegExpMatch> linkMatches = linkExp.allMatches(fixedMessage);
 
-  for (final match in matches) {
+  for (final match in linkMatches) {
     int matchStart = match.start;
     int matchEnd = match.end;
 
-    // Add text before the match
+    // Add any text before the <a> tag
     if (matchStart > currentIndex) {
-      String text = fixedMessage.substring(currentIndex, matchStart);
-      spans.add(TextSpan(text: text));
+      String textBeforeLink = fixedMessage.substring(currentIndex, matchStart);
+
+      // Parse and add bold text spans if <b> tags are found within textBeforeLink
+      spans.addAll(_parseBoldText(textBeforeLink, fontWeight));
     }
 
-    // Extract href and link text
+    // Extract href and link text for <a> tag
     String href = match.group(1) ?? '';
     String linkText = match.group(2) ?? '';
 
@@ -91,10 +129,10 @@ Widget buildEventMessageWidget(String message, FontWeight fontWeight, Function l
     currentIndex = matchEnd;
   }
 
-  // Add any remaining text after the last match
+  // Add any remaining text after the last <a> tag
   if (currentIndex < fixedMessage.length) {
-    String text = fixedMessage.substring(currentIndex);
-    spans.add(TextSpan(text: text));
+    String textAfterLastLink = fixedMessage.substring(currentIndex);
+    spans.addAll(_parseBoldText(textAfterLastLink, fontWeight));
   }
 
   return RichText(
@@ -103,36 +141,40 @@ Widget buildEventMessageWidget(String message, FontWeight fontWeight, Function l
       style: TextStyle(
         fontSize: 12,
         fontWeight: fontWeight,
-        color: Colors.black,
+        color: themeProvider.mainText,
       ),
     ),
   );
 }
 
-String processEventMessage(String message) {
-  String newMessage = message;
+/// Helper function to parse text with <b> tags and apply bold styling
+List<InlineSpan> _parseBoldText(String text, FontWeight fontWeight) {
+  List<InlineSpan> spans = [];
 
-  Map<String, String> corrections = {
-    'View the details here!': 'view',
-    'Please click here to continue.': 'view',
-    'Please click here.': 'view',
-    'Please click here to collect your funds.': 'Collect',
-  };
+  RegExp boldExp = RegExp(r'<b>(.*?)<\/b>', caseSensitive: false);
+  int currentIndex = 0;
 
-  corrections.forEach((error, correction) {
-    newMessage = newMessage.replaceAll(error, correction);
-  });
+  // Iterate over bold matches
+  for (final match in boldExp.allMatches(text)) {
+    int matchStart = match.start;
+    int matchEnd = match.end;
 
-  // Regular expression to replace [view] with (view), preserving links
-  RegExp bracketedViewExp = RegExp(
-    r'\[\s*(<a\b[^>]*?>\s*view\s*<\/a>|\bview\b)\s*\]',
-    caseSensitive: false,
-  );
+    // Add any text before <b> tag
+    if (matchStart > currentIndex) {
+      spans.add(TextSpan(text: text.substring(currentIndex, matchStart), style: TextStyle(fontWeight: fontWeight)));
+    }
 
-  newMessage = newMessage.replaceAllMapped(bracketedViewExp, (match) {
-    String content = match.group(1) ?? '';
-    return '($content)';
-  });
+    // Add bold text
+    String boldText = match.group(1) ?? '';
+    spans.add(TextSpan(text: boldText, style: TextStyle(fontWeight: FontWeight.bold)));
 
-  return newMessage;
+    currentIndex = matchEnd;
+  }
+
+  // Add any remaining text after the last <b> tag
+  if (currentIndex < text.length) {
+    spans.add(TextSpan(text: text.substring(currentIndex), style: TextStyle(fontWeight: fontWeight)));
+  }
+
+  return spans;
 }
