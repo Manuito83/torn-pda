@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.0 - Build 451 - 12/11/2024
+    // v3.6.0 - Build 452 - 13/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.5.2'
@@ -75,6 +75,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "or restore the example scripts.",
           ),
           "Improved error handling for TSC",
+          "Added app upgrade dialog",
           "Fixed multiple max buy buttons abroad",
           "Fixed Torn Stats pie chart representation",
         ],
