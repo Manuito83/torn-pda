@@ -2909,7 +2909,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // Build the message widget
       // (the events API v1 has got many issues in http links, so we need to correct them manually)
-      final Widget messageWidget = buildEventMessageWidget(e.event!, fontWeight, _launchBrowser);
+      final Widget messageWidget = buildEventMessageWidget(e.event!, fontWeight, _launchBrowser, _themeProvider!);
 
       final Widget insideIcon = EventIcons(
         message: e.event!,
