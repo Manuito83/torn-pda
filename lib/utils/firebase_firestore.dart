@@ -385,13 +385,6 @@ class FirestoreHelper {
       log("TOKEN ERROR!");
       return "error";
     });
-
-    if (currentToken != null) {
-      await Prefs().setFCMToken(currentToken);
-      return currentToken;
-    }
-
-    await Prefs().setFCMToken("error");
-    return "error";
+    return currentToken ?? "error";
   }
 }

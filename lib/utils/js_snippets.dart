@@ -90,6 +90,7 @@ String buyMaxAbroadJS() {
         `);
         
         for(let buy_btn of market.querySelectorAll(".buy")){
+          if (buy_btn.parentElement.querySelector(".max-buy") !== null) continue;
           let max_span = doc.createElement('span');
           max_span.innerHTML = '<a class="max-buy">FILL</a>';
           buy_btn.parentElement.appendChild(max_span);
@@ -534,9 +535,15 @@ String addHeightForPullToRefresh() {
 String removeChatJS() {
   return '''
     try {
-      var doc = document;
       var chatBox = document.querySelectorAll("[class*='chat-app-container_']");
-      chatBox[0].style.display = 'none';
+      if (chatBox.length > 0) {
+        chatBox[0].style.display = 'none';
+      }
+
+      var chatBox2 = document.getElementById("chatRoot");
+      if (chatBox2 !== undefined) {
+        chatBox2.style.display = 'none';
+      }
     } catch (e) {
       // Sometimes firing too early and generating error in other scripts
     }
@@ -548,9 +555,15 @@ String removeChatJS() {
 
 String restoreChatJS() {
   return '''
-    var doc = document;
     var chatBox = document.querySelectorAll("[class*='chat-app-container_']");
-    chatBox[0].style.display = 'block';
+    if (chatBox.length > 0) {
+      chatBox[0].style.display = 'block';
+    }
+
+    var chatBox2 = document.getElementById("chatRoot");
+    if (chatBox2 !== undefined) {
+      chatBox2.style.display = 'block';
+    }
     
     // Return to avoid iOS WKErrorDomain
     123;

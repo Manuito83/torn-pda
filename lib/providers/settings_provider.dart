@@ -1265,8 +1265,7 @@ class SettingsProvider extends ChangeNotifier {
     String? iconName;
 
     // Determine the icon based on the current date
-    // TODO: change to (now.month == 10 && now.day >= 25) || (now.month == 11 && now.day <= 1)
-    if ((now.month == 10 && now.day >= 10) || (now.month == 11 && now.day <= 1)) {
+    if ((now.month == 10 && now.day >= 25) || (now.month == 11 && now.day <= 1)) {
       iconName = "AppIconHalloween";
     } else {
       iconName = null; // Default icon
