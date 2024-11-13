@@ -63,6 +63,7 @@ class ChangeLogState extends State<ChangeLog> {
             explanation: "",
           ),
           */
+          "Added browser links to the Events timeline in Profile",
           "War: added option to sort by travel distance",
           ComplexFeature(
             "Adapted auto-price script for new market [Kwack]",
