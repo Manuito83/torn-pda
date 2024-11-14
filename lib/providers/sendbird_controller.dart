@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:get/get.dart';
 import 'package:sendbird_chat_sdk/sendbird_chat_sdk.dart';
 import 'package:toastification/toastification.dart';
@@ -20,6 +21,12 @@ class SendbirdController extends GetxController {
   String _sendbirdAppToken = "";
 
   bool webviewInForeground = false;
+
+  // Variables para almacenar la configuración actual
+  bool doNotDisturbEnabled = false;
+  TimeOfDay startTime = TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay endTime = TimeOfDay(hour: 0, minute: 0);
+  String timeZoneName = DateTime.now().timeZoneName;
 
   bool _sendBirdNotificationsEnabled = true;
   bool get sendBirdNotificationsEnabled => _sendBirdNotificationsEnabled;
@@ -249,6 +256,46 @@ class SendbirdController extends GetxController {
     } catch (e) {
       logToUser("$e");
     }
+  }
+
+  Future<void> getDoNotDisturbSettings() async {
+    try {
+      final result = await SendbirdChat.getDoNotDisturb();
+      doNotDisturbEnabled = result.isDoNotDisturbOn;
+      startTime = TimeOfDay(hour: result.startHour ?? 0, minute: result.startMin ?? 0);
+      endTime = TimeOfDay(hour: result.endHour ?? 0, minute: result.endMin ?? 0);
+      timeZoneName = result.timezone?.isNotEmpty == true ? result.timezone! : await getLocalTimeZone();
+      update();
+    } catch (e) {
+      log("Sendbird: error getting Do Not Disturb: $e");
+    }
+  }
+
+  Future<void> setDoNotDisturbSettings(bool enabled, TimeOfDay start, TimeOfDay end) async {
+    try {
+      String timezone = await getLocalTimeZone();
+      await SendbirdChat.setDoNotDisturb(
+        enable: enabled,
+        startHour: start.hour,
+        startMin: start.minute,
+        endHour: end.hour,
+        endMin: end.minute,
+        timezone: timezone,
+      );
+      doNotDisturbEnabled = enabled;
+      startTime = start;
+      endTime = end;
+      timeZoneName = timezone;
+      update();
+      log("Sendbird: do not disturb updated");
+    } catch (e) {
+      log("Sendbird: error updating Do Not Disturb: $e");
+    }
+  }
+
+  Future<String> getLocalTimeZone() async {
+    final location = await FlutterTimezone.getLocalTimezone();
+    return location;
   }
 }
 

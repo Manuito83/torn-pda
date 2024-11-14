@@ -177,6 +177,8 @@ Future<void> main() async {
   final sb = Get.put(SendbirdController(), permanent: true);
   await sb.init();
 
+  tz.initializeTimeZones();
+
   // Flutter Local Notifications
   if (!Platform.isWindows) {
     if (Platform.isAndroid) {
@@ -186,7 +188,6 @@ Future<void> main() async {
       exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
     }
 
-    tz.initializeTimeZones();
     const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
     const initializationSettingsIOS = DarwinInitializationSettings();
 
