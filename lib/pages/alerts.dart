@@ -91,7 +91,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           future: _getFirebaseAndTornDetails,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.data[0] is FirebaseUserModel) {
+              if (snapshot.data != null && snapshot.data[0] is FirebaseUserModel) {
                 _firebaseUserModel ??= snapshot.data[0] as FirebaseUserModel?;
                 return SingleChildScrollView(
                   controller: _scrollController,

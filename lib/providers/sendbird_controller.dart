@@ -4,12 +4,12 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:sendbird_chat_sdk/sendbird_chat_sdk.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/user_controller.dart';
+import 'package:torn_pda/utils/env/env.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -52,13 +52,13 @@ class SendbirdController extends GetxController {
     update();
   }
 
-  Future inasdit() async {
+  Future init() async {
     if (_initialised) return;
     _initialised = true;
 
     try {
-      _sendbirdAppId = dotenv.get('SENDBIRD_APP_ID', fallback: "");
-      _sendbirdAppToken = dotenv.get('SENDBIRD_APP_TOKEN', fallback: "");
+      _sendbirdAppId = Env.sendbirdAppId;
+      _sendbirdAppToken = Env.sendbirdAppToken;
 
       if (_sendbirdAppId.isEmpty || _sendbirdAppToken.isEmpty) {
         log("Empty Sendbird env. variables, can't init!");
@@ -159,13 +159,12 @@ class SendbirdController extends GetxController {
     try {
       // Get the push token based on platform
       String? fcmToken = await _getFCMToken();
-      if (fcmToken == null) throw ("could not get FCM token");
+      if (fcmToken == null || fcmToken.isEmpty) throw ("could not get FCM token");
 
       // Register push token with Sendbird
       final regStatus = await SendbirdChat.registerPushToken(
         type: Platform.isAndroid ? PushTokenType.fcm : PushTokenType.apns,
         token: fcmToken,
-        unique: true,
       );
 
       if (regStatus == PushTokenRegistrationStatus.success) {

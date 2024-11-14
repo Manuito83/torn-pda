@@ -20,7 +20,6 @@ import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -176,7 +175,7 @@ Future<void> main() async {
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
   final sb = Get.put(SendbirdController(), permanent: true);
-  await sb.register();
+  await sb.init();
 
   // Flutter Local Notifications
   if (!Platform.isWindows) {
@@ -284,9 +283,6 @@ Future<void> main() async {
       android: AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
     ),
   );
-
-  // Get env variables
-  await dotenv.load(fileName: ".env", isOptional: true);
 
   runApp(
     MultiProvider(

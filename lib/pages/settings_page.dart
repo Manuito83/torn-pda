@@ -2500,7 +2500,7 @@ class SettingsPageState extends State<SettingsPage> {
                                     FocusScope.of(context).requestFocus(FocusNode());
                                     if (_formKey.currentState!.validate()) {
                                       _myCurrentKey = _apiKeyInputController.text.trim();
-                                      _getApiDetails(userTriggered: true, reload: true);
+                                      _getApiDetails(userTriggered: true);
                                     }
                                   },
                                 ),
@@ -3566,7 +3566,7 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _getApiDetails({required bool userTriggered, bool reload = false}) async {
+  Future<void> _getApiDetails({required bool userTriggered}) async {
     try {
       setState(() {
         _apiIsLoading = true;

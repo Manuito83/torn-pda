@@ -366,6 +366,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Sendbird notifications
       final sbController = Get.find<SendbirdController>();
       if (sbController.sendBirdNotificationsEnabled) {
+        // After app install, this will trigger an invalid playerId until the user loads the API
         await sbController.register();
       }
     });
