@@ -55,11 +55,11 @@ class FirestoreHelper {
     // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
     String? token = "";
     if (!Platform.isWindows) {
-      final String currentToken = (await _getToken());
+      final String currentToken = await _getToken();
       if (currentToken.isNotEmpty) {
         await _messaging.deleteToken();
       }
-      token = (await _getToken());
+      token = await _getToken();
     } else {
       token = "windows";
     }
@@ -387,9 +387,9 @@ class FirestoreHelper {
   // Note: Messaging might return error on iOS emulators
   Future<String> _getToken() async {
     final String? currentToken = await _messaging.getToken().onError((error, stackTrace) {
+      log("TOKEN ERROR!");
       return "error";
     });
-    log("TOKEN ERROR!");
     return currentToken ?? "error";
   }
 }

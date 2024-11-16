@@ -56,14 +56,15 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:windows_notification/windows_notification.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.5.2';
-const String androidCompilation = '450';
-const String iosCompilation = '450';
+const String appVersion = '3.6.0';
+const String androidCompilation = '453';
+const String iosCompilation = '453';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -275,6 +276,15 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   late Widget _mainBrowser;
 
+  final upgrader = Upgrader(
+    debugDisplayAlways: kDebugMode ? false : false, // True for debugging if necessary
+    willDisplayUpgrade: ({required display, installedVersion, versionInfo}) {
+      if (display) {
+        log(versionInfo.toString());
+      }
+    },
+  );
+
   @override
   void initState() {
     super.initState();
@@ -365,7 +375,12 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     // reference to this widget is not lost
     final homeDrawer = Navigator(
       onGenerateRoute: (_) {
-        return MaterialPageRoute(builder: (BuildContext _) => DrawerPage());
+        return MaterialPageRoute(
+          builder: (BuildContext _) => UpgradeAlert(
+            upgrader: upgrader,
+            child: DrawerPage(),
+          ),
+        );
       },
     );
 

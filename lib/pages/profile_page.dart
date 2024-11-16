@@ -50,6 +50,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/profile/events_timeline_fixes.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
@@ -2898,22 +2899,24 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     for (final Event e in _events) {
-      String message = HtmlParser.fix(e.event);
-      message = message;
-      message = message.replaceAll('View the details here!', '');
-      message = message.replaceAll('Please click here to continue.', '');
-      message = message.replaceAll(' [view]', '.');
-      message = message.replaceAll(' [View]', '');
-      message = message.replaceAll(' Please click here.', '');
-      message = message.replaceAll(' Please click here to collect your funds.', '');
+      if (e.event == null) continue;
+
+      // Determine font weight based on unread status
+      final FontWeight fontWeight = unreadCount! >= loopCount ? FontWeight.bold : FontWeight.normal;
+
+      // Adapt text
+      e.event = processEventMessage(e.event!);
+
+      // Build the message widget
+      // (the events API v1 has got many issues in http links, so we need to correct them manually)
+      final Widget messageWidget = buildEventMessageWidget(e.event!, fontWeight, _launchBrowser, _themeProvider!);
 
       final Widget insideIcon = EventIcons(
-        message: message,
+        message: e.event!,
         themeProvider: _themeProvider,
       );
 
-      IndicatorStyle iconBubble;
-      iconBubble = IndicatorStyle(
+      IndicatorStyle iconBubble = IndicatorStyle(
         width: 30,
         height: 30,
         drawGap: true,
@@ -2932,32 +2935,22 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final eventTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp! * 1000);
 
       final event = TimelineTile(
-        isFirst: loopCount == 1 ? true : false,
-        isLast: loopCount == maxCount ? true : false,
+        isFirst: loopCount == 1,
+        isLast: loopCount == maxCount,
         alignment: TimelineAlign.manual,
         indicatorStyle: iconBubble,
         lineXY: 0.25,
         endChild: Container(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: unreadCount! >= loopCount ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
+          padding: const EdgeInsets.all(8.0),
+          child: messageWidget,
         ),
         startChild: Container(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 5.0),
-            child: Text(
-              _occurrenceTimeFormatted(eventTime),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: unreadCount >= loopCount ? FontWeight.bold : FontWeight.normal,
-              ),
+          padding: const EdgeInsets.only(right: 5.0),
+          child: Text(
+            _occurrenceTimeFormatted(eventTime),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: fontWeight,
             ),
           ),
         ),
@@ -3019,9 +3012,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', shortTap: true);
                 },
-                child: Padding(
+                child: const Padding(
                   padding: EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size: 18),
+                  child: Icon(Icons.open_in_new, size: 18),
                 ),
               ),
             ],

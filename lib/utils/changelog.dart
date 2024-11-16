@@ -51,6 +51,31 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.6.0 - Build 453 - 13/11/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.5.2'
+        ..date = '10 DEC 2024'
+        ..features = [
+          "Added browser links to the Events timeline in Profile",
+          "War: added option to sort by travel distance",
+          ComplexFeature(
+            "Adapted auto-price script for new market [Kwack]",
+            explanation: "With the introduction of the new market system, "
+                "the old bazaar auto-price script has been adapted to work with "
+                "this new market.\n\nIf you had the official script installed, "
+                "you will receive a notification to update; if you installed "
+                "it manually, you will need to update the code manually "
+                "or restore the example scripts.",
+          ),
+          "Improved error handling for TSC [Mavri]",
+          if (Platform.isIOS) "Added option to manually override app icon",
+          "Added app upgrade dialog",
+          "Fixed multiple max buy buttons abroad",
+          "Fixed Torn Stats pie chart representation",
+        ],
+    );
+
     // v3.5.2 - Build 450 - 13/10/2024
     itemList.add(
       ChangeLogItem()
