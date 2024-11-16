@@ -57,12 +57,6 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.5.2'
         ..date = '10 DEC 2024'
         ..features = [
-          /*
-          ComplexFeature(
-            "",
-            explanation: "",
-          ),
-          */
           "Added browser links to the Events timeline in Profile",
           "War: added option to sort by travel distance",
           ComplexFeature(
@@ -74,7 +68,8 @@ class ChangeLogState extends State<ChangeLog> {
                 "it manually, you will need to update the code manually "
                 "or restore the example scripts.",
           ),
-          "Improved error handling for TSC",
+          "Improved error handling for TSC [Mavri]",
+          if (Platform.isIOS) "Added option to manually override app icon",
           "Added app upgrade dialog",
           "Fixed multiple max buy buttons abroad",
           "Fixed Torn Stats pie chart representation",

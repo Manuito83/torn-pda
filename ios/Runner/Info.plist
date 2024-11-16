@@ -111,7 +111,7 @@
                 <key>UIPrerenderedIcon</key>
                 <false/>
             </dict>
-            <!--
+            <!-- Alternate icon for Halloween -->
             <key>AppIconChristmas</key>
             <dict>
                 <key>CFBundleIconFiles</key>
@@ -121,7 +121,16 @@
                 <key>UIPrerenderedIcon</key>
                 <false/>
             </dict>
-            -->
+			<!-- Alternate icon for Awareness Week -->
+            <key>AppIconAwareness</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIconAwareness</string>
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
         </dict>
     </dict>
 </dict>

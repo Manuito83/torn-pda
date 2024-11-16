@@ -1824,6 +1824,49 @@ class SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig ? false : _settingsProvider.dynamicAppIcons)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Flexible(
+                  child: Text(
+                    "Override icon",
+                  ),
+                ),
+                Flexible(
+                  child: _manualAppIconDropdown(),
+                ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "By using this option, you can manually trigger (some) app icons even if the conditions "
+                "are not met",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig)
+                Text(
+                  "Deactivated remotely for the time being",
+                  style: TextStyle(
+                    color: Colors.orange[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -2843,6 +2886,71 @@ class SettingsPageState extends State<SettingsPage> {
               _webViewProvider.browserForegroundWithSplitTransition();
             }
           }
+        });
+      },
+    );
+  }
+
+  DropdownButton _manualAppIconDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.dynamicAppIconsManual,
+      items: const [
+        DropdownMenuItem(
+          value: "off",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Off",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "awareness",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Awareness",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "halloween",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Halloween",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "christmas",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Christmas",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _settingsProvider.dynamicAppIconsManual = value;
+          _settingsProvider.appIconChangeBasedOnCondition();
         });
       },
     );

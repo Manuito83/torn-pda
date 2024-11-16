@@ -18,7 +18,7 @@
 
 # ENV
 .env
-env.g.dart
+*env.g.dart
 
 # IntelliJ related
 *.iml
