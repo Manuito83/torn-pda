@@ -153,6 +153,16 @@ Map<String, dynamic> _$AttackSimplifiedToJson(AttackSimplified instance) =>
       'respect_loss': instance.respectLoss,
     };
 
+TimestampResponse _$TimestampResponseFromJson(Map<String, dynamic> json) =>
+    TimestampResponse(
+      timestamp: (json['timestamp'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$TimestampResponseToJson(TimestampResponse instance) =>
+    <String, dynamic>{
+      'timestamp': instance.timestamp,
+    };
+
 FactionHofStats _$FactionHofStatsFromJson(Map<String, dynamic> json) =>
     FactionHofStats(
       rank: json['rank'] == null
@@ -171,6 +181,19 @@ Map<String, dynamic> _$FactionHofStatsToJson(FactionHofStats instance) =>
       'rank': instance.rank?.toJson(),
       'respect': instance.respect?.toJson(),
       'chain': instance.chain?.toJson(),
+    };
+
+FactionHofResponse _$FactionHofResponseFromJson(Map<String, dynamic> json) =>
+    FactionHofResponse(
+      hof: (json['hof'] as List<dynamic>?)
+              ?.map((e) => FactionHofStats.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$FactionHofResponseToJson(FactionHofResponse instance) =>
+    <String, dynamic>{
+      'hof': instance.hof?.map((e) => e.toJson()).toList(),
     };
 
 FactionMember _$FactionMemberFromJson(Map<String, dynamic> json) =>
@@ -247,6 +270,21 @@ Map<String, dynamic> _$UserStatusToJson(UserStatus instance) =>
       'until': instance.until,
     };
 
+FactionMembersResponse _$FactionMembersResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionMembersResponse(
+      members: (json['members'] as List<dynamic>?)
+              ?.map((e) => FactionMember.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$FactionMembersResponseToJson(
+        FactionMembersResponse instance) =>
+    <String, dynamic>{
+      'members': instance.members?.map((e) => e.toJson()).toList(),
+    };
+
 FactionRank _$FactionRankFromJson(Map<String, dynamic> json) => FactionRank(
       level: (json['level'] as num?)?.toInt(),
       name: json['name'] as String?,
@@ -297,6 +335,20 @@ Map<String, dynamic> _$FactionBasicToJson(FactionBasic instance) =>
       'is_enlisted': instance.isEnlisted,
       'rank': instance.rank?.toJson(),
       'best_chain': instance.bestChain,
+    };
+
+FactionBasicResponse _$FactionBasicResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionBasicResponse(
+      basic: json['basic'] == null
+          ? null
+          : FactionBasic.fromJson(json['basic'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionBasicResponseToJson(
+        FactionBasicResponse instance) =>
+    <String, dynamic>{
+      'basic': instance.basic?.toJson(),
     };
 
 FactionPact _$FactionPactFromJson(Map<String, dynamic> json) => FactionPact(
@@ -468,6 +520,24 @@ Map<String, dynamic> _$FactionWarsToJson(FactionWars instance) =>
       'territory': instance.territory?.map((e) => e.toJson()).toList(),
     };
 
+FactionWarsResponse _$FactionWarsResponseFromJson(Map<String, dynamic> json) =>
+    FactionWarsResponse(
+      pacts: (json['pacts'] as List<dynamic>?)
+              ?.map((e) => FactionPact.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      wars: json['wars'] == null
+          ? null
+          : FactionWars.fromJson(json['wars'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionWarsResponseToJson(
+        FactionWarsResponse instance) =>
+    <String, dynamic>{
+      'pacts': instance.pacts?.map((e) => e.toJson()).toList(),
+      'wars': instance.wars?.toJson(),
+    };
+
 FactionNews _$FactionNewsFromJson(Map<String, dynamic> json) => FactionNews(
       id: json['id'] as String?,
       text: json['text'] as String?,
@@ -481,15 +551,125 @@ Map<String, dynamic> _$FactionNewsToJson(FactionNews instance) =>
       'timestamp': instance.timestamp,
     };
 
-ForumCategories _$ForumCategoriesFromJson(Map<String, dynamic> json) =>
-    ForumCategories(
+FactionNewsResponse _$FactionNewsResponseFromJson(Map<String, dynamic> json) =>
+    FactionNewsResponse(
+      news: (json['news'] as List<dynamic>?)
+              ?.map((e) => FactionNews.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionNewsResponseToJson(
+        FactionNewsResponse instance) =>
+    <String, dynamic>{
+      'news': instance.news?.map((e) => e.toJson()).toList(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+FactionAttacksResponse _$FactionAttacksResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionAttacksResponse(
+      attacks: (json['attacks'] as List<dynamic>?)
+              ?.map((e) => Attack.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionAttacksResponseToJson(
+        FactionAttacksResponse instance) =>
+    <String, dynamic>{
+      'attacks': instance.attacks?.map((e) => e.toJson()).toList(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+FactionAttacksFullResponse _$FactionAttacksFullResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionAttacksFullResponse(
+      attacks: (json['attacks'] as List<dynamic>?)
+              ?.map((e) => AttackSimplified.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionAttacksFullResponseToJson(
+        FactionAttacksFullResponse instance) =>
+    <String, dynamic>{
+      'attacks': instance.attacks?.map((e) => e.toJson()).toList(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+FactionApplication _$FactionApplicationFromJson(Map<String, dynamic> json) =>
+    FactionApplication(
+      id: (json['id'] as num?)?.toInt(),
+      user: json['user'] == null
+          ? null
+          : FactionApplication$User.fromJson(
+              json['user'] as Map<String, dynamic>),
+      message: json['message'] as String?,
+      validUntil: (json['valid_until'] as num?)?.toInt(),
+      status: factionApplicationStatusEnumNullableFromJson(json['status']),
+    );
+
+Map<String, dynamic> _$FactionApplicationToJson(FactionApplication instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'user': instance.user?.toJson(),
+      'message': instance.message,
+      'valid_until': instance.validUntil,
+      'status': factionApplicationStatusEnumNullableToJson(instance.status),
+    };
+
+FactionApplicationsResponse _$FactionApplicationsResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionApplicationsResponse(
+      applications: (json['applications'] as List<dynamic>?)
+              ?.map(
+                  (e) => FactionApplication.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$FactionApplicationsResponseToJson(
+        FactionApplicationsResponse instance) =>
+    <String, dynamic>{
+      'applications': instance.applications?.map((e) => e.toJson()).toList(),
+    };
+
+FactionLookupResponse _$FactionLookupResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionLookupResponse(
+      selections: factionSelectionNameListFromJson(json['selections'] as List?),
+    );
+
+Map<String, dynamic> _$FactionLookupResponseToJson(
+        FactionLookupResponse instance) =>
+    <String, dynamic>{
+      'selections': factionSelectionNameListToJson(instance.selections),
+    };
+
+ForumCategoriesResponse _$ForumCategoriesResponseFromJson(
+        Map<String, dynamic> json) =>
+    ForumCategoriesResponse(
       categories: (json['categories'] as List<dynamic>?)
-          ?.map((e) => ForumCategories$Categories$Item.fromJson(
+          ?.map((e) => ForumCategoriesResponse$Categories$Item.fromJson(
               e as Map<String, dynamic>))
           .toList(),
     );
 
-Map<String, dynamic> _$ForumCategoriesToJson(ForumCategories instance) =>
+Map<String, dynamic> _$ForumCategoriesResponseToJson(
+        ForumCategoriesResponse instance) =>
     <String, dynamic>{
       'categories': instance.categories?.map((e) => e.toJson()).toList(),
     };
@@ -764,6 +944,77 @@ Map<String, dynamic> _$ForumFeedToJson(ForumFeed instance) => <String, dynamic>{
       'type': forumFeedTypeEnumNullableToJson(instance.type),
     };
 
+ForumThreadsResponse _$ForumThreadsResponseFromJson(
+        Map<String, dynamic> json) =>
+    ForumThreadsResponse(
+      threads: (json['threads'] as List<dynamic>?)
+              ?.map((e) => ForumThreadBase.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      links: json['_links'] == null
+          ? null
+          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$ForumThreadsResponseToJson(
+        ForumThreadsResponse instance) =>
+    <String, dynamic>{
+      'threads': instance.threads?.map((e) => e.toJson()).toList(),
+      '_links': instance.links?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+ForumThreadResponse _$ForumThreadResponseFromJson(Map<String, dynamic> json) =>
+    ForumThreadResponse(
+      thread: json['thread'] == null
+          ? null
+          : ForumThreadExtended.fromJson(
+              json['thread'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$ForumThreadResponseToJson(
+        ForumThreadResponse instance) =>
+    <String, dynamic>{
+      'thread': instance.thread?.toJson(),
+    };
+
+ForumPostsResponse _$ForumPostsResponseFromJson(Map<String, dynamic> json) =>
+    ForumPostsResponse(
+      posts: (json['posts'] as List<dynamic>?)
+              ?.map((e) => ForumPost.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      links: json['_links'] == null
+          ? null
+          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$ForumPostsResponseToJson(ForumPostsResponse instance) =>
+    <String, dynamic>{
+      'posts': instance.posts?.map((e) => e.toJson()).toList(),
+      '_links': instance.links?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+ForumLookupResponse _$ForumLookupResponseFromJson(Map<String, dynamic> json) =>
+    ForumLookupResponse(
+      selections: forumSelectionNameListFromJson(json['selections'] as List?),
+    );
+
+Map<String, dynamic> _$ForumLookupResponseToJson(
+        ForumLookupResponse instance) =>
+    <String, dynamic>{
+      'selections': forumSelectionNameListToJson(instance.selections),
+    };
+
 ItemMarketListingItemBonus _$ItemMarketListingItemBonusFromJson(
         Map<String, dynamic> json) =>
     ItemMarketListingItemBonus(
@@ -841,6 +1092,8 @@ ItemMarketListingItemDetails _$ItemMarketListingItemDetailsFromJson(
                   e as Map<String, dynamic>))
               .toList() ??
           [],
+      rarity:
+          itemMarketListingItemDetailsRarityNullableFromJson(json['rarity']),
     );
 
 Map<String, dynamic> _$ItemMarketListingItemDetailsToJson(
@@ -849,6 +1102,8 @@ Map<String, dynamic> _$ItemMarketListingItemDetailsToJson(
       'uid': instance.uid,
       'stats': instance.stats?.toJson(),
       'bonuses': instance.bonuses?.map((e) => e.toJson()).toList(),
+      'rarity':
+          itemMarketListingItemDetailsRarityNullableToJson(instance.rarity),
     };
 
 ItemMarketListingNonstackable _$ItemMarketListingNonstackableFromJson(
@@ -888,14 +1143,47 @@ Map<String, dynamic> _$ItemMarketToJson(ItemMarket instance) =>
       'listings': instance.listings,
     };
 
-RaceCars _$RaceCarsFromJson(Map<String, dynamic> json) => RaceCars(
+MarketItemMarketResponse _$MarketItemMarketResponseFromJson(
+        Map<String, dynamic> json) =>
+    MarketItemMarketResponse(
+      itemmarket: json['itemmarket'] == null
+          ? null
+          : ItemMarket.fromJson(json['itemmarket'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$MarketItemMarketResponseToJson(
+        MarketItemMarketResponse instance) =>
+    <String, dynamic>{
+      'itemmarket': instance.itemmarket?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+MarketLookupResponse _$MarketLookupResponseFromJson(
+        Map<String, dynamic> json) =>
+    MarketLookupResponse(
+      selections: marketSelectionNameListFromJson(json['selections'] as List?),
+    );
+
+Map<String, dynamic> _$MarketLookupResponseToJson(
+        MarketLookupResponse instance) =>
+    <String, dynamic>{
+      'selections': marketSelectionNameListToJson(instance.selections),
+    };
+
+RacingCarsResponse _$RacingCarsResponseFromJson(Map<String, dynamic> json) =>
+    RacingCarsResponse(
       cars: (json['cars'] as List<dynamic>?)
               ?.map((e) => RaceCar.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
 
-Map<String, dynamic> _$RaceCarsToJson(RaceCars instance) => <String, dynamic>{
+Map<String, dynamic> _$RacingCarsResponseToJson(RacingCarsResponse instance) =>
+    <String, dynamic>{
       'cars': instance.cars?.map((e) => e.toJson()).toList(),
     };
 
@@ -925,14 +1213,17 @@ Map<String, dynamic> _$RaceCarToJson(RaceCar instance) => <String, dynamic>{
       'class': raceClassEnumNullableToJson(instance.$class),
     };
 
-RaceTracks _$RaceTracksFromJson(Map<String, dynamic> json) => RaceTracks(
+RacingTracksResponse _$RacingTracksResponseFromJson(
+        Map<String, dynamic> json) =>
+    RacingTracksResponse(
       tracks: (json['tracks'] as List<dynamic>?)
               ?.map((e) => RaceTrack.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
 
-Map<String, dynamic> _$RaceTracksToJson(RaceTracks instance) =>
+Map<String, dynamic> _$RacingTracksResponseToJson(
+        RacingTracksResponse instance) =>
     <String, dynamic>{
       'tracks': instance.tracks?.map((e) => e.toJson()).toList(),
     };
@@ -949,15 +1240,17 @@ Map<String, dynamic> _$RaceTrackToJson(RaceTrack instance) => <String, dynamic>{
       'description': instance.description,
     };
 
-RaceCarUpgrades _$RaceCarUpgradesFromJson(Map<String, dynamic> json) =>
-    RaceCarUpgrades(
+RacingCarUpgradesResponse _$RacingCarUpgradesResponseFromJson(
+        Map<String, dynamic> json) =>
+    RacingCarUpgradesResponse(
       carupgrades: (json['carupgrades'] as List<dynamic>?)
               ?.map((e) => RaceCarUpgrade.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
 
-Map<String, dynamic> _$RaceCarUpgradesToJson(RaceCarUpgrades instance) =>
+Map<String, dynamic> _$RacingCarUpgradesResponseToJson(
+        RacingCarUpgradesResponse instance) =>
     <String, dynamic>{
       'carupgrades': instance.carupgrades?.map((e) => e.toJson()).toList(),
     };
@@ -993,15 +1286,23 @@ Map<String, dynamic> _$RaceCarUpgradeToJson(RaceCarUpgrade instance) =>
       'cost': instance.cost?.toJson(),
     };
 
-Races _$RacesFromJson(Map<String, dynamic> json) => Races(
+RacingRacesResponse _$RacingRacesResponseFromJson(Map<String, dynamic> json) =>
+    RacingRacesResponse(
       races: (json['races'] as List<dynamic>?)
               ?.map((e) => Race.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$RacesToJson(Races instance) => <String, dynamic>{
+Map<String, dynamic> _$RacingRacesResponseToJson(
+        RacingRacesResponse instance) =>
+    <String, dynamic>{
       'races': instance.races?.map((e) => e.toJson()).toList(),
+      '_metadata': instance.metadata?.toJson(),
     };
 
 Race _$RaceFromJson(Map<String, dynamic> json) => Race(
@@ -1036,14 +1337,17 @@ Map<String, dynamic> _$RaceToJson(Race instance) => <String, dynamic>{
       'requirements': instance.requirements?.toJson(),
     };
 
-RaceRecords _$RaceRecordsFromJson(Map<String, dynamic> json) => RaceRecords(
+RacingTrackRecordsResponse _$RacingTrackRecordsResponseFromJson(
+        Map<String, dynamic> json) =>
+    RacingTrackRecordsResponse(
       records: (json['records'] as List<dynamic>?)
               ?.map((e) => RaceRecord.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
 
-Map<String, dynamic> _$RaceRecordsToJson(RaceRecords instance) =>
+Map<String, dynamic> _$RacingTrackRecordsResponseToJson(
+        RacingTrackRecordsResponse instance) =>
     <String, dynamic>{
       'records': instance.records?.map((e) => e.toJson()).toList(),
     };
@@ -1092,7 +1396,9 @@ Map<String, dynamic> _$RacerDetailsToJson(RacerDetails instance) =>
       'time_ended': instance.timeEnded,
     };
 
-RaceDetails _$RaceDetailsFromJson(Map<String, dynamic> json) => RaceDetails(
+RacingRaceDetailsResponse _$RacingRaceDetailsResponseFromJson(
+        Map<String, dynamic> json) =>
+    RacingRaceDetailsResponse(
       results: (json['results'] as List<dynamic>?)
               ?.map((e) => RacerDetails.fromJson(e as Map<String, dynamic>))
               .toList() ??
@@ -1105,19 +1411,20 @@ RaceDetails _$RaceDetailsFromJson(Map<String, dynamic> json) => RaceDetails(
       laps: (json['laps'] as num?)?.toInt(),
       participants: json['participants'] == null
           ? null
-          : RaceDetails$Participants.fromJson(
+          : RacingRaceDetailsResponse$Participants.fromJson(
               json['participants'] as Map<String, dynamic>),
       schedule: json['schedule'] == null
           ? null
-          : RaceDetails$Schedule.fromJson(
+          : RacingRaceDetailsResponse$Schedule.fromJson(
               json['schedule'] as Map<String, dynamic>),
       requirements: json['requirements'] == null
           ? null
-          : RaceDetails$Requirements.fromJson(
+          : RacingRaceDetailsResponse$Requirements.fromJson(
               json['requirements'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$RaceDetailsToJson(RaceDetails instance) =>
+Map<String, dynamic> _$RacingRaceDetailsResponseToJson(
+        RacingRaceDetailsResponse instance) =>
     <String, dynamic>{
       'results': instance.results?.map((e) => e.toJson()).toList(),
       'id': instance.id,
@@ -1131,15 +1438,29 @@ Map<String, dynamic> _$RaceDetailsToJson(RaceDetails instance) =>
       'requirements': instance.requirements?.toJson(),
     };
 
-TornSubcrimes _$TornSubcrimesFromJson(Map<String, dynamic> json) =>
-    TornSubcrimes(
+RacingLookupResponse _$RacingLookupResponseFromJson(
+        Map<String, dynamic> json) =>
+    RacingLookupResponse(
+      selections: racingSelectionNameListFromJson(json['selections'] as List?),
+    );
+
+Map<String, dynamic> _$RacingLookupResponseToJson(
+        RacingLookupResponse instance) =>
+    <String, dynamic>{
+      'selections': racingSelectionNameListToJson(instance.selections),
+    };
+
+TornSubcrimesResponse _$TornSubcrimesResponseFromJson(
+        Map<String, dynamic> json) =>
+    TornSubcrimesResponse(
       subcrimes: (json['subcrimes'] as List<dynamic>?)
               ?.map((e) => TornSubcrime.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
 
-Map<String, dynamic> _$TornSubcrimesToJson(TornSubcrimes instance) =>
+Map<String, dynamic> _$TornSubcrimesResponseToJson(
+        TornSubcrimesResponse instance) =>
     <String, dynamic>{
       'subcrimes': instance.subcrimes?.map((e) => e.toJson()).toList(),
     };
@@ -1157,14 +1478,15 @@ Map<String, dynamic> _$TornSubcrimeToJson(TornSubcrime instance) =>
       'nerve_cost': instance.nerveCost,
     };
 
-TornCrimes _$TornCrimesFromJson(Map<String, dynamic> json) => TornCrimes(
+TornCrimesResponse _$TornCrimesResponseFromJson(Map<String, dynamic> json) =>
+    TornCrimesResponse(
       crimes: (json['crimes'] as List<dynamic>?)
               ?.map((e) => TornCrime.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
     );
 
-Map<String, dynamic> _$TornCrimesToJson(TornCrimes instance) =>
+Map<String, dynamic> _$TornCrimesResponseToJson(TornCrimesResponse instance) =>
     <String, dynamic>{
       'crimes': instance.crimes?.map((e) => e.toJson()).toList(),
     };
@@ -1216,6 +1538,21 @@ Map<String, dynamic> _$TornCalendarActivityToJson(
       'end': instance.end,
     };
 
+TornCalendarResponse _$TornCalendarResponseFromJson(
+        Map<String, dynamic> json) =>
+    TornCalendarResponse(
+      calendar: json['calendar'] == null
+          ? null
+          : TornCalendarResponse$Calendar.fromJson(
+              json['calendar'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$TornCalendarResponseToJson(
+        TornCalendarResponse instance) =>
+    <String, dynamic>{
+      'calendar': instance.calendar?.toJson(),
+    };
+
 TornHof _$TornHofFromJson(Map<String, dynamic> json) => TornHof(
       id: (json['id'] as num?)?.toInt(),
       username: json['username'] as String?,
@@ -1244,6 +1581,28 @@ Map<String, dynamic> _$TornHofToJson(TornHof instance) => <String, dynamic>{
       'age_in_days': instance.ageInDays,
       'value': instance.$value,
       'rank': instance.rank,
+    };
+
+TornHofResponse _$TornHofResponseFromJson(Map<String, dynamic> json) =>
+    TornHofResponse(
+      hof: (json['hof'] as List<dynamic>?)
+              ?.map((e) => TornHof.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      links: json['_links'] == null
+          ? null
+          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$TornHofResponseToJson(TornHofResponse instance) =>
+    <String, dynamic>{
+      'hof': instance.hof?.map((e) => e.toJson()).toList(),
+      '_links': instance.links?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
     };
 
 FactionHofValues _$FactionHofValuesFromJson(Map<String, dynamic> json) =>
@@ -1282,6 +1641,30 @@ Map<String, dynamic> _$TornFactionHofToJson(TornFactionHof instance) =>
       'values': instance.values?.toJson(),
     };
 
+TornFactionHofResponse _$TornFactionHofResponseFromJson(
+        Map<String, dynamic> json) =>
+    TornFactionHofResponse(
+      factionhof: (json['factionhof'] as List<dynamic>?)
+              ?.map((e) => TornFactionHof.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      links: json['_links'] == null
+          ? null
+          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$TornFactionHofResponseToJson(
+        TornFactionHofResponse instance) =>
+    <String, dynamic>{
+      'factionhof': instance.factionhof?.map((e) => e.toJson()).toList(),
+      '_links': instance.links?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
 TornLog _$TornLogFromJson(Map<String, dynamic> json) => TornLog(
       id: (json['id'] as num?)?.toInt(),
       title: json['title'] as String?,
@@ -1302,6 +1685,36 @@ Map<String, dynamic> _$TornLogCategoryToJson(TornLogCategory instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
+    };
+
+TornLogTypesResponse _$TornLogTypesResponseFromJson(
+        Map<String, dynamic> json) =>
+    TornLogTypesResponse(
+      logtypes: (json['logtypes'] as List<dynamic>?)
+              ?.map((e) => TornLog.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$TornLogTypesResponseToJson(
+        TornLogTypesResponse instance) =>
+    <String, dynamic>{
+      'logtypes': instance.logtypes?.map((e) => e.toJson()).toList(),
+    };
+
+TornLogCategoriesResponse _$TornLogCategoriesResponseFromJson(
+        Map<String, dynamic> json) =>
+    TornLogCategoriesResponse(
+      logcategories: (json['logcategories'] as List<dynamic>?)
+              ?.map((e) => TornLogCategory.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$TornLogCategoriesResponseToJson(
+        TornLogCategoriesResponse instance) =>
+    <String, dynamic>{
+      'logcategories': instance.logcategories?.map((e) => e.toJson()).toList(),
     };
 
 Bounty _$BountyFromJson(Map<String, dynamic> json) => Bounty(
@@ -1328,6 +1741,40 @@ Map<String, dynamic> _$BountyToJson(Bounty instance) => <String, dynamic>{
       'quantity': instance.quantity,
       'is_anonymous': instance.isAnonymous,
       'valid_until': instance.validUntil,
+    };
+
+TornBountiesResponse _$TornBountiesResponseFromJson(
+        Map<String, dynamic> json) =>
+    TornBountiesResponse(
+      bounties: (json['bounties'] as List<dynamic>?)
+              ?.map((e) => Bounty.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      links: json['_links'] == null
+          ? null
+          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$TornBountiesResponseToJson(
+        TornBountiesResponse instance) =>
+    <String, dynamic>{
+      'bounties': instance.bounties?.map((e) => e.toJson()).toList(),
+      '_links': instance.links?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+TornLookupResponse _$TornLookupResponseFromJson(Map<String, dynamic> json) =>
+    TornLookupResponse(
+      selections: tornSelectionNameListFromJson(json['selections'] as List?),
+    );
+
+Map<String, dynamic> _$TornLookupResponseToJson(TornLookupResponse instance) =>
+    <String, dynamic>{
+      'selections': tornSelectionNameListToJson(instance.selections),
     };
 
 UserCrimeDetailsBootlegging _$UserCrimeDetailsBootleggingFromJson(
@@ -1630,14 +2077,14 @@ Map<String, dynamic> _$UserCrimeUniquesToJson(UserCrimeUniques instance) =>
       'rewards': instance.rewards?.map((e) => e.toJson()).toList(),
     };
 
-UserCrimeDetails _$UserCrimeDetailsFromJson(Map<String, dynamic> json) =>
-    UserCrimeDetails(
+UserCrimesResponse _$UserCrimesResponseFromJson(Map<String, dynamic> json) =>
+    UserCrimesResponse(
       crimes: json['crimes'] == null
           ? null
           : UserCrime.fromJson(json['crimes'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$UserCrimeDetailsToJson(UserCrimeDetails instance) =>
+Map<String, dynamic> _$UserCrimesResponseToJson(UserCrimesResponse instance) =>
     <String, dynamic>{
       'crimes': instance.crimes?.toJson(),
     };
@@ -1673,6 +2120,25 @@ Map<String, dynamic> _$UserCrimeToJson(UserCrime instance) => <String, dynamic>{
       'attempts': instance.attempts?.toJson(),
       'uniques': instance.uniques?.map((e) => e.toJson()).toList(),
       'miscellaneous': instance.miscellaneous,
+    };
+
+UserRacesResponse _$UserRacesResponseFromJson(Map<String, dynamic> json) =>
+    UserRacesResponse(
+      races: (json['races'] as List<dynamic>?)
+              ?.map((e) =>
+                  RacingRaceDetailsResponse.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$UserRacesResponseToJson(UserRacesResponse instance) =>
+    <String, dynamic>{
+      'races': instance.races?.map((e) => e.toJson()).toList(),
+      '_metadata': instance.metadata?.toJson(),
     };
 
 UserRaceCarDetails _$UserRaceCarDetailsFromJson(Map<String, dynamic> json) =>
@@ -1720,6 +2186,118 @@ Map<String, dynamic> _$UserRaceCarDetailsToJson(UserRaceCarDetails instance) =>
       'safety': instance.safety,
       'tarmac': instance.tarmac,
       'class': raceClassEnumNullableToJson(instance.$class),
+    };
+
+UserEnlistedCarsResponse _$UserEnlistedCarsResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserEnlistedCarsResponse(
+      enlistedcars: (json['enlistedcars'] as List<dynamic>?)
+              ?.map(
+                  (e) => UserRaceCarDetails.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$UserEnlistedCarsResponseToJson(
+        UserEnlistedCarsResponse instance) =>
+    <String, dynamic>{
+      'enlistedcars': instance.enlistedcars?.map((e) => e.toJson()).toList(),
+    };
+
+UserForumPostsResponse _$UserForumPostsResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserForumPostsResponse(
+      forumPosts: (json['forumPosts'] as List<dynamic>?)
+              ?.map((e) => ForumPost.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      links: json['_links'] == null
+          ? null
+          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$UserForumPostsResponseToJson(
+        UserForumPostsResponse instance) =>
+    <String, dynamic>{
+      'forumPosts': instance.forumPosts?.map((e) => e.toJson()).toList(),
+      '_links': instance.links?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+UserForumThreadsResponse _$UserForumThreadsResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserForumThreadsResponse(
+      forumThreads: (json['forumThreads'] as List<dynamic>?)
+              ?.map((e) =>
+                  ForumThreadUserExtended.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      links: json['_links'] == null
+          ? null
+          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$UserForumThreadsResponseToJson(
+        UserForumThreadsResponse instance) =>
+    <String, dynamic>{
+      'forumThreads': instance.forumThreads?.map((e) => e.toJson()).toList(),
+      '_links': instance.links?.toJson(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+UserForumSubscribedThreadsResponse _$UserForumSubscribedThreadsResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserForumSubscribedThreadsResponse(
+      forumSubscribedThreads: (json['forumSubscribedThreads'] as List<dynamic>?)
+              ?.map((e) =>
+                  ForumSubscribedThread.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$UserForumSubscribedThreadsResponseToJson(
+        UserForumSubscribedThreadsResponse instance) =>
+    <String, dynamic>{
+      'forumSubscribedThreads':
+          instance.forumSubscribedThreads?.map((e) => e.toJson()).toList(),
+    };
+
+UserForumFeedResponse _$UserForumFeedResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserForumFeedResponse(
+      forumFeed: (json['forumFeed'] as List<dynamic>?)
+              ?.map((e) => ForumFeed.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$UserForumFeedResponseToJson(
+        UserForumFeedResponse instance) =>
+    <String, dynamic>{
+      'forumFeed': instance.forumFeed?.map((e) => e.toJson()).toList(),
+    };
+
+UserForumFriendsResponse _$UserForumFriendsResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserForumFriendsResponse(
+      forumFriends: (json['forumFriends'] as List<dynamic>?)
+              ?.map((e) => ForumFeed.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$UserForumFriendsResponseToJson(
+        UserForumFriendsResponse instance) =>
+    <String, dynamic>{
+      'forumFriends': instance.forumFriends?.map((e) => e.toJson()).toList(),
     };
 
 HofValue _$HofValueFromJson(Map<String, dynamic> json) => HofValue(
@@ -1811,6 +2389,19 @@ Map<String, dynamic> _$UserHofStatsToJson(UserHofStats instance) =>
       'battle_stats': instance.battleStats?.toJson(),
     };
 
+UserHofResponse _$UserHofResponseFromJson(Map<String, dynamic> json) =>
+    UserHofResponse(
+      hof: (json['hof'] as List<dynamic>?)
+              ?.map((e) => UserHofStats.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$UserHofResponseToJson(UserHofResponse instance) =>
+    <String, dynamic>{
+      'hof': instance.hof?.map((e) => e.toJson()).toList(),
+    };
+
 UserCalendar _$UserCalendarFromJson(Map<String, dynamic> json) => UserCalendar(
       startTime: json['start_time'] as String?,
     );
@@ -1818,6 +2409,35 @@ UserCalendar _$UserCalendarFromJson(Map<String, dynamic> json) => UserCalendar(
 Map<String, dynamic> _$UserCalendarToJson(UserCalendar instance) =>
     <String, dynamic>{
       'start_time': instance.startTime,
+    };
+
+UserCalendarResponse _$UserCalendarResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserCalendarResponse(
+      calendar: json['calendar'] == null
+          ? null
+          : UserCalendar.fromJson(json['calendar'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$UserCalendarResponseToJson(
+        UserCalendarResponse instance) =>
+    <String, dynamic>{
+      'calendar': instance.calendar?.toJson(),
+    };
+
+UserBountiesResponse _$UserBountiesResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserBountiesResponse(
+      bounties: (json['bounties'] as List<dynamic>?)
+              ?.map((e) => Bounty.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$UserBountiesResponseToJson(
+        UserBountiesResponse instance) =>
+    <String, dynamic>{
+      'bounties': instance.bounties?.map((e) => e.toJson()).toList(),
     };
 
 UserJobRanks _$UserJobRanksFromJson(Map<String, dynamic> json) => UserJobRanks(
@@ -1839,12 +2459,28 @@ Map<String, dynamic> _$UserJobRanksToJson(UserJobRanks instance) =>
       'education': jobPositionEducationEnumNullableToJson(instance.education),
     };
 
+UserJobRanksResponse _$UserJobRanksResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserJobRanksResponse(
+      jobranks: json['jobranks'] == null
+          ? null
+          : UserJobRanks.fromJson(json['jobranks'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$UserJobRanksResponseToJson(
+        UserJobRanksResponse instance) =>
+    <String, dynamic>{
+      'jobranks': instance.jobranks?.toJson(),
+    };
+
 UserItemMarkeListingItemDetails _$UserItemMarkeListingItemDetailsFromJson(
         Map<String, dynamic> json) =>
     UserItemMarkeListingItemDetails(
       id: (json['id'] as num?)?.toInt(),
       name: json['name'] as String?,
       type: json['type'] as String?,
+      rarity:
+          userItemMarkeListingItemDetailsRarityNullableFromJson(json['rarity']),
       uid: (json['uid'] as num?)?.toInt(),
       stats: json['stats'] == null
           ? null
@@ -1863,6 +2499,8 @@ Map<String, dynamic> _$UserItemMarkeListingItemDetailsToJson(
       'id': instance.id,
       'name': instance.name,
       'type': instance.type,
+      'rarity':
+          userItemMarkeListingItemDetailsRarityNullableToJson(instance.rarity),
       'uid': instance.uid,
       'stats': instance.stats?.toJson(),
       'bonuses': instance.bonuses?.map((e) => e.toJson()).toList(),
@@ -1895,75 +2533,12 @@ Map<String, dynamic> _$UserItemMarketListingToJson(
       'item': instance.item?.toJson(),
     };
 
-FactionSelectionsHofGet$Response _$FactionSelectionsHofGet$ResponseFromJson(
+UserItemMarketResponse _$UserItemMarketResponseFromJson(
         Map<String, dynamic> json) =>
-    FactionSelectionsHofGet$Response(
-      hof: (json['hof'] as List<dynamic>?)
-              ?.map((e) => FactionHofStats.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );
-
-Map<String, dynamic> _$FactionSelectionsHofGet$ResponseToJson(
-        FactionSelectionsHofGet$Response instance) =>
-    <String, dynamic>{
-      'hof': instance.hof?.map((e) => e.toJson()).toList(),
-    };
-
-FactionSelectionsMembersGet$Response
-    _$FactionSelectionsMembersGet$ResponseFromJson(Map<String, dynamic> json) =>
-        FactionSelectionsMembersGet$Response(
-          members: (json['members'] as List<dynamic>?)
-                  ?.map(
-                      (e) => FactionMember.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-        );
-
-Map<String, dynamic> _$FactionSelectionsMembersGet$ResponseToJson(
-        FactionSelectionsMembersGet$Response instance) =>
-    <String, dynamic>{
-      'members': instance.members?.map((e) => e.toJson()).toList(),
-    };
-
-FactionSelectionsBasicGet$Response _$FactionSelectionsBasicGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    FactionSelectionsBasicGet$Response(
-      basic: json['basic'] == null
-          ? null
-          : FactionBasic.fromJson(json['basic'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$FactionSelectionsBasicGet$ResponseToJson(
-        FactionSelectionsBasicGet$Response instance) =>
-    <String, dynamic>{
-      'basic': instance.basic?.toJson(),
-    };
-
-FactionSelectionsWarsGet$Response _$FactionSelectionsWarsGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    FactionSelectionsWarsGet$Response(
-      pacts: (json['pacts'] as List<dynamic>?)
-              ?.map((e) => FactionPact.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      wars: json['wars'] == null
-          ? null
-          : FactionWars.fromJson(json['wars'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$FactionSelectionsWarsGet$ResponseToJson(
-        FactionSelectionsWarsGet$Response instance) =>
-    <String, dynamic>{
-      'pacts': instance.pacts?.map((e) => e.toJson()).toList(),
-      'wars': instance.wars?.toJson(),
-    };
-
-FactionSelectionsNewsGet$Response _$FactionSelectionsNewsGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    FactionSelectionsNewsGet$Response(
-      news: (json['news'] as List<dynamic>?)
-              ?.map((e) => FactionNews.fromJson(e as Map<String, dynamic>))
+    UserItemMarketResponse(
+      itemmarket: (json['itemmarket'] as List<dynamic>?)
+              ?.map((e) =>
+                  UserItemMarketListing.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
       metadata: json['_metadata'] == null
@@ -1972,400 +2547,21 @@ FactionSelectionsNewsGet$Response _$FactionSelectionsNewsGet$ResponseFromJson(
               json['_metadata'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$FactionSelectionsNewsGet$ResponseToJson(
-        FactionSelectionsNewsGet$Response instance) =>
-    <String, dynamic>{
-      'news': instance.news?.map((e) => e.toJson()).toList(),
-      '_metadata': instance.metadata?.toJson(),
-    };
-
-FactionSelectionsAttacksGet$Response
-    _$FactionSelectionsAttacksGet$ResponseFromJson(Map<String, dynamic> json) =>
-        FactionSelectionsAttacksGet$Response(
-          attacks: (json['attacks'] as List<dynamic>?)
-                  ?.map((e) => Attack.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          metadata: json['_metadata'] == null
-              ? null
-              : RequestMetadataWithLinks.fromJson(
-                  json['_metadata'] as Map<String, dynamic>),
-        );
-
-Map<String, dynamic> _$FactionSelectionsAttacksGet$ResponseToJson(
-        FactionSelectionsAttacksGet$Response instance) =>
-    <String, dynamic>{
-      'attacks': instance.attacks?.map((e) => e.toJson()).toList(),
-      '_metadata': instance.metadata?.toJson(),
-    };
-
-FactionSelectionsAttacksfullGet$Response
-    _$FactionSelectionsAttacksfullGet$ResponseFromJson(
-            Map<String, dynamic> json) =>
-        FactionSelectionsAttacksfullGet$Response(
-          attacks: (json['attacks'] as List<dynamic>?)
-                  ?.map((e) =>
-                      AttackSimplified.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          metadata: json['_metadata'] == null
-              ? null
-              : RequestMetadataWithLinks.fromJson(
-                  json['_metadata'] as Map<String, dynamic>),
-        );
-
-Map<String, dynamic> _$FactionSelectionsAttacksfullGet$ResponseToJson(
-        FactionSelectionsAttacksfullGet$Response instance) =>
-    <String, dynamic>{
-      'attacks': instance.attacks?.map((e) => e.toJson()).toList(),
-      '_metadata': instance.metadata?.toJson(),
-    };
-
-ForumSelectionsThreadsGet$Response _$ForumSelectionsThreadsGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    ForumSelectionsThreadsGet$Response(
-      threads: (json['threads'] as List<dynamic>?)
-              ?.map((e) => ForumThreadBase.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$ForumSelectionsThreadsGet$ResponseToJson(
-        ForumSelectionsThreadsGet$Response instance) =>
-    <String, dynamic>{
-      'threads': instance.threads?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
-    };
-
-ForumSelectionsThreadGet$Response _$ForumSelectionsThreadGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    ForumSelectionsThreadGet$Response(
-      thread: json['thread'] == null
-          ? null
-          : ForumThreadExtended.fromJson(
-              json['thread'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$ForumSelectionsThreadGet$ResponseToJson(
-        ForumSelectionsThreadGet$Response instance) =>
-    <String, dynamic>{
-      'thread': instance.thread?.toJson(),
-    };
-
-ForumSelectionsPostsGet$Response _$ForumSelectionsPostsGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    ForumSelectionsPostsGet$Response(
-      posts: (json['posts'] as List<dynamic>?)
-              ?.map((e) => ForumPost.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$ForumSelectionsPostsGet$ResponseToJson(
-        ForumSelectionsPostsGet$Response instance) =>
-    <String, dynamic>{
-      'posts': instance.posts?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
-    };
-
-MarketSelectionsItemmarketGet$Response
-    _$MarketSelectionsItemmarketGet$ResponseFromJson(
-            Map<String, dynamic> json) =>
-        MarketSelectionsItemmarketGet$Response(
-          itemmarket: json['itemmarket'] == null
-              ? null
-              : ItemMarket.fromJson(json['itemmarket'] as Map<String, dynamic>),
-          metadata: json['_metadata'] == null
-              ? null
-              : RequestMetadataWithLinks.fromJson(
-                  json['_metadata'] as Map<String, dynamic>),
-        );
-
-Map<String, dynamic> _$MarketSelectionsItemmarketGet$ResponseToJson(
-        MarketSelectionsItemmarketGet$Response instance) =>
-    <String, dynamic>{
-      'itemmarket': instance.itemmarket?.toJson(),
-      '_metadata': instance.metadata?.toJson(),
-    };
-
-TornSelectionsCalendarGet$Response _$TornSelectionsCalendarGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    TornSelectionsCalendarGet$Response(
-      calendar: json['calendar'] == null
-          ? null
-          : TornSelectionsCalendarGet$Response$Calendar.fromJson(
-              json['calendar'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$TornSelectionsCalendarGet$ResponseToJson(
-        TornSelectionsCalendarGet$Response instance) =>
-    <String, dynamic>{
-      'calendar': instance.calendar?.toJson(),
-    };
-
-TornSelectionsHofGet$Response _$TornSelectionsHofGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    TornSelectionsHofGet$Response(
-      hof: (json['hof'] as List<dynamic>?)
-              ?.map((e) => TornHof.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$TornSelectionsHofGet$ResponseToJson(
-        TornSelectionsHofGet$Response instance) =>
-    <String, dynamic>{
-      'hof': instance.hof?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
-    };
-
-TornSelectionsFactionhofGet$Response
-    _$TornSelectionsFactionhofGet$ResponseFromJson(Map<String, dynamic> json) =>
-        TornSelectionsFactionhofGet$Response(
-          factionhof: (json['factionhof'] as List<dynamic>?)
-                  ?.map(
-                      (e) => TornFactionHof.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          links: json['_links'] == null
-              ? null
-              : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
-        );
-
-Map<String, dynamic> _$TornSelectionsFactionhofGet$ResponseToJson(
-        TornSelectionsFactionhofGet$Response instance) =>
-    <String, dynamic>{
-      'factionhof': instance.factionhof?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
-    };
-
-TornSelectionsLogtypesGet$Response _$TornSelectionsLogtypesGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    TornSelectionsLogtypesGet$Response(
-      logtypes: (json['logtypes'] as List<dynamic>?)
-              ?.map((e) => TornLog.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );
-
-Map<String, dynamic> _$TornSelectionsLogtypesGet$ResponseToJson(
-        TornSelectionsLogtypesGet$Response instance) =>
-    <String, dynamic>{
-      'logtypes': instance.logtypes?.map((e) => e.toJson()).toList(),
-    };
-
-TornSelectionsLogcategoriesGet$Response
-    _$TornSelectionsLogcategoriesGet$ResponseFromJson(
-            Map<String, dynamic> json) =>
-        TornSelectionsLogcategoriesGet$Response(
-          logcategories: (json['logcategories'] as List<dynamic>?)
-                  ?.map((e) =>
-                      TornLogCategory.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-        );
-
-Map<String, dynamic> _$TornSelectionsLogcategoriesGet$ResponseToJson(
-        TornSelectionsLogcategoriesGet$Response instance) =>
-    <String, dynamic>{
-      'logcategories': instance.logcategories?.map((e) => e.toJson()).toList(),
-    };
-
-TornSelectionsBountiesGet$Response _$TornSelectionsBountiesGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    TornSelectionsBountiesGet$Response(
-      bounties: (json['bounties'] as List<dynamic>?)
-              ?.map((e) => Bounty.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$TornSelectionsBountiesGet$ResponseToJson(
-        TornSelectionsBountiesGet$Response instance) =>
-    <String, dynamic>{
-      'bounties': instance.bounties?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
-    };
-
-UserSelectionsForumpostsGet$Response
-    _$UserSelectionsForumpostsGet$ResponseFromJson(Map<String, dynamic> json) =>
-        UserSelectionsForumpostsGet$Response(
-          forumPosts: (json['forumPosts'] as List<dynamic>?)
-                  ?.map((e) => ForumPost.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          links: json['_links'] == null
-              ? null
-              : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
-        );
-
-Map<String, dynamic> _$UserSelectionsForumpostsGet$ResponseToJson(
-        UserSelectionsForumpostsGet$Response instance) =>
-    <String, dynamic>{
-      'forumPosts': instance.forumPosts?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
-    };
-
-UserSelectionsForumthreadsGet$Response
-    _$UserSelectionsForumthreadsGet$ResponseFromJson(
-            Map<String, dynamic> json) =>
-        UserSelectionsForumthreadsGet$Response(
-          forumThreads: (json['forumThreads'] as List<dynamic>?)
-                  ?.map((e) => ForumThreadUserExtended.fromJson(
-                      e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          links: json['_links'] == null
-              ? null
-              : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
-        );
-
-Map<String, dynamic> _$UserSelectionsForumthreadsGet$ResponseToJson(
-        UserSelectionsForumthreadsGet$Response instance) =>
-    <String, dynamic>{
-      'forumThreads': instance.forumThreads?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
-    };
-
-UserSelectionsForumsubscribedthreadsGet$Response
-    _$UserSelectionsForumsubscribedthreadsGet$ResponseFromJson(
-            Map<String, dynamic> json) =>
-        UserSelectionsForumsubscribedthreadsGet$Response(
-          forumSubscribedThreads: (json['forumSubscribedThreads']
-                      as List<dynamic>?)
-                  ?.map((e) =>
-                      ForumSubscribedThread.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-        );
-
-Map<String, dynamic> _$UserSelectionsForumsubscribedthreadsGet$ResponseToJson(
-        UserSelectionsForumsubscribedthreadsGet$Response instance) =>
-    <String, dynamic>{
-      'forumSubscribedThreads':
-          instance.forumSubscribedThreads?.map((e) => e.toJson()).toList(),
-    };
-
-UserSelectionsForumfeedGet$Response
-    _$UserSelectionsForumfeedGet$ResponseFromJson(Map<String, dynamic> json) =>
-        UserSelectionsForumfeedGet$Response(
-          forumFeed: (json['forumFeed'] as List<dynamic>?)
-                  ?.map((e) => ForumFeed.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-        );
-
-Map<String, dynamic> _$UserSelectionsForumfeedGet$ResponseToJson(
-        UserSelectionsForumfeedGet$Response instance) =>
-    <String, dynamic>{
-      'forumFeed': instance.forumFeed?.map((e) => e.toJson()).toList(),
-    };
-
-UserSelectionsForumfriendsGet$Response
-    _$UserSelectionsForumfriendsGet$ResponseFromJson(
-            Map<String, dynamic> json) =>
-        UserSelectionsForumfriendsGet$Response(
-          forumFriends: (json['forumFriends'] as List<dynamic>?)
-                  ?.map((e) => ForumFeed.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-        );
-
-Map<String, dynamic> _$UserSelectionsForumfriendsGet$ResponseToJson(
-        UserSelectionsForumfriendsGet$Response instance) =>
-    <String, dynamic>{
-      'forumFriends': instance.forumFriends?.map((e) => e.toJson()).toList(),
-    };
-
-UserSelectionsHofGet$Response _$UserSelectionsHofGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    UserSelectionsHofGet$Response(
-      hof: (json['hof'] as List<dynamic>?)
-              ?.map((e) => UserHofStats.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );
-
-Map<String, dynamic> _$UserSelectionsHofGet$ResponseToJson(
-        UserSelectionsHofGet$Response instance) =>
-    <String, dynamic>{
-      'hof': instance.hof?.map((e) => e.toJson()).toList(),
-    };
-
-UserSelectionsCalendarGet$Response _$UserSelectionsCalendarGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    UserSelectionsCalendarGet$Response(
-      calendar: json['calendar'] == null
-          ? null
-          : UserCalendar.fromJson(json['calendar'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$UserSelectionsCalendarGet$ResponseToJson(
-        UserSelectionsCalendarGet$Response instance) =>
-    <String, dynamic>{
-      'calendar': instance.calendar?.toJson(),
-    };
-
-UserSelectionsBountiesGet$Response _$UserSelectionsBountiesGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    UserSelectionsBountiesGet$Response(
-      bounties: (json['bounties'] as List<dynamic>?)
-              ?.map((e) => Bounty.fromJson(e as Map<String, dynamic>))
-              .toList() ??
-          [],
-    );
-
-Map<String, dynamic> _$UserSelectionsBountiesGet$ResponseToJson(
-        UserSelectionsBountiesGet$Response instance) =>
-    <String, dynamic>{
-      'bounties': instance.bounties?.map((e) => e.toJson()).toList(),
-    };
-
-UserSelectionsJobranksGet$Response _$UserSelectionsJobranksGet$ResponseFromJson(
-        Map<String, dynamic> json) =>
-    UserSelectionsJobranksGet$Response(
-      jobranks: json['jobranks'] == null
-          ? null
-          : UserJobRanks.fromJson(json['jobranks'] as Map<String, dynamic>),
-    );
-
-Map<String, dynamic> _$UserSelectionsJobranksGet$ResponseToJson(
-        UserSelectionsJobranksGet$Response instance) =>
-    <String, dynamic>{
-      'jobranks': instance.jobranks?.toJson(),
-    };
-
-UserSelectionsItemmarketGet$Response
-    _$UserSelectionsItemmarketGet$ResponseFromJson(Map<String, dynamic> json) =>
-        UserSelectionsItemmarketGet$Response(
-          itemmarket: (json['itemmarket'] as List<dynamic>?)
-                  ?.map((e) =>
-                      UserItemMarketListing.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          metadata: json['_metadata'] == null
-              ? null
-              : RequestMetadataWithLinks.fromJson(
-                  json['_metadata'] as Map<String, dynamic>),
-        );
-
-Map<String, dynamic> _$UserSelectionsItemmarketGet$ResponseToJson(
-        UserSelectionsItemmarketGet$Response instance) =>
+Map<String, dynamic> _$UserItemMarketResponseToJson(
+        UserItemMarketResponse instance) =>
     <String, dynamic>{
       'itemmarket': instance.itemmarket?.map((e) => e.toJson()).toList(),
       '_metadata': instance.metadata?.toJson(),
+    };
+
+UserLookupResponse _$UserLookupResponseFromJson(Map<String, dynamic> json) =>
+    UserLookupResponse(
+      selections: userSelectionNameListFromJson(json['selections'] as List?),
+    );
+
+Map<String, dynamic> _$UserLookupResponseToJson(UserLookupResponse instance) =>
+    <String, dynamic>{
+      'selections': userSelectionNameListToJson(instance.selections),
     };
 
 Attack$Modifiers _$Attack$ModifiersFromJson(Map<String, dynamic> json) =>
@@ -2390,17 +2586,39 @@ Map<String, dynamic> _$Attack$ModifiersToJson(Attack$Modifiers instance) =>
       'warlord': instance.warlord,
     };
 
-ForumCategories$Categories$Item _$ForumCategories$Categories$ItemFromJson(
+FactionApplication$User _$FactionApplication$UserFromJson(
         Map<String, dynamic> json) =>
-    ForumCategories$Categories$Item(
+    FactionApplication$User(
       id: (json['id'] as num?)?.toInt(),
-      title: json['title'] as String?,
-      acronym: json['acronym'] as String?,
-      threads: (json['threads'] as num?)?.toInt(),
+      name: json['name'] as String?,
+      level: json['level'] as String?,
+      stats: json['stats'] == null
+          ? null
+          : FactionApplication$User$Stats.fromJson(
+              json['stats'] as Map<String, dynamic>),
     );
 
-Map<String, dynamic> _$ForumCategories$Categories$ItemToJson(
-        ForumCategories$Categories$Item instance) =>
+Map<String, dynamic> _$FactionApplication$UserToJson(
+        FactionApplication$User instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'name': instance.name,
+      'level': instance.level,
+      'stats': instance.stats?.toJson(),
+    };
+
+ForumCategoriesResponse$Categories$Item
+    _$ForumCategoriesResponse$Categories$ItemFromJson(
+            Map<String, dynamic> json) =>
+        ForumCategoriesResponse$Categories$Item(
+          id: (json['id'] as num?)?.toInt(),
+          title: json['title'] as String?,
+          acronym: json['acronym'] as String?,
+          threads: (json['threads'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$ForumCategoriesResponse$Categories$ItemToJson(
+        ForumCategoriesResponse$Categories$Item instance) =>
     <String, dynamic>{
       'id': instance.id,
       'title': instance.title,
@@ -2495,33 +2713,34 @@ Map<String, dynamic> _$Race$RequirementsToJson(Race$Requirements instance) =>
       'join_fee': instance.joinFee,
     };
 
-RaceDetails$Participants _$RaceDetails$ParticipantsFromJson(
-        Map<String, dynamic> json) =>
-    RaceDetails$Participants(
-      minimum: (json['minimum'] as num?)?.toInt(),
-      maximum: (json['maximum'] as num?)?.toInt(),
-      current: (json['current'] as num?)?.toInt(),
-    );
+RacingRaceDetailsResponse$Participants
+    _$RacingRaceDetailsResponse$ParticipantsFromJson(
+            Map<String, dynamic> json) =>
+        RacingRaceDetailsResponse$Participants(
+          minimum: (json['minimum'] as num?)?.toInt(),
+          maximum: (json['maximum'] as num?)?.toInt(),
+          current: (json['current'] as num?)?.toInt(),
+        );
 
-Map<String, dynamic> _$RaceDetails$ParticipantsToJson(
-        RaceDetails$Participants instance) =>
+Map<String, dynamic> _$RacingRaceDetailsResponse$ParticipantsToJson(
+        RacingRaceDetailsResponse$Participants instance) =>
     <String, dynamic>{
       'minimum': instance.minimum,
       'maximum': instance.maximum,
       'current': instance.current,
     };
 
-RaceDetails$Schedule _$RaceDetails$ScheduleFromJson(
+RacingRaceDetailsResponse$Schedule _$RacingRaceDetailsResponse$ScheduleFromJson(
         Map<String, dynamic> json) =>
-    RaceDetails$Schedule(
+    RacingRaceDetailsResponse$Schedule(
       joinFrom: (json['join_from'] as num?)?.toInt(),
       joinUntil: (json['join_until'] as num?)?.toInt(),
       start: (json['start'] as num?)?.toInt(),
       end: (json['end'] as num?)?.toInt(),
     );
 
-Map<String, dynamic> _$RaceDetails$ScheduleToJson(
-        RaceDetails$Schedule instance) =>
+Map<String, dynamic> _$RacingRaceDetailsResponse$ScheduleToJson(
+        RacingRaceDetailsResponse$Schedule instance) =>
     <String, dynamic>{
       'join_from': instance.joinFrom,
       'join_until': instance.joinUntil,
@@ -2529,19 +2748,20 @@ Map<String, dynamic> _$RaceDetails$ScheduleToJson(
       'end': instance.end,
     };
 
-RaceDetails$Requirements _$RaceDetails$RequirementsFromJson(
-        Map<String, dynamic> json) =>
-    RaceDetails$Requirements(
-      carClass: raceClassEnumNullableFromJson(json['car_class']),
-      driverClass: raceClassEnumNullableFromJson(json['driver_class']),
-      carItemId: (json['car_item_id'] as num?)?.toInt(),
-      requiresStockCar: json['requires_stock_car'] as bool?,
-      requiresPassword: json['requires_password'] as bool?,
-      joinFee: (json['join_fee'] as num?)?.toInt(),
-    );
+RacingRaceDetailsResponse$Requirements
+    _$RacingRaceDetailsResponse$RequirementsFromJson(
+            Map<String, dynamic> json) =>
+        RacingRaceDetailsResponse$Requirements(
+          carClass: raceClassEnumNullableFromJson(json['car_class']),
+          driverClass: raceClassEnumNullableFromJson(json['driver_class']),
+          carItemId: (json['car_item_id'] as num?)?.toInt(),
+          requiresStockCar: json['requires_stock_car'] as bool?,
+          requiresPassword: json['requires_password'] as bool?,
+          joinFee: (json['join_fee'] as num?)?.toInt(),
+        );
 
-Map<String, dynamic> _$RaceDetails$RequirementsToJson(
-        RaceDetails$Requirements instance) =>
+Map<String, dynamic> _$RacingRaceDetailsResponse$RequirementsToJson(
+        RacingRaceDetailsResponse$Requirements instance) =>
     <String, dynamic>{
       'car_class': raceClassEnumNullableToJson(instance.carClass),
       'driver_class': raceClassEnumNullableToJson(instance.driverClass),
@@ -2549,6 +2769,28 @@ Map<String, dynamic> _$RaceDetails$RequirementsToJson(
       'requires_stock_car': instance.requiresStockCar,
       'requires_password': instance.requiresPassword,
       'join_fee': instance.joinFee,
+    };
+
+TornCalendarResponse$Calendar _$TornCalendarResponse$CalendarFromJson(
+        Map<String, dynamic> json) =>
+    TornCalendarResponse$Calendar(
+      competitions: (json['competitions'] as List<dynamic>?)
+              ?.map((e) =>
+                  TornCalendarActivity.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      events: (json['events'] as List<dynamic>?)
+              ?.map((e) =>
+                  TornCalendarActivity.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$TornCalendarResponse$CalendarToJson(
+        TornCalendarResponse$Calendar instance) =>
+    <String, dynamic>{
+      'competitions': instance.competitions?.map((e) => e.toJson()).toList(),
+      'events': instance.events?.map((e) => e.toJson()).toList(),
     };
 
 UserCrimeDetailsBootlegging$OnlineStore
@@ -2716,27 +2958,22 @@ Map<String, dynamic> _$UserCrimeDetailsScamming$EmailsToJson(
       'phisher': instance.phisher,
     };
 
-TornSelectionsCalendarGet$Response$Calendar
-    _$TornSelectionsCalendarGet$Response$CalendarFromJson(
-            Map<String, dynamic> json) =>
-        TornSelectionsCalendarGet$Response$Calendar(
-          competitions: (json['competitions'] as List<dynamic>?)
-                  ?.map((e) =>
-                      TornCalendarActivity.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-          events: (json['events'] as List<dynamic>?)
-                  ?.map((e) =>
-                      TornCalendarActivity.fromJson(e as Map<String, dynamic>))
-                  .toList() ??
-              [],
-        );
+FactionApplication$User$Stats _$FactionApplication$User$StatsFromJson(
+        Map<String, dynamic> json) =>
+    FactionApplication$User$Stats(
+      strength: (json['strength'] as num?)?.toInt(),
+      speed: (json['speed'] as num?)?.toInt(),
+      dexterity: (json['dexterity'] as num?)?.toInt(),
+      defense: (json['defense'] as num?)?.toInt(),
+    );
 
-Map<String, dynamic> _$TornSelectionsCalendarGet$Response$CalendarToJson(
-        TornSelectionsCalendarGet$Response$Calendar instance) =>
+Map<String, dynamic> _$FactionApplication$User$StatsToJson(
+        FactionApplication$User$Stats instance) =>
     <String, dynamic>{
-      'competitions': instance.competitions?.map((e) => e.toJson()).toList(),
-      'events': instance.events?.map((e) => e.toJson()).toList(),
+      'strength': instance.strength,
+      'speed': instance.speed,
+      'dexterity': instance.dexterity,
+      'defense': instance.defense,
     };
 
 UserCrimeDetailsCardSkimming$CardDetails$Areas$Item

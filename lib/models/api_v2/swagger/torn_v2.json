@@ -2,6 +2,7 @@
     "openapi": "3.0.0",
     "info": {
         "title": "Torn API",
+        "description": "\n * The development of Torn's API v2 is still ongoing.\n * If selections remain unaltered, they will default to the API v1 version.\n * Unlike API v1, API v2 accepts both selections and IDs as path and query parameters.\n * If any discrepancies or errors are found, please submit a [bug report](https://www.torn.com/forums.php#/p=forums&f=19&b=0&a=0) on the Torn Forums.",
         "version": "2.0"
     },
     "servers": [
@@ -11,23 +12,23 @@
         }
     ],
     "paths": {
-        "/faction/?selections=hof": {
+        "/faction/{id}/hof": {
             "get": {
                 "tags": [
                     "Hall of Fame",
-                    "Faction"
+                    "Faction",
+                    "Stable"
                 ],
                 "summary": "Get a faction's hall of fame rankings.",
-                "description": "If the id is not provided it will return details of your own faction.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "Faction id",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "$ref": "#/components/schemas/FactionId"
                         }
@@ -39,15 +40,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "hof": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/FactionHofStats"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/FactionHofResponse"
                                 }
                             }
                         }
@@ -55,39 +48,17 @@
                 }
             }
         },
-        "/faction/?selections=members": {
+        "/faction/hof": {
             "get": {
                 "tags": [
-                    "Faction"
+                    "Hall of Fame",
+                    "Faction",
+                    "Stable"
                 ],
-                "summary": "Get a list of faction's members",
-                "description": "The 'revive_setting' value will be populated (not Unknown) if you're requesting data for your faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as 'Unknown'. If the id is not provided it will return details of your own faction.",
+                "summary": "Get your faction's hall of fame rankings.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
-                    {
-                        "name": "id",
-                        "in": "query",
-                        "description": "Faction id",
-                        "required": false,
-                        "schema": {
-                            "$ref": "#/components/schemas/FactionId"
-                        }
-                    },
-                    {
-                        "name": "striptags",
-                        "in": "query",
-                        "description": "Determines if the 'status.details' field includes HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user'",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "true",
-                            "enum": [
-                                "true",
-                                "false"
-                            ]
-                        }
                     }
                 ],
                 "responses": {
@@ -96,15 +67,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "members": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/FactionMember"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/FactionHofResponse"
                                 }
                             }
                         }
@@ -112,22 +75,92 @@
                 }
             }
         },
-        "/faction/?selections=basic": {
+        "/faction/{id}/members": {
             "get": {
                 "tags": [
-                    "Faction"
+                    "Faction",
+                    "Stable"
+                ],
+                "summary": "Get a list of a faction's members",
+                "description": "The 'revive_setting' value will be populated (not Unknown) if you're requesting data for your own faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as 'Unknown'.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Faction id",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/FactionId"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiStripTagsTrue"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionMembersResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/members": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Stable"
+                ],
+                "summary": "Get a list of your faction's members",
+                "description": "The 'revive_setting' value will be populated (not Unknown) if you have faction permissions (with custom, limited or full access keys), otherwise it will be set as 'Unknown'.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiStripTagsTrue"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionMembersResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/{id}/basic": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Stable"
                 ],
                 "summary": "Get a faction's basic details",
-                "description": "The 'is_enlisted' value will be populated if you're requesting data for your faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as null. If the id is not provided it will return details of your own faction.",
+                "description": "The 'is_enlisted' value will be populated if you're requesting data for your faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as null.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "Faction id",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "$ref": "#/components/schemas/FactionId"
                         }
@@ -139,12 +172,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "basic": {
-                                            "$ref": "#/components/schemas/FactionBasic"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/FactionBasicResponse"
                                 }
                             }
                         }
@@ -152,10 +180,38 @@
                 }
             }
         },
-        "/faction/?selections=wars": {
+        "/faction/basic": {
             "get": {
                 "tags": [
-                    "Faction"
+                    "Faction",
+                    "Stable"
+                ],
+                "summary": "Get your faction's basic details",
+                "description": "The 'is_enlisted' value will be populated if you have API faction permissions (with custom, limited or full access keys), otherwise it will be set as null.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionBasicResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/{id}/wars": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Stable"
                 ],
                 "summary": "Get a faction's wars & pacts details",
                 "parameters": [
@@ -164,9 +220,9 @@
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "Faction id",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "$ref": "#/components/schemas/FactionId"
                         }
@@ -178,18 +234,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "pacts": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/FactionPact"
-                                            }
-                                        },
-                                        "wars": {
-                                            "$ref": "#/components/schemas/FactionWars"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/FactionWarsResponse"
                                 }
                             }
                         }
@@ -197,10 +242,37 @@
                 }
             }
         },
-        "/faction/?selections=news": {
+        "/faction/wars": {
             "get": {
                 "tags": [
-                    "Faction"
+                    "Faction",
+                    "Stable"
+                ],
+                "summary": "Get your faction's wars & pacts details",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionWarsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/news": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Stable"
                 ],
                 "summary": "Get your faction's news details",
                 "description": "It is possible to pass up to 10 categories at the time (comma separated). Categories 'attack', 'depositFunds' and 'giveFunds' are only available with 'Custom', 'Limited' or 'Full' access keys.",
@@ -239,18 +311,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "news": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/FactionNews"
-                                            }
-                                        },
-                                        "_metadata": {
-                                            "$ref": "#/components/schemas/RequestMetadataWithLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/FactionNewsResponse"
                                 }
                             }
                         }
@@ -258,11 +319,12 @@
                 }
             }
         },
-        "/faction/?selections=attacks": {
+        "/faction/attacks": {
             "get": {
                 "tags": [
                     "Faction",
-                    "Attacking"
+                    "Attacking",
+                    "Stable"
                 ],
                 "summary": "Get your faction's detailed attacks",
                 "parameters": [
@@ -288,18 +350,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "attacks": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Attack"
-                                            }
-                                        },
-                                        "_metadata": {
-                                            "$ref": "#/components/schemas/RequestMetadataWithLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/FactionAttacksResponse"
                                 }
                             }
                         }
@@ -307,11 +358,12 @@
                 }
             }
         },
-        "/faction/?selections=attacksfull": {
+        "/faction/attacksfull": {
             "get": {
                 "tags": [
                     "Faction",
-                    "Attacking"
+                    "Attacking",
+                    "Stable"
                 ],
                 "summary": "Get your faction's attacks",
                 "parameters": [
@@ -337,18 +389,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "attacks": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/AttackSimplified"
-                                            }
-                                        },
-                                        "_metadata": {
-                                            "$ref": "#/components/schemas/RequestMetadataWithLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/FactionAttacksFullResponse"
                                 }
                             }
                         }
@@ -356,22 +397,16 @@
                 }
             }
         },
-        "/forum/?selections=categories": {
+        "/faction/applications": {
             "get": {
                 "tags": [
-                    "Forum"
+                    "Faction",
+                    "Stable"
                 ],
-                "summary": "Get a list of publicly available forum categories",
-                "description": "It is possible to get threads from returned public categories.",
+                "summary": "Get your faction's applications",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyMinimal"
                     }
                 ],
                 "responses": {
@@ -380,7 +415,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ForumCategories"
+                                    "$ref": "#/components/schemas/FactionApplicationsResponse"
                                 }
                             }
                         }
@@ -388,33 +423,228 @@
                 }
             }
         },
-        "/forum/?selections=threads": {
+        "/faction/lookup": {
             "get": {
                 "tags": [
-                    "Forum"
+                    "Faction",
+                    "Lookup",
+                    "Stable"
                 ],
-                "summary": "Get threads",
-                "description": "Returns a list of threads for the chosen forum category (or categories).",
+                "summary": "Get all available faction selections",
                 "parameters": [
                     {
-                        "name": "key",
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionLookupResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/timestamp": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Stable"
+                ],
+                "summary": "Get current server time",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimestampResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Stable"
+                ],
+                "summary": "Get any Faction selection",
+                "description": "Choose one or more selections (comma separated).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "selections",
                         "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
+                        "description": "Selection names",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/FactionSelectionName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "selection id",
+                        "required": false,
                         "schema": {
                             "type": "string"
                         }
                     },
                     {
-                        "name": "limit",
+                        "$ref": "#/components/parameters/ApiLimit"
+                    },
+                    {
+                        "name": "to",
                         "in": "query",
+                        "description": "Timestamp until when rows are returned",
                         "required": false,
                         "schema": {
-                            "type": "integer",
-                            "default": 100,
-                            "maximum": 100,
-                            "minimum": 1
+                            "type": "integer"
                         }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Timestamp after when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Selection category",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiStripTags"
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Direction to sort rows in",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiOffsetNoDefault"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/FactionHofResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionMembersResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionBasicResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionWarsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionNewsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionAttacksResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionAttacksFullResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionApplicationsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionLookupResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TimestampResponse"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forum/categories": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "Stable"
+                ],
+                "summary": "Get publicly available forum categories",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ForumCategoriesResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forum/{categoryIds}/threads": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "Stable"
+                ],
+                "summary": "Get threads for specific public forum category or categories",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit100"
                     },
                     {
                         "name": "sort",
@@ -449,16 +679,16 @@
                         }
                     },
                     {
-                        "name": "id",
-                        "in": "query",
-                        "description": "The forum ID or a list of forum IDs",
-                        "required": false,
+                        "name": "categoryIds",
+                        "in": "path",
+                        "description": "Category id or a list of category ids (comma separated)",
+                        "required": true,
                         "style": "form",
-                        "explode": true,
+                        "explode": false,
                         "schema": {
                             "type": "array",
                             "items": {
-                                "type": "integer"
+                                "$ref": "#/components/schemas/ForumId"
                             }
                         }
                     }
@@ -469,18 +699,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "threads": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ForumThreadBase"
-                                            }
-                                        },
-                                        "_links": {
-                                            "$ref": "#/components/schemas/RequestLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ForumThreadsResponse"
                                 }
                             }
                         }
@@ -488,26 +707,82 @@
                 }
             }
         },
-        "/forum/?selections=thread": {
+        "/forum/threads": {
             "get": {
                 "tags": [
-                    "Forum"
+                    "Forum",
+                    "Stable"
                 ],
-                "summary": "Get specific thread details",
-                "description": "Return the details of a thread including topic content and poll (if any).",
+                "summary": "Get threads across all forum categories",
                 "parameters": [
                     {
-                        "name": "key",
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit100"
+                    },
+                    {
+                        "name": "sort",
                         "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
+                        "description": "Sorted by the greatest of first_post_time and last_post_time timestamps",
+                        "required": false,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "default": "DESC",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
                         }
                     },
                     {
-                        "name": "id",
+                        "name": "to",
                         "in": "query",
+                        "description": "Returns threads created before this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Returns threads created after this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ForumThreadsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forum/{threadId}/thread": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "Stable"
+                ],
+                "summary": "Get specific thread details",
+                "description": "Contains details of a thread including topic content and poll (if any).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "threadId",
+                        "in": "path",
                         "description": "Thread id",
                         "required": true,
                         "schema": {
@@ -521,12 +796,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "thread": {
-                                            "$ref": "#/components/schemas/ForumThreadExtended"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ForumThreadResponse"
                                 }
                             }
                         }
@@ -534,22 +804,17 @@
                 }
             }
         },
-        "/forum/?selections=posts": {
+        "/forum/{threadId}/posts": {
             "get": {
                 "tags": [
-                    "Forum"
+                    "Forum",
+                    "Stable"
                 ],
-                "summary": "Get specific thread posts",
-                "description": "Returns 20 posts per page for the specific thread.",
+                "summary": "Get specific forum thread posts",
+                "description": "Returns 20 posts per page for a specific thread.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "offset",
@@ -564,8 +829,9 @@
                     {
                         "name": "cat",
                         "in": "query",
-                        "description": "Determines if the 'content' field returns raw HTML or plain text",
+                        "description": "This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text",
                         "required": false,
+                        "deprecated": true,
                         "schema": {
                             "type": "string",
                             "default": "plain",
@@ -576,8 +842,11 @@
                         }
                     },
                     {
-                        "name": "id",
-                        "in": "query",
+                        "$ref": "#/components/parameters/ApiStripTagsTrue"
+                    },
+                    {
+                        "name": "threadId",
+                        "in": "path",
                         "description": "Thread id",
                         "required": true,
                         "schema": {
@@ -591,18 +860,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "posts": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ForumPost"
-                                            }
-                                        },
-                                        "_links": {
-                                            "$ref": "#/components/schemas/RequestLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/ForumPostsResponse"
                                 }
                             }
                         }
@@ -610,31 +868,212 @@
                 }
             }
         },
-        "/market/?selections=itemmarket": {
+        "/forum/lookup": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "Lookup",
+                    "Stable"
+                ],
+                "summary": "Get all available forum selections",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ForumLookupResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forum/timestamp": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "Stable"
+                ],
+                "summary": "Get current server time",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimestampResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/forum": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "Stable"
+                ],
+                "summary": "Get any Forum selection",
+                "description": "Choose one or more selections (comma separated).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "selections",
+                        "in": "query",
+                        "description": "Selection names",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/ForumSelectionName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "selection id",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiStripTags"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Timestamp until when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Timestamp after when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Selection category",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Direction to sort rows in",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiOffsetNoDefault"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/ForumCategoriesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ForumThreadsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ForumThreadResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ForumPostsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/ForumLookupResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TimestampResponse"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/market/{id}/itemmarket": {
             "get": {
                 "tags": [
                     "Market",
-                    "Item Market"
+                    "Item Market",
+                    "Unstable"
                 ],
                 "summary": "Get item market listings",
-                "description": "It is possible to get specific weapon bonuses by using the 'cat' parameter (will be replaced with 'bonus' parameter in the near future.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "Item id",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/components/schemas/ItemId"
                         }
                     },
                     {
                         "name": "cat",
                         "in": "query",
-                        "description": "Weapon bonus",
+                        "description": "This parameter is being replaced with 'bonus' parameter and will be removed on 1st December 2024.",
+                        "required": false,
+                        "deprecated": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/WeaponBonusEnum"
+                        }
+                    },
+                    {
+                        "name": "bonus",
+                        "in": "query",
+                        "description": "Used to filter weapons with a specific bonus.",
                         "required": false,
                         "schema": {
                             "$ref": "#/components/schemas/WeaponBonusEnum"
@@ -650,15 +1089,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "itemmarket": {
-                                            "$ref": "#/components/schemas/ItemMarket"
-                                        },
-                                        "_metadata": {
-                                            "$ref": "#/components/schemas/RequestMetadataWithLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/MarketItemMarketResponse"
                                 }
                             }
                         }
@@ -666,22 +1097,164 @@
                 }
             }
         },
-        "/racing/?selections=races": {
+        "/market/lookup": {
             "get": {
                 "tags": [
-                    "Racing"
+                    "Market",
+                    "Lookup",
+                    "Stable"
+                ],
+                "summary": "Get all available market selections",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MarketLookupResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/market/timestamp": {
+            "get": {
+                "tags": [
+                    "Market",
+                    "Stable"
+                ],
+                "summary": "Get current server time",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimestampResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/market": {
+            "get": {
+                "tags": [
+                    "Market",
+                    "Stable"
+                ],
+                "summary": "Get any Market selection",
+                "description": "Choose one or more selections (comma separated).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "selections",
+                        "in": "query",
+                        "description": "Selection names",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/MarketSelectionName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "selection id",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "bonus",
+                        "in": "query",
+                        "description": "Used to filter weapons with a specific bonus",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/WeaponBonusEnum"
+                        }
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Selection category",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Direction to sort rows in",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiOffsetNoDefault"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/MarketItemMarketResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/MarketLookupResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TimestampResponse"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/racing/races": {
+            "get": {
+                "tags": [
+                    "Racing",
+                    "Stable"
                 ],
                 "summary": "Get races",
                 "description": "Returns a list of races, ordered by race start timestamp.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "limit",
@@ -747,7 +1320,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/Races"
+                                    "$ref": "#/components/schemas/RacingRacesResponse"
                                 }
                             }
                         }
@@ -755,26 +1328,21 @@
                 }
             }
         },
-        "/racing/?selections=records": {
+        "/racing/{trackId}/records": {
             "get": {
                 "tags": [
-                    "Racing"
+                    "Racing",
+                    "Stable"
                 ],
                 "summary": "Get track records",
                 "description": "Returns a list of 10 best lap records for the chosen track and car class. Results are cached globally 1 hour.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
-                        "name": "id",
-                        "in": "query",
+                        "name": "trackId",
+                        "in": "path",
                         "description": "Track id",
                         "required": true,
                         "schema": {
@@ -797,7 +1365,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RaceRecords"
+                                    "$ref": "#/components/schemas/RacingTrackRecordsResponse"
                                 }
                             }
                         }
@@ -805,26 +1373,21 @@
                 }
             }
         },
-        "/racing/?selections=race": {
+        "/racing/{raceId}/race": {
             "get": {
                 "tags": [
-                    "Racing"
+                    "Racing",
+                    "Stable"
                 ],
                 "summary": "Get specific race details",
                 "description": "Returns the details of a race.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "Race id",
                         "required": true,
                         "schema": {
@@ -838,7 +1401,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RaceDetails"
+                                    "$ref": "#/components/schemas/RacingRaceDetailsResponse"
                                 }
                             }
                         }
@@ -846,22 +1409,17 @@
                 }
             }
         },
-        "/racing/?selections=cars": {
+        "/racing/cars": {
             "get": {
                 "tags": [
-                    "Racing"
+                    "Racing",
+                    "Stable"
                 ],
                 "summary": "Get cars and their racing stats",
                 "description": "Returns the stat details about racing cars.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     }
                 ],
                 "responses": {
@@ -870,7 +1428,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RaceCars"
+                                    "$ref": "#/components/schemas/RacingCarsResponse"
                                 }
                             }
                         }
@@ -878,22 +1436,17 @@
                 }
             }
         },
-        "/racing/?selections=tracks": {
+        "/racing/tracks": {
             "get": {
                 "tags": [
-                    "Racing"
+                    "Racing",
+                    "Stable"
                 ],
                 "summary": "Get race tracks and descriptions",
                 "description": "Returns the details about racing tracks.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     }
                 ],
                 "responses": {
@@ -902,7 +1455,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RaceTracks"
+                                    "$ref": "#/components/schemas/RacingTracksResponse"
                                 }
                             }
                         }
@@ -910,22 +1463,17 @@
                 }
             }
         },
-        "/racing/?selections=carupgrades": {
+        "/racing/carupgrades": {
             "get": {
                 "tags": [
-                    "Racing"
+                    "Racing",
+                    "Stable"
                 ],
                 "summary": "Get all possible car upgrades",
                 "description": "Returns the details about all possible car upgrades.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     }
                 ],
                 "responses": {
@@ -934,7 +1482,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RaceCarUpgrades"
+                                    "$ref": "#/components/schemas/RacingCarUpgradesResponse"
                                 }
                             }
                         }
@@ -942,27 +1490,196 @@
                 }
             }
         },
-        "/torn/?selections=subcrimes": {
+        "/racing/lookup": {
             "get": {
                 "tags": [
-                    "Torn",
-                    "Crimes 2.0"
+                    "Racing",
+                    "Lookup",
+                    "Stable"
                 ],
-                "summary": "Get Subcrimes information",
-                "description": "Return the details about possible actions for a specific crime.",
+                "summary": "Get all available racing selections",
                 "parameters": [
                     {
-                        "name": "key",
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/RacingLookupResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/racing/timestamp": {
+            "get": {
+                "tags": [
+                    "Racing",
+                    "Stable"
+                ],
+                "summary": "Get current server time",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimestampResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/racing": {
+            "get": {
+                "tags": [
+                    "Racing",
+                    "Stable"
+                ],
+                "summary": "Get any Racing selection",
+                "description": "Choose one or more selections (comma separated).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "selections",
                         "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
+                        "description": "Selection names",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
                         "schema": {
-                            "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/RacingSelectionName"
+                            }
                         }
                     },
                     {
                         "name": "id",
                         "in": "query",
+                        "description": "selection id",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Timestamp until when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Timestamp after when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Selection category",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Direction to sort rows in",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiOffsetNoDefault"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/RacingRacesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/RacingTrackRecordsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/RacingRaceDetailsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/RacingCarsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/RacingTracksResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/RacingCarUpgradesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/RacingLookupResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TimestampResponse"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/torn/{crimeId}/subcrimes": {
+            "get": {
+                "tags": [
+                    "Torn",
+                    "Crimes 2.0",
+                    "Stable"
+                ],
+                "summary": "Get Subcrimes information",
+                "description": "Return the details about possible actions for a specific crime.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "crimeId",
+                        "in": "path",
                         "description": "Crime id",
                         "required": true,
                         "schema": {
@@ -976,7 +1693,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/TornSubcrimes"
+                                    "$ref": "#/components/schemas/TornSubcrimesResponse"
                                 }
                             }
                         }
@@ -984,23 +1701,18 @@
                 }
             }
         },
-        "/torn/?selections=crimes": {
+        "/torn/crimes": {
             "get": {
                 "tags": [
                     "Torn",
-                    "Crimes 2.0"
+                    "Crimes 2.0",
+                    "Stable"
                 ],
                 "summary": "Get crimes information",
                 "description": "Return the details about released crimes.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     }
                 ],
                 "responses": {
@@ -1009,7 +1721,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/TornCrimes"
+                                    "$ref": "#/components/schemas/TornCrimesResponse"
                                 }
                             }
                         }
@@ -1017,22 +1729,17 @@
                 }
             }
         },
-        "/torn/?selections=calendar": {
+        "/torn/calendar": {
             "get": {
                 "tags": [
-                    "Torn"
+                    "Torn",
+                    "Stable"
                 ],
                 "summary": "Get calendar information",
                 "description": "Get the details about competitions & events in the running year.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Public)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyPublic"
                     }
                 ],
                 "responses": {
@@ -1041,26 +1748,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "calendar": {
-                                            "properties": {
-                                                "competitions": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/TornCalendarActivity"
-                                                    }
-                                                },
-                                                "events": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "$ref": "#/components/schemas/TornCalendarActivity"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/TornCalendarResponse"
                                 }
                             }
                         }
@@ -1068,11 +1756,12 @@
                 }
             }
         },
-        "/torn/?selections=hof": {
+        "/torn/hof": {
             "get": {
                 "tags": [
                     "Torn",
-                    "Hall of Fame"
+                    "Hall of Fame",
+                    "Stable"
                 ],
                 "summary": "Get player hall of fame positions for a specific category",
                 "parameters": [
@@ -1101,18 +1790,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "hof": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/TornHof"
-                                            }
-                                        },
-                                        "_links": {
-                                            "$ref": "#/components/schemas/RequestLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/TornHofResponse"
                                 }
                             }
                         }
@@ -1120,11 +1798,12 @@
                 }
             }
         },
-        "/torn/?selections=factionhof": {
+        "/torn/factionhof": {
             "get": {
                 "tags": [
                     "Torn",
-                    "Hall of Fame"
+                    "Hall of Fame",
+                    "Stable"
                 ],
                 "summary": "Get faction hall of fame positions for a specific category",
                 "parameters": [
@@ -1153,18 +1832,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "factionhof": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/TornFactionHof"
-                                            }
-                                        },
-                                        "_links": {
-                                            "$ref": "#/components/schemas/RequestLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/TornFactionHofResponse"
                                 }
                             }
                         }
@@ -1172,23 +1840,23 @@
                 }
             }
         },
-        "/torn/?selections=logtypes": {
+        "/torn/{logCategoryId}/logtypes": {
             "get": {
                 "tags": [
                     "Torn",
-                    "Logs"
+                    "Logs",
+                    "Stable"
                 ],
-                "summary": "Get available log ids",
-                "description": "Default behavior is to return all log ids, but you can also get only specific log types by passing a category id.",
+                "summary": "Get available log ids for a specific log category",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
-                        "name": "id",
-                        "in": "query",
+                        "name": "logCategoryId",
+                        "in": "path",
                         "description": "Log category id",
-                        "required": false,
+                        "required": true,
                         "schema": {
                             "$ref": "#/components/schemas/LogCategoryId"
                         }
@@ -1200,15 +1868,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "logtypes": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/TornLog"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/TornLogTypesResponse"
                                 }
                             }
                         }
@@ -1216,11 +1876,39 @@
                 }
             }
         },
-        "/torn/?selections=logcategories": {
+        "/torn/logtypes": {
             "get": {
                 "tags": [
                     "Torn",
-                    "Logs"
+                    "Logs",
+                    "Stable"
+                ],
+                "summary": "Get all available log ids",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TornLogTypesResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/torn/logcategories": {
+            "get": {
+                "tags": [
+                    "Torn",
+                    "Logs",
+                    "Stable"
                 ],
                 "summary": "Get available log categories",
                 "parameters": [
@@ -1234,15 +1922,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "logcategories": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/TornLogCategory"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/TornLogCategoriesResponse"
                                 }
                             }
                         }
@@ -1250,11 +1930,12 @@
                 }
             }
         },
-        "/torn/?selections=bounties": {
+        "/torn/bounties": {
             "get": {
                 "tags": [
                     "Torn",
-                    "Bounties"
+                    "Bounties",
+                    "Stable"
                 ],
                 "summary": "Get bounties",
                 "parameters": [
@@ -1274,18 +1955,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "bounties": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Bounty"
-                                            }
-                                        },
-                                        "_links": {
-                                            "$ref": "#/components/schemas/RequestLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/TornBountiesResponse"
                                 }
                             }
                         }
@@ -1293,27 +1963,205 @@
                 }
             }
         },
-        "/user/?selections=crimes": {
+        "/torn/lookup": {
             "get": {
                 "tags": [
-                    "User",
-                    "Crimes 2.0"
+                    "Torn",
+                    "Lookup",
+                    "Stable"
                 ],
-                "summary": "Get user's crime statistics",
-                "description": "Return the details and statistics about a user's specific crime.",
+                "summary": "Get all available torn selections",
                 "parameters": [
                     {
-                        "name": "key",
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TornLookupResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/torn/timestamp": {
+            "get": {
+                "tags": [
+                    "Torn",
+                    "Stable"
+                ],
+                "summary": "Get current server time",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimestampResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/torn": {
+            "get": {
+                "tags": [
+                    "Torn",
+                    "Stable"
+                ],
+                "summary": "Get any Torn selection",
+                "description": "Choose one or more selections (comma separated).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "selections",
                         "in": "query",
-                        "description": "API key (Minimal)",
-                        "required": true,
+                        "description": "Selection names",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
                         "schema": {
-                            "type": "string"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/TornSelectionName"
+                            }
                         }
                     },
                     {
                         "name": "id",
                         "in": "query",
+                        "description": "selection id",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiStripTags"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Timestamp until when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Timestamp after when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Selection category",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Direction to sort rows in",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiOffsetNoDefault"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/TornSubcrimesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornCrimesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornCalendarResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornHofResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornFactionHofResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornLogTypesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornLogCategoriesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornBountiesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TornLookupResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TimestampResponse"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{crimeId}/crimes": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Crimes 2.0",
+                    "Stable"
+                ],
+                "summary": "Get user's crime statistics",
+                "description": "Return the details and statistics about a user's specific crime.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyMinimal"
+                    },
+                    {
+                        "name": "crimeId",
+                        "in": "path",
                         "description": "Crime id",
                         "required": true,
                         "schema": {
@@ -1327,7 +2175,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UserCrimeDetails"
+                                    "$ref": "#/components/schemas/UserCrimesResponse"
                                 }
                             }
                         }
@@ -1335,34 +2183,21 @@
                 }
             }
         },
-        "/user/?selections=races": {
+        "/user/races": {
             "get": {
                 "tags": [
                     "Racing",
-                    "User"
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get user races",
                 "description": "Returns a list of user races, ordered by race start timestamp.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Minimal)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyMinimal"
                     },
                     {
-                        "name": "limit",
-                        "in": "query",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 100,
-                            "maximum": 100,
-                            "minimum": 1
-                        }
+                        "$ref": "#/components/parameters/ApiLimit100"
                     },
                     {
                         "name": "sort",
@@ -1417,7 +2252,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/RaceDetails"
+                                    "$ref": "#/components/schemas/UserRacesResponse"
                                 }
                             }
                         }
@@ -1425,23 +2260,18 @@
                 }
             }
         },
-        "/user/?selections=enlistedcars": {
+        "/user/enlistedcars": {
             "get": {
                 "tags": [
                     "Racing",
-                    "User"
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get user enlisted cars",
                 "description": "Returns a list of all user enlisted cars.",
                 "parameters": [
                     {
-                        "name": "key",
-                        "in": "query",
-                        "description": "API key (Minimal)",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/ApiKeyMinimal"
                     }
                 ],
                 "responses": {
@@ -1450,7 +2280,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/UserRaceCarDetails"
+                                    "$ref": "#/components/schemas/UserEnlistedCarsResponse"
                                 }
                             }
                         }
@@ -1458,11 +2288,12 @@
                 }
             }
         },
-        "/user/?selections=forumposts": {
+        "/user/{id}/forumposts": {
             "get": {
                 "tags": [
                     "Forum",
-                    "User"
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get posts for a specific player",
                 "description": "Returns 20 posts per page for a specific player.",
@@ -1473,8 +2304,9 @@
                     {
                         "name": "cat",
                         "in": "query",
-                        "description": "Determines if the 'content' field returns raw HTML or plain text",
+                        "description": "This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text",
                         "required": false,
+                        "deprecated": true,
                         "schema": {
                             "type": "string",
                             "default": "plain",
@@ -1485,8 +2317,11 @@
                         }
                     },
                     {
+                        "$ref": "#/components/parameters/ApiStripTagsTrue"
+                    },
+                    {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "User id",
                         "required": true,
                         "schema": {
@@ -1543,18 +2378,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "forumPosts": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ForumPost"
-                                            }
-                                        },
-                                        "_links": {
-                                            "$ref": "#/components/schemas/RequestLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserForumPostsResponse"
                                 }
                             }
                         }
@@ -1562,11 +2386,101 @@
                 }
             }
         },
-        "/user/?selections=forumthreads": {
+        "/user/forumposts": {
             "get": {
                 "tags": [
                     "Forum",
-                    "User"
+                    "User",
+                    "Stable"
+                ],
+                "summary": "Get your posts",
+                "description": "Returns 20 posts per page.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text",
+                        "required": false,
+                        "deprecated": true,
+                        "schema": {
+                            "type": "string",
+                            "default": "plain",
+                            "enum": [
+                                "raw",
+                                "plain"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiStripTagsTrue"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 20,
+                            "maximum": 20,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sorted by post created timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "DESC",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Returns posts created before this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Returns posts created after this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserForumPostsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/{id}/forumthreads": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get threads for a specific player",
                 "description": "Returns 100 threads per page for a specific player. When requesting data for the key owner, a field 'new_posts' is also available, indicating the amount of unread posts. Minimum API key is required for that.",
@@ -1576,7 +2490,7 @@
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "User id",
                         "required": true,
                         "schema": {
@@ -1633,18 +2547,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "forumThreads": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ForumThreadUserExtended"
-                                            }
-                                        },
-                                        "_links": {
-                                            "$ref": "#/components/schemas/RequestLinks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserForumThreadsResponse"
                                 }
                             }
                         }
@@ -1652,11 +2555,83 @@
                 }
             }
         },
-        "/user/?selections=forumsubscribedthreads": {
+        "/user/forumthreads": {
             "get": {
                 "tags": [
                     "Forum",
-                    "User"
+                    "User",
+                    "Stable"
+                ],
+                "summary": "Get your threads",
+                "description": "Returns 100 threads per page. The field 'new_posts' is also available, indicating the amount of unread posts with a Minimum API key (or higher).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 100,
+                            "maximum": 100,
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Sorted by the greatest of first_post_time and last_post_time timestamps",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "DESC",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Returns threads created before this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Returns threads created after this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserForumThreadsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/forumsubscribedthreads": {
+            "get": {
+                "tags": [
+                    "Forum",
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get updates on threads you subscribed to",
                 "description": "This selection returns data visible in 'Subscribed Threads' section on forum page. Threads are sorted in the same way as on site.",
@@ -1671,15 +2646,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "forumSubscribedThreads": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ForumSubscribedThread"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserForumSubscribedThreadsResponse"
                                 }
                             }
                         }
@@ -1687,11 +2654,12 @@
                 }
             }
         },
-        "/user/?selections=forumfeed": {
+        "/user/forumfeed": {
             "get": {
                 "tags": [
                     "Forum",
-                    "User"
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get updates on your threads and posts",
                 "description": "This selection returns data visible in 'Feed' section on forum page. Feed is sorted by timestamp descending. Only a maximum of 100 rows are returned.",
@@ -1706,15 +2674,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "forumFeed": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ForumFeed"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserForumFeedResponse"
                                 }
                             }
                         }
@@ -1722,11 +2682,12 @@
                 }
             }
         },
-        "/user/?selections=forumfriends": {
+        "/user/forumfriends": {
             "get": {
                 "tags": [
                     "Forum",
-                    "User"
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get updates on your friends' activity",
                 "description": "This selection returns data visible in 'Friends' section on forum page. Feed is sorted by timestamp descending. Only a maximum of 100 rows are returned.",
@@ -1741,15 +2702,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "forumFriends": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ForumFeed"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserForumFriendsResponse"
                                 }
                             }
                         }
@@ -1757,21 +2710,22 @@
                 }
             }
         },
-        "/user/?selections=hof": {
+        "/user/{id}/hof": {
             "get": {
                 "tags": [
                     "Hall of Fame",
-                    "User"
+                    "User",
+                    "Stable"
                 ],
-                "summary": "Get a player's hall of fame rankings",
-                "description": "When requesting selection for yourself with Limited key (or higher), battle_stats selection will be populated.",
+                "summary": "Get hall of fame rankings for a specific player",
+                "description": "The battle_stats selection will be populated only when requesting selection with Limited, Full or Custom key and for yourself.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "User id",
                         "required": true,
                         "schema": {
@@ -1785,15 +2739,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "hof": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/UserHofStats"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserHofResponse"
                                 }
                             }
                         }
@@ -1801,10 +2747,39 @@
                 }
             }
         },
-        "/user/?selections=calendar": {
+        "/user/hof": {
             "get": {
                 "tags": [
-                    "User"
+                    "Hall of Fame",
+                    "User",
+                    "Stable"
+                ],
+                "summary": "Get your hall of fame rankings",
+                "description": "When requesting selection with Limited, Full or Custom key, battle_stats selection will be populated.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserHofResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/calendar": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get your competition's event start time",
                 "description": "Only available to yourself.",
@@ -1819,12 +2794,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "calendar": {
-                                            "$ref": "#/components/schemas/UserCalendar"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserCalendarResponse"
                                 }
                             }
                         }
@@ -1832,20 +2802,21 @@
                 }
             }
         },
-        "/user/?selections=bounties": {
+        "/user/{id}/bounties": {
             "get": {
                 "tags": [
                     "User",
-                    "Bounties"
+                    "Bounties",
+                    "Stable"
                 ],
-                "summary": "Get bounties placed on a user",
+                "summary": "Get bounties placed on a specific user",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
                     },
                     {
                         "name": "id",
-                        "in": "query",
+                        "in": "path",
                         "description": "User id",
                         "required": true,
                         "schema": {
@@ -1859,15 +2830,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "bounties": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/Bounty"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserBountiesResponse"
                                 }
                             }
                         }
@@ -1875,13 +2838,40 @@
                 }
             }
         },
-        "/user/?selections=jobranks": {
+        "/user/bounties": {
             "get": {
                 "tags": [
-                    "User"
+                    "User",
+                    "Bounties",
+                    "Stable"
+                ],
+                "summary": "Get bounties placed on you",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserBountiesResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/jobranks": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Stable"
                 ],
                 "summary": "Get your starter job positions",
-                "description": "Only available to yourself.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyMinimal"
@@ -1893,12 +2883,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "jobranks": {
-                                            "$ref": "#/components/schemas/UserJobRanks"
-                                        }
-                                    },
-                                    "type": "object"
+                                    "$ref": "#/components/schemas/UserJobRanksResponse"
                                 }
                             }
                         }
@@ -1906,13 +2891,14 @@
                 }
             }
         },
-        "/user/?selections=itemmarket": {
+        "/user/itemmarket": {
             "get": {
                 "tags": [
                     "User",
-                    "Item Market"
+                    "Item Market",
+                    "Unstable"
                 ],
-                "summary": "Get your item market listings",
+                "summary": "Get your item market listings for a specific item",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyLimited"
@@ -1927,18 +2913,205 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "properties": {
-                                        "itemmarket": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/UserItemMarketListing"
-                                            }
+                                    "$ref": "#/components/schemas/UserItemMarketResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/lookup": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Lookup",
+                    "Stable"
+                ],
+                "summary": "Get all available user selections",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserLookupResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/timestamp": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Stable"
+                ],
+                "summary": "Get current server time",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TimestampResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Stable"
+                ],
+                "summary": "Get any User selection",
+                "description": "Choose one or more selections (comma separated).",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "selections",
+                        "in": "query",
+                        "description": "Selection names",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/UserSelectionName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "id",
+                        "in": "query",
+                        "description": "selection id",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit"
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Timestamp until when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Timestamp after when rows are returned",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Selection category",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiStripTags"
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Direction to sort rows in",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiOffsetNoDefault"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "$ref": "#/components/schemas/UserCrimesResponse"
                                         },
-                                        "_metadata": {
-                                            "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                                        {
+                                            "$ref": "#/components/schemas/UserRacesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserEnlistedCarsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserForumPostsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserForumThreadsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserForumSubscribedThreadsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserForumFeedResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserForumFriendsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserHofResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserCalendarResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserBountiesResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserJobRanksResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserItemMarketResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserLookupResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/TimestampResponse"
                                         }
-                                    },
-                                    "type": "object"
+                                    ]
                                 }
                             }
                         }
@@ -2091,72 +3264,77 @@
             "WeaponBonusEnum": {
                 "type": "string",
                 "enum": [
-                    "Proficience",
-                    "Expose",
-                    "Stricken",
-                    "Plunder",
-                    "Burn",
-                    "Emasculate",
-                    "Poison",
-                    "Blindfire",
-                    "Hazardous",
-                    "Spray",
-                    "Demoralize",
-                    "Storage",
-                    "Freeze",
-                    "Sleep",
-                    "Revitalize",
-                    "Wither",
-                    "Roshambo",
-                    "Slow",
-                    "Cripple",
-                    "Weaken",
-                    "Cupid",
-                    "Throttle",
-                    "Crusher",
+                    "Any",
+                    "Double",
+                    "Yellow",
+                    "Orange",
+                    "Red",
                     "Achilles",
-                    "Blindside",
-                    "Backstab",
-                    "Grace",
-                    "Berserk",
-                    "Conserve",
-                    "Eviscerate",
-                    "Bleed",
-                    "Stun",
-                    "Paralyze",
-                    "Suppress",
-                    "Motivation",
-                    "Deadly",
-                    "Deadeye",
-                    "Fury",
-                    "Rage",
-                    "Puncture",
-                    "Comeback",
-                    "Powerful",
-                    "Specialist",
                     "Assassinate",
-                    "Smurf",
-                    "Double-edged",
-                    "Execute",
-                    "Shock",
-                    "Wind-up",
-                    "Sure Shot",
-                    "Focus",
-                    "Frenzy",
-                    "Warlord",
-                    "Finale",
-                    "Home run",
-                    "Parry",
+                    "Backstab",
+                    "Berserk",
+                    "Bleed",
+                    "Blindfire",
+                    "Blindside",
                     "Bloodlust",
+                    "Burn",
+                    "Comeback",
+                    "Conserve",
+                    "Cripple",
+                    "Crusher",
+                    "Cupid",
+                    "Deadeye",
+                    "Deadly",
+                    "Demoralize",
                     "Disarm",
+                    "Double-edged",
+                    "Double Tap",
+                    "Emasculate",
                     "Empower",
-                    "Quicken",
-                    "Lacerate",
-                    "Penetrate",
+                    "Eviscerate",
+                    "Execute",
+                    "Expose",
+                    "Finale",
+                    "Focus",
+                    "Freeze",
+                    "Frenzy",
+                    "Fury",
+                    "Grace",
+                    "Hazardous",
+                    "Home run",
                     "Irradiate",
-                    "Toxin",
+                    "Lacerate",
+                    "Motivation",
+                    "Paralyze",
+                    "Parry",
+                    "Penetrate",
+                    "Plunder",
+                    "Poison",
+                    "Powerful",
+                    "Proficience",
+                    "Puncture",
+                    "Quicken",
+                    "Rage",
+                    "Revitalize",
+                    "Roshambo",
+                    "Shock",
+                    "Sleep",
+                    "Slow",
                     "Smash",
-                    "Double Tap"
+                    "Smurf",
+                    "Specialist",
+                    "Spray",
+                    "Storage",
+                    "Stricken",
+                    "Stun",
+                    "Suppress",
+                    "Sure Shot",
+                    "Throttle",
+                    "Toxin",
+                    "Warlord",
+                    "Weaken",
+                    "Wind-up",
+                    "Wither"
                 ]
             },
             "JobPositionCasinoEnum": {
@@ -2263,6 +3441,14 @@
                     "Fluid"
                 ]
             },
+            "FactionApplicationStatusEnum": {
+                "type": "string",
+                "enum": [
+                    "accepted",
+                    "declined",
+                    "withdrawn"
+                ]
+            },
             "RaceId": {
                 "type": "integer"
             },
@@ -2276,6 +3462,9 @@
                 "type": "integer"
             },
             "ItemId": {
+                "type": "integer"
+            },
+            "ItemUid": {
                 "type": "integer"
             },
             "UserId": {
@@ -2549,6 +3738,14 @@
                 },
                 "type": "object"
             },
+            "TimestampResponse": {
+                "properties": {
+                    "timestamp": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "FactionHofStats": {
                 "properties": {
                     "rank": {
@@ -2559,6 +3756,17 @@
                     },
                     "chain": {
                         "$ref": "#/components/schemas/HofValue"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionHofResponse": {
+                "properties": {
+                    "hof": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionHofStats"
+                        }
                     }
                 },
                 "type": "object"
@@ -2646,6 +3854,17 @@
                 },
                 "type": "object"
             },
+            "FactionMembersResponse": {
+                "properties": {
+                    "members": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionMember"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "FactionRank": {
                 "properties": {
                     "level": {
@@ -2708,6 +3927,14 @@
                     },
                     "best_chain": {
                         "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionBasicResponse": {
+                "properties": {
+                    "basic": {
+                        "$ref": "#/components/schemas/FactionBasic"
                     }
                 },
                 "type": "object"
@@ -2906,6 +4133,20 @@
                 },
                 "type": "object"
             },
+            "FactionWarsResponse": {
+                "properties": {
+                    "pacts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionPact"
+                        }
+                    },
+                    "wars": {
+                        "$ref": "#/components/schemas/FactionWars"
+                    }
+                },
+                "type": "object"
+            },
             "FactionNews": {
                 "properties": {
                     "id": {
@@ -2920,14 +4161,168 @@
                 },
                 "type": "object"
             },
-            "ForumCategories": {
+            "FactionNewsResponse": {
+                "properties": {
+                    "news": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionNews"
+                        }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionAttacksResponse": {
+                "properties": {
+                    "attacks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Attack"
+                        }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionAttacksFullResponse": {
+                "properties": {
+                    "attacks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AttackSimplified"
+                        }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionApplication": {
+                "properties": {
+                    "id": {
+                        "description": "application id",
+                        "type": "integer"
+                    },
+                    "user": {
+                        "properties": {
+                            "id": {
+                                "$ref": "#/components/schemas/UserId"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "level": {
+                                "type": "string"
+                            },
+                            "stats": {
+                                "properties": {
+                                    "strength": {
+                                        "type": "integer"
+                                    },
+                                    "speed": {
+                                        "type": "integer"
+                                    },
+                                    "dexterity": {
+                                        "type": "integer"
+                                    },
+                                    "defense": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "valid_until": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/FactionApplicationStatusEnum"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionApplicationsResponse": {
+                "properties": {
+                    "applications": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionApplication"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "FactionSelectionName": {
+                "type": "string",
+                "enum": [
+                    "applications",
+                    "armor",
+                    "attacks",
+                    "attacksfull",
+                    "basic",
+                    "boosters",
+                    "caches",
+                    "cesium",
+                    "chain",
+                    "chainreport",
+                    "chains",
+                    "contributors",
+                    "crimeexp",
+                    "crimenews",
+                    "crimes",
+                    "currency",
+                    "donations",
+                    "drugs",
+                    "hof",
+                    "lookup",
+                    "medical",
+                    "members",
+                    "news",
+                    "positions",
+                    "rankedwars",
+                    "reports",
+                    "revives",
+                    "revivesfull",
+                    "stats",
+                    "temporary",
+                    "territory",
+                    "territorynews",
+                    "timestamp",
+                    "upgrades",
+                    "wars",
+                    "weapons"
+                ]
+            },
+            "FactionLookupResponse": {
+                "properties": {
+                    "selections": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionSelectionName"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "ForumCategoriesResponse": {
                 "properties": {
                     "categories": {
                         "type": "array",
                         "items": {
                             "properties": {
                                 "id": {
-                                    "type": "integer"
+                                    "$ref": "#/components/schemas/ForumId"
                                 },
                                 "title": {
                                     "type": "string"
@@ -3182,6 +4577,70 @@
                 },
                 "type": "object"
             },
+            "ForumThreadsResponse": {
+                "properties": {
+                    "threads": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumThreadBase"
+                        }
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/RequestLinks"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "ForumThreadResponse": {
+                "properties": {
+                    "thread": {
+                        "$ref": "#/components/schemas/ForumThreadExtended"
+                    }
+                },
+                "type": "object"
+            },
+            "ForumPostsResponse": {
+                "properties": {
+                    "posts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumPost"
+                        }
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/RequestLinks"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "ForumSelectionName": {
+                "type": "string",
+                "enum": [
+                    "categories",
+                    "lookup",
+                    "posts",
+                    "thread",
+                    "threads",
+                    "timestamp"
+                ]
+            },
+            "ForumLookupResponse": {
+                "properties": {
+                    "selections": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumSelectionName"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "ItemMarketListingItemBonus": {
                 "properties": {
                     "id": {
@@ -3219,7 +4678,7 @@
             "ItemMarketItem": {
                 "properties": {
                     "id": {
-                        "type": "integer"
+                        "$ref": "#/components/schemas/ItemId"
                     },
                     "name": {
                         "type": "string"
@@ -3250,7 +4709,7 @@
             "ItemMarketListingItemDetails": {
                 "properties": {
                     "uid": {
-                        "type": "integer"
+                        "$ref": "#/components/schemas/ItemUid"
                     },
                     "stats": {
                         "$ref": "#/components/schemas/ItemMarketListingItemStats"
@@ -3260,6 +4719,15 @@
                         "items": {
                             "$ref": "#/components/schemas/ItemMarketListingItemBonus"
                         }
+                    },
+                    "rarity": {
+                        "type": "string",
+                        "enum": [
+                            "yellow",
+                            "orange",
+                            "red"
+                        ],
+                        "nullable": true
                     }
                 },
                 "type": "object"
@@ -3302,7 +4770,38 @@
                 },
                 "type": "object"
             },
-            "RaceCars": {
+            "MarketItemMarketResponse": {
+                "properties": {
+                    "itemmarket": {
+                        "$ref": "#/components/schemas/ItemMarket"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "MarketSelectionName": {
+                "type": "string",
+                "enum": [
+                    "itemmarket",
+                    "lookup",
+                    "pointsmarket",
+                    "timestamp"
+                ]
+            },
+            "MarketLookupResponse": {
+                "properties": {
+                    "selections": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MarketSelectionName"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "RacingCarsResponse": {
                 "properties": {
                     "cars": {
                         "type": "array",
@@ -3348,7 +4847,7 @@
                 },
                 "type": "object"
             },
-            "RaceTracks": {
+            "RacingTracksResponse": {
                 "properties": {
                     "tracks": {
                         "type": "array",
@@ -3373,7 +4872,7 @@
                 },
                 "type": "object"
             },
-            "RaceCarUpgrades": {
+            "RacingCarUpgradesResponse": {
                 "properties": {
                     "carupgrades": {
                         "type": "array",
@@ -3444,13 +4943,16 @@
                 },
                 "type": "object"
             },
-            "Races": {
+            "RacingRacesResponse": {
                 "properties": {
                     "races": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Race"
                         }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
                     }
                 },
                 "type": "object"
@@ -3533,7 +5035,7 @@
                 },
                 "type": "object"
             },
-            "RaceRecords": {
+            "RacingTrackRecordsResponse": {
                 "properties": {
                     "records": {
                         "type": "array",
@@ -3606,7 +5108,7 @@
                 },
                 "type": "object"
             },
-            "RaceDetails": {
+            "RacingRaceDetailsResponse": {
                 "allOf": [
                     {
                         "properties": {
@@ -3624,7 +5126,31 @@
                     }
                 ]
             },
-            "TornSubcrimes": {
+            "RacingSelectionName": {
+                "type": "string",
+                "enum": [
+                    "cars",
+                    "carupgrades",
+                    "lookup",
+                    "race",
+                    "races",
+                    "records",
+                    "timestamp",
+                    "tracks"
+                ]
+            },
+            "RacingLookupResponse": {
+                "properties": {
+                    "selections": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RacingSelectionName"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TornSubcrimesResponse": {
                 "properties": {
                     "subcrimes": {
                         "type": "array",
@@ -3649,7 +5175,7 @@
                 },
                 "type": "object"
             },
-            "TornCrimes": {
+            "TornCrimesResponse": {
                 "properties": {
                     "crimes": {
                         "type": "array",
@@ -3715,6 +5241,28 @@
                 },
                 "type": "object"
             },
+            "TornCalendarResponse": {
+                "properties": {
+                    "calendar": {
+                        "properties": {
+                            "competitions": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/TornCalendarActivity"
+                                }
+                            },
+                            "events": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/TornCalendarActivity"
+                                }
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
             "TornHof": {
                 "properties": {
                     "id": {
@@ -3752,6 +5300,23 @@
                     },
                     "rank": {
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "TornHofResponse": {
+                "properties": {
+                    "hof": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TornHof"
+                        }
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/RequestLinks"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
                     }
                 },
                 "type": "object"
@@ -3800,6 +5365,23 @@
                 },
                 "type": "object"
             },
+            "TornFactionHofResponse": {
+                "properties": {
+                    "factionhof": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TornFactionHof"
+                        }
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/RequestLinks"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
             "TornLog": {
                 "properties": {
                     "id": {
@@ -3818,6 +5400,28 @@
                     },
                     "title": {
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "TornLogTypesResponse": {
+                "properties": {
+                    "logtypes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TornLog"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "TornLogCategoriesResponse": {
+                "properties": {
+                    "logcategories": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TornLogCategory"
+                        }
                     }
                 },
                 "type": "object"
@@ -3866,6 +5470,81 @@
                     },
                     "valid_until": {
                         "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "TornBountiesResponse": {
+                "properties": {
+                    "bounties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Bounty"
+                        }
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/RequestLinks"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "TornSelectionName": {
+                "type": "string",
+                "enum": [
+                    "bank",
+                    "calendar",
+                    "cards",
+                    "chainreport",
+                    "cityshops",
+                    "companies",
+                    "competition",
+                    "crimes",
+                    "dirtybombs",
+                    "education",
+                    "factionHof",
+                    "factiontree",
+                    "gyms",
+                    "hof",
+                    "honors",
+                    "itemdetails",
+                    "items",
+                    "itemstats",
+                    "logcategories",
+                    "logtypes",
+                    "lookup",
+                    "medals",
+                    "organisedcrimes",
+                    "pawnshop",
+                    "pokertables",
+                    "properties",
+                    "rackets",
+                    "raidreport",
+                    "raids",
+                    "rankedwarreport",
+                    "rankedwars",
+                    "rockpaperscissors",
+                    "searchforcash",
+                    "shoplifting",
+                    "stats",
+                    "stocks",
+                    "subcrimes",
+                    "territory",
+                    "territorynames",
+                    "territorywarreport",
+                    "territorywars",
+                    "timestamp"
+                ]
+            },
+            "TornLookupResponse": {
+                "properties": {
+                    "selections": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TornSelectionName"
+                        }
                     }
                 },
                 "type": "object"
@@ -4292,7 +5971,7 @@
                 },
                 "type": "object"
             },
-            "UserCrimeDetails": {
+            "UserCrimesResponse": {
                 "properties": {
                     "crimes": {
                         "$ref": "#/components/schemas/UserCrime"
@@ -4312,7 +5991,7 @@
                         "type": "integer"
                     },
                     "achieved_uniques": {
-                        "description": "This field is replaced by 'uniques' field which provides more information about achieved uniques. This field will be removed on 1st of November.",
+                        "description": "This field is being replaced by 'uniques' field which provides more information about achieved uniques. This field will be removed on 1st of December.",
                         "type": "array",
                         "items": {
                             "type": "integer"
@@ -4361,6 +6040,20 @@
                 },
                 "type": "object"
             },
+            "UserRacesResponse": {
+                "properties": {
+                    "races": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/RacingRaceDetailsResponse"
+                        }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
             "UserRaceCarDetails": {
                 "allOf": [
                     {
@@ -4399,6 +6092,84 @@
                         "$ref": "#/components/schemas/RaceCar"
                     }
                 ]
+            },
+            "UserEnlistedCarsResponse": {
+                "properties": {
+                    "enlistedcars": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserRaceCarDetails"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "UserForumPostsResponse": {
+                "properties": {
+                    "forumPosts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumPost"
+                        }
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/RequestLinks"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "UserForumThreadsResponse": {
+                "properties": {
+                    "forumThreads": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumThreadUserExtended"
+                        }
+                    },
+                    "_links": {
+                        "$ref": "#/components/schemas/RequestLinks"
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "UserForumSubscribedThreadsResponse": {
+                "properties": {
+                    "forumSubscribedThreads": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumSubscribedThread"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "UserForumFeedResponse": {
+                "properties": {
+                    "forumFeed": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumFeed"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "UserForumFriendsResponse": {
+                "properties": {
+                    "forumFriends": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ForumFeed"
+                        }
+                    }
+                },
+                "type": "object"
             },
             "HofValue": {
                 "properties": {
@@ -4481,11 +6252,41 @@
                 },
                 "type": "object"
             },
+            "UserHofResponse": {
+                "properties": {
+                    "hof": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserHofStats"
+                        }
+                    }
+                },
+                "type": "object"
+            },
             "UserCalendar": {
                 "properties": {
                     "start_time": {
                         "description": "Event start time displayed in TCT.",
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "UserCalendarResponse": {
+                "properties": {
+                    "calendar": {
+                        "$ref": "#/components/schemas/UserCalendar"
+                    }
+                },
+                "type": "object"
+            },
+            "UserBountiesResponse": {
+                "properties": {
+                    "bounties": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Bounty"
+                        }
                     }
                 },
                 "type": "object"
@@ -4513,6 +6314,14 @@
                 },
                 "type": "object"
             },
+            "UserJobRanksResponse": {
+                "properties": {
+                    "jobranks": {
+                        "$ref": "#/components/schemas/UserJobRanks"
+                    }
+                },
+                "type": "object"
+            },
             "UserItemMarkeListingItemDetails": {
                 "properties": {
                     "id": {
@@ -4523,6 +6332,15 @@
                     },
                     "type": {
                         "type": "string"
+                    },
+                    "rarity": {
+                        "type": "string",
+                        "enum": [
+                            "yellow",
+                            "orange",
+                            "red"
+                        ],
+                        "nullable": true
                     },
                     "uid": {
                         "type": "integer",
@@ -4571,6 +6389,92 @@
                     },
                     "item": {
                         "$ref": "#/components/schemas/UserItemMarkeListingItemDetails"
+                    }
+                },
+                "type": "object"
+            },
+            "UserItemMarketResponse": {
+                "properties": {
+                    "itemmarket": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserItemMarketListing"
+                        }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "UserSelectionName": {
+                "type": "string",
+                "enum": [
+                    "ammo",
+                    "attacks",
+                    "attacksfull",
+                    "bars",
+                    "basic",
+                    "battlestats",
+                    "bazaar",
+                    "calendar",
+                    "cooldowns",
+                    "crimes",
+                    "criminalrecord",
+                    "discord",
+                    "display",
+                    "education",
+                    "enlistedcars",
+                    "equipment",
+                    "events",
+                    "forumfeed",
+                    "forumfriends",
+                    "forumposts",
+                    "forumsubscribedthreads",
+                    "forumthreads",
+                    "gym",
+                    "hof",
+                    "honors",
+                    "icons",
+                    "inventory",
+                    "itemmarket",
+                    "jobpoints",
+                    "log",
+                    "lookup",
+                    "medals",
+                    "merits",
+                    "messages",
+                    "missions",
+                    "money",
+                    "networth",
+                    "newevents",
+                    "newmessages",
+                    "notifications",
+                    "perks",
+                    "personalstats",
+                    "profile",
+                    "properties",
+                    "publicStatus",
+                    "races",
+                    "refills",
+                    "reports",
+                    "revives",
+                    "revivesfull",
+                    "skills",
+                    "stocks",
+                    "timestamp",
+                    "travel",
+                    "weaponexp",
+                    "workstats"
+                ]
+            },
+            "UserLookupResponse": {
+                "properties": {
+                    "selections": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserSelectionName"
+                        }
                     }
                 },
                 "type": "object"
@@ -4626,6 +6530,15 @@
                     "minimum": 1
                 }
             },
+            "ApiLimit": {
+                "name": "limit",
+                "in": "query",
+                "required": false,
+                "schema": {
+                    "type": "integer",
+                    "minimum": 1
+                }
+            },
             "ApiSort": {
                 "name": "sort",
                 "in": "query",
@@ -4668,10 +6581,19 @@
                     "minimum": 0
                 }
             },
+            "ApiOffsetNoDefault": {
+                "name": "offset",
+                "in": "query",
+                "required": false,
+                "schema": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            },
             "ApiStripTagsTrue": {
                 "name": "striptags",
                 "in": "query",
-                "description": "Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user'",
+                "description": "Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').",
                 "required": false,
                 "schema": {
                     "type": "string",
@@ -4685,11 +6607,24 @@
             "ApiStripTagsFalse": {
                 "name": "striptags",
                 "in": "query",
-                "description": "Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user'",
+                "description": "Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').",
                 "required": false,
                 "schema": {
                     "type": "string",
                     "default": "false",
+                    "enum": [
+                        "true",
+                        "false"
+                    ]
+                }
+            },
+            "ApiStripTags": {
+                "name": "striptags",
+                "in": "query",
+                "description": "Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').",
+                "required": false,
+                "schema": {
+                    "type": "string",
                     "enum": [
                         "true",
                         "false"
@@ -4705,7 +6640,7 @@
         },
         {
             "name": "Racing",
-            "description": "Part of Racing section"
+            "description": "Part of Racing section or related to Racing"
         },
         {
             "name": "User",
@@ -4720,12 +6655,12 @@
             "description": "Part of Market section"
         },
         {
-            "name": "Crimes 2.0",
-            "description": "Related to crimes 2.0"
+            "name": "Forum",
+            "description": "Part of Forum section or related to Forum"
         },
         {
-            "name": "Forum",
-            "description": "Part of Forum selections"
+            "name": "Crimes 2.0",
+            "description": "Related to crimes 2.0"
         },
         {
             "name": "Hall of Fame",
@@ -4746,6 +6681,14 @@
         {
             "name": "Item Market",
             "description": "Related to item market"
+        },
+        {
+            "name": "Stable",
+            "description": "Stable selections are not likely to undergo significant changes."
+        },
+        {
+            "name": "Unstable",
+            "description": "Future updates may result in sudden or significant changes."
         }
     ]
 }

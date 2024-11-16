@@ -1,7 +1,6 @@
 // ignore_for_file: type=lint
 
 import 'package:json_annotation/json_annotation.dart';
-import 'package:json_annotation/json_annotation.dart' as json;
 import 'package:collection/collection.dart';
 import 'dart:convert';
 
@@ -10,7 +9,6 @@ import 'package:chopper/chopper.dart';
 import 'client_mapping.dart';
 import 'dart:async';
 import 'package:http/http.dart' as http;
-import 'package:http/http.dart' show MultipartFile;
 import 'package:chopper/chopper.dart' as chopper;
 import 'torn_v2.enums.swagger.dart' as enums;
 export 'torn_v2.enums.swagger.dart';
@@ -51,114 +49,160 @@ abstract class TornV2 extends ChopperService {
   ///Get a faction's hall of fame rankings.
   ///@param key API key (Public)
   ///@param id Faction id
-  Future<chopper.Response<FactionSelectionsHofGet$Response>>
-      factionSelectionsHofGet({
+  Future<chopper.Response<FactionHofResponse>> factionIdHofGet({
     required String? key,
-    int? id,
+    required int? id,
   }) {
-    generatedMapping.putIfAbsent(FactionSelectionsHofGet$Response,
-        () => FactionSelectionsHofGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(FactionHofResponse, () => FactionHofResponse.fromJsonFactory);
 
-    return _factionSelectionsHofGet(key: key, id: id);
+    return _factionIdHofGet(key: key, id: id);
   }
 
   ///Get a faction's hall of fame rankings.
   ///@param key API key (Public)
   ///@param id Faction id
-  @Get(path: '/faction/?selections=hof')
-  Future<chopper.Response<FactionSelectionsHofGet$Response>>
-      _factionSelectionsHofGet({
+  @Get(path: '/faction/{id}/hof')
+  Future<chopper.Response<FactionHofResponse>> _factionIdHofGet({
     @Query('key') required String? key,
-    @Query('id') int? id,
+    @Path('id') required int? id,
   });
 
-  ///Get a list of faction's members
+  ///Get your faction's hall of fame rankings.
   ///@param key API key (Public)
-  ///@param id Faction id
-  ///@param striptags Determines if the 'status.details' field includes HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user'
-  Future<chopper.Response<FactionSelectionsMembersGet$Response>>
-      factionSelectionsMembersGet({
-    required String? key,
-    int? id,
-    enums.FactionSelectionsMembersGetStriptags? striptags,
-  }) {
-    generatedMapping.putIfAbsent(FactionSelectionsMembersGet$Response,
-        () => FactionSelectionsMembersGet$Response.fromJsonFactory);
+  Future<chopper.Response<FactionHofResponse>> factionHofGet({required String? key}) {
+    generatedMapping.putIfAbsent(FactionHofResponse, () => FactionHofResponse.fromJsonFactory);
 
-    return _factionSelectionsMembersGet(
-        key: key, id: id, striptags: striptags?.value?.toString());
+    return _factionHofGet(key: key);
   }
 
-  ///Get a list of faction's members
+  ///Get your faction's hall of fame rankings.
+  ///@param key API key (Public)
+  @Get(path: '/faction/hof')
+  Future<chopper.Response<FactionHofResponse>> _factionHofGet({@Query('key') required String? key});
+
+  ///Get a list of a faction's members
   ///@param key API key (Public)
   ///@param id Faction id
-  ///@param striptags Determines if the 'status.details' field includes HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user'
-  @Get(path: '/faction/?selections=members')
-  Future<chopper.Response<FactionSelectionsMembersGet$Response>>
-      _factionSelectionsMembersGet({
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  Future<chopper.Response<FactionMembersResponse>> factionIdMembersGet({
+    required String? key,
+    required int? id,
+    enums.ApiStripTagsTrue? striptags,
+  }) {
+    generatedMapping.putIfAbsent(FactionMembersResponse, () => FactionMembersResponse.fromJsonFactory);
+
+    return _factionIdMembersGet(key: key, id: id, striptags: striptags?.value?.toString());
+  }
+
+  ///Get a list of a faction's members
+  ///@param key API key (Public)
+  ///@param id Faction id
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  @Get(path: '/faction/{id}/members')
+  Future<chopper.Response<FactionMembersResponse>> _factionIdMembersGet({
     @Query('key') required String? key,
-    @Query('id') int? id,
+    @Path('id') required int? id,
+    @Query('striptags') String? striptags,
+  });
+
+  ///Get a list of your faction's members
+  ///@param key API key (Public)
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  Future<chopper.Response<FactionMembersResponse>> factionMembersGet({
+    required String? key,
+    enums.ApiStripTagsTrue? striptags,
+  }) {
+    generatedMapping.putIfAbsent(FactionMembersResponse, () => FactionMembersResponse.fromJsonFactory);
+
+    return _factionMembersGet(key: key, striptags: striptags?.value?.toString());
+  }
+
+  ///Get a list of your faction's members
+  ///@param key API key (Public)
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  @Get(path: '/faction/members')
+  Future<chopper.Response<FactionMembersResponse>> _factionMembersGet({
+    @Query('key') required String? key,
     @Query('striptags') String? striptags,
   });
 
   ///Get a faction's basic details
   ///@param key API key (Public)
   ///@param id Faction id
-  Future<chopper.Response<FactionSelectionsBasicGet$Response>>
-      factionSelectionsBasicGet({
+  Future<chopper.Response<FactionBasicResponse>> factionIdBasicGet({
     required String? key,
-    int? id,
+    required int? id,
   }) {
-    generatedMapping.putIfAbsent(FactionSelectionsBasicGet$Response,
-        () => FactionSelectionsBasicGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(FactionBasicResponse, () => FactionBasicResponse.fromJsonFactory);
 
-    return _factionSelectionsBasicGet(key: key, id: id);
+    return _factionIdBasicGet(key: key, id: id);
   }
 
   ///Get a faction's basic details
   ///@param key API key (Public)
   ///@param id Faction id
-  @Get(path: '/faction/?selections=basic')
-  Future<chopper.Response<FactionSelectionsBasicGet$Response>>
-      _factionSelectionsBasicGet({
+  @Get(path: '/faction/{id}/basic')
+  Future<chopper.Response<FactionBasicResponse>> _factionIdBasicGet({
     @Query('key') required String? key,
-    @Query('id') int? id,
+    @Path('id') required int? id,
   });
+
+  ///Get your faction's basic details
+  ///@param key API key (Public)
+  Future<chopper.Response<FactionBasicResponse>> factionBasicGet({required String? key}) {
+    generatedMapping.putIfAbsent(FactionBasicResponse, () => FactionBasicResponse.fromJsonFactory);
+
+    return _factionBasicGet(key: key);
+  }
+
+  ///Get your faction's basic details
+  ///@param key API key (Public)
+  @Get(path: '/faction/basic')
+  Future<chopper.Response<FactionBasicResponse>> _factionBasicGet({@Query('key') required String? key});
 
   ///Get a faction's wars & pacts details
   ///@param key API key (Public)
   ///@param id Faction id
-  Future<chopper.Response<FactionSelectionsWarsGet$Response>>
-      factionSelectionsWarsGet({
+  Future<chopper.Response<FactionWarsResponse>> factionIdWarsGet({
     required String? key,
-    int? id,
+    required int? id,
   }) {
-    generatedMapping.putIfAbsent(FactionSelectionsWarsGet$Response,
-        () => FactionSelectionsWarsGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(FactionWarsResponse, () => FactionWarsResponse.fromJsonFactory);
 
-    return _factionSelectionsWarsGet(key: key, id: id);
+    return _factionIdWarsGet(key: key, id: id);
   }
 
   ///Get a faction's wars & pacts details
   ///@param key API key (Public)
   ///@param id Faction id
-  @Get(path: '/faction/?selections=wars')
-  Future<chopper.Response<FactionSelectionsWarsGet$Response>>
-      _factionSelectionsWarsGet({
+  @Get(path: '/faction/{id}/wars')
+  Future<chopper.Response<FactionWarsResponse>> _factionIdWarsGet({
     @Query('key') required String? key,
-    @Query('id') int? id,
+    @Path('id') required int? id,
   });
+
+  ///Get your faction's wars & pacts details
+  ///@param key API key (Public)
+  Future<chopper.Response<FactionWarsResponse>> factionWarsGet({required String? key}) {
+    generatedMapping.putIfAbsent(FactionWarsResponse, () => FactionWarsResponse.fromJsonFactory);
+
+    return _factionWarsGet(key: key);
+  }
+
+  ///Get your faction's wars & pacts details
+  ///@param key API key (Public)
+  @Get(path: '/faction/wars')
+  Future<chopper.Response<FactionWarsResponse>> _factionWarsGet({@Query('key') required String? key});
 
   ///Get your faction's news details
   ///@param key API key (Minimal)
-  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user'
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   ///@param cat News category type
-  Future<chopper.Response<FactionSelectionsNewsGet$Response>>
-      factionSelectionsNewsGet({
+  Future<chopper.Response<FactionNewsResponse>> factionNewsGet({
     required String? key,
     enums.ApiStripTagsFalse? striptags,
     int? limit,
@@ -167,10 +211,9 @@ abstract class TornV2 extends ChopperService {
     int? from,
     required enums.FactionNewsCategory? cat,
   }) {
-    generatedMapping.putIfAbsent(FactionSelectionsNewsGet$Response,
-        () => FactionSelectionsNewsGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(FactionNewsResponse, () => FactionNewsResponse.fromJsonFactory);
 
-    return _factionSelectionsNewsGet(
+    return _factionNewsGet(
         key: key,
         striptags: striptags?.value?.toString(),
         limit: limit,
@@ -182,15 +225,14 @@ abstract class TornV2 extends ChopperService {
 
   ///Get your faction's news details
   ///@param key API key (Minimal)
-  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user'
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   ///@param cat News category type
-  @Get(path: '/faction/?selections=news')
-  Future<chopper.Response<FactionSelectionsNewsGet$Response>>
-      _factionSelectionsNewsGet({
+  @Get(path: '/faction/news')
+  Future<chopper.Response<FactionNewsResponse>> _factionNewsGet({
     @Query('key') required String? key,
     @Query('striptags') String? striptags,
     @Query('limit') int? limit,
@@ -206,23 +248,16 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  Future<chopper.Response<FactionSelectionsAttacksGet$Response>>
-      factionSelectionsAttacksGet({
+  Future<chopper.Response<FactionAttacksResponse>> factionAttacksGet({
     required String? key,
     int? limit,
     enums.ApiSort? sort,
     int? to,
     int? from,
   }) {
-    generatedMapping.putIfAbsent(FactionSelectionsAttacksGet$Response,
-        () => FactionSelectionsAttacksGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(FactionAttacksResponse, () => FactionAttacksResponse.fromJsonFactory);
 
-    return _factionSelectionsAttacksGet(
-        key: key,
-        limit: limit,
-        sort: sort?.value?.toString(),
-        to: to,
-        from: from);
+    return _factionAttacksGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get your faction's detailed attacks
@@ -231,9 +266,8 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  @Get(path: '/faction/?selections=attacks')
-  Future<chopper.Response<FactionSelectionsAttacksGet$Response>>
-      _factionSelectionsAttacksGet({
+  @Get(path: '/faction/attacks')
+  Future<chopper.Response<FactionAttacksResponse>> _factionAttacksGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -247,23 +281,16 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  Future<chopper.Response<FactionSelectionsAttacksfullGet$Response>>
-      factionSelectionsAttacksfullGet({
+  Future<chopper.Response<FactionAttacksFullResponse>> factionAttacksfullGet({
     required String? key,
     int? limit,
     enums.ApiSort? sort,
     int? to,
     int? from,
   }) {
-    generatedMapping.putIfAbsent(FactionSelectionsAttacksfullGet$Response,
-        () => FactionSelectionsAttacksfullGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(FactionAttacksFullResponse, () => FactionAttacksFullResponse.fromJsonFactory);
 
-    return _factionSelectionsAttacksfullGet(
-        key: key,
-        limit: limit,
-        sort: sort?.value?.toString(),
-        to: to,
-        from: from);
+    return _factionAttacksfullGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get your faction's attacks
@@ -272,9 +299,8 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  @Get(path: '/faction/?selections=attacksfull')
-  Future<chopper.Response<FactionSelectionsAttacksfullGet$Response>>
-      _factionSelectionsAttacksfullGet({
+  @Get(path: '/faction/attacksfull')
+  Future<chopper.Response<FactionAttacksFullResponse>> _factionAttacksfullGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -282,155 +308,439 @@ abstract class TornV2 extends ChopperService {
     @Query('from') int? from,
   });
 
-  ///Get a list of publicly available forum categories
-  ///@param key API key (Public)
-  Future<chopper.Response<ForumCategories>> forumSelectionsCategoriesGet(
-      {required String? key}) {
-    generatedMapping.putIfAbsent(
-        ForumCategories, () => ForumCategories.fromJsonFactory);
+  ///Get your faction's applications
+  ///@param key API key (Minimal)
+  Future<chopper.Response<FactionApplicationsResponse>> factionApplicationsGet({required String? key}) {
+    generatedMapping.putIfAbsent(FactionApplicationsResponse, () => FactionApplicationsResponse.fromJsonFactory);
 
-    return _forumSelectionsCategoriesGet(key: key);
+    return _factionApplicationsGet(key: key);
   }
 
-  ///Get a list of publicly available forum categories
-  ///@param key API key (Public)
-  @Get(path: '/forum/?selections=categories')
-  Future<chopper.Response<ForumCategories>> _forumSelectionsCategoriesGet(
-      {@Query('key') required String? key});
+  ///Get your faction's applications
+  ///@param key API key (Minimal)
+  @Get(path: '/faction/applications')
+  Future<chopper.Response<FactionApplicationsResponse>> _factionApplicationsGet({@Query('key') required String? key});
 
-  ///Get threads
+  ///Get all available faction selections
   ///@param key API key (Public)
+  Future<chopper.Response<FactionLookupResponse>> factionLookupGet({required String? key}) {
+    generatedMapping.putIfAbsent(FactionLookupResponse, () => FactionLookupResponse.fromJsonFactory);
+
+    return _factionLookupGet(key: key);
+  }
+
+  ///Get all available faction selections
+  ///@param key API key (Public)
+  @Get(path: '/faction/lookup')
+  Future<chopper.Response<FactionLookupResponse>> _factionLookupGet({@Query('key') required String? key});
+
+  ///Get current server time
+  ///@param key API key (Public)
+  Future<chopper.Response<TimestampResponse>> factionTimestampGet({required String? key}) {
+    generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
+
+    return _factionTimestampGet(key: key);
+  }
+
+  ///Get current server time
+  ///@param key API key (Public)
+  @Get(path: '/faction/timestamp')
+  Future<chopper.Response<TimestampResponse>> _factionTimestampGet({@Query('key') required String? key});
+
+  ///Get any Faction selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
   ///@param limit
-  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
-  ///@param to Returns threads created before this timestamp
-  ///@param from Returns threads created after this timestamp
-  ///@param id The forum ID or a list of forum IDs
-  Future<chopper.Response<ForumSelectionsThreadsGet$Response>>
-      forumSelectionsThreadsGet({
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  Future<chopper.Response> factionGet({
     required String? key,
+    List<enums.FactionSelectionName>? selections,
+    String? id,
     int? limit,
-    enums.ForumSelectionsThreadsGetSort? sort,
     int? to,
     int? from,
-    List<int>? id,
+    String? cat,
+    enums.ApiStripTags? striptags,
+    enums.FactionGetSort? sort,
+    int? offset,
   }) {
-    generatedMapping.putIfAbsent(ForumSelectionsThreadsGet$Response,
-        () => ForumSelectionsThreadsGet$Response.fromJsonFactory);
-
-    return _forumSelectionsThreadsGet(
+    return _factionGet(
         key: key,
+        selections: factionSelectionNameListToJson(selections),
+        id: id,
         limit: limit,
-        sort: sort?.value?.toString(),
         to: to,
         from: from,
-        id: id);
+        cat: cat,
+        striptags: striptags?.value?.toString(),
+        sort: sort?.value?.toString(),
+        offset: offset);
   }
 
-  ///Get threads
+  ///Get any Faction selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  @Get(path: '/faction')
+  Future<chopper.Response> _factionGet({
+    @Query('key') required String? key,
+    @Query('selections') List<Object?>? selections,
+    @Query('id') String? id,
+    @Query('limit') int? limit,
+    @Query('to') int? to,
+    @Query('from') int? from,
+    @Query('cat') String? cat,
+    @Query('striptags') String? striptags,
+    @Query('sort') String? sort,
+    @Query('offset') int? offset,
+  });
+
+  ///Get publicly available forum categories
+  ///@param key API key (Public)
+  Future<chopper.Response<ForumCategoriesResponse>> forumCategoriesGet({required String? key}) {
+    generatedMapping.putIfAbsent(ForumCategoriesResponse, () => ForumCategoriesResponse.fromJsonFactory);
+
+    return _forumCategoriesGet(key: key);
+  }
+
+  ///Get publicly available forum categories
+  ///@param key API key (Public)
+  @Get(path: '/forum/categories')
+  Future<chopper.Response<ForumCategoriesResponse>> _forumCategoriesGet({@Query('key') required String? key});
+
+  ///Get threads for specific public forum category or categories
   ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
-  ///@param id The forum ID or a list of forum IDs
-  @Get(path: '/forum/?selections=threads')
-  Future<chopper.Response<ForumSelectionsThreadsGet$Response>>
-      _forumSelectionsThreadsGet({
+  ///@param categoryIds Category id or a list of category ids (comma separated)
+  Future<chopper.Response<ForumThreadsResponse>> forumCategoryIdsThreadsGet({
+    required String? key,
+    int? limit,
+    enums.ForumCategoryIdsThreadsGetSort? sort,
+    int? to,
+    int? from,
+    required List<int>? categoryIds,
+  }) {
+    generatedMapping.putIfAbsent(ForumThreadsResponse, () => ForumThreadsResponse.fromJsonFactory);
+
+    return _forumCategoryIdsThreadsGet(
+        key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from, categoryIds: categoryIds);
+  }
+
+  ///Get threads for specific public forum category or categories
+  ///@param key API key (Public)
+  ///@param limit
+  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
+  ///@param to Returns threads created before this timestamp
+  ///@param from Returns threads created after this timestamp
+  ///@param categoryIds Category id or a list of category ids (comma separated)
+  @Get(path: '/forum/{categoryIds}/threads')
+  Future<chopper.Response<ForumThreadsResponse>> _forumCategoryIdsThreadsGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
     @Query('from') int? from,
-    @Query('id') List<int>? id,
+    @Path('categoryIds') required List<int>? categoryIds,
+  });
+
+  ///Get threads across all forum categories
+  ///@param key API key (Public)
+  ///@param limit
+  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
+  ///@param to Returns threads created before this timestamp
+  ///@param from Returns threads created after this timestamp
+  Future<chopper.Response<ForumThreadsResponse>> forumThreadsGet({
+    required String? key,
+    int? limit,
+    enums.ForumThreadsGetSort? sort,
+    int? to,
+    int? from,
+  }) {
+    generatedMapping.putIfAbsent(ForumThreadsResponse, () => ForumThreadsResponse.fromJsonFactory);
+
+    return _forumThreadsGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+  }
+
+  ///Get threads across all forum categories
+  ///@param key API key (Public)
+  ///@param limit
+  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
+  ///@param to Returns threads created before this timestamp
+  ///@param from Returns threads created after this timestamp
+  @Get(path: '/forum/threads')
+  Future<chopper.Response<ForumThreadsResponse>> _forumThreadsGet({
+    @Query('key') required String? key,
+    @Query('limit') int? limit,
+    @Query('sort') String? sort,
+    @Query('to') int? to,
+    @Query('from') int? from,
   });
 
   ///Get specific thread details
   ///@param key API key (Public)
-  ///@param id Thread id
-  Future<chopper.Response<ForumSelectionsThreadGet$Response>>
-      forumSelectionsThreadGet({
+  ///@param threadId Thread id
+  Future<chopper.Response<ForumThreadResponse>> forumThreadIdThreadGet({
     required String? key,
-    required int? id,
+    required int? threadId,
   }) {
-    generatedMapping.putIfAbsent(ForumSelectionsThreadGet$Response,
-        () => ForumSelectionsThreadGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(ForumThreadResponse, () => ForumThreadResponse.fromJsonFactory);
 
-    return _forumSelectionsThreadGet(key: key, id: id);
+    return _forumThreadIdThreadGet(key: key, threadId: threadId);
   }
 
   ///Get specific thread details
   ///@param key API key (Public)
-  ///@param id Thread id
-  @Get(path: '/forum/?selections=thread')
-  Future<chopper.Response<ForumSelectionsThreadGet$Response>>
-      _forumSelectionsThreadGet({
+  ///@param threadId Thread id
+  @Get(path: '/forum/{threadId}/thread')
+  Future<chopper.Response<ForumThreadResponse>> _forumThreadIdThreadGet({
     @Query('key') required String? key,
-    @Query('id') required int? id,
+    @Path('threadId') required int? threadId,
   });
 
-  ///Get specific thread posts
+  ///Get specific forum thread posts
   ///@param key API key (Public)
   ///@param offset
-  ///@param cat Determines if the 'content' field returns raw HTML or plain text
-  ///@param id Thread id
-  Future<chopper.Response<ForumSelectionsPostsGet$Response>>
-      forumSelectionsPostsGet({
+  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param threadId Thread id
+  Future<chopper.Response<ForumPostsResponse>> forumThreadIdPostsGet({
     required String? key,
     int? offset,
-    enums.ForumSelectionsPostsGetCat? cat,
-    required int? id,
+    enums.ForumThreadIdPostsGetCat? cat,
+    enums.ApiStripTagsTrue? striptags,
+    required int? threadId,
   }) {
-    generatedMapping.putIfAbsent(ForumSelectionsPostsGet$Response,
-        () => ForumSelectionsPostsGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(ForumPostsResponse, () => ForumPostsResponse.fromJsonFactory);
 
-    return _forumSelectionsPostsGet(
-        key: key, offset: offset, cat: cat?.value?.toString(), id: id);
+    return _forumThreadIdPostsGet(
+        key: key,
+        offset: offset,
+        cat: cat?.value?.toString(),
+        striptags: striptags?.value?.toString(),
+        threadId: threadId);
   }
 
-  ///Get specific thread posts
+  ///Get specific forum thread posts
   ///@param key API key (Public)
   ///@param offset
-  ///@param cat Determines if the 'content' field returns raw HTML or plain text
-  ///@param id Thread id
-  @Get(path: '/forum/?selections=posts')
-  Future<chopper.Response<ForumSelectionsPostsGet$Response>>
-      _forumSelectionsPostsGet({
+  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param threadId Thread id
+  @Get(path: '/forum/{threadId}/posts')
+  Future<chopper.Response<ForumPostsResponse>> _forumThreadIdPostsGet({
     @Query('key') required String? key,
     @Query('offset') int? offset,
     @Query('cat') String? cat,
-    @Query('id') required int? id,
+    @Query('striptags') String? striptags,
+    @Path('threadId') required int? threadId,
+  });
+
+  ///Get all available forum selections
+  ///@param key API key (Public)
+  Future<chopper.Response<ForumLookupResponse>> forumLookupGet({required String? key}) {
+    generatedMapping.putIfAbsent(ForumLookupResponse, () => ForumLookupResponse.fromJsonFactory);
+
+    return _forumLookupGet(key: key);
+  }
+
+  ///Get all available forum selections
+  ///@param key API key (Public)
+  @Get(path: '/forum/lookup')
+  Future<chopper.Response<ForumLookupResponse>> _forumLookupGet({@Query('key') required String? key});
+
+  ///Get current server time
+  ///@param key API key (Public)
+  Future<chopper.Response<TimestampResponse>> forumTimestampGet({required String? key}) {
+    generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
+
+    return _forumTimestampGet(key: key);
+  }
+
+  ///Get current server time
+  ///@param key API key (Public)
+  @Get(path: '/forum/timestamp')
+  Future<chopper.Response<TimestampResponse>> _forumTimestampGet({@Query('key') required String? key});
+
+  ///Get any Forum selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  Future<chopper.Response> forumGet({
+    required String? key,
+    List<enums.ForumSelectionName>? selections,
+    String? id,
+    enums.ApiStripTags? striptags,
+    int? limit,
+    int? to,
+    int? from,
+    String? cat,
+    enums.ForumGetSort? sort,
+    int? offset,
+  }) {
+    return _forumGet(
+        key: key,
+        selections: forumSelectionNameListToJson(selections),
+        id: id,
+        striptags: striptags?.value?.toString(),
+        limit: limit,
+        to: to,
+        from: from,
+        cat: cat,
+        sort: sort?.value?.toString(),
+        offset: offset);
+  }
+
+  ///Get any Forum selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  @Get(path: '/forum')
+  Future<chopper.Response> _forumGet({
+    @Query('key') required String? key,
+    @Query('selections') List<Object?>? selections,
+    @Query('id') String? id,
+    @Query('striptags') String? striptags,
+    @Query('limit') int? limit,
+    @Query('to') int? to,
+    @Query('from') int? from,
+    @Query('cat') String? cat,
+    @Query('sort') String? sort,
+    @Query('offset') int? offset,
   });
 
   ///Get item market listings
   ///@param key API key (Public)
   ///@param id Item id
-  ///@param cat Weapon bonus
+  ///@param cat This parameter is being replaced with 'bonus' parameter and will be removed on 1st December 2024.
+  ///@param bonus Used to filter weapons with a specific bonus.
   ///@param offset
-  Future<chopper.Response<MarketSelectionsItemmarketGet$Response>>
-      marketSelectionsItemmarketGet({
+  Future<chopper.Response<MarketItemMarketResponse>> marketIdItemmarketGet({
     required String? key,
-    required String? id,
+    required int? id,
     enums.WeaponBonusEnum? cat,
+    enums.WeaponBonusEnum? bonus,
     int? offset,
   }) {
-    generatedMapping.putIfAbsent(MarketSelectionsItemmarketGet$Response,
-        () => MarketSelectionsItemmarketGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(MarketItemMarketResponse, () => MarketItemMarketResponse.fromJsonFactory);
 
-    return _marketSelectionsItemmarketGet(
-        key: key, id: id, cat: cat?.value?.toString(), offset: offset);
+    return _marketIdItemmarketGet(
+        key: key, id: id, cat: cat?.value?.toString(), bonus: bonus?.value?.toString(), offset: offset);
   }
 
   ///Get item market listings
   ///@param key API key (Public)
   ///@param id Item id
-  ///@param cat Weapon bonus
+  ///@param cat This parameter is being replaced with 'bonus' parameter and will be removed on 1st December 2024.
+  ///@param bonus Used to filter weapons with a specific bonus.
   ///@param offset
-  @Get(path: '/market/?selections=itemmarket')
-  Future<chopper.Response<MarketSelectionsItemmarketGet$Response>>
-      _marketSelectionsItemmarketGet({
+  @Get(path: '/market/{id}/itemmarket')
+  Future<chopper.Response<MarketItemMarketResponse>> _marketIdItemmarketGet({
     @Query('key') required String? key,
-    @Query('id') required String? id,
+    @Path('id') required int? id,
     @Query('cat') String? cat,
+    @Query('bonus') String? bonus,
+    @Query('offset') int? offset,
+  });
+
+  ///Get all available market selections
+  ///@param key API key (Public)
+  Future<chopper.Response<MarketLookupResponse>> marketLookupGet({required String? key}) {
+    generatedMapping.putIfAbsent(MarketLookupResponse, () => MarketLookupResponse.fromJsonFactory);
+
+    return _marketLookupGet(key: key);
+  }
+
+  ///Get all available market selections
+  ///@param key API key (Public)
+  @Get(path: '/market/lookup')
+  Future<chopper.Response<MarketLookupResponse>> _marketLookupGet({@Query('key') required String? key});
+
+  ///Get current server time
+  ///@param key API key (Public)
+  Future<chopper.Response<TimestampResponse>> marketTimestampGet({required String? key}) {
+    generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
+
+    return _marketTimestampGet(key: key);
+  }
+
+  ///Get current server time
+  ///@param key API key (Public)
+  @Get(path: '/market/timestamp')
+  Future<chopper.Response<TimestampResponse>> _marketTimestampGet({@Query('key') required String? key});
+
+  ///Get any Market selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param bonus Used to filter weapons with a specific bonus
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  Future<chopper.Response> marketGet({
+    required String? key,
+    List<enums.MarketSelectionName>? selections,
+    String? id,
+    enums.WeaponBonusEnum? bonus,
+    String? cat,
+    enums.MarketGetSort? sort,
+    int? offset,
+  }) {
+    return _marketGet(
+        key: key,
+        selections: marketSelectionNameListToJson(selections),
+        id: id,
+        bonus: bonus?.value?.toString(),
+        cat: cat,
+        sort: sort?.value?.toString(),
+        offset: offset);
+  }
+
+  ///Get any Market selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param bonus Used to filter weapons with a specific bonus
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  @Get(path: '/market')
+  Future<chopper.Response> _marketGet({
+    @Query('key') required String? key,
+    @Query('selections') List<Object?>? selections,
+    @Query('id') String? id,
+    @Query('bonus') String? bonus,
+    @Query('cat') String? cat,
+    @Query('sort') String? sort,
     @Query('offset') int? offset,
   });
 
@@ -441,23 +751,18 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp until when started races are returned (schedule.start)
   ///@param from Timestamp after when started races are returned (scheduled.start)
   ///@param cat Category of races returned
-  Future<chopper.Response<Races>> racingSelectionsRacesGet({
+  Future<chopper.Response<RacingRacesResponse>> racingRacesGet({
     required String? key,
     int? limit,
-    enums.RacingSelectionsRacesGetSort? sort,
+    enums.RacingRacesGetSort? sort,
     int? to,
     int? from,
-    enums.RacingSelectionsRacesGetCat? cat,
+    enums.RacingRacesGetCat? cat,
   }) {
-    generatedMapping.putIfAbsent(Races, () => Races.fromJsonFactory);
+    generatedMapping.putIfAbsent(RacingRacesResponse, () => RacingRacesResponse.fromJsonFactory);
 
-    return _racingSelectionsRacesGet(
-        key: key,
-        limit: limit,
-        sort: sort?.value?.toString(),
-        to: to,
-        from: from,
-        cat: cat?.value?.toString());
+    return _racingRacesGet(
+        key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from, cat: cat?.value?.toString());
   }
 
   ///Get races
@@ -467,8 +772,8 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp until when started races are returned (schedule.start)
   ///@param from Timestamp after when started races are returned (scheduled.start)
   ///@param cat Category of races returned
-  @Get(path: '/racing/?selections=races')
-  Future<chopper.Response<Races>> _racingSelectionsRacesGet({
+  @Get(path: '/racing/races')
+  Future<chopper.Response<RacingRacesResponse>> _racingRacesGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -479,168 +784,232 @@ abstract class TornV2 extends ChopperService {
 
   ///Get track records
   ///@param key API key (Public)
-  ///@param id Track id
+  ///@param trackId Track id
   ///@param cat Car class
-  Future<chopper.Response<RaceRecords>> racingSelectionsRecordsGet({
+  Future<chopper.Response<RacingTrackRecordsResponse>> racingTrackIdRecordsGet({
     required String? key,
-    required int? id,
+    required int? trackId,
     required enums.RaceClassEnum? cat,
   }) {
-    generatedMapping.putIfAbsent(
-        RaceRecords, () => RaceRecords.fromJsonFactory);
+    generatedMapping.putIfAbsent(RacingTrackRecordsResponse, () => RacingTrackRecordsResponse.fromJsonFactory);
 
-    return _racingSelectionsRecordsGet(
-        key: key, id: id, cat: cat?.value?.toString());
+    return _racingTrackIdRecordsGet(key: key, trackId: trackId, cat: cat?.value?.toString());
   }
 
   ///Get track records
   ///@param key API key (Public)
-  ///@param id Track id
+  ///@param trackId Track id
   ///@param cat Car class
-  @Get(path: '/racing/?selections=records')
-  Future<chopper.Response<RaceRecords>> _racingSelectionsRecordsGet({
+  @Get(path: '/racing/{trackId}/records')
+  Future<chopper.Response<RacingTrackRecordsResponse>> _racingTrackIdRecordsGet({
     @Query('key') required String? key,
-    @Query('id') required int? id,
+    @Path('trackId') required int? trackId,
     @Query('cat') required String? cat,
   });
 
   ///Get specific race details
   ///@param key API key (Public)
   ///@param id Race id
-  Future<chopper.Response<RaceDetails>> racingSelectionsRaceGet({
+  Future<chopper.Response<RacingRaceDetailsResponse>> racingRaceIdRaceGet({
     required String? key,
     required int? id,
   }) {
-    generatedMapping.putIfAbsent(
-        RaceDetails, () => RaceDetails.fromJsonFactory);
+    generatedMapping.putIfAbsent(RacingRaceDetailsResponse, () => RacingRaceDetailsResponse.fromJsonFactory);
 
-    return _racingSelectionsRaceGet(key: key, id: id);
+    return _racingRaceIdRaceGet(key: key, id: id);
   }
 
   ///Get specific race details
   ///@param key API key (Public)
   ///@param id Race id
-  @Get(path: '/racing/?selections=race')
-  Future<chopper.Response<RaceDetails>> _racingSelectionsRaceGet({
+  @Get(path: '/racing/{raceId}/race')
+  Future<chopper.Response<RacingRaceDetailsResponse>> _racingRaceIdRaceGet({
     @Query('key') required String? key,
-    @Query('id') required int? id,
+    @Path('id') required int? id,
   });
 
   ///Get cars and their racing stats
   ///@param key API key (Public)
-  Future<chopper.Response<RaceCars>> racingSelectionsCarsGet(
-      {required String? key}) {
-    generatedMapping.putIfAbsent(RaceCars, () => RaceCars.fromJsonFactory);
+  Future<chopper.Response<RacingCarsResponse>> racingCarsGet({required String? key}) {
+    generatedMapping.putIfAbsent(RacingCarsResponse, () => RacingCarsResponse.fromJsonFactory);
 
-    return _racingSelectionsCarsGet(key: key);
+    return _racingCarsGet(key: key);
   }
 
   ///Get cars and their racing stats
   ///@param key API key (Public)
-  @Get(path: '/racing/?selections=cars')
-  Future<chopper.Response<RaceCars>> _racingSelectionsCarsGet(
-      {@Query('key') required String? key});
+  @Get(path: '/racing/cars')
+  Future<chopper.Response<RacingCarsResponse>> _racingCarsGet({@Query('key') required String? key});
 
   ///Get race tracks and descriptions
   ///@param key API key (Public)
-  Future<chopper.Response<RaceTracks>> racingSelectionsTracksGet(
-      {required String? key}) {
-    generatedMapping.putIfAbsent(RaceTracks, () => RaceTracks.fromJsonFactory);
+  Future<chopper.Response<RacingTracksResponse>> racingTracksGet({required String? key}) {
+    generatedMapping.putIfAbsent(RacingTracksResponse, () => RacingTracksResponse.fromJsonFactory);
 
-    return _racingSelectionsTracksGet(key: key);
+    return _racingTracksGet(key: key);
   }
 
   ///Get race tracks and descriptions
   ///@param key API key (Public)
-  @Get(path: '/racing/?selections=tracks')
-  Future<chopper.Response<RaceTracks>> _racingSelectionsTracksGet(
-      {@Query('key') required String? key});
+  @Get(path: '/racing/tracks')
+  Future<chopper.Response<RacingTracksResponse>> _racingTracksGet({@Query('key') required String? key});
 
   ///Get all possible car upgrades
   ///@param key API key (Public)
-  Future<chopper.Response<RaceCarUpgrades>> racingSelectionsCarupgradesGet(
-      {required String? key}) {
-    generatedMapping.putIfAbsent(
-        RaceCarUpgrades, () => RaceCarUpgrades.fromJsonFactory);
+  Future<chopper.Response<RacingCarUpgradesResponse>> racingCarupgradesGet({required String? key}) {
+    generatedMapping.putIfAbsent(RacingCarUpgradesResponse, () => RacingCarUpgradesResponse.fromJsonFactory);
 
-    return _racingSelectionsCarupgradesGet(key: key);
+    return _racingCarupgradesGet(key: key);
   }
 
   ///Get all possible car upgrades
   ///@param key API key (Public)
-  @Get(path: '/racing/?selections=carupgrades')
-  Future<chopper.Response<RaceCarUpgrades>> _racingSelectionsCarupgradesGet(
-      {@Query('key') required String? key});
+  @Get(path: '/racing/carupgrades')
+  Future<chopper.Response<RacingCarUpgradesResponse>> _racingCarupgradesGet({@Query('key') required String? key});
 
-  ///Get Subcrimes information
+  ///Get all available racing selections
   ///@param key API key (Public)
-  ///@param id Crime id
-  Future<chopper.Response<TornSubcrimes>> tornSelectionsSubcrimesGet({
+  Future<chopper.Response<RacingLookupResponse>> racingLookupGet({required String? key}) {
+    generatedMapping.putIfAbsent(RacingLookupResponse, () => RacingLookupResponse.fromJsonFactory);
+
+    return _racingLookupGet(key: key);
+  }
+
+  ///Get all available racing selections
+  ///@param key API key (Public)
+  @Get(path: '/racing/lookup')
+  Future<chopper.Response<RacingLookupResponse>> _racingLookupGet({@Query('key') required String? key});
+
+  ///Get current server time
+  ///@param key API key (Public)
+  Future<chopper.Response<TimestampResponse>> racingTimestampGet({required String? key}) {
+    generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
+
+    return _racingTimestampGet(key: key);
+  }
+
+  ///Get current server time
+  ///@param key API key (Public)
+  @Get(path: '/racing/timestamp')
+  Future<chopper.Response<TimestampResponse>> _racingTimestampGet({@Query('key') required String? key});
+
+  ///Get any Racing selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  Future<chopper.Response> racingGet({
     required String? key,
-    required String? id,
+    List<enums.RacingSelectionName>? selections,
+    String? id,
+    int? limit,
+    int? to,
+    int? from,
+    String? cat,
+    enums.RacingGetSort? sort,
+    int? offset,
   }) {
-    generatedMapping.putIfAbsent(
-        TornSubcrimes, () => TornSubcrimes.fromJsonFactory);
+    return _racingGet(
+        key: key,
+        selections: racingSelectionNameListToJson(selections),
+        id: id,
+        limit: limit,
+        to: to,
+        from: from,
+        cat: cat,
+        sort: sort?.value?.toString(),
+        offset: offset);
+  }
 
-    return _tornSelectionsSubcrimesGet(key: key, id: id);
+  ///Get any Racing selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  @Get(path: '/racing')
+  Future<chopper.Response> _racingGet({
+    @Query('key') required String? key,
+    @Query('selections') List<Object?>? selections,
+    @Query('id') String? id,
+    @Query('limit') int? limit,
+    @Query('to') int? to,
+    @Query('from') int? from,
+    @Query('cat') String? cat,
+    @Query('sort') String? sort,
+    @Query('offset') int? offset,
+  });
+
+  ///Get Subcrimes information
+  ///@param key API key (Public)
+  ///@param crimeId Crime id
+  Future<chopper.Response<TornSubcrimesResponse>> tornCrimeIdSubcrimesGet({
+    required String? key,
+    required String? crimeId,
+  }) {
+    generatedMapping.putIfAbsent(TornSubcrimesResponse, () => TornSubcrimesResponse.fromJsonFactory);
+
+    return _tornCrimeIdSubcrimesGet(key: key, crimeId: crimeId);
   }
 
   ///Get Subcrimes information
   ///@param key API key (Public)
-  ///@param id Crime id
-  @Get(path: '/torn/?selections=subcrimes')
-  Future<chopper.Response<TornSubcrimes>> _tornSelectionsSubcrimesGet({
+  ///@param crimeId Crime id
+  @Get(path: '/torn/{crimeId}/subcrimes')
+  Future<chopper.Response<TornSubcrimesResponse>> _tornCrimeIdSubcrimesGet({
     @Query('key') required String? key,
-    @Query('id') required String? id,
+    @Path('crimeId') required String? crimeId,
   });
 
   ///Get crimes information
   ///@param key API key (Public)
-  Future<chopper.Response<TornCrimes>> tornSelectionsCrimesGet(
-      {required String? key}) {
-    generatedMapping.putIfAbsent(TornCrimes, () => TornCrimes.fromJsonFactory);
+  Future<chopper.Response<TornCrimesResponse>> tornCrimesGet({required String? key}) {
+    generatedMapping.putIfAbsent(TornCrimesResponse, () => TornCrimesResponse.fromJsonFactory);
 
-    return _tornSelectionsCrimesGet(key: key);
+    return _tornCrimesGet(key: key);
   }
 
   ///Get crimes information
   ///@param key API key (Public)
-  @Get(path: '/torn/?selections=crimes')
-  Future<chopper.Response<TornCrimes>> _tornSelectionsCrimesGet(
-      {@Query('key') required String? key});
+  @Get(path: '/torn/crimes')
+  Future<chopper.Response<TornCrimesResponse>> _tornCrimesGet({@Query('key') required String? key});
 
   ///Get calendar information
   ///@param key API key (Public)
-  Future<chopper.Response<TornSelectionsCalendarGet$Response>>
-      tornSelectionsCalendarGet({required String? key}) {
-    generatedMapping.putIfAbsent(TornSelectionsCalendarGet$Response,
-        () => TornSelectionsCalendarGet$Response.fromJsonFactory);
+  Future<chopper.Response<TornCalendarResponse>> tornCalendarGet({required String? key}) {
+    generatedMapping.putIfAbsent(TornCalendarResponse, () => TornCalendarResponse.fromJsonFactory);
 
-    return _tornSelectionsCalendarGet(key: key);
+    return _tornCalendarGet(key: key);
   }
 
   ///Get calendar information
   ///@param key API key (Public)
-  @Get(path: '/torn/?selections=calendar')
-  Future<chopper.Response<TornSelectionsCalendarGet$Response>>
-      _tornSelectionsCalendarGet({@Query('key') required String? key});
+  @Get(path: '/torn/calendar')
+  Future<chopper.Response<TornCalendarResponse>> _tornCalendarGet({@Query('key') required String? key});
 
   ///Get player hall of fame positions for a specific category
   ///@param key API key (Public)
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
-  Future<chopper.Response<TornSelectionsHofGet$Response>> tornSelectionsHofGet({
+  Future<chopper.Response<TornHofResponse>> tornHofGet({
     required String? key,
     int? limit,
     int? offset,
     required enums.TornHofCategory? cat,
   }) {
-    generatedMapping.putIfAbsent(TornSelectionsHofGet$Response,
-        () => TornSelectionsHofGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(TornHofResponse, () => TornHofResponse.fromJsonFactory);
 
-    return _tornSelectionsHofGet(
-        key: key, limit: limit, offset: offset, cat: cat?.value?.toString());
+    return _tornHofGet(key: key, limit: limit, offset: offset, cat: cat?.value?.toString());
   }
 
   ///Get player hall of fame positions for a specific category
@@ -648,9 +1017,8 @@ abstract class TornV2 extends ChopperService {
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
-  @Get(path: '/torn/?selections=hof')
-  Future<chopper.Response<TornSelectionsHofGet$Response>>
-      _tornSelectionsHofGet({
+  @Get(path: '/torn/hof')
+  Future<chopper.Response<TornHofResponse>> _tornHofGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('offset') int? offset,
@@ -662,18 +1030,15 @@ abstract class TornV2 extends ChopperService {
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
-  Future<chopper.Response<TornSelectionsFactionhofGet$Response>>
-      tornSelectionsFactionhofGet({
+  Future<chopper.Response<TornFactionHofResponse>> tornFactionhofGet({
     required String? key,
     int? limit,
     int? offset,
     required enums.TornFactionHofCategory? cat,
   }) {
-    generatedMapping.putIfAbsent(TornSelectionsFactionhofGet$Response,
-        () => TornSelectionsFactionhofGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(TornFactionHofResponse, () => TornFactionHofResponse.fromJsonFactory);
 
-    return _tornSelectionsFactionhofGet(
-        key: key, limit: limit, offset: offset, cat: cat?.value?.toString());
+    return _tornFactionhofGet(key: key, limit: limit, offset: offset, cat: cat?.value?.toString());
   }
 
   ///Get faction hall of fame positions for a specific category
@@ -681,130 +1046,213 @@ abstract class TornV2 extends ChopperService {
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
-  @Get(path: '/torn/?selections=factionhof')
-  Future<chopper.Response<TornSelectionsFactionhofGet$Response>>
-      _tornSelectionsFactionhofGet({
+  @Get(path: '/torn/factionhof')
+  Future<chopper.Response<TornFactionHofResponse>> _tornFactionhofGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('offset') int? offset,
     @Query('cat') required String? cat,
   });
 
-  ///Get available log ids
+  ///Get available log ids for a specific log category
   ///@param key API key (Public)
-  ///@param id Log category id
-  Future<chopper.Response<TornSelectionsLogtypesGet$Response>>
-      tornSelectionsLogtypesGet({
+  ///@param logCategoryId Log category id
+  Future<chopper.Response<TornLogTypesResponse>> tornLogCategoryIdLogtypesGet({
     required String? key,
-    int? id,
+    required int? logCategoryId,
   }) {
-    generatedMapping.putIfAbsent(TornSelectionsLogtypesGet$Response,
-        () => TornSelectionsLogtypesGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(TornLogTypesResponse, () => TornLogTypesResponse.fromJsonFactory);
 
-    return _tornSelectionsLogtypesGet(key: key, id: id);
+    return _tornLogCategoryIdLogtypesGet(key: key, logCategoryId: logCategoryId);
   }
 
-  ///Get available log ids
+  ///Get available log ids for a specific log category
   ///@param key API key (Public)
-  ///@param id Log category id
-  @Get(path: '/torn/?selections=logtypes')
-  Future<chopper.Response<TornSelectionsLogtypesGet$Response>>
-      _tornSelectionsLogtypesGet({
+  ///@param logCategoryId Log category id
+  @Get(path: '/torn/{logCategoryId}/logtypes')
+  Future<chopper.Response<TornLogTypesResponse>> _tornLogCategoryIdLogtypesGet({
     @Query('key') required String? key,
-    @Query('id') int? id,
+    @Path('logCategoryId') required int? logCategoryId,
   });
 
+  ///Get all available log ids
+  ///@param key API key (Public)
+  Future<chopper.Response<TornLogTypesResponse>> tornLogtypesGet({required String? key}) {
+    generatedMapping.putIfAbsent(TornLogTypesResponse, () => TornLogTypesResponse.fromJsonFactory);
+
+    return _tornLogtypesGet(key: key);
+  }
+
+  ///Get all available log ids
+  ///@param key API key (Public)
+  @Get(path: '/torn/logtypes')
+  Future<chopper.Response<TornLogTypesResponse>> _tornLogtypesGet({@Query('key') required String? key});
+
   ///Get available log categories
   ///@param key API key (Public)
-  Future<chopper.Response<TornSelectionsLogcategoriesGet$Response>>
-      tornSelectionsLogcategoriesGet({required String? key}) {
-    generatedMapping.putIfAbsent(TornSelectionsLogcategoriesGet$Response,
-        () => TornSelectionsLogcategoriesGet$Response.fromJsonFactory);
+  Future<chopper.Response<TornLogCategoriesResponse>> tornLogcategoriesGet({required String? key}) {
+    generatedMapping.putIfAbsent(TornLogCategoriesResponse, () => TornLogCategoriesResponse.fromJsonFactory);
 
-    return _tornSelectionsLogcategoriesGet(key: key);
+    return _tornLogcategoriesGet(key: key);
   }
 
   ///Get available log categories
   ///@param key API key (Public)
-  @Get(path: '/torn/?selections=logcategories')
-  Future<chopper.Response<TornSelectionsLogcategoriesGet$Response>>
-      _tornSelectionsLogcategoriesGet({@Query('key') required String? key});
+  @Get(path: '/torn/logcategories')
+  Future<chopper.Response<TornLogCategoriesResponse>> _tornLogcategoriesGet({@Query('key') required String? key});
 
   ///Get bounties
   ///@param key API key (Public)
   ///@param limit
   ///@param offset
-  Future<chopper.Response<TornSelectionsBountiesGet$Response>>
-      tornSelectionsBountiesGet({
+  Future<chopper.Response<TornBountiesResponse>> tornBountiesGet({
     required String? key,
     int? limit,
     int? offset,
   }) {
-    generatedMapping.putIfAbsent(TornSelectionsBountiesGet$Response,
-        () => TornSelectionsBountiesGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(TornBountiesResponse, () => TornBountiesResponse.fromJsonFactory);
 
-    return _tornSelectionsBountiesGet(key: key, limit: limit, offset: offset);
+    return _tornBountiesGet(key: key, limit: limit, offset: offset);
   }
 
   ///Get bounties
   ///@param key API key (Public)
   ///@param limit
   ///@param offset
-  @Get(path: '/torn/?selections=bounties')
-  Future<chopper.Response<TornSelectionsBountiesGet$Response>>
-      _tornSelectionsBountiesGet({
+  @Get(path: '/torn/bounties')
+  Future<chopper.Response<TornBountiesResponse>> _tornBountiesGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('offset') int? offset,
   });
 
-  ///Get user's crime statistics
-  ///@param key API key (Minimal)
-  ///@param id Crime id
-  Future<chopper.Response<UserCrimeDetails>> userSelectionsCrimesGet({
-    required String? key,
-    required String? id,
-  }) {
-    generatedMapping.putIfAbsent(
-        UserCrimeDetails, () => UserCrimeDetails.fromJsonFactory);
+  ///Get all available torn selections
+  ///@param key API key (Public)
+  Future<chopper.Response<TornLookupResponse>> tornLookupGet({required String? key}) {
+    generatedMapping.putIfAbsent(TornLookupResponse, () => TornLookupResponse.fromJsonFactory);
 
-    return _userSelectionsCrimesGet(key: key, id: id);
+    return _tornLookupGet(key: key);
   }
 
-  ///Get user's crime statistics
-  ///@param key API key (Minimal)
-  ///@param id Crime id
-  @Get(path: '/user/?selections=crimes')
-  Future<chopper.Response<UserCrimeDetails>> _userSelectionsCrimesGet({
-    @Query('key') required String? key,
-    @Query('id') required String? id,
-  });
+  ///Get all available torn selections
+  ///@param key API key (Public)
+  @Get(path: '/torn/lookup')
+  Future<chopper.Response<TornLookupResponse>> _tornLookupGet({@Query('key') required String? key});
 
-  ///Get user races
-  ///@param key API key (Minimal)
+  ///Get current server time
+  ///@param key API key (Public)
+  Future<chopper.Response<TimestampResponse>> tornTimestampGet({required String? key}) {
+    generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
+
+    return _tornTimestampGet(key: key);
+  }
+
+  ///Get current server time
+  ///@param key API key (Public)
+  @Get(path: '/torn/timestamp')
+  Future<chopper.Response<TimestampResponse>> _tornTimestampGet({@Query('key') required String? key});
+
+  ///Get any Torn selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
-  ///@param sort Sorted by schedule.start field
-  ///@param to Timestamp until when started races are returned (schedule.start)
-  ///@param from Timestamp after when started races are returned (scheduled.start)
-  ///@param cat Category of races returned
-  Future<chopper.Response<RaceDetails>> userSelectionsRacesGet({
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  Future<chopper.Response> tornGet({
     required String? key,
+    List<enums.TornSelectionName>? selections,
+    String? id,
+    enums.ApiStripTags? striptags,
     int? limit,
-    enums.UserSelectionsRacesGetSort? sort,
     int? to,
     int? from,
-    enums.UserSelectionsRacesGetCat? cat,
+    String? cat,
+    enums.TornGetSort? sort,
+    int? offset,
   }) {
-    generatedMapping.putIfAbsent(
-        RaceDetails, () => RaceDetails.fromJsonFactory);
-
-    return _userSelectionsRacesGet(
+    return _tornGet(
         key: key,
+        selections: tornSelectionNameListToJson(selections),
+        id: id,
+        striptags: striptags?.value?.toString(),
         limit: limit,
-        sort: sort?.value?.toString(),
         to: to,
         from: from,
-        cat: cat?.value?.toString());
+        cat: cat,
+        sort: sort?.value?.toString(),
+        offset: offset);
+  }
+
+  ///Get any Torn selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  @Get(path: '/torn')
+  Future<chopper.Response> _tornGet({
+    @Query('key') required String? key,
+    @Query('selections') List<Object?>? selections,
+    @Query('id') String? id,
+    @Query('striptags') String? striptags,
+    @Query('limit') int? limit,
+    @Query('to') int? to,
+    @Query('from') int? from,
+    @Query('cat') String? cat,
+    @Query('sort') String? sort,
+    @Query('offset') int? offset,
+  });
+
+  ///Get user's crime statistics
+  ///@param key API key (Minimal)
+  ///@param crimeId Crime id
+  Future<chopper.Response<UserCrimesResponse>> userCrimeIdCrimesGet({
+    required String? key,
+    required String? crimeId,
+  }) {
+    generatedMapping.putIfAbsent(UserCrimesResponse, () => UserCrimesResponse.fromJsonFactory);
+
+    return _userCrimeIdCrimesGet(key: key, crimeId: crimeId);
+  }
+
+  ///Get user's crime statistics
+  ///@param key API key (Minimal)
+  ///@param crimeId Crime id
+  @Get(path: '/user/{crimeId}/crimes')
+  Future<chopper.Response<UserCrimesResponse>> _userCrimeIdCrimesGet({
+    @Query('key') required String? key,
+    @Path('crimeId') required String? crimeId,
+  });
+
+  ///Get user races
+  ///@param key API key (Minimal)
+  ///@param limit
+  ///@param sort Sorted by schedule.start field
+  ///@param to Timestamp until when started races are returned (schedule.start)
+  ///@param from Timestamp after when started races are returned (scheduled.start)
+  ///@param cat Category of races returned
+  Future<chopper.Response<UserRacesResponse>> userRacesGet({
+    required String? key,
+    int? limit,
+    enums.UserRacesGetSort? sort,
+    int? to,
+    int? from,
+    enums.UserRacesGetCat? cat,
+  }) {
+    generatedMapping.putIfAbsent(UserRacesResponse, () => UserRacesResponse.fromJsonFactory);
+
+    return _userRacesGet(
+        key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from, cat: cat?.value?.toString());
   }
 
   ///Get user races
@@ -814,8 +1262,8 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp until when started races are returned (schedule.start)
   ///@param from Timestamp after when started races are returned (scheduled.start)
   ///@param cat Category of races returned
-  @Get(path: '/user/?selections=races')
-  Future<chopper.Response<RaceDetails>> _userSelectionsRacesGet({
+  @Get(path: '/user/races')
+  Future<chopper.Response<UserRacesResponse>> _userRacesGet({
     @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -826,44 +1274,42 @@ abstract class TornV2 extends ChopperService {
 
   ///Get user enlisted cars
   ///@param key API key (Minimal)
-  Future<chopper.Response<UserRaceCarDetails>> userSelectionsEnlistedcarsGet(
-      {required String? key}) {
-    generatedMapping.putIfAbsent(
-        UserRaceCarDetails, () => UserRaceCarDetails.fromJsonFactory);
+  Future<chopper.Response<UserEnlistedCarsResponse>> userEnlistedcarsGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserEnlistedCarsResponse, () => UserEnlistedCarsResponse.fromJsonFactory);
 
-    return _userSelectionsEnlistedcarsGet(key: key);
+    return _userEnlistedcarsGet(key: key);
   }
 
   ///Get user enlisted cars
   ///@param key API key (Minimal)
-  @Get(path: '/user/?selections=enlistedcars')
-  Future<chopper.Response<UserRaceCarDetails>> _userSelectionsEnlistedcarsGet(
-      {@Query('key') required String? key});
+  @Get(path: '/user/enlistedcars')
+  Future<chopper.Response<UserEnlistedCarsResponse>> _userEnlistedcarsGet({@Query('key') required String? key});
 
   ///Get posts for a specific player
   ///@param key API key (Public)
-  ///@param cat Determines if the 'content' field returns raw HTML or plain text
+  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param id User id
   ///@param limit
   ///@param sort Sorted by post created timestamp
   ///@param to Returns posts created before this timestamp
   ///@param from Returns posts created after this timestamp
-  Future<chopper.Response<UserSelectionsForumpostsGet$Response>>
-      userSelectionsForumpostsGet({
+  Future<chopper.Response<UserForumPostsResponse>> userIdForumpostsGet({
     required String? key,
-    enums.UserSelectionsForumpostsGetCat? cat,
+    enums.UserIdForumpostsGetCat? cat,
+    enums.ApiStripTagsTrue? striptags,
     required int? id,
     int? limit,
-    enums.UserSelectionsForumpostsGetSort? sort,
+    enums.UserIdForumpostsGetSort? sort,
     int? to,
     int? from,
   }) {
-    generatedMapping.putIfAbsent(UserSelectionsForumpostsGet$Response,
-        () => UserSelectionsForumpostsGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(UserForumPostsResponse, () => UserForumPostsResponse.fromJsonFactory);
 
-    return _userSelectionsForumpostsGet(
+    return _userIdForumpostsGet(
         key: key,
         cat: cat?.value?.toString(),
+        striptags: striptags?.value?.toString(),
         id: id,
         limit: limit,
         sort: sort?.value?.toString(),
@@ -873,52 +1319,73 @@ abstract class TornV2 extends ChopperService {
 
   ///Get posts for a specific player
   ///@param key API key (Public)
-  ///@param cat Determines if the 'content' field returns raw HTML or plain text
+  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param id User id
   ///@param limit
   ///@param sort Sorted by post created timestamp
   ///@param to Returns posts created before this timestamp
   ///@param from Returns posts created after this timestamp
-  @Get(path: '/user/?selections=forumposts')
-  Future<chopper.Response<UserSelectionsForumpostsGet$Response>>
-      _userSelectionsForumpostsGet({
+  @Get(path: '/user/{id}/forumposts')
+  Future<chopper.Response<UserForumPostsResponse>> _userIdForumpostsGet({
     @Query('key') required String? key,
     @Query('cat') String? cat,
-    @Query('id') required int? id,
+    @Query('striptags') String? striptags,
+    @Path('id') required int? id,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
     @Query('from') int? from,
   });
 
-  ///Get threads for a specific player
+  ///Get your posts
   ///@param key API key (Public)
-  ///@param id User id
+  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
-  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
-  ///@param to Returns threads created before this timestamp
-  ///@param from Returns threads created after this timestamp
-  Future<chopper.Response<UserSelectionsForumthreadsGet$Response>>
-      userSelectionsForumthreadsGet({
+  ///@param sort Sorted by post created timestamp
+  ///@param to Returns posts created before this timestamp
+  ///@param from Returns posts created after this timestamp
+  Future<chopper.Response<UserForumPostsResponse>> userForumpostsGet({
     required String? key,
-    required int? id,
+    enums.UserForumpostsGetCat? cat,
+    enums.ApiStripTagsTrue? striptags,
     int? limit,
-    enums.UserSelectionsForumthreadsGetSort? sort,
+    enums.UserForumpostsGetSort? sort,
     int? to,
     int? from,
   }) {
-    generatedMapping.putIfAbsent(UserSelectionsForumthreadsGet$Response,
-        () => UserSelectionsForumthreadsGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(UserForumPostsResponse, () => UserForumPostsResponse.fromJsonFactory);
 
-    return _userSelectionsForumthreadsGet(
+    return _userForumpostsGet(
         key: key,
-        id: id,
+        cat: cat?.value?.toString(),
+        striptags: striptags?.value?.toString(),
         limit: limit,
         sort: sort?.value?.toString(),
         to: to,
         from: from);
   }
 
+  ///Get your posts
+  ///@param key API key (Public)
+  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param limit
+  ///@param sort Sorted by post created timestamp
+  ///@param to Returns posts created before this timestamp
+  ///@param from Returns posts created after this timestamp
+  @Get(path: '/user/forumposts')
+  Future<chopper.Response<UserForumPostsResponse>> _userForumpostsGet({
+    @Query('key') required String? key,
+    @Query('cat') String? cat,
+    @Query('striptags') String? striptags,
+    @Query('limit') int? limit,
+    @Query('sort') String? sort,
+    @Query('to') int? to,
+    @Query('from') int? from,
+  });
+
   ///Get threads for a specific player
   ///@param key API key (Public)
   ///@param id User id
@@ -926,11 +1393,63 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
-  @Get(path: '/user/?selections=forumthreads')
-  Future<chopper.Response<UserSelectionsForumthreadsGet$Response>>
-      _userSelectionsForumthreadsGet({
+  Future<chopper.Response<UserForumThreadsResponse>> userIdForumthreadsGet({
+    required String? key,
+    required int? id,
+    int? limit,
+    enums.UserIdForumthreadsGetSort? sort,
+    int? to,
+    int? from,
+  }) {
+    generatedMapping.putIfAbsent(UserForumThreadsResponse, () => UserForumThreadsResponse.fromJsonFactory);
+
+    return _userIdForumthreadsGet(key: key, id: id, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+  }
+
+  ///Get threads for a specific player
+  ///@param key API key (Public)
+  ///@param id User id
+  ///@param limit
+  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
+  ///@param to Returns threads created before this timestamp
+  ///@param from Returns threads created after this timestamp
+  @Get(path: '/user/{id}/forumthreads')
+  Future<chopper.Response<UserForumThreadsResponse>> _userIdForumthreadsGet({
     @Query('key') required String? key,
-    @Query('id') required int? id,
+    @Path('id') required int? id,
+    @Query('limit') int? limit,
+    @Query('sort') String? sort,
+    @Query('to') int? to,
+    @Query('from') int? from,
+  });
+
+  ///Get your threads
+  ///@param key API key (Public)
+  ///@param limit
+  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
+  ///@param to Returns threads created before this timestamp
+  ///@param from Returns threads created after this timestamp
+  Future<chopper.Response<UserForumThreadsResponse>> userForumthreadsGet({
+    required String? key,
+    int? limit,
+    enums.UserForumthreadsGetSort? sort,
+    int? to,
+    int? from,
+  }) {
+    generatedMapping.putIfAbsent(UserForumThreadsResponse, () => UserForumThreadsResponse.fromJsonFactory);
+
+    return _userForumthreadsGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+  }
+
+  ///Get your threads
+  ///@param key API key (Public)
+  ///@param limit
+  ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
+  ///@param to Returns threads created before this timestamp
+  ///@param from Returns threads created after this timestamp
+  @Get(path: '/user/forumthreads')
+  Future<chopper.Response<UserForumThreadsResponse>> _userForumthreadsGet({
+    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -939,154 +1458,244 @@ abstract class TornV2 extends ChopperService {
 
   ///Get updates on threads you subscribed to
   ///@param key API key (Minimal)
-  Future<chopper.Response<UserSelectionsForumsubscribedthreadsGet$Response>>
-      userSelectionsForumsubscribedthreadsGet({required String? key}) {
+  Future<chopper.Response<UserForumSubscribedThreadsResponse>> userForumsubscribedthreadsGet({required String? key}) {
     generatedMapping.putIfAbsent(
-        UserSelectionsForumsubscribedthreadsGet$Response,
-        () => UserSelectionsForumsubscribedthreadsGet$Response.fromJsonFactory);
+        UserForumSubscribedThreadsResponse, () => UserForumSubscribedThreadsResponse.fromJsonFactory);
 
-    return _userSelectionsForumsubscribedthreadsGet(key: key);
+    return _userForumsubscribedthreadsGet(key: key);
   }
 
   ///Get updates on threads you subscribed to
   ///@param key API key (Minimal)
-  @Get(path: '/user/?selections=forumsubscribedthreads')
-  Future<chopper.Response<UserSelectionsForumsubscribedthreadsGet$Response>>
-      _userSelectionsForumsubscribedthreadsGet(
-          {@Query('key') required String? key});
+  @Get(path: '/user/forumsubscribedthreads')
+  Future<chopper.Response<UserForumSubscribedThreadsResponse>> _userForumsubscribedthreadsGet(
+      {@Query('key') required String? key});
 
   ///Get updates on your threads and posts
   ///@param key API key (Minimal)
-  Future<chopper.Response<UserSelectionsForumfeedGet$Response>>
-      userSelectionsForumfeedGet({required String? key}) {
-    generatedMapping.putIfAbsent(UserSelectionsForumfeedGet$Response,
-        () => UserSelectionsForumfeedGet$Response.fromJsonFactory);
+  Future<chopper.Response<UserForumFeedResponse>> userForumfeedGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserForumFeedResponse, () => UserForumFeedResponse.fromJsonFactory);
 
-    return _userSelectionsForumfeedGet(key: key);
+    return _userForumfeedGet(key: key);
   }
 
   ///Get updates on your threads and posts
   ///@param key API key (Minimal)
-  @Get(path: '/user/?selections=forumfeed')
-  Future<chopper.Response<UserSelectionsForumfeedGet$Response>>
-      _userSelectionsForumfeedGet({@Query('key') required String? key});
+  @Get(path: '/user/forumfeed')
+  Future<chopper.Response<UserForumFeedResponse>> _userForumfeedGet({@Query('key') required String? key});
 
   ///Get updates on your friends' activity
   ///@param key API key (Minimal)
-  Future<chopper.Response<UserSelectionsForumfriendsGet$Response>>
-      userSelectionsForumfriendsGet({required String? key}) {
-    generatedMapping.putIfAbsent(UserSelectionsForumfriendsGet$Response,
-        () => UserSelectionsForumfriendsGet$Response.fromJsonFactory);
+  Future<chopper.Response<UserForumFriendsResponse>> userForumfriendsGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserForumFriendsResponse, () => UserForumFriendsResponse.fromJsonFactory);
 
-    return _userSelectionsForumfriendsGet(key: key);
+    return _userForumfriendsGet(key: key);
   }
 
   ///Get updates on your friends' activity
   ///@param key API key (Minimal)
-  @Get(path: '/user/?selections=forumfriends')
-  Future<chopper.Response<UserSelectionsForumfriendsGet$Response>>
-      _userSelectionsForumfriendsGet({@Query('key') required String? key});
+  @Get(path: '/user/forumfriends')
+  Future<chopper.Response<UserForumFriendsResponse>> _userForumfriendsGet({@Query('key') required String? key});
 
-  ///Get a player's hall of fame rankings
+  ///Get hall of fame rankings for a specific player
   ///@param key API key (Public)
   ///@param id User id
-  Future<chopper.Response<UserSelectionsHofGet$Response>> userSelectionsHofGet({
+  Future<chopper.Response<UserHofResponse>> userIdHofGet({
     required String? key,
     required int? id,
   }) {
-    generatedMapping.putIfAbsent(UserSelectionsHofGet$Response,
-        () => UserSelectionsHofGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(UserHofResponse, () => UserHofResponse.fromJsonFactory);
 
-    return _userSelectionsHofGet(key: key, id: id);
+    return _userIdHofGet(key: key, id: id);
   }
 
-  ///Get a player's hall of fame rankings
+  ///Get hall of fame rankings for a specific player
   ///@param key API key (Public)
   ///@param id User id
-  @Get(path: '/user/?selections=hof')
-  Future<chopper.Response<UserSelectionsHofGet$Response>>
-      _userSelectionsHofGet({
+  @Get(path: '/user/{id}/hof')
+  Future<chopper.Response<UserHofResponse>> _userIdHofGet({
     @Query('key') required String? key,
-    @Query('id') required int? id,
+    @Path('id') required int? id,
   });
 
+  ///Get your hall of fame rankings
+  ///@param key API key (Public)
+  Future<chopper.Response<UserHofResponse>> userHofGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserHofResponse, () => UserHofResponse.fromJsonFactory);
+
+    return _userHofGet(key: key);
+  }
+
+  ///Get your hall of fame rankings
+  ///@param key API key (Public)
+  @Get(path: '/user/hof')
+  Future<chopper.Response<UserHofResponse>> _userHofGet({@Query('key') required String? key});
+
   ///Get your competition's event start time
   ///@param key API key (Minimal)
-  Future<chopper.Response<UserSelectionsCalendarGet$Response>>
-      userSelectionsCalendarGet({required String? key}) {
-    generatedMapping.putIfAbsent(UserSelectionsCalendarGet$Response,
-        () => UserSelectionsCalendarGet$Response.fromJsonFactory);
+  Future<chopper.Response<UserCalendarResponse>> userCalendarGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserCalendarResponse, () => UserCalendarResponse.fromJsonFactory);
 
-    return _userSelectionsCalendarGet(key: key);
+    return _userCalendarGet(key: key);
   }
 
   ///Get your competition's event start time
   ///@param key API key (Minimal)
-  @Get(path: '/user/?selections=calendar')
-  Future<chopper.Response<UserSelectionsCalendarGet$Response>>
-      _userSelectionsCalendarGet({@Query('key') required String? key});
+  @Get(path: '/user/calendar')
+  Future<chopper.Response<UserCalendarResponse>> _userCalendarGet({@Query('key') required String? key});
 
-  ///Get bounties placed on a user
+  ///Get bounties placed on a specific user
   ///@param key API key (Public)
   ///@param id User id
-  Future<chopper.Response<UserSelectionsBountiesGet$Response>>
-      userSelectionsBountiesGet({
+  Future<chopper.Response<UserBountiesResponse>> userIdBountiesGet({
     required String? key,
     required int? id,
   }) {
-    generatedMapping.putIfAbsent(UserSelectionsBountiesGet$Response,
-        () => UserSelectionsBountiesGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(UserBountiesResponse, () => UserBountiesResponse.fromJsonFactory);
 
-    return _userSelectionsBountiesGet(key: key, id: id);
+    return _userIdBountiesGet(key: key, id: id);
   }
 
-  ///Get bounties placed on a user
+  ///Get bounties placed on a specific user
   ///@param key API key (Public)
   ///@param id User id
-  @Get(path: '/user/?selections=bounties')
-  Future<chopper.Response<UserSelectionsBountiesGet$Response>>
-      _userSelectionsBountiesGet({
+  @Get(path: '/user/{id}/bounties')
+  Future<chopper.Response<UserBountiesResponse>> _userIdBountiesGet({
     @Query('key') required String? key,
-    @Query('id') required int? id,
+    @Path('id') required int? id,
   });
+
+  ///Get bounties placed on you
+  ///@param key API key (Public)
+  Future<chopper.Response<UserBountiesResponse>> userBountiesGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserBountiesResponse, () => UserBountiesResponse.fromJsonFactory);
+
+    return _userBountiesGet(key: key);
+  }
+
+  ///Get bounties placed on you
+  ///@param key API key (Public)
+  @Get(path: '/user/bounties')
+  Future<chopper.Response<UserBountiesResponse>> _userBountiesGet({@Query('key') required String? key});
 
   ///Get your starter job positions
   ///@param key API key (Minimal)
-  Future<chopper.Response<UserSelectionsJobranksGet$Response>>
-      userSelectionsJobranksGet({required String? key}) {
-    generatedMapping.putIfAbsent(UserSelectionsJobranksGet$Response,
-        () => UserSelectionsJobranksGet$Response.fromJsonFactory);
+  Future<chopper.Response<UserJobRanksResponse>> userJobranksGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserJobRanksResponse, () => UserJobRanksResponse.fromJsonFactory);
 
-    return _userSelectionsJobranksGet(key: key);
+    return _userJobranksGet(key: key);
   }
 
   ///Get your starter job positions
   ///@param key API key (Minimal)
-  @Get(path: '/user/?selections=jobranks')
-  Future<chopper.Response<UserSelectionsJobranksGet$Response>>
-      _userSelectionsJobranksGet({@Query('key') required String? key});
+  @Get(path: '/user/jobranks')
+  Future<chopper.Response<UserJobRanksResponse>> _userJobranksGet({@Query('key') required String? key});
 
-  ///Get your item market listings
+  ///Get your item market listings for a specific item
   ///@param key API key (Limited)
   ///@param offset
-  Future<chopper.Response<UserSelectionsItemmarketGet$Response>>
-      userSelectionsItemmarketGet({
+  Future<chopper.Response<UserItemMarketResponse>> userItemmarketGet({
     required String? key,
     int? offset,
   }) {
-    generatedMapping.putIfAbsent(UserSelectionsItemmarketGet$Response,
-        () => UserSelectionsItemmarketGet$Response.fromJsonFactory);
+    generatedMapping.putIfAbsent(UserItemMarketResponse, () => UserItemMarketResponse.fromJsonFactory);
 
-    return _userSelectionsItemmarketGet(key: key, offset: offset);
+    return _userItemmarketGet(key: key, offset: offset);
   }
 
-  ///Get your item market listings
+  ///Get your item market listings for a specific item
   ///@param key API key (Limited)
   ///@param offset
-  @Get(path: '/user/?selections=itemmarket')
-  Future<chopper.Response<UserSelectionsItemmarketGet$Response>>
-      _userSelectionsItemmarketGet({
+  @Get(path: '/user/itemmarket')
+  Future<chopper.Response<UserItemMarketResponse>> _userItemmarketGet({
     @Query('key') required String? key,
+    @Query('offset') int? offset,
+  });
+
+  ///Get all available user selections
+  ///@param key API key (Public)
+  Future<chopper.Response<UserLookupResponse>> userLookupGet({required String? key}) {
+    generatedMapping.putIfAbsent(UserLookupResponse, () => UserLookupResponse.fromJsonFactory);
+
+    return _userLookupGet(key: key);
+  }
+
+  ///Get all available user selections
+  ///@param key API key (Public)
+  @Get(path: '/user/lookup')
+  Future<chopper.Response<UserLookupResponse>> _userLookupGet({@Query('key') required String? key});
+
+  ///Get current server time
+  ///@param key API key (Public)
+  Future<chopper.Response<TimestampResponse>> userTimestampGet({required String? key}) {
+    generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
+
+    return _userTimestampGet(key: key);
+  }
+
+  ///Get current server time
+  ///@param key API key (Public)
+  @Get(path: '/user/timestamp')
+  Future<chopper.Response<TimestampResponse>> _userTimestampGet({@Query('key') required String? key});
+
+  ///Get any User selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  Future<chopper.Response> userGet({
+    required String? key,
+    List<enums.UserSelectionName>? selections,
+    String? id,
+    int? limit,
+    int? to,
+    int? from,
+    String? cat,
+    enums.ApiStripTags? striptags,
+    enums.UserGetSort? sort,
+    int? offset,
+  }) {
+    return _userGet(
+        key: key,
+        selections: userSelectionNameListToJson(selections),
+        id: id,
+        limit: limit,
+        to: to,
+        from: from,
+        cat: cat,
+        striptags: striptags?.value?.toString(),
+        sort: sort?.value?.toString(),
+        offset: offset);
+  }
+
+  ///Get any User selection
+  ///@param key API key (Public)
+  ///@param selections Selection names
+  ///@param id selection id
+  ///@param limit
+  ///@param to Timestamp until when rows are returned
+  ///@param from Timestamp after when rows are returned
+  ///@param cat Selection category
+  ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
+  ///@param sort Direction to sort rows in
+  ///@param offset
+  @Get(path: '/user')
+  Future<chopper.Response> _userGet({
+    @Query('key') required String? key,
+    @Query('selections') List<Object?>? selections,
+    @Query('id') String? id,
+    @Query('limit') int? limit,
+    @Query('to') int? to,
+    @Query('from') int? from,
+    @Query('cat') String? cat,
+    @Query('striptags') String? striptags,
+    @Query('sort') String? sort,
     @Query('offset') int? offset,
   });
 }
@@ -1098,8 +1707,7 @@ class RequestLinks {
     this.prev,
   });
 
-  factory RequestLinks.fromJson(Map<String, dynamic> json) =>
-      _$RequestLinksFromJson(json);
+  factory RequestLinks.fromJson(Map<String, dynamic> json) => _$RequestLinksFromJson(json);
 
   static const toJsonFactory = _$RequestLinksToJson;
   Map<String, dynamic> toJson() => _$RequestLinksToJson(this);
@@ -1114,10 +1722,8 @@ class RequestLinks {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RequestLinks &&
-            (identical(other.next, next) ||
-                const DeepCollectionEquality().equals(other.next, next)) &&
-            (identical(other.prev, prev) ||
-                const DeepCollectionEquality().equals(other.prev, prev)));
+            (identical(other.next, next) || const DeepCollectionEquality().equals(other.next, next)) &&
+            (identical(other.prev, prev) || const DeepCollectionEquality().equals(other.prev, prev)));
   }
 
   @override
@@ -1125,9 +1731,7 @@ class RequestLinks {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(next) ^
-      const DeepCollectionEquality().hash(prev) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(next) ^ const DeepCollectionEquality().hash(prev) ^ runtimeType.hashCode;
 }
 
 extension $RequestLinksExtension on RequestLinks {
@@ -1135,11 +1739,8 @@ extension $RequestLinksExtension on RequestLinks {
     return RequestLinks(next: next ?? this.next, prev: prev ?? this.prev);
   }
 
-  RequestLinks copyWithWrapped(
-      {Wrapped<String?>? next, Wrapped<String?>? prev}) {
-    return RequestLinks(
-        next: (next != null ? next.value : this.next),
-        prev: (prev != null ? prev.value : this.prev));
+  RequestLinks copyWithWrapped({Wrapped<String?>? next, Wrapped<String?>? prev}) {
+    return RequestLinks(next: (next != null ? next.value : this.next), prev: (prev != null ? prev.value : this.prev));
   }
 }
 
@@ -1149,8 +1750,7 @@ class RequestMetadata {
     this.links,
   });
 
-  factory RequestMetadata.fromJson(Map<String, dynamic> json) =>
-      _$RequestMetadataFromJson(json);
+  factory RequestMetadata.fromJson(Map<String, dynamic> json) => _$RequestMetadataFromJson(json);
 
   static const toJsonFactory = _$RequestMetadataToJson;
   Map<String, dynamic> toJson() => _$RequestMetadataToJson(this);
@@ -1163,16 +1763,14 @@ class RequestMetadata {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RequestMetadata &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(links) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(links) ^ runtimeType.hashCode;
 }
 
 extension $RequestMetadataExtension on RequestMetadata {
@@ -1191,8 +1789,7 @@ class RequestMetadataWithLinks {
     this.links,
   });
 
-  factory RequestMetadataWithLinks.fromJson(Map<String, dynamic> json) =>
-      _$RequestMetadataWithLinksFromJson(json);
+  factory RequestMetadataWithLinks.fromJson(Map<String, dynamic> json) => _$RequestMetadataWithLinksFromJson(json);
 
   static const toJsonFactory = _$RequestMetadataWithLinksToJson;
   Map<String, dynamic> toJson() => _$RequestMetadataWithLinksToJson(this);
@@ -1205,16 +1802,14 @@ class RequestMetadataWithLinks {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RequestMetadataWithLinks &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(links) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(links) ^ runtimeType.hashCode;
 }
 
 extension $RequestMetadataWithLinksExtension on RequestMetadataWithLinks {
@@ -1223,8 +1818,7 @@ extension $RequestMetadataWithLinksExtension on RequestMetadataWithLinks {
   }
 
   RequestMetadataWithLinks copyWithWrapped({Wrapped<RequestLinks?>? links}) {
-    return RequestMetadataWithLinks(
-        links: (links != null ? links.value : this.links));
+    return RequestMetadataWithLinks(links: (links != null ? links.value : this.links));
   }
 }
 
@@ -1235,8 +1829,7 @@ class AttackPlayerFaction {
     this.name,
   });
 
-  factory AttackPlayerFaction.fromJson(Map<String, dynamic> json) =>
-      _$AttackPlayerFactionFromJson(json);
+  factory AttackPlayerFaction.fromJson(Map<String, dynamic> json) => _$AttackPlayerFactionFromJson(json);
 
   static const toJsonFactory = _$AttackPlayerFactionToJson;
   Map<String, dynamic> toJson() => _$AttackPlayerFactionToJson(this);
@@ -1251,10 +1844,8 @@ class AttackPlayerFaction {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is AttackPlayerFaction &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)));
   }
 
   @override
@@ -1262,9 +1853,7 @@ class AttackPlayerFaction {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(id) ^
-      const DeepCollectionEquality().hash(name) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(name) ^ runtimeType.hashCode;
 }
 
 extension $AttackPlayerFactionExtension on AttackPlayerFaction {
@@ -1272,11 +1861,8 @@ extension $AttackPlayerFactionExtension on AttackPlayerFaction {
     return AttackPlayerFaction(id: id ?? this.id, name: name ?? this.name);
   }
 
-  AttackPlayerFaction copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<String?>? name}) {
-    return AttackPlayerFaction(
-        id: (id != null ? id.value : this.id),
-        name: (name != null ? name.value : this.name));
+  AttackPlayerFaction copyWithWrapped({Wrapped<int?>? id, Wrapped<String?>? name}) {
+    return AttackPlayerFaction(id: (id != null ? id.value : this.id), name: (name != null ? name.value : this.name));
   }
 }
 
@@ -1289,8 +1875,7 @@ class AttackPlayer {
     this.faction,
   });
 
-  factory AttackPlayer.fromJson(Map<String, dynamic> json) =>
-      _$AttackPlayerFromJson(json);
+  factory AttackPlayer.fromJson(Map<String, dynamic> json) => _$AttackPlayerFromJson(json);
 
   static const toJsonFactory = _$AttackPlayerToJson;
   Map<String, dynamic> toJson() => _$AttackPlayerToJson(this);
@@ -1309,14 +1894,10 @@ class AttackPlayer {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is AttackPlayer &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.level, level) ||
-                const DeepCollectionEquality().equals(other.level, level)) &&
-            (identical(other.faction, faction) ||
-                const DeepCollectionEquality().equals(other.faction, faction)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.level, level) || const DeepCollectionEquality().equals(other.level, level)) &&
+            (identical(other.faction, faction) || const DeepCollectionEquality().equals(other.faction, faction)));
   }
 
   @override
@@ -1334,17 +1915,11 @@ class AttackPlayer {
 extension $AttackPlayerExtension on AttackPlayer {
   AttackPlayer copyWith({int? id, String? name, int? level, Object? faction}) {
     return AttackPlayer(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        level: level ?? this.level,
-        faction: faction ?? this.faction);
+        id: id ?? this.id, name: name ?? this.name, level: level ?? this.level, faction: faction ?? this.faction);
   }
 
   AttackPlayer copyWithWrapped(
-      {Wrapped<int?>? id,
-      Wrapped<String?>? name,
-      Wrapped<int?>? level,
-      Wrapped<Object?>? faction}) {
+      {Wrapped<int?>? id, Wrapped<String?>? name, Wrapped<int?>? level, Wrapped<Object?>? faction}) {
     return AttackPlayer(
         id: (id != null ? id.value : this.id),
         name: (name != null ? name.value : this.name),
@@ -1360,8 +1935,7 @@ class AttackPlayerSimplified {
     this.factionId,
   });
 
-  factory AttackPlayerSimplified.fromJson(Map<String, dynamic> json) =>
-      _$AttackPlayerSimplifiedFromJson(json);
+  factory AttackPlayerSimplified.fromJson(Map<String, dynamic> json) => _$AttackPlayerSimplifiedFromJson(json);
 
   static const toJsonFactory = _$AttackPlayerSimplifiedToJson;
   Map<String, dynamic> toJson() => _$AttackPlayerSimplifiedToJson(this);
@@ -1376,11 +1950,9 @@ class AttackPlayerSimplified {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is AttackPlayerSimplified &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
             (identical(other.factionId, factionId) ||
-                const DeepCollectionEquality()
-                    .equals(other.factionId, factionId)));
+                const DeepCollectionEquality().equals(other.factionId, factionId)));
   }
 
   @override
@@ -1388,22 +1960,17 @@ class AttackPlayerSimplified {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(id) ^
-      const DeepCollectionEquality().hash(factionId) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(factionId) ^ runtimeType.hashCode;
 }
 
 extension $AttackPlayerSimplifiedExtension on AttackPlayerSimplified {
   AttackPlayerSimplified copyWith({int? id, int? factionId}) {
-    return AttackPlayerSimplified(
-        id: id ?? this.id, factionId: factionId ?? this.factionId);
+    return AttackPlayerSimplified(id: id ?? this.id, factionId: factionId ?? this.factionId);
   }
 
-  AttackPlayerSimplified copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<int?>? factionId}) {
+  AttackPlayerSimplified copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? factionId}) {
     return AttackPlayerSimplified(
-        id: (id != null ? id.value : this.id),
-        factionId: (factionId != null ? factionId.value : this.factionId));
+        id: (id != null ? id.value : this.id), factionId: (factionId != null ? factionId.value : this.factionId));
   }
 }
 
@@ -1469,42 +2036,25 @@ class Attack {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is Attack &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.code, code) ||
-                const DeepCollectionEquality().equals(other.code, code)) &&
-            (identical(other.started, started) ||
-                const DeepCollectionEquality()
-                    .equals(other.started, started)) &&
-            (identical(other.ended, ended) ||
-                const DeepCollectionEquality().equals(other.ended, ended)) &&
-            (identical(other.attacker, attacker) ||
-                const DeepCollectionEquality()
-                    .equals(other.attacker, attacker)) &&
-            (identical(other.defender, defender) ||
-                const DeepCollectionEquality()
-                    .equals(other.defender, defender)) &&
-            (identical(other.result, result) ||
-                const DeepCollectionEquality().equals(other.result, result)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.code, code) || const DeepCollectionEquality().equals(other.code, code)) &&
+            (identical(other.started, started) || const DeepCollectionEquality().equals(other.started, started)) &&
+            (identical(other.ended, ended) || const DeepCollectionEquality().equals(other.ended, ended)) &&
+            (identical(other.attacker, attacker) || const DeepCollectionEquality().equals(other.attacker, attacker)) &&
+            (identical(other.defender, defender) || const DeepCollectionEquality().equals(other.defender, defender)) &&
+            (identical(other.result, result) || const DeepCollectionEquality().equals(other.result, result)) &&
             (identical(other.respectGain, respectGain) ||
-                const DeepCollectionEquality()
-                    .equals(other.respectGain, respectGain)) &&
+                const DeepCollectionEquality().equals(other.respectGain, respectGain)) &&
             (identical(other.respectLoss, respectLoss) ||
-                const DeepCollectionEquality()
-                    .equals(other.respectLoss, respectLoss)) &&
-            (identical(other.chain, chain) ||
-                const DeepCollectionEquality().equals(other.chain, chain)) &&
+                const DeepCollectionEquality().equals(other.respectLoss, respectLoss)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
             (identical(other.isStealthed, isStealthed) ||
-                const DeepCollectionEquality()
-                    .equals(other.isStealthed, isStealthed)) &&
-            (identical(other.isRaid, isRaid) ||
-                const DeepCollectionEquality().equals(other.isRaid, isRaid)) &&
+                const DeepCollectionEquality().equals(other.isStealthed, isStealthed)) &&
+            (identical(other.isRaid, isRaid) || const DeepCollectionEquality().equals(other.isRaid, isRaid)) &&
             (identical(other.isRankedWar, isRankedWar) ||
-                const DeepCollectionEquality()
-                    .equals(other.isRankedWar, isRankedWar)) &&
+                const DeepCollectionEquality().equals(other.isRankedWar, isRankedWar)) &&
             (identical(other.modifiers, modifiers) ||
-                const DeepCollectionEquality()
-                    .equals(other.modifiers, modifiers)));
+                const DeepCollectionEquality().equals(other.modifiers, modifiers)));
   }
 
   @override
@@ -1585,16 +2135,12 @@ extension $AttackExtension on Attack {
         attacker: (attacker != null ? attacker.value : this.attacker),
         defender: (defender != null ? defender.value : this.defender),
         result: (result != null ? result.value : this.result),
-        respectGain:
-            (respectGain != null ? respectGain.value : this.respectGain),
-        respectLoss:
-            (respectLoss != null ? respectLoss.value : this.respectLoss),
+        respectGain: (respectGain != null ? respectGain.value : this.respectGain),
+        respectLoss: (respectLoss != null ? respectLoss.value : this.respectLoss),
         chain: (chain != null ? chain.value : this.chain),
-        isStealthed:
-            (isStealthed != null ? isStealthed.value : this.isStealthed),
+        isStealthed: (isStealthed != null ? isStealthed.value : this.isStealthed),
         isRaid: (isRaid != null ? isRaid.value : this.isRaid),
-        isRankedWar:
-            (isRankedWar != null ? isRankedWar.value : this.isRankedWar),
+        isRankedWar: (isRankedWar != null ? isRankedWar.value : this.isRankedWar),
         modifiers: (modifiers != null ? modifiers.value : this.modifiers));
   }
 }
@@ -1613,8 +2159,7 @@ class AttackSimplified {
     this.respectLoss,
   });
 
-  factory AttackSimplified.fromJson(Map<String, dynamic> json) =>
-      _$AttackSimplifiedFromJson(json);
+  factory AttackSimplified.fromJson(Map<String, dynamic> json) => _$AttackSimplifiedFromJson(json);
 
   static const toJsonFactory = _$AttackSimplifiedToJson;
   Map<String, dynamic> toJson() => _$AttackSimplifiedToJson(this);
@@ -1647,29 +2192,17 @@ class AttackSimplified {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is AttackSimplified &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.code, code) ||
-                const DeepCollectionEquality().equals(other.code, code)) &&
-            (identical(other.started, started) ||
-                const DeepCollectionEquality()
-                    .equals(other.started, started)) &&
-            (identical(other.ended, ended) ||
-                const DeepCollectionEquality().equals(other.ended, ended)) &&
-            (identical(other.attacker, attacker) ||
-                const DeepCollectionEquality()
-                    .equals(other.attacker, attacker)) &&
-            (identical(other.defender, defender) ||
-                const DeepCollectionEquality()
-                    .equals(other.defender, defender)) &&
-            (identical(other.result, result) ||
-                const DeepCollectionEquality().equals(other.result, result)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.code, code) || const DeepCollectionEquality().equals(other.code, code)) &&
+            (identical(other.started, started) || const DeepCollectionEquality().equals(other.started, started)) &&
+            (identical(other.ended, ended) || const DeepCollectionEquality().equals(other.ended, ended)) &&
+            (identical(other.attacker, attacker) || const DeepCollectionEquality().equals(other.attacker, attacker)) &&
+            (identical(other.defender, defender) || const DeepCollectionEquality().equals(other.defender, defender)) &&
+            (identical(other.result, result) || const DeepCollectionEquality().equals(other.result, result)) &&
             (identical(other.respectGain, respectGain) ||
-                const DeepCollectionEquality()
-                    .equals(other.respectGain, respectGain)) &&
+                const DeepCollectionEquality().equals(other.respectGain, respectGain)) &&
             (identical(other.respectLoss, respectLoss) ||
-                const DeepCollectionEquality()
-                    .equals(other.respectLoss, respectLoss)));
+                const DeepCollectionEquality().equals(other.respectLoss, respectLoss)));
   }
 
   @override
@@ -1730,10 +2263,48 @@ extension $AttackSimplifiedExtension on AttackSimplified {
         attacker: (attacker != null ? attacker.value : this.attacker),
         defender: (defender != null ? defender.value : this.defender),
         result: (result != null ? result.value : this.result),
-        respectGain:
-            (respectGain != null ? respectGain.value : this.respectGain),
-        respectLoss:
-            (respectLoss != null ? respectLoss.value : this.respectLoss));
+        respectGain: (respectGain != null ? respectGain.value : this.respectGain),
+        respectLoss: (respectLoss != null ? respectLoss.value : this.respectLoss));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TimestampResponse {
+  const TimestampResponse({
+    this.timestamp,
+  });
+
+  factory TimestampResponse.fromJson(Map<String, dynamic> json) => _$TimestampResponseFromJson(json);
+
+  static const toJsonFactory = _$TimestampResponseToJson;
+  Map<String, dynamic> toJson() => _$TimestampResponseToJson(this);
+
+  @JsonKey(name: 'timestamp')
+  final int? timestamp;
+  static const fromJsonFactory = _$TimestampResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TimestampResponse &&
+            (identical(other.timestamp, timestamp) ||
+                const DeepCollectionEquality().equals(other.timestamp, timestamp)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(timestamp) ^ runtimeType.hashCode;
+}
+
+extension $TimestampResponseExtension on TimestampResponse {
+  TimestampResponse copyWith({int? timestamp}) {
+    return TimestampResponse(timestamp: timestamp ?? this.timestamp);
+  }
+
+  TimestampResponse copyWithWrapped({Wrapped<int?>? timestamp}) {
+    return TimestampResponse(timestamp: (timestamp != null ? timestamp.value : this.timestamp));
   }
 }
 
@@ -1745,8 +2316,7 @@ class FactionHofStats {
     this.chain,
   });
 
-  factory FactionHofStats.fromJson(Map<String, dynamic> json) =>
-      _$FactionHofStatsFromJson(json);
+  factory FactionHofStats.fromJson(Map<String, dynamic> json) => _$FactionHofStatsFromJson(json);
 
   static const toJsonFactory = _$FactionHofStatsToJson;
   Map<String, dynamic> toJson() => _$FactionHofStatsToJson(this);
@@ -1763,13 +2333,9 @@ class FactionHofStats {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionHofStats &&
-            (identical(other.rank, rank) ||
-                const DeepCollectionEquality().equals(other.rank, rank)) &&
-            (identical(other.respect, respect) ||
-                const DeepCollectionEquality()
-                    .equals(other.respect, respect)) &&
-            (identical(other.chain, chain) ||
-                const DeepCollectionEquality().equals(other.chain, chain)));
+            (identical(other.rank, rank) || const DeepCollectionEquality().equals(other.rank, rank)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)));
   }
 
   @override
@@ -1784,22 +2350,55 @@ class FactionHofStats {
 }
 
 extension $FactionHofStatsExtension on FactionHofStats {
-  FactionHofStats copyWith(
-      {HofValueString? rank, HofValue? respect, HofValue? chain}) {
-    return FactionHofStats(
-        rank: rank ?? this.rank,
-        respect: respect ?? this.respect,
-        chain: chain ?? this.chain);
+  FactionHofStats copyWith({HofValueString? rank, HofValue? respect, HofValue? chain}) {
+    return FactionHofStats(rank: rank ?? this.rank, respect: respect ?? this.respect, chain: chain ?? this.chain);
   }
 
   FactionHofStats copyWithWrapped(
-      {Wrapped<HofValueString?>? rank,
-      Wrapped<HofValue?>? respect,
-      Wrapped<HofValue?>? chain}) {
+      {Wrapped<HofValueString?>? rank, Wrapped<HofValue?>? respect, Wrapped<HofValue?>? chain}) {
     return FactionHofStats(
         rank: (rank != null ? rank.value : this.rank),
         respect: (respect != null ? respect.value : this.respect),
         chain: (chain != null ? chain.value : this.chain));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionHofResponse {
+  const FactionHofResponse({
+    this.hof,
+  });
+
+  factory FactionHofResponse.fromJson(Map<String, dynamic> json) => _$FactionHofResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionHofResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionHofResponseToJson(this);
+
+  @JsonKey(name: 'hof', defaultValue: <FactionHofStats>[])
+  final List<FactionHofStats>? hof;
+  static const fromJsonFactory = _$FactionHofResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionHofResponse &&
+            (identical(other.hof, hof) || const DeepCollectionEquality().equals(other.hof, hof)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(hof) ^ runtimeType.hashCode;
+}
+
+extension $FactionHofResponseExtension on FactionHofResponse {
+  FactionHofResponse copyWith({List<FactionHofStats>? hof}) {
+    return FactionHofResponse(hof: hof ?? this.hof);
+  }
+
+  FactionHofResponse copyWithWrapped({Wrapped<List<FactionHofStats>?>? hof}) {
+    return FactionHofResponse(hof: (hof != null ? hof.value : this.hof));
   }
 }
 
@@ -1818,8 +2417,7 @@ class FactionMember {
     this.reviveSetting,
   });
 
-  factory FactionMember.fromJson(Map<String, dynamic> json) =>
-      _$FactionMemberFromJson(json);
+  factory FactionMember.fromJson(Map<String, dynamic> json) => _$FactionMemberFromJson(json);
 
   static const toJsonFactory = _$FactionMemberToJson;
   Map<String, dynamic> toJson() => _$FactionMemberToJson(this);
@@ -1854,31 +2452,20 @@ class FactionMember {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionMember &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.position, position) ||
-                const DeepCollectionEquality()
-                    .equals(other.position, position)) &&
-            (identical(other.level, level) ||
-                const DeepCollectionEquality().equals(other.level, level)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.position, position) || const DeepCollectionEquality().equals(other.position, position)) &&
+            (identical(other.level, level) || const DeepCollectionEquality().equals(other.level, level)) &&
             (identical(other.daysInFaction, daysInFaction) ||
-                const DeepCollectionEquality()
-                    .equals(other.daysInFaction, daysInFaction)) &&
+                const DeepCollectionEquality().equals(other.daysInFaction, daysInFaction)) &&
             (identical(other.isRevivable, isRevivable) ||
-                const DeepCollectionEquality()
-                    .equals(other.isRevivable, isRevivable)) &&
+                const DeepCollectionEquality().equals(other.isRevivable, isRevivable)) &&
             (identical(other.lastAction, lastAction) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastAction, lastAction)) &&
-            (identical(other.status, status) ||
-                const DeepCollectionEquality().equals(other.status, status)) &&
-            (identical(other.life, life) ||
-                const DeepCollectionEquality().equals(other.life, life)) &&
+                const DeepCollectionEquality().equals(other.lastAction, lastAction)) &&
+            (identical(other.status, status) || const DeepCollectionEquality().equals(other.status, status)) &&
+            (identical(other.life, life) || const DeepCollectionEquality().equals(other.life, life)) &&
             (identical(other.reviveSetting, reviveSetting) ||
-                const DeepCollectionEquality()
-                    .equals(other.reviveSetting, reviveSetting)));
+                const DeepCollectionEquality().equals(other.reviveSetting, reviveSetting)));
   }
 
   @override
@@ -1940,15 +2527,12 @@ extension $FactionMemberExtension on FactionMember {
         name: (name != null ? name.value : this.name),
         position: (position != null ? position.value : this.position),
         level: (level != null ? level.value : this.level),
-        daysInFaction:
-            (daysInFaction != null ? daysInFaction.value : this.daysInFaction),
-        isRevivable:
-            (isRevivable != null ? isRevivable.value : this.isRevivable),
+        daysInFaction: (daysInFaction != null ? daysInFaction.value : this.daysInFaction),
+        isRevivable: (isRevivable != null ? isRevivable.value : this.isRevivable),
         lastAction: (lastAction != null ? lastAction.value : this.lastAction),
         status: (status != null ? status.value : this.status),
         life: (life != null ? life.value : this.life),
-        reviveSetting:
-            (reviveSetting != null ? reviveSetting.value : this.reviveSetting));
+        reviveSetting: (reviveSetting != null ? reviveSetting.value : this.reviveSetting));
   }
 }
 
@@ -1960,8 +2544,7 @@ class UserLastAction {
     this.relative,
   });
 
-  factory UserLastAction.fromJson(Map<String, dynamic> json) =>
-      _$UserLastActionFromJson(json);
+  factory UserLastAction.fromJson(Map<String, dynamic> json) => _$UserLastActionFromJson(json);
 
   static const toJsonFactory = _$UserLastActionToJson;
   Map<String, dynamic> toJson() => _$UserLastActionToJson(this);
@@ -1978,14 +2561,10 @@ class UserLastAction {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserLastAction &&
-            (identical(other.status, status) ||
-                const DeepCollectionEquality().equals(other.status, status)) &&
+            (identical(other.status, status) || const DeepCollectionEquality().equals(other.status, status)) &&
             (identical(other.timestamp, timestamp) ||
-                const DeepCollectionEquality()
-                    .equals(other.timestamp, timestamp)) &&
-            (identical(other.relative, relative) ||
-                const DeepCollectionEquality()
-                    .equals(other.relative, relative)));
+                const DeepCollectionEquality().equals(other.timestamp, timestamp)) &&
+            (identical(other.relative, relative) || const DeepCollectionEquality().equals(other.relative, relative)));
   }
 
   @override
@@ -2000,18 +2579,12 @@ class UserLastAction {
 }
 
 extension $UserLastActionExtension on UserLastAction {
-  UserLastAction copyWith(
-      {String? status, double? timestamp, String? relative}) {
+  UserLastAction copyWith({String? status, double? timestamp, String? relative}) {
     return UserLastAction(
-        status: status ?? this.status,
-        timestamp: timestamp ?? this.timestamp,
-        relative: relative ?? this.relative);
+        status: status ?? this.status, timestamp: timestamp ?? this.timestamp, relative: relative ?? this.relative);
   }
 
-  UserLastAction copyWithWrapped(
-      {Wrapped<String?>? status,
-      Wrapped<double?>? timestamp,
-      Wrapped<String?>? relative}) {
+  UserLastAction copyWithWrapped({Wrapped<String?>? status, Wrapped<double?>? timestamp, Wrapped<String?>? relative}) {
     return UserLastAction(
         status: (status != null ? status.value : this.status),
         timestamp: (timestamp != null ? timestamp.value : this.timestamp),
@@ -2026,8 +2599,7 @@ class UserLife {
     this.maximum,
   });
 
-  factory UserLife.fromJson(Map<String, dynamic> json) =>
-      _$UserLifeFromJson(json);
+  factory UserLife.fromJson(Map<String, dynamic> json) => _$UserLifeFromJson(json);
 
   static const toJsonFactory = _$UserLifeToJson;
   Map<String, dynamic> toJson() => _$UserLifeToJson(this);
@@ -2042,11 +2614,8 @@ class UserLife {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserLife &&
-            (identical(other.current, current) ||
-                const DeepCollectionEquality()
-                    .equals(other.current, current)) &&
-            (identical(other.maximum, maximum) ||
-                const DeepCollectionEquality().equals(other.maximum, maximum)));
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)) &&
+            (identical(other.maximum, maximum) || const DeepCollectionEquality().equals(other.maximum, maximum)));
   }
 
   @override
@@ -2061,12 +2630,10 @@ class UserLife {
 
 extension $UserLifeExtension on UserLife {
   UserLife copyWith({double? current, double? maximum}) {
-    return UserLife(
-        current: current ?? this.current, maximum: maximum ?? this.maximum);
+    return UserLife(current: current ?? this.current, maximum: maximum ?? this.maximum);
   }
 
-  UserLife copyWithWrapped(
-      {Wrapped<double?>? current, Wrapped<double?>? maximum}) {
+  UserLife copyWithWrapped({Wrapped<double?>? current, Wrapped<double?>? maximum}) {
     return UserLife(
         current: (current != null ? current.value : this.current),
         maximum: (maximum != null ? maximum.value : this.maximum));
@@ -2082,8 +2649,7 @@ class UserStatus {
     this.until,
   });
 
-  factory UserStatus.fromJson(Map<String, dynamic> json) =>
-      _$UserStatusFromJson(json);
+  factory UserStatus.fromJson(Map<String, dynamic> json) => _$UserStatusFromJson(json);
 
   static const toJsonFactory = _$UserStatusToJson;
   Map<String, dynamic> toJson() => _$UserStatusToJson(this);
@@ -2103,15 +2669,10 @@ class UserStatus {
     return identical(this, other) ||
         (other is UserStatus &&
             (identical(other.description, description) ||
-                const DeepCollectionEquality()
-                    .equals(other.description, description)) &&
-            (identical(other.details, details) ||
-                const DeepCollectionEquality()
-                    .equals(other.details, details)) &&
-            (identical(other.state, state) ||
-                const DeepCollectionEquality().equals(other.state, state)) &&
-            (identical(other.until, until) ||
-                const DeepCollectionEquality().equals(other.until, until)));
+                const DeepCollectionEquality().equals(other.description, description)) &&
+            (identical(other.details, details) || const DeepCollectionEquality().equals(other.details, details)) &&
+            (identical(other.state, state) || const DeepCollectionEquality().equals(other.state, state)) &&
+            (identical(other.until, until) || const DeepCollectionEquality().equals(other.until, until)));
   }
 
   @override
@@ -2127,8 +2688,7 @@ class UserStatus {
 }
 
 extension $UserStatusExtension on UserStatus {
-  UserStatus copyWith(
-      {String? description, String? details, String? state, String? until}) {
+  UserStatus copyWith({String? description, String? details, String? state, String? until}) {
     return UserStatus(
         description: description ?? this.description,
         details: details ?? this.details,
@@ -2137,16 +2697,51 @@ extension $UserStatusExtension on UserStatus {
   }
 
   UserStatus copyWithWrapped(
-      {Wrapped<String?>? description,
-      Wrapped<String?>? details,
-      Wrapped<String?>? state,
-      Wrapped<String?>? until}) {
+      {Wrapped<String?>? description, Wrapped<String?>? details, Wrapped<String?>? state, Wrapped<String?>? until}) {
     return UserStatus(
-        description:
-            (description != null ? description.value : this.description),
+        description: (description != null ? description.value : this.description),
         details: (details != null ? details.value : this.details),
         state: (state != null ? state.value : this.state),
         until: (until != null ? until.value : this.until));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionMembersResponse {
+  const FactionMembersResponse({
+    this.members,
+  });
+
+  factory FactionMembersResponse.fromJson(Map<String, dynamic> json) => _$FactionMembersResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionMembersResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionMembersResponseToJson(this);
+
+  @JsonKey(name: 'members', defaultValue: <FactionMember>[])
+  final List<FactionMember>? members;
+  static const fromJsonFactory = _$FactionMembersResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionMembersResponse &&
+            (identical(other.members, members) || const DeepCollectionEquality().equals(other.members, members)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(members) ^ runtimeType.hashCode;
+}
+
+extension $FactionMembersResponseExtension on FactionMembersResponse {
+  FactionMembersResponse copyWith({List<FactionMember>? members}) {
+    return FactionMembersResponse(members: members ?? this.members);
+  }
+
+  FactionMembersResponse copyWithWrapped({Wrapped<List<FactionMember>?>? members}) {
+    return FactionMembersResponse(members: (members != null ? members.value : this.members));
   }
 }
 
@@ -2160,8 +2755,7 @@ class FactionRank {
     this.wins,
   });
 
-  factory FactionRank.fromJson(Map<String, dynamic> json) =>
-      _$FactionRankFromJson(json);
+  factory FactionRank.fromJson(Map<String, dynamic> json) => _$FactionRankFromJson(json);
 
   static const toJsonFactory = _$FactionRankToJson;
   Map<String, dynamic> toJson() => _$FactionRankToJson(this);
@@ -2182,18 +2776,11 @@ class FactionRank {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionRank &&
-            (identical(other.level, level) ||
-                const DeepCollectionEquality().equals(other.level, level)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.division, division) ||
-                const DeepCollectionEquality()
-                    .equals(other.division, division)) &&
-            (identical(other.position, position) ||
-                const DeepCollectionEquality()
-                    .equals(other.position, position)) &&
-            (identical(other.wins, wins) ||
-                const DeepCollectionEquality().equals(other.wins, wins)));
+            (identical(other.level, level) || const DeepCollectionEquality().equals(other.level, level)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.division, division) || const DeepCollectionEquality().equals(other.division, division)) &&
+            (identical(other.position, position) || const DeepCollectionEquality().equals(other.position, position)) &&
+            (identical(other.wins, wins) || const DeepCollectionEquality().equals(other.wins, wins)));
   }
 
   @override
@@ -2210,8 +2797,7 @@ class FactionRank {
 }
 
 extension $FactionRankExtension on FactionRank {
-  FactionRank copyWith(
-      {int? level, String? name, int? division, int? position, int? wins}) {
+  FactionRank copyWith({int? level, String? name, int? division, int? position, int? wins}) {
     return FactionRank(
         level: level ?? this.level,
         name: name ?? this.name,
@@ -2253,8 +2839,7 @@ class FactionBasic {
     this.bestChain,
   });
 
-  factory FactionBasic.fromJson(Map<String, dynamic> json) =>
-      _$FactionBasicFromJson(json);
+  factory FactionBasic.fromJson(Map<String, dynamic> json) => _$FactionBasicFromJson(json);
 
   static const toJsonFactory = _$FactionBasicToJson;
   Map<String, dynamic> toJson() => _$FactionBasicToJson(this);
@@ -2291,41 +2876,22 @@ class FactionBasic {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionBasic &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.tag, tag) ||
-                const DeepCollectionEquality().equals(other.tag, tag)) &&
-            (identical(other.tagImage, tagImage) ||
-                const DeepCollectionEquality()
-                    .equals(other.tagImage, tagImage)) &&
-            (identical(other.leaderId, leaderId) ||
-                const DeepCollectionEquality()
-                    .equals(other.leaderId, leaderId)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.tag, tag) || const DeepCollectionEquality().equals(other.tag, tag)) &&
+            (identical(other.tagImage, tagImage) || const DeepCollectionEquality().equals(other.tagImage, tagImage)) &&
+            (identical(other.leaderId, leaderId) || const DeepCollectionEquality().equals(other.leaderId, leaderId)) &&
             (identical(other.coLeaderId, coLeaderId) ||
-                const DeepCollectionEquality()
-                    .equals(other.coLeaderId, coLeaderId)) &&
-            (identical(other.respect, respect) ||
-                const DeepCollectionEquality()
-                    .equals(other.respect, respect)) &&
-            (identical(other.daysOld, daysOld) ||
-                const DeepCollectionEquality()
-                    .equals(other.daysOld, daysOld)) &&
-            (identical(other.capacity, capacity) ||
-                const DeepCollectionEquality()
-                    .equals(other.capacity, capacity)) &&
-            (identical(other.members, members) ||
-                const DeepCollectionEquality()
-                    .equals(other.members, members)) &&
+                const DeepCollectionEquality().equals(other.coLeaderId, coLeaderId)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.daysOld, daysOld) || const DeepCollectionEquality().equals(other.daysOld, daysOld)) &&
+            (identical(other.capacity, capacity) || const DeepCollectionEquality().equals(other.capacity, capacity)) &&
+            (identical(other.members, members) || const DeepCollectionEquality().equals(other.members, members)) &&
             (identical(other.isEnlisted, isEnlisted) ||
-                const DeepCollectionEquality()
-                    .equals(other.isEnlisted, isEnlisted)) &&
-            (identical(other.rank, rank) ||
-                const DeepCollectionEquality().equals(other.rank, rank)) &&
+                const DeepCollectionEquality().equals(other.isEnlisted, isEnlisted)) &&
+            (identical(other.rank, rank) || const DeepCollectionEquality().equals(other.rank, rank)) &&
             (identical(other.bestChain, bestChain) ||
-                const DeepCollectionEquality()
-                    .equals(other.bestChain, bestChain)));
+                const DeepCollectionEquality().equals(other.bestChain, bestChain)));
   }
 
   @override
@@ -2412,6 +2978,45 @@ extension $FactionBasicExtension on FactionBasic {
 }
 
 @JsonSerializable(explicitToJson: true)
+class FactionBasicResponse {
+  const FactionBasicResponse({
+    this.basic,
+  });
+
+  factory FactionBasicResponse.fromJson(Map<String, dynamic> json) => _$FactionBasicResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionBasicResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionBasicResponseToJson(this);
+
+  @JsonKey(name: 'basic')
+  final FactionBasic? basic;
+  static const fromJsonFactory = _$FactionBasicResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionBasicResponse &&
+            (identical(other.basic, basic) || const DeepCollectionEquality().equals(other.basic, basic)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(basic) ^ runtimeType.hashCode;
+}
+
+extension $FactionBasicResponseExtension on FactionBasicResponse {
+  FactionBasicResponse copyWith({FactionBasic? basic}) {
+    return FactionBasicResponse(basic: basic ?? this.basic);
+  }
+
+  FactionBasicResponse copyWithWrapped({Wrapped<FactionBasic?>? basic}) {
+    return FactionBasicResponse(basic: (basic != null ? basic.value : this.basic));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class FactionPact {
   const FactionPact({
     this.factionId,
@@ -2419,8 +3024,7 @@ class FactionPact {
     this.until,
   });
 
-  factory FactionPact.fromJson(Map<String, dynamic> json) =>
-      _$FactionPactFromJson(json);
+  factory FactionPact.fromJson(Map<String, dynamic> json) => _$FactionPactFromJson(json);
 
   static const toJsonFactory = _$FactionPactToJson;
   Map<String, dynamic> toJson() => _$FactionPactToJson(this);
@@ -2438,13 +3042,10 @@ class FactionPact {
     return identical(this, other) ||
         (other is FactionPact &&
             (identical(other.factionId, factionId) ||
-                const DeepCollectionEquality()
-                    .equals(other.factionId, factionId)) &&
+                const DeepCollectionEquality().equals(other.factionId, factionId)) &&
             (identical(other.factionName, factionName) ||
-                const DeepCollectionEquality()
-                    .equals(other.factionName, factionName)) &&
-            (identical(other.until, until) ||
-                const DeepCollectionEquality().equals(other.until, until)));
+                const DeepCollectionEquality().equals(other.factionName, factionName)) &&
+            (identical(other.until, until) || const DeepCollectionEquality().equals(other.until, until)));
   }
 
   @override
@@ -2466,14 +3067,10 @@ extension $FactionPactExtension on FactionPact {
         until: until ?? this.until);
   }
 
-  FactionPact copyWithWrapped(
-      {Wrapped<int?>? factionId,
-      Wrapped<String?>? factionName,
-      Wrapped<String?>? until}) {
+  FactionPact copyWithWrapped({Wrapped<int?>? factionId, Wrapped<String?>? factionName, Wrapped<String?>? until}) {
     return FactionPact(
         factionId: (factionId != null ? factionId.value : this.factionId),
-        factionName:
-            (factionName != null ? factionName.value : this.factionName),
+        factionName: (factionName != null ? factionName.value : this.factionName),
         until: (until != null ? until.value : this.until));
   }
 }
@@ -2507,14 +3104,10 @@ class FactionRankedWarParticipant {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionRankedWarParticipant &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.score, score) ||
-                const DeepCollectionEquality().equals(other.score, score)) &&
-            (identical(other.chain, chain) ||
-                const DeepCollectionEquality().equals(other.chain, chain)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.score, score) || const DeepCollectionEquality().equals(other.score, score)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)));
   }
 
   @override
@@ -2530,20 +3123,13 @@ class FactionRankedWarParticipant {
 }
 
 extension $FactionRankedWarParticipantExtension on FactionRankedWarParticipant {
-  FactionRankedWarParticipant copyWith(
-      {int? id, String? name, int? score, int? chain}) {
+  FactionRankedWarParticipant copyWith({int? id, String? name, int? score, int? chain}) {
     return FactionRankedWarParticipant(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        score: score ?? this.score,
-        chain: chain ?? this.chain);
+        id: id ?? this.id, name: name ?? this.name, score: score ?? this.score, chain: chain ?? this.chain);
   }
 
   FactionRankedWarParticipant copyWithWrapped(
-      {Wrapped<int?>? id,
-      Wrapped<String?>? name,
-      Wrapped<int?>? score,
-      Wrapped<int?>? chain}) {
+      {Wrapped<int?>? id, Wrapped<String?>? name, Wrapped<int?>? score, Wrapped<int?>? chain}) {
     return FactionRankedWarParticipant(
         id: (id != null ? id.value : this.id),
         name: (name != null ? name.value : this.name),
@@ -2563,8 +3149,7 @@ class FactionRankedWar {
     this.factions,
   });
 
-  factory FactionRankedWar.fromJson(Map<String, dynamic> json) =>
-      _$FactionRankedWarFromJson(json);
+  factory FactionRankedWar.fromJson(Map<String, dynamic> json) => _$FactionRankedWarFromJson(json);
 
   static const toJsonFactory = _$FactionRankedWarToJson;
   Map<String, dynamic> toJson() => _$FactionRankedWarToJson(this);
@@ -2587,19 +3172,12 @@ class FactionRankedWar {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionRankedWar &&
-            (identical(other.warId, warId) ||
-                const DeepCollectionEquality().equals(other.warId, warId)) &&
-            (identical(other.start, start) ||
-                const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) ||
-                const DeepCollectionEquality().equals(other.end, end)) &&
-            (identical(other.target, target) ||
-                const DeepCollectionEquality().equals(other.target, target)) &&
-            (identical(other.winner, winner) ||
-                const DeepCollectionEquality().equals(other.winner, winner)) &&
-            (identical(other.factions, factions) ||
-                const DeepCollectionEquality()
-                    .equals(other.factions, factions)));
+            (identical(other.warId, warId) || const DeepCollectionEquality().equals(other.warId, warId)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)) &&
+            (identical(other.target, target) || const DeepCollectionEquality().equals(other.target, target)) &&
+            (identical(other.winner, winner) || const DeepCollectionEquality().equals(other.winner, winner)) &&
+            (identical(other.factions, factions) || const DeepCollectionEquality().equals(other.factions, factions)));
   }
 
   @override
@@ -2618,12 +3196,7 @@ class FactionRankedWar {
 
 extension $FactionRankedWarExtension on FactionRankedWar {
   FactionRankedWar copyWith(
-      {int? warId,
-      int? start,
-      int? end,
-      int? target,
-      int? winner,
-      List<FactionRankedWarParticipant>? factions}) {
+      {int? warId, int? start, int? end, int? target, int? winner, List<FactionRankedWarParticipant>? factions}) {
     return FactionRankedWar(
         warId: warId ?? this.warId,
         start: start ?? this.start,
@@ -2660,8 +3233,7 @@ class FactionRaidWarParticipant {
     this.isAggressor,
   });
 
-  factory FactionRaidWarParticipant.fromJson(Map<String, dynamic> json) =>
-      _$FactionRaidWarParticipantFromJson(json);
+  factory FactionRaidWarParticipant.fromJson(Map<String, dynamic> json) => _$FactionRaidWarParticipantFromJson(json);
 
   static const toJsonFactory = _$FactionRaidWarParticipantToJson;
   Map<String, dynamic> toJson() => _$FactionRaidWarParticipantToJson(this);
@@ -2682,17 +3254,12 @@ class FactionRaidWarParticipant {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionRaidWarParticipant &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.score, score) ||
-                const DeepCollectionEquality().equals(other.score, score)) &&
-            (identical(other.chain, chain) ||
-                const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.score, score) || const DeepCollectionEquality().equals(other.score, score)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
             (identical(other.isAggressor, isAggressor) ||
-                const DeepCollectionEquality()
-                    .equals(other.isAggressor, isAggressor)));
+                const DeepCollectionEquality().equals(other.isAggressor, isAggressor)));
   }
 
   @override
@@ -2709,8 +3276,7 @@ class FactionRaidWarParticipant {
 }
 
 extension $FactionRaidWarParticipantExtension on FactionRaidWarParticipant {
-  FactionRaidWarParticipant copyWith(
-      {int? id, String? name, int? score, int? chain, bool? isAggressor}) {
+  FactionRaidWarParticipant copyWith({int? id, String? name, int? score, int? chain, bool? isAggressor}) {
     return FactionRaidWarParticipant(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -2730,8 +3296,7 @@ extension $FactionRaidWarParticipantExtension on FactionRaidWarParticipant {
         name: (name != null ? name.value : this.name),
         score: (score != null ? score.value : this.score),
         chain: (chain != null ? chain.value : this.chain),
-        isAggressor:
-            (isAggressor != null ? isAggressor.value : this.isAggressor));
+        isAggressor: (isAggressor != null ? isAggressor.value : this.isAggressor));
   }
 }
 
@@ -2744,8 +3309,7 @@ class FactionRaidWar {
     this.factions,
   });
 
-  factory FactionRaidWar.fromJson(Map<String, dynamic> json) =>
-      _$FactionRaidWarFromJson(json);
+  factory FactionRaidWar.fromJson(Map<String, dynamic> json) => _$FactionRaidWarFromJson(json);
 
   static const toJsonFactory = _$FactionRaidWarToJson;
   Map<String, dynamic> toJson() => _$FactionRaidWarToJson(this);
@@ -2764,15 +3328,10 @@ class FactionRaidWar {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionRaidWar &&
-            (identical(other.warId, warId) ||
-                const DeepCollectionEquality().equals(other.warId, warId)) &&
-            (identical(other.start, start) ||
-                const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) ||
-                const DeepCollectionEquality().equals(other.end, end)) &&
-            (identical(other.factions, factions) ||
-                const DeepCollectionEquality()
-                    .equals(other.factions, factions)));
+            (identical(other.warId, warId) || const DeepCollectionEquality().equals(other.warId, warId)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)) &&
+            (identical(other.factions, factions) || const DeepCollectionEquality().equals(other.factions, factions)));
   }
 
   @override
@@ -2788,11 +3347,7 @@ class FactionRaidWar {
 }
 
 extension $FactionRaidWarExtension on FactionRaidWar {
-  FactionRaidWar copyWith(
-      {int? warId,
-      int? start,
-      int? end,
-      List<FactionRaidWarParticipant>? factions}) {
+  FactionRaidWar copyWith({int? warId, int? start, int? end, List<FactionRaidWarParticipant>? factions}) {
     return FactionRaidWar(
         warId: warId ?? this.warId,
         start: start ?? this.start,
@@ -2848,20 +3403,14 @@ class FactionTerritoryWarParticipant {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionTerritoryWarParticipant &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.score, score) ||
-                const DeepCollectionEquality().equals(other.score, score)) &&
-            (identical(other.chain, chain) ||
-                const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.score, score) || const DeepCollectionEquality().equals(other.score, score)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
             (identical(other.isAggressor, isAggressor) ||
-                const DeepCollectionEquality()
-                    .equals(other.isAggressor, isAggressor)) &&
+                const DeepCollectionEquality().equals(other.isAggressor, isAggressor)) &&
             (identical(other.playerIds, playerIds) ||
-                const DeepCollectionEquality()
-                    .equals(other.playerIds, playerIds)));
+                const DeepCollectionEquality().equals(other.playerIds, playerIds)));
   }
 
   @override
@@ -2878,15 +3427,9 @@ class FactionTerritoryWarParticipant {
       runtimeType.hashCode;
 }
 
-extension $FactionTerritoryWarParticipantExtension
-    on FactionTerritoryWarParticipant {
+extension $FactionTerritoryWarParticipantExtension on FactionTerritoryWarParticipant {
   FactionTerritoryWarParticipant copyWith(
-      {int? id,
-      String? name,
-      int? score,
-      int? chain,
-      bool? isAggressor,
-      List<int>? playerIds}) {
+      {int? id, String? name, int? score, int? chain, bool? isAggressor, List<int>? playerIds}) {
     return FactionTerritoryWarParticipant(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -2908,8 +3451,7 @@ extension $FactionTerritoryWarParticipantExtension
         name: (name != null ? name.value : this.name),
         score: (score != null ? score.value : this.score),
         chain: (chain != null ? chain.value : this.chain),
-        isAggressor:
-            (isAggressor != null ? isAggressor.value : this.isAggressor),
+        isAggressor: (isAggressor != null ? isAggressor.value : this.isAggressor),
         playerIds: (playerIds != null ? playerIds.value : this.playerIds));
   }
 }
@@ -2926,8 +3468,7 @@ class FactionTerritoryWar {
     this.factions,
   });
 
-  factory FactionTerritoryWar.fromJson(Map<String, dynamic> json) =>
-      _$FactionTerritoryWarFromJson(json);
+  factory FactionTerritoryWar.fromJson(Map<String, dynamic> json) => _$FactionTerritoryWarFromJson(json);
 
   static const toJsonFactory = _$FactionTerritoryWarToJson;
   Map<String, dynamic> toJson() => _$FactionTerritoryWarToJson(this);
@@ -2952,22 +3493,14 @@ class FactionTerritoryWar {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionTerritoryWar &&
-            (identical(other.warId, warId) ||
-                const DeepCollectionEquality().equals(other.warId, warId)) &&
+            (identical(other.warId, warId) || const DeepCollectionEquality().equals(other.warId, warId)) &&
             (identical(other.territory, territory) ||
-                const DeepCollectionEquality()
-                    .equals(other.territory, territory)) &&
-            (identical(other.start, start) ||
-                const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) ||
-                const DeepCollectionEquality().equals(other.end, end)) &&
-            (identical(other.target, target) ||
-                const DeepCollectionEquality().equals(other.target, target)) &&
-            (identical(other.winner, winner) ||
-                const DeepCollectionEquality().equals(other.winner, winner)) &&
-            (identical(other.factions, factions) ||
-                const DeepCollectionEquality()
-                    .equals(other.factions, factions)));
+                const DeepCollectionEquality().equals(other.territory, territory)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)) &&
+            (identical(other.target, target) || const DeepCollectionEquality().equals(other.target, target)) &&
+            (identical(other.winner, winner) || const DeepCollectionEquality().equals(other.winner, winner)) &&
+            (identical(other.factions, factions) || const DeepCollectionEquality().equals(other.factions, factions)));
   }
 
   @override
@@ -3031,8 +3564,7 @@ class FactionWars {
     this.territory,
   });
 
-  factory FactionWars.fromJson(Map<String, dynamic> json) =>
-      _$FactionWarsFromJson(json);
+  factory FactionWars.fromJson(Map<String, dynamic> json) => _$FactionWarsFromJson(json);
 
   static const toJsonFactory = _$FactionWarsToJson;
   Map<String, dynamic> toJson() => _$FactionWarsToJson(this);
@@ -3049,13 +3581,10 @@ class FactionWars {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionWars &&
-            (identical(other.ranked, ranked) ||
-                const DeepCollectionEquality().equals(other.ranked, ranked)) &&
-            (identical(other.raids, raids) ||
-                const DeepCollectionEquality().equals(other.raids, raids)) &&
+            (identical(other.ranked, ranked) || const DeepCollectionEquality().equals(other.ranked, ranked)) &&
+            (identical(other.raids, raids) || const DeepCollectionEquality().equals(other.raids, raids)) &&
             (identical(other.territory, territory) ||
-                const DeepCollectionEquality()
-                    .equals(other.territory, territory)));
+                const DeepCollectionEquality().equals(other.territory, territory)));
   }
 
   @override
@@ -3070,14 +3599,9 @@ class FactionWars {
 }
 
 extension $FactionWarsExtension on FactionWars {
-  FactionWars copyWith(
-      {FactionRankedWar? ranked,
-      List<FactionRaidWar>? raids,
-      List<FactionTerritoryWar>? territory}) {
+  FactionWars copyWith({FactionRankedWar? ranked, List<FactionRaidWar>? raids, List<FactionTerritoryWar>? territory}) {
     return FactionWars(
-        ranked: ranked ?? this.ranked,
-        raids: raids ?? this.raids,
-        territory: territory ?? this.territory);
+        ranked: ranked ?? this.ranked, raids: raids ?? this.raids, territory: territory ?? this.territory);
   }
 
   FactionWars copyWithWrapped(
@@ -3092,6 +3616,51 @@ extension $FactionWarsExtension on FactionWars {
 }
 
 @JsonSerializable(explicitToJson: true)
+class FactionWarsResponse {
+  const FactionWarsResponse({
+    this.pacts,
+    this.wars,
+  });
+
+  factory FactionWarsResponse.fromJson(Map<String, dynamic> json) => _$FactionWarsResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionWarsResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionWarsResponseToJson(this);
+
+  @JsonKey(name: 'pacts', defaultValue: <FactionPact>[])
+  final List<FactionPact>? pacts;
+  @JsonKey(name: 'wars')
+  final FactionWars? wars;
+  static const fromJsonFactory = _$FactionWarsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionWarsResponse &&
+            (identical(other.pacts, pacts) || const DeepCollectionEquality().equals(other.pacts, pacts)) &&
+            (identical(other.wars, wars) || const DeepCollectionEquality().equals(other.wars, wars)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(pacts) ^ const DeepCollectionEquality().hash(wars) ^ runtimeType.hashCode;
+}
+
+extension $FactionWarsResponseExtension on FactionWarsResponse {
+  FactionWarsResponse copyWith({List<FactionPact>? pacts, FactionWars? wars}) {
+    return FactionWarsResponse(pacts: pacts ?? this.pacts, wars: wars ?? this.wars);
+  }
+
+  FactionWarsResponse copyWithWrapped({Wrapped<List<FactionPact>?>? pacts, Wrapped<FactionWars?>? wars}) {
+    return FactionWarsResponse(
+        pacts: (pacts != null ? pacts.value : this.pacts), wars: (wars != null ? wars.value : this.wars));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class FactionNews {
   const FactionNews({
     this.id,
@@ -3099,8 +3668,7 @@ class FactionNews {
     this.timestamp,
   });
 
-  factory FactionNews.fromJson(Map<String, dynamic> json) =>
-      _$FactionNewsFromJson(json);
+  factory FactionNews.fromJson(Map<String, dynamic> json) => _$FactionNewsFromJson(json);
 
   static const toJsonFactory = _$FactionNewsToJson;
   Map<String, dynamic> toJson() => _$FactionNewsToJson(this);
@@ -3117,13 +3685,10 @@ class FactionNews {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionNews &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.text, text) ||
-                const DeepCollectionEquality().equals(other.text, text)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.text, text) || const DeepCollectionEquality().equals(other.text, text)) &&
             (identical(other.timestamp, timestamp) ||
-                const DeepCollectionEquality()
-                    .equals(other.timestamp, timestamp)));
+                const DeepCollectionEquality().equals(other.timestamp, timestamp)));
   }
 
   @override
@@ -3139,16 +3704,10 @@ class FactionNews {
 
 extension $FactionNewsExtension on FactionNews {
   FactionNews copyWith({String? id, String? text, int? timestamp}) {
-    return FactionNews(
-        id: id ?? this.id,
-        text: text ?? this.text,
-        timestamp: timestamp ?? this.timestamp);
+    return FactionNews(id: id ?? this.id, text: text ?? this.text, timestamp: timestamp ?? this.timestamp);
   }
 
-  FactionNews copyWithWrapped(
-      {Wrapped<String?>? id,
-      Wrapped<String?>? text,
-      Wrapped<int?>? timestamp}) {
+  FactionNews copyWithWrapped({Wrapped<String?>? id, Wrapped<String?>? text, Wrapped<int?>? timestamp}) {
     return FactionNews(
         id: (id != null ? id.value : this.id),
         text: (text != null ? text.value : this.text),
@@ -3157,28 +3716,29 @@ extension $FactionNewsExtension on FactionNews {
 }
 
 @JsonSerializable(explicitToJson: true)
-class ForumCategories {
-  const ForumCategories({
-    this.categories,
+class FactionNewsResponse {
+  const FactionNewsResponse({
+    this.news,
+    this.metadata,
   });
 
-  factory ForumCategories.fromJson(Map<String, dynamic> json) =>
-      _$ForumCategoriesFromJson(json);
+  factory FactionNewsResponse.fromJson(Map<String, dynamic> json) => _$FactionNewsResponseFromJson(json);
 
-  static const toJsonFactory = _$ForumCategoriesToJson;
-  Map<String, dynamic> toJson() => _$ForumCategoriesToJson(this);
+  static const toJsonFactory = _$FactionNewsResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionNewsResponseToJson(this);
 
-  @JsonKey(name: 'categories')
-  final List<ForumCategories$Categories$Item>? categories;
-  static const fromJsonFactory = _$ForumCategoriesFromJson;
+  @JsonKey(name: 'news', defaultValue: <FactionNews>[])
+  final List<FactionNews>? news;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$FactionNewsResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is ForumCategories &&
-            (identical(other.categories, categories) ||
-                const DeepCollectionEquality()
-                    .equals(other.categories, categories)));
+        (other is FactionNewsResponse &&
+            (identical(other.news, news) || const DeepCollectionEquality().equals(other.news, news)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
   @override
@@ -3186,19 +3746,327 @@ class ForumCategories {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(categories) ^ runtimeType.hashCode;
+      const DeepCollectionEquality().hash(news) ^ const DeepCollectionEquality().hash(metadata) ^ runtimeType.hashCode;
 }
 
-extension $ForumCategoriesExtension on ForumCategories {
-  ForumCategories copyWith(
-      {List<ForumCategories$Categories$Item>? categories}) {
-    return ForumCategories(categories: categories ?? this.categories);
+extension $FactionNewsResponseExtension on FactionNewsResponse {
+  FactionNewsResponse copyWith({List<FactionNews>? news, RequestMetadataWithLinks? metadata}) {
+    return FactionNewsResponse(news: news ?? this.news, metadata: metadata ?? this.metadata);
   }
 
-  ForumCategories copyWithWrapped(
-      {Wrapped<List<ForumCategories$Categories$Item>?>? categories}) {
-    return ForumCategories(
-        categories: (categories != null ? categories.value : this.categories));
+  FactionNewsResponse copyWithWrapped(
+      {Wrapped<List<FactionNews>?>? news, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return FactionNewsResponse(
+        news: (news != null ? news.value : this.news), metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionAttacksResponse {
+  const FactionAttacksResponse({
+    this.attacks,
+    this.metadata,
+  });
+
+  factory FactionAttacksResponse.fromJson(Map<String, dynamic> json) => _$FactionAttacksResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionAttacksResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionAttacksResponseToJson(this);
+
+  @JsonKey(name: 'attacks', defaultValue: <Attack>[])
+  final List<Attack>? attacks;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$FactionAttacksResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionAttacksResponse &&
+            (identical(other.attacks, attacks) || const DeepCollectionEquality().equals(other.attacks, attacks)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(attacks) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionAttacksResponseExtension on FactionAttacksResponse {
+  FactionAttacksResponse copyWith({List<Attack>? attacks, RequestMetadataWithLinks? metadata}) {
+    return FactionAttacksResponse(attacks: attacks ?? this.attacks, metadata: metadata ?? this.metadata);
+  }
+
+  FactionAttacksResponse copyWithWrapped(
+      {Wrapped<List<Attack>?>? attacks, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return FactionAttacksResponse(
+        attacks: (attacks != null ? attacks.value : this.attacks),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionAttacksFullResponse {
+  const FactionAttacksFullResponse({
+    this.attacks,
+    this.metadata,
+  });
+
+  factory FactionAttacksFullResponse.fromJson(Map<String, dynamic> json) => _$FactionAttacksFullResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionAttacksFullResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionAttacksFullResponseToJson(this);
+
+  @JsonKey(name: 'attacks', defaultValue: <AttackSimplified>[])
+  final List<AttackSimplified>? attacks;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$FactionAttacksFullResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionAttacksFullResponse &&
+            (identical(other.attacks, attacks) || const DeepCollectionEquality().equals(other.attacks, attacks)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(attacks) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionAttacksFullResponseExtension on FactionAttacksFullResponse {
+  FactionAttacksFullResponse copyWith({List<AttackSimplified>? attacks, RequestMetadataWithLinks? metadata}) {
+    return FactionAttacksFullResponse(attacks: attacks ?? this.attacks, metadata: metadata ?? this.metadata);
+  }
+
+  FactionAttacksFullResponse copyWithWrapped(
+      {Wrapped<List<AttackSimplified>?>? attacks, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return FactionAttacksFullResponse(
+        attacks: (attacks != null ? attacks.value : this.attacks),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionApplication {
+  const FactionApplication({
+    this.id,
+    this.user,
+    this.message,
+    this.validUntil,
+    this.status,
+  });
+
+  factory FactionApplication.fromJson(Map<String, dynamic> json) => _$FactionApplicationFromJson(json);
+
+  static const toJsonFactory = _$FactionApplicationToJson;
+  Map<String, dynamic> toJson() => _$FactionApplicationToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'user')
+  final FactionApplication$User? user;
+  @JsonKey(name: 'message')
+  final String? message;
+  @JsonKey(name: 'valid_until')
+  final int? validUntil;
+  @JsonKey(
+    name: 'status',
+    toJson: factionApplicationStatusEnumNullableToJson,
+    fromJson: factionApplicationStatusEnumNullableFromJson,
+  )
+  final enums.FactionApplicationStatusEnum? status;
+  static const fromJsonFactory = _$FactionApplicationFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionApplication &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.user, user) || const DeepCollectionEquality().equals(other.user, user)) &&
+            (identical(other.message, message) || const DeepCollectionEquality().equals(other.message, message)) &&
+            (identical(other.validUntil, validUntil) ||
+                const DeepCollectionEquality().equals(other.validUntil, validUntil)) &&
+            (identical(other.status, status) || const DeepCollectionEquality().equals(other.status, status)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(user) ^
+      const DeepCollectionEquality().hash(message) ^
+      const DeepCollectionEquality().hash(validUntil) ^
+      const DeepCollectionEquality().hash(status) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionApplicationExtension on FactionApplication {
+  FactionApplication copyWith(
+      {int? id,
+      FactionApplication$User? user,
+      String? message,
+      int? validUntil,
+      enums.FactionApplicationStatusEnum? status}) {
+    return FactionApplication(
+        id: id ?? this.id,
+        user: user ?? this.user,
+        message: message ?? this.message,
+        validUntil: validUntil ?? this.validUntil,
+        status: status ?? this.status);
+  }
+
+  FactionApplication copyWithWrapped(
+      {Wrapped<int?>? id,
+      Wrapped<FactionApplication$User?>? user,
+      Wrapped<String?>? message,
+      Wrapped<int?>? validUntil,
+      Wrapped<enums.FactionApplicationStatusEnum?>? status}) {
+    return FactionApplication(
+        id: (id != null ? id.value : this.id),
+        user: (user != null ? user.value : this.user),
+        message: (message != null ? message.value : this.message),
+        validUntil: (validUntil != null ? validUntil.value : this.validUntil),
+        status: (status != null ? status.value : this.status));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionApplicationsResponse {
+  const FactionApplicationsResponse({
+    this.applications,
+  });
+
+  factory FactionApplicationsResponse.fromJson(Map<String, dynamic> json) =>
+      _$FactionApplicationsResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionApplicationsResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionApplicationsResponseToJson(this);
+
+  @JsonKey(name: 'applications', defaultValue: <FactionApplication>[])
+  final List<FactionApplication>? applications;
+  static const fromJsonFactory = _$FactionApplicationsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionApplicationsResponse &&
+            (identical(other.applications, applications) ||
+                const DeepCollectionEquality().equals(other.applications, applications)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(applications) ^ runtimeType.hashCode;
+}
+
+extension $FactionApplicationsResponseExtension on FactionApplicationsResponse {
+  FactionApplicationsResponse copyWith({List<FactionApplication>? applications}) {
+    return FactionApplicationsResponse(applications: applications ?? this.applications);
+  }
+
+  FactionApplicationsResponse copyWithWrapped({Wrapped<List<FactionApplication>?>? applications}) {
+    return FactionApplicationsResponse(applications: (applications != null ? applications.value : this.applications));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionLookupResponse {
+  const FactionLookupResponse({
+    this.selections,
+  });
+
+  factory FactionLookupResponse.fromJson(Map<String, dynamic> json) => _$FactionLookupResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionLookupResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionLookupResponseToJson(this);
+
+  @JsonKey(
+    name: 'selections',
+    toJson: factionSelectionNameListToJson,
+    fromJson: factionSelectionNameListFromJson,
+  )
+  final List<enums.FactionSelectionName>? selections;
+  static const fromJsonFactory = _$FactionLookupResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionLookupResponse &&
+            (identical(other.selections, selections) ||
+                const DeepCollectionEquality().equals(other.selections, selections)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(selections) ^ runtimeType.hashCode;
+}
+
+extension $FactionLookupResponseExtension on FactionLookupResponse {
+  FactionLookupResponse copyWith({List<enums.FactionSelectionName>? selections}) {
+    return FactionLookupResponse(selections: selections ?? this.selections);
+  }
+
+  FactionLookupResponse copyWithWrapped({Wrapped<List<enums.FactionSelectionName>?>? selections}) {
+    return FactionLookupResponse(selections: (selections != null ? selections.value : this.selections));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class ForumCategoriesResponse {
+  const ForumCategoriesResponse({
+    this.categories,
+  });
+
+  factory ForumCategoriesResponse.fromJson(Map<String, dynamic> json) => _$ForumCategoriesResponseFromJson(json);
+
+  static const toJsonFactory = _$ForumCategoriesResponseToJson;
+  Map<String, dynamic> toJson() => _$ForumCategoriesResponseToJson(this);
+
+  @JsonKey(name: 'categories')
+  final List<ForumCategoriesResponse$Categories$Item>? categories;
+  static const fromJsonFactory = _$ForumCategoriesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is ForumCategoriesResponse &&
+            (identical(other.categories, categories) ||
+                const DeepCollectionEquality().equals(other.categories, categories)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(categories) ^ runtimeType.hashCode;
+}
+
+extension $ForumCategoriesResponseExtension on ForumCategoriesResponse {
+  ForumCategoriesResponse copyWith({List<ForumCategoriesResponse$Categories$Item>? categories}) {
+    return ForumCategoriesResponse(categories: categories ?? this.categories);
+  }
+
+  ForumCategoriesResponse copyWithWrapped({Wrapped<List<ForumCategoriesResponse$Categories$Item>?>? categories}) {
+    return ForumCategoriesResponse(categories: (categories != null ? categories.value : this.categories));
   }
 }
 
@@ -3210,8 +4078,7 @@ class ForumThreadAuthor {
     this.karma,
   });
 
-  factory ForumThreadAuthor.fromJson(Map<String, dynamic> json) =>
-      _$ForumThreadAuthorFromJson(json);
+  factory ForumThreadAuthor.fromJson(Map<String, dynamic> json) => _$ForumThreadAuthorFromJson(json);
 
   static const toJsonFactory = _$ForumThreadAuthorToJson;
   Map<String, dynamic> toJson() => _$ForumThreadAuthorToJson(this);
@@ -3228,13 +4095,9 @@ class ForumThreadAuthor {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumThreadAuthor &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.username, username) ||
-                const DeepCollectionEquality()
-                    .equals(other.username, username)) &&
-            (identical(other.karma, karma) ||
-                const DeepCollectionEquality().equals(other.karma, karma)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.username, username) || const DeepCollectionEquality().equals(other.username, username)) &&
+            (identical(other.karma, karma) || const DeepCollectionEquality().equals(other.karma, karma)));
   }
 
   @override
@@ -3250,14 +4113,10 @@ class ForumThreadAuthor {
 
 extension $ForumThreadAuthorExtension on ForumThreadAuthor {
   ForumThreadAuthor copyWith({int? id, String? username, int? karma}) {
-    return ForumThreadAuthor(
-        id: id ?? this.id,
-        username: username ?? this.username,
-        karma: karma ?? this.karma);
+    return ForumThreadAuthor(id: id ?? this.id, username: username ?? this.username, karma: karma ?? this.karma);
   }
 
-  ForumThreadAuthor copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<String?>? username, Wrapped<int?>? karma}) {
+  ForumThreadAuthor copyWithWrapped({Wrapped<int?>? id, Wrapped<String?>? username, Wrapped<int?>? karma}) {
     return ForumThreadAuthor(
         id: (id != null ? id.value : this.id),
         username: (username != null ? username.value : this.username),
@@ -3272,8 +4131,7 @@ class ForumPollVote {
     this.votes,
   });
 
-  factory ForumPollVote.fromJson(Map<String, dynamic> json) =>
-      _$ForumPollVoteFromJson(json);
+  factory ForumPollVote.fromJson(Map<String, dynamic> json) => _$ForumPollVoteFromJson(json);
 
   static const toJsonFactory = _$ForumPollVoteToJson;
   Map<String, dynamic> toJson() => _$ForumPollVoteToJson(this);
@@ -3288,10 +4146,8 @@ class ForumPollVote {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumPollVote &&
-            (identical(other.answer, answer) ||
-                const DeepCollectionEquality().equals(other.answer, answer)) &&
-            (identical(other.votes, votes) ||
-                const DeepCollectionEquality().equals(other.votes, votes)));
+            (identical(other.answer, answer) || const DeepCollectionEquality().equals(other.answer, answer)) &&
+            (identical(other.votes, votes) || const DeepCollectionEquality().equals(other.votes, votes)));
   }
 
   @override
@@ -3299,22 +4155,17 @@ class ForumPollVote {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(answer) ^
-      const DeepCollectionEquality().hash(votes) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(answer) ^ const DeepCollectionEquality().hash(votes) ^ runtimeType.hashCode;
 }
 
 extension $ForumPollVoteExtension on ForumPollVote {
   ForumPollVote copyWith({String? answer, int? votes}) {
-    return ForumPollVote(
-        answer: answer ?? this.answer, votes: votes ?? this.votes);
+    return ForumPollVote(answer: answer ?? this.answer, votes: votes ?? this.votes);
   }
 
-  ForumPollVote copyWithWrapped(
-      {Wrapped<String?>? answer, Wrapped<int?>? votes}) {
+  ForumPollVote copyWithWrapped({Wrapped<String?>? answer, Wrapped<int?>? votes}) {
     return ForumPollVote(
-        answer: (answer != null ? answer.value : this.answer),
-        votes: (votes != null ? votes.value : this.votes));
+        answer: (answer != null ? answer.value : this.answer), votes: (votes != null ? votes.value : this.votes));
   }
 }
 
@@ -3326,8 +4177,7 @@ class ForumPoll {
     this.answers,
   });
 
-  factory ForumPoll.fromJson(Map<String, dynamic> json) =>
-      _$ForumPollFromJson(json);
+  factory ForumPoll.fromJson(Map<String, dynamic> json) => _$ForumPollFromJson(json);
 
   static const toJsonFactory = _$ForumPollToJson;
   Map<String, dynamic> toJson() => _$ForumPollToJson(this);
@@ -3344,14 +4194,10 @@ class ForumPoll {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumPoll &&
-            (identical(other.question, question) ||
-                const DeepCollectionEquality()
-                    .equals(other.question, question)) &&
+            (identical(other.question, question) || const DeepCollectionEquality().equals(other.question, question)) &&
             (identical(other.answersCount, answersCount) ||
-                const DeepCollectionEquality()
-                    .equals(other.answersCount, answersCount)) &&
-            (identical(other.answers, answers) ||
-                const DeepCollectionEquality().equals(other.answers, answers)));
+                const DeepCollectionEquality().equals(other.answersCount, answersCount)) &&
+            (identical(other.answers, answers) || const DeepCollectionEquality().equals(other.answers, answers)));
   }
 
   @override
@@ -3366,8 +4212,7 @@ class ForumPoll {
 }
 
 extension $ForumPollExtension on ForumPoll {
-  ForumPoll copyWith(
-      {String? question, int? answersCount, List<ForumPollVote>? answers}) {
+  ForumPoll copyWith({String? question, int? answersCount, List<ForumPollVote>? answers}) {
     return ForumPoll(
         question: question ?? this.question,
         answersCount: answersCount ?? this.answersCount,
@@ -3375,13 +4220,10 @@ extension $ForumPollExtension on ForumPoll {
   }
 
   ForumPoll copyWithWrapped(
-      {Wrapped<String?>? question,
-      Wrapped<int?>? answersCount,
-      Wrapped<List<ForumPollVote>?>? answers}) {
+      {Wrapped<String?>? question, Wrapped<int?>? answersCount, Wrapped<List<ForumPollVote>?>? answers}) {
     return ForumPoll(
         question: (question != null ? question.value : this.question),
-        answersCount:
-            (answersCount != null ? answersCount.value : this.answersCount),
+        answersCount: (answersCount != null ? answersCount.value : this.answersCount),
         answers: (answers != null ? answers.value : this.answers));
   }
 }
@@ -3404,8 +4246,7 @@ class ForumThreadBase {
     this.isSticky,
   });
 
-  factory ForumThreadBase.fromJson(Map<String, dynamic> json) =>
-      _$ForumThreadBaseFromJson(json);
+  factory ForumThreadBase.fromJson(Map<String, dynamic> json) => _$ForumThreadBaseFromJson(json);
 
   static const toJsonFactory = _$ForumThreadBaseToJson;
   Map<String, dynamic> toJson() => _$ForumThreadBaseToJson(this);
@@ -3442,39 +4283,22 @@ class ForumThreadBase {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumThreadBase &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.forumId, forumId) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumId, forumId)) &&
-            (identical(other.posts, posts) ||
-                const DeepCollectionEquality().equals(other.posts, posts)) &&
-            (identical(other.rating, rating) ||
-                const DeepCollectionEquality().equals(other.rating, rating)) &&
-            (identical(other.views, views) ||
-                const DeepCollectionEquality().equals(other.views, views)) &&
-            (identical(other.author, author) ||
-                const DeepCollectionEquality().equals(other.author, author)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.forumId, forumId) || const DeepCollectionEquality().equals(other.forumId, forumId)) &&
+            (identical(other.posts, posts) || const DeepCollectionEquality().equals(other.posts, posts)) &&
+            (identical(other.rating, rating) || const DeepCollectionEquality().equals(other.rating, rating)) &&
+            (identical(other.views, views) || const DeepCollectionEquality().equals(other.views, views)) &&
+            (identical(other.author, author) || const DeepCollectionEquality().equals(other.author, author)) &&
             (identical(other.lastPoster, lastPoster) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastPoster, lastPoster)) &&
+                const DeepCollectionEquality().equals(other.lastPoster, lastPoster)) &&
             (identical(other.firstPostTime, firstPostTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.firstPostTime, firstPostTime)) &&
+                const DeepCollectionEquality().equals(other.firstPostTime, firstPostTime)) &&
             (identical(other.lastPostTime, lastPostTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastPostTime, lastPostTime)) &&
-            (identical(other.hasPoll, hasPoll) ||
-                const DeepCollectionEquality()
-                    .equals(other.hasPoll, hasPoll)) &&
-            (identical(other.isLocked, isLocked) ||
-                const DeepCollectionEquality()
-                    .equals(other.isLocked, isLocked)) &&
-            (identical(other.isSticky, isSticky) ||
-                const DeepCollectionEquality()
-                    .equals(other.isSticky, isSticky)));
+                const DeepCollectionEquality().equals(other.lastPostTime, lastPostTime)) &&
+            (identical(other.hasPoll, hasPoll) || const DeepCollectionEquality().equals(other.hasPoll, hasPoll)) &&
+            (identical(other.isLocked, isLocked) || const DeepCollectionEquality().equals(other.isLocked, isLocked)) &&
+            (identical(other.isSticky, isSticky) || const DeepCollectionEquality().equals(other.isSticky, isSticky)));
   }
 
   @override
@@ -3552,10 +4376,8 @@ extension $ForumThreadBaseExtension on ForumThreadBase {
         views: (views != null ? views.value : this.views),
         author: (author != null ? author.value : this.author),
         lastPoster: (lastPoster != null ? lastPoster.value : this.lastPoster),
-        firstPostTime:
-            (firstPostTime != null ? firstPostTime.value : this.firstPostTime),
-        lastPostTime:
-            (lastPostTime != null ? lastPostTime.value : this.lastPostTime),
+        firstPostTime: (firstPostTime != null ? firstPostTime.value : this.firstPostTime),
+        lastPostTime: (lastPostTime != null ? lastPostTime.value : this.lastPostTime),
         hasPoll: (hasPoll != null ? hasPoll.value : this.hasPoll),
         isLocked: (isLocked != null ? isLocked.value : this.isLocked),
         isSticky: (isSticky != null ? isSticky.value : this.isSticky));
@@ -3583,8 +4405,7 @@ class ForumThreadExtended {
     this.isSticky,
   });
 
-  factory ForumThreadExtended.fromJson(Map<String, dynamic> json) =>
-      _$ForumThreadExtendedFromJson(json);
+  factory ForumThreadExtended.fromJson(Map<String, dynamic> json) => _$ForumThreadExtendedFromJson(json);
 
   static const toJsonFactory = _$ForumThreadExtendedToJson;
   Map<String, dynamic> toJson() => _$ForumThreadExtendedToJson(this);
@@ -3627,47 +4448,26 @@ class ForumThreadExtended {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumThreadExtended &&
-            (identical(other.content, content) ||
-                const DeepCollectionEquality()
-                    .equals(other.content, content)) &&
+            (identical(other.content, content) || const DeepCollectionEquality().equals(other.content, content)) &&
             (identical(other.contentRaw, contentRaw) ||
-                const DeepCollectionEquality()
-                    .equals(other.contentRaw, contentRaw)) &&
-            (identical(other.poll, poll) ||
-                const DeepCollectionEquality().equals(other.poll, poll)) &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.forumId, forumId) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumId, forumId)) &&
-            (identical(other.posts, posts) ||
-                const DeepCollectionEquality().equals(other.posts, posts)) &&
-            (identical(other.rating, rating) ||
-                const DeepCollectionEquality().equals(other.rating, rating)) &&
-            (identical(other.views, views) ||
-                const DeepCollectionEquality().equals(other.views, views)) &&
-            (identical(other.author, author) ||
-                const DeepCollectionEquality().equals(other.author, author)) &&
+                const DeepCollectionEquality().equals(other.contentRaw, contentRaw)) &&
+            (identical(other.poll, poll) || const DeepCollectionEquality().equals(other.poll, poll)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.forumId, forumId) || const DeepCollectionEquality().equals(other.forumId, forumId)) &&
+            (identical(other.posts, posts) || const DeepCollectionEquality().equals(other.posts, posts)) &&
+            (identical(other.rating, rating) || const DeepCollectionEquality().equals(other.rating, rating)) &&
+            (identical(other.views, views) || const DeepCollectionEquality().equals(other.views, views)) &&
+            (identical(other.author, author) || const DeepCollectionEquality().equals(other.author, author)) &&
             (identical(other.lastPoster, lastPoster) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastPoster, lastPoster)) &&
+                const DeepCollectionEquality().equals(other.lastPoster, lastPoster)) &&
             (identical(other.firstPostTime, firstPostTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.firstPostTime, firstPostTime)) &&
+                const DeepCollectionEquality().equals(other.firstPostTime, firstPostTime)) &&
             (identical(other.lastPostTime, lastPostTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastPostTime, lastPostTime)) &&
-            (identical(other.hasPoll, hasPoll) ||
-                const DeepCollectionEquality()
-                    .equals(other.hasPoll, hasPoll)) &&
-            (identical(other.isLocked, isLocked) ||
-                const DeepCollectionEquality()
-                    .equals(other.isLocked, isLocked)) &&
-            (identical(other.isSticky, isSticky) ||
-                const DeepCollectionEquality()
-                    .equals(other.isSticky, isSticky)));
+                const DeepCollectionEquality().equals(other.lastPostTime, lastPostTime)) &&
+            (identical(other.hasPoll, hasPoll) || const DeepCollectionEquality().equals(other.hasPoll, hasPoll)) &&
+            (identical(other.isLocked, isLocked) || const DeepCollectionEquality().equals(other.isLocked, isLocked)) &&
+            (identical(other.isSticky, isSticky) || const DeepCollectionEquality().equals(other.isSticky, isSticky)));
   }
 
   @override
@@ -3760,10 +4560,8 @@ extension $ForumThreadExtendedExtension on ForumThreadExtended {
         views: (views != null ? views.value : this.views),
         author: (author != null ? author.value : this.author),
         lastPoster: (lastPoster != null ? lastPoster.value : this.lastPoster),
-        firstPostTime:
-            (firstPostTime != null ? firstPostTime.value : this.firstPostTime),
-        lastPostTime:
-            (lastPostTime != null ? lastPostTime.value : this.lastPostTime),
+        firstPostTime: (firstPostTime != null ? firstPostTime.value : this.firstPostTime),
+        lastPostTime: (lastPostTime != null ? lastPostTime.value : this.lastPostTime),
         hasPoll: (hasPoll != null ? hasPoll.value : this.hasPoll),
         isLocked: (isLocked != null ? isLocked.value : this.isLocked),
         isSticky: (isSticky != null ? isSticky.value : this.isSticky));
@@ -3789,8 +4587,7 @@ class ForumPost {
     this.dislikes,
   });
 
-  factory ForumPost.fromJson(Map<String, dynamic> json) =>
-      _$ForumPostFromJson(json);
+  factory ForumPost.fromJson(Map<String, dynamic> json) => _$ForumPostFromJson(json);
 
   static const toJsonFactory = _$ForumPostToJson;
   Map<String, dynamic> toJson() => _$ForumPostToJson(this);
@@ -3829,45 +4626,22 @@ class ForumPost {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumPost &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.threadId, threadId) ||
-                const DeepCollectionEquality()
-                    .equals(other.threadId, threadId)) &&
-            (identical(other.author, author) ||
-                const DeepCollectionEquality().equals(other.author, author)) &&
-            (identical(other.isLegacy, isLegacy) ||
-                const DeepCollectionEquality()
-                    .equals(other.isLegacy, isLegacy)) &&
-            (identical(other.isTopic, isTopic) ||
-                const DeepCollectionEquality()
-                    .equals(other.isTopic, isTopic)) &&
-            (identical(other.isEdited, isEdited) ||
-                const DeepCollectionEquality()
-                    .equals(other.isEdited, isEdited)) &&
-            (identical(other.isPinned, isPinned) ||
-                const DeepCollectionEquality()
-                    .equals(other.isPinned, isPinned)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.threadId, threadId) || const DeepCollectionEquality().equals(other.threadId, threadId)) &&
+            (identical(other.author, author) || const DeepCollectionEquality().equals(other.author, author)) &&
+            (identical(other.isLegacy, isLegacy) || const DeepCollectionEquality().equals(other.isLegacy, isLegacy)) &&
+            (identical(other.isTopic, isTopic) || const DeepCollectionEquality().equals(other.isTopic, isTopic)) &&
+            (identical(other.isEdited, isEdited) || const DeepCollectionEquality().equals(other.isEdited, isEdited)) &&
+            (identical(other.isPinned, isPinned) || const DeepCollectionEquality().equals(other.isPinned, isPinned)) &&
             (identical(other.createdTime, createdTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.createdTime, createdTime)) &&
-            (identical(other.editedBy, editedBy) ||
-                const DeepCollectionEquality()
-                    .equals(other.editedBy, editedBy)) &&
-            (identical(other.hasQuote, hasQuote) ||
-                const DeepCollectionEquality()
-                    .equals(other.hasQuote, hasQuote)) &&
+                const DeepCollectionEquality().equals(other.createdTime, createdTime)) &&
+            (identical(other.editedBy, editedBy) || const DeepCollectionEquality().equals(other.editedBy, editedBy)) &&
+            (identical(other.hasQuote, hasQuote) || const DeepCollectionEquality().equals(other.hasQuote, hasQuote)) &&
             (identical(other.quotedPostId, quotedPostId) ||
-                const DeepCollectionEquality()
-                    .equals(other.quotedPostId, quotedPostId)) &&
-            (identical(other.content, content) ||
-                const DeepCollectionEquality()
-                    .equals(other.content, content)) &&
-            (identical(other.likes, likes) ||
-                const DeepCollectionEquality().equals(other.likes, likes)) &&
-            (identical(other.dislikes, dislikes) ||
-                const DeepCollectionEquality()
-                    .equals(other.dislikes, dislikes)));
+                const DeepCollectionEquality().equals(other.quotedPostId, quotedPostId)) &&
+            (identical(other.content, content) || const DeepCollectionEquality().equals(other.content, content)) &&
+            (identical(other.likes, likes) || const DeepCollectionEquality().equals(other.likes, likes)) &&
+            (identical(other.dislikes, dislikes) || const DeepCollectionEquality().equals(other.dislikes, dislikes)));
   }
 
   @override
@@ -3948,12 +4722,10 @@ extension $ForumPostExtension on ForumPost {
         isTopic: (isTopic != null ? isTopic.value : this.isTopic),
         isEdited: (isEdited != null ? isEdited.value : this.isEdited),
         isPinned: (isPinned != null ? isPinned.value : this.isPinned),
-        createdTime:
-            (createdTime != null ? createdTime.value : this.createdTime),
+        createdTime: (createdTime != null ? createdTime.value : this.createdTime),
         editedBy: (editedBy != null ? editedBy.value : this.editedBy),
         hasQuote: (hasQuote != null ? hasQuote.value : this.hasQuote),
-        quotedPostId:
-            (quotedPostId != null ? quotedPostId.value : this.quotedPostId),
+        quotedPostId: (quotedPostId != null ? quotedPostId.value : this.quotedPostId),
         content: (content != null ? content.value : this.content),
         likes: (likes != null ? likes.value : this.likes),
         dislikes: (dislikes != null ? dislikes.value : this.dislikes));
@@ -3979,8 +4751,7 @@ class ForumThreadUserExtended {
     this.isSticky,
   });
 
-  factory ForumThreadUserExtended.fromJson(Map<String, dynamic> json) =>
-      _$ForumThreadUserExtendedFromJson(json);
+  factory ForumThreadUserExtended.fromJson(Map<String, dynamic> json) => _$ForumThreadUserExtendedFromJson(json);
 
   static const toJsonFactory = _$ForumThreadUserExtendedToJson;
   Map<String, dynamic> toJson() => _$ForumThreadUserExtendedToJson(this);
@@ -4019,42 +4790,23 @@ class ForumThreadUserExtended {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumThreadUserExtended &&
-            (identical(other.newPosts, newPosts) ||
-                const DeepCollectionEquality()
-                    .equals(other.newPosts, newPosts)) &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.forumId, forumId) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumId, forumId)) &&
-            (identical(other.posts, posts) ||
-                const DeepCollectionEquality().equals(other.posts, posts)) &&
-            (identical(other.rating, rating) ||
-                const DeepCollectionEquality().equals(other.rating, rating)) &&
-            (identical(other.views, views) ||
-                const DeepCollectionEquality().equals(other.views, views)) &&
-            (identical(other.author, author) ||
-                const DeepCollectionEquality().equals(other.author, author)) &&
+            (identical(other.newPosts, newPosts) || const DeepCollectionEquality().equals(other.newPosts, newPosts)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.forumId, forumId) || const DeepCollectionEquality().equals(other.forumId, forumId)) &&
+            (identical(other.posts, posts) || const DeepCollectionEquality().equals(other.posts, posts)) &&
+            (identical(other.rating, rating) || const DeepCollectionEquality().equals(other.rating, rating)) &&
+            (identical(other.views, views) || const DeepCollectionEquality().equals(other.views, views)) &&
+            (identical(other.author, author) || const DeepCollectionEquality().equals(other.author, author)) &&
             (identical(other.lastPoster, lastPoster) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastPoster, lastPoster)) &&
+                const DeepCollectionEquality().equals(other.lastPoster, lastPoster)) &&
             (identical(other.firstPostTime, firstPostTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.firstPostTime, firstPostTime)) &&
+                const DeepCollectionEquality().equals(other.firstPostTime, firstPostTime)) &&
             (identical(other.lastPostTime, lastPostTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastPostTime, lastPostTime)) &&
-            (identical(other.hasPoll, hasPoll) ||
-                const DeepCollectionEquality()
-                    .equals(other.hasPoll, hasPoll)) &&
-            (identical(other.isLocked, isLocked) ||
-                const DeepCollectionEquality()
-                    .equals(other.isLocked, isLocked)) &&
-            (identical(other.isSticky, isSticky) ||
-                const DeepCollectionEquality()
-                    .equals(other.isSticky, isSticky)));
+                const DeepCollectionEquality().equals(other.lastPostTime, lastPostTime)) &&
+            (identical(other.hasPoll, hasPoll) || const DeepCollectionEquality().equals(other.hasPoll, hasPoll)) &&
+            (identical(other.isLocked, isLocked) || const DeepCollectionEquality().equals(other.isLocked, isLocked)) &&
+            (identical(other.isSticky, isSticky) || const DeepCollectionEquality().equals(other.isSticky, isSticky)));
   }
 
   @override
@@ -4137,10 +4889,8 @@ extension $ForumThreadUserExtendedExtension on ForumThreadUserExtended {
         views: (views != null ? views.value : this.views),
         author: (author != null ? author.value : this.author),
         lastPoster: (lastPoster != null ? lastPoster.value : this.lastPoster),
-        firstPostTime:
-            (firstPostTime != null ? firstPostTime.value : this.firstPostTime),
-        lastPostTime:
-            (lastPostTime != null ? lastPostTime.value : this.lastPostTime),
+        firstPostTime: (firstPostTime != null ? firstPostTime.value : this.firstPostTime),
+        lastPostTime: (lastPostTime != null ? lastPostTime.value : this.lastPostTime),
         hasPoll: (hasPoll != null ? hasPoll.value : this.hasPoll),
         isLocked: (isLocked != null ? isLocked.value : this.isLocked),
         isSticky: (isSticky != null ? isSticky.value : this.isSticky));
@@ -4158,8 +4908,7 @@ class ForumSubscribedThreadPostsCount {
       _$ForumSubscribedThreadPostsCountFromJson(json);
 
   static const toJsonFactory = _$ForumSubscribedThreadPostsCountToJson;
-  Map<String, dynamic> toJson() =>
-      _$ForumSubscribedThreadPostsCountToJson(this);
+  Map<String, dynamic> toJson() => _$ForumSubscribedThreadPostsCountToJson(this);
 
   @JsonKey(name: 'new')
   final int? $new;
@@ -4171,10 +4920,8 @@ class ForumSubscribedThreadPostsCount {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumSubscribedThreadPostsCount &&
-            (identical(other.$new, $new) ||
-                const DeepCollectionEquality().equals(other.$new, $new)) &&
-            (identical(other.total, total) ||
-                const DeepCollectionEquality().equals(other.total, total)));
+            (identical(other.$new, $new) || const DeepCollectionEquality().equals(other.$new, $new)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)));
   }
 
   @override
@@ -4182,23 +4929,17 @@ class ForumSubscribedThreadPostsCount {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash($new) ^
-      const DeepCollectionEquality().hash(total) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash($new) ^ const DeepCollectionEquality().hash(total) ^ runtimeType.hashCode;
 }
 
-extension $ForumSubscribedThreadPostsCountExtension
-    on ForumSubscribedThreadPostsCount {
+extension $ForumSubscribedThreadPostsCountExtension on ForumSubscribedThreadPostsCount {
   ForumSubscribedThreadPostsCount copyWith({int? $new, int? total}) {
-    return ForumSubscribedThreadPostsCount(
-        $new: $new ?? this.$new, total: total ?? this.total);
+    return ForumSubscribedThreadPostsCount($new: $new ?? this.$new, total: total ?? this.total);
   }
 
-  ForumSubscribedThreadPostsCount copyWithWrapped(
-      {Wrapped<int?>? $new, Wrapped<int?>? total}) {
+  ForumSubscribedThreadPostsCount copyWithWrapped({Wrapped<int?>? $new, Wrapped<int?>? total}) {
     return ForumSubscribedThreadPostsCount(
-        $new: ($new != null ? $new.value : this.$new),
-        total: (total != null ? total.value : this.total));
+        $new: ($new != null ? $new.value : this.$new), total: (total != null ? total.value : this.total));
   }
 }
 
@@ -4212,8 +4953,7 @@ class ForumSubscribedThread {
     this.posts,
   });
 
-  factory ForumSubscribedThread.fromJson(Map<String, dynamic> json) =>
-      _$ForumSubscribedThreadFromJson(json);
+  factory ForumSubscribedThread.fromJson(Map<String, dynamic> json) => _$ForumSubscribedThreadFromJson(json);
 
   static const toJsonFactory = _$ForumSubscribedThreadToJson;
   Map<String, dynamic> toJson() => _$ForumSubscribedThreadToJson(this);
@@ -4234,17 +4974,11 @@ class ForumSubscribedThread {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumSubscribedThread &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.forumId, forumId) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumId, forumId)) &&
-            (identical(other.author, author) ||
-                const DeepCollectionEquality().equals(other.author, author)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.posts, posts) ||
-                const DeepCollectionEquality().equals(other.posts, posts)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.forumId, forumId) || const DeepCollectionEquality().equals(other.forumId, forumId)) &&
+            (identical(other.author, author) || const DeepCollectionEquality().equals(other.author, author)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.posts, posts) || const DeepCollectionEquality().equals(other.posts, posts)));
   }
 
   @override
@@ -4262,11 +4996,7 @@ class ForumSubscribedThread {
 
 extension $ForumSubscribedThreadExtension on ForumSubscribedThread {
   ForumSubscribedThread copyWith(
-      {int? id,
-      int? forumId,
-      ForumThreadAuthor? author,
-      String? title,
-      ForumSubscribedThreadPostsCount? posts}) {
+      {int? id, int? forumId, ForumThreadAuthor? author, String? title, ForumSubscribedThreadPostsCount? posts}) {
     return ForumSubscribedThread(
         id: id ?? this.id,
         forumId: forumId ?? this.forumId,
@@ -4303,8 +5033,7 @@ class ForumFeed {
     this.type,
   });
 
-  factory ForumFeed.fromJson(Map<String, dynamic> json) =>
-      _$ForumFeedFromJson(json);
+  factory ForumFeed.fromJson(Map<String, dynamic> json) => _$ForumFeedFromJson(json);
 
   static const toJsonFactory = _$ForumFeedToJson;
   Map<String, dynamic> toJson() => _$ForumFeedToJson(this);
@@ -4335,24 +5064,15 @@ class ForumFeed {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ForumFeed &&
-            (identical(other.threadId, threadId) ||
-                const DeepCollectionEquality()
-                    .equals(other.threadId, threadId)) &&
-            (identical(other.postId, postId) ||
-                const DeepCollectionEquality().equals(other.postId, postId)) &&
-            (identical(other.user, user) ||
-                const DeepCollectionEquality().equals(other.user, user)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.text, text) ||
-                const DeepCollectionEquality().equals(other.text, text)) &&
+            (identical(other.threadId, threadId) || const DeepCollectionEquality().equals(other.threadId, threadId)) &&
+            (identical(other.postId, postId) || const DeepCollectionEquality().equals(other.postId, postId)) &&
+            (identical(other.user, user) || const DeepCollectionEquality().equals(other.user, user)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.text, text) || const DeepCollectionEquality().equals(other.text, text)) &&
             (identical(other.timestamp, timestamp) ||
-                const DeepCollectionEquality()
-                    .equals(other.timestamp, timestamp)) &&
-            (identical(other.isSeen, isSeen) ||
-                const DeepCollectionEquality().equals(other.isSeen, isSeen)) &&
-            (identical(other.type, type) ||
-                const DeepCollectionEquality().equals(other.type, type)));
+                const DeepCollectionEquality().equals(other.timestamp, timestamp)) &&
+            (identical(other.isSeen, isSeen) || const DeepCollectionEquality().equals(other.isSeen, isSeen)) &&
+            (identical(other.type, type) || const DeepCollectionEquality().equals(other.type, type)));
   }
 
   @override
@@ -4414,6 +5134,204 @@ extension $ForumFeedExtension on ForumFeed {
 }
 
 @JsonSerializable(explicitToJson: true)
+class ForumThreadsResponse {
+  const ForumThreadsResponse({
+    this.threads,
+    this.links,
+    this.metadata,
+  });
+
+  factory ForumThreadsResponse.fromJson(Map<String, dynamic> json) => _$ForumThreadsResponseFromJson(json);
+
+  static const toJsonFactory = _$ForumThreadsResponseToJson;
+  Map<String, dynamic> toJson() => _$ForumThreadsResponseToJson(this);
+
+  @JsonKey(name: 'threads', defaultValue: <ForumThreadBase>[])
+  final List<ForumThreadBase>? threads;
+  @JsonKey(name: '_links')
+  final RequestLinks? links;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$ForumThreadsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is ForumThreadsResponse &&
+            (identical(other.threads, threads) || const DeepCollectionEquality().equals(other.threads, threads)) &&
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(threads) ^
+      const DeepCollectionEquality().hash(links) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $ForumThreadsResponseExtension on ForumThreadsResponse {
+  ForumThreadsResponse copyWith(
+      {List<ForumThreadBase>? threads, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+    return ForumThreadsResponse(
+        threads: threads ?? this.threads, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  }
+
+  ForumThreadsResponse copyWithWrapped(
+      {Wrapped<List<ForumThreadBase>?>? threads,
+      Wrapped<RequestLinks?>? links,
+      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return ForumThreadsResponse(
+        threads: (threads != null ? threads.value : this.threads),
+        links: (links != null ? links.value : this.links),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class ForumThreadResponse {
+  const ForumThreadResponse({
+    this.thread,
+  });
+
+  factory ForumThreadResponse.fromJson(Map<String, dynamic> json) => _$ForumThreadResponseFromJson(json);
+
+  static const toJsonFactory = _$ForumThreadResponseToJson;
+  Map<String, dynamic> toJson() => _$ForumThreadResponseToJson(this);
+
+  @JsonKey(name: 'thread')
+  final ForumThreadExtended? thread;
+  static const fromJsonFactory = _$ForumThreadResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is ForumThreadResponse &&
+            (identical(other.thread, thread) || const DeepCollectionEquality().equals(other.thread, thread)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(thread) ^ runtimeType.hashCode;
+}
+
+extension $ForumThreadResponseExtension on ForumThreadResponse {
+  ForumThreadResponse copyWith({ForumThreadExtended? thread}) {
+    return ForumThreadResponse(thread: thread ?? this.thread);
+  }
+
+  ForumThreadResponse copyWithWrapped({Wrapped<ForumThreadExtended?>? thread}) {
+    return ForumThreadResponse(thread: (thread != null ? thread.value : this.thread));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class ForumPostsResponse {
+  const ForumPostsResponse({
+    this.posts,
+    this.links,
+    this.metadata,
+  });
+
+  factory ForumPostsResponse.fromJson(Map<String, dynamic> json) => _$ForumPostsResponseFromJson(json);
+
+  static const toJsonFactory = _$ForumPostsResponseToJson;
+  Map<String, dynamic> toJson() => _$ForumPostsResponseToJson(this);
+
+  @JsonKey(name: 'posts', defaultValue: <ForumPost>[])
+  final List<ForumPost>? posts;
+  @JsonKey(name: '_links')
+  final RequestLinks? links;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$ForumPostsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is ForumPostsResponse &&
+            (identical(other.posts, posts) || const DeepCollectionEquality().equals(other.posts, posts)) &&
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(posts) ^
+      const DeepCollectionEquality().hash(links) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $ForumPostsResponseExtension on ForumPostsResponse {
+  ForumPostsResponse copyWith({List<ForumPost>? posts, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+    return ForumPostsResponse(
+        posts: posts ?? this.posts, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  }
+
+  ForumPostsResponse copyWithWrapped(
+      {Wrapped<List<ForumPost>?>? posts, Wrapped<RequestLinks?>? links, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return ForumPostsResponse(
+        posts: (posts != null ? posts.value : this.posts),
+        links: (links != null ? links.value : this.links),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class ForumLookupResponse {
+  const ForumLookupResponse({
+    this.selections,
+  });
+
+  factory ForumLookupResponse.fromJson(Map<String, dynamic> json) => _$ForumLookupResponseFromJson(json);
+
+  static const toJsonFactory = _$ForumLookupResponseToJson;
+  Map<String, dynamic> toJson() => _$ForumLookupResponseToJson(this);
+
+  @JsonKey(
+    name: 'selections',
+    toJson: forumSelectionNameListToJson,
+    fromJson: forumSelectionNameListFromJson,
+  )
+  final List<enums.ForumSelectionName>? selections;
+  static const fromJsonFactory = _$ForumLookupResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is ForumLookupResponse &&
+            (identical(other.selections, selections) ||
+                const DeepCollectionEquality().equals(other.selections, selections)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(selections) ^ runtimeType.hashCode;
+}
+
+extension $ForumLookupResponseExtension on ForumLookupResponse {
+  ForumLookupResponse copyWith({List<enums.ForumSelectionName>? selections}) {
+    return ForumLookupResponse(selections: selections ?? this.selections);
+  }
+
+  ForumLookupResponse copyWithWrapped({Wrapped<List<enums.ForumSelectionName>?>? selections}) {
+    return ForumLookupResponse(selections: (selections != null ? selections.value : this.selections));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class ItemMarketListingItemBonus {
   const ItemMarketListingItemBonus({
     this.id,
@@ -4421,8 +5339,7 @@ class ItemMarketListingItemBonus {
     this.description,
   });
 
-  factory ItemMarketListingItemBonus.fromJson(Map<String, dynamic> json) =>
-      _$ItemMarketListingItemBonusFromJson(json);
+  factory ItemMarketListingItemBonus.fromJson(Map<String, dynamic> json) => _$ItemMarketListingItemBonusFromJson(json);
 
   static const toJsonFactory = _$ItemMarketListingItemBonusToJson;
   Map<String, dynamic> toJson() => _$ItemMarketListingItemBonusToJson(this);
@@ -4439,13 +5356,10 @@ class ItemMarketListingItemBonus {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ItemMarketListingItemBonus &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
             (identical(other.description, description) ||
-                const DeepCollectionEquality()
-                    .equals(other.description, description)));
+                const DeepCollectionEquality().equals(other.description, description)));
   }
 
   @override
@@ -4460,23 +5374,17 @@ class ItemMarketListingItemBonus {
 }
 
 extension $ItemMarketListingItemBonusExtension on ItemMarketListingItemBonus {
-  ItemMarketListingItemBonus copyWith(
-      {int? id, String? title, String? description}) {
+  ItemMarketListingItemBonus copyWith({int? id, String? title, String? description}) {
     return ItemMarketListingItemBonus(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        description: description ?? this.description);
+        id: id ?? this.id, title: title ?? this.title, description: description ?? this.description);
   }
 
   ItemMarketListingItemBonus copyWithWrapped(
-      {Wrapped<int?>? id,
-      Wrapped<String?>? title,
-      Wrapped<String?>? description}) {
+      {Wrapped<int?>? id, Wrapped<String?>? title, Wrapped<String?>? description}) {
     return ItemMarketListingItemBonus(
         id: (id != null ? id.value : this.id),
         title: (title != null ? title.value : this.title),
-        description:
-            (description != null ? description.value : this.description));
+        description: (description != null ? description.value : this.description));
   }
 }
 
@@ -4488,8 +5396,7 @@ class ItemMarketListingItemStats {
     this.armor,
   });
 
-  factory ItemMarketListingItemStats.fromJson(Map<String, dynamic> json) =>
-      _$ItemMarketListingItemStatsFromJson(json);
+  factory ItemMarketListingItemStats.fromJson(Map<String, dynamic> json) => _$ItemMarketListingItemStatsFromJson(json);
 
   static const toJsonFactory = _$ItemMarketListingItemStatsToJson;
   Map<String, dynamic> toJson() => _$ItemMarketListingItemStatsToJson(this);
@@ -4506,13 +5413,9 @@ class ItemMarketListingItemStats {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ItemMarketListingItemStats &&
-            (identical(other.damage, damage) ||
-                const DeepCollectionEquality().equals(other.damage, damage)) &&
-            (identical(other.accuracy, accuracy) ||
-                const DeepCollectionEquality()
-                    .equals(other.accuracy, accuracy)) &&
-            (identical(other.armor, armor) ||
-                const DeepCollectionEquality().equals(other.armor, armor)));
+            (identical(other.damage, damage) || const DeepCollectionEquality().equals(other.damage, damage)) &&
+            (identical(other.accuracy, accuracy) || const DeepCollectionEquality().equals(other.accuracy, accuracy)) &&
+            (identical(other.armor, armor) || const DeepCollectionEquality().equals(other.armor, armor)));
   }
 
   @override
@@ -4527,18 +5430,13 @@ class ItemMarketListingItemStats {
 }
 
 extension $ItemMarketListingItemStatsExtension on ItemMarketListingItemStats {
-  ItemMarketListingItemStats copyWith(
-      {double? damage, double? accuracy, double? armor}) {
+  ItemMarketListingItemStats copyWith({double? damage, double? accuracy, double? armor}) {
     return ItemMarketListingItemStats(
-        damage: damage ?? this.damage,
-        accuracy: accuracy ?? this.accuracy,
-        armor: armor ?? this.armor);
+        damage: damage ?? this.damage, accuracy: accuracy ?? this.accuracy, armor: armor ?? this.armor);
   }
 
   ItemMarketListingItemStats copyWithWrapped(
-      {Wrapped<double?>? damage,
-      Wrapped<double?>? accuracy,
-      Wrapped<double?>? armor}) {
+      {Wrapped<double?>? damage, Wrapped<double?>? accuracy, Wrapped<double?>? armor}) {
     return ItemMarketListingItemStats(
         damage: (damage != null ? damage.value : this.damage),
         accuracy: (accuracy != null ? accuracy.value : this.accuracy),
@@ -4555,8 +5453,7 @@ class ItemMarketItem {
     this.averagePrice,
   });
 
-  factory ItemMarketItem.fromJson(Map<String, dynamic> json) =>
-      _$ItemMarketItemFromJson(json);
+  factory ItemMarketItem.fromJson(Map<String, dynamic> json) => _$ItemMarketItemFromJson(json);
 
   static const toJsonFactory = _$ItemMarketItemToJson;
   Map<String, dynamic> toJson() => _$ItemMarketItemToJson(this);
@@ -4575,15 +5472,11 @@ class ItemMarketItem {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ItemMarketItem &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.type, type) ||
-                const DeepCollectionEquality().equals(other.type, type)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.type, type) || const DeepCollectionEquality().equals(other.type, type)) &&
             (identical(other.averagePrice, averagePrice) ||
-                const DeepCollectionEquality()
-                    .equals(other.averagePrice, averagePrice)));
+                const DeepCollectionEquality().equals(other.averagePrice, averagePrice)));
   }
 
   @override
@@ -4599,8 +5492,7 @@ class ItemMarketItem {
 }
 
 extension $ItemMarketItemExtension on ItemMarketItem {
-  ItemMarketItem copyWith(
-      {int? id, String? name, String? type, int? averagePrice}) {
+  ItemMarketItem copyWith({int? id, String? name, String? type, int? averagePrice}) {
     return ItemMarketItem(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -4609,16 +5501,12 @@ extension $ItemMarketItemExtension on ItemMarketItem {
   }
 
   ItemMarketItem copyWithWrapped(
-      {Wrapped<int?>? id,
-      Wrapped<String?>? name,
-      Wrapped<String?>? type,
-      Wrapped<int?>? averagePrice}) {
+      {Wrapped<int?>? id, Wrapped<String?>? name, Wrapped<String?>? type, Wrapped<int?>? averagePrice}) {
     return ItemMarketItem(
         id: (id != null ? id.value : this.id),
         name: (name != null ? name.value : this.name),
         type: (type != null ? type.value : this.type),
-        averagePrice:
-            (averagePrice != null ? averagePrice.value : this.averagePrice));
+        averagePrice: (averagePrice != null ? averagePrice.value : this.averagePrice));
   }
 }
 
@@ -4630,8 +5518,7 @@ class ItemMarketListingStackable {
     this.amount,
   });
 
-  factory ItemMarketListingStackable.fromJson(Map<String, dynamic> json) =>
-      _$ItemMarketListingStackableFromJson(json);
+  factory ItemMarketListingStackable.fromJson(Map<String, dynamic> json) => _$ItemMarketListingStackableFromJson(json);
 
   static const toJsonFactory = _$ItemMarketListingStackableToJson;
   Map<String, dynamic> toJson() => _$ItemMarketListingStackableToJson(this);
@@ -4648,12 +5535,9 @@ class ItemMarketListingStackable {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ItemMarketListingStackable &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.price, price) ||
-                const DeepCollectionEquality().equals(other.price, price)) &&
-            (identical(other.amount, amount) ||
-                const DeepCollectionEquality().equals(other.amount, amount)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.price, price) || const DeepCollectionEquality().equals(other.price, price)) &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)));
   }
 
   @override
@@ -4669,14 +5553,10 @@ class ItemMarketListingStackable {
 
 extension $ItemMarketListingStackableExtension on ItemMarketListingStackable {
   ItemMarketListingStackable copyWith({int? id, int? price, int? amount}) {
-    return ItemMarketListingStackable(
-        id: id ?? this.id,
-        price: price ?? this.price,
-        amount: amount ?? this.amount);
+    return ItemMarketListingStackable(id: id ?? this.id, price: price ?? this.price, amount: amount ?? this.amount);
   }
 
-  ItemMarketListingStackable copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<int?>? price, Wrapped<int?>? amount}) {
+  ItemMarketListingStackable copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? price, Wrapped<int?>? amount}) {
     return ItemMarketListingStackable(
         id: (id != null ? id.value : this.id),
         price: (price != null ? price.value : this.price),
@@ -4690,6 +5570,7 @@ class ItemMarketListingItemDetails {
     this.uid,
     this.stats,
     this.bonuses,
+    this.rarity,
   });
 
   factory ItemMarketListingItemDetails.fromJson(Map<String, dynamic> json) =>
@@ -4704,18 +5585,22 @@ class ItemMarketListingItemDetails {
   final ItemMarketListingItemStats? stats;
   @JsonKey(name: 'bonuses', defaultValue: <ItemMarketListingItemBonus>[])
   final List<ItemMarketListingItemBonus>? bonuses;
+  @JsonKey(
+    name: 'rarity',
+    toJson: itemMarketListingItemDetailsRarityNullableToJson,
+    fromJson: itemMarketListingItemDetailsRarityNullableFromJson,
+  )
+  final enums.ItemMarketListingItemDetailsRarity? rarity;
   static const fromJsonFactory = _$ItemMarketListingItemDetailsFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ItemMarketListingItemDetails &&
-            (identical(other.uid, uid) ||
-                const DeepCollectionEquality().equals(other.uid, uid)) &&
-            (identical(other.stats, stats) ||
-                const DeepCollectionEquality().equals(other.stats, stats)) &&
-            (identical(other.bonuses, bonuses) ||
-                const DeepCollectionEquality().equals(other.bonuses, bonuses)));
+            (identical(other.uid, uid) || const DeepCollectionEquality().equals(other.uid, uid)) &&
+            (identical(other.stats, stats) || const DeepCollectionEquality().equals(other.stats, stats)) &&
+            (identical(other.bonuses, bonuses) || const DeepCollectionEquality().equals(other.bonuses, bonuses)) &&
+            (identical(other.rarity, rarity) || const DeepCollectionEquality().equals(other.rarity, rarity)));
   }
 
   @override
@@ -4726,29 +5611,33 @@ class ItemMarketListingItemDetails {
       const DeepCollectionEquality().hash(uid) ^
       const DeepCollectionEquality().hash(stats) ^
       const DeepCollectionEquality().hash(bonuses) ^
+      const DeepCollectionEquality().hash(rarity) ^
       runtimeType.hashCode;
 }
 
-extension $ItemMarketListingItemDetailsExtension
-    on ItemMarketListingItemDetails {
+extension $ItemMarketListingItemDetailsExtension on ItemMarketListingItemDetails {
   ItemMarketListingItemDetails copyWith(
       {int? uid,
       ItemMarketListingItemStats? stats,
-      List<ItemMarketListingItemBonus>? bonuses}) {
+      List<ItemMarketListingItemBonus>? bonuses,
+      enums.ItemMarketListingItemDetailsRarity? rarity}) {
     return ItemMarketListingItemDetails(
         uid: uid ?? this.uid,
         stats: stats ?? this.stats,
-        bonuses: bonuses ?? this.bonuses);
+        bonuses: bonuses ?? this.bonuses,
+        rarity: rarity ?? this.rarity);
   }
 
   ItemMarketListingItemDetails copyWithWrapped(
       {Wrapped<int?>? uid,
       Wrapped<ItemMarketListingItemStats?>? stats,
-      Wrapped<List<ItemMarketListingItemBonus>?>? bonuses}) {
+      Wrapped<List<ItemMarketListingItemBonus>?>? bonuses,
+      Wrapped<enums.ItemMarketListingItemDetailsRarity?>? rarity}) {
     return ItemMarketListingItemDetails(
         uid: (uid != null ? uid.value : this.uid),
         stats: (stats != null ? stats.value : this.stats),
-        bonuses: (bonuses != null ? bonuses.value : this.bonuses));
+        bonuses: (bonuses != null ? bonuses.value : this.bonuses),
+        rarity: (rarity != null ? rarity.value : this.rarity));
   }
 }
 
@@ -4781,15 +5670,11 @@ class ItemMarketListingNonstackable {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ItemMarketListingNonstackable &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.price, price) ||
-                const DeepCollectionEquality().equals(other.price, price)) &&
-            (identical(other.amount, amount) ||
-                const DeepCollectionEquality().equals(other.amount, amount)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.price, price) || const DeepCollectionEquality().equals(other.price, price)) &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
             (identical(other.itemDetails, itemDetails) ||
-                const DeepCollectionEquality()
-                    .equals(other.itemDetails, itemDetails)));
+                const DeepCollectionEquality().equals(other.itemDetails, itemDetails)));
   }
 
   @override
@@ -4804,13 +5689,9 @@ class ItemMarketListingNonstackable {
       runtimeType.hashCode;
 }
 
-extension $ItemMarketListingNonstackableExtension
-    on ItemMarketListingNonstackable {
+extension $ItemMarketListingNonstackableExtension on ItemMarketListingNonstackable {
   ItemMarketListingNonstackable copyWith(
-      {int? id,
-      int? price,
-      int? amount,
-      ItemMarketListingItemDetails? itemDetails}) {
+      {int? id, int? price, int? amount, ItemMarketListingItemDetails? itemDetails}) {
     return ItemMarketListingNonstackable(
         id: id ?? this.id,
         price: price ?? this.price,
@@ -4827,8 +5708,7 @@ extension $ItemMarketListingNonstackableExtension
         id: (id != null ? id.value : this.id),
         price: (price != null ? price.value : this.price),
         amount: (amount != null ? amount.value : this.amount),
-        itemDetails:
-            (itemDetails != null ? itemDetails.value : this.itemDetails));
+        itemDetails: (itemDetails != null ? itemDetails.value : this.itemDetails));
   }
 }
 
@@ -4839,8 +5719,7 @@ class ItemMarket {
     this.listings,
   });
 
-  factory ItemMarket.fromJson(Map<String, dynamic> json) =>
-      _$ItemMarketFromJson(json);
+  factory ItemMarket.fromJson(Map<String, dynamic> json) => _$ItemMarketFromJson(json);
 
   static const toJsonFactory = _$ItemMarketToJson;
   Map<String, dynamic> toJson() => _$ItemMarketToJson(this);
@@ -4855,11 +5734,8 @@ class ItemMarket {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is ItemMarket &&
-            (identical(other.item, item) ||
-                const DeepCollectionEquality().equals(other.item, item)) &&
-            (identical(other.listings, listings) ||
-                const DeepCollectionEquality()
-                    .equals(other.listings, listings)));
+            (identical(other.item, item) || const DeepCollectionEquality().equals(other.item, item)) &&
+            (identical(other.listings, listings) || const DeepCollectionEquality().equals(other.listings, listings)));
   }
 
   @override
@@ -4867,47 +5743,45 @@ class ItemMarket {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(item) ^
-      const DeepCollectionEquality().hash(listings) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(item) ^ const DeepCollectionEquality().hash(listings) ^ runtimeType.hashCode;
 }
 
 extension $ItemMarketExtension on ItemMarket {
   ItemMarket copyWith({ItemMarketItem? item, List<Object>? listings}) {
-    return ItemMarket(
-        item: item ?? this.item, listings: listings ?? this.listings);
+    return ItemMarket(item: item ?? this.item, listings: listings ?? this.listings);
   }
 
-  ItemMarket copyWithWrapped(
-      {Wrapped<ItemMarketItem?>? item, Wrapped<List<Object>?>? listings}) {
+  ItemMarket copyWithWrapped({Wrapped<ItemMarketItem?>? item, Wrapped<List<Object>?>? listings}) {
     return ItemMarket(
-        item: (item != null ? item.value : this.item),
-        listings: (listings != null ? listings.value : this.listings));
+        item: (item != null ? item.value : this.item), listings: (listings != null ? listings.value : this.listings));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceCars {
-  const RaceCars({
-    this.cars,
+class MarketItemMarketResponse {
+  const MarketItemMarketResponse({
+    this.itemmarket,
+    this.metadata,
   });
 
-  factory RaceCars.fromJson(Map<String, dynamic> json) =>
-      _$RaceCarsFromJson(json);
+  factory MarketItemMarketResponse.fromJson(Map<String, dynamic> json) => _$MarketItemMarketResponseFromJson(json);
 
-  static const toJsonFactory = _$RaceCarsToJson;
-  Map<String, dynamic> toJson() => _$RaceCarsToJson(this);
+  static const toJsonFactory = _$MarketItemMarketResponseToJson;
+  Map<String, dynamic> toJson() => _$MarketItemMarketResponseToJson(this);
 
-  @JsonKey(name: 'cars', defaultValue: <RaceCar>[])
-  final List<RaceCar>? cars;
-  static const fromJsonFactory = _$RaceCarsFromJson;
+  @JsonKey(name: 'itemmarket')
+  final ItemMarket? itemmarket;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$MarketItemMarketResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceCars &&
-            (identical(other.cars, cars) ||
-                const DeepCollectionEquality().equals(other.cars, cars)));
+        (other is MarketItemMarketResponse &&
+            (identical(other.itemmarket, itemmarket) ||
+                const DeepCollectionEquality().equals(other.itemmarket, itemmarket)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
   @override
@@ -4915,16 +5789,104 @@ class RaceCars {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(cars) ^ runtimeType.hashCode;
+      const DeepCollectionEquality().hash(itemmarket) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
 }
 
-extension $RaceCarsExtension on RaceCars {
-  RaceCars copyWith({List<RaceCar>? cars}) {
-    return RaceCars(cars: cars ?? this.cars);
+extension $MarketItemMarketResponseExtension on MarketItemMarketResponse {
+  MarketItemMarketResponse copyWith({ItemMarket? itemmarket, RequestMetadataWithLinks? metadata}) {
+    return MarketItemMarketResponse(itemmarket: itemmarket ?? this.itemmarket, metadata: metadata ?? this.metadata);
   }
 
-  RaceCars copyWithWrapped({Wrapped<List<RaceCar>?>? cars}) {
-    return RaceCars(cars: (cars != null ? cars.value : this.cars));
+  MarketItemMarketResponse copyWithWrapped(
+      {Wrapped<ItemMarket?>? itemmarket, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return MarketItemMarketResponse(
+        itemmarket: (itemmarket != null ? itemmarket.value : this.itemmarket),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class MarketLookupResponse {
+  const MarketLookupResponse({
+    this.selections,
+  });
+
+  factory MarketLookupResponse.fromJson(Map<String, dynamic> json) => _$MarketLookupResponseFromJson(json);
+
+  static const toJsonFactory = _$MarketLookupResponseToJson;
+  Map<String, dynamic> toJson() => _$MarketLookupResponseToJson(this);
+
+  @JsonKey(
+    name: 'selections',
+    toJson: marketSelectionNameListToJson,
+    fromJson: marketSelectionNameListFromJson,
+  )
+  final List<enums.MarketSelectionName>? selections;
+  static const fromJsonFactory = _$MarketLookupResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is MarketLookupResponse &&
+            (identical(other.selections, selections) ||
+                const DeepCollectionEquality().equals(other.selections, selections)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(selections) ^ runtimeType.hashCode;
+}
+
+extension $MarketLookupResponseExtension on MarketLookupResponse {
+  MarketLookupResponse copyWith({List<enums.MarketSelectionName>? selections}) {
+    return MarketLookupResponse(selections: selections ?? this.selections);
+  }
+
+  MarketLookupResponse copyWithWrapped({Wrapped<List<enums.MarketSelectionName>?>? selections}) {
+    return MarketLookupResponse(selections: (selections != null ? selections.value : this.selections));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class RacingCarsResponse {
+  const RacingCarsResponse({
+    this.cars,
+  });
+
+  factory RacingCarsResponse.fromJson(Map<String, dynamic> json) => _$RacingCarsResponseFromJson(json);
+
+  static const toJsonFactory = _$RacingCarsResponseToJson;
+  Map<String, dynamic> toJson() => _$RacingCarsResponseToJson(this);
+
+  @JsonKey(name: 'cars', defaultValue: <RaceCar>[])
+  final List<RaceCar>? cars;
+  static const fromJsonFactory = _$RacingCarsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is RacingCarsResponse &&
+            (identical(other.cars, cars) || const DeepCollectionEquality().equals(other.cars, cars)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(cars) ^ runtimeType.hashCode;
+}
+
+extension $RacingCarsResponseExtension on RacingCarsResponse {
+  RacingCarsResponse copyWith({List<RaceCar>? cars}) {
+    return RacingCarsResponse(cars: cars ?? this.cars);
+  }
+
+  RacingCarsResponse copyWithWrapped({Wrapped<List<RaceCar>?>? cars}) {
+    return RacingCarsResponse(cars: (cars != null ? cars.value : this.cars));
   }
 }
 
@@ -4943,8 +5905,7 @@ class RaceCar {
     this.$class,
   });
 
-  factory RaceCar.fromJson(Map<String, dynamic> json) =>
-      _$RaceCarFromJson(json);
+  factory RaceCar.fromJson(Map<String, dynamic> json) => _$RaceCarFromJson(json);
 
   static const toJsonFactory = _$RaceCarToJson;
   Map<String, dynamic> toJson() => _$RaceCarToJson(this);
@@ -4980,31 +5941,18 @@ class RaceCar {
     return identical(this, other) ||
         (other is RaceCar &&
             (identical(other.carItemId, carItemId) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemId, carItemId)) &&
+                const DeepCollectionEquality().equals(other.carItemId, carItemId)) &&
             (identical(other.carItemName, carItemName) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemName, carItemName)) &&
-            (identical(other.topSpeed, topSpeed) ||
-                const DeepCollectionEquality()
-                    .equals(other.topSpeed, topSpeed)) &&
+                const DeepCollectionEquality().equals(other.carItemName, carItemName)) &&
+            (identical(other.topSpeed, topSpeed) || const DeepCollectionEquality().equals(other.topSpeed, topSpeed)) &&
             (identical(other.acceleration, acceleration) ||
-                const DeepCollectionEquality()
-                    .equals(other.acceleration, acceleration)) &&
-            (identical(other.braking, braking) ||
-                const DeepCollectionEquality()
-                    .equals(other.braking, braking)) &&
-            (identical(other.dirt, dirt) ||
-                const DeepCollectionEquality().equals(other.dirt, dirt)) &&
-            (identical(other.handling, handling) ||
-                const DeepCollectionEquality()
-                    .equals(other.handling, handling)) &&
-            (identical(other.safety, safety) ||
-                const DeepCollectionEquality().equals(other.safety, safety)) &&
-            (identical(other.tarmac, tarmac) ||
-                const DeepCollectionEquality().equals(other.tarmac, tarmac)) &&
-            (identical(other.$class, $class) ||
-                const DeepCollectionEquality().equals(other.$class, $class)));
+                const DeepCollectionEquality().equals(other.acceleration, acceleration)) &&
+            (identical(other.braking, braking) || const DeepCollectionEquality().equals(other.braking, braking)) &&
+            (identical(other.dirt, dirt) || const DeepCollectionEquality().equals(other.dirt, dirt)) &&
+            (identical(other.handling, handling) || const DeepCollectionEquality().equals(other.handling, handling)) &&
+            (identical(other.safety, safety) || const DeepCollectionEquality().equals(other.safety, safety)) &&
+            (identical(other.tarmac, tarmac) || const DeepCollectionEquality().equals(other.tarmac, tarmac)) &&
+            (identical(other.$class, $class) || const DeepCollectionEquality().equals(other.$class, $class)));
   }
 
   @override
@@ -5063,11 +6011,9 @@ extension $RaceCarExtension on RaceCar {
       Wrapped<enums.RaceClassEnum?>? $class}) {
     return RaceCar(
         carItemId: (carItemId != null ? carItemId.value : this.carItemId),
-        carItemName:
-            (carItemName != null ? carItemName.value : this.carItemName),
+        carItemName: (carItemName != null ? carItemName.value : this.carItemName),
         topSpeed: (topSpeed != null ? topSpeed.value : this.topSpeed),
-        acceleration:
-            (acceleration != null ? acceleration.value : this.acceleration),
+        acceleration: (acceleration != null ? acceleration.value : this.acceleration),
         braking: (braking != null ? braking.value : this.braking),
         dirt: (dirt != null ? dirt.value : this.dirt),
         handling: (handling != null ? handling.value : this.handling),
@@ -5078,44 +6024,41 @@ extension $RaceCarExtension on RaceCar {
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceTracks {
-  const RaceTracks({
+class RacingTracksResponse {
+  const RacingTracksResponse({
     this.tracks,
   });
 
-  factory RaceTracks.fromJson(Map<String, dynamic> json) =>
-      _$RaceTracksFromJson(json);
+  factory RacingTracksResponse.fromJson(Map<String, dynamic> json) => _$RacingTracksResponseFromJson(json);
 
-  static const toJsonFactory = _$RaceTracksToJson;
-  Map<String, dynamic> toJson() => _$RaceTracksToJson(this);
+  static const toJsonFactory = _$RacingTracksResponseToJson;
+  Map<String, dynamic> toJson() => _$RacingTracksResponseToJson(this);
 
   @JsonKey(name: 'tracks', defaultValue: <RaceTrack>[])
   final List<RaceTrack>? tracks;
-  static const fromJsonFactory = _$RaceTracksFromJson;
+  static const fromJsonFactory = _$RacingTracksResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceTracks &&
-            (identical(other.tracks, tracks) ||
-                const DeepCollectionEquality().equals(other.tracks, tracks)));
+        (other is RacingTracksResponse &&
+            (identical(other.tracks, tracks) || const DeepCollectionEquality().equals(other.tracks, tracks)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(tracks) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(tracks) ^ runtimeType.hashCode;
 }
 
-extension $RaceTracksExtension on RaceTracks {
-  RaceTracks copyWith({List<RaceTrack>? tracks}) {
-    return RaceTracks(tracks: tracks ?? this.tracks);
+extension $RacingTracksResponseExtension on RacingTracksResponse {
+  RacingTracksResponse copyWith({List<RaceTrack>? tracks}) {
+    return RacingTracksResponse(tracks: tracks ?? this.tracks);
   }
 
-  RaceTracks copyWithWrapped({Wrapped<List<RaceTrack>?>? tracks}) {
-    return RaceTracks(tracks: (tracks != null ? tracks.value : this.tracks));
+  RacingTracksResponse copyWithWrapped({Wrapped<List<RaceTrack>?>? tracks}) {
+    return RacingTracksResponse(tracks: (tracks != null ? tracks.value : this.tracks));
   }
 }
 
@@ -5127,8 +6070,7 @@ class RaceTrack {
     this.description,
   });
 
-  factory RaceTrack.fromJson(Map<String, dynamic> json) =>
-      _$RaceTrackFromJson(json);
+  factory RaceTrack.fromJson(Map<String, dynamic> json) => _$RaceTrackFromJson(json);
 
   static const toJsonFactory = _$RaceTrackToJson;
   Map<String, dynamic> toJson() => _$RaceTrackToJson(this);
@@ -5145,13 +6087,10 @@ class RaceTrack {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RaceTrack &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
             (identical(other.description, description) ||
-                const DeepCollectionEquality()
-                    .equals(other.description, description)));
+                const DeepCollectionEquality().equals(other.description, description)));
   }
 
   @override
@@ -5167,67 +6106,54 @@ class RaceTrack {
 
 extension $RaceTrackExtension on RaceTrack {
   RaceTrack copyWith({int? id, String? title, String? description}) {
-    return RaceTrack(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        description: description ?? this.description);
+    return RaceTrack(id: id ?? this.id, title: title ?? this.title, description: description ?? this.description);
   }
 
-  RaceTrack copyWithWrapped(
-      {Wrapped<int?>? id,
-      Wrapped<String?>? title,
-      Wrapped<String?>? description}) {
+  RaceTrack copyWithWrapped({Wrapped<int?>? id, Wrapped<String?>? title, Wrapped<String?>? description}) {
     return RaceTrack(
         id: (id != null ? id.value : this.id),
         title: (title != null ? title.value : this.title),
-        description:
-            (description != null ? description.value : this.description));
+        description: (description != null ? description.value : this.description));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceCarUpgrades {
-  const RaceCarUpgrades({
+class RacingCarUpgradesResponse {
+  const RacingCarUpgradesResponse({
     this.carupgrades,
   });
 
-  factory RaceCarUpgrades.fromJson(Map<String, dynamic> json) =>
-      _$RaceCarUpgradesFromJson(json);
+  factory RacingCarUpgradesResponse.fromJson(Map<String, dynamic> json) => _$RacingCarUpgradesResponseFromJson(json);
 
-  static const toJsonFactory = _$RaceCarUpgradesToJson;
-  Map<String, dynamic> toJson() => _$RaceCarUpgradesToJson(this);
+  static const toJsonFactory = _$RacingCarUpgradesResponseToJson;
+  Map<String, dynamic> toJson() => _$RacingCarUpgradesResponseToJson(this);
 
   @JsonKey(name: 'carupgrades', defaultValue: <RaceCarUpgrade>[])
   final List<RaceCarUpgrade>? carupgrades;
-  static const fromJsonFactory = _$RaceCarUpgradesFromJson;
+  static const fromJsonFactory = _$RacingCarUpgradesResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceCarUpgrades &&
+        (other is RacingCarUpgradesResponse &&
             (identical(other.carupgrades, carupgrades) ||
-                const DeepCollectionEquality()
-                    .equals(other.carupgrades, carupgrades)));
+                const DeepCollectionEquality().equals(other.carupgrades, carupgrades)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(carupgrades) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(carupgrades) ^ runtimeType.hashCode;
 }
 
-extension $RaceCarUpgradesExtension on RaceCarUpgrades {
-  RaceCarUpgrades copyWith({List<RaceCarUpgrade>? carupgrades}) {
-    return RaceCarUpgrades(carupgrades: carupgrades ?? this.carupgrades);
+extension $RacingCarUpgradesResponseExtension on RacingCarUpgradesResponse {
+  RacingCarUpgradesResponse copyWith({List<RaceCarUpgrade>? carupgrades}) {
+    return RacingCarUpgradesResponse(carupgrades: carupgrades ?? this.carupgrades);
   }
 
-  RaceCarUpgrades copyWithWrapped(
-      {Wrapped<List<RaceCarUpgrade>?>? carupgrades}) {
-    return RaceCarUpgrades(
-        carupgrades:
-            (carupgrades != null ? carupgrades.value : this.carupgrades));
+  RacingCarUpgradesResponse copyWithWrapped({Wrapped<List<RaceCarUpgrade>?>? carupgrades}) {
+    return RacingCarUpgradesResponse(carupgrades: (carupgrades != null ? carupgrades.value : this.carupgrades));
   }
 }
 
@@ -5244,8 +6170,7 @@ class RaceCarUpgrade {
     this.cost,
   });
 
-  factory RaceCarUpgrade.fromJson(Map<String, dynamic> json) =>
-      _$RaceCarUpgradeFromJson(json);
+  factory RaceCarUpgrade.fromJson(Map<String, dynamic> json) => _$RaceCarUpgradeFromJson(json);
 
   static const toJsonFactory = _$RaceCarUpgradeToJson;
   Map<String, dynamic> toJson() => _$RaceCarUpgradeToJson(this);
@@ -5284,27 +6209,17 @@ class RaceCarUpgrade {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RaceCarUpgrade &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
             (identical(other.classRequired, classRequired) ||
-                const DeepCollectionEquality()
-                    .equals(other.classRequired, classRequired)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
+                const DeepCollectionEquality().equals(other.classRequired, classRequired)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
             (identical(other.description, description) ||
-                const DeepCollectionEquality()
-                    .equals(other.description, description)) &&
-            (identical(other.category, category) ||
-                const DeepCollectionEquality()
-                    .equals(other.category, category)) &&
+                const DeepCollectionEquality().equals(other.description, description)) &&
+            (identical(other.category, category) || const DeepCollectionEquality().equals(other.category, category)) &&
             (identical(other.subcategory, subcategory) ||
-                const DeepCollectionEquality()
-                    .equals(other.subcategory, subcategory)) &&
-            (identical(other.effects, effects) ||
-                const DeepCollectionEquality()
-                    .equals(other.effects, effects)) &&
-            (identical(other.cost, cost) ||
-                const DeepCollectionEquality().equals(other.cost, cost)));
+                const DeepCollectionEquality().equals(other.subcategory, subcategory)) &&
+            (identical(other.effects, effects) || const DeepCollectionEquality().equals(other.effects, effects)) &&
+            (identical(other.cost, cost) || const DeepCollectionEquality().equals(other.cost, cost)));
   }
 
   @override
@@ -5355,40 +6270,40 @@ extension $RaceCarUpgradeExtension on RaceCarUpgrade {
       Wrapped<RaceCarUpgrade$Cost?>? cost}) {
     return RaceCarUpgrade(
         id: (id != null ? id.value : this.id),
-        classRequired:
-            (classRequired != null ? classRequired.value : this.classRequired),
+        classRequired: (classRequired != null ? classRequired.value : this.classRequired),
         name: (name != null ? name.value : this.name),
-        description:
-            (description != null ? description.value : this.description),
+        description: (description != null ? description.value : this.description),
         category: (category != null ? category.value : this.category),
-        subcategory:
-            (subcategory != null ? subcategory.value : this.subcategory),
+        subcategory: (subcategory != null ? subcategory.value : this.subcategory),
         effects: (effects != null ? effects.value : this.effects),
         cost: (cost != null ? cost.value : this.cost));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class Races {
-  const Races({
+class RacingRacesResponse {
+  const RacingRacesResponse({
     this.races,
+    this.metadata,
   });
 
-  factory Races.fromJson(Map<String, dynamic> json) => _$RacesFromJson(json);
+  factory RacingRacesResponse.fromJson(Map<String, dynamic> json) => _$RacingRacesResponseFromJson(json);
 
-  static const toJsonFactory = _$RacesToJson;
-  Map<String, dynamic> toJson() => _$RacesToJson(this);
+  static const toJsonFactory = _$RacingRacesResponseToJson;
+  Map<String, dynamic> toJson() => _$RacingRacesResponseToJson(this);
 
   @JsonKey(name: 'races', defaultValue: <Race>[])
   final List<Race>? races;
-  static const fromJsonFactory = _$RacesFromJson;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$RacingRacesResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is Races &&
-            (identical(other.races, races) ||
-                const DeepCollectionEquality().equals(other.races, races)));
+        (other is RacingRacesResponse &&
+            (identical(other.races, races) || const DeepCollectionEquality().equals(other.races, races)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
   @override
@@ -5396,16 +6311,18 @@ class Races {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(races) ^ runtimeType.hashCode;
+      const DeepCollectionEquality().hash(races) ^ const DeepCollectionEquality().hash(metadata) ^ runtimeType.hashCode;
 }
 
-extension $RacesExtension on Races {
-  Races copyWith({List<Race>? races}) {
-    return Races(races: races ?? this.races);
+extension $RacingRacesResponseExtension on RacingRacesResponse {
+  RacingRacesResponse copyWith({List<Race>? races, RequestMetadataWithLinks? metadata}) {
+    return RacingRacesResponse(races: races ?? this.races, metadata: metadata ?? this.metadata);
   }
 
-  Races copyWithWrapped({Wrapped<List<Race>?>? races}) {
-    return Races(races: (races != null ? races.value : this.races));
+  RacingRacesResponse copyWithWrapped({Wrapped<List<Race>?>? races, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return RacingRacesResponse(
+        races: (races != null ? races.value : this.races),
+        metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
 
@@ -5456,29 +6373,18 @@ class Race {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is Race &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.trackId, trackId) ||
-                const DeepCollectionEquality()
-                    .equals(other.trackId, trackId)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.trackId, trackId) || const DeepCollectionEquality().equals(other.trackId, trackId)) &&
             (identical(other.creatorId, creatorId) ||
-                const DeepCollectionEquality()
-                    .equals(other.creatorId, creatorId)) &&
-            (identical(other.status, status) ||
-                const DeepCollectionEquality().equals(other.status, status)) &&
-            (identical(other.laps, laps) ||
-                const DeepCollectionEquality().equals(other.laps, laps)) &&
+                const DeepCollectionEquality().equals(other.creatorId, creatorId)) &&
+            (identical(other.status, status) || const DeepCollectionEquality().equals(other.status, status)) &&
+            (identical(other.laps, laps) || const DeepCollectionEquality().equals(other.laps, laps)) &&
             (identical(other.participants, participants) ||
-                const DeepCollectionEquality()
-                    .equals(other.participants, participants)) &&
-            (identical(other.schedule, schedule) ||
-                const DeepCollectionEquality()
-                    .equals(other.schedule, schedule)) &&
+                const DeepCollectionEquality().equals(other.participants, participants)) &&
+            (identical(other.schedule, schedule) || const DeepCollectionEquality().equals(other.schedule, schedule)) &&
             (identical(other.requirements, requirements) ||
-                const DeepCollectionEquality()
-                    .equals(other.requirements, requirements)));
+                const DeepCollectionEquality().equals(other.requirements, requirements)));
   }
 
   @override
@@ -5538,54 +6444,48 @@ extension $RaceExtension on Race {
         creatorId: (creatorId != null ? creatorId.value : this.creatorId),
         status: (status != null ? status.value : this.status),
         laps: (laps != null ? laps.value : this.laps),
-        participants:
-            (participants != null ? participants.value : this.participants),
+        participants: (participants != null ? participants.value : this.participants),
         schedule: (schedule != null ? schedule.value : this.schedule),
-        requirements:
-            (requirements != null ? requirements.value : this.requirements));
+        requirements: (requirements != null ? requirements.value : this.requirements));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceRecords {
-  const RaceRecords({
+class RacingTrackRecordsResponse {
+  const RacingTrackRecordsResponse({
     this.records,
   });
 
-  factory RaceRecords.fromJson(Map<String, dynamic> json) =>
-      _$RaceRecordsFromJson(json);
+  factory RacingTrackRecordsResponse.fromJson(Map<String, dynamic> json) => _$RacingTrackRecordsResponseFromJson(json);
 
-  static const toJsonFactory = _$RaceRecordsToJson;
-  Map<String, dynamic> toJson() => _$RaceRecordsToJson(this);
+  static const toJsonFactory = _$RacingTrackRecordsResponseToJson;
+  Map<String, dynamic> toJson() => _$RacingTrackRecordsResponseToJson(this);
 
   @JsonKey(name: 'records', defaultValue: <RaceRecord>[])
   final List<RaceRecord>? records;
-  static const fromJsonFactory = _$RaceRecordsFromJson;
+  static const fromJsonFactory = _$RacingTrackRecordsResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceRecords &&
-            (identical(other.records, records) ||
-                const DeepCollectionEquality().equals(other.records, records)));
+        (other is RacingTrackRecordsResponse &&
+            (identical(other.records, records) || const DeepCollectionEquality().equals(other.records, records)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(records) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(records) ^ runtimeType.hashCode;
 }
 
-extension $RaceRecordsExtension on RaceRecords {
-  RaceRecords copyWith({List<RaceRecord>? records}) {
-    return RaceRecords(records: records ?? this.records);
+extension $RacingTrackRecordsResponseExtension on RacingTrackRecordsResponse {
+  RacingTrackRecordsResponse copyWith({List<RaceRecord>? records}) {
+    return RacingTrackRecordsResponse(records: records ?? this.records);
   }
 
-  RaceRecords copyWithWrapped({Wrapped<List<RaceRecord>?>? records}) {
-    return RaceRecords(
-        records: (records != null ? records.value : this.records));
+  RacingTrackRecordsResponse copyWithWrapped({Wrapped<List<RaceRecord>?>? records}) {
+    return RacingTrackRecordsResponse(records: (records != null ? records.value : this.records));
   }
 }
 
@@ -5599,8 +6499,7 @@ class RaceRecord {
     this.carItemName,
   });
 
-  factory RaceRecord.fromJson(Map<String, dynamic> json) =>
-      _$RaceRecordFromJson(json);
+  factory RaceRecord.fromJson(Map<String, dynamic> json) => _$RaceRecordFromJson(json);
 
   static const toJsonFactory = _$RaceRecordToJson;
   Map<String, dynamic> toJson() => _$RaceRecordToJson(this);
@@ -5621,21 +6520,14 @@ class RaceRecord {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RaceRecord &&
-            (identical(other.driverId, driverId) ||
-                const DeepCollectionEquality()
-                    .equals(other.driverId, driverId)) &&
+            (identical(other.driverId, driverId) || const DeepCollectionEquality().equals(other.driverId, driverId)) &&
             (identical(other.driverName, driverName) ||
-                const DeepCollectionEquality()
-                    .equals(other.driverName, driverName)) &&
+                const DeepCollectionEquality().equals(other.driverName, driverName)) &&
             (identical(other.carItemId, carItemId) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemId, carItemId)) &&
-            (identical(other.lapTime, lapTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.lapTime, lapTime)) &&
+                const DeepCollectionEquality().equals(other.carItemId, carItemId)) &&
+            (identical(other.lapTime, lapTime) || const DeepCollectionEquality().equals(other.lapTime, lapTime)) &&
             (identical(other.carItemName, carItemName) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemName, carItemName)));
+                const DeepCollectionEquality().equals(other.carItemName, carItemName)));
   }
 
   @override
@@ -5652,12 +6544,7 @@ class RaceRecord {
 }
 
 extension $RaceRecordExtension on RaceRecord {
-  RaceRecord copyWith(
-      {int? driverId,
-      String? driverName,
-      int? carItemId,
-      int? lapTime,
-      String? carItemName}) {
+  RaceRecord copyWith({int? driverId, String? driverName, int? carItemId, int? lapTime, String? carItemName}) {
     return RaceRecord(
         driverId: driverId ?? this.driverId,
         driverName: driverName ?? this.driverName,
@@ -5677,8 +6564,7 @@ extension $RaceRecordExtension on RaceRecord {
         driverName: (driverName != null ? driverName.value : this.driverName),
         carItemId: (carItemId != null ? carItemId.value : this.carItemId),
         lapTime: (lapTime != null ? lapTime.value : this.lapTime),
-        carItemName:
-            (carItemName != null ? carItemName.value : this.carItemName));
+        carItemName: (carItemName != null ? carItemName.value : this.carItemName));
   }
 }
 
@@ -5697,8 +6583,7 @@ class RacerDetails {
     this.timeEnded,
   });
 
-  factory RacerDetails.fromJson(Map<String, dynamic> json) =>
-      _$RacerDetailsFromJson(json);
+  factory RacerDetails.fromJson(Map<String, dynamic> json) => _$RacerDetailsFromJson(json);
 
   static const toJsonFactory = _$RacerDetailsToJson;
   Map<String, dynamic> toJson() => _$RacerDetailsToJson(this);
@@ -5733,35 +6618,21 @@ class RacerDetails {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RacerDetails &&
-            (identical(other.driverId, driverId) ||
-                const DeepCollectionEquality()
-                    .equals(other.driverId, driverId)) &&
-            (identical(other.position, position) ||
-                const DeepCollectionEquality()
-                    .equals(other.position, position)) &&
-            (identical(other.carId, carId) ||
-                const DeepCollectionEquality().equals(other.carId, carId)) &&
+            (identical(other.driverId, driverId) || const DeepCollectionEquality().equals(other.driverId, driverId)) &&
+            (identical(other.position, position) || const DeepCollectionEquality().equals(other.position, position)) &&
+            (identical(other.carId, carId) || const DeepCollectionEquality().equals(other.carId, carId)) &&
             (identical(other.carItemId, carItemId) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemId, carItemId)) &&
+                const DeepCollectionEquality().equals(other.carItemId, carItemId)) &&
             (identical(other.carItemName, carItemName) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemName, carItemName)) &&
-            (identical(other.carClass, carClass) ||
-                const DeepCollectionEquality()
-                    .equals(other.carClass, carClass)) &&
+                const DeepCollectionEquality().equals(other.carItemName, carItemName)) &&
+            (identical(other.carClass, carClass) || const DeepCollectionEquality().equals(other.carClass, carClass)) &&
             (identical(other.hasCrashed, hasCrashed) ||
-                const DeepCollectionEquality()
-                    .equals(other.hasCrashed, hasCrashed)) &&
+                const DeepCollectionEquality().equals(other.hasCrashed, hasCrashed)) &&
             (identical(other.bestLapTime, bestLapTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.bestLapTime, bestLapTime)) &&
-            (identical(other.raceTime, raceTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.raceTime, raceTime)) &&
+                const DeepCollectionEquality().equals(other.bestLapTime, bestLapTime)) &&
+            (identical(other.raceTime, raceTime) || const DeepCollectionEquality().equals(other.raceTime, raceTime)) &&
             (identical(other.timeEnded, timeEnded) ||
-                const DeepCollectionEquality()
-                    .equals(other.timeEnded, timeEnded)));
+                const DeepCollectionEquality().equals(other.timeEnded, timeEnded)));
   }
 
   @override
@@ -5823,20 +6694,18 @@ extension $RacerDetailsExtension on RacerDetails {
         position: (position != null ? position.value : this.position),
         carId: (carId != null ? carId.value : this.carId),
         carItemId: (carItemId != null ? carItemId.value : this.carItemId),
-        carItemName:
-            (carItemName != null ? carItemName.value : this.carItemName),
+        carItemName: (carItemName != null ? carItemName.value : this.carItemName),
         carClass: (carClass != null ? carClass.value : this.carClass),
         hasCrashed: (hasCrashed != null ? hasCrashed.value : this.hasCrashed),
-        bestLapTime:
-            (bestLapTime != null ? bestLapTime.value : this.bestLapTime),
+        bestLapTime: (bestLapTime != null ? bestLapTime.value : this.bestLapTime),
         raceTime: (raceTime != null ? raceTime.value : this.raceTime),
         timeEnded: (timeEnded != null ? timeEnded.value : this.timeEnded));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceDetails {
-  const RaceDetails({
+class RacingRaceDetailsResponse {
+  const RacingRaceDetailsResponse({
     this.results,
     this.id,
     this.title,
@@ -5849,11 +6718,10 @@ class RaceDetails {
     this.requirements,
   });
 
-  factory RaceDetails.fromJson(Map<String, dynamic> json) =>
-      _$RaceDetailsFromJson(json);
+  factory RacingRaceDetailsResponse.fromJson(Map<String, dynamic> json) => _$RacingRaceDetailsResponseFromJson(json);
 
-  static const toJsonFactory = _$RaceDetailsToJson;
-  Map<String, dynamic> toJson() => _$RaceDetailsToJson(this);
+  static const toJsonFactory = _$RacingRaceDetailsResponseToJson;
+  Map<String, dynamic> toJson() => _$RacingRaceDetailsResponseToJson(this);
 
   @JsonKey(name: 'results', defaultValue: <RacerDetails>[])
   final List<RacerDetails>? results;
@@ -5874,43 +6742,30 @@ class RaceDetails {
   @JsonKey(name: 'laps')
   final int? laps;
   @JsonKey(name: 'participants')
-  final RaceDetails$Participants? participants;
+  final RacingRaceDetailsResponse$Participants? participants;
   @JsonKey(name: 'schedule')
-  final RaceDetails$Schedule? schedule;
+  final RacingRaceDetailsResponse$Schedule? schedule;
   @JsonKey(name: 'requirements')
-  final RaceDetails$Requirements? requirements;
-  static const fromJsonFactory = _$RaceDetailsFromJson;
+  final RacingRaceDetailsResponse$Requirements? requirements;
+  static const fromJsonFactory = _$RacingRaceDetailsResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceDetails &&
-            (identical(other.results, results) ||
-                const DeepCollectionEquality()
-                    .equals(other.results, results)) &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.trackId, trackId) ||
-                const DeepCollectionEquality()
-                    .equals(other.trackId, trackId)) &&
+        (other is RacingRaceDetailsResponse &&
+            (identical(other.results, results) || const DeepCollectionEquality().equals(other.results, results)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.trackId, trackId) || const DeepCollectionEquality().equals(other.trackId, trackId)) &&
             (identical(other.creatorId, creatorId) ||
-                const DeepCollectionEquality()
-                    .equals(other.creatorId, creatorId)) &&
-            (identical(other.status, status) ||
-                const DeepCollectionEquality().equals(other.status, status)) &&
-            (identical(other.laps, laps) ||
-                const DeepCollectionEquality().equals(other.laps, laps)) &&
+                const DeepCollectionEquality().equals(other.creatorId, creatorId)) &&
+            (identical(other.status, status) || const DeepCollectionEquality().equals(other.status, status)) &&
+            (identical(other.laps, laps) || const DeepCollectionEquality().equals(other.laps, laps)) &&
             (identical(other.participants, participants) ||
-                const DeepCollectionEquality()
-                    .equals(other.participants, participants)) &&
-            (identical(other.schedule, schedule) ||
-                const DeepCollectionEquality()
-                    .equals(other.schedule, schedule)) &&
+                const DeepCollectionEquality().equals(other.participants, participants)) &&
+            (identical(other.schedule, schedule) || const DeepCollectionEquality().equals(other.schedule, schedule)) &&
             (identical(other.requirements, requirements) ||
-                const DeepCollectionEquality()
-                    .equals(other.requirements, requirements)));
+                const DeepCollectionEquality().equals(other.requirements, requirements)));
   }
 
   @override
@@ -5931,8 +6786,8 @@ class RaceDetails {
       runtimeType.hashCode;
 }
 
-extension $RaceDetailsExtension on RaceDetails {
-  RaceDetails copyWith(
+extension $RacingRaceDetailsResponseExtension on RacingRaceDetailsResponse {
+  RacingRaceDetailsResponse copyWith(
       {List<RacerDetails>? results,
       int? id,
       String? title,
@@ -5940,10 +6795,10 @@ extension $RaceDetailsExtension on RaceDetails {
       int? creatorId,
       enums.RaceStatusEnum? status,
       int? laps,
-      RaceDetails$Participants? participants,
-      RaceDetails$Schedule? schedule,
-      RaceDetails$Requirements? requirements}) {
-    return RaceDetails(
+      RacingRaceDetailsResponse$Participants? participants,
+      RacingRaceDetailsResponse$Schedule? schedule,
+      RacingRaceDetailsResponse$Requirements? requirements}) {
+    return RacingRaceDetailsResponse(
         results: results ?? this.results,
         id: id ?? this.id,
         title: title ?? this.title,
@@ -5956,7 +6811,7 @@ extension $RaceDetailsExtension on RaceDetails {
         requirements: requirements ?? this.requirements);
   }
 
-  RaceDetails copyWithWrapped(
+  RacingRaceDetailsResponse copyWithWrapped(
       {Wrapped<List<RacerDetails>?>? results,
       Wrapped<int?>? id,
       Wrapped<String?>? title,
@@ -5964,10 +6819,10 @@ extension $RaceDetailsExtension on RaceDetails {
       Wrapped<int?>? creatorId,
       Wrapped<enums.RaceStatusEnum?>? status,
       Wrapped<int?>? laps,
-      Wrapped<RaceDetails$Participants?>? participants,
-      Wrapped<RaceDetails$Schedule?>? schedule,
-      Wrapped<RaceDetails$Requirements?>? requirements}) {
-    return RaceDetails(
+      Wrapped<RacingRaceDetailsResponse$Participants?>? participants,
+      Wrapped<RacingRaceDetailsResponse$Schedule?>? schedule,
+      Wrapped<RacingRaceDetailsResponse$Requirements?>? requirements}) {
+    return RacingRaceDetailsResponse(
         results: (results != null ? results.value : this.results),
         id: (id != null ? id.value : this.id),
         title: (title != null ? title.value : this.title),
@@ -5975,55 +6830,93 @@ extension $RaceDetailsExtension on RaceDetails {
         creatorId: (creatorId != null ? creatorId.value : this.creatorId),
         status: (status != null ? status.value : this.status),
         laps: (laps != null ? laps.value : this.laps),
-        participants:
-            (participants != null ? participants.value : this.participants),
+        participants: (participants != null ? participants.value : this.participants),
         schedule: (schedule != null ? schedule.value : this.schedule),
-        requirements:
-            (requirements != null ? requirements.value : this.requirements));
+        requirements: (requirements != null ? requirements.value : this.requirements));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class TornSubcrimes {
-  const TornSubcrimes({
-    this.subcrimes,
+class RacingLookupResponse {
+  const RacingLookupResponse({
+    this.selections,
   });
 
-  factory TornSubcrimes.fromJson(Map<String, dynamic> json) =>
-      _$TornSubcrimesFromJson(json);
+  factory RacingLookupResponse.fromJson(Map<String, dynamic> json) => _$RacingLookupResponseFromJson(json);
 
-  static const toJsonFactory = _$TornSubcrimesToJson;
-  Map<String, dynamic> toJson() => _$TornSubcrimesToJson(this);
+  static const toJsonFactory = _$RacingLookupResponseToJson;
+  Map<String, dynamic> toJson() => _$RacingLookupResponseToJson(this);
 
-  @JsonKey(name: 'subcrimes', defaultValue: <TornSubcrime>[])
-  final List<TornSubcrime>? subcrimes;
-  static const fromJsonFactory = _$TornSubcrimesFromJson;
+  @JsonKey(
+    name: 'selections',
+    toJson: racingSelectionNameListToJson,
+    fromJson: racingSelectionNameListFromJson,
+  )
+  final List<enums.RacingSelectionName>? selections;
+  static const fromJsonFactory = _$RacingLookupResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is TornSubcrimes &&
-            (identical(other.subcrimes, subcrimes) ||
-                const DeepCollectionEquality()
-                    .equals(other.subcrimes, subcrimes)));
+        (other is RacingLookupResponse &&
+            (identical(other.selections, selections) ||
+                const DeepCollectionEquality().equals(other.selections, selections)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(subcrimes) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(selections) ^ runtimeType.hashCode;
 }
 
-extension $TornSubcrimesExtension on TornSubcrimes {
-  TornSubcrimes copyWith({List<TornSubcrime>? subcrimes}) {
-    return TornSubcrimes(subcrimes: subcrimes ?? this.subcrimes);
+extension $RacingLookupResponseExtension on RacingLookupResponse {
+  RacingLookupResponse copyWith({List<enums.RacingSelectionName>? selections}) {
+    return RacingLookupResponse(selections: selections ?? this.selections);
   }
 
-  TornSubcrimes copyWithWrapped({Wrapped<List<TornSubcrime>?>? subcrimes}) {
-    return TornSubcrimes(
-        subcrimes: (subcrimes != null ? subcrimes.value : this.subcrimes));
+  RacingLookupResponse copyWithWrapped({Wrapped<List<enums.RacingSelectionName>?>? selections}) {
+    return RacingLookupResponse(selections: (selections != null ? selections.value : this.selections));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TornSubcrimesResponse {
+  const TornSubcrimesResponse({
+    this.subcrimes,
+  });
+
+  factory TornSubcrimesResponse.fromJson(Map<String, dynamic> json) => _$TornSubcrimesResponseFromJson(json);
+
+  static const toJsonFactory = _$TornSubcrimesResponseToJson;
+  Map<String, dynamic> toJson() => _$TornSubcrimesResponseToJson(this);
+
+  @JsonKey(name: 'subcrimes', defaultValue: <TornSubcrime>[])
+  final List<TornSubcrime>? subcrimes;
+  static const fromJsonFactory = _$TornSubcrimesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornSubcrimesResponse &&
+            (identical(other.subcrimes, subcrimes) ||
+                const DeepCollectionEquality().equals(other.subcrimes, subcrimes)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(subcrimes) ^ runtimeType.hashCode;
+}
+
+extension $TornSubcrimesResponseExtension on TornSubcrimesResponse {
+  TornSubcrimesResponse copyWith({List<TornSubcrime>? subcrimes}) {
+    return TornSubcrimesResponse(subcrimes: subcrimes ?? this.subcrimes);
+  }
+
+  TornSubcrimesResponse copyWithWrapped({Wrapped<List<TornSubcrime>?>? subcrimes}) {
+    return TornSubcrimesResponse(subcrimes: (subcrimes != null ? subcrimes.value : this.subcrimes));
   }
 }
 
@@ -6035,8 +6928,7 @@ class TornSubcrime {
     this.nerveCost,
   });
 
-  factory TornSubcrime.fromJson(Map<String, dynamic> json) =>
-      _$TornSubcrimeFromJson(json);
+  factory TornSubcrime.fromJson(Map<String, dynamic> json) => _$TornSubcrimeFromJson(json);
 
   static const toJsonFactory = _$TornSubcrimeToJson;
   Map<String, dynamic> toJson() => _$TornSubcrimeToJson(this);
@@ -6053,13 +6945,10 @@ class TornSubcrime {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is TornSubcrime &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
             (identical(other.nerveCost, nerveCost) ||
-                const DeepCollectionEquality()
-                    .equals(other.nerveCost, nerveCost)));
+                const DeepCollectionEquality().equals(other.nerveCost, nerveCost)));
   }
 
   @override
@@ -6075,14 +6964,10 @@ class TornSubcrime {
 
 extension $TornSubcrimeExtension on TornSubcrime {
   TornSubcrime copyWith({int? id, String? name, int? nerveCost}) {
-    return TornSubcrime(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        nerveCost: nerveCost ?? this.nerveCost);
+    return TornSubcrime(id: id ?? this.id, name: name ?? this.name, nerveCost: nerveCost ?? this.nerveCost);
   }
 
-  TornSubcrime copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<String?>? name, Wrapped<int?>? nerveCost}) {
+  TornSubcrime copyWithWrapped({Wrapped<int?>? id, Wrapped<String?>? name, Wrapped<int?>? nerveCost}) {
     return TornSubcrime(
         id: (id != null ? id.value : this.id),
         name: (name != null ? name.value : this.name),
@@ -6091,44 +6976,41 @@ extension $TornSubcrimeExtension on TornSubcrime {
 }
 
 @JsonSerializable(explicitToJson: true)
-class TornCrimes {
-  const TornCrimes({
+class TornCrimesResponse {
+  const TornCrimesResponse({
     this.crimes,
   });
 
-  factory TornCrimes.fromJson(Map<String, dynamic> json) =>
-      _$TornCrimesFromJson(json);
+  factory TornCrimesResponse.fromJson(Map<String, dynamic> json) => _$TornCrimesResponseFromJson(json);
 
-  static const toJsonFactory = _$TornCrimesToJson;
-  Map<String, dynamic> toJson() => _$TornCrimesToJson(this);
+  static const toJsonFactory = _$TornCrimesResponseToJson;
+  Map<String, dynamic> toJson() => _$TornCrimesResponseToJson(this);
 
   @JsonKey(name: 'crimes', defaultValue: <TornCrime>[])
   final List<TornCrime>? crimes;
-  static const fromJsonFactory = _$TornCrimesFromJson;
+  static const fromJsonFactory = _$TornCrimesResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is TornCrimes &&
-            (identical(other.crimes, crimes) ||
-                const DeepCollectionEquality().equals(other.crimes, crimes)));
+        (other is TornCrimesResponse &&
+            (identical(other.crimes, crimes) || const DeepCollectionEquality().equals(other.crimes, crimes)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(crimes) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(crimes) ^ runtimeType.hashCode;
 }
 
-extension $TornCrimesExtension on TornCrimes {
-  TornCrimes copyWith({List<TornCrime>? crimes}) {
-    return TornCrimes(crimes: crimes ?? this.crimes);
+extension $TornCrimesResponseExtension on TornCrimesResponse {
+  TornCrimesResponse copyWith({List<TornCrime>? crimes}) {
+    return TornCrimesResponse(crimes: crimes ?? this.crimes);
   }
 
-  TornCrimes copyWithWrapped({Wrapped<List<TornCrime>?>? crimes}) {
-    return TornCrimes(crimes: (crimes != null ? crimes.value : this.crimes));
+  TornCrimesResponse copyWithWrapped({Wrapped<List<TornCrime>?>? crimes}) {
+    return TornCrimesResponse(crimes: (crimes != null ? crimes.value : this.crimes));
   }
 }
 
@@ -6146,8 +7028,7 @@ class TornCrime {
     this.notes,
   });
 
-  factory TornCrime.fromJson(Map<String, dynamic> json) =>
-      _$TornCrimeFromJson(json);
+  factory TornCrime.fromJson(Map<String, dynamic> json) => _$TornCrimeFromJson(json);
 
   static const toJsonFactory = _$TornCrimeToJson;
   Map<String, dynamic> toJson() => _$TornCrimeToJson(this);
@@ -6176,30 +7057,21 @@ class TornCrime {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is TornCrime &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
             (identical(other.categoryId, categoryId) ||
-                const DeepCollectionEquality()
-                    .equals(other.categoryId, categoryId)) &&
+                const DeepCollectionEquality().equals(other.categoryId, categoryId)) &&
             (identical(other.categoryName, categoryName) ||
-                const DeepCollectionEquality()
-                    .equals(other.categoryName, categoryName)) &&
+                const DeepCollectionEquality().equals(other.categoryName, categoryName)) &&
             (identical(other.enhancerId, enhancerId) ||
-                const DeepCollectionEquality()
-                    .equals(other.enhancerId, enhancerId)) &&
+                const DeepCollectionEquality().equals(other.enhancerId, enhancerId)) &&
             (identical(other.enhancerName, enhancerName) ||
-                const DeepCollectionEquality()
-                    .equals(other.enhancerName, enhancerName)) &&
+                const DeepCollectionEquality().equals(other.enhancerName, enhancerName)) &&
             (identical(other.uniqueOutcomesCount, uniqueOutcomesCount) ||
-                const DeepCollectionEquality()
-                    .equals(other.uniqueOutcomesCount, uniqueOutcomesCount)) &&
+                const DeepCollectionEquality().equals(other.uniqueOutcomesCount, uniqueOutcomesCount)) &&
             (identical(other.uniqueOutcomesIds, uniqueOutcomesIds) ||
-                const DeepCollectionEquality()
-                    .equals(other.uniqueOutcomesIds, uniqueOutcomesIds)) &&
-            (identical(other.notes, notes) ||
-                const DeepCollectionEquality().equals(other.notes, notes)));
+                const DeepCollectionEquality().equals(other.uniqueOutcomesIds, uniqueOutcomesIds)) &&
+            (identical(other.notes, notes) || const DeepCollectionEquality().equals(other.notes, notes)));
   }
 
   @override
@@ -6256,17 +7128,11 @@ extension $TornCrimeExtension on TornCrime {
         id: (id != null ? id.value : this.id),
         name: (name != null ? name.value : this.name),
         categoryId: (categoryId != null ? categoryId.value : this.categoryId),
-        categoryName:
-            (categoryName != null ? categoryName.value : this.categoryName),
+        categoryName: (categoryName != null ? categoryName.value : this.categoryName),
         enhancerId: (enhancerId != null ? enhancerId.value : this.enhancerId),
-        enhancerName:
-            (enhancerName != null ? enhancerName.value : this.enhancerName),
-        uniqueOutcomesCount: (uniqueOutcomesCount != null
-            ? uniqueOutcomesCount.value
-            : this.uniqueOutcomesCount),
-        uniqueOutcomesIds: (uniqueOutcomesIds != null
-            ? uniqueOutcomesIds.value
-            : this.uniqueOutcomesIds),
+        enhancerName: (enhancerName != null ? enhancerName.value : this.enhancerName),
+        uniqueOutcomesCount: (uniqueOutcomesCount != null ? uniqueOutcomesCount.value : this.uniqueOutcomesCount),
+        uniqueOutcomesIds: (uniqueOutcomesIds != null ? uniqueOutcomesIds.value : this.uniqueOutcomesIds),
         notes: (notes != null ? notes.value : this.notes));
   }
 }
@@ -6280,8 +7146,7 @@ class TornCalendarActivity {
     this.end,
   });
 
-  factory TornCalendarActivity.fromJson(Map<String, dynamic> json) =>
-      _$TornCalendarActivityFromJson(json);
+  factory TornCalendarActivity.fromJson(Map<String, dynamic> json) => _$TornCalendarActivityFromJson(json);
 
   static const toJsonFactory = _$TornCalendarActivityToJson;
   Map<String, dynamic> toJson() => _$TornCalendarActivityToJson(this);
@@ -6300,15 +7165,11 @@ class TornCalendarActivity {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is TornCalendarActivity &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
             (identical(other.description, description) ||
-                const DeepCollectionEquality()
-                    .equals(other.description, description)) &&
-            (identical(other.start, start) ||
-                const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) ||
-                const DeepCollectionEquality().equals(other.end, end)));
+                const DeepCollectionEquality().equals(other.description, description)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)));
   }
 
   @override
@@ -6324,8 +7185,7 @@ class TornCalendarActivity {
 }
 
 extension $TornCalendarActivityExtension on TornCalendarActivity {
-  TornCalendarActivity copyWith(
-      {String? title, String? description, int? start, int? end}) {
+  TornCalendarActivity copyWith({String? title, String? description, int? start, int? end}) {
     return TornCalendarActivity(
         title: title ?? this.title,
         description: description ?? this.description,
@@ -6334,16 +7194,51 @@ extension $TornCalendarActivityExtension on TornCalendarActivity {
   }
 
   TornCalendarActivity copyWithWrapped(
-      {Wrapped<String?>? title,
-      Wrapped<String?>? description,
-      Wrapped<int?>? start,
-      Wrapped<int?>? end}) {
+      {Wrapped<String?>? title, Wrapped<String?>? description, Wrapped<int?>? start, Wrapped<int?>? end}) {
     return TornCalendarActivity(
         title: (title != null ? title.value : this.title),
-        description:
-            (description != null ? description.value : this.description),
+        description: (description != null ? description.value : this.description),
         start: (start != null ? start.value : this.start),
         end: (end != null ? end.value : this.end));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TornCalendarResponse {
+  const TornCalendarResponse({
+    this.calendar,
+  });
+
+  factory TornCalendarResponse.fromJson(Map<String, dynamic> json) => _$TornCalendarResponseFromJson(json);
+
+  static const toJsonFactory = _$TornCalendarResponseToJson;
+  Map<String, dynamic> toJson() => _$TornCalendarResponseToJson(this);
+
+  @JsonKey(name: 'calendar')
+  final TornCalendarResponse$Calendar? calendar;
+  static const fromJsonFactory = _$TornCalendarResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornCalendarResponse &&
+            (identical(other.calendar, calendar) || const DeepCollectionEquality().equals(other.calendar, calendar)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(calendar) ^ runtimeType.hashCode;
+}
+
+extension $TornCalendarResponseExtension on TornCalendarResponse {
+  TornCalendarResponse copyWith({TornCalendarResponse$Calendar? calendar}) {
+    return TornCalendarResponse(calendar: calendar ?? this.calendar);
+  }
+
+  TornCalendarResponse copyWithWrapped({Wrapped<TornCalendarResponse$Calendar?>? calendar}) {
+    return TornCalendarResponse(calendar: (calendar != null ? calendar.value : this.calendar));
   }
 }
 
@@ -6364,8 +7259,7 @@ class TornHof {
     this.rank,
   });
 
-  factory TornHof.fromJson(Map<String, dynamic> json) =>
-      _$TornHofFromJson(json);
+  factory TornHof.fromJson(Map<String, dynamic> json) => _$TornHofFromJson(json);
 
   static const toJsonFactory = _$TornHofToJson;
   Map<String, dynamic> toJson() => _$TornHofToJson(this);
@@ -6400,38 +7294,22 @@ class TornHof {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is TornHof &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.username, username) ||
-                const DeepCollectionEquality()
-                    .equals(other.username, username)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.username, username) || const DeepCollectionEquality().equals(other.username, username)) &&
             (identical(other.factionId, factionId) ||
-                const DeepCollectionEquality()
-                    .equals(other.factionId, factionId)) &&
-            (identical(other.level, level) ||
-                const DeepCollectionEquality().equals(other.level, level)) &&
+                const DeepCollectionEquality().equals(other.factionId, factionId)) &&
+            (identical(other.level, level) || const DeepCollectionEquality().equals(other.level, level)) &&
             (identical(other.lastAction, lastAction) ||
-                const DeepCollectionEquality()
-                    .equals(other.lastAction, lastAction)) &&
-            (identical(other.rankName, rankName) ||
-                const DeepCollectionEquality()
-                    .equals(other.rankName, rankName)) &&
+                const DeepCollectionEquality().equals(other.lastAction, lastAction)) &&
+            (identical(other.rankName, rankName) || const DeepCollectionEquality().equals(other.rankName, rankName)) &&
             (identical(other.rankNumber, rankNumber) ||
-                const DeepCollectionEquality()
-                    .equals(other.rankNumber, rankNumber)) &&
-            (identical(other.position, position) ||
-                const DeepCollectionEquality()
-                    .equals(other.position, position)) &&
-            (identical(other.signedUp, signedUp) ||
-                const DeepCollectionEquality()
-                    .equals(other.signedUp, signedUp)) &&
+                const DeepCollectionEquality().equals(other.rankNumber, rankNumber)) &&
+            (identical(other.position, position) || const DeepCollectionEquality().equals(other.position, position)) &&
+            (identical(other.signedUp, signedUp) || const DeepCollectionEquality().equals(other.signedUp, signedUp)) &&
             (identical(other.ageInDays, ageInDays) ||
-                const DeepCollectionEquality()
-                    .equals(other.ageInDays, ageInDays)) &&
-            (identical(other.$value, $value) ||
-                const DeepCollectionEquality().equals(other.$value, $value)) &&
-            (identical(other.rank, rank) ||
-                const DeepCollectionEquality().equals(other.rank, rank)));
+                const DeepCollectionEquality().equals(other.ageInDays, ageInDays)) &&
+            (identical(other.$value, $value) || const DeepCollectionEquality().equals(other.$value, $value)) &&
+            (identical(other.rank, rank) || const DeepCollectionEquality().equals(other.rank, rank)));
   }
 
   @override
@@ -6513,6 +7391,61 @@ extension $TornHofExtension on TornHof {
 }
 
 @JsonSerializable(explicitToJson: true)
+class TornHofResponse {
+  const TornHofResponse({
+    this.hof,
+    this.links,
+    this.metadata,
+  });
+
+  factory TornHofResponse.fromJson(Map<String, dynamic> json) => _$TornHofResponseFromJson(json);
+
+  static const toJsonFactory = _$TornHofResponseToJson;
+  Map<String, dynamic> toJson() => _$TornHofResponseToJson(this);
+
+  @JsonKey(name: 'hof', defaultValue: <TornHof>[])
+  final List<TornHof>? hof;
+  @JsonKey(name: '_links')
+  final RequestLinks? links;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$TornHofResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornHofResponse &&
+            (identical(other.hof, hof) || const DeepCollectionEquality().equals(other.hof, hof)) &&
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(hof) ^
+      const DeepCollectionEquality().hash(links) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $TornHofResponseExtension on TornHofResponse {
+  TornHofResponse copyWith({List<TornHof>? hof, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+    return TornHofResponse(hof: hof ?? this.hof, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  }
+
+  TornHofResponse copyWithWrapped(
+      {Wrapped<List<TornHof>?>? hof, Wrapped<RequestLinks?>? links, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return TornHofResponse(
+        hof: (hof != null ? hof.value : this.hof),
+        links: (links != null ? links.value : this.links),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class FactionHofValues {
   const FactionHofValues({
     this.chain,
@@ -6520,8 +7453,7 @@ class FactionHofValues {
     this.respect,
   });
 
-  factory FactionHofValues.fromJson(Map<String, dynamic> json) =>
-      _$FactionHofValuesFromJson(json);
+  factory FactionHofValues.fromJson(Map<String, dynamic> json) => _$FactionHofValuesFromJson(json);
 
   static const toJsonFactory = _$FactionHofValuesToJson;
   Map<String, dynamic> toJson() => _$FactionHofValuesToJson(this);
@@ -6538,13 +7470,10 @@ class FactionHofValues {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is FactionHofValues &&
-            (identical(other.chain, chain) ||
-                const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
             (identical(other.chainDuration, chainDuration) ||
-                const DeepCollectionEquality()
-                    .equals(other.chainDuration, chainDuration)) &&
-            (identical(other.respect, respect) ||
-                const DeepCollectionEquality().equals(other.respect, respect)));
+                const DeepCollectionEquality().equals(other.chainDuration, chainDuration)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)));
   }
 
   @override
@@ -6566,14 +7495,10 @@ extension $FactionHofValuesExtension on FactionHofValues {
         respect: respect ?? this.respect);
   }
 
-  FactionHofValues copyWithWrapped(
-      {Wrapped<int?>? chain,
-      Wrapped<int?>? chainDuration,
-      Wrapped<int?>? respect}) {
+  FactionHofValues copyWithWrapped({Wrapped<int?>? chain, Wrapped<int?>? chainDuration, Wrapped<int?>? respect}) {
     return FactionHofValues(
         chain: (chain != null ? chain.value : this.chain),
-        chainDuration:
-            (chainDuration != null ? chainDuration.value : this.chainDuration),
+        chainDuration: (chainDuration != null ? chainDuration.value : this.chainDuration),
         respect: (respect != null ? respect.value : this.respect));
   }
 }
@@ -6589,8 +7514,7 @@ class TornFactionHof {
     this.values,
   });
 
-  factory TornFactionHof.fromJson(Map<String, dynamic> json) =>
-      _$TornFactionHofFromJson(json);
+  factory TornFactionHof.fromJson(Map<String, dynamic> json) => _$TornFactionHofFromJson(json);
 
   static const toJsonFactory = _$TornFactionHofToJson;
   Map<String, dynamic> toJson() => _$TornFactionHofToJson(this);
@@ -6614,20 +7538,12 @@ class TornFactionHof {
     return identical(this, other) ||
         (other is TornFactionHof &&
             (identical(other.factionId, factionId) ||
-                const DeepCollectionEquality()
-                    .equals(other.factionId, factionId)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.members, members) ||
-                const DeepCollectionEquality()
-                    .equals(other.members, members)) &&
-            (identical(other.position, position) ||
-                const DeepCollectionEquality()
-                    .equals(other.position, position)) &&
-            (identical(other.rank, rank) ||
-                const DeepCollectionEquality().equals(other.rank, rank)) &&
-            (identical(other.values, values) ||
-                const DeepCollectionEquality().equals(other.values, values)));
+                const DeepCollectionEquality().equals(other.factionId, factionId)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.members, members) || const DeepCollectionEquality().equals(other.members, members)) &&
+            (identical(other.position, position) || const DeepCollectionEquality().equals(other.position, position)) &&
+            (identical(other.rank, rank) || const DeepCollectionEquality().equals(other.rank, rank)) &&
+            (identical(other.values, values) || const DeepCollectionEquality().equals(other.values, values)));
   }
 
   @override
@@ -6646,12 +7562,7 @@ class TornFactionHof {
 
 extension $TornFactionHofExtension on TornFactionHof {
   TornFactionHof copyWith(
-      {int? factionId,
-      String? name,
-      int? members,
-      int? position,
-      String? rank,
-      FactionHofValues? values}) {
+      {int? factionId, String? name, int? members, int? position, String? rank, FactionHofValues? values}) {
     return TornFactionHof(
         factionId: factionId ?? this.factionId,
         name: name ?? this.name,
@@ -6679,14 +7590,73 @@ extension $TornFactionHofExtension on TornFactionHof {
 }
 
 @JsonSerializable(explicitToJson: true)
+class TornFactionHofResponse {
+  const TornFactionHofResponse({
+    this.factionhof,
+    this.links,
+    this.metadata,
+  });
+
+  factory TornFactionHofResponse.fromJson(Map<String, dynamic> json) => _$TornFactionHofResponseFromJson(json);
+
+  static const toJsonFactory = _$TornFactionHofResponseToJson;
+  Map<String, dynamic> toJson() => _$TornFactionHofResponseToJson(this);
+
+  @JsonKey(name: 'factionhof', defaultValue: <TornFactionHof>[])
+  final List<TornFactionHof>? factionhof;
+  @JsonKey(name: '_links')
+  final RequestLinks? links;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$TornFactionHofResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornFactionHofResponse &&
+            (identical(other.factionhof, factionhof) ||
+                const DeepCollectionEquality().equals(other.factionhof, factionhof)) &&
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(factionhof) ^
+      const DeepCollectionEquality().hash(links) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $TornFactionHofResponseExtension on TornFactionHofResponse {
+  TornFactionHofResponse copyWith(
+      {List<TornFactionHof>? factionhof, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+    return TornFactionHofResponse(
+        factionhof: factionhof ?? this.factionhof, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  }
+
+  TornFactionHofResponse copyWithWrapped(
+      {Wrapped<List<TornFactionHof>?>? factionhof,
+      Wrapped<RequestLinks?>? links,
+      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return TornFactionHofResponse(
+        factionhof: (factionhof != null ? factionhof.value : this.factionhof),
+        links: (links != null ? links.value : this.links),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class TornLog {
   const TornLog({
     this.id,
     this.title,
   });
 
-  factory TornLog.fromJson(Map<String, dynamic> json) =>
-      _$TornLogFromJson(json);
+  factory TornLog.fromJson(Map<String, dynamic> json) => _$TornLogFromJson(json);
 
   static const toJsonFactory = _$TornLogToJson;
   Map<String, dynamic> toJson() => _$TornLogToJson(this);
@@ -6701,10 +7671,8 @@ class TornLog {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is TornLog &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)));
   }
 
   @override
@@ -6712,9 +7680,7 @@ class TornLog {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(id) ^
-      const DeepCollectionEquality().hash(title) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(title) ^ runtimeType.hashCode;
 }
 
 extension $TornLogExtension on TornLog {
@@ -6723,9 +7689,7 @@ extension $TornLogExtension on TornLog {
   }
 
   TornLog copyWithWrapped({Wrapped<int?>? id, Wrapped<String?>? title}) {
-    return TornLog(
-        id: (id != null ? id.value : this.id),
-        title: (title != null ? title.value : this.title));
+    return TornLog(id: (id != null ? id.value : this.id), title: (title != null ? title.value : this.title));
   }
 }
 
@@ -6736,8 +7700,7 @@ class TornLogCategory {
     this.title,
   });
 
-  factory TornLogCategory.fromJson(Map<String, dynamic> json) =>
-      _$TornLogCategoryFromJson(json);
+  factory TornLogCategory.fromJson(Map<String, dynamic> json) => _$TornLogCategoryFromJson(json);
 
   static const toJsonFactory = _$TornLogCategoryToJson;
   Map<String, dynamic> toJson() => _$TornLogCategoryToJson(this);
@@ -6752,10 +7715,8 @@ class TornLogCategory {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is TornLogCategory &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)));
   }
 
   @override
@@ -6763,9 +7724,7 @@ class TornLogCategory {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(id) ^
-      const DeepCollectionEquality().hash(title) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(title) ^ runtimeType.hashCode;
 }
 
 extension $TornLogCategoryExtension on TornLogCategory {
@@ -6773,11 +7732,87 @@ extension $TornLogCategoryExtension on TornLogCategory {
     return TornLogCategory(id: id ?? this.id, title: title ?? this.title);
   }
 
-  TornLogCategory copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<String?>? title}) {
-    return TornLogCategory(
-        id: (id != null ? id.value : this.id),
-        title: (title != null ? title.value : this.title));
+  TornLogCategory copyWithWrapped({Wrapped<int?>? id, Wrapped<String?>? title}) {
+    return TornLogCategory(id: (id != null ? id.value : this.id), title: (title != null ? title.value : this.title));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TornLogTypesResponse {
+  const TornLogTypesResponse({
+    this.logtypes,
+  });
+
+  factory TornLogTypesResponse.fromJson(Map<String, dynamic> json) => _$TornLogTypesResponseFromJson(json);
+
+  static const toJsonFactory = _$TornLogTypesResponseToJson;
+  Map<String, dynamic> toJson() => _$TornLogTypesResponseToJson(this);
+
+  @JsonKey(name: 'logtypes', defaultValue: <TornLog>[])
+  final List<TornLog>? logtypes;
+  static const fromJsonFactory = _$TornLogTypesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornLogTypesResponse &&
+            (identical(other.logtypes, logtypes) || const DeepCollectionEquality().equals(other.logtypes, logtypes)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(logtypes) ^ runtimeType.hashCode;
+}
+
+extension $TornLogTypesResponseExtension on TornLogTypesResponse {
+  TornLogTypesResponse copyWith({List<TornLog>? logtypes}) {
+    return TornLogTypesResponse(logtypes: logtypes ?? this.logtypes);
+  }
+
+  TornLogTypesResponse copyWithWrapped({Wrapped<List<TornLog>?>? logtypes}) {
+    return TornLogTypesResponse(logtypes: (logtypes != null ? logtypes.value : this.logtypes));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TornLogCategoriesResponse {
+  const TornLogCategoriesResponse({
+    this.logcategories,
+  });
+
+  factory TornLogCategoriesResponse.fromJson(Map<String, dynamic> json) => _$TornLogCategoriesResponseFromJson(json);
+
+  static const toJsonFactory = _$TornLogCategoriesResponseToJson;
+  Map<String, dynamic> toJson() => _$TornLogCategoriesResponseToJson(this);
+
+  @JsonKey(name: 'logcategories', defaultValue: <TornLogCategory>[])
+  final List<TornLogCategory>? logcategories;
+  static const fromJsonFactory = _$TornLogCategoriesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornLogCategoriesResponse &&
+            (identical(other.logcategories, logcategories) ||
+                const DeepCollectionEquality().equals(other.logcategories, logcategories)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(logcategories) ^ runtimeType.hashCode;
+}
+
+extension $TornLogCategoriesResponseExtension on TornLogCategoriesResponse {
+  TornLogCategoriesResponse copyWith({List<TornLogCategory>? logcategories}) {
+    return TornLogCategoriesResponse(logcategories: logcategories ?? this.logcategories);
+  }
+
+  TornLogCategoriesResponse copyWithWrapped({Wrapped<List<TornLogCategory>?>? logcategories}) {
+    return TornLogCategoriesResponse(logcategories: (logcategories != null ? logcategories.value : this.logcategories));
   }
 }
 
@@ -6827,34 +7862,21 @@ class Bounty {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is Bounty &&
-            (identical(other.targetId, targetId) ||
-                const DeepCollectionEquality()
-                    .equals(other.targetId, targetId)) &&
+            (identical(other.targetId, targetId) || const DeepCollectionEquality().equals(other.targetId, targetId)) &&
             (identical(other.targetName, targetName) ||
-                const DeepCollectionEquality()
-                    .equals(other.targetName, targetName)) &&
+                const DeepCollectionEquality().equals(other.targetName, targetName)) &&
             (identical(other.targetLevel, targetLevel) ||
-                const DeepCollectionEquality()
-                    .equals(other.targetLevel, targetLevel)) &&
-            (identical(other.listerId, listerId) ||
-                const DeepCollectionEquality()
-                    .equals(other.listerId, listerId)) &&
+                const DeepCollectionEquality().equals(other.targetLevel, targetLevel)) &&
+            (identical(other.listerId, listerId) || const DeepCollectionEquality().equals(other.listerId, listerId)) &&
             (identical(other.listerName, listerName) ||
-                const DeepCollectionEquality()
-                    .equals(other.listerName, listerName)) &&
-            (identical(other.reward, reward) ||
-                const DeepCollectionEquality().equals(other.reward, reward)) &&
-            (identical(other.reason, reason) ||
-                const DeepCollectionEquality().equals(other.reason, reason)) &&
-            (identical(other.quantity, quantity) ||
-                const DeepCollectionEquality()
-                    .equals(other.quantity, quantity)) &&
+                const DeepCollectionEquality().equals(other.listerName, listerName)) &&
+            (identical(other.reward, reward) || const DeepCollectionEquality().equals(other.reward, reward)) &&
+            (identical(other.reason, reason) || const DeepCollectionEquality().equals(other.reason, reason)) &&
+            (identical(other.quantity, quantity) || const DeepCollectionEquality().equals(other.quantity, quantity)) &&
             (identical(other.isAnonymous, isAnonymous) ||
-                const DeepCollectionEquality()
-                    .equals(other.isAnonymous, isAnonymous)) &&
+                const DeepCollectionEquality().equals(other.isAnonymous, isAnonymous)) &&
             (identical(other.validUntil, validUntil) ||
-                const DeepCollectionEquality()
-                    .equals(other.validUntil, validUntil)));
+                const DeepCollectionEquality().equals(other.validUntil, validUntil)));
   }
 
   @override
@@ -6914,16 +7936,114 @@ extension $BountyExtension on Bounty {
     return Bounty(
         targetId: (targetId != null ? targetId.value : this.targetId),
         targetName: (targetName != null ? targetName.value : this.targetName),
-        targetLevel:
-            (targetLevel != null ? targetLevel.value : this.targetLevel),
+        targetLevel: (targetLevel != null ? targetLevel.value : this.targetLevel),
         listerId: (listerId != null ? listerId.value : this.listerId),
         listerName: (listerName != null ? listerName.value : this.listerName),
         reward: (reward != null ? reward.value : this.reward),
         reason: (reason != null ? reason.value : this.reason),
         quantity: (quantity != null ? quantity.value : this.quantity),
-        isAnonymous:
-            (isAnonymous != null ? isAnonymous.value : this.isAnonymous),
+        isAnonymous: (isAnonymous != null ? isAnonymous.value : this.isAnonymous),
         validUntil: (validUntil != null ? validUntil.value : this.validUntil));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TornBountiesResponse {
+  const TornBountiesResponse({
+    this.bounties,
+    this.links,
+    this.metadata,
+  });
+
+  factory TornBountiesResponse.fromJson(Map<String, dynamic> json) => _$TornBountiesResponseFromJson(json);
+
+  static const toJsonFactory = _$TornBountiesResponseToJson;
+  Map<String, dynamic> toJson() => _$TornBountiesResponseToJson(this);
+
+  @JsonKey(name: 'bounties', defaultValue: <Bounty>[])
+  final List<Bounty>? bounties;
+  @JsonKey(name: '_links')
+  final RequestLinks? links;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$TornBountiesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornBountiesResponse &&
+            (identical(other.bounties, bounties) || const DeepCollectionEquality().equals(other.bounties, bounties)) &&
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(bounties) ^
+      const DeepCollectionEquality().hash(links) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $TornBountiesResponseExtension on TornBountiesResponse {
+  TornBountiesResponse copyWith({List<Bounty>? bounties, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+    return TornBountiesResponse(
+        bounties: bounties ?? this.bounties, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  }
+
+  TornBountiesResponse copyWithWrapped(
+      {Wrapped<List<Bounty>?>? bounties, Wrapped<RequestLinks?>? links, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return TornBountiesResponse(
+        bounties: (bounties != null ? bounties.value : this.bounties),
+        links: (links != null ? links.value : this.links),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TornLookupResponse {
+  const TornLookupResponse({
+    this.selections,
+  });
+
+  factory TornLookupResponse.fromJson(Map<String, dynamic> json) => _$TornLookupResponseFromJson(json);
+
+  static const toJsonFactory = _$TornLookupResponseToJson;
+  Map<String, dynamic> toJson() => _$TornLookupResponseToJson(this);
+
+  @JsonKey(
+    name: 'selections',
+    toJson: tornSelectionNameListToJson,
+    fromJson: tornSelectionNameListFromJson,
+  )
+  final List<enums.TornSelectionName>? selections;
+  static const fromJsonFactory = _$TornLookupResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornLookupResponse &&
+            (identical(other.selections, selections) ||
+                const DeepCollectionEquality().equals(other.selections, selections)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(selections) ^ runtimeType.hashCode;
+}
+
+extension $TornLookupResponseExtension on TornLookupResponse {
+  TornLookupResponse copyWith({List<enums.TornSelectionName>? selections}) {
+    return TornLookupResponse(selections: selections ?? this.selections);
+  }
+
+  TornLookupResponse copyWithWrapped({Wrapped<List<enums.TornSelectionName>?>? selections}) {
+    return TornLookupResponse(selections: (selections != null ? selections.value : this.selections));
   }
 }
 
@@ -6954,14 +8074,10 @@ class UserCrimeDetailsBootlegging {
     return identical(this, other) ||
         (other is UserCrimeDetailsBootlegging &&
             (identical(other.onlineStore, onlineStore) ||
-                const DeepCollectionEquality()
-                    .equals(other.onlineStore, onlineStore)) &&
-            (identical(other.dvdSales, dvdSales) ||
-                const DeepCollectionEquality()
-                    .equals(other.dvdSales, dvdSales)) &&
+                const DeepCollectionEquality().equals(other.onlineStore, onlineStore)) &&
+            (identical(other.dvdSales, dvdSales) || const DeepCollectionEquality().equals(other.dvdSales, dvdSales)) &&
             (identical(other.dvdsCopied, dvdsCopied) ||
-                const DeepCollectionEquality()
-                    .equals(other.dvdsCopied, dvdsCopied)));
+                const DeepCollectionEquality().equals(other.dvdsCopied, dvdsCopied)));
   }
 
   @override
@@ -6991,8 +8107,7 @@ extension $UserCrimeDetailsBootleggingExtension on UserCrimeDetailsBootlegging {
       Wrapped<UserCrimeDetailsBootlegging$DvdSales?>? dvdSales,
       Wrapped<int?>? dvdsCopied}) {
     return UserCrimeDetailsBootlegging(
-        onlineStore:
-            (onlineStore != null ? onlineStore.value : this.onlineStore),
+        onlineStore: (onlineStore != null ? onlineStore.value : this.onlineStore),
         dvdSales: (dvdSales != null ? dvdSales.value : this.dvdSales),
         dvdsCopied: (dvdsCopied != null ? dvdsCopied.value : this.dvdsCopied));
   }
@@ -7008,8 +8123,7 @@ class UserCrimeDetailsGraffiti {
     this.costToCity,
   });
 
-  factory UserCrimeDetailsGraffiti.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeDetailsGraffitiFromJson(json);
+  factory UserCrimeDetailsGraffiti.fromJson(Map<String, dynamic> json) => _$UserCrimeDetailsGraffitiFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsGraffitiToJson;
   Map<String, dynamic> toJson() => _$UserCrimeDetailsGraffitiToJson(this);
@@ -7030,23 +8144,15 @@ class UserCrimeDetailsGraffiti {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsGraffiti &&
-            (identical(other.cansUsed, cansUsed) ||
-                const DeepCollectionEquality()
-                    .equals(other.cansUsed, cansUsed)) &&
+            (identical(other.cansUsed, cansUsed) || const DeepCollectionEquality().equals(other.cansUsed, cansUsed)) &&
             (identical(other.mostGraffitiInOneArea, mostGraffitiInOneArea) ||
-                const DeepCollectionEquality().equals(
-                    other.mostGraffitiInOneArea, mostGraffitiInOneArea)) &&
-            (identical(other.mostGraffitiSimultaneously,
-                    mostGraffitiSimultaneously) ||
-                const DeepCollectionEquality().equals(
-                    other.mostGraffitiSimultaneously,
-                    mostGraffitiSimultaneously)) &&
+                const DeepCollectionEquality().equals(other.mostGraffitiInOneArea, mostGraffitiInOneArea)) &&
+            (identical(other.mostGraffitiSimultaneously, mostGraffitiSimultaneously) ||
+                const DeepCollectionEquality().equals(other.mostGraffitiSimultaneously, mostGraffitiSimultaneously)) &&
             (identical(other.graffitiRemoved, graffitiRemoved) ||
-                const DeepCollectionEquality()
-                    .equals(other.graffitiRemoved, graffitiRemoved)) &&
+                const DeepCollectionEquality().equals(other.graffitiRemoved, graffitiRemoved)) &&
             (identical(other.costToCity, costToCity) ||
-                const DeepCollectionEquality()
-                    .equals(other.costToCity, costToCity)));
+                const DeepCollectionEquality().equals(other.costToCity, costToCity)));
   }
 
   @override
@@ -7071,10 +8177,8 @@ extension $UserCrimeDetailsGraffitiExtension on UserCrimeDetailsGraffiti {
       int? costToCity}) {
     return UserCrimeDetailsGraffiti(
         cansUsed: cansUsed ?? this.cansUsed,
-        mostGraffitiInOneArea:
-            mostGraffitiInOneArea ?? this.mostGraffitiInOneArea,
-        mostGraffitiSimultaneously:
-            mostGraffitiSimultaneously ?? this.mostGraffitiSimultaneously,
+        mostGraffitiInOneArea: mostGraffitiInOneArea ?? this.mostGraffitiInOneArea,
+        mostGraffitiSimultaneously: mostGraffitiSimultaneously ?? this.mostGraffitiSimultaneously,
         graffitiRemoved: graffitiRemoved ?? this.graffitiRemoved,
         costToCity: costToCity ?? this.costToCity);
   }
@@ -7087,15 +8191,11 @@ extension $UserCrimeDetailsGraffitiExtension on UserCrimeDetailsGraffiti {
       Wrapped<int?>? costToCity}) {
     return UserCrimeDetailsGraffiti(
         cansUsed: (cansUsed != null ? cansUsed.value : this.cansUsed),
-        mostGraffitiInOneArea: (mostGraffitiInOneArea != null
-            ? mostGraffitiInOneArea.value
-            : this.mostGraffitiInOneArea),
-        mostGraffitiSimultaneously: (mostGraffitiSimultaneously != null
-            ? mostGraffitiSimultaneously.value
-            : this.mostGraffitiSimultaneously),
-        graffitiRemoved: (graffitiRemoved != null
-            ? graffitiRemoved.value
-            : this.graffitiRemoved),
+        mostGraffitiInOneArea:
+            (mostGraffitiInOneArea != null ? mostGraffitiInOneArea.value : this.mostGraffitiInOneArea),
+        mostGraffitiSimultaneously:
+            (mostGraffitiSimultaneously != null ? mostGraffitiSimultaneously.value : this.mostGraffitiSimultaneously),
+        graffitiRemoved: (graffitiRemoved != null ? graffitiRemoved.value : this.graffitiRemoved),
         costToCity: (costToCity != null ? costToCity.value : this.costToCity));
   }
 }
@@ -7121,31 +8221,24 @@ class UserCrimeDetailsShoplifting {
     return identical(this, other) ||
         (other is UserCrimeDetailsShoplifting &&
             (identical(other.averageNotoriety, averageNotoriety) ||
-                const DeepCollectionEquality()
-                    .equals(other.averageNotoriety, averageNotoriety)));
+                const DeepCollectionEquality().equals(other.averageNotoriety, averageNotoriety)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(averageNotoriety) ^
-      runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(averageNotoriety) ^ runtimeType.hashCode;
 }
 
 extension $UserCrimeDetailsShopliftingExtension on UserCrimeDetailsShoplifting {
   UserCrimeDetailsShoplifting copyWith({int? averageNotoriety}) {
-    return UserCrimeDetailsShoplifting(
-        averageNotoriety: averageNotoriety ?? this.averageNotoriety);
+    return UserCrimeDetailsShoplifting(averageNotoriety: averageNotoriety ?? this.averageNotoriety);
   }
 
-  UserCrimeDetailsShoplifting copyWithWrapped(
-      {Wrapped<int?>? averageNotoriety}) {
+  UserCrimeDetailsShoplifting copyWithWrapped({Wrapped<int?>? averageNotoriety}) {
     return UserCrimeDetailsShoplifting(
-        averageNotoriety: (averageNotoriety != null
-            ? averageNotoriety.value
-            : this.averageNotoriety));
+        averageNotoriety: (averageNotoriety != null ? averageNotoriety.value : this.averageNotoriety));
   }
 }
 
@@ -7173,11 +8266,8 @@ class UserCrimeDetailsCardSkimming {
     return identical(this, other) ||
         (other is UserCrimeDetailsCardSkimming &&
             (identical(other.cardDetails, cardDetails) ||
-                const DeepCollectionEquality()
-                    .equals(other.cardDetails, cardDetails)) &&
-            (identical(other.skimmers, skimmers) ||
-                const DeepCollectionEquality()
-                    .equals(other.skimmers, skimmers)));
+                const DeepCollectionEquality().equals(other.cardDetails, cardDetails)) &&
+            (identical(other.skimmers, skimmers) || const DeepCollectionEquality().equals(other.skimmers, skimmers)));
   }
 
   @override
@@ -7190,22 +8280,18 @@ class UserCrimeDetailsCardSkimming {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsCardSkimmingExtension
-    on UserCrimeDetailsCardSkimming {
+extension $UserCrimeDetailsCardSkimmingExtension on UserCrimeDetailsCardSkimming {
   UserCrimeDetailsCardSkimming copyWith(
-      {UserCrimeDetailsCardSkimming$CardDetails? cardDetails,
-      UserCrimeDetailsCardSkimming$Skimmers? skimmers}) {
+      {UserCrimeDetailsCardSkimming$CardDetails? cardDetails, UserCrimeDetailsCardSkimming$Skimmers? skimmers}) {
     return UserCrimeDetailsCardSkimming(
-        cardDetails: cardDetails ?? this.cardDetails,
-        skimmers: skimmers ?? this.skimmers);
+        cardDetails: cardDetails ?? this.cardDetails, skimmers: skimmers ?? this.skimmers);
   }
 
   UserCrimeDetailsCardSkimming copyWithWrapped(
       {Wrapped<UserCrimeDetailsCardSkimming$CardDetails?>? cardDetails,
       Wrapped<UserCrimeDetailsCardSkimming$Skimmers?>? skimmers}) {
     return UserCrimeDetailsCardSkimming(
-        cardDetails:
-            (cardDetails != null ? cardDetails.value : this.cardDetails),
+        cardDetails: (cardDetails != null ? cardDetails.value : this.cardDetails),
         skimmers: (skimmers != null ? skimmers.value : this.skimmers));
   }
 }
@@ -7219,8 +8305,7 @@ class UserCrimeDetailsHustling {
     this.pickpocketMoneyCollected,
   });
 
-  factory UserCrimeDetailsHustling.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeDetailsHustlingFromJson(json);
+  factory UserCrimeDetailsHustling.fromJson(Map<String, dynamic> json) => _$UserCrimeDetailsHustlingFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsHustlingToJson;
   Map<String, dynamic> toJson() => _$UserCrimeDetailsHustlingToJson(this);
@@ -7240,18 +8325,13 @@ class UserCrimeDetailsHustling {
     return identical(this, other) ||
         (other is UserCrimeDetailsHustling &&
             (identical(other.totalAudienceGathered, totalAudienceGathered) ||
-                const DeepCollectionEquality().equals(
-                    other.totalAudienceGathered, totalAudienceGathered)) &&
+                const DeepCollectionEquality().equals(other.totalAudienceGathered, totalAudienceGathered)) &&
             (identical(other.biggestMoneyWon, biggestMoneyWon) ||
-                const DeepCollectionEquality()
-                    .equals(other.biggestMoneyWon, biggestMoneyWon)) &&
+                const DeepCollectionEquality().equals(other.biggestMoneyWon, biggestMoneyWon)) &&
             (identical(other.shillMoneyCollected, shillMoneyCollected) ||
-                const DeepCollectionEquality()
-                    .equals(other.shillMoneyCollected, shillMoneyCollected)) &&
-            (identical(
-                    other.pickpocketMoneyCollected, pickpocketMoneyCollected) ||
-                const DeepCollectionEquality().equals(
-                    other.pickpocketMoneyCollected, pickpocketMoneyCollected)));
+                const DeepCollectionEquality().equals(other.shillMoneyCollected, shillMoneyCollected)) &&
+            (identical(other.pickpocketMoneyCollected, pickpocketMoneyCollected) ||
+                const DeepCollectionEquality().equals(other.pickpocketMoneyCollected, pickpocketMoneyCollected)));
   }
 
   @override
@@ -7268,17 +8348,12 @@ class UserCrimeDetailsHustling {
 
 extension $UserCrimeDetailsHustlingExtension on UserCrimeDetailsHustling {
   UserCrimeDetailsHustling copyWith(
-      {int? totalAudienceGathered,
-      int? biggestMoneyWon,
-      int? shillMoneyCollected,
-      int? pickpocketMoneyCollected}) {
+      {int? totalAudienceGathered, int? biggestMoneyWon, int? shillMoneyCollected, int? pickpocketMoneyCollected}) {
     return UserCrimeDetailsHustling(
-        totalAudienceGathered:
-            totalAudienceGathered ?? this.totalAudienceGathered,
+        totalAudienceGathered: totalAudienceGathered ?? this.totalAudienceGathered,
         biggestMoneyWon: biggestMoneyWon ?? this.biggestMoneyWon,
         shillMoneyCollected: shillMoneyCollected ?? this.shillMoneyCollected,
-        pickpocketMoneyCollected:
-            pickpocketMoneyCollected ?? this.pickpocketMoneyCollected);
+        pickpocketMoneyCollected: pickpocketMoneyCollected ?? this.pickpocketMoneyCollected);
   }
 
   UserCrimeDetailsHustling copyWithWrapped(
@@ -7287,18 +8362,12 @@ extension $UserCrimeDetailsHustlingExtension on UserCrimeDetailsHustling {
       Wrapped<int?>? shillMoneyCollected,
       Wrapped<int?>? pickpocketMoneyCollected}) {
     return UserCrimeDetailsHustling(
-        totalAudienceGathered: (totalAudienceGathered != null
-            ? totalAudienceGathered.value
-            : this.totalAudienceGathered),
-        biggestMoneyWon: (biggestMoneyWon != null
-            ? biggestMoneyWon.value
-            : this.biggestMoneyWon),
-        shillMoneyCollected: (shillMoneyCollected != null
-            ? shillMoneyCollected.value
-            : this.shillMoneyCollected),
-        pickpocketMoneyCollected: (pickpocketMoneyCollected != null
-            ? pickpocketMoneyCollected.value
-            : this.pickpocketMoneyCollected));
+        totalAudienceGathered:
+            (totalAudienceGathered != null ? totalAudienceGathered.value : this.totalAudienceGathered),
+        biggestMoneyWon: (biggestMoneyWon != null ? biggestMoneyWon.value : this.biggestMoneyWon),
+        shillMoneyCollected: (shillMoneyCollected != null ? shillMoneyCollected.value : this.shillMoneyCollected),
+        pickpocketMoneyCollected:
+            (pickpocketMoneyCollected != null ? pickpocketMoneyCollected.value : this.pickpocketMoneyCollected));
   }
 }
 
@@ -7312,8 +8381,7 @@ class UserCrimeDetailsCracking {
     this.charsGuessedTotal,
   });
 
-  factory UserCrimeDetailsCracking.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeDetailsCrackingFromJson(json);
+  factory UserCrimeDetailsCracking.fromJson(Map<String, dynamic> json) => _$UserCrimeDetailsCrackingFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsCrackingToJson;
   Map<String, dynamic> toJson() => _$UserCrimeDetailsCrackingToJson(this);
@@ -7335,20 +8403,15 @@ class UserCrimeDetailsCracking {
     return identical(this, other) ||
         (other is UserCrimeDetailsCracking &&
             (identical(other.bruteForceCycles, bruteForceCycles) ||
-                const DeepCollectionEquality()
-                    .equals(other.bruteForceCycles, bruteForceCycles)) &&
+                const DeepCollectionEquality().equals(other.bruteForceCycles, bruteForceCycles)) &&
             (identical(other.encryptionLayersBroken, encryptionLayersBroken) ||
-                const DeepCollectionEquality().equals(
-                    other.encryptionLayersBroken, encryptionLayersBroken)) &&
+                const DeepCollectionEquality().equals(other.encryptionLayersBroken, encryptionLayersBroken)) &&
             (identical(other.highestMips, highestMips) ||
-                const DeepCollectionEquality()
-                    .equals(other.highestMips, highestMips)) &&
+                const DeepCollectionEquality().equals(other.highestMips, highestMips)) &&
             (identical(other.charsGuessed, charsGuessed) ||
-                const DeepCollectionEquality()
-                    .equals(other.charsGuessed, charsGuessed)) &&
+                const DeepCollectionEquality().equals(other.charsGuessed, charsGuessed)) &&
             (identical(other.charsGuessedTotal, charsGuessedTotal) ||
-                const DeepCollectionEquality()
-                    .equals(other.charsGuessedTotal, charsGuessedTotal)));
+                const DeepCollectionEquality().equals(other.charsGuessedTotal, charsGuessedTotal)));
   }
 
   @override
@@ -7373,8 +8436,7 @@ extension $UserCrimeDetailsCrackingExtension on UserCrimeDetailsCracking {
       int? charsGuessedTotal}) {
     return UserCrimeDetailsCracking(
         bruteForceCycles: bruteForceCycles ?? this.bruteForceCycles,
-        encryptionLayersBroken:
-            encryptionLayersBroken ?? this.encryptionLayersBroken,
+        encryptionLayersBroken: encryptionLayersBroken ?? this.encryptionLayersBroken,
         highestMips: highestMips ?? this.highestMips,
         charsGuessed: charsGuessed ?? this.charsGuessed,
         charsGuessedTotal: charsGuessedTotal ?? this.charsGuessedTotal);
@@ -7387,19 +8449,12 @@ extension $UserCrimeDetailsCrackingExtension on UserCrimeDetailsCracking {
       Wrapped<int?>? charsGuessed,
       Wrapped<int?>? charsGuessedTotal}) {
     return UserCrimeDetailsCracking(
-        bruteForceCycles: (bruteForceCycles != null
-            ? bruteForceCycles.value
-            : this.bruteForceCycles),
-        encryptionLayersBroken: (encryptionLayersBroken != null
-            ? encryptionLayersBroken.value
-            : this.encryptionLayersBroken),
-        highestMips:
-            (highestMips != null ? highestMips.value : this.highestMips),
-        charsGuessed:
-            (charsGuessed != null ? charsGuessed.value : this.charsGuessed),
-        charsGuessedTotal: (charsGuessedTotal != null
-            ? charsGuessedTotal.value
-            : this.charsGuessedTotal));
+        bruteForceCycles: (bruteForceCycles != null ? bruteForceCycles.value : this.bruteForceCycles),
+        encryptionLayersBroken:
+            (encryptionLayersBroken != null ? encryptionLayersBroken.value : this.encryptionLayersBroken),
+        highestMips: (highestMips != null ? highestMips.value : this.highestMips),
+        charsGuessed: (charsGuessed != null ? charsGuessed.value : this.charsGuessed),
+        charsGuessedTotal: (charsGuessedTotal != null ? charsGuessedTotal.value : this.charsGuessedTotal));
   }
 }
 
@@ -7413,8 +8468,7 @@ class UserCrimeDetailsScamming {
     this.emails,
   });
 
-  factory UserCrimeDetailsScamming.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeDetailsScammingFromJson(json);
+  factory UserCrimeDetailsScamming.fromJson(Map<String, dynamic> json) => _$UserCrimeDetailsScammingFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsScammingToJson;
   Map<String, dynamic> toJson() => _$UserCrimeDetailsScammingToJson(this);
@@ -7436,18 +8490,11 @@ class UserCrimeDetailsScamming {
     return identical(this, other) ||
         (other is UserCrimeDetailsScamming &&
             (identical(other.mostResponses, mostResponses) ||
-                const DeepCollectionEquality()
-                    .equals(other.mostResponses, mostResponses)) &&
-            (identical(other.zones, zones) ||
-                const DeepCollectionEquality().equals(other.zones, zones)) &&
-            (identical(other.concerns, concerns) ||
-                const DeepCollectionEquality()
-                    .equals(other.concerns, concerns)) &&
-            (identical(other.payouts, payouts) ||
-                const DeepCollectionEquality()
-                    .equals(other.payouts, payouts)) &&
-            (identical(other.emails, emails) ||
-                const DeepCollectionEquality().equals(other.emails, emails)));
+                const DeepCollectionEquality().equals(other.mostResponses, mostResponses)) &&
+            (identical(other.zones, zones) || const DeepCollectionEquality().equals(other.zones, zones)) &&
+            (identical(other.concerns, concerns) || const DeepCollectionEquality().equals(other.concerns, concerns)) &&
+            (identical(other.payouts, payouts) || const DeepCollectionEquality().equals(other.payouts, payouts)) &&
+            (identical(other.emails, emails) || const DeepCollectionEquality().equals(other.emails, emails)));
   }
 
   @override
@@ -7485,8 +8532,7 @@ extension $UserCrimeDetailsScammingExtension on UserCrimeDetailsScamming {
       Wrapped<UserCrimeDetailsScamming$Payouts?>? payouts,
       Wrapped<UserCrimeDetailsScamming$Emails?>? emails}) {
     return UserCrimeDetailsScamming(
-        mostResponses:
-            (mostResponses != null ? mostResponses.value : this.mostResponses),
+        mostResponses: (mostResponses != null ? mostResponses.value : this.mostResponses),
         zones: (zones != null ? zones.value : this.zones),
         concerns: (concerns != null ? concerns.value : this.concerns),
         payouts: (payouts != null ? payouts.value : this.payouts),
@@ -7503,8 +8549,7 @@ class UserSubcrime {
     this.fail,
   });
 
-  factory UserSubcrime.fromJson(Map<String, dynamic> json) =>
-      _$UserSubcrimeFromJson(json);
+  factory UserSubcrime.fromJson(Map<String, dynamic> json) => _$UserSubcrimeFromJson(json);
 
   static const toJsonFactory = _$UserSubcrimeToJson;
   Map<String, dynamic> toJson() => _$UserSubcrimeToJson(this);
@@ -7523,15 +8568,10 @@ class UserSubcrime {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserSubcrime &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.total, total) ||
-                const DeepCollectionEquality().equals(other.total, total)) &&
-            (identical(other.success, success) ||
-                const DeepCollectionEquality()
-                    .equals(other.success, success)) &&
-            (identical(other.fail, fail) ||
-                const DeepCollectionEquality().equals(other.fail, fail)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.success, success) || const DeepCollectionEquality().equals(other.success, success)) &&
+            (identical(other.fail, fail) || const DeepCollectionEquality().equals(other.fail, fail)));
   }
 
   @override
@@ -7549,17 +8589,10 @@ class UserSubcrime {
 extension $UserSubcrimeExtension on UserSubcrime {
   UserSubcrime copyWith({int? id, int? total, int? success, int? fail}) {
     return UserSubcrime(
-        id: id ?? this.id,
-        total: total ?? this.total,
-        success: success ?? this.success,
-        fail: fail ?? this.fail);
+        id: id ?? this.id, total: total ?? this.total, success: success ?? this.success, fail: fail ?? this.fail);
   }
 
-  UserSubcrime copyWithWrapped(
-      {Wrapped<int?>? id,
-      Wrapped<int?>? total,
-      Wrapped<int?>? success,
-      Wrapped<int?>? fail}) {
+  UserSubcrime copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? total, Wrapped<int?>? success, Wrapped<int?>? fail}) {
     return UserSubcrime(
         id: (id != null ? id.value : this.id),
         total: (total != null ? total.value : this.total),
@@ -7575,8 +8608,7 @@ class UserCrimeRewardAmmo {
     this.special,
   });
 
-  factory UserCrimeRewardAmmo.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeRewardAmmoFromJson(json);
+  factory UserCrimeRewardAmmo.fromJson(Map<String, dynamic> json) => _$UserCrimeRewardAmmoFromJson(json);
 
   static const toJsonFactory = _$UserCrimeRewardAmmoToJson;
   Map<String, dynamic> toJson() => _$UserCrimeRewardAmmoToJson(this);
@@ -7591,11 +8623,8 @@ class UserCrimeRewardAmmo {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeRewardAmmo &&
-            (identical(other.standard, standard) ||
-                const DeepCollectionEquality()
-                    .equals(other.standard, standard)) &&
-            (identical(other.special, special) ||
-                const DeepCollectionEquality().equals(other.special, special)));
+            (identical(other.standard, standard) || const DeepCollectionEquality().equals(other.standard, standard)) &&
+            (identical(other.special, special) || const DeepCollectionEquality().equals(other.special, special)));
   }
 
   @override
@@ -7610,12 +8639,10 @@ class UserCrimeRewardAmmo {
 
 extension $UserCrimeRewardAmmoExtension on UserCrimeRewardAmmo {
   UserCrimeRewardAmmo copyWith({int? standard, int? special}) {
-    return UserCrimeRewardAmmo(
-        standard: standard ?? this.standard, special: special ?? this.special);
+    return UserCrimeRewardAmmo(standard: standard ?? this.standard, special: special ?? this.special);
   }
 
-  UserCrimeRewardAmmo copyWithWrapped(
-      {Wrapped<int?>? standard, Wrapped<int?>? special}) {
+  UserCrimeRewardAmmo copyWithWrapped({Wrapped<int?>? standard, Wrapped<int?>? special}) {
     return UserCrimeRewardAmmo(
         standard: (standard != null ? standard.value : this.standard),
         special: (special != null ? special.value : this.special));
@@ -7629,8 +8656,7 @@ class UserCrimeRewardItem {
     this.amount,
   });
 
-  factory UserCrimeRewardItem.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeRewardItemFromJson(json);
+  factory UserCrimeRewardItem.fromJson(Map<String, dynamic> json) => _$UserCrimeRewardItemFromJson(json);
 
   static const toJsonFactory = _$UserCrimeRewardItemToJson;
   Map<String, dynamic> toJson() => _$UserCrimeRewardItemToJson(this);
@@ -7645,10 +8671,8 @@ class UserCrimeRewardItem {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeRewardItem &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.amount, amount) ||
-                const DeepCollectionEquality().equals(other.amount, amount)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)));
   }
 
   @override
@@ -7656,22 +8680,17 @@ class UserCrimeRewardItem {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(id) ^
-      const DeepCollectionEquality().hash(amount) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(amount) ^ runtimeType.hashCode;
 }
 
 extension $UserCrimeRewardItemExtension on UserCrimeRewardItem {
   UserCrimeRewardItem copyWith({int? id, int? amount}) {
-    return UserCrimeRewardItem(
-        id: id ?? this.id, amount: amount ?? this.amount);
+    return UserCrimeRewardItem(id: id ?? this.id, amount: amount ?? this.amount);
   }
 
-  UserCrimeRewardItem copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<int?>? amount}) {
+  UserCrimeRewardItem copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? amount}) {
     return UserCrimeRewardItem(
-        id: (id != null ? id.value : this.id),
-        amount: (amount != null ? amount.value : this.amount));
+        id: (id != null ? id.value : this.id), amount: (amount != null ? amount.value : this.amount));
   }
 }
 
@@ -7683,8 +8702,7 @@ class UserCrimeRewards {
     this.items,
   });
 
-  factory UserCrimeRewards.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeRewardsFromJson(json);
+  factory UserCrimeRewards.fromJson(Map<String, dynamic> json) => _$UserCrimeRewardsFromJson(json);
 
   static const toJsonFactory = _$UserCrimeRewardsToJson;
   Map<String, dynamic> toJson() => _$UserCrimeRewardsToJson(this);
@@ -7701,12 +8719,9 @@ class UserCrimeRewards {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeRewards &&
-            (identical(other.money, money) ||
-                const DeepCollectionEquality().equals(other.money, money)) &&
-            (identical(other.ammo, ammo) ||
-                const DeepCollectionEquality().equals(other.ammo, ammo)) &&
-            (identical(other.items, items) ||
-                const DeepCollectionEquality().equals(other.items, items)));
+            (identical(other.money, money) || const DeepCollectionEquality().equals(other.money, money)) &&
+            (identical(other.ammo, ammo) || const DeepCollectionEquality().equals(other.ammo, ammo)) &&
+            (identical(other.items, items) || const DeepCollectionEquality().equals(other.items, items)));
   }
 
   @override
@@ -7721,20 +8736,12 @@ class UserCrimeRewards {
 }
 
 extension $UserCrimeRewardsExtension on UserCrimeRewards {
-  UserCrimeRewards copyWith(
-      {int? money,
-      UserCrimeRewardAmmo? ammo,
-      List<UserCrimeRewardItem>? items}) {
-    return UserCrimeRewards(
-        money: money ?? this.money,
-        ammo: ammo ?? this.ammo,
-        items: items ?? this.items);
+  UserCrimeRewards copyWith({int? money, UserCrimeRewardAmmo? ammo, List<UserCrimeRewardItem>? items}) {
+    return UserCrimeRewards(money: money ?? this.money, ammo: ammo ?? this.ammo, items: items ?? this.items);
   }
 
   UserCrimeRewards copyWithWrapped(
-      {Wrapped<int?>? money,
-      Wrapped<UserCrimeRewardAmmo?>? ammo,
-      Wrapped<List<UserCrimeRewardItem>?>? items}) {
+      {Wrapped<int?>? money, Wrapped<UserCrimeRewardAmmo?>? ammo, Wrapped<List<UserCrimeRewardItem>?>? items}) {
     return UserCrimeRewards(
         money: (money != null ? money.value : this.money),
         ammo: (ammo != null ? ammo.value : this.ammo),
@@ -7752,8 +8759,7 @@ class UserCrimeAttempts {
     this.subcrimes,
   });
 
-  factory UserCrimeAttempts.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeAttemptsFromJson(json);
+  factory UserCrimeAttempts.fromJson(Map<String, dynamic> json) => _$UserCrimeAttemptsFromJson(json);
 
   static const toJsonFactory = _$UserCrimeAttemptsToJson;
   Map<String, dynamic> toJson() => _$UserCrimeAttemptsToJson(this);
@@ -7774,19 +8780,13 @@ class UserCrimeAttempts {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeAttempts &&
-            (identical(other.total, total) ||
-                const DeepCollectionEquality().equals(other.total, total)) &&
-            (identical(other.success, success) ||
-                const DeepCollectionEquality()
-                    .equals(other.success, success)) &&
-            (identical(other.fail, fail) ||
-                const DeepCollectionEquality().equals(other.fail, fail)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.success, success) || const DeepCollectionEquality().equals(other.success, success)) &&
+            (identical(other.fail, fail) || const DeepCollectionEquality().equals(other.fail, fail)) &&
             (identical(other.criticalFail, criticalFail) ||
-                const DeepCollectionEquality()
-                    .equals(other.criticalFail, criticalFail)) &&
+                const DeepCollectionEquality().equals(other.criticalFail, criticalFail)) &&
             (identical(other.subcrimes, subcrimes) ||
-                const DeepCollectionEquality()
-                    .equals(other.subcrimes, subcrimes)));
+                const DeepCollectionEquality().equals(other.subcrimes, subcrimes)));
   }
 
   @override
@@ -7803,12 +8803,7 @@ class UserCrimeAttempts {
 }
 
 extension $UserCrimeAttemptsExtension on UserCrimeAttempts {
-  UserCrimeAttempts copyWith(
-      {int? total,
-      int? success,
-      int? fail,
-      int? criticalFail,
-      List<UserSubcrime>? subcrimes}) {
+  UserCrimeAttempts copyWith({int? total, int? success, int? fail, int? criticalFail, List<UserSubcrime>? subcrimes}) {
     return UserCrimeAttempts(
         total: total ?? this.total,
         success: success ?? this.success,
@@ -7827,8 +8822,7 @@ extension $UserCrimeAttemptsExtension on UserCrimeAttempts {
         total: (total != null ? total.value : this.total),
         success: (success != null ? success.value : this.success),
         fail: (fail != null ? fail.value : this.fail),
-        criticalFail:
-            (criticalFail != null ? criticalFail.value : this.criticalFail),
+        criticalFail: (criticalFail != null ? criticalFail.value : this.criticalFail),
         subcrimes: (subcrimes != null ? subcrimes.value : this.subcrimes));
   }
 }
@@ -7856,10 +8850,8 @@ class UserCrimeUniquesRewardMoney {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeUniquesRewardMoney &&
-            (identical(other.min, min) ||
-                const DeepCollectionEquality().equals(other.min, min)) &&
-            (identical(other.max, max) ||
-                const DeepCollectionEquality().equals(other.max, max)));
+            (identical(other.min, min) || const DeepCollectionEquality().equals(other.min, min)) &&
+            (identical(other.max, max) || const DeepCollectionEquality().equals(other.max, max)));
   }
 
   @override
@@ -7867,22 +8859,17 @@ class UserCrimeUniquesRewardMoney {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(min) ^
-      const DeepCollectionEquality().hash(max) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(min) ^ const DeepCollectionEquality().hash(max) ^ runtimeType.hashCode;
 }
 
 extension $UserCrimeUniquesRewardMoneyExtension on UserCrimeUniquesRewardMoney {
   UserCrimeUniquesRewardMoney copyWith({int? min, int? max}) {
-    return UserCrimeUniquesRewardMoney(
-        min: min ?? this.min, max: max ?? this.max);
+    return UserCrimeUniquesRewardMoney(min: min ?? this.min, max: max ?? this.max);
   }
 
-  UserCrimeUniquesRewardMoney copyWithWrapped(
-      {Wrapped<int?>? min, Wrapped<int?>? max}) {
+  UserCrimeUniquesRewardMoney copyWithWrapped({Wrapped<int?>? min, Wrapped<int?>? max}) {
     return UserCrimeUniquesRewardMoney(
-        min: (min != null ? min.value : this.min),
-        max: (max != null ? max.value : this.max));
+        min: (min != null ? min.value : this.min), max: (max != null ? max.value : this.max));
   }
 }
 
@@ -7893,8 +8880,7 @@ class UserCrimeUniquesRewardAmmo {
     this.type,
   });
 
-  factory UserCrimeUniquesRewardAmmo.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeUniquesRewardAmmoFromJson(json);
+  factory UserCrimeUniquesRewardAmmo.fromJson(Map<String, dynamic> json) => _$UserCrimeUniquesRewardAmmoFromJson(json);
 
   static const toJsonFactory = _$UserCrimeUniquesRewardAmmoToJson;
   Map<String, dynamic> toJson() => _$UserCrimeUniquesRewardAmmoToJson(this);
@@ -7913,10 +8899,8 @@ class UserCrimeUniquesRewardAmmo {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeUniquesRewardAmmo &&
-            (identical(other.amount, amount) ||
-                const DeepCollectionEquality().equals(other.amount, amount)) &&
-            (identical(other.type, type) ||
-                const DeepCollectionEquality().equals(other.type, type)));
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
+            (identical(other.type, type) || const DeepCollectionEquality().equals(other.type, type)));
   }
 
   @override
@@ -7924,24 +8908,18 @@ class UserCrimeUniquesRewardAmmo {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(amount) ^
-      const DeepCollectionEquality().hash(type) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(amount) ^ const DeepCollectionEquality().hash(type) ^ runtimeType.hashCode;
 }
 
 extension $UserCrimeUniquesRewardAmmoExtension on UserCrimeUniquesRewardAmmo {
-  UserCrimeUniquesRewardAmmo copyWith(
-      {int? amount, enums.UserCrimeUniquesRewardAmmoEnum? type}) {
-    return UserCrimeUniquesRewardAmmo(
-        amount: amount ?? this.amount, type: type ?? this.type);
+  UserCrimeUniquesRewardAmmo copyWith({int? amount, enums.UserCrimeUniquesRewardAmmoEnum? type}) {
+    return UserCrimeUniquesRewardAmmo(amount: amount ?? this.amount, type: type ?? this.type);
   }
 
   UserCrimeUniquesRewardAmmo copyWithWrapped(
-      {Wrapped<int?>? amount,
-      Wrapped<enums.UserCrimeUniquesRewardAmmoEnum?>? type}) {
+      {Wrapped<int?>? amount, Wrapped<enums.UserCrimeUniquesRewardAmmoEnum?>? type}) {
     return UserCrimeUniquesRewardAmmo(
-        amount: (amount != null ? amount.value : this.amount),
-        type: (type != null ? type.value : this.type));
+        amount: (amount != null ? amount.value : this.amount), type: (type != null ? type.value : this.type));
   }
 }
 
@@ -7953,8 +8931,7 @@ class UserCrimeUniquesReward {
     this.ammo,
   });
 
-  factory UserCrimeUniquesReward.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeUniquesRewardFromJson(json);
+  factory UserCrimeUniquesReward.fromJson(Map<String, dynamic> json) => _$UserCrimeUniquesRewardFromJson(json);
 
   static const toJsonFactory = _$UserCrimeUniquesRewardToJson;
   Map<String, dynamic> toJson() => _$UserCrimeUniquesRewardToJson(this);
@@ -7971,12 +8948,9 @@ class UserCrimeUniquesReward {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeUniquesReward &&
-            (identical(other.items, items) ||
-                const DeepCollectionEquality().equals(other.items, items)) &&
-            (identical(other.money, money) ||
-                const DeepCollectionEquality().equals(other.money, money)) &&
-            (identical(other.ammo, ammo) ||
-                const DeepCollectionEquality().equals(other.ammo, ammo)));
+            (identical(other.items, items) || const DeepCollectionEquality().equals(other.items, items)) &&
+            (identical(other.money, money) || const DeepCollectionEquality().equals(other.money, money)) &&
+            (identical(other.ammo, ammo) || const DeepCollectionEquality().equals(other.ammo, ammo)));
   }
 
   @override
@@ -7992,13 +8966,8 @@ class UserCrimeUniquesReward {
 
 extension $UserCrimeUniquesRewardExtension on UserCrimeUniquesReward {
   UserCrimeUniquesReward copyWith(
-      {List<UserCrimeRewardItem>? items,
-      UserCrimeUniquesRewardMoney? money,
-      UserCrimeUniquesRewardAmmo? ammo}) {
-    return UserCrimeUniquesReward(
-        items: items ?? this.items,
-        money: money ?? this.money,
-        ammo: ammo ?? this.ammo);
+      {List<UserCrimeRewardItem>? items, UserCrimeUniquesRewardMoney? money, UserCrimeUniquesRewardAmmo? ammo}) {
+    return UserCrimeUniquesReward(items: items ?? this.items, money: money ?? this.money, ammo: ammo ?? this.ammo);
   }
 
   UserCrimeUniquesReward copyWithWrapped(
@@ -8019,8 +8988,7 @@ class UserCrimeUniques {
     this.rewards,
   });
 
-  factory UserCrimeUniques.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeUniquesFromJson(json);
+  factory UserCrimeUniques.fromJson(Map<String, dynamic> json) => _$UserCrimeUniquesFromJson(json);
 
   static const toJsonFactory = _$UserCrimeUniquesToJson;
   Map<String, dynamic> toJson() => _$UserCrimeUniquesToJson(this);
@@ -8035,10 +9003,8 @@ class UserCrimeUniques {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeUniques &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.rewards, rewards) ||
-                const DeepCollectionEquality().equals(other.rewards, rewards)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.rewards, rewards) || const DeepCollectionEquality().equals(other.rewards, rewards)));
   }
 
   @override
@@ -8046,65 +9012,56 @@ class UserCrimeUniques {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(id) ^
-      const DeepCollectionEquality().hash(rewards) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(rewards) ^ runtimeType.hashCode;
 }
 
 extension $UserCrimeUniquesExtension on UserCrimeUniques {
   UserCrimeUniques copyWith({int? id, List<UserCrimeUniquesReward>? rewards}) {
-    return UserCrimeUniques(
-        id: id ?? this.id, rewards: rewards ?? this.rewards);
+    return UserCrimeUniques(id: id ?? this.id, rewards: rewards ?? this.rewards);
   }
 
-  UserCrimeUniques copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<List<UserCrimeUniquesReward>?>? rewards}) {
+  UserCrimeUniques copyWithWrapped({Wrapped<int?>? id, Wrapped<List<UserCrimeUniquesReward>?>? rewards}) {
     return UserCrimeUniques(
-        id: (id != null ? id.value : this.id),
-        rewards: (rewards != null ? rewards.value : this.rewards));
+        id: (id != null ? id.value : this.id), rewards: (rewards != null ? rewards.value : this.rewards));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class UserCrimeDetails {
-  const UserCrimeDetails({
+class UserCrimesResponse {
+  const UserCrimesResponse({
     this.crimes,
   });
 
-  factory UserCrimeDetails.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeDetailsFromJson(json);
+  factory UserCrimesResponse.fromJson(Map<String, dynamic> json) => _$UserCrimesResponseFromJson(json);
 
-  static const toJsonFactory = _$UserCrimeDetailsToJson;
-  Map<String, dynamic> toJson() => _$UserCrimeDetailsToJson(this);
+  static const toJsonFactory = _$UserCrimesResponseToJson;
+  Map<String, dynamic> toJson() => _$UserCrimesResponseToJson(this);
 
   @JsonKey(name: 'crimes')
   final UserCrime? crimes;
-  static const fromJsonFactory = _$UserCrimeDetailsFromJson;
+  static const fromJsonFactory = _$UserCrimesResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is UserCrimeDetails &&
-            (identical(other.crimes, crimes) ||
-                const DeepCollectionEquality().equals(other.crimes, crimes)));
+        (other is UserCrimesResponse &&
+            (identical(other.crimes, crimes) || const DeepCollectionEquality().equals(other.crimes, crimes)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(crimes) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(crimes) ^ runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsExtension on UserCrimeDetails {
-  UserCrimeDetails copyWith({UserCrime? crimes}) {
-    return UserCrimeDetails(crimes: crimes ?? this.crimes);
+extension $UserCrimesResponseExtension on UserCrimesResponse {
+  UserCrimesResponse copyWith({UserCrime? crimes}) {
+    return UserCrimesResponse(crimes: crimes ?? this.crimes);
   }
 
-  UserCrimeDetails copyWithWrapped({Wrapped<UserCrime?>? crimes}) {
-    return UserCrimeDetails(
-        crimes: (crimes != null ? crimes.value : this.crimes));
+  UserCrimesResponse copyWithWrapped({Wrapped<UserCrime?>? crimes}) {
+    return UserCrimesResponse(crimes: (crimes != null ? crimes.value : this.crimes));
   }
 }
 
@@ -8121,8 +9078,7 @@ class UserCrime {
     this.miscellaneous,
   });
 
-  factory UserCrime.fromJson(Map<String, dynamic> json) =>
-      _$UserCrimeFromJson(json);
+  factory UserCrime.fromJson(Map<String, dynamic> json) => _$UserCrimeFromJson(json);
 
   static const toJsonFactory = _$UserCrimeToJson;
   Map<String, dynamic> toJson() => _$UserCrimeToJson(this);
@@ -8151,28 +9107,17 @@ class UserCrime {
     return identical(this, other) ||
         (other is UserCrime &&
             (identical(other.nerveSpent, nerveSpent) ||
-                const DeepCollectionEquality()
-                    .equals(other.nerveSpent, nerveSpent)) &&
-            (identical(other.skill, skill) ||
-                const DeepCollectionEquality().equals(other.skill, skill)) &&
+                const DeepCollectionEquality().equals(other.nerveSpent, nerveSpent)) &&
+            (identical(other.skill, skill) || const DeepCollectionEquality().equals(other.skill, skill)) &&
             (identical(other.progressionBonus, progressionBonus) ||
-                const DeepCollectionEquality()
-                    .equals(other.progressionBonus, progressionBonus)) &&
+                const DeepCollectionEquality().equals(other.progressionBonus, progressionBonus)) &&
             (identical(other.achievedUniques, achievedUniques) ||
-                const DeepCollectionEquality()
-                    .equals(other.achievedUniques, achievedUniques)) &&
-            (identical(other.rewards, rewards) ||
-                const DeepCollectionEquality()
-                    .equals(other.rewards, rewards)) &&
-            (identical(other.attempts, attempts) ||
-                const DeepCollectionEquality()
-                    .equals(other.attempts, attempts)) &&
-            (identical(other.uniques, uniques) ||
-                const DeepCollectionEquality()
-                    .equals(other.uniques, uniques)) &&
+                const DeepCollectionEquality().equals(other.achievedUniques, achievedUniques)) &&
+            (identical(other.rewards, rewards) || const DeepCollectionEquality().equals(other.rewards, rewards)) &&
+            (identical(other.attempts, attempts) || const DeepCollectionEquality().equals(other.attempts, attempts)) &&
+            (identical(other.uniques, uniques) || const DeepCollectionEquality().equals(other.uniques, uniques)) &&
             (identical(other.miscellaneous, miscellaneous) ||
-                const DeepCollectionEquality()
-                    .equals(other.miscellaneous, miscellaneous)));
+                const DeepCollectionEquality().equals(other.miscellaneous, miscellaneous)));
   }
 
   @override
@@ -8224,17 +9169,59 @@ extension $UserCrimeExtension on UserCrime {
     return UserCrime(
         nerveSpent: (nerveSpent != null ? nerveSpent.value : this.nerveSpent),
         skill: (skill != null ? skill.value : this.skill),
-        progressionBonus: (progressionBonus != null
-            ? progressionBonus.value
-            : this.progressionBonus),
-        achievedUniques: (achievedUniques != null
-            ? achievedUniques.value
-            : this.achievedUniques),
+        progressionBonus: (progressionBonus != null ? progressionBonus.value : this.progressionBonus),
+        achievedUniques: (achievedUniques != null ? achievedUniques.value : this.achievedUniques),
         rewards: (rewards != null ? rewards.value : this.rewards),
         attempts: (attempts != null ? attempts.value : this.attempts),
         uniques: (uniques != null ? uniques.value : this.uniques),
-        miscellaneous:
-            (miscellaneous != null ? miscellaneous.value : this.miscellaneous));
+        miscellaneous: (miscellaneous != null ? miscellaneous.value : this.miscellaneous));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserRacesResponse {
+  const UserRacesResponse({
+    this.races,
+    this.metadata,
+  });
+
+  factory UserRacesResponse.fromJson(Map<String, dynamic> json) => _$UserRacesResponseFromJson(json);
+
+  static const toJsonFactory = _$UserRacesResponseToJson;
+  Map<String, dynamic> toJson() => _$UserRacesResponseToJson(this);
+
+  @JsonKey(name: 'races', defaultValue: <RacingRaceDetailsResponse>[])
+  final List<RacingRaceDetailsResponse>? races;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$UserRacesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserRacesResponse &&
+            (identical(other.races, races) || const DeepCollectionEquality().equals(other.races, races)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(races) ^ const DeepCollectionEquality().hash(metadata) ^ runtimeType.hashCode;
+}
+
+extension $UserRacesResponseExtension on UserRacesResponse {
+  UserRacesResponse copyWith({List<RacingRaceDetailsResponse>? races, RequestMetadataWithLinks? metadata}) {
+    return UserRacesResponse(races: races ?? this.races, metadata: metadata ?? this.metadata);
+  }
+
+  UserRacesResponse copyWithWrapped(
+      {Wrapped<List<RacingRaceDetailsResponse>?>? races, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return UserRacesResponse(
+        races: (races != null ? races.value : this.races),
+        metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
 
@@ -8261,8 +9248,7 @@ class UserRaceCarDetails {
     this.$class,
   });
 
-  factory UserRaceCarDetails.fromJson(Map<String, dynamic> json) =>
-      _$UserRaceCarDetailsFromJson(json);
+  factory UserRaceCarDetails.fromJson(Map<String, dynamic> json) => _$UserRaceCarDetailsFromJson(json);
 
   static const toJsonFactory = _$UserRaceCarDetailsToJson;
   Map<String, dynamic> toJson() => _$UserRaceCarDetailsToJson(this);
@@ -8313,52 +9299,30 @@ class UserRaceCarDetails {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserRaceCarDetails &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.worth, worth) ||
-                const DeepCollectionEquality().equals(other.worth, worth)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.worth, worth) || const DeepCollectionEquality().equals(other.worth, worth)) &&
             (identical(other.pointsSpent, pointsSpent) ||
-                const DeepCollectionEquality()
-                    .equals(other.pointsSpent, pointsSpent)) &&
+                const DeepCollectionEquality().equals(other.pointsSpent, pointsSpent)) &&
             (identical(other.racesEntered, racesEntered) ||
-                const DeepCollectionEquality()
-                    .equals(other.racesEntered, racesEntered)) &&
-            (identical(other.racesWon, racesWon) ||
-                const DeepCollectionEquality()
-                    .equals(other.racesWon, racesWon)) &&
+                const DeepCollectionEquality().equals(other.racesEntered, racesEntered)) &&
+            (identical(other.racesWon, racesWon) || const DeepCollectionEquality().equals(other.racesWon, racesWon)) &&
             (identical(other.isRemoved, isRemoved) ||
-                const DeepCollectionEquality()
-                    .equals(other.isRemoved, isRemoved)) &&
-            (identical(other.parts, parts) ||
-                const DeepCollectionEquality().equals(other.parts, parts)) &&
+                const DeepCollectionEquality().equals(other.isRemoved, isRemoved)) &&
+            (identical(other.parts, parts) || const DeepCollectionEquality().equals(other.parts, parts)) &&
             (identical(other.carItemId, carItemId) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemId, carItemId)) &&
+                const DeepCollectionEquality().equals(other.carItemId, carItemId)) &&
             (identical(other.carItemName, carItemName) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemName, carItemName)) &&
-            (identical(other.topSpeed, topSpeed) ||
-                const DeepCollectionEquality()
-                    .equals(other.topSpeed, topSpeed)) &&
+                const DeepCollectionEquality().equals(other.carItemName, carItemName)) &&
+            (identical(other.topSpeed, topSpeed) || const DeepCollectionEquality().equals(other.topSpeed, topSpeed)) &&
             (identical(other.acceleration, acceleration) ||
-                const DeepCollectionEquality()
-                    .equals(other.acceleration, acceleration)) &&
-            (identical(other.braking, braking) ||
-                const DeepCollectionEquality()
-                    .equals(other.braking, braking)) &&
-            (identical(other.dirt, dirt) ||
-                const DeepCollectionEquality().equals(other.dirt, dirt)) &&
-            (identical(other.handling, handling) ||
-                const DeepCollectionEquality()
-                    .equals(other.handling, handling)) &&
-            (identical(other.safety, safety) ||
-                const DeepCollectionEquality().equals(other.safety, safety)) &&
-            (identical(other.tarmac, tarmac) ||
-                const DeepCollectionEquality().equals(other.tarmac, tarmac)) &&
-            (identical(other.$class, $class) ||
-                const DeepCollectionEquality().equals(other.$class, $class)));
+                const DeepCollectionEquality().equals(other.acceleration, acceleration)) &&
+            (identical(other.braking, braking) || const DeepCollectionEquality().equals(other.braking, braking)) &&
+            (identical(other.dirt, dirt) || const DeepCollectionEquality().equals(other.dirt, dirt)) &&
+            (identical(other.handling, handling) || const DeepCollectionEquality().equals(other.handling, handling)) &&
+            (identical(other.safety, safety) || const DeepCollectionEquality().equals(other.safety, safety)) &&
+            (identical(other.tarmac, tarmac) || const DeepCollectionEquality().equals(other.tarmac, tarmac)) &&
+            (identical(other.$class, $class) || const DeepCollectionEquality().equals(other.$class, $class)));
   }
 
   @override
@@ -8451,19 +9415,15 @@ extension $UserRaceCarDetailsExtension on UserRaceCarDetails {
         id: (id != null ? id.value : this.id),
         name: (name != null ? name.value : this.name),
         worth: (worth != null ? worth.value : this.worth),
-        pointsSpent:
-            (pointsSpent != null ? pointsSpent.value : this.pointsSpent),
-        racesEntered:
-            (racesEntered != null ? racesEntered.value : this.racesEntered),
+        pointsSpent: (pointsSpent != null ? pointsSpent.value : this.pointsSpent),
+        racesEntered: (racesEntered != null ? racesEntered.value : this.racesEntered),
         racesWon: (racesWon != null ? racesWon.value : this.racesWon),
         isRemoved: (isRemoved != null ? isRemoved.value : this.isRemoved),
         parts: (parts != null ? parts.value : this.parts),
         carItemId: (carItemId != null ? carItemId.value : this.carItemId),
-        carItemName:
-            (carItemName != null ? carItemName.value : this.carItemName),
+        carItemName: (carItemName != null ? carItemName.value : this.carItemName),
         topSpeed: (topSpeed != null ? topSpeed.value : this.topSpeed),
-        acceleration:
-            (acceleration != null ? acceleration.value : this.acceleration),
+        acceleration: (acceleration != null ? acceleration.value : this.acceleration),
         braking: (braking != null ? braking.value : this.braking),
         dirt: (dirt != null ? dirt.value : this.dirt),
         handling: (handling != null ? handling.value : this.handling),
@@ -8474,14 +9434,299 @@ extension $UserRaceCarDetailsExtension on UserRaceCarDetails {
 }
 
 @JsonSerializable(explicitToJson: true)
+class UserEnlistedCarsResponse {
+  const UserEnlistedCarsResponse({
+    this.enlistedcars,
+  });
+
+  factory UserEnlistedCarsResponse.fromJson(Map<String, dynamic> json) => _$UserEnlistedCarsResponseFromJson(json);
+
+  static const toJsonFactory = _$UserEnlistedCarsResponseToJson;
+  Map<String, dynamic> toJson() => _$UserEnlistedCarsResponseToJson(this);
+
+  @JsonKey(name: 'enlistedcars', defaultValue: <UserRaceCarDetails>[])
+  final List<UserRaceCarDetails>? enlistedcars;
+  static const fromJsonFactory = _$UserEnlistedCarsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserEnlistedCarsResponse &&
+            (identical(other.enlistedcars, enlistedcars) ||
+                const DeepCollectionEquality().equals(other.enlistedcars, enlistedcars)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(enlistedcars) ^ runtimeType.hashCode;
+}
+
+extension $UserEnlistedCarsResponseExtension on UserEnlistedCarsResponse {
+  UserEnlistedCarsResponse copyWith({List<UserRaceCarDetails>? enlistedcars}) {
+    return UserEnlistedCarsResponse(enlistedcars: enlistedcars ?? this.enlistedcars);
+  }
+
+  UserEnlistedCarsResponse copyWithWrapped({Wrapped<List<UserRaceCarDetails>?>? enlistedcars}) {
+    return UserEnlistedCarsResponse(enlistedcars: (enlistedcars != null ? enlistedcars.value : this.enlistedcars));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserForumPostsResponse {
+  const UserForumPostsResponse({
+    this.forumPosts,
+    this.links,
+    this.metadata,
+  });
+
+  factory UserForumPostsResponse.fromJson(Map<String, dynamic> json) => _$UserForumPostsResponseFromJson(json);
+
+  static const toJsonFactory = _$UserForumPostsResponseToJson;
+  Map<String, dynamic> toJson() => _$UserForumPostsResponseToJson(this);
+
+  @JsonKey(name: 'forumPosts', defaultValue: <ForumPost>[])
+  final List<ForumPost>? forumPosts;
+  @JsonKey(name: '_links')
+  final RequestLinks? links;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$UserForumPostsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserForumPostsResponse &&
+            (identical(other.forumPosts, forumPosts) ||
+                const DeepCollectionEquality().equals(other.forumPosts, forumPosts)) &&
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(forumPosts) ^
+      const DeepCollectionEquality().hash(links) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $UserForumPostsResponseExtension on UserForumPostsResponse {
+  UserForumPostsResponse copyWith(
+      {List<ForumPost>? forumPosts, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+    return UserForumPostsResponse(
+        forumPosts: forumPosts ?? this.forumPosts, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  }
+
+  UserForumPostsResponse copyWithWrapped(
+      {Wrapped<List<ForumPost>?>? forumPosts,
+      Wrapped<RequestLinks?>? links,
+      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return UserForumPostsResponse(
+        forumPosts: (forumPosts != null ? forumPosts.value : this.forumPosts),
+        links: (links != null ? links.value : this.links),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserForumThreadsResponse {
+  const UserForumThreadsResponse({
+    this.forumThreads,
+    this.links,
+    this.metadata,
+  });
+
+  factory UserForumThreadsResponse.fromJson(Map<String, dynamic> json) => _$UserForumThreadsResponseFromJson(json);
+
+  static const toJsonFactory = _$UserForumThreadsResponseToJson;
+  Map<String, dynamic> toJson() => _$UserForumThreadsResponseToJson(this);
+
+  @JsonKey(name: 'forumThreads', defaultValue: <ForumThreadUserExtended>[])
+  final List<ForumThreadUserExtended>? forumThreads;
+  @JsonKey(name: '_links')
+  final RequestLinks? links;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$UserForumThreadsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserForumThreadsResponse &&
+            (identical(other.forumThreads, forumThreads) ||
+                const DeepCollectionEquality().equals(other.forumThreads, forumThreads)) &&
+            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(forumThreads) ^
+      const DeepCollectionEquality().hash(links) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $UserForumThreadsResponseExtension on UserForumThreadsResponse {
+  UserForumThreadsResponse copyWith(
+      {List<ForumThreadUserExtended>? forumThreads, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+    return UserForumThreadsResponse(
+        forumThreads: forumThreads ?? this.forumThreads,
+        links: links ?? this.links,
+        metadata: metadata ?? this.metadata);
+  }
+
+  UserForumThreadsResponse copyWithWrapped(
+      {Wrapped<List<ForumThreadUserExtended>?>? forumThreads,
+      Wrapped<RequestLinks?>? links,
+      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return UserForumThreadsResponse(
+        forumThreads: (forumThreads != null ? forumThreads.value : this.forumThreads),
+        links: (links != null ? links.value : this.links),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserForumSubscribedThreadsResponse {
+  const UserForumSubscribedThreadsResponse({
+    this.forumSubscribedThreads,
+  });
+
+  factory UserForumSubscribedThreadsResponse.fromJson(Map<String, dynamic> json) =>
+      _$UserForumSubscribedThreadsResponseFromJson(json);
+
+  static const toJsonFactory = _$UserForumSubscribedThreadsResponseToJson;
+  Map<String, dynamic> toJson() => _$UserForumSubscribedThreadsResponseToJson(this);
+
+  @JsonKey(name: 'forumSubscribedThreads', defaultValue: <ForumSubscribedThread>[])
+  final List<ForumSubscribedThread>? forumSubscribedThreads;
+  static const fromJsonFactory = _$UserForumSubscribedThreadsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserForumSubscribedThreadsResponse &&
+            (identical(other.forumSubscribedThreads, forumSubscribedThreads) ||
+                const DeepCollectionEquality().equals(other.forumSubscribedThreads, forumSubscribedThreads)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(forumSubscribedThreads) ^ runtimeType.hashCode;
+}
+
+extension $UserForumSubscribedThreadsResponseExtension on UserForumSubscribedThreadsResponse {
+  UserForumSubscribedThreadsResponse copyWith({List<ForumSubscribedThread>? forumSubscribedThreads}) {
+    return UserForumSubscribedThreadsResponse(
+        forumSubscribedThreads: forumSubscribedThreads ?? this.forumSubscribedThreads);
+  }
+
+  UserForumSubscribedThreadsResponse copyWithWrapped({Wrapped<List<ForumSubscribedThread>?>? forumSubscribedThreads}) {
+    return UserForumSubscribedThreadsResponse(
+        forumSubscribedThreads:
+            (forumSubscribedThreads != null ? forumSubscribedThreads.value : this.forumSubscribedThreads));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserForumFeedResponse {
+  const UserForumFeedResponse({
+    this.forumFeed,
+  });
+
+  factory UserForumFeedResponse.fromJson(Map<String, dynamic> json) => _$UserForumFeedResponseFromJson(json);
+
+  static const toJsonFactory = _$UserForumFeedResponseToJson;
+  Map<String, dynamic> toJson() => _$UserForumFeedResponseToJson(this);
+
+  @JsonKey(name: 'forumFeed', defaultValue: <ForumFeed>[])
+  final List<ForumFeed>? forumFeed;
+  static const fromJsonFactory = _$UserForumFeedResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserForumFeedResponse &&
+            (identical(other.forumFeed, forumFeed) ||
+                const DeepCollectionEquality().equals(other.forumFeed, forumFeed)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(forumFeed) ^ runtimeType.hashCode;
+}
+
+extension $UserForumFeedResponseExtension on UserForumFeedResponse {
+  UserForumFeedResponse copyWith({List<ForumFeed>? forumFeed}) {
+    return UserForumFeedResponse(forumFeed: forumFeed ?? this.forumFeed);
+  }
+
+  UserForumFeedResponse copyWithWrapped({Wrapped<List<ForumFeed>?>? forumFeed}) {
+    return UserForumFeedResponse(forumFeed: (forumFeed != null ? forumFeed.value : this.forumFeed));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserForumFriendsResponse {
+  const UserForumFriendsResponse({
+    this.forumFriends,
+  });
+
+  factory UserForumFriendsResponse.fromJson(Map<String, dynamic> json) => _$UserForumFriendsResponseFromJson(json);
+
+  static const toJsonFactory = _$UserForumFriendsResponseToJson;
+  Map<String, dynamic> toJson() => _$UserForumFriendsResponseToJson(this);
+
+  @JsonKey(name: 'forumFriends', defaultValue: <ForumFeed>[])
+  final List<ForumFeed>? forumFriends;
+  static const fromJsonFactory = _$UserForumFriendsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserForumFriendsResponse &&
+            (identical(other.forumFriends, forumFriends) ||
+                const DeepCollectionEquality().equals(other.forumFriends, forumFriends)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(forumFriends) ^ runtimeType.hashCode;
+}
+
+extension $UserForumFriendsResponseExtension on UserForumFriendsResponse {
+  UserForumFriendsResponse copyWith({List<ForumFeed>? forumFriends}) {
+    return UserForumFriendsResponse(forumFriends: forumFriends ?? this.forumFriends);
+  }
+
+  UserForumFriendsResponse copyWithWrapped({Wrapped<List<ForumFeed>?>? forumFriends}) {
+    return UserForumFriendsResponse(forumFriends: (forumFriends != null ? forumFriends.value : this.forumFriends));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class HofValue {
   const HofValue({
     this.$value,
     this.rank,
   });
 
-  factory HofValue.fromJson(Map<String, dynamic> json) =>
-      _$HofValueFromJson(json);
+  factory HofValue.fromJson(Map<String, dynamic> json) => _$HofValueFromJson(json);
 
   static const toJsonFactory = _$HofValueToJson;
   Map<String, dynamic> toJson() => _$HofValueToJson(this);
@@ -8496,10 +9741,8 @@ class HofValue {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is HofValue &&
-            (identical(other.$value, $value) ||
-                const DeepCollectionEquality().equals(other.$value, $value)) &&
-            (identical(other.rank, rank) ||
-                const DeepCollectionEquality().equals(other.rank, rank)));
+            (identical(other.$value, $value) || const DeepCollectionEquality().equals(other.$value, $value)) &&
+            (identical(other.rank, rank) || const DeepCollectionEquality().equals(other.rank, rank)));
   }
 
   @override
@@ -8507,9 +9750,7 @@ class HofValue {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash($value) ^
-      const DeepCollectionEquality().hash(rank) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash($value) ^ const DeepCollectionEquality().hash(rank) ^ runtimeType.hashCode;
 }
 
 extension $HofValueExtension on HofValue {
@@ -8519,8 +9760,7 @@ extension $HofValueExtension on HofValue {
 
   HofValue copyWithWrapped({Wrapped<int?>? $value, Wrapped<int?>? rank}) {
     return HofValue(
-        $value: ($value != null ? $value.value : this.$value),
-        rank: (rank != null ? rank.value : this.rank));
+        $value: ($value != null ? $value.value : this.$value), rank: (rank != null ? rank.value : this.rank));
   }
 }
 
@@ -8531,8 +9771,7 @@ class HofValueString {
     this.rank,
   });
 
-  factory HofValueString.fromJson(Map<String, dynamic> json) =>
-      _$HofValueStringFromJson(json);
+  factory HofValueString.fromJson(Map<String, dynamic> json) => _$HofValueStringFromJson(json);
 
   static const toJsonFactory = _$HofValueStringToJson;
   Map<String, dynamic> toJson() => _$HofValueStringToJson(this);
@@ -8547,10 +9786,8 @@ class HofValueString {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is HofValueString &&
-            (identical(other.$value, $value) ||
-                const DeepCollectionEquality().equals(other.$value, $value)) &&
-            (identical(other.rank, rank) ||
-                const DeepCollectionEquality().equals(other.rank, rank)));
+            (identical(other.$value, $value) || const DeepCollectionEquality().equals(other.$value, $value)) &&
+            (identical(other.rank, rank) || const DeepCollectionEquality().equals(other.rank, rank)));
   }
 
   @override
@@ -8558,22 +9795,17 @@ class HofValueString {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash($value) ^
-      const DeepCollectionEquality().hash(rank) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash($value) ^ const DeepCollectionEquality().hash(rank) ^ runtimeType.hashCode;
 }
 
 extension $HofValueStringExtension on HofValueString {
   HofValueString copyWith({String? $value, int? rank}) {
-    return HofValueString(
-        $value: $value ?? this.$value, rank: rank ?? this.rank);
+    return HofValueString($value: $value ?? this.$value, rank: rank ?? this.rank);
   }
 
-  HofValueString copyWithWrapped(
-      {Wrapped<String?>? $value, Wrapped<int?>? rank}) {
+  HofValueString copyWithWrapped({Wrapped<String?>? $value, Wrapped<int?>? rank}) {
     return HofValueString(
-        $value: ($value != null ? $value.value : this.$value),
-        rank: (rank != null ? rank.value : this.rank));
+        $value: ($value != null ? $value.value : this.$value), rank: (rank != null ? rank.value : this.rank));
   }
 }
 
@@ -8597,8 +9829,7 @@ class UserHofStats {
     this.battleStats,
   });
 
-  factory UserHofStats.fromJson(Map<String, dynamic> json) =>
-      _$UserHofStatsFromJson(json);
+  factory UserHofStats.fromJson(Map<String, dynamic> json) => _$UserHofStatsFromJson(json);
 
   static const toJsonFactory = _$UserHofStatsToJson;
   Map<String, dynamic> toJson() => _$UserHofStatsToJson(this);
@@ -8639,47 +9870,27 @@ class UserHofStats {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserHofStats &&
-            (identical(other.attacks, attacks) ||
-                const DeepCollectionEquality()
-                    .equals(other.attacks, attacks)) &&
-            (identical(other.busts, busts) ||
-                const DeepCollectionEquality().equals(other.busts, busts)) &&
-            (identical(other.defends, defends) ||
-                const DeepCollectionEquality()
-                    .equals(other.defends, defends)) &&
-            (identical(other.networth, networth) ||
-                const DeepCollectionEquality()
-                    .equals(other.networth, networth)) &&
-            (identical(other.offences, offences) ||
-                const DeepCollectionEquality()
-                    .equals(other.offences, offences)) &&
-            (identical(other.revives, revives) ||
-                const DeepCollectionEquality()
-                    .equals(other.revives, revives)) &&
-            (identical(other.level, level) ||
-                const DeepCollectionEquality().equals(other.level, level)) &&
-            (identical(other.rank, rank) ||
-                const DeepCollectionEquality().equals(other.rank, rank)) &&
-            (identical(other.awards, awards) ||
-                const DeepCollectionEquality().equals(other.awards, awards)) &&
+            (identical(other.attacks, attacks) || const DeepCollectionEquality().equals(other.attacks, attacks)) &&
+            (identical(other.busts, busts) || const DeepCollectionEquality().equals(other.busts, busts)) &&
+            (identical(other.defends, defends) || const DeepCollectionEquality().equals(other.defends, defends)) &&
+            (identical(other.networth, networth) || const DeepCollectionEquality().equals(other.networth, networth)) &&
+            (identical(other.offences, offences) || const DeepCollectionEquality().equals(other.offences, offences)) &&
+            (identical(other.revives, revives) || const DeepCollectionEquality().equals(other.revives, revives)) &&
+            (identical(other.level, level) || const DeepCollectionEquality().equals(other.level, level)) &&
+            (identical(other.rank, rank) || const DeepCollectionEquality().equals(other.rank, rank)) &&
+            (identical(other.awards, awards) || const DeepCollectionEquality().equals(other.awards, awards)) &&
             (identical(other.racingSkill, racingSkill) ||
-                const DeepCollectionEquality()
-                    .equals(other.racingSkill, racingSkill)) &&
+                const DeepCollectionEquality().equals(other.racingSkill, racingSkill)) &&
             (identical(other.racingPoints, racingPoints) ||
-                const DeepCollectionEquality()
-                    .equals(other.racingPoints, racingPoints)) &&
+                const DeepCollectionEquality().equals(other.racingPoints, racingPoints)) &&
             (identical(other.racingWins, racingWins) ||
-                const DeepCollectionEquality()
-                    .equals(other.racingWins, racingWins)) &&
+                const DeepCollectionEquality().equals(other.racingWins, racingWins)) &&
             (identical(other.travelTime, travelTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.travelTime, travelTime)) &&
+                const DeepCollectionEquality().equals(other.travelTime, travelTime)) &&
             (identical(other.workingStats, workingStats) ||
-                const DeepCollectionEquality()
-                    .equals(other.workingStats, workingStats)) &&
+                const DeepCollectionEquality().equals(other.workingStats, workingStats)) &&
             (identical(other.battleStats, battleStats) ||
-                const DeepCollectionEquality()
-                    .equals(other.battleStats, battleStats)));
+                const DeepCollectionEquality().equals(other.battleStats, battleStats)));
   }
 
   @override
@@ -8766,16 +9977,51 @@ extension $UserHofStatsExtension on UserHofStats {
         level: (level != null ? level.value : this.level),
         rank: (rank != null ? rank.value : this.rank),
         awards: (awards != null ? awards.value : this.awards),
-        racingSkill:
-            (racingSkill != null ? racingSkill.value : this.racingSkill),
-        racingPoints:
-            (racingPoints != null ? racingPoints.value : this.racingPoints),
+        racingSkill: (racingSkill != null ? racingSkill.value : this.racingSkill),
+        racingPoints: (racingPoints != null ? racingPoints.value : this.racingPoints),
         racingWins: (racingWins != null ? racingWins.value : this.racingWins),
         travelTime: (travelTime != null ? travelTime.value : this.travelTime),
-        workingStats:
-            (workingStats != null ? workingStats.value : this.workingStats),
-        battleStats:
-            (battleStats != null ? battleStats.value : this.battleStats));
+        workingStats: (workingStats != null ? workingStats.value : this.workingStats),
+        battleStats: (battleStats != null ? battleStats.value : this.battleStats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserHofResponse {
+  const UserHofResponse({
+    this.hof,
+  });
+
+  factory UserHofResponse.fromJson(Map<String, dynamic> json) => _$UserHofResponseFromJson(json);
+
+  static const toJsonFactory = _$UserHofResponseToJson;
+  Map<String, dynamic> toJson() => _$UserHofResponseToJson(this);
+
+  @JsonKey(name: 'hof', defaultValue: <UserHofStats>[])
+  final List<UserHofStats>? hof;
+  static const fromJsonFactory = _$UserHofResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserHofResponse &&
+            (identical(other.hof, hof) || const DeepCollectionEquality().equals(other.hof, hof)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(hof) ^ runtimeType.hashCode;
+}
+
+extension $UserHofResponseExtension on UserHofResponse {
+  UserHofResponse copyWith({List<UserHofStats>? hof}) {
+    return UserHofResponse(hof: hof ?? this.hof);
+  }
+
+  UserHofResponse copyWithWrapped({Wrapped<List<UserHofStats>?>? hof}) {
+    return UserHofResponse(hof: (hof != null ? hof.value : this.hof));
   }
 }
 
@@ -8785,8 +10031,7 @@ class UserCalendar {
     this.startTime,
   });
 
-  factory UserCalendar.fromJson(Map<String, dynamic> json) =>
-      _$UserCalendarFromJson(json);
+  factory UserCalendar.fromJson(Map<String, dynamic> json) => _$UserCalendarFromJson(json);
 
   static const toJsonFactory = _$UserCalendarToJson;
   Map<String, dynamic> toJson() => _$UserCalendarToJson(this);
@@ -8800,16 +10045,14 @@ class UserCalendar {
     return identical(this, other) ||
         (other is UserCalendar &&
             (identical(other.startTime, startTime) ||
-                const DeepCollectionEquality()
-                    .equals(other.startTime, startTime)));
+                const DeepCollectionEquality().equals(other.startTime, startTime)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(startTime) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(startTime) ^ runtimeType.hashCode;
 }
 
 extension $UserCalendarExtension on UserCalendar {
@@ -8818,8 +10061,85 @@ extension $UserCalendarExtension on UserCalendar {
   }
 
   UserCalendar copyWithWrapped({Wrapped<String?>? startTime}) {
-    return UserCalendar(
-        startTime: (startTime != null ? startTime.value : this.startTime));
+    return UserCalendar(startTime: (startTime != null ? startTime.value : this.startTime));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserCalendarResponse {
+  const UserCalendarResponse({
+    this.calendar,
+  });
+
+  factory UserCalendarResponse.fromJson(Map<String, dynamic> json) => _$UserCalendarResponseFromJson(json);
+
+  static const toJsonFactory = _$UserCalendarResponseToJson;
+  Map<String, dynamic> toJson() => _$UserCalendarResponseToJson(this);
+
+  @JsonKey(name: 'calendar')
+  final UserCalendar? calendar;
+  static const fromJsonFactory = _$UserCalendarResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserCalendarResponse &&
+            (identical(other.calendar, calendar) || const DeepCollectionEquality().equals(other.calendar, calendar)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(calendar) ^ runtimeType.hashCode;
+}
+
+extension $UserCalendarResponseExtension on UserCalendarResponse {
+  UserCalendarResponse copyWith({UserCalendar? calendar}) {
+    return UserCalendarResponse(calendar: calendar ?? this.calendar);
+  }
+
+  UserCalendarResponse copyWithWrapped({Wrapped<UserCalendar?>? calendar}) {
+    return UserCalendarResponse(calendar: (calendar != null ? calendar.value : this.calendar));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserBountiesResponse {
+  const UserBountiesResponse({
+    this.bounties,
+  });
+
+  factory UserBountiesResponse.fromJson(Map<String, dynamic> json) => _$UserBountiesResponseFromJson(json);
+
+  static const toJsonFactory = _$UserBountiesResponseToJson;
+  Map<String, dynamic> toJson() => _$UserBountiesResponseToJson(this);
+
+  @JsonKey(name: 'bounties', defaultValue: <Bounty>[])
+  final List<Bounty>? bounties;
+  static const fromJsonFactory = _$UserBountiesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserBountiesResponse &&
+            (identical(other.bounties, bounties) || const DeepCollectionEquality().equals(other.bounties, bounties)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(bounties) ^ runtimeType.hashCode;
+}
+
+extension $UserBountiesResponseExtension on UserBountiesResponse {
+  UserBountiesResponse copyWith({List<Bounty>? bounties}) {
+    return UserBountiesResponse(bounties: bounties ?? this.bounties);
+  }
+
+  UserBountiesResponse copyWithWrapped({Wrapped<List<Bounty>?>? bounties}) {
+    return UserBountiesResponse(bounties: (bounties != null ? bounties.value : this.bounties));
   }
 }
 
@@ -8834,8 +10154,7 @@ class UserJobRanks {
     this.education,
   });
 
-  factory UserJobRanks.fromJson(Map<String, dynamic> json) =>
-      _$UserJobRanksFromJson(json);
+  factory UserJobRanks.fromJson(Map<String, dynamic> json) => _$UserJobRanksFromJson(json);
 
   static const toJsonFactory = _$UserJobRanksToJson;
   Map<String, dynamic> toJson() => _$UserJobRanksToJson(this);
@@ -8882,20 +10201,13 @@ class UserJobRanks {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserJobRanks &&
-            (identical(other.army, army) ||
-                const DeepCollectionEquality().equals(other.army, army)) &&
-            (identical(other.grocer, grocer) ||
-                const DeepCollectionEquality().equals(other.grocer, grocer)) &&
-            (identical(other.casino, casino) ||
-                const DeepCollectionEquality().equals(other.casino, casino)) &&
-            (identical(other.medical, medical) ||
-                const DeepCollectionEquality()
-                    .equals(other.medical, medical)) &&
-            (identical(other.law, law) ||
-                const DeepCollectionEquality().equals(other.law, law)) &&
+            (identical(other.army, army) || const DeepCollectionEquality().equals(other.army, army)) &&
+            (identical(other.grocer, grocer) || const DeepCollectionEquality().equals(other.grocer, grocer)) &&
+            (identical(other.casino, casino) || const DeepCollectionEquality().equals(other.casino, casino)) &&
+            (identical(other.medical, medical) || const DeepCollectionEquality().equals(other.medical, medical)) &&
+            (identical(other.law, law) || const DeepCollectionEquality().equals(other.law, law)) &&
             (identical(other.education, education) ||
-                const DeepCollectionEquality()
-                    .equals(other.education, education)));
+                const DeepCollectionEquality().equals(other.education, education)));
   }
 
   @override
@@ -8947,11 +10259,51 @@ extension $UserJobRanksExtension on UserJobRanks {
 }
 
 @JsonSerializable(explicitToJson: true)
+class UserJobRanksResponse {
+  const UserJobRanksResponse({
+    this.jobranks,
+  });
+
+  factory UserJobRanksResponse.fromJson(Map<String, dynamic> json) => _$UserJobRanksResponseFromJson(json);
+
+  static const toJsonFactory = _$UserJobRanksResponseToJson;
+  Map<String, dynamic> toJson() => _$UserJobRanksResponseToJson(this);
+
+  @JsonKey(name: 'jobranks')
+  final UserJobRanks? jobranks;
+  static const fromJsonFactory = _$UserJobRanksResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserJobRanksResponse &&
+            (identical(other.jobranks, jobranks) || const DeepCollectionEquality().equals(other.jobranks, jobranks)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(jobranks) ^ runtimeType.hashCode;
+}
+
+extension $UserJobRanksResponseExtension on UserJobRanksResponse {
+  UserJobRanksResponse copyWith({UserJobRanks? jobranks}) {
+    return UserJobRanksResponse(jobranks: jobranks ?? this.jobranks);
+  }
+
+  UserJobRanksResponse copyWithWrapped({Wrapped<UserJobRanks?>? jobranks}) {
+    return UserJobRanksResponse(jobranks: (jobranks != null ? jobranks.value : this.jobranks));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class UserItemMarkeListingItemDetails {
   const UserItemMarkeListingItemDetails({
     this.id,
     this.name,
     this.type,
+    this.rarity,
     this.uid,
     this.stats,
     this.bonuses,
@@ -8961,8 +10313,7 @@ class UserItemMarkeListingItemDetails {
       _$UserItemMarkeListingItemDetailsFromJson(json);
 
   static const toJsonFactory = _$UserItemMarkeListingItemDetailsToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserItemMarkeListingItemDetailsToJson(this);
+  Map<String, dynamic> toJson() => _$UserItemMarkeListingItemDetailsToJson(this);
 
   @JsonKey(name: 'id')
   final int? id;
@@ -8970,6 +10321,12 @@ class UserItemMarkeListingItemDetails {
   final String? name;
   @JsonKey(name: 'type')
   final String? type;
+  @JsonKey(
+    name: 'rarity',
+    toJson: userItemMarkeListingItemDetailsRarityNullableToJson,
+    fromJson: userItemMarkeListingItemDetailsRarityNullableFromJson,
+  )
+  final enums.UserItemMarkeListingItemDetailsRarity? rarity;
   @JsonKey(name: 'uid')
   final int? uid;
   @JsonKey(name: 'stats')
@@ -8982,18 +10339,13 @@ class UserItemMarkeListingItemDetails {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserItemMarkeListingItemDetails &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.name, name) ||
-                const DeepCollectionEquality().equals(other.name, name)) &&
-            (identical(other.type, type) ||
-                const DeepCollectionEquality().equals(other.type, type)) &&
-            (identical(other.uid, uid) ||
-                const DeepCollectionEquality().equals(other.uid, uid)) &&
-            (identical(other.stats, stats) ||
-                const DeepCollectionEquality().equals(other.stats, stats)) &&
-            (identical(other.bonuses, bonuses) ||
-                const DeepCollectionEquality().equals(other.bonuses, bonuses)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.type, type) || const DeepCollectionEquality().equals(other.type, type)) &&
+            (identical(other.rarity, rarity) || const DeepCollectionEquality().equals(other.rarity, rarity)) &&
+            (identical(other.uid, uid) || const DeepCollectionEquality().equals(other.uid, uid)) &&
+            (identical(other.stats, stats) || const DeepCollectionEquality().equals(other.stats, stats)) &&
+            (identical(other.bonuses, bonuses) || const DeepCollectionEquality().equals(other.bonuses, bonuses)));
   }
 
   @override
@@ -9004,18 +10356,19 @@ class UserItemMarkeListingItemDetails {
       const DeepCollectionEquality().hash(id) ^
       const DeepCollectionEquality().hash(name) ^
       const DeepCollectionEquality().hash(type) ^
+      const DeepCollectionEquality().hash(rarity) ^
       const DeepCollectionEquality().hash(uid) ^
       const DeepCollectionEquality().hash(stats) ^
       const DeepCollectionEquality().hash(bonuses) ^
       runtimeType.hashCode;
 }
 
-extension $UserItemMarkeListingItemDetailsExtension
-    on UserItemMarkeListingItemDetails {
+extension $UserItemMarkeListingItemDetailsExtension on UserItemMarkeListingItemDetails {
   UserItemMarkeListingItemDetails copyWith(
       {int? id,
       String? name,
       String? type,
+      enums.UserItemMarkeListingItemDetailsRarity? rarity,
       int? uid,
       ItemMarketListingItemStats? stats,
       List<ItemMarketListingItemBonus>? bonuses}) {
@@ -9023,6 +10376,7 @@ extension $UserItemMarkeListingItemDetailsExtension
         id: id ?? this.id,
         name: name ?? this.name,
         type: type ?? this.type,
+        rarity: rarity ?? this.rarity,
         uid: uid ?? this.uid,
         stats: stats ?? this.stats,
         bonuses: bonuses ?? this.bonuses);
@@ -9032,6 +10386,7 @@ extension $UserItemMarkeListingItemDetailsExtension
       {Wrapped<int?>? id,
       Wrapped<String?>? name,
       Wrapped<String?>? type,
+      Wrapped<enums.UserItemMarkeListingItemDetailsRarity?>? rarity,
       Wrapped<int?>? uid,
       Wrapped<ItemMarketListingItemStats?>? stats,
       Wrapped<List<ItemMarketListingItemBonus>?>? bonuses}) {
@@ -9039,6 +10394,7 @@ extension $UserItemMarkeListingItemDetailsExtension
         id: (id != null ? id.value : this.id),
         name: (name != null ? name.value : this.name),
         type: (type != null ? type.value : this.type),
+        rarity: (rarity != null ? rarity.value : this.rarity),
         uid: (uid != null ? uid.value : this.uid),
         stats: (stats != null ? stats.value : this.stats),
         bonuses: (bonuses != null ? bonuses.value : this.bonuses));
@@ -9057,8 +10413,7 @@ class UserItemMarketListing {
     this.item,
   });
 
-  factory UserItemMarketListing.fromJson(Map<String, dynamic> json) =>
-      _$UserItemMarketListingFromJson(json);
+  factory UserItemMarketListing.fromJson(Map<String, dynamic> json) => _$UserItemMarketListingFromJson(json);
 
   static const toJsonFactory = _$UserItemMarketListingToJson;
   Map<String, dynamic> toJson() => _$UserItemMarketListingToJson(this);
@@ -9083,23 +10438,16 @@ class UserItemMarketListing {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserItemMarketListing &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.price, price) ||
-                const DeepCollectionEquality().equals(other.price, price)) &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.price, price) || const DeepCollectionEquality().equals(other.price, price)) &&
             (identical(other.averagePrice, averagePrice) ||
-                const DeepCollectionEquality()
-                    .equals(other.averagePrice, averagePrice)) &&
-            (identical(other.amount, amount) ||
-                const DeepCollectionEquality().equals(other.amount, amount)) &&
+                const DeepCollectionEquality().equals(other.averagePrice, averagePrice)) &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
             (identical(other.isAnonymous, isAnonymous) ||
-                const DeepCollectionEquality()
-                    .equals(other.isAnonymous, isAnonymous)) &&
+                const DeepCollectionEquality().equals(other.isAnonymous, isAnonymous)) &&
             (identical(other.available, available) ||
-                const DeepCollectionEquality()
-                    .equals(other.available, available)) &&
-            (identical(other.item, item) ||
-                const DeepCollectionEquality().equals(other.item, item)));
+                const DeepCollectionEquality().equals(other.available, available)) &&
+            (identical(other.item, item) || const DeepCollectionEquality().equals(other.item, item)));
   }
 
   @override
@@ -9147,1445 +10495,39 @@ extension $UserItemMarketListingExtension on UserItemMarketListing {
     return UserItemMarketListing(
         id: (id != null ? id.value : this.id),
         price: (price != null ? price.value : this.price),
-        averagePrice:
-            (averagePrice != null ? averagePrice.value : this.averagePrice),
+        averagePrice: (averagePrice != null ? averagePrice.value : this.averagePrice),
         amount: (amount != null ? amount.value : this.amount),
-        isAnonymous:
-            (isAnonymous != null ? isAnonymous.value : this.isAnonymous),
+        isAnonymous: (isAnonymous != null ? isAnonymous.value : this.isAnonymous),
         available: (available != null ? available.value : this.available),
         item: (item != null ? item.value : this.item));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class FactionSelectionsHofGet$Response {
-  const FactionSelectionsHofGet$Response({
-    this.hof,
-  });
-
-  factory FactionSelectionsHofGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$FactionSelectionsHofGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$FactionSelectionsHofGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$FactionSelectionsHofGet$ResponseToJson(this);
-
-  @JsonKey(name: 'hof', defaultValue: <FactionHofStats>[])
-  final List<FactionHofStats>? hof;
-  static const fromJsonFactory = _$FactionSelectionsHofGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is FactionSelectionsHofGet$Response &&
-            (identical(other.hof, hof) ||
-                const DeepCollectionEquality().equals(other.hof, hof)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(hof) ^ runtimeType.hashCode;
-}
-
-extension $FactionSelectionsHofGet$ResponseExtension
-    on FactionSelectionsHofGet$Response {
-  FactionSelectionsHofGet$Response copyWith({List<FactionHofStats>? hof}) {
-    return FactionSelectionsHofGet$Response(hof: hof ?? this.hof);
-  }
-
-  FactionSelectionsHofGet$Response copyWithWrapped(
-      {Wrapped<List<FactionHofStats>?>? hof}) {
-    return FactionSelectionsHofGet$Response(
-        hof: (hof != null ? hof.value : this.hof));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class FactionSelectionsMembersGet$Response {
-  const FactionSelectionsMembersGet$Response({
-    this.members,
-  });
-
-  factory FactionSelectionsMembersGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$FactionSelectionsMembersGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$FactionSelectionsMembersGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$FactionSelectionsMembersGet$ResponseToJson(this);
-
-  @JsonKey(name: 'members', defaultValue: <FactionMember>[])
-  final List<FactionMember>? members;
-  static const fromJsonFactory = _$FactionSelectionsMembersGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is FactionSelectionsMembersGet$Response &&
-            (identical(other.members, members) ||
-                const DeepCollectionEquality().equals(other.members, members)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(members) ^ runtimeType.hashCode;
-}
-
-extension $FactionSelectionsMembersGet$ResponseExtension
-    on FactionSelectionsMembersGet$Response {
-  FactionSelectionsMembersGet$Response copyWith(
-      {List<FactionMember>? members}) {
-    return FactionSelectionsMembersGet$Response(
-        members: members ?? this.members);
-  }
-
-  FactionSelectionsMembersGet$Response copyWithWrapped(
-      {Wrapped<List<FactionMember>?>? members}) {
-    return FactionSelectionsMembersGet$Response(
-        members: (members != null ? members.value : this.members));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class FactionSelectionsBasicGet$Response {
-  const FactionSelectionsBasicGet$Response({
-    this.basic,
-  });
-
-  factory FactionSelectionsBasicGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$FactionSelectionsBasicGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$FactionSelectionsBasicGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$FactionSelectionsBasicGet$ResponseToJson(this);
-
-  @JsonKey(name: 'basic')
-  final FactionBasic? basic;
-  static const fromJsonFactory = _$FactionSelectionsBasicGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is FactionSelectionsBasicGet$Response &&
-            (identical(other.basic, basic) ||
-                const DeepCollectionEquality().equals(other.basic, basic)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(basic) ^ runtimeType.hashCode;
-}
-
-extension $FactionSelectionsBasicGet$ResponseExtension
-    on FactionSelectionsBasicGet$Response {
-  FactionSelectionsBasicGet$Response copyWith({FactionBasic? basic}) {
-    return FactionSelectionsBasicGet$Response(basic: basic ?? this.basic);
-  }
-
-  FactionSelectionsBasicGet$Response copyWithWrapped(
-      {Wrapped<FactionBasic?>? basic}) {
-    return FactionSelectionsBasicGet$Response(
-        basic: (basic != null ? basic.value : this.basic));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class FactionSelectionsWarsGet$Response {
-  const FactionSelectionsWarsGet$Response({
-    this.pacts,
-    this.wars,
-  });
-
-  factory FactionSelectionsWarsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$FactionSelectionsWarsGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$FactionSelectionsWarsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$FactionSelectionsWarsGet$ResponseToJson(this);
-
-  @JsonKey(name: 'pacts', defaultValue: <FactionPact>[])
-  final List<FactionPact>? pacts;
-  @JsonKey(name: 'wars')
-  final FactionWars? wars;
-  static const fromJsonFactory = _$FactionSelectionsWarsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is FactionSelectionsWarsGet$Response &&
-            (identical(other.pacts, pacts) ||
-                const DeepCollectionEquality().equals(other.pacts, pacts)) &&
-            (identical(other.wars, wars) ||
-                const DeepCollectionEquality().equals(other.wars, wars)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(pacts) ^
-      const DeepCollectionEquality().hash(wars) ^
-      runtimeType.hashCode;
-}
-
-extension $FactionSelectionsWarsGet$ResponseExtension
-    on FactionSelectionsWarsGet$Response {
-  FactionSelectionsWarsGet$Response copyWith(
-      {List<FactionPact>? pacts, FactionWars? wars}) {
-    return FactionSelectionsWarsGet$Response(
-        pacts: pacts ?? this.pacts, wars: wars ?? this.wars);
-  }
-
-  FactionSelectionsWarsGet$Response copyWithWrapped(
-      {Wrapped<List<FactionPact>?>? pacts, Wrapped<FactionWars?>? wars}) {
-    return FactionSelectionsWarsGet$Response(
-        pacts: (pacts != null ? pacts.value : this.pacts),
-        wars: (wars != null ? wars.value : this.wars));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class FactionSelectionsNewsGet$Response {
-  const FactionSelectionsNewsGet$Response({
-    this.news,
-    this.metadata,
-  });
-
-  factory FactionSelectionsNewsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$FactionSelectionsNewsGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$FactionSelectionsNewsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$FactionSelectionsNewsGet$ResponseToJson(this);
-
-  @JsonKey(name: 'news', defaultValue: <FactionNews>[])
-  final List<FactionNews>? news;
-  @JsonKey(name: '_metadata')
-  final RequestMetadataWithLinks? metadata;
-  static const fromJsonFactory = _$FactionSelectionsNewsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is FactionSelectionsNewsGet$Response &&
-            (identical(other.news, news) ||
-                const DeepCollectionEquality().equals(other.news, news)) &&
-            (identical(other.metadata, metadata) ||
-                const DeepCollectionEquality()
-                    .equals(other.metadata, metadata)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(news) ^
-      const DeepCollectionEquality().hash(metadata) ^
-      runtimeType.hashCode;
-}
-
-extension $FactionSelectionsNewsGet$ResponseExtension
-    on FactionSelectionsNewsGet$Response {
-  FactionSelectionsNewsGet$Response copyWith(
-      {List<FactionNews>? news, RequestMetadataWithLinks? metadata}) {
-    return FactionSelectionsNewsGet$Response(
-        news: news ?? this.news, metadata: metadata ?? this.metadata);
-  }
-
-  FactionSelectionsNewsGet$Response copyWithWrapped(
-      {Wrapped<List<FactionNews>?>? news,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
-    return FactionSelectionsNewsGet$Response(
-        news: (news != null ? news.value : this.news),
-        metadata: (metadata != null ? metadata.value : this.metadata));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class FactionSelectionsAttacksGet$Response {
-  const FactionSelectionsAttacksGet$Response({
-    this.attacks,
-    this.metadata,
-  });
-
-  factory FactionSelectionsAttacksGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$FactionSelectionsAttacksGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$FactionSelectionsAttacksGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$FactionSelectionsAttacksGet$ResponseToJson(this);
-
-  @JsonKey(name: 'attacks', defaultValue: <Attack>[])
-  final List<Attack>? attacks;
-  @JsonKey(name: '_metadata')
-  final RequestMetadataWithLinks? metadata;
-  static const fromJsonFactory = _$FactionSelectionsAttacksGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is FactionSelectionsAttacksGet$Response &&
-            (identical(other.attacks, attacks) ||
-                const DeepCollectionEquality()
-                    .equals(other.attacks, attacks)) &&
-            (identical(other.metadata, metadata) ||
-                const DeepCollectionEquality()
-                    .equals(other.metadata, metadata)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(attacks) ^
-      const DeepCollectionEquality().hash(metadata) ^
-      runtimeType.hashCode;
-}
-
-extension $FactionSelectionsAttacksGet$ResponseExtension
-    on FactionSelectionsAttacksGet$Response {
-  FactionSelectionsAttacksGet$Response copyWith(
-      {List<Attack>? attacks, RequestMetadataWithLinks? metadata}) {
-    return FactionSelectionsAttacksGet$Response(
-        attacks: attacks ?? this.attacks, metadata: metadata ?? this.metadata);
-  }
-
-  FactionSelectionsAttacksGet$Response copyWithWrapped(
-      {Wrapped<List<Attack>?>? attacks,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
-    return FactionSelectionsAttacksGet$Response(
-        attacks: (attacks != null ? attacks.value : this.attacks),
-        metadata: (metadata != null ? metadata.value : this.metadata));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class FactionSelectionsAttacksfullGet$Response {
-  const FactionSelectionsAttacksfullGet$Response({
-    this.attacks,
-    this.metadata,
-  });
-
-  factory FactionSelectionsAttacksfullGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$FactionSelectionsAttacksfullGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$FactionSelectionsAttacksfullGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$FactionSelectionsAttacksfullGet$ResponseToJson(this);
-
-  @JsonKey(name: 'attacks', defaultValue: <AttackSimplified>[])
-  final List<AttackSimplified>? attacks;
-  @JsonKey(name: '_metadata')
-  final RequestMetadataWithLinks? metadata;
-  static const fromJsonFactory =
-      _$FactionSelectionsAttacksfullGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is FactionSelectionsAttacksfullGet$Response &&
-            (identical(other.attacks, attacks) ||
-                const DeepCollectionEquality()
-                    .equals(other.attacks, attacks)) &&
-            (identical(other.metadata, metadata) ||
-                const DeepCollectionEquality()
-                    .equals(other.metadata, metadata)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(attacks) ^
-      const DeepCollectionEquality().hash(metadata) ^
-      runtimeType.hashCode;
-}
-
-extension $FactionSelectionsAttacksfullGet$ResponseExtension
-    on FactionSelectionsAttacksfullGet$Response {
-  FactionSelectionsAttacksfullGet$Response copyWith(
-      {List<AttackSimplified>? attacks, RequestMetadataWithLinks? metadata}) {
-    return FactionSelectionsAttacksfullGet$Response(
-        attacks: attacks ?? this.attacks, metadata: metadata ?? this.metadata);
-  }
-
-  FactionSelectionsAttacksfullGet$Response copyWithWrapped(
-      {Wrapped<List<AttackSimplified>?>? attacks,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
-    return FactionSelectionsAttacksfullGet$Response(
-        attacks: (attacks != null ? attacks.value : this.attacks),
-        metadata: (metadata != null ? metadata.value : this.metadata));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class ForumSelectionsThreadsGet$Response {
-  const ForumSelectionsThreadsGet$Response({
-    this.threads,
-    this.links,
-  });
-
-  factory ForumSelectionsThreadsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$ForumSelectionsThreadsGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$ForumSelectionsThreadsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$ForumSelectionsThreadsGet$ResponseToJson(this);
-
-  @JsonKey(name: 'threads', defaultValue: <ForumThreadBase>[])
-  final List<ForumThreadBase>? threads;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
-  static const fromJsonFactory = _$ForumSelectionsThreadsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is ForumSelectionsThreadsGet$Response &&
-            (identical(other.threads, threads) ||
-                const DeepCollectionEquality()
-                    .equals(other.threads, threads)) &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(threads) ^
-      const DeepCollectionEquality().hash(links) ^
-      runtimeType.hashCode;
-}
-
-extension $ForumSelectionsThreadsGet$ResponseExtension
-    on ForumSelectionsThreadsGet$Response {
-  ForumSelectionsThreadsGet$Response copyWith(
-      {List<ForumThreadBase>? threads, RequestLinks? links}) {
-    return ForumSelectionsThreadsGet$Response(
-        threads: threads ?? this.threads, links: links ?? this.links);
-  }
-
-  ForumSelectionsThreadsGet$Response copyWithWrapped(
-      {Wrapped<List<ForumThreadBase>?>? threads,
-      Wrapped<RequestLinks?>? links}) {
-    return ForumSelectionsThreadsGet$Response(
-        threads: (threads != null ? threads.value : this.threads),
-        links: (links != null ? links.value : this.links));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class ForumSelectionsThreadGet$Response {
-  const ForumSelectionsThreadGet$Response({
-    this.thread,
-  });
-
-  factory ForumSelectionsThreadGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$ForumSelectionsThreadGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$ForumSelectionsThreadGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$ForumSelectionsThreadGet$ResponseToJson(this);
-
-  @JsonKey(name: 'thread')
-  final ForumThreadExtended? thread;
-  static const fromJsonFactory = _$ForumSelectionsThreadGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is ForumSelectionsThreadGet$Response &&
-            (identical(other.thread, thread) ||
-                const DeepCollectionEquality().equals(other.thread, thread)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(thread) ^ runtimeType.hashCode;
-}
-
-extension $ForumSelectionsThreadGet$ResponseExtension
-    on ForumSelectionsThreadGet$Response {
-  ForumSelectionsThreadGet$Response copyWith({ForumThreadExtended? thread}) {
-    return ForumSelectionsThreadGet$Response(thread: thread ?? this.thread);
-  }
-
-  ForumSelectionsThreadGet$Response copyWithWrapped(
-      {Wrapped<ForumThreadExtended?>? thread}) {
-    return ForumSelectionsThreadGet$Response(
-        thread: (thread != null ? thread.value : this.thread));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class ForumSelectionsPostsGet$Response {
-  const ForumSelectionsPostsGet$Response({
-    this.posts,
-    this.links,
-  });
-
-  factory ForumSelectionsPostsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$ForumSelectionsPostsGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$ForumSelectionsPostsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$ForumSelectionsPostsGet$ResponseToJson(this);
-
-  @JsonKey(name: 'posts', defaultValue: <ForumPost>[])
-  final List<ForumPost>? posts;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
-  static const fromJsonFactory = _$ForumSelectionsPostsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is ForumSelectionsPostsGet$Response &&
-            (identical(other.posts, posts) ||
-                const DeepCollectionEquality().equals(other.posts, posts)) &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(posts) ^
-      const DeepCollectionEquality().hash(links) ^
-      runtimeType.hashCode;
-}
-
-extension $ForumSelectionsPostsGet$ResponseExtension
-    on ForumSelectionsPostsGet$Response {
-  ForumSelectionsPostsGet$Response copyWith(
-      {List<ForumPost>? posts, RequestLinks? links}) {
-    return ForumSelectionsPostsGet$Response(
-        posts: posts ?? this.posts, links: links ?? this.links);
-  }
-
-  ForumSelectionsPostsGet$Response copyWithWrapped(
-      {Wrapped<List<ForumPost>?>? posts, Wrapped<RequestLinks?>? links}) {
-    return ForumSelectionsPostsGet$Response(
-        posts: (posts != null ? posts.value : this.posts),
-        links: (links != null ? links.value : this.links));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class MarketSelectionsItemmarketGet$Response {
-  const MarketSelectionsItemmarketGet$Response({
+class UserItemMarketResponse {
+  const UserItemMarketResponse({
     this.itemmarket,
     this.metadata,
   });
 
-  factory MarketSelectionsItemmarketGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$MarketSelectionsItemmarketGet$ResponseFromJson(json);
+  factory UserItemMarketResponse.fromJson(Map<String, dynamic> json) => _$UserItemMarketResponseFromJson(json);
 
-  static const toJsonFactory = _$MarketSelectionsItemmarketGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$MarketSelectionsItemmarketGet$ResponseToJson(this);
-
-  @JsonKey(name: 'itemmarket')
-  final ItemMarket? itemmarket;
-  @JsonKey(name: '_metadata')
-  final RequestMetadataWithLinks? metadata;
-  static const fromJsonFactory =
-      _$MarketSelectionsItemmarketGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is MarketSelectionsItemmarketGet$Response &&
-            (identical(other.itemmarket, itemmarket) ||
-                const DeepCollectionEquality()
-                    .equals(other.itemmarket, itemmarket)) &&
-            (identical(other.metadata, metadata) ||
-                const DeepCollectionEquality()
-                    .equals(other.metadata, metadata)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(itemmarket) ^
-      const DeepCollectionEquality().hash(metadata) ^
-      runtimeType.hashCode;
-}
-
-extension $MarketSelectionsItemmarketGet$ResponseExtension
-    on MarketSelectionsItemmarketGet$Response {
-  MarketSelectionsItemmarketGet$Response copyWith(
-      {ItemMarket? itemmarket, RequestMetadataWithLinks? metadata}) {
-    return MarketSelectionsItemmarketGet$Response(
-        itemmarket: itemmarket ?? this.itemmarket,
-        metadata: metadata ?? this.metadata);
-  }
-
-  MarketSelectionsItemmarketGet$Response copyWithWrapped(
-      {Wrapped<ItemMarket?>? itemmarket,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
-    return MarketSelectionsItemmarketGet$Response(
-        itemmarket: (itemmarket != null ? itemmarket.value : this.itemmarket),
-        metadata: (metadata != null ? metadata.value : this.metadata));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class TornSelectionsCalendarGet$Response {
-  const TornSelectionsCalendarGet$Response({
-    this.calendar,
-  });
-
-  factory TornSelectionsCalendarGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$TornSelectionsCalendarGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$TornSelectionsCalendarGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$TornSelectionsCalendarGet$ResponseToJson(this);
-
-  @JsonKey(name: 'calendar')
-  final TornSelectionsCalendarGet$Response$Calendar? calendar;
-  static const fromJsonFactory = _$TornSelectionsCalendarGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is TornSelectionsCalendarGet$Response &&
-            (identical(other.calendar, calendar) ||
-                const DeepCollectionEquality()
-                    .equals(other.calendar, calendar)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(calendar) ^ runtimeType.hashCode;
-}
-
-extension $TornSelectionsCalendarGet$ResponseExtension
-    on TornSelectionsCalendarGet$Response {
-  TornSelectionsCalendarGet$Response copyWith(
-      {TornSelectionsCalendarGet$Response$Calendar? calendar}) {
-    return TornSelectionsCalendarGet$Response(
-        calendar: calendar ?? this.calendar);
-  }
-
-  TornSelectionsCalendarGet$Response copyWithWrapped(
-      {Wrapped<TornSelectionsCalendarGet$Response$Calendar?>? calendar}) {
-    return TornSelectionsCalendarGet$Response(
-        calendar: (calendar != null ? calendar.value : this.calendar));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class TornSelectionsHofGet$Response {
-  const TornSelectionsHofGet$Response({
-    this.hof,
-    this.links,
-  });
-
-  factory TornSelectionsHofGet$Response.fromJson(Map<String, dynamic> json) =>
-      _$TornSelectionsHofGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$TornSelectionsHofGet$ResponseToJson;
-  Map<String, dynamic> toJson() => _$TornSelectionsHofGet$ResponseToJson(this);
-
-  @JsonKey(name: 'hof', defaultValue: <TornHof>[])
-  final List<TornHof>? hof;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
-  static const fromJsonFactory = _$TornSelectionsHofGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is TornSelectionsHofGet$Response &&
-            (identical(other.hof, hof) ||
-                const DeepCollectionEquality().equals(other.hof, hof)) &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(hof) ^
-      const DeepCollectionEquality().hash(links) ^
-      runtimeType.hashCode;
-}
-
-extension $TornSelectionsHofGet$ResponseExtension
-    on TornSelectionsHofGet$Response {
-  TornSelectionsHofGet$Response copyWith(
-      {List<TornHof>? hof, RequestLinks? links}) {
-    return TornSelectionsHofGet$Response(
-        hof: hof ?? this.hof, links: links ?? this.links);
-  }
-
-  TornSelectionsHofGet$Response copyWithWrapped(
-      {Wrapped<List<TornHof>?>? hof, Wrapped<RequestLinks?>? links}) {
-    return TornSelectionsHofGet$Response(
-        hof: (hof != null ? hof.value : this.hof),
-        links: (links != null ? links.value : this.links));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class TornSelectionsFactionhofGet$Response {
-  const TornSelectionsFactionhofGet$Response({
-    this.factionhof,
-    this.links,
-  });
-
-  factory TornSelectionsFactionhofGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$TornSelectionsFactionhofGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$TornSelectionsFactionhofGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$TornSelectionsFactionhofGet$ResponseToJson(this);
-
-  @JsonKey(name: 'factionhof', defaultValue: <TornFactionHof>[])
-  final List<TornFactionHof>? factionhof;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
-  static const fromJsonFactory = _$TornSelectionsFactionhofGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is TornSelectionsFactionhofGet$Response &&
-            (identical(other.factionhof, factionhof) ||
-                const DeepCollectionEquality()
-                    .equals(other.factionhof, factionhof)) &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(factionhof) ^
-      const DeepCollectionEquality().hash(links) ^
-      runtimeType.hashCode;
-}
-
-extension $TornSelectionsFactionhofGet$ResponseExtension
-    on TornSelectionsFactionhofGet$Response {
-  TornSelectionsFactionhofGet$Response copyWith(
-      {List<TornFactionHof>? factionhof, RequestLinks? links}) {
-    return TornSelectionsFactionhofGet$Response(
-        factionhof: factionhof ?? this.factionhof, links: links ?? this.links);
-  }
-
-  TornSelectionsFactionhofGet$Response copyWithWrapped(
-      {Wrapped<List<TornFactionHof>?>? factionhof,
-      Wrapped<RequestLinks?>? links}) {
-    return TornSelectionsFactionhofGet$Response(
-        factionhof: (factionhof != null ? factionhof.value : this.factionhof),
-        links: (links != null ? links.value : this.links));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class TornSelectionsLogtypesGet$Response {
-  const TornSelectionsLogtypesGet$Response({
-    this.logtypes,
-  });
-
-  factory TornSelectionsLogtypesGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$TornSelectionsLogtypesGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$TornSelectionsLogtypesGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$TornSelectionsLogtypesGet$ResponseToJson(this);
-
-  @JsonKey(name: 'logtypes', defaultValue: <TornLog>[])
-  final List<TornLog>? logtypes;
-  static const fromJsonFactory = _$TornSelectionsLogtypesGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is TornSelectionsLogtypesGet$Response &&
-            (identical(other.logtypes, logtypes) ||
-                const DeepCollectionEquality()
-                    .equals(other.logtypes, logtypes)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(logtypes) ^ runtimeType.hashCode;
-}
-
-extension $TornSelectionsLogtypesGet$ResponseExtension
-    on TornSelectionsLogtypesGet$Response {
-  TornSelectionsLogtypesGet$Response copyWith({List<TornLog>? logtypes}) {
-    return TornSelectionsLogtypesGet$Response(
-        logtypes: logtypes ?? this.logtypes);
-  }
-
-  TornSelectionsLogtypesGet$Response copyWithWrapped(
-      {Wrapped<List<TornLog>?>? logtypes}) {
-    return TornSelectionsLogtypesGet$Response(
-        logtypes: (logtypes != null ? logtypes.value : this.logtypes));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class TornSelectionsLogcategoriesGet$Response {
-  const TornSelectionsLogcategoriesGet$Response({
-    this.logcategories,
-  });
-
-  factory TornSelectionsLogcategoriesGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$TornSelectionsLogcategoriesGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$TornSelectionsLogcategoriesGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$TornSelectionsLogcategoriesGet$ResponseToJson(this);
-
-  @JsonKey(name: 'logcategories', defaultValue: <TornLogCategory>[])
-  final List<TornLogCategory>? logcategories;
-  static const fromJsonFactory =
-      _$TornSelectionsLogcategoriesGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is TornSelectionsLogcategoriesGet$Response &&
-            (identical(other.logcategories, logcategories) ||
-                const DeepCollectionEquality()
-                    .equals(other.logcategories, logcategories)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(logcategories) ^ runtimeType.hashCode;
-}
-
-extension $TornSelectionsLogcategoriesGet$ResponseExtension
-    on TornSelectionsLogcategoriesGet$Response {
-  TornSelectionsLogcategoriesGet$Response copyWith(
-      {List<TornLogCategory>? logcategories}) {
-    return TornSelectionsLogcategoriesGet$Response(
-        logcategories: logcategories ?? this.logcategories);
-  }
-
-  TornSelectionsLogcategoriesGet$Response copyWithWrapped(
-      {Wrapped<List<TornLogCategory>?>? logcategories}) {
-    return TornSelectionsLogcategoriesGet$Response(
-        logcategories:
-            (logcategories != null ? logcategories.value : this.logcategories));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class TornSelectionsBountiesGet$Response {
-  const TornSelectionsBountiesGet$Response({
-    this.bounties,
-    this.links,
-  });
-
-  factory TornSelectionsBountiesGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$TornSelectionsBountiesGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$TornSelectionsBountiesGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$TornSelectionsBountiesGet$ResponseToJson(this);
-
-  @JsonKey(name: 'bounties', defaultValue: <Bounty>[])
-  final List<Bounty>? bounties;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
-  static const fromJsonFactory = _$TornSelectionsBountiesGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is TornSelectionsBountiesGet$Response &&
-            (identical(other.bounties, bounties) ||
-                const DeepCollectionEquality()
-                    .equals(other.bounties, bounties)) &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(bounties) ^
-      const DeepCollectionEquality().hash(links) ^
-      runtimeType.hashCode;
-}
-
-extension $TornSelectionsBountiesGet$ResponseExtension
-    on TornSelectionsBountiesGet$Response {
-  TornSelectionsBountiesGet$Response copyWith(
-      {List<Bounty>? bounties, RequestLinks? links}) {
-    return TornSelectionsBountiesGet$Response(
-        bounties: bounties ?? this.bounties, links: links ?? this.links);
-  }
-
-  TornSelectionsBountiesGet$Response copyWithWrapped(
-      {Wrapped<List<Bounty>?>? bounties, Wrapped<RequestLinks?>? links}) {
-    return TornSelectionsBountiesGet$Response(
-        bounties: (bounties != null ? bounties.value : this.bounties),
-        links: (links != null ? links.value : this.links));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsForumpostsGet$Response {
-  const UserSelectionsForumpostsGet$Response({
-    this.forumPosts,
-    this.links,
-  });
-
-  factory UserSelectionsForumpostsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsForumpostsGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsForumpostsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsForumpostsGet$ResponseToJson(this);
-
-  @JsonKey(name: 'forumPosts', defaultValue: <ForumPost>[])
-  final List<ForumPost>? forumPosts;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
-  static const fromJsonFactory = _$UserSelectionsForumpostsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsForumpostsGet$Response &&
-            (identical(other.forumPosts, forumPosts) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumPosts, forumPosts)) &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(forumPosts) ^
-      const DeepCollectionEquality().hash(links) ^
-      runtimeType.hashCode;
-}
-
-extension $UserSelectionsForumpostsGet$ResponseExtension
-    on UserSelectionsForumpostsGet$Response {
-  UserSelectionsForumpostsGet$Response copyWith(
-      {List<ForumPost>? forumPosts, RequestLinks? links}) {
-    return UserSelectionsForumpostsGet$Response(
-        forumPosts: forumPosts ?? this.forumPosts, links: links ?? this.links);
-  }
-
-  UserSelectionsForumpostsGet$Response copyWithWrapped(
-      {Wrapped<List<ForumPost>?>? forumPosts, Wrapped<RequestLinks?>? links}) {
-    return UserSelectionsForumpostsGet$Response(
-        forumPosts: (forumPosts != null ? forumPosts.value : this.forumPosts),
-        links: (links != null ? links.value : this.links));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsForumthreadsGet$Response {
-  const UserSelectionsForumthreadsGet$Response({
-    this.forumThreads,
-    this.links,
-  });
-
-  factory UserSelectionsForumthreadsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsForumthreadsGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsForumthreadsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsForumthreadsGet$ResponseToJson(this);
-
-  @JsonKey(name: 'forumThreads', defaultValue: <ForumThreadUserExtended>[])
-  final List<ForumThreadUserExtended>? forumThreads;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
-  static const fromJsonFactory =
-      _$UserSelectionsForumthreadsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsForumthreadsGet$Response &&
-            (identical(other.forumThreads, forumThreads) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumThreads, forumThreads)) &&
-            (identical(other.links, links) ||
-                const DeepCollectionEquality().equals(other.links, links)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(forumThreads) ^
-      const DeepCollectionEquality().hash(links) ^
-      runtimeType.hashCode;
-}
-
-extension $UserSelectionsForumthreadsGet$ResponseExtension
-    on UserSelectionsForumthreadsGet$Response {
-  UserSelectionsForumthreadsGet$Response copyWith(
-      {List<ForumThreadUserExtended>? forumThreads, RequestLinks? links}) {
-    return UserSelectionsForumthreadsGet$Response(
-        forumThreads: forumThreads ?? this.forumThreads,
-        links: links ?? this.links);
-  }
-
-  UserSelectionsForumthreadsGet$Response copyWithWrapped(
-      {Wrapped<List<ForumThreadUserExtended>?>? forumThreads,
-      Wrapped<RequestLinks?>? links}) {
-    return UserSelectionsForumthreadsGet$Response(
-        forumThreads:
-            (forumThreads != null ? forumThreads.value : this.forumThreads),
-        links: (links != null ? links.value : this.links));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsForumsubscribedthreadsGet$Response {
-  const UserSelectionsForumsubscribedthreadsGet$Response({
-    this.forumSubscribedThreads,
-  });
-
-  factory UserSelectionsForumsubscribedthreadsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsForumsubscribedthreadsGet$ResponseFromJson(json);
-
-  static const toJsonFactory =
-      _$UserSelectionsForumsubscribedthreadsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsForumsubscribedthreadsGet$ResponseToJson(this);
-
-  @JsonKey(
-      name: 'forumSubscribedThreads', defaultValue: <ForumSubscribedThread>[])
-  final List<ForumSubscribedThread>? forumSubscribedThreads;
-  static const fromJsonFactory =
-      _$UserSelectionsForumsubscribedthreadsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsForumsubscribedthreadsGet$Response &&
-            (identical(other.forumSubscribedThreads, forumSubscribedThreads) ||
-                const DeepCollectionEquality().equals(
-                    other.forumSubscribedThreads, forumSubscribedThreads)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(forumSubscribedThreads) ^
-      runtimeType.hashCode;
-}
-
-extension $UserSelectionsForumsubscribedthreadsGet$ResponseExtension
-    on UserSelectionsForumsubscribedthreadsGet$Response {
-  UserSelectionsForumsubscribedthreadsGet$Response copyWith(
-      {List<ForumSubscribedThread>? forumSubscribedThreads}) {
-    return UserSelectionsForumsubscribedthreadsGet$Response(
-        forumSubscribedThreads:
-            forumSubscribedThreads ?? this.forumSubscribedThreads);
-  }
-
-  UserSelectionsForumsubscribedthreadsGet$Response copyWithWrapped(
-      {Wrapped<List<ForumSubscribedThread>?>? forumSubscribedThreads}) {
-    return UserSelectionsForumsubscribedthreadsGet$Response(
-        forumSubscribedThreads: (forumSubscribedThreads != null
-            ? forumSubscribedThreads.value
-            : this.forumSubscribedThreads));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsForumfeedGet$Response {
-  const UserSelectionsForumfeedGet$Response({
-    this.forumFeed,
-  });
-
-  factory UserSelectionsForumfeedGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsForumfeedGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsForumfeedGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsForumfeedGet$ResponseToJson(this);
-
-  @JsonKey(name: 'forumFeed', defaultValue: <ForumFeed>[])
-  final List<ForumFeed>? forumFeed;
-  static const fromJsonFactory = _$UserSelectionsForumfeedGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsForumfeedGet$Response &&
-            (identical(other.forumFeed, forumFeed) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumFeed, forumFeed)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(forumFeed) ^ runtimeType.hashCode;
-}
-
-extension $UserSelectionsForumfeedGet$ResponseExtension
-    on UserSelectionsForumfeedGet$Response {
-  UserSelectionsForumfeedGet$Response copyWith({List<ForumFeed>? forumFeed}) {
-    return UserSelectionsForumfeedGet$Response(
-        forumFeed: forumFeed ?? this.forumFeed);
-  }
-
-  UserSelectionsForumfeedGet$Response copyWithWrapped(
-      {Wrapped<List<ForumFeed>?>? forumFeed}) {
-    return UserSelectionsForumfeedGet$Response(
-        forumFeed: (forumFeed != null ? forumFeed.value : this.forumFeed));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsForumfriendsGet$Response {
-  const UserSelectionsForumfriendsGet$Response({
-    this.forumFriends,
-  });
-
-  factory UserSelectionsForumfriendsGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsForumfriendsGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsForumfriendsGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsForumfriendsGet$ResponseToJson(this);
-
-  @JsonKey(name: 'forumFriends', defaultValue: <ForumFeed>[])
-  final List<ForumFeed>? forumFriends;
-  static const fromJsonFactory =
-      _$UserSelectionsForumfriendsGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsForumfriendsGet$Response &&
-            (identical(other.forumFriends, forumFriends) ||
-                const DeepCollectionEquality()
-                    .equals(other.forumFriends, forumFriends)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(forumFriends) ^ runtimeType.hashCode;
-}
-
-extension $UserSelectionsForumfriendsGet$ResponseExtension
-    on UserSelectionsForumfriendsGet$Response {
-  UserSelectionsForumfriendsGet$Response copyWith(
-      {List<ForumFeed>? forumFriends}) {
-    return UserSelectionsForumfriendsGet$Response(
-        forumFriends: forumFriends ?? this.forumFriends);
-  }
-
-  UserSelectionsForumfriendsGet$Response copyWithWrapped(
-      {Wrapped<List<ForumFeed>?>? forumFriends}) {
-    return UserSelectionsForumfriendsGet$Response(
-        forumFriends:
-            (forumFriends != null ? forumFriends.value : this.forumFriends));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsHofGet$Response {
-  const UserSelectionsHofGet$Response({
-    this.hof,
-  });
-
-  factory UserSelectionsHofGet$Response.fromJson(Map<String, dynamic> json) =>
-      _$UserSelectionsHofGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsHofGet$ResponseToJson;
-  Map<String, dynamic> toJson() => _$UserSelectionsHofGet$ResponseToJson(this);
-
-  @JsonKey(name: 'hof', defaultValue: <UserHofStats>[])
-  final List<UserHofStats>? hof;
-  static const fromJsonFactory = _$UserSelectionsHofGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsHofGet$Response &&
-            (identical(other.hof, hof) ||
-                const DeepCollectionEquality().equals(other.hof, hof)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(hof) ^ runtimeType.hashCode;
-}
-
-extension $UserSelectionsHofGet$ResponseExtension
-    on UserSelectionsHofGet$Response {
-  UserSelectionsHofGet$Response copyWith({List<UserHofStats>? hof}) {
-    return UserSelectionsHofGet$Response(hof: hof ?? this.hof);
-  }
-
-  UserSelectionsHofGet$Response copyWithWrapped(
-      {Wrapped<List<UserHofStats>?>? hof}) {
-    return UserSelectionsHofGet$Response(
-        hof: (hof != null ? hof.value : this.hof));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsCalendarGet$Response {
-  const UserSelectionsCalendarGet$Response({
-    this.calendar,
-  });
-
-  factory UserSelectionsCalendarGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsCalendarGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsCalendarGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsCalendarGet$ResponseToJson(this);
-
-  @JsonKey(name: 'calendar')
-  final UserCalendar? calendar;
-  static const fromJsonFactory = _$UserSelectionsCalendarGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsCalendarGet$Response &&
-            (identical(other.calendar, calendar) ||
-                const DeepCollectionEquality()
-                    .equals(other.calendar, calendar)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(calendar) ^ runtimeType.hashCode;
-}
-
-extension $UserSelectionsCalendarGet$ResponseExtension
-    on UserSelectionsCalendarGet$Response {
-  UserSelectionsCalendarGet$Response copyWith({UserCalendar? calendar}) {
-    return UserSelectionsCalendarGet$Response(
-        calendar: calendar ?? this.calendar);
-  }
-
-  UserSelectionsCalendarGet$Response copyWithWrapped(
-      {Wrapped<UserCalendar?>? calendar}) {
-    return UserSelectionsCalendarGet$Response(
-        calendar: (calendar != null ? calendar.value : this.calendar));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsBountiesGet$Response {
-  const UserSelectionsBountiesGet$Response({
-    this.bounties,
-  });
-
-  factory UserSelectionsBountiesGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsBountiesGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsBountiesGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsBountiesGet$ResponseToJson(this);
-
-  @JsonKey(name: 'bounties', defaultValue: <Bounty>[])
-  final List<Bounty>? bounties;
-  static const fromJsonFactory = _$UserSelectionsBountiesGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsBountiesGet$Response &&
-            (identical(other.bounties, bounties) ||
-                const DeepCollectionEquality()
-                    .equals(other.bounties, bounties)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(bounties) ^ runtimeType.hashCode;
-}
-
-extension $UserSelectionsBountiesGet$ResponseExtension
-    on UserSelectionsBountiesGet$Response {
-  UserSelectionsBountiesGet$Response copyWith({List<Bounty>? bounties}) {
-    return UserSelectionsBountiesGet$Response(
-        bounties: bounties ?? this.bounties);
-  }
-
-  UserSelectionsBountiesGet$Response copyWithWrapped(
-      {Wrapped<List<Bounty>?>? bounties}) {
-    return UserSelectionsBountiesGet$Response(
-        bounties: (bounties != null ? bounties.value : this.bounties));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsJobranksGet$Response {
-  const UserSelectionsJobranksGet$Response({
-    this.jobranks,
-  });
-
-  factory UserSelectionsJobranksGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsJobranksGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsJobranksGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsJobranksGet$ResponseToJson(this);
-
-  @JsonKey(name: 'jobranks')
-  final UserJobRanks? jobranks;
-  static const fromJsonFactory = _$UserSelectionsJobranksGet$ResponseFromJson;
-
-  @override
-  bool operator ==(Object other) {
-    return identical(this, other) ||
-        (other is UserSelectionsJobranksGet$Response &&
-            (identical(other.jobranks, jobranks) ||
-                const DeepCollectionEquality()
-                    .equals(other.jobranks, jobranks)));
-  }
-
-  @override
-  String toString() => jsonEncode(this);
-
-  @override
-  int get hashCode =>
-      const DeepCollectionEquality().hash(jobranks) ^ runtimeType.hashCode;
-}
-
-extension $UserSelectionsJobranksGet$ResponseExtension
-    on UserSelectionsJobranksGet$Response {
-  UserSelectionsJobranksGet$Response copyWith({UserJobRanks? jobranks}) {
-    return UserSelectionsJobranksGet$Response(
-        jobranks: jobranks ?? this.jobranks);
-  }
-
-  UserSelectionsJobranksGet$Response copyWithWrapped(
-      {Wrapped<UserJobRanks?>? jobranks}) {
-    return UserSelectionsJobranksGet$Response(
-        jobranks: (jobranks != null ? jobranks.value : this.jobranks));
-  }
-}
-
-@JsonSerializable(explicitToJson: true)
-class UserSelectionsItemmarketGet$Response {
-  const UserSelectionsItemmarketGet$Response({
-    this.itemmarket,
-    this.metadata,
-  });
-
-  factory UserSelectionsItemmarketGet$Response.fromJson(
-          Map<String, dynamic> json) =>
-      _$UserSelectionsItemmarketGet$ResponseFromJson(json);
-
-  static const toJsonFactory = _$UserSelectionsItemmarketGet$ResponseToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserSelectionsItemmarketGet$ResponseToJson(this);
+  static const toJsonFactory = _$UserItemMarketResponseToJson;
+  Map<String, dynamic> toJson() => _$UserItemMarketResponseToJson(this);
 
   @JsonKey(name: 'itemmarket', defaultValue: <UserItemMarketListing>[])
   final List<UserItemMarketListing>? itemmarket;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
-  static const fromJsonFactory = _$UserSelectionsItemmarketGet$ResponseFromJson;
+  static const fromJsonFactory = _$UserItemMarketResponseFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is UserSelectionsItemmarketGet$Response &&
+        (other is UserItemMarketResponse &&
             (identical(other.itemmarket, itemmarket) ||
-                const DeepCollectionEquality()
-                    .equals(other.itemmarket, itemmarket)) &&
-            (identical(other.metadata, metadata) ||
-                const DeepCollectionEquality()
-                    .equals(other.metadata, metadata)));
+                const DeepCollectionEquality().equals(other.itemmarket, itemmarket)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
   @override
@@ -10598,22 +10540,60 @@ class UserSelectionsItemmarketGet$Response {
       runtimeType.hashCode;
 }
 
-extension $UserSelectionsItemmarketGet$ResponseExtension
-    on UserSelectionsItemmarketGet$Response {
-  UserSelectionsItemmarketGet$Response copyWith(
-      {List<UserItemMarketListing>? itemmarket,
-      RequestMetadataWithLinks? metadata}) {
-    return UserSelectionsItemmarketGet$Response(
-        itemmarket: itemmarket ?? this.itemmarket,
-        metadata: metadata ?? this.metadata);
+extension $UserItemMarketResponseExtension on UserItemMarketResponse {
+  UserItemMarketResponse copyWith({List<UserItemMarketListing>? itemmarket, RequestMetadataWithLinks? metadata}) {
+    return UserItemMarketResponse(itemmarket: itemmarket ?? this.itemmarket, metadata: metadata ?? this.metadata);
   }
 
-  UserSelectionsItemmarketGet$Response copyWithWrapped(
-      {Wrapped<List<UserItemMarketListing>?>? itemmarket,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
-    return UserSelectionsItemmarketGet$Response(
+  UserItemMarketResponse copyWithWrapped(
+      {Wrapped<List<UserItemMarketListing>?>? itemmarket, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return UserItemMarketResponse(
         itemmarket: (itemmarket != null ? itemmarket.value : this.itemmarket),
         metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserLookupResponse {
+  const UserLookupResponse({
+    this.selections,
+  });
+
+  factory UserLookupResponse.fromJson(Map<String, dynamic> json) => _$UserLookupResponseFromJson(json);
+
+  static const toJsonFactory = _$UserLookupResponseToJson;
+  Map<String, dynamic> toJson() => _$UserLookupResponseToJson(this);
+
+  @JsonKey(
+    name: 'selections',
+    toJson: userSelectionNameListToJson,
+    fromJson: userSelectionNameListFromJson,
+  )
+  final List<enums.UserSelectionName>? selections;
+  static const fromJsonFactory = _$UserLookupResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserLookupResponse &&
+            (identical(other.selections, selections) ||
+                const DeepCollectionEquality().equals(other.selections, selections)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(selections) ^ runtimeType.hashCode;
+}
+
+extension $UserLookupResponseExtension on UserLookupResponse {
+  UserLookupResponse copyWith({List<enums.UserSelectionName>? selections}) {
+    return UserLookupResponse(selections: selections ?? this.selections);
+  }
+
+  UserLookupResponse copyWithWrapped({Wrapped<List<enums.UserSelectionName>?>? selections}) {
+    return UserLookupResponse(selections: (selections != null ? selections.value : this.selections));
   }
 }
 
@@ -10629,8 +10609,7 @@ class Attack$Modifiers {
     this.warlord,
   });
 
-  factory Attack$Modifiers.fromJson(Map<String, dynamic> json) =>
-      _$Attack$ModifiersFromJson(json);
+  factory Attack$Modifiers.fromJson(Map<String, dynamic> json) => _$Attack$ModifiersFromJson(json);
 
   static const toJsonFactory = _$Attack$ModifiersToJson;
   Map<String, dynamic> toJson() => _$Attack$ModifiersToJson(this);
@@ -10656,22 +10635,14 @@ class Attack$Modifiers {
     return identical(this, other) ||
         (other is Attack$Modifiers &&
             (identical(other.fairFight, fairFight) ||
-                const DeepCollectionEquality()
-                    .equals(other.fairFight, fairFight)) &&
-            (identical(other.war, war) ||
-                const DeepCollectionEquality().equals(other.war, war)) &&
+                const DeepCollectionEquality().equals(other.fairFight, fairFight)) &&
+            (identical(other.war, war) || const DeepCollectionEquality().equals(other.war, war)) &&
             (identical(other.retaliation, retaliation) ||
-                const DeepCollectionEquality()
-                    .equals(other.retaliation, retaliation)) &&
-            (identical(other.group, group) ||
-                const DeepCollectionEquality().equals(other.group, group)) &&
-            (identical(other.overseas, overseas) ||
-                const DeepCollectionEquality()
-                    .equals(other.overseas, overseas)) &&
-            (identical(other.chain, chain) ||
-                const DeepCollectionEquality().equals(other.chain, chain)) &&
-            (identical(other.warlord, warlord) ||
-                const DeepCollectionEquality().equals(other.warlord, warlord)));
+                const DeepCollectionEquality().equals(other.retaliation, retaliation)) &&
+            (identical(other.group, group) || const DeepCollectionEquality().equals(other.group, group)) &&
+            (identical(other.overseas, overseas) || const DeepCollectionEquality().equals(other.overseas, overseas)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.warlord, warlord) || const DeepCollectionEquality().equals(other.warlord, warlord)));
   }
 
   @override
@@ -10719,8 +10690,7 @@ extension $Attack$ModifiersExtension on Attack$Modifiers {
     return Attack$Modifiers(
         fairFight: (fairFight != null ? fairFight.value : this.fairFight),
         war: (war != null ? war.value : this.war),
-        retaliation:
-            (retaliation != null ? retaliation.value : this.retaliation),
+        retaliation: (retaliation != null ? retaliation.value : this.retaliation),
         group: (group != null ? group.value : this.group),
         overseas: (overseas != null ? overseas.value : this.overseas),
         chain: (chain != null ? chain.value : this.chain),
@@ -10729,20 +10699,84 @@ extension $Attack$ModifiersExtension on Attack$Modifiers {
 }
 
 @JsonSerializable(explicitToJson: true)
-class ForumCategories$Categories$Item {
-  const ForumCategories$Categories$Item({
+class FactionApplication$User {
+  const FactionApplication$User({
+    this.id,
+    this.name,
+    this.level,
+    this.stats,
+  });
+
+  factory FactionApplication$User.fromJson(Map<String, dynamic> json) => _$FactionApplication$UserFromJson(json);
+
+  static const toJsonFactory = _$FactionApplication$UserToJson;
+  Map<String, dynamic> toJson() => _$FactionApplication$UserToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'name')
+  final String? name;
+  @JsonKey(name: 'level')
+  final String? level;
+  @JsonKey(name: 'stats')
+  final FactionApplication$User$Stats? stats;
+  static const fromJsonFactory = _$FactionApplication$UserFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionApplication$User &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.level, level) || const DeepCollectionEquality().equals(other.level, level)) &&
+            (identical(other.stats, stats) || const DeepCollectionEquality().equals(other.stats, stats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(name) ^
+      const DeepCollectionEquality().hash(level) ^
+      const DeepCollectionEquality().hash(stats) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionApplication$UserExtension on FactionApplication$User {
+  FactionApplication$User copyWith({int? id, String? name, String? level, FactionApplication$User$Stats? stats}) {
+    return FactionApplication$User(
+        id: id ?? this.id, name: name ?? this.name, level: level ?? this.level, stats: stats ?? this.stats);
+  }
+
+  FactionApplication$User copyWithWrapped(
+      {Wrapped<int?>? id,
+      Wrapped<String?>? name,
+      Wrapped<String?>? level,
+      Wrapped<FactionApplication$User$Stats?>? stats}) {
+    return FactionApplication$User(
+        id: (id != null ? id.value : this.id),
+        name: (name != null ? name.value : this.name),
+        level: (level != null ? level.value : this.level),
+        stats: (stats != null ? stats.value : this.stats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class ForumCategoriesResponse$Categories$Item {
+  const ForumCategoriesResponse$Categories$Item({
     this.id,
     this.title,
     this.acronym,
     this.threads,
   });
 
-  factory ForumCategories$Categories$Item.fromJson(Map<String, dynamic> json) =>
-      _$ForumCategories$Categories$ItemFromJson(json);
+  factory ForumCategoriesResponse$Categories$Item.fromJson(Map<String, dynamic> json) =>
+      _$ForumCategoriesResponse$Categories$ItemFromJson(json);
 
-  static const toJsonFactory = _$ForumCategories$Categories$ItemToJson;
-  Map<String, dynamic> toJson() =>
-      _$ForumCategories$Categories$ItemToJson(this);
+  static const toJsonFactory = _$ForumCategoriesResponse$Categories$ItemToJson;
+  Map<String, dynamic> toJson() => _$ForumCategoriesResponse$Categories$ItemToJson(this);
 
   @JsonKey(name: 'id')
   final int? id;
@@ -10752,21 +10786,16 @@ class ForumCategories$Categories$Item {
   final String? acronym;
   @JsonKey(name: 'threads')
   final int? threads;
-  static const fromJsonFactory = _$ForumCategories$Categories$ItemFromJson;
+  static const fromJsonFactory = _$ForumCategoriesResponse$Categories$ItemFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is ForumCategories$Categories$Item &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.title, title) ||
-                const DeepCollectionEquality().equals(other.title, title)) &&
-            (identical(other.acronym, acronym) ||
-                const DeepCollectionEquality()
-                    .equals(other.acronym, acronym)) &&
-            (identical(other.threads, threads) ||
-                const DeepCollectionEquality().equals(other.threads, threads)));
+        (other is ForumCategoriesResponse$Categories$Item &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.title, title) || const DeepCollectionEquality().equals(other.title, title)) &&
+            (identical(other.acronym, acronym) || const DeepCollectionEquality().equals(other.acronym, acronym)) &&
+            (identical(other.threads, threads) || const DeepCollectionEquality().equals(other.threads, threads)));
   }
 
   @override
@@ -10781,23 +10810,18 @@ class ForumCategories$Categories$Item {
       runtimeType.hashCode;
 }
 
-extension $ForumCategories$Categories$ItemExtension
-    on ForumCategories$Categories$Item {
-  ForumCategories$Categories$Item copyWith(
-      {int? id, String? title, String? acronym, int? threads}) {
-    return ForumCategories$Categories$Item(
+extension $ForumCategoriesResponse$Categories$ItemExtension on ForumCategoriesResponse$Categories$Item {
+  ForumCategoriesResponse$Categories$Item copyWith({int? id, String? title, String? acronym, int? threads}) {
+    return ForumCategoriesResponse$Categories$Item(
         id: id ?? this.id,
         title: title ?? this.title,
         acronym: acronym ?? this.acronym,
         threads: threads ?? this.threads);
   }
 
-  ForumCategories$Categories$Item copyWithWrapped(
-      {Wrapped<int?>? id,
-      Wrapped<String?>? title,
-      Wrapped<String?>? acronym,
-      Wrapped<int?>? threads}) {
-    return ForumCategories$Categories$Item(
+  ForumCategoriesResponse$Categories$Item copyWithWrapped(
+      {Wrapped<int?>? id, Wrapped<String?>? title, Wrapped<String?>? acronym, Wrapped<int?>? threads}) {
+    return ForumCategoriesResponse$Categories$Item(
         id: (id != null ? id.value : this.id),
         title: (title != null ? title.value : this.title),
         acronym: (acronym != null ? acronym.value : this.acronym),
@@ -10817,8 +10841,7 @@ class RaceCarUpgrade$Effects {
     this.tarmac,
   });
 
-  factory RaceCarUpgrade$Effects.fromJson(Map<String, dynamic> json) =>
-      _$RaceCarUpgrade$EffectsFromJson(json);
+  factory RaceCarUpgrade$Effects.fromJson(Map<String, dynamic> json) => _$RaceCarUpgrade$EffectsFromJson(json);
 
   static const toJsonFactory = _$RaceCarUpgrade$EffectsToJson;
   Map<String, dynamic> toJson() => _$RaceCarUpgrade$EffectsToJson(this);
@@ -10843,24 +10866,14 @@ class RaceCarUpgrade$Effects {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RaceCarUpgrade$Effects &&
-            (identical(other.topSpeed, topSpeed) ||
-                const DeepCollectionEquality()
-                    .equals(other.topSpeed, topSpeed)) &&
+            (identical(other.topSpeed, topSpeed) || const DeepCollectionEquality().equals(other.topSpeed, topSpeed)) &&
             (identical(other.acceleration, acceleration) ||
-                const DeepCollectionEquality()
-                    .equals(other.acceleration, acceleration)) &&
-            (identical(other.braking, braking) ||
-                const DeepCollectionEquality()
-                    .equals(other.braking, braking)) &&
-            (identical(other.handling, handling) ||
-                const DeepCollectionEquality()
-                    .equals(other.handling, handling)) &&
-            (identical(other.safety, safety) ||
-                const DeepCollectionEquality().equals(other.safety, safety)) &&
-            (identical(other.dirt, dirt) ||
-                const DeepCollectionEquality().equals(other.dirt, dirt)) &&
-            (identical(other.tarmac, tarmac) ||
-                const DeepCollectionEquality().equals(other.tarmac, tarmac)));
+                const DeepCollectionEquality().equals(other.acceleration, acceleration)) &&
+            (identical(other.braking, braking) || const DeepCollectionEquality().equals(other.braking, braking)) &&
+            (identical(other.handling, handling) || const DeepCollectionEquality().equals(other.handling, handling)) &&
+            (identical(other.safety, safety) || const DeepCollectionEquality().equals(other.safety, safety)) &&
+            (identical(other.dirt, dirt) || const DeepCollectionEquality().equals(other.dirt, dirt)) &&
+            (identical(other.tarmac, tarmac) || const DeepCollectionEquality().equals(other.tarmac, tarmac)));
   }
 
   @override
@@ -10880,13 +10893,7 @@ class RaceCarUpgrade$Effects {
 
 extension $RaceCarUpgrade$EffectsExtension on RaceCarUpgrade$Effects {
   RaceCarUpgrade$Effects copyWith(
-      {int? topSpeed,
-      int? acceleration,
-      int? braking,
-      int? handling,
-      int? safety,
-      int? dirt,
-      int? tarmac}) {
+      {int? topSpeed, int? acceleration, int? braking, int? handling, int? safety, int? dirt, int? tarmac}) {
     return RaceCarUpgrade$Effects(
         topSpeed: topSpeed ?? this.topSpeed,
         acceleration: acceleration ?? this.acceleration,
@@ -10907,8 +10914,7 @@ extension $RaceCarUpgrade$EffectsExtension on RaceCarUpgrade$Effects {
       Wrapped<int?>? tarmac}) {
     return RaceCarUpgrade$Effects(
         topSpeed: (topSpeed != null ? topSpeed.value : this.topSpeed),
-        acceleration:
-            (acceleration != null ? acceleration.value : this.acceleration),
+        acceleration: (acceleration != null ? acceleration.value : this.acceleration),
         braking: (braking != null ? braking.value : this.braking),
         handling: (handling != null ? handling.value : this.handling),
         safety: (safety != null ? safety.value : this.safety),
@@ -10924,8 +10930,7 @@ class RaceCarUpgrade$Cost {
     this.cash,
   });
 
-  factory RaceCarUpgrade$Cost.fromJson(Map<String, dynamic> json) =>
-      _$RaceCarUpgrade$CostFromJson(json);
+  factory RaceCarUpgrade$Cost.fromJson(Map<String, dynamic> json) => _$RaceCarUpgrade$CostFromJson(json);
 
   static const toJsonFactory = _$RaceCarUpgrade$CostToJson;
   Map<String, dynamic> toJson() => _$RaceCarUpgrade$CostToJson(this);
@@ -10940,10 +10945,8 @@ class RaceCarUpgrade$Cost {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is RaceCarUpgrade$Cost &&
-            (identical(other.points, points) ||
-                const DeepCollectionEquality().equals(other.points, points)) &&
-            (identical(other.cash, cash) ||
-                const DeepCollectionEquality().equals(other.cash, cash)));
+            (identical(other.points, points) || const DeepCollectionEquality().equals(other.points, points)) &&
+            (identical(other.cash, cash) || const DeepCollectionEquality().equals(other.cash, cash)));
   }
 
   @override
@@ -10951,22 +10954,17 @@ class RaceCarUpgrade$Cost {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(points) ^
-      const DeepCollectionEquality().hash(cash) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(points) ^ const DeepCollectionEquality().hash(cash) ^ runtimeType.hashCode;
 }
 
 extension $RaceCarUpgrade$CostExtension on RaceCarUpgrade$Cost {
   RaceCarUpgrade$Cost copyWith({int? points, int? cash}) {
-    return RaceCarUpgrade$Cost(
-        points: points ?? this.points, cash: cash ?? this.cash);
+    return RaceCarUpgrade$Cost(points: points ?? this.points, cash: cash ?? this.cash);
   }
 
-  RaceCarUpgrade$Cost copyWithWrapped(
-      {Wrapped<int?>? points, Wrapped<int?>? cash}) {
+  RaceCarUpgrade$Cost copyWithWrapped({Wrapped<int?>? points, Wrapped<int?>? cash}) {
     return RaceCarUpgrade$Cost(
-        points: (points != null ? points.value : this.points),
-        cash: (cash != null ? cash.value : this.cash));
+        points: (points != null ? points.value : this.points), cash: (cash != null ? cash.value : this.cash));
   }
 }
 
@@ -10978,8 +10976,7 @@ class Race$Participants {
     this.current,
   });
 
-  factory Race$Participants.fromJson(Map<String, dynamic> json) =>
-      _$Race$ParticipantsFromJson(json);
+  factory Race$Participants.fromJson(Map<String, dynamic> json) => _$Race$ParticipantsFromJson(json);
 
   static const toJsonFactory = _$Race$ParticipantsToJson;
   Map<String, dynamic> toJson() => _$Race$ParticipantsToJson(this);
@@ -10996,14 +10993,9 @@ class Race$Participants {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is Race$Participants &&
-            (identical(other.minimum, minimum) ||
-                const DeepCollectionEquality()
-                    .equals(other.minimum, minimum)) &&
-            (identical(other.maximum, maximum) ||
-                const DeepCollectionEquality()
-                    .equals(other.maximum, maximum)) &&
-            (identical(other.current, current) ||
-                const DeepCollectionEquality().equals(other.current, current)));
+            (identical(other.minimum, minimum) || const DeepCollectionEquality().equals(other.minimum, minimum)) &&
+            (identical(other.maximum, maximum) || const DeepCollectionEquality().equals(other.maximum, maximum)) &&
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)));
   }
 
   @override
@@ -11020,15 +11012,10 @@ class Race$Participants {
 extension $Race$ParticipantsExtension on Race$Participants {
   Race$Participants copyWith({int? minimum, int? maximum, int? current}) {
     return Race$Participants(
-        minimum: minimum ?? this.minimum,
-        maximum: maximum ?? this.maximum,
-        current: current ?? this.current);
+        minimum: minimum ?? this.minimum, maximum: maximum ?? this.maximum, current: current ?? this.current);
   }
 
-  Race$Participants copyWithWrapped(
-      {Wrapped<int?>? minimum,
-      Wrapped<int?>? maximum,
-      Wrapped<int?>? current}) {
+  Race$Participants copyWithWrapped({Wrapped<int?>? minimum, Wrapped<int?>? maximum, Wrapped<int?>? current}) {
     return Race$Participants(
         minimum: (minimum != null ? minimum.value : this.minimum),
         maximum: (maximum != null ? maximum.value : this.maximum),
@@ -11045,8 +11032,7 @@ class Race$Schedule {
     this.end,
   });
 
-  factory Race$Schedule.fromJson(Map<String, dynamic> json) =>
-      _$Race$ScheduleFromJson(json);
+  factory Race$Schedule.fromJson(Map<String, dynamic> json) => _$Race$ScheduleFromJson(json);
 
   static const toJsonFactory = _$Race$ScheduleToJson;
   Map<String, dynamic> toJson() => _$Race$ScheduleToJson(this);
@@ -11065,16 +11051,11 @@ class Race$Schedule {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is Race$Schedule &&
-            (identical(other.joinFrom, joinFrom) ||
-                const DeepCollectionEquality()
-                    .equals(other.joinFrom, joinFrom)) &&
+            (identical(other.joinFrom, joinFrom) || const DeepCollectionEquality().equals(other.joinFrom, joinFrom)) &&
             (identical(other.joinUntil, joinUntil) ||
-                const DeepCollectionEquality()
-                    .equals(other.joinUntil, joinUntil)) &&
-            (identical(other.start, start) ||
-                const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) ||
-                const DeepCollectionEquality().equals(other.end, end)));
+                const DeepCollectionEquality().equals(other.joinUntil, joinUntil)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)));
   }
 
   @override
@@ -11090,8 +11071,7 @@ class Race$Schedule {
 }
 
 extension $Race$ScheduleExtension on Race$Schedule {
-  Race$Schedule copyWith(
-      {int? joinFrom, int? joinUntil, int? start, int? end}) {
+  Race$Schedule copyWith({int? joinFrom, int? joinUntil, int? start, int? end}) {
     return Race$Schedule(
         joinFrom: joinFrom ?? this.joinFrom,
         joinUntil: joinUntil ?? this.joinUntil,
@@ -11100,10 +11080,7 @@ extension $Race$ScheduleExtension on Race$Schedule {
   }
 
   Race$Schedule copyWithWrapped(
-      {Wrapped<int?>? joinFrom,
-      Wrapped<int?>? joinUntil,
-      Wrapped<int?>? start,
-      Wrapped<int?>? end}) {
+      {Wrapped<int?>? joinFrom, Wrapped<int?>? joinUntil, Wrapped<int?>? start, Wrapped<int?>? end}) {
     return Race$Schedule(
         joinFrom: (joinFrom != null ? joinFrom.value : this.joinFrom),
         joinUntil: (joinUntil != null ? joinUntil.value : this.joinUntil),
@@ -11123,8 +11100,7 @@ class Race$Requirements {
     this.joinFee,
   });
 
-  factory Race$Requirements.fromJson(Map<String, dynamic> json) =>
-      _$Race$RequirementsFromJson(json);
+  factory Race$Requirements.fromJson(Map<String, dynamic> json) => _$Race$RequirementsFromJson(json);
 
   static const toJsonFactory = _$Race$RequirementsToJson;
   Map<String, dynamic> toJson() => _$Race$RequirementsToJson(this);
@@ -11155,23 +11131,16 @@ class Race$Requirements {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is Race$Requirements &&
-            (identical(other.carClass, carClass) ||
-                const DeepCollectionEquality()
-                    .equals(other.carClass, carClass)) &&
+            (identical(other.carClass, carClass) || const DeepCollectionEquality().equals(other.carClass, carClass)) &&
             (identical(other.driverClass, driverClass) ||
-                const DeepCollectionEquality()
-                    .equals(other.driverClass, driverClass)) &&
+                const DeepCollectionEquality().equals(other.driverClass, driverClass)) &&
             (identical(other.carItemId, carItemId) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemId, carItemId)) &&
+                const DeepCollectionEquality().equals(other.carItemId, carItemId)) &&
             (identical(other.requiresStockCar, requiresStockCar) ||
-                const DeepCollectionEquality()
-                    .equals(other.requiresStockCar, requiresStockCar)) &&
+                const DeepCollectionEquality().equals(other.requiresStockCar, requiresStockCar)) &&
             (identical(other.requiresPassword, requiresPassword) ||
-                const DeepCollectionEquality()
-                    .equals(other.requiresPassword, requiresPassword)) &&
-            (identical(other.joinFee, joinFee) ||
-                const DeepCollectionEquality().equals(other.joinFee, joinFee)));
+                const DeepCollectionEquality().equals(other.requiresPassword, requiresPassword)) &&
+            (identical(other.joinFee, joinFee) || const DeepCollectionEquality().equals(other.joinFee, joinFee)));
   }
 
   @override
@@ -11214,32 +11183,27 @@ extension $Race$RequirementsExtension on Race$Requirements {
       Wrapped<int?>? joinFee}) {
     return Race$Requirements(
         carClass: (carClass != null ? carClass.value : this.carClass),
-        driverClass:
-            (driverClass != null ? driverClass.value : this.driverClass),
+        driverClass: (driverClass != null ? driverClass.value : this.driverClass),
         carItemId: (carItemId != null ? carItemId.value : this.carItemId),
-        requiresStockCar: (requiresStockCar != null
-            ? requiresStockCar.value
-            : this.requiresStockCar),
-        requiresPassword: (requiresPassword != null
-            ? requiresPassword.value
-            : this.requiresPassword),
+        requiresStockCar: (requiresStockCar != null ? requiresStockCar.value : this.requiresStockCar),
+        requiresPassword: (requiresPassword != null ? requiresPassword.value : this.requiresPassword),
         joinFee: (joinFee != null ? joinFee.value : this.joinFee));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceDetails$Participants {
-  const RaceDetails$Participants({
+class RacingRaceDetailsResponse$Participants {
+  const RacingRaceDetailsResponse$Participants({
     this.minimum,
     this.maximum,
     this.current,
   });
 
-  factory RaceDetails$Participants.fromJson(Map<String, dynamic> json) =>
-      _$RaceDetails$ParticipantsFromJson(json);
+  factory RacingRaceDetailsResponse$Participants.fromJson(Map<String, dynamic> json) =>
+      _$RacingRaceDetailsResponse$ParticipantsFromJson(json);
 
-  static const toJsonFactory = _$RaceDetails$ParticipantsToJson;
-  Map<String, dynamic> toJson() => _$RaceDetails$ParticipantsToJson(this);
+  static const toJsonFactory = _$RacingRaceDetailsResponse$ParticipantsToJson;
+  Map<String, dynamic> toJson() => _$RacingRaceDetailsResponse$ParticipantsToJson(this);
 
   @JsonKey(name: 'minimum')
   final int? minimum;
@@ -11247,20 +11211,15 @@ class RaceDetails$Participants {
   final int? maximum;
   @JsonKey(name: 'current')
   final int? current;
-  static const fromJsonFactory = _$RaceDetails$ParticipantsFromJson;
+  static const fromJsonFactory = _$RacingRaceDetailsResponse$ParticipantsFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceDetails$Participants &&
-            (identical(other.minimum, minimum) ||
-                const DeepCollectionEquality()
-                    .equals(other.minimum, minimum)) &&
-            (identical(other.maximum, maximum) ||
-                const DeepCollectionEquality()
-                    .equals(other.maximum, maximum)) &&
-            (identical(other.current, current) ||
-                const DeepCollectionEquality().equals(other.current, current)));
+        (other is RacingRaceDetailsResponse$Participants &&
+            (identical(other.minimum, minimum) || const DeepCollectionEquality().equals(other.minimum, minimum)) &&
+            (identical(other.maximum, maximum) || const DeepCollectionEquality().equals(other.maximum, maximum)) &&
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)));
   }
 
   @override
@@ -11274,20 +11233,15 @@ class RaceDetails$Participants {
       runtimeType.hashCode;
 }
 
-extension $RaceDetails$ParticipantsExtension on RaceDetails$Participants {
-  RaceDetails$Participants copyWith(
-      {int? minimum, int? maximum, int? current}) {
-    return RaceDetails$Participants(
-        minimum: minimum ?? this.minimum,
-        maximum: maximum ?? this.maximum,
-        current: current ?? this.current);
+extension $RacingRaceDetailsResponse$ParticipantsExtension on RacingRaceDetailsResponse$Participants {
+  RacingRaceDetailsResponse$Participants copyWith({int? minimum, int? maximum, int? current}) {
+    return RacingRaceDetailsResponse$Participants(
+        minimum: minimum ?? this.minimum, maximum: maximum ?? this.maximum, current: current ?? this.current);
   }
 
-  RaceDetails$Participants copyWithWrapped(
-      {Wrapped<int?>? minimum,
-      Wrapped<int?>? maximum,
-      Wrapped<int?>? current}) {
-    return RaceDetails$Participants(
+  RacingRaceDetailsResponse$Participants copyWithWrapped(
+      {Wrapped<int?>? minimum, Wrapped<int?>? maximum, Wrapped<int?>? current}) {
+    return RacingRaceDetailsResponse$Participants(
         minimum: (minimum != null ? minimum.value : this.minimum),
         maximum: (maximum != null ? maximum.value : this.maximum),
         current: (current != null ? current.value : this.current));
@@ -11295,19 +11249,19 @@ extension $RaceDetails$ParticipantsExtension on RaceDetails$Participants {
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceDetails$Schedule {
-  const RaceDetails$Schedule({
+class RacingRaceDetailsResponse$Schedule {
+  const RacingRaceDetailsResponse$Schedule({
     this.joinFrom,
     this.joinUntil,
     this.start,
     this.end,
   });
 
-  factory RaceDetails$Schedule.fromJson(Map<String, dynamic> json) =>
-      _$RaceDetails$ScheduleFromJson(json);
+  factory RacingRaceDetailsResponse$Schedule.fromJson(Map<String, dynamic> json) =>
+      _$RacingRaceDetailsResponse$ScheduleFromJson(json);
 
-  static const toJsonFactory = _$RaceDetails$ScheduleToJson;
-  Map<String, dynamic> toJson() => _$RaceDetails$ScheduleToJson(this);
+  static const toJsonFactory = _$RacingRaceDetailsResponse$ScheduleToJson;
+  Map<String, dynamic> toJson() => _$RacingRaceDetailsResponse$ScheduleToJson(this);
 
   @JsonKey(name: 'join_from')
   final int? joinFrom;
@@ -11317,22 +11271,17 @@ class RaceDetails$Schedule {
   final int? start;
   @JsonKey(name: 'end')
   final int? end;
-  static const fromJsonFactory = _$RaceDetails$ScheduleFromJson;
+  static const fromJsonFactory = _$RacingRaceDetailsResponse$ScheduleFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceDetails$Schedule &&
-            (identical(other.joinFrom, joinFrom) ||
-                const DeepCollectionEquality()
-                    .equals(other.joinFrom, joinFrom)) &&
+        (other is RacingRaceDetailsResponse$Schedule &&
+            (identical(other.joinFrom, joinFrom) || const DeepCollectionEquality().equals(other.joinFrom, joinFrom)) &&
             (identical(other.joinUntil, joinUntil) ||
-                const DeepCollectionEquality()
-                    .equals(other.joinUntil, joinUntil)) &&
-            (identical(other.start, start) ||
-                const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) ||
-                const DeepCollectionEquality().equals(other.end, end)));
+                const DeepCollectionEquality().equals(other.joinUntil, joinUntil)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)));
   }
 
   @override
@@ -11347,22 +11296,18 @@ class RaceDetails$Schedule {
       runtimeType.hashCode;
 }
 
-extension $RaceDetails$ScheduleExtension on RaceDetails$Schedule {
-  RaceDetails$Schedule copyWith(
-      {int? joinFrom, int? joinUntil, int? start, int? end}) {
-    return RaceDetails$Schedule(
+extension $RacingRaceDetailsResponse$ScheduleExtension on RacingRaceDetailsResponse$Schedule {
+  RacingRaceDetailsResponse$Schedule copyWith({int? joinFrom, int? joinUntil, int? start, int? end}) {
+    return RacingRaceDetailsResponse$Schedule(
         joinFrom: joinFrom ?? this.joinFrom,
         joinUntil: joinUntil ?? this.joinUntil,
         start: start ?? this.start,
         end: end ?? this.end);
   }
 
-  RaceDetails$Schedule copyWithWrapped(
-      {Wrapped<int?>? joinFrom,
-      Wrapped<int?>? joinUntil,
-      Wrapped<int?>? start,
-      Wrapped<int?>? end}) {
-    return RaceDetails$Schedule(
+  RacingRaceDetailsResponse$Schedule copyWithWrapped(
+      {Wrapped<int?>? joinFrom, Wrapped<int?>? joinUntil, Wrapped<int?>? start, Wrapped<int?>? end}) {
+    return RacingRaceDetailsResponse$Schedule(
         joinFrom: (joinFrom != null ? joinFrom.value : this.joinFrom),
         joinUntil: (joinUntil != null ? joinUntil.value : this.joinUntil),
         start: (start != null ? start.value : this.start),
@@ -11371,8 +11316,8 @@ extension $RaceDetails$ScheduleExtension on RaceDetails$Schedule {
 }
 
 @JsonSerializable(explicitToJson: true)
-class RaceDetails$Requirements {
-  const RaceDetails$Requirements({
+class RacingRaceDetailsResponse$Requirements {
+  const RacingRaceDetailsResponse$Requirements({
     this.carClass,
     this.driverClass,
     this.carItemId,
@@ -11381,11 +11326,11 @@ class RaceDetails$Requirements {
     this.joinFee,
   });
 
-  factory RaceDetails$Requirements.fromJson(Map<String, dynamic> json) =>
-      _$RaceDetails$RequirementsFromJson(json);
+  factory RacingRaceDetailsResponse$Requirements.fromJson(Map<String, dynamic> json) =>
+      _$RacingRaceDetailsResponse$RequirementsFromJson(json);
 
-  static const toJsonFactory = _$RaceDetails$RequirementsToJson;
-  Map<String, dynamic> toJson() => _$RaceDetails$RequirementsToJson(this);
+  static const toJsonFactory = _$RacingRaceDetailsResponse$RequirementsToJson;
+  Map<String, dynamic> toJson() => _$RacingRaceDetailsResponse$RequirementsToJson(this);
 
   @JsonKey(
     name: 'car_class',
@@ -11407,29 +11352,22 @@ class RaceDetails$Requirements {
   final bool? requiresPassword;
   @JsonKey(name: 'join_fee')
   final int? joinFee;
-  static const fromJsonFactory = _$RaceDetails$RequirementsFromJson;
+  static const fromJsonFactory = _$RacingRaceDetailsResponse$RequirementsFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is RaceDetails$Requirements &&
-            (identical(other.carClass, carClass) ||
-                const DeepCollectionEquality()
-                    .equals(other.carClass, carClass)) &&
+        (other is RacingRaceDetailsResponse$Requirements &&
+            (identical(other.carClass, carClass) || const DeepCollectionEquality().equals(other.carClass, carClass)) &&
             (identical(other.driverClass, driverClass) ||
-                const DeepCollectionEquality()
-                    .equals(other.driverClass, driverClass)) &&
+                const DeepCollectionEquality().equals(other.driverClass, driverClass)) &&
             (identical(other.carItemId, carItemId) ||
-                const DeepCollectionEquality()
-                    .equals(other.carItemId, carItemId)) &&
+                const DeepCollectionEquality().equals(other.carItemId, carItemId)) &&
             (identical(other.requiresStockCar, requiresStockCar) ||
-                const DeepCollectionEquality()
-                    .equals(other.requiresStockCar, requiresStockCar)) &&
+                const DeepCollectionEquality().equals(other.requiresStockCar, requiresStockCar)) &&
             (identical(other.requiresPassword, requiresPassword) ||
-                const DeepCollectionEquality()
-                    .equals(other.requiresPassword, requiresPassword)) &&
-            (identical(other.joinFee, joinFee) ||
-                const DeepCollectionEquality().equals(other.joinFee, joinFee)));
+                const DeepCollectionEquality().equals(other.requiresPassword, requiresPassword)) &&
+            (identical(other.joinFee, joinFee) || const DeepCollectionEquality().equals(other.joinFee, joinFee)));
   }
 
   @override
@@ -11446,15 +11384,15 @@ class RaceDetails$Requirements {
       runtimeType.hashCode;
 }
 
-extension $RaceDetails$RequirementsExtension on RaceDetails$Requirements {
-  RaceDetails$Requirements copyWith(
+extension $RacingRaceDetailsResponse$RequirementsExtension on RacingRaceDetailsResponse$Requirements {
+  RacingRaceDetailsResponse$Requirements copyWith(
       {enums.RaceClassEnum? carClass,
       enums.RaceClassEnum? driverClass,
       int? carItemId,
       bool? requiresStockCar,
       bool? requiresPassword,
       int? joinFee}) {
-    return RaceDetails$Requirements(
+    return RacingRaceDetailsResponse$Requirements(
         carClass: carClass ?? this.carClass,
         driverClass: driverClass ?? this.driverClass,
         carItemId: carItemId ?? this.carItemId,
@@ -11463,25 +11401,73 @@ extension $RaceDetails$RequirementsExtension on RaceDetails$Requirements {
         joinFee: joinFee ?? this.joinFee);
   }
 
-  RaceDetails$Requirements copyWithWrapped(
+  RacingRaceDetailsResponse$Requirements copyWithWrapped(
       {Wrapped<enums.RaceClassEnum?>? carClass,
       Wrapped<enums.RaceClassEnum?>? driverClass,
       Wrapped<int?>? carItemId,
       Wrapped<bool?>? requiresStockCar,
       Wrapped<bool?>? requiresPassword,
       Wrapped<int?>? joinFee}) {
-    return RaceDetails$Requirements(
+    return RacingRaceDetailsResponse$Requirements(
         carClass: (carClass != null ? carClass.value : this.carClass),
-        driverClass:
-            (driverClass != null ? driverClass.value : this.driverClass),
+        driverClass: (driverClass != null ? driverClass.value : this.driverClass),
         carItemId: (carItemId != null ? carItemId.value : this.carItemId),
-        requiresStockCar: (requiresStockCar != null
-            ? requiresStockCar.value
-            : this.requiresStockCar),
-        requiresPassword: (requiresPassword != null
-            ? requiresPassword.value
-            : this.requiresPassword),
+        requiresStockCar: (requiresStockCar != null ? requiresStockCar.value : this.requiresStockCar),
+        requiresPassword: (requiresPassword != null ? requiresPassword.value : this.requiresPassword),
         joinFee: (joinFee != null ? joinFee.value : this.joinFee));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class TornCalendarResponse$Calendar {
+  const TornCalendarResponse$Calendar({
+    this.competitions,
+    this.events,
+  });
+
+  factory TornCalendarResponse$Calendar.fromJson(Map<String, dynamic> json) =>
+      _$TornCalendarResponse$CalendarFromJson(json);
+
+  static const toJsonFactory = _$TornCalendarResponse$CalendarToJson;
+  Map<String, dynamic> toJson() => _$TornCalendarResponse$CalendarToJson(this);
+
+  @JsonKey(name: 'competitions', defaultValue: <TornCalendarActivity>[])
+  final List<TornCalendarActivity>? competitions;
+  @JsonKey(name: 'events', defaultValue: <TornCalendarActivity>[])
+  final List<TornCalendarActivity>? events;
+  static const fromJsonFactory = _$TornCalendarResponse$CalendarFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is TornCalendarResponse$Calendar &&
+            (identical(other.competitions, competitions) ||
+                const DeepCollectionEquality().equals(other.competitions, competitions)) &&
+            (identical(other.events, events) || const DeepCollectionEquality().equals(other.events, events)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(competitions) ^
+      const DeepCollectionEquality().hash(events) ^
+      runtimeType.hashCode;
+}
+
+extension $TornCalendarResponse$CalendarExtension on TornCalendarResponse$Calendar {
+  TornCalendarResponse$Calendar copyWith(
+      {List<TornCalendarActivity>? competitions, List<TornCalendarActivity>? events}) {
+    return TornCalendarResponse$Calendar(
+        competitions: competitions ?? this.competitions, events: events ?? this.events);
+  }
+
+  TornCalendarResponse$Calendar copyWithWrapped(
+      {Wrapped<List<TornCalendarActivity>?>? competitions, Wrapped<List<TornCalendarActivity>?>? events}) {
+    return TornCalendarResponse$Calendar(
+        competitions: (competitions != null ? competitions.value : this.competitions),
+        events: (events != null ? events.value : this.events));
   }
 }
 
@@ -11494,13 +11480,11 @@ class UserCrimeDetailsBootlegging$OnlineStore {
     this.sales,
   });
 
-  factory UserCrimeDetailsBootlegging$OnlineStore.fromJson(
-          Map<String, dynamic> json) =>
+  factory UserCrimeDetailsBootlegging$OnlineStore.fromJson(Map<String, dynamic> json) =>
       _$UserCrimeDetailsBootlegging$OnlineStoreFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsBootlegging$OnlineStoreToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsBootlegging$OnlineStoreToJson(this);
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsBootlegging$OnlineStoreToJson(this);
 
   @JsonKey(name: 'earnings')
   final int? earnings;
@@ -11510,23 +11494,17 @@ class UserCrimeDetailsBootlegging$OnlineStore {
   final int? customers;
   @JsonKey(name: 'sales')
   final int? sales;
-  static const fromJsonFactory =
-      _$UserCrimeDetailsBootlegging$OnlineStoreFromJson;
+  static const fromJsonFactory = _$UserCrimeDetailsBootlegging$OnlineStoreFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsBootlegging$OnlineStore &&
-            (identical(other.earnings, earnings) ||
-                const DeepCollectionEquality()
-                    .equals(other.earnings, earnings)) &&
-            (identical(other.visits, visits) ||
-                const DeepCollectionEquality().equals(other.visits, visits)) &&
+            (identical(other.earnings, earnings) || const DeepCollectionEquality().equals(other.earnings, earnings)) &&
+            (identical(other.visits, visits) || const DeepCollectionEquality().equals(other.visits, visits)) &&
             (identical(other.customers, customers) ||
-                const DeepCollectionEquality()
-                    .equals(other.customers, customers)) &&
-            (identical(other.sales, sales) ||
-                const DeepCollectionEquality().equals(other.sales, sales)));
+                const DeepCollectionEquality().equals(other.customers, customers)) &&
+            (identical(other.sales, sales) || const DeepCollectionEquality().equals(other.sales, sales)));
   }
 
   @override
@@ -11541,10 +11519,8 @@ class UserCrimeDetailsBootlegging$OnlineStore {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsBootlegging$OnlineStoreExtension
-    on UserCrimeDetailsBootlegging$OnlineStore {
-  UserCrimeDetailsBootlegging$OnlineStore copyWith(
-      {int? earnings, int? visits, int? customers, int? sales}) {
+extension $UserCrimeDetailsBootlegging$OnlineStoreExtension on UserCrimeDetailsBootlegging$OnlineStore {
+  UserCrimeDetailsBootlegging$OnlineStore copyWith({int? earnings, int? visits, int? customers, int? sales}) {
     return UserCrimeDetailsBootlegging$OnlineStore(
         earnings: earnings ?? this.earnings,
         visits: visits ?? this.visits,
@@ -11553,10 +11529,7 @@ extension $UserCrimeDetailsBootlegging$OnlineStoreExtension
   }
 
   UserCrimeDetailsBootlegging$OnlineStore copyWithWrapped(
-      {Wrapped<int?>? earnings,
-      Wrapped<int?>? visits,
-      Wrapped<int?>? customers,
-      Wrapped<int?>? sales}) {
+      {Wrapped<int?>? earnings, Wrapped<int?>? visits, Wrapped<int?>? customers, Wrapped<int?>? sales}) {
     return UserCrimeDetailsBootlegging$OnlineStore(
         earnings: (earnings != null ? earnings.value : this.earnings),
         visits: (visits != null ? visits.value : this.visits),
@@ -11580,13 +11553,11 @@ class UserCrimeDetailsBootlegging$DvdSales {
     this.earnings,
   });
 
-  factory UserCrimeDetailsBootlegging$DvdSales.fromJson(
-          Map<String, dynamic> json) =>
+  factory UserCrimeDetailsBootlegging$DvdSales.fromJson(Map<String, dynamic> json) =>
       _$UserCrimeDetailsBootlegging$DvdSalesFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsBootlegging$DvdSalesToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsBootlegging$DvdSalesToJson(this);
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsBootlegging$DvdSalesToJson(this);
 
   @JsonKey(name: 'action')
   final int? action;
@@ -11614,30 +11585,16 @@ class UserCrimeDetailsBootlegging$DvdSales {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsBootlegging$DvdSales &&
-            (identical(other.action, action) ||
-                const DeepCollectionEquality().equals(other.action, action)) &&
-            (identical(other.comedy, comedy) ||
-                const DeepCollectionEquality().equals(other.comedy, comedy)) &&
-            (identical(other.drama, drama) ||
-                const DeepCollectionEquality().equals(other.drama, drama)) &&
-            (identical(other.fantasy, fantasy) ||
-                const DeepCollectionEquality()
-                    .equals(other.fantasy, fantasy)) &&
-            (identical(other.horror, horror) ||
-                const DeepCollectionEquality().equals(other.horror, horror)) &&
-            (identical(other.romance, romance) ||
-                const DeepCollectionEquality()
-                    .equals(other.romance, romance)) &&
-            (identical(other.thriller, thriller) ||
-                const DeepCollectionEquality()
-                    .equals(other.thriller, thriller)) &&
-            (identical(other.sciFi, sciFi) ||
-                const DeepCollectionEquality().equals(other.sciFi, sciFi)) &&
-            (identical(other.total, total) ||
-                const DeepCollectionEquality().equals(other.total, total)) &&
-            (identical(other.earnings, earnings) ||
-                const DeepCollectionEquality()
-                    .equals(other.earnings, earnings)));
+            (identical(other.action, action) || const DeepCollectionEquality().equals(other.action, action)) &&
+            (identical(other.comedy, comedy) || const DeepCollectionEquality().equals(other.comedy, comedy)) &&
+            (identical(other.drama, drama) || const DeepCollectionEquality().equals(other.drama, drama)) &&
+            (identical(other.fantasy, fantasy) || const DeepCollectionEquality().equals(other.fantasy, fantasy)) &&
+            (identical(other.horror, horror) || const DeepCollectionEquality().equals(other.horror, horror)) &&
+            (identical(other.romance, romance) || const DeepCollectionEquality().equals(other.romance, romance)) &&
+            (identical(other.thriller, thriller) || const DeepCollectionEquality().equals(other.thriller, thriller)) &&
+            (identical(other.sciFi, sciFi) || const DeepCollectionEquality().equals(other.sciFi, sciFi)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.earnings, earnings) || const DeepCollectionEquality().equals(other.earnings, earnings)));
   }
 
   @override
@@ -11658,8 +11615,7 @@ class UserCrimeDetailsBootlegging$DvdSales {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsBootlegging$DvdSalesExtension
-    on UserCrimeDetailsBootlegging$DvdSales {
+extension $UserCrimeDetailsBootlegging$DvdSalesExtension on UserCrimeDetailsBootlegging$DvdSales {
   UserCrimeDetailsBootlegging$DvdSales copyWith(
       {int? action,
       int? comedy,
@@ -11719,13 +11675,11 @@ class UserCrimeDetailsCardSkimming$CardDetails {
     this.areas,
   });
 
-  factory UserCrimeDetailsCardSkimming$CardDetails.fromJson(
-          Map<String, dynamic> json) =>
+  factory UserCrimeDetailsCardSkimming$CardDetails.fromJson(Map<String, dynamic> json) =>
       _$UserCrimeDetailsCardSkimming$CardDetailsFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsCardSkimming$CardDetailsToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsCardSkimming$CardDetailsToJson(this);
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsCardSkimming$CardDetailsToJson(this);
 
   @JsonKey(name: 'recoverable')
   final int? recoverable;
@@ -11737,25 +11691,19 @@ class UserCrimeDetailsCardSkimming$CardDetails {
   final int? lost;
   @JsonKey(name: 'areas')
   final List<UserCrimeDetailsCardSkimming$CardDetails$Areas$Item>? areas;
-  static const fromJsonFactory =
-      _$UserCrimeDetailsCardSkimming$CardDetailsFromJson;
+  static const fromJsonFactory = _$UserCrimeDetailsCardSkimming$CardDetailsFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsCardSkimming$CardDetails &&
             (identical(other.recoverable, recoverable) ||
-                const DeepCollectionEquality()
-                    .equals(other.recoverable, recoverable)) &&
+                const DeepCollectionEquality().equals(other.recoverable, recoverable)) &&
             (identical(other.recovered, recovered) ||
-                const DeepCollectionEquality()
-                    .equals(other.recovered, recovered)) &&
-            (identical(other.sold, sold) ||
-                const DeepCollectionEquality().equals(other.sold, sold)) &&
-            (identical(other.lost, lost) ||
-                const DeepCollectionEquality().equals(other.lost, lost)) &&
-            (identical(other.areas, areas) ||
-                const DeepCollectionEquality().equals(other.areas, areas)));
+                const DeepCollectionEquality().equals(other.recovered, recovered)) &&
+            (identical(other.sold, sold) || const DeepCollectionEquality().equals(other.sold, sold)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)) &&
+            (identical(other.areas, areas) || const DeepCollectionEquality().equals(other.areas, areas)));
   }
 
   @override
@@ -11771,8 +11719,7 @@ class UserCrimeDetailsCardSkimming$CardDetails {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsCardSkimming$CardDetailsExtension
-    on UserCrimeDetailsCardSkimming$CardDetails {
+extension $UserCrimeDetailsCardSkimming$CardDetailsExtension on UserCrimeDetailsCardSkimming$CardDetails {
   UserCrimeDetailsCardSkimming$CardDetails copyWith(
       {int? recoverable,
       int? recovered,
@@ -11792,11 +11739,9 @@ extension $UserCrimeDetailsCardSkimming$CardDetailsExtension
       Wrapped<int?>? recovered,
       Wrapped<int?>? sold,
       Wrapped<int?>? lost,
-      Wrapped<List<UserCrimeDetailsCardSkimming$CardDetails$Areas$Item>?>?
-          areas}) {
+      Wrapped<List<UserCrimeDetailsCardSkimming$CardDetails$Areas$Item>?>? areas}) {
     return UserCrimeDetailsCardSkimming$CardDetails(
-        recoverable:
-            (recoverable != null ? recoverable.value : this.recoverable),
+        recoverable: (recoverable != null ? recoverable.value : this.recoverable),
         recovered: (recovered != null ? recovered.value : this.recovered),
         sold: (sold != null ? sold.value : this.sold),
         lost: (lost != null ? lost.value : this.lost),
@@ -11813,13 +11758,11 @@ class UserCrimeDetailsCardSkimming$Skimmers {
     this.lost,
   });
 
-  factory UserCrimeDetailsCardSkimming$Skimmers.fromJson(
-          Map<String, dynamic> json) =>
+  factory UserCrimeDetailsCardSkimming$Skimmers.fromJson(Map<String, dynamic> json) =>
       _$UserCrimeDetailsCardSkimming$SkimmersFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsCardSkimming$SkimmersToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsCardSkimming$SkimmersToJson(this);
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsCardSkimming$SkimmersToJson(this);
 
   @JsonKey(name: 'active')
   final int? active;
@@ -11829,23 +11772,18 @@ class UserCrimeDetailsCardSkimming$Skimmers {
   final int? oldestRecovered;
   @JsonKey(name: 'lost')
   final int? lost;
-  static const fromJsonFactory =
-      _$UserCrimeDetailsCardSkimming$SkimmersFromJson;
+  static const fromJsonFactory = _$UserCrimeDetailsCardSkimming$SkimmersFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsCardSkimming$Skimmers &&
-            (identical(other.active, active) ||
-                const DeepCollectionEquality().equals(other.active, active)) &&
+            (identical(other.active, active) || const DeepCollectionEquality().equals(other.active, active)) &&
             (identical(other.mostLucrative, mostLucrative) ||
-                const DeepCollectionEquality()
-                    .equals(other.mostLucrative, mostLucrative)) &&
+                const DeepCollectionEquality().equals(other.mostLucrative, mostLucrative)) &&
             (identical(other.oldestRecovered, oldestRecovered) ||
-                const DeepCollectionEquality()
-                    .equals(other.oldestRecovered, oldestRecovered)) &&
-            (identical(other.lost, lost) ||
-                const DeepCollectionEquality().equals(other.lost, lost)));
+                const DeepCollectionEquality().equals(other.oldestRecovered, oldestRecovered)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)));
   }
 
   @override
@@ -11860,10 +11798,8 @@ class UserCrimeDetailsCardSkimming$Skimmers {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsCardSkimming$SkimmersExtension
-    on UserCrimeDetailsCardSkimming$Skimmers {
-  UserCrimeDetailsCardSkimming$Skimmers copyWith(
-      {int? active, int? mostLucrative, int? oldestRecovered, int? lost}) {
+extension $UserCrimeDetailsCardSkimming$SkimmersExtension on UserCrimeDetailsCardSkimming$Skimmers {
+  UserCrimeDetailsCardSkimming$Skimmers copyWith({int? active, int? mostLucrative, int? oldestRecovered, int? lost}) {
     return UserCrimeDetailsCardSkimming$Skimmers(
         active: active ?? this.active,
         mostLucrative: mostLucrative ?? this.mostLucrative,
@@ -11872,17 +11808,11 @@ extension $UserCrimeDetailsCardSkimming$SkimmersExtension
   }
 
   UserCrimeDetailsCardSkimming$Skimmers copyWithWrapped(
-      {Wrapped<int?>? active,
-      Wrapped<int?>? mostLucrative,
-      Wrapped<int?>? oldestRecovered,
-      Wrapped<int?>? lost}) {
+      {Wrapped<int?>? active, Wrapped<int?>? mostLucrative, Wrapped<int?>? oldestRecovered, Wrapped<int?>? lost}) {
     return UserCrimeDetailsCardSkimming$Skimmers(
         active: (active != null ? active.value : this.active),
-        mostLucrative:
-            (mostLucrative != null ? mostLucrative.value : this.mostLucrative),
-        oldestRecovered: (oldestRecovered != null
-            ? oldestRecovered.value
-            : this.oldestRecovered),
+        mostLucrative: (mostLucrative != null ? mostLucrative.value : this.mostLucrative),
+        oldestRecovered: (oldestRecovered != null ? oldestRecovered.value : this.oldestRecovered),
         lost: (lost != null ? lost.value : this.lost));
   }
 }
@@ -11931,32 +11861,21 @@ class UserCrimeDetailsScamming$Zones {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsScamming$Zones &&
-            (identical(other.red, red) ||
-                const DeepCollectionEquality().equals(other.red, red)) &&
-            (identical(other.neutral, neutral) ||
-                const DeepCollectionEquality()
-                    .equals(other.neutral, neutral)) &&
-            (identical(other.concern, concern) ||
-                const DeepCollectionEquality()
-                    .equals(other.concern, concern)) &&
+            (identical(other.red, red) || const DeepCollectionEquality().equals(other.red, red)) &&
+            (identical(other.neutral, neutral) || const DeepCollectionEquality().equals(other.neutral, neutral)) &&
+            (identical(other.concern, concern) || const DeepCollectionEquality().equals(other.concern, concern)) &&
             (identical(other.sensitivity, sensitivity) ||
-                const DeepCollectionEquality()
-                    .equals(other.sensitivity, sensitivity)) &&
+                const DeepCollectionEquality().equals(other.sensitivity, sensitivity)) &&
             (identical(other.temptation, temptation) ||
-                const DeepCollectionEquality()
-                    .equals(other.temptation, temptation)) &&
+                const DeepCollectionEquality().equals(other.temptation, temptation)) &&
             (identical(other.hesitation, hesitation) ||
-                const DeepCollectionEquality()
-                    .equals(other.hesitation, hesitation)) &&
+                const DeepCollectionEquality().equals(other.hesitation, hesitation)) &&
             (identical(other.lowReward, lowReward) ||
-                const DeepCollectionEquality()
-                    .equals(other.lowReward, lowReward)) &&
+                const DeepCollectionEquality().equals(other.lowReward, lowReward)) &&
             (identical(other.mediumReward, mediumReward) ||
-                const DeepCollectionEquality()
-                    .equals(other.mediumReward, mediumReward)) &&
+                const DeepCollectionEquality().equals(other.mediumReward, mediumReward)) &&
             (identical(other.highReward, highReward) ||
-                const DeepCollectionEquality()
-                    .equals(other.highReward, highReward)));
+                const DeepCollectionEquality().equals(other.highReward, highReward)));
   }
 
   @override
@@ -11976,8 +11895,7 @@ class UserCrimeDetailsScamming$Zones {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsScamming$ZonesExtension
-    on UserCrimeDetailsScamming$Zones {
+extension $UserCrimeDetailsScamming$ZonesExtension on UserCrimeDetailsScamming$Zones {
   UserCrimeDetailsScamming$Zones copyWith(
       {int? red,
       int? neutral,
@@ -12014,13 +11932,11 @@ extension $UserCrimeDetailsScamming$ZonesExtension
         red: (red != null ? red.value : this.red),
         neutral: (neutral != null ? neutral.value : this.neutral),
         concern: (concern != null ? concern.value : this.concern),
-        sensitivity:
-            (sensitivity != null ? sensitivity.value : this.sensitivity),
+        sensitivity: (sensitivity != null ? sensitivity.value : this.sensitivity),
         temptation: (temptation != null ? temptation.value : this.temptation),
         hesitation: (hesitation != null ? hesitation.value : this.hesitation),
         lowReward: (lowReward != null ? lowReward.value : this.lowReward),
-        mediumReward:
-            (mediumReward != null ? mediumReward.value : this.mediumReward),
+        mediumReward: (mediumReward != null ? mediumReward.value : this.mediumReward),
         highReward: (highReward != null ? highReward.value : this.highReward));
   }
 }
@@ -12032,13 +11948,11 @@ class UserCrimeDetailsScamming$Concerns {
     this.resolved,
   });
 
-  factory UserCrimeDetailsScamming$Concerns.fromJson(
-          Map<String, dynamic> json) =>
+  factory UserCrimeDetailsScamming$Concerns.fromJson(Map<String, dynamic> json) =>
       _$UserCrimeDetailsScamming$ConcernsFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsScamming$ConcernsToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsScamming$ConcernsToJson(this);
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsScamming$ConcernsToJson(this);
 
   @JsonKey(name: 'attempts')
   final int? attempts;
@@ -12050,12 +11964,8 @@ class UserCrimeDetailsScamming$Concerns {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsScamming$Concerns &&
-            (identical(other.attempts, attempts) ||
-                const DeepCollectionEquality()
-                    .equals(other.attempts, attempts)) &&
-            (identical(other.resolved, resolved) ||
-                const DeepCollectionEquality()
-                    .equals(other.resolved, resolved)));
+            (identical(other.attempts, attempts) || const DeepCollectionEquality().equals(other.attempts, attempts)) &&
+            (identical(other.resolved, resolved) || const DeepCollectionEquality().equals(other.resolved, resolved)));
   }
 
   @override
@@ -12068,16 +11978,12 @@ class UserCrimeDetailsScamming$Concerns {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsScamming$ConcernsExtension
-    on UserCrimeDetailsScamming$Concerns {
+extension $UserCrimeDetailsScamming$ConcernsExtension on UserCrimeDetailsScamming$Concerns {
   UserCrimeDetailsScamming$Concerns copyWith({int? attempts, int? resolved}) {
-    return UserCrimeDetailsScamming$Concerns(
-        attempts: attempts ?? this.attempts,
-        resolved: resolved ?? this.resolved);
+    return UserCrimeDetailsScamming$Concerns(attempts: attempts ?? this.attempts, resolved: resolved ?? this.resolved);
   }
 
-  UserCrimeDetailsScamming$Concerns copyWithWrapped(
-      {Wrapped<int?>? attempts, Wrapped<int?>? resolved}) {
+  UserCrimeDetailsScamming$Concerns copyWithWrapped({Wrapped<int?>? attempts, Wrapped<int?>? resolved}) {
     return UserCrimeDetailsScamming$Concerns(
         attempts: (attempts != null ? attempts.value : this.attempts),
         resolved: (resolved != null ? resolved.value : this.resolved));
@@ -12092,13 +11998,11 @@ class UserCrimeDetailsScamming$Payouts {
     this.high,
   });
 
-  factory UserCrimeDetailsScamming$Payouts.fromJson(
-          Map<String, dynamic> json) =>
+  factory UserCrimeDetailsScamming$Payouts.fromJson(Map<String, dynamic> json) =>
       _$UserCrimeDetailsScamming$PayoutsFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsScamming$PayoutsToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsScamming$PayoutsToJson(this);
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsScamming$PayoutsToJson(this);
 
   @JsonKey(name: 'low')
   final int? low;
@@ -12112,12 +12016,9 @@ class UserCrimeDetailsScamming$Payouts {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsScamming$Payouts &&
-            (identical(other.low, low) ||
-                const DeepCollectionEquality().equals(other.low, low)) &&
-            (identical(other.medium, medium) ||
-                const DeepCollectionEquality().equals(other.medium, medium)) &&
-            (identical(other.high, high) ||
-                const DeepCollectionEquality().equals(other.high, high)));
+            (identical(other.low, low) || const DeepCollectionEquality().equals(other.low, low)) &&
+            (identical(other.medium, medium) || const DeepCollectionEquality().equals(other.medium, medium)) &&
+            (identical(other.high, high) || const DeepCollectionEquality().equals(other.high, high)));
   }
 
   @override
@@ -12131,18 +12032,13 @@ class UserCrimeDetailsScamming$Payouts {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsScamming$PayoutsExtension
-    on UserCrimeDetailsScamming$Payouts {
-  UserCrimeDetailsScamming$Payouts copyWith(
-      {int? low, int? medium, int? high}) {
+extension $UserCrimeDetailsScamming$PayoutsExtension on UserCrimeDetailsScamming$Payouts {
+  UserCrimeDetailsScamming$Payouts copyWith({int? low, int? medium, int? high}) {
     return UserCrimeDetailsScamming$Payouts(
-        low: low ?? this.low,
-        medium: medium ?? this.medium,
-        high: high ?? this.high);
+        low: low ?? this.low, medium: medium ?? this.medium, high: high ?? this.high);
   }
 
-  UserCrimeDetailsScamming$Payouts copyWithWrapped(
-      {Wrapped<int?>? low, Wrapped<int?>? medium, Wrapped<int?>? high}) {
+  UserCrimeDetailsScamming$Payouts copyWithWrapped({Wrapped<int?>? low, Wrapped<int?>? medium, Wrapped<int?>? high}) {
     return UserCrimeDetailsScamming$Payouts(
         low: (low != null ? low.value : this.low),
         medium: (medium != null ? medium.value : this.medium),
@@ -12161,8 +12057,7 @@ class UserCrimeDetailsScamming$Emails {
       _$UserCrimeDetailsScamming$EmailsFromJson(json);
 
   static const toJsonFactory = _$UserCrimeDetailsScamming$EmailsToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsScamming$EmailsToJson(this);
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsScamming$EmailsToJson(this);
 
   @JsonKey(name: 'scraper')
   final int? scraper;
@@ -12174,11 +12069,8 @@ class UserCrimeDetailsScamming$Emails {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsScamming$Emails &&
-            (identical(other.scraper, scraper) ||
-                const DeepCollectionEquality()
-                    .equals(other.scraper, scraper)) &&
-            (identical(other.phisher, phisher) ||
-                const DeepCollectionEquality().equals(other.phisher, phisher)));
+            (identical(other.scraper, scraper) || const DeepCollectionEquality().equals(other.scraper, scraper)) &&
+            (identical(other.phisher, phisher) || const DeepCollectionEquality().equals(other.phisher, phisher)));
   }
 
   @override
@@ -12191,15 +12083,12 @@ class UserCrimeDetailsScamming$Emails {
       runtimeType.hashCode;
 }
 
-extension $UserCrimeDetailsScamming$EmailsExtension
-    on UserCrimeDetailsScamming$Emails {
+extension $UserCrimeDetailsScamming$EmailsExtension on UserCrimeDetailsScamming$Emails {
   UserCrimeDetailsScamming$Emails copyWith({int? scraper, int? phisher}) {
-    return UserCrimeDetailsScamming$Emails(
-        scraper: scraper ?? this.scraper, phisher: phisher ?? this.phisher);
+    return UserCrimeDetailsScamming$Emails(scraper: scraper ?? this.scraper, phisher: phisher ?? this.phisher);
   }
 
-  UserCrimeDetailsScamming$Emails copyWithWrapped(
-      {Wrapped<int?>? scraper, Wrapped<int?>? phisher}) {
+  UserCrimeDetailsScamming$Emails copyWithWrapped({Wrapped<int?>? scraper, Wrapped<int?>? phisher}) {
     return UserCrimeDetailsScamming$Emails(
         scraper: (scraper != null ? scraper.value : this.scraper),
         phisher: (phisher != null ? phisher.value : this.phisher));
@@ -12207,37 +12096,39 @@ extension $UserCrimeDetailsScamming$EmailsExtension
 }
 
 @JsonSerializable(explicitToJson: true)
-class TornSelectionsCalendarGet$Response$Calendar {
-  const TornSelectionsCalendarGet$Response$Calendar({
-    this.competitions,
-    this.events,
+class FactionApplication$User$Stats {
+  const FactionApplication$User$Stats({
+    this.strength,
+    this.speed,
+    this.dexterity,
+    this.defense,
   });
 
-  factory TornSelectionsCalendarGet$Response$Calendar.fromJson(
-          Map<String, dynamic> json) =>
-      _$TornSelectionsCalendarGet$Response$CalendarFromJson(json);
+  factory FactionApplication$User$Stats.fromJson(Map<String, dynamic> json) =>
+      _$FactionApplication$User$StatsFromJson(json);
 
-  static const toJsonFactory =
-      _$TornSelectionsCalendarGet$Response$CalendarToJson;
-  Map<String, dynamic> toJson() =>
-      _$TornSelectionsCalendarGet$Response$CalendarToJson(this);
+  static const toJsonFactory = _$FactionApplication$User$StatsToJson;
+  Map<String, dynamic> toJson() => _$FactionApplication$User$StatsToJson(this);
 
-  @JsonKey(name: 'competitions', defaultValue: <TornCalendarActivity>[])
-  final List<TornCalendarActivity>? competitions;
-  @JsonKey(name: 'events', defaultValue: <TornCalendarActivity>[])
-  final List<TornCalendarActivity>? events;
-  static const fromJsonFactory =
-      _$TornSelectionsCalendarGet$Response$CalendarFromJson;
+  @JsonKey(name: 'strength')
+  final int? strength;
+  @JsonKey(name: 'speed')
+  final int? speed;
+  @JsonKey(name: 'dexterity')
+  final int? dexterity;
+  @JsonKey(name: 'defense')
+  final int? defense;
+  static const fromJsonFactory = _$FactionApplication$User$StatsFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is TornSelectionsCalendarGet$Response$Calendar &&
-            (identical(other.competitions, competitions) ||
-                const DeepCollectionEquality()
-                    .equals(other.competitions, competitions)) &&
-            (identical(other.events, events) ||
-                const DeepCollectionEquality().equals(other.events, events)));
+        (other is FactionApplication$User$Stats &&
+            (identical(other.strength, strength) || const DeepCollectionEquality().equals(other.strength, strength)) &&
+            (identical(other.speed, speed) || const DeepCollectionEquality().equals(other.speed, speed)) &&
+            (identical(other.dexterity, dexterity) ||
+                const DeepCollectionEquality().equals(other.dexterity, dexterity)) &&
+            (identical(other.defense, defense) || const DeepCollectionEquality().equals(other.defense, defense)));
   }
 
   @override
@@ -12245,28 +12136,29 @@ class TornSelectionsCalendarGet$Response$Calendar {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(competitions) ^
-      const DeepCollectionEquality().hash(events) ^
+      const DeepCollectionEquality().hash(strength) ^
+      const DeepCollectionEquality().hash(speed) ^
+      const DeepCollectionEquality().hash(dexterity) ^
+      const DeepCollectionEquality().hash(defense) ^
       runtimeType.hashCode;
 }
 
-extension $TornSelectionsCalendarGet$Response$CalendarExtension
-    on TornSelectionsCalendarGet$Response$Calendar {
-  TornSelectionsCalendarGet$Response$Calendar copyWith(
-      {List<TornCalendarActivity>? competitions,
-      List<TornCalendarActivity>? events}) {
-    return TornSelectionsCalendarGet$Response$Calendar(
-        competitions: competitions ?? this.competitions,
-        events: events ?? this.events);
+extension $FactionApplication$User$StatsExtension on FactionApplication$User$Stats {
+  FactionApplication$User$Stats copyWith({int? strength, int? speed, int? dexterity, int? defense}) {
+    return FactionApplication$User$Stats(
+        strength: strength ?? this.strength,
+        speed: speed ?? this.speed,
+        dexterity: dexterity ?? this.dexterity,
+        defense: defense ?? this.defense);
   }
 
-  TornSelectionsCalendarGet$Response$Calendar copyWithWrapped(
-      {Wrapped<List<TornCalendarActivity>?>? competitions,
-      Wrapped<List<TornCalendarActivity>?>? events}) {
-    return TornSelectionsCalendarGet$Response$Calendar(
-        competitions:
-            (competitions != null ? competitions.value : this.competitions),
-        events: (events != null ? events.value : this.events));
+  FactionApplication$User$Stats copyWithWrapped(
+      {Wrapped<int?>? strength, Wrapped<int?>? speed, Wrapped<int?>? dexterity, Wrapped<int?>? defense}) {
+    return FactionApplication$User$Stats(
+        strength: (strength != null ? strength.value : this.strength),
+        speed: (speed != null ? speed.value : this.speed),
+        dexterity: (dexterity != null ? dexterity.value : this.dexterity),
+        defense: (defense != null ? defense.value : this.defense));
   }
 }
 
@@ -12277,30 +12169,24 @@ class UserCrimeDetailsCardSkimming$CardDetails$Areas$Item {
     this.amount,
   });
 
-  factory UserCrimeDetailsCardSkimming$CardDetails$Areas$Item.fromJson(
-          Map<String, dynamic> json) =>
+  factory UserCrimeDetailsCardSkimming$CardDetails$Areas$Item.fromJson(Map<String, dynamic> json) =>
       _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemFromJson(json);
 
-  static const toJsonFactory =
-      _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemToJson;
-  Map<String, dynamic> toJson() =>
-      _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemToJson(this);
+  static const toJsonFactory = _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemToJson;
+  Map<String, dynamic> toJson() => _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemToJson(this);
 
   @JsonKey(name: 'id')
   final int? id;
   @JsonKey(name: 'amount')
   final int? amount;
-  static const fromJsonFactory =
-      _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemFromJson;
+  static const fromJsonFactory = _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is UserCrimeDetailsCardSkimming$CardDetails$Areas$Item &&
-            (identical(other.id, id) ||
-                const DeepCollectionEquality().equals(other.id, id)) &&
-            (identical(other.amount, amount) ||
-                const DeepCollectionEquality().equals(other.amount, amount)));
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)));
   }
 
   @override
@@ -12308,24 +12194,18 @@ class UserCrimeDetailsCardSkimming$CardDetails$Areas$Item {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(id) ^
-      const DeepCollectionEquality().hash(amount) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(amount) ^ runtimeType.hashCode;
 }
 
 extension $UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemExtension
     on UserCrimeDetailsCardSkimming$CardDetails$Areas$Item {
-  UserCrimeDetailsCardSkimming$CardDetails$Areas$Item copyWith(
-      {int? id, int? amount}) {
-    return UserCrimeDetailsCardSkimming$CardDetails$Areas$Item(
-        id: id ?? this.id, amount: amount ?? this.amount);
+  UserCrimeDetailsCardSkimming$CardDetails$Areas$Item copyWith({int? id, int? amount}) {
+    return UserCrimeDetailsCardSkimming$CardDetails$Areas$Item(id: id ?? this.id, amount: amount ?? this.amount);
   }
 
-  UserCrimeDetailsCardSkimming$CardDetails$Areas$Item copyWithWrapped(
-      {Wrapped<int?>? id, Wrapped<int?>? amount}) {
+  UserCrimeDetailsCardSkimming$CardDetails$Areas$Item copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? amount}) {
     return UserCrimeDetailsCardSkimming$CardDetails$Areas$Item(
-        id: (id != null ? id.value : this.id),
-        amount: (amount != null ? amount.value : this.amount));
+        id: (id != null ? id.value : this.id), amount: (amount != null ? amount.value : this.amount));
   }
 }
 
@@ -12341,8 +12221,7 @@ enums.RaceClassEnum raceClassEnumFromJson(
   Object? raceClassEnum, [
   enums.RaceClassEnum? defaultValue,
 ]) {
-  return enums.RaceClassEnum.values
-          .firstWhereOrNull((e) => e.value == raceClassEnum) ??
+  return enums.RaceClassEnum.values.firstWhereOrNull((e) => e.value == raceClassEnum) ??
       defaultValue ??
       enums.RaceClassEnum.swaggerGeneratedUnknown;
 }
@@ -12354,13 +12233,10 @@ enums.RaceClassEnum? raceClassEnumNullableFromJson(
   if (raceClassEnum == null) {
     return null;
   }
-  return enums.RaceClassEnum.values
-          .firstWhereOrNull((e) => e.value == raceClassEnum) ??
-      defaultValue;
+  return enums.RaceClassEnum.values.firstWhereOrNull((e) => e.value == raceClassEnum) ?? defaultValue;
 }
 
-String raceClassEnumExplodedListToJson(
-    List<enums.RaceClassEnum>? raceClassEnum) {
+String raceClassEnumExplodedListToJson(List<enums.RaceClassEnum>? raceClassEnum) {
   return raceClassEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
@@ -12394,13 +12270,11 @@ List<enums.RaceClassEnum>? raceClassEnumNullableListFromJson(
   return raceClassEnum.map((e) => raceClassEnumFromJson(e.toString())).toList();
 }
 
-String? factionNewsCategoryNullableToJson(
-    enums.FactionNewsCategory? factionNewsCategory) {
+String? factionNewsCategoryNullableToJson(enums.FactionNewsCategory? factionNewsCategory) {
   return factionNewsCategory?.value;
 }
 
-String? factionNewsCategoryToJson(
-    enums.FactionNewsCategory factionNewsCategory) {
+String? factionNewsCategoryToJson(enums.FactionNewsCategory factionNewsCategory) {
   return factionNewsCategory.value;
 }
 
@@ -12408,8 +12282,7 @@ enums.FactionNewsCategory factionNewsCategoryFromJson(
   Object? factionNewsCategory, [
   enums.FactionNewsCategory? defaultValue,
 ]) {
-  return enums.FactionNewsCategory.values
-          .firstWhereOrNull((e) => e.value == factionNewsCategory) ??
+  return enums.FactionNewsCategory.values.firstWhereOrNull((e) => e.value == factionNewsCategory) ??
       defaultValue ??
       enums.FactionNewsCategory.swaggerGeneratedUnknown;
 }
@@ -12421,18 +12294,14 @@ enums.FactionNewsCategory? factionNewsCategoryNullableFromJson(
   if (factionNewsCategory == null) {
     return null;
   }
-  return enums.FactionNewsCategory.values
-          .firstWhereOrNull((e) => e.value == factionNewsCategory) ??
-      defaultValue;
+  return enums.FactionNewsCategory.values.firstWhereOrNull((e) => e.value == factionNewsCategory) ?? defaultValue;
 }
 
-String factionNewsCategoryExplodedListToJson(
-    List<enums.FactionNewsCategory>? factionNewsCategory) {
+String factionNewsCategoryExplodedListToJson(List<enums.FactionNewsCategory>? factionNewsCategory) {
   return factionNewsCategory?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> factionNewsCategoryListToJson(
-    List<enums.FactionNewsCategory>? factionNewsCategory) {
+List<String> factionNewsCategoryListToJson(List<enums.FactionNewsCategory>? factionNewsCategory) {
   if (factionNewsCategory == null) {
     return [];
   }
@@ -12448,9 +12317,7 @@ List<enums.FactionNewsCategory> factionNewsCategoryListFromJson(
     return defaultValue ?? [];
   }
 
-  return factionNewsCategory
-      .map((e) => factionNewsCategoryFromJson(e.toString()))
-      .toList();
+  return factionNewsCategory.map((e) => factionNewsCategoryFromJson(e.toString())).toList();
 }
 
 List<enums.FactionNewsCategory>? factionNewsCategoryNullableListFromJson(
@@ -12461,9 +12328,7 @@ List<enums.FactionNewsCategory>? factionNewsCategoryNullableListFromJson(
     return defaultValue;
   }
 
-  return factionNewsCategory
-      .map((e) => factionNewsCategoryFromJson(e.toString()))
-      .toList();
+  return factionNewsCategory.map((e) => factionNewsCategoryFromJson(e.toString())).toList();
 }
 
 String? factionRankEnumNullableToJson(enums.FactionRankEnum? factionRankEnum) {
@@ -12478,8 +12343,7 @@ enums.FactionRankEnum factionRankEnumFromJson(
   Object? factionRankEnum, [
   enums.FactionRankEnum? defaultValue,
 ]) {
-  return enums.FactionRankEnum.values
-          .firstWhereOrNull((e) => e.value == factionRankEnum) ??
+  return enums.FactionRankEnum.values.firstWhereOrNull((e) => e.value == factionRankEnum) ??
       defaultValue ??
       enums.FactionRankEnum.swaggerGeneratedUnknown;
 }
@@ -12491,18 +12355,14 @@ enums.FactionRankEnum? factionRankEnumNullableFromJson(
   if (factionRankEnum == null) {
     return null;
   }
-  return enums.FactionRankEnum.values
-          .firstWhereOrNull((e) => e.value == factionRankEnum) ??
-      defaultValue;
+  return enums.FactionRankEnum.values.firstWhereOrNull((e) => e.value == factionRankEnum) ?? defaultValue;
 }
 
-String factionRankEnumExplodedListToJson(
-    List<enums.FactionRankEnum>? factionRankEnum) {
+String factionRankEnumExplodedListToJson(List<enums.FactionRankEnum>? factionRankEnum) {
   return factionRankEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> factionRankEnumListToJson(
-    List<enums.FactionRankEnum>? factionRankEnum) {
+List<String> factionRankEnumListToJson(List<enums.FactionRankEnum>? factionRankEnum) {
   if (factionRankEnum == null) {
     return [];
   }
@@ -12518,9 +12378,7 @@ List<enums.FactionRankEnum> factionRankEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return factionRankEnum
-      .map((e) => factionRankEnumFromJson(e.toString()))
-      .toList();
+  return factionRankEnum.map((e) => factionRankEnumFromJson(e.toString())).toList();
 }
 
 List<enums.FactionRankEnum>? factionRankEnumNullableListFromJson(
@@ -12531,9 +12389,7 @@ List<enums.FactionRankEnum>? factionRankEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return factionRankEnum
-      .map((e) => factionRankEnumFromJson(e.toString()))
-      .toList();
+  return factionRankEnum.map((e) => factionRankEnumFromJson(e.toString())).toList();
 }
 
 String? userCrimeUniquesRewardAmmoEnumNullableToJson(
@@ -12541,8 +12397,7 @@ String? userCrimeUniquesRewardAmmoEnumNullableToJson(
   return userCrimeUniquesRewardAmmoEnum?.value;
 }
 
-String? userCrimeUniquesRewardAmmoEnumToJson(
-    enums.UserCrimeUniquesRewardAmmoEnum userCrimeUniquesRewardAmmoEnum) {
+String? userCrimeUniquesRewardAmmoEnumToJson(enums.UserCrimeUniquesRewardAmmoEnum userCrimeUniquesRewardAmmoEnum) {
   return userCrimeUniquesRewardAmmoEnum.value;
 }
 
@@ -12556,8 +12411,7 @@ enums.UserCrimeUniquesRewardAmmoEnum userCrimeUniquesRewardAmmoEnumFromJson(
       enums.UserCrimeUniquesRewardAmmoEnum.swaggerGeneratedUnknown;
 }
 
-enums.UserCrimeUniquesRewardAmmoEnum?
-    userCrimeUniquesRewardAmmoEnumNullableFromJson(
+enums.UserCrimeUniquesRewardAmmoEnum? userCrimeUniquesRewardAmmoEnumNullableFromJson(
   Object? userCrimeUniquesRewardAmmoEnum, [
   enums.UserCrimeUniquesRewardAmmoEnum? defaultValue,
 ]) {
@@ -12570,14 +12424,12 @@ enums.UserCrimeUniquesRewardAmmoEnum?
 }
 
 String userCrimeUniquesRewardAmmoEnumExplodedListToJson(
-    List<enums.UserCrimeUniquesRewardAmmoEnum>?
-        userCrimeUniquesRewardAmmoEnum) {
+    List<enums.UserCrimeUniquesRewardAmmoEnum>? userCrimeUniquesRewardAmmoEnum) {
   return userCrimeUniquesRewardAmmoEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
 List<String> userCrimeUniquesRewardAmmoEnumListToJson(
-    List<enums.UserCrimeUniquesRewardAmmoEnum>?
-        userCrimeUniquesRewardAmmoEnum) {
+    List<enums.UserCrimeUniquesRewardAmmoEnum>? userCrimeUniquesRewardAmmoEnum) {
   if (userCrimeUniquesRewardAmmoEnum == null) {
     return [];
   }
@@ -12585,8 +12437,7 @@ List<String> userCrimeUniquesRewardAmmoEnumListToJson(
   return userCrimeUniquesRewardAmmoEnum.map((e) => e.value!).toList();
 }
 
-List<enums.UserCrimeUniquesRewardAmmoEnum>
-    userCrimeUniquesRewardAmmoEnumListFromJson(
+List<enums.UserCrimeUniquesRewardAmmoEnum> userCrimeUniquesRewardAmmoEnumListFromJson(
   List? userCrimeUniquesRewardAmmoEnum, [
   List<enums.UserCrimeUniquesRewardAmmoEnum>? defaultValue,
 ]) {
@@ -12594,13 +12445,10 @@ List<enums.UserCrimeUniquesRewardAmmoEnum>
     return defaultValue ?? [];
   }
 
-  return userCrimeUniquesRewardAmmoEnum
-      .map((e) => userCrimeUniquesRewardAmmoEnumFromJson(e.toString()))
-      .toList();
+  return userCrimeUniquesRewardAmmoEnum.map((e) => userCrimeUniquesRewardAmmoEnumFromJson(e.toString())).toList();
 }
 
-List<enums.UserCrimeUniquesRewardAmmoEnum>?
-    userCrimeUniquesRewardAmmoEnumNullableListFromJson(
+List<enums.UserCrimeUniquesRewardAmmoEnum>? userCrimeUniquesRewardAmmoEnumNullableListFromJson(
   List? userCrimeUniquesRewardAmmoEnum, [
   List<enums.UserCrimeUniquesRewardAmmoEnum>? defaultValue,
 ]) {
@@ -12608,9 +12456,7 @@ List<enums.UserCrimeUniquesRewardAmmoEnum>?
     return defaultValue;
   }
 
-  return userCrimeUniquesRewardAmmoEnum
-      .map((e) => userCrimeUniquesRewardAmmoEnumFromJson(e.toString()))
-      .toList();
+  return userCrimeUniquesRewardAmmoEnum.map((e) => userCrimeUniquesRewardAmmoEnumFromJson(e.toString())).toList();
 }
 
 String? raceStatusEnumNullableToJson(enums.RaceStatusEnum? raceStatusEnum) {
@@ -12625,8 +12471,7 @@ enums.RaceStatusEnum raceStatusEnumFromJson(
   Object? raceStatusEnum, [
   enums.RaceStatusEnum? defaultValue,
 ]) {
-  return enums.RaceStatusEnum.values
-          .firstWhereOrNull((e) => e.value == raceStatusEnum) ??
+  return enums.RaceStatusEnum.values.firstWhereOrNull((e) => e.value == raceStatusEnum) ??
       defaultValue ??
       enums.RaceStatusEnum.swaggerGeneratedUnknown;
 }
@@ -12638,18 +12483,14 @@ enums.RaceStatusEnum? raceStatusEnumNullableFromJson(
   if (raceStatusEnum == null) {
     return null;
   }
-  return enums.RaceStatusEnum.values
-          .firstWhereOrNull((e) => e.value == raceStatusEnum) ??
-      defaultValue;
+  return enums.RaceStatusEnum.values.firstWhereOrNull((e) => e.value == raceStatusEnum) ?? defaultValue;
 }
 
-String raceStatusEnumExplodedListToJson(
-    List<enums.RaceStatusEnum>? raceStatusEnum) {
+String raceStatusEnumExplodedListToJson(List<enums.RaceStatusEnum>? raceStatusEnum) {
   return raceStatusEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> raceStatusEnumListToJson(
-    List<enums.RaceStatusEnum>? raceStatusEnum) {
+List<String> raceStatusEnumListToJson(List<enums.RaceStatusEnum>? raceStatusEnum) {
   if (raceStatusEnum == null) {
     return [];
   }
@@ -12665,9 +12506,7 @@ List<enums.RaceStatusEnum> raceStatusEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return raceStatusEnum
-      .map((e) => raceStatusEnumFromJson(e.toString()))
-      .toList();
+  return raceStatusEnum.map((e) => raceStatusEnumFromJson(e.toString())).toList();
 }
 
 List<enums.RaceStatusEnum>? raceStatusEnumNullableListFromJson(
@@ -12678,9 +12517,7 @@ List<enums.RaceStatusEnum>? raceStatusEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return raceStatusEnum
-      .map((e) => raceStatusEnumFromJson(e.toString()))
-      .toList();
+  return raceStatusEnum.map((e) => raceStatusEnumFromJson(e.toString())).toList();
 }
 
 String? tornHofCategoryNullableToJson(enums.TornHofCategory? tornHofCategory) {
@@ -12695,8 +12532,7 @@ enums.TornHofCategory tornHofCategoryFromJson(
   Object? tornHofCategory, [
   enums.TornHofCategory? defaultValue,
 ]) {
-  return enums.TornHofCategory.values
-          .firstWhereOrNull((e) => e.value == tornHofCategory) ??
+  return enums.TornHofCategory.values.firstWhereOrNull((e) => e.value == tornHofCategory) ??
       defaultValue ??
       enums.TornHofCategory.swaggerGeneratedUnknown;
 }
@@ -12708,18 +12544,14 @@ enums.TornHofCategory? tornHofCategoryNullableFromJson(
   if (tornHofCategory == null) {
     return null;
   }
-  return enums.TornHofCategory.values
-          .firstWhereOrNull((e) => e.value == tornHofCategory) ??
-      defaultValue;
+  return enums.TornHofCategory.values.firstWhereOrNull((e) => e.value == tornHofCategory) ?? defaultValue;
 }
 
-String tornHofCategoryExplodedListToJson(
-    List<enums.TornHofCategory>? tornHofCategory) {
+String tornHofCategoryExplodedListToJson(List<enums.TornHofCategory>? tornHofCategory) {
   return tornHofCategory?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> tornHofCategoryListToJson(
-    List<enums.TornHofCategory>? tornHofCategory) {
+List<String> tornHofCategoryListToJson(List<enums.TornHofCategory>? tornHofCategory) {
   if (tornHofCategory == null) {
     return [];
   }
@@ -12735,9 +12567,7 @@ List<enums.TornHofCategory> tornHofCategoryListFromJson(
     return defaultValue ?? [];
   }
 
-  return tornHofCategory
-      .map((e) => tornHofCategoryFromJson(e.toString()))
-      .toList();
+  return tornHofCategory.map((e) => tornHofCategoryFromJson(e.toString())).toList();
 }
 
 List<enums.TornHofCategory>? tornHofCategoryNullableListFromJson(
@@ -12748,18 +12578,14 @@ List<enums.TornHofCategory>? tornHofCategoryNullableListFromJson(
     return defaultValue;
   }
 
-  return tornHofCategory
-      .map((e) => tornHofCategoryFromJson(e.toString()))
-      .toList();
+  return tornHofCategory.map((e) => tornHofCategoryFromJson(e.toString())).toList();
 }
 
-String? tornFactionHofCategoryNullableToJson(
-    enums.TornFactionHofCategory? tornFactionHofCategory) {
+String? tornFactionHofCategoryNullableToJson(enums.TornFactionHofCategory? tornFactionHofCategory) {
   return tornFactionHofCategory?.value;
 }
 
-String? tornFactionHofCategoryToJson(
-    enums.TornFactionHofCategory tornFactionHofCategory) {
+String? tornFactionHofCategoryToJson(enums.TornFactionHofCategory tornFactionHofCategory) {
   return tornFactionHofCategory.value;
 }
 
@@ -12767,8 +12593,7 @@ enums.TornFactionHofCategory tornFactionHofCategoryFromJson(
   Object? tornFactionHofCategory, [
   enums.TornFactionHofCategory? defaultValue,
 ]) {
-  return enums.TornFactionHofCategory.values
-          .firstWhereOrNull((e) => e.value == tornFactionHofCategory) ??
+  return enums.TornFactionHofCategory.values.firstWhereOrNull((e) => e.value == tornFactionHofCategory) ??
       defaultValue ??
       enums.TornFactionHofCategory.swaggerGeneratedUnknown;
 }
@@ -12780,18 +12605,14 @@ enums.TornFactionHofCategory? tornFactionHofCategoryNullableFromJson(
   if (tornFactionHofCategory == null) {
     return null;
   }
-  return enums.TornFactionHofCategory.values
-          .firstWhereOrNull((e) => e.value == tornFactionHofCategory) ??
-      defaultValue;
+  return enums.TornFactionHofCategory.values.firstWhereOrNull((e) => e.value == tornFactionHofCategory) ?? defaultValue;
 }
 
-String tornFactionHofCategoryExplodedListToJson(
-    List<enums.TornFactionHofCategory>? tornFactionHofCategory) {
+String tornFactionHofCategoryExplodedListToJson(List<enums.TornFactionHofCategory>? tornFactionHofCategory) {
   return tornFactionHofCategory?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> tornFactionHofCategoryListToJson(
-    List<enums.TornFactionHofCategory>? tornFactionHofCategory) {
+List<String> tornFactionHofCategoryListToJson(List<enums.TornFactionHofCategory>? tornFactionHofCategory) {
   if (tornFactionHofCategory == null) {
     return [];
   }
@@ -12807,9 +12628,7 @@ List<enums.TornFactionHofCategory> tornFactionHofCategoryListFromJson(
     return defaultValue ?? [];
   }
 
-  return tornFactionHofCategory
-      .map((e) => tornFactionHofCategoryFromJson(e.toString()))
-      .toList();
+  return tornFactionHofCategory.map((e) => tornFactionHofCategoryFromJson(e.toString())).toList();
 }
 
 List<enums.TornFactionHofCategory>? tornFactionHofCategoryNullableListFromJson(
@@ -12820,18 +12639,14 @@ List<enums.TornFactionHofCategory>? tornFactionHofCategoryNullableListFromJson(
     return defaultValue;
   }
 
-  return tornFactionHofCategory
-      .map((e) => tornFactionHofCategoryFromJson(e.toString()))
-      .toList();
+  return tornFactionHofCategory.map((e) => tornFactionHofCategoryFromJson(e.toString())).toList();
 }
 
-String? factionAttackResultNullableToJson(
-    enums.FactionAttackResult? factionAttackResult) {
+String? factionAttackResultNullableToJson(enums.FactionAttackResult? factionAttackResult) {
   return factionAttackResult?.value;
 }
 
-String? factionAttackResultToJson(
-    enums.FactionAttackResult factionAttackResult) {
+String? factionAttackResultToJson(enums.FactionAttackResult factionAttackResult) {
   return factionAttackResult.value;
 }
 
@@ -12839,8 +12654,7 @@ enums.FactionAttackResult factionAttackResultFromJson(
   Object? factionAttackResult, [
   enums.FactionAttackResult? defaultValue,
 ]) {
-  return enums.FactionAttackResult.values
-          .firstWhereOrNull((e) => e.value == factionAttackResult) ??
+  return enums.FactionAttackResult.values.firstWhereOrNull((e) => e.value == factionAttackResult) ??
       defaultValue ??
       enums.FactionAttackResult.swaggerGeneratedUnknown;
 }
@@ -12852,18 +12666,14 @@ enums.FactionAttackResult? factionAttackResultNullableFromJson(
   if (factionAttackResult == null) {
     return null;
   }
-  return enums.FactionAttackResult.values
-          .firstWhereOrNull((e) => e.value == factionAttackResult) ??
-      defaultValue;
+  return enums.FactionAttackResult.values.firstWhereOrNull((e) => e.value == factionAttackResult) ?? defaultValue;
 }
 
-String factionAttackResultExplodedListToJson(
-    List<enums.FactionAttackResult>? factionAttackResult) {
+String factionAttackResultExplodedListToJson(List<enums.FactionAttackResult>? factionAttackResult) {
   return factionAttackResult?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> factionAttackResultListToJson(
-    List<enums.FactionAttackResult>? factionAttackResult) {
+List<String> factionAttackResultListToJson(List<enums.FactionAttackResult>? factionAttackResult) {
   if (factionAttackResult == null) {
     return [];
   }
@@ -12879,9 +12689,7 @@ List<enums.FactionAttackResult> factionAttackResultListFromJson(
     return defaultValue ?? [];
   }
 
-  return factionAttackResult
-      .map((e) => factionAttackResultFromJson(e.toString()))
-      .toList();
+  return factionAttackResult.map((e) => factionAttackResultFromJson(e.toString())).toList();
 }
 
 List<enums.FactionAttackResult>? factionAttackResultNullableListFromJson(
@@ -12892,18 +12700,14 @@ List<enums.FactionAttackResult>? factionAttackResultNullableListFromJson(
     return defaultValue;
   }
 
-  return factionAttackResult
-      .map((e) => factionAttackResultFromJson(e.toString()))
-      .toList();
+  return factionAttackResult.map((e) => factionAttackResultFromJson(e.toString())).toList();
 }
 
-String? raceCarUpgradeCategoryNullableToJson(
-    enums.RaceCarUpgradeCategory? raceCarUpgradeCategory) {
+String? raceCarUpgradeCategoryNullableToJson(enums.RaceCarUpgradeCategory? raceCarUpgradeCategory) {
   return raceCarUpgradeCategory?.value;
 }
 
-String? raceCarUpgradeCategoryToJson(
-    enums.RaceCarUpgradeCategory raceCarUpgradeCategory) {
+String? raceCarUpgradeCategoryToJson(enums.RaceCarUpgradeCategory raceCarUpgradeCategory) {
   return raceCarUpgradeCategory.value;
 }
 
@@ -12911,8 +12715,7 @@ enums.RaceCarUpgradeCategory raceCarUpgradeCategoryFromJson(
   Object? raceCarUpgradeCategory, [
   enums.RaceCarUpgradeCategory? defaultValue,
 ]) {
-  return enums.RaceCarUpgradeCategory.values
-          .firstWhereOrNull((e) => e.value == raceCarUpgradeCategory) ??
+  return enums.RaceCarUpgradeCategory.values.firstWhereOrNull((e) => e.value == raceCarUpgradeCategory) ??
       defaultValue ??
       enums.RaceCarUpgradeCategory.swaggerGeneratedUnknown;
 }
@@ -12924,18 +12727,14 @@ enums.RaceCarUpgradeCategory? raceCarUpgradeCategoryNullableFromJson(
   if (raceCarUpgradeCategory == null) {
     return null;
   }
-  return enums.RaceCarUpgradeCategory.values
-          .firstWhereOrNull((e) => e.value == raceCarUpgradeCategory) ??
-      defaultValue;
+  return enums.RaceCarUpgradeCategory.values.firstWhereOrNull((e) => e.value == raceCarUpgradeCategory) ?? defaultValue;
 }
 
-String raceCarUpgradeCategoryExplodedListToJson(
-    List<enums.RaceCarUpgradeCategory>? raceCarUpgradeCategory) {
+String raceCarUpgradeCategoryExplodedListToJson(List<enums.RaceCarUpgradeCategory>? raceCarUpgradeCategory) {
   return raceCarUpgradeCategory?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> raceCarUpgradeCategoryListToJson(
-    List<enums.RaceCarUpgradeCategory>? raceCarUpgradeCategory) {
+List<String> raceCarUpgradeCategoryListToJson(List<enums.RaceCarUpgradeCategory>? raceCarUpgradeCategory) {
   if (raceCarUpgradeCategory == null) {
     return [];
   }
@@ -12951,9 +12750,7 @@ List<enums.RaceCarUpgradeCategory> raceCarUpgradeCategoryListFromJson(
     return defaultValue ?? [];
   }
 
-  return raceCarUpgradeCategory
-      .map((e) => raceCarUpgradeCategoryFromJson(e.toString()))
-      .toList();
+  return raceCarUpgradeCategory.map((e) => raceCarUpgradeCategoryFromJson(e.toString())).toList();
 }
 
 List<enums.RaceCarUpgradeCategory>? raceCarUpgradeCategoryNullableListFromJson(
@@ -12964,18 +12761,14 @@ List<enums.RaceCarUpgradeCategory>? raceCarUpgradeCategoryNullableListFromJson(
     return defaultValue;
   }
 
-  return raceCarUpgradeCategory
-      .map((e) => raceCarUpgradeCategoryFromJson(e.toString()))
-      .toList();
+  return raceCarUpgradeCategory.map((e) => raceCarUpgradeCategoryFromJson(e.toString())).toList();
 }
 
-String? jobPositionArmyEnumNullableToJson(
-    enums.JobPositionArmyEnum? jobPositionArmyEnum) {
+String? jobPositionArmyEnumNullableToJson(enums.JobPositionArmyEnum? jobPositionArmyEnum) {
   return jobPositionArmyEnum?.value;
 }
 
-String? jobPositionArmyEnumToJson(
-    enums.JobPositionArmyEnum jobPositionArmyEnum) {
+String? jobPositionArmyEnumToJson(enums.JobPositionArmyEnum jobPositionArmyEnum) {
   return jobPositionArmyEnum.value;
 }
 
@@ -12983,8 +12776,7 @@ enums.JobPositionArmyEnum jobPositionArmyEnumFromJson(
   Object? jobPositionArmyEnum, [
   enums.JobPositionArmyEnum? defaultValue,
 ]) {
-  return enums.JobPositionArmyEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionArmyEnum) ??
+  return enums.JobPositionArmyEnum.values.firstWhereOrNull((e) => e.value == jobPositionArmyEnum) ??
       defaultValue ??
       enums.JobPositionArmyEnum.swaggerGeneratedUnknown;
 }
@@ -12996,18 +12788,14 @@ enums.JobPositionArmyEnum? jobPositionArmyEnumNullableFromJson(
   if (jobPositionArmyEnum == null) {
     return null;
   }
-  return enums.JobPositionArmyEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionArmyEnum) ??
-      defaultValue;
+  return enums.JobPositionArmyEnum.values.firstWhereOrNull((e) => e.value == jobPositionArmyEnum) ?? defaultValue;
 }
 
-String jobPositionArmyEnumExplodedListToJson(
-    List<enums.JobPositionArmyEnum>? jobPositionArmyEnum) {
+String jobPositionArmyEnumExplodedListToJson(List<enums.JobPositionArmyEnum>? jobPositionArmyEnum) {
   return jobPositionArmyEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> jobPositionArmyEnumListToJson(
-    List<enums.JobPositionArmyEnum>? jobPositionArmyEnum) {
+List<String> jobPositionArmyEnumListToJson(List<enums.JobPositionArmyEnum>? jobPositionArmyEnum) {
   if (jobPositionArmyEnum == null) {
     return [];
   }
@@ -13023,9 +12811,7 @@ List<enums.JobPositionArmyEnum> jobPositionArmyEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return jobPositionArmyEnum
-      .map((e) => jobPositionArmyEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionArmyEnum.map((e) => jobPositionArmyEnumFromJson(e.toString())).toList();
 }
 
 List<enums.JobPositionArmyEnum>? jobPositionArmyEnumNullableListFromJson(
@@ -13036,18 +12822,14 @@ List<enums.JobPositionArmyEnum>? jobPositionArmyEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return jobPositionArmyEnum
-      .map((e) => jobPositionArmyEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionArmyEnum.map((e) => jobPositionArmyEnumFromJson(e.toString())).toList();
 }
 
-String? jobPositionGrocerEnumNullableToJson(
-    enums.JobPositionGrocerEnum? jobPositionGrocerEnum) {
+String? jobPositionGrocerEnumNullableToJson(enums.JobPositionGrocerEnum? jobPositionGrocerEnum) {
   return jobPositionGrocerEnum?.value;
 }
 
-String? jobPositionGrocerEnumToJson(
-    enums.JobPositionGrocerEnum jobPositionGrocerEnum) {
+String? jobPositionGrocerEnumToJson(enums.JobPositionGrocerEnum jobPositionGrocerEnum) {
   return jobPositionGrocerEnum.value;
 }
 
@@ -13055,8 +12837,7 @@ enums.JobPositionGrocerEnum jobPositionGrocerEnumFromJson(
   Object? jobPositionGrocerEnum, [
   enums.JobPositionGrocerEnum? defaultValue,
 ]) {
-  return enums.JobPositionGrocerEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionGrocerEnum) ??
+  return enums.JobPositionGrocerEnum.values.firstWhereOrNull((e) => e.value == jobPositionGrocerEnum) ??
       defaultValue ??
       enums.JobPositionGrocerEnum.swaggerGeneratedUnknown;
 }
@@ -13068,18 +12849,14 @@ enums.JobPositionGrocerEnum? jobPositionGrocerEnumNullableFromJson(
   if (jobPositionGrocerEnum == null) {
     return null;
   }
-  return enums.JobPositionGrocerEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionGrocerEnum) ??
-      defaultValue;
+  return enums.JobPositionGrocerEnum.values.firstWhereOrNull((e) => e.value == jobPositionGrocerEnum) ?? defaultValue;
 }
 
-String jobPositionGrocerEnumExplodedListToJson(
-    List<enums.JobPositionGrocerEnum>? jobPositionGrocerEnum) {
+String jobPositionGrocerEnumExplodedListToJson(List<enums.JobPositionGrocerEnum>? jobPositionGrocerEnum) {
   return jobPositionGrocerEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> jobPositionGrocerEnumListToJson(
-    List<enums.JobPositionGrocerEnum>? jobPositionGrocerEnum) {
+List<String> jobPositionGrocerEnumListToJson(List<enums.JobPositionGrocerEnum>? jobPositionGrocerEnum) {
   if (jobPositionGrocerEnum == null) {
     return [];
   }
@@ -13095,9 +12872,7 @@ List<enums.JobPositionGrocerEnum> jobPositionGrocerEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return jobPositionGrocerEnum
-      .map((e) => jobPositionGrocerEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionGrocerEnum.map((e) => jobPositionGrocerEnumFromJson(e.toString())).toList();
 }
 
 List<enums.JobPositionGrocerEnum>? jobPositionGrocerEnumNullableListFromJson(
@@ -13108,9 +12883,7 @@ List<enums.JobPositionGrocerEnum>? jobPositionGrocerEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return jobPositionGrocerEnum
-      .map((e) => jobPositionGrocerEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionGrocerEnum.map((e) => jobPositionGrocerEnumFromJson(e.toString())).toList();
 }
 
 String? weaponBonusEnumNullableToJson(enums.WeaponBonusEnum? weaponBonusEnum) {
@@ -13125,8 +12898,7 @@ enums.WeaponBonusEnum weaponBonusEnumFromJson(
   Object? weaponBonusEnum, [
   enums.WeaponBonusEnum? defaultValue,
 ]) {
-  return enums.WeaponBonusEnum.values
-          .firstWhereOrNull((e) => e.value == weaponBonusEnum) ??
+  return enums.WeaponBonusEnum.values.firstWhereOrNull((e) => e.value == weaponBonusEnum) ??
       defaultValue ??
       enums.WeaponBonusEnum.swaggerGeneratedUnknown;
 }
@@ -13138,18 +12910,14 @@ enums.WeaponBonusEnum? weaponBonusEnumNullableFromJson(
   if (weaponBonusEnum == null) {
     return null;
   }
-  return enums.WeaponBonusEnum.values
-          .firstWhereOrNull((e) => e.value == weaponBonusEnum) ??
-      defaultValue;
+  return enums.WeaponBonusEnum.values.firstWhereOrNull((e) => e.value == weaponBonusEnum) ?? defaultValue;
 }
 
-String weaponBonusEnumExplodedListToJson(
-    List<enums.WeaponBonusEnum>? weaponBonusEnum) {
+String weaponBonusEnumExplodedListToJson(List<enums.WeaponBonusEnum>? weaponBonusEnum) {
   return weaponBonusEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> weaponBonusEnumListToJson(
-    List<enums.WeaponBonusEnum>? weaponBonusEnum) {
+List<String> weaponBonusEnumListToJson(List<enums.WeaponBonusEnum>? weaponBonusEnum) {
   if (weaponBonusEnum == null) {
     return [];
   }
@@ -13165,9 +12933,7 @@ List<enums.WeaponBonusEnum> weaponBonusEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return weaponBonusEnum
-      .map((e) => weaponBonusEnumFromJson(e.toString()))
-      .toList();
+  return weaponBonusEnum.map((e) => weaponBonusEnumFromJson(e.toString())).toList();
 }
 
 List<enums.WeaponBonusEnum>? weaponBonusEnumNullableListFromJson(
@@ -13178,18 +12944,14 @@ List<enums.WeaponBonusEnum>? weaponBonusEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return weaponBonusEnum
-      .map((e) => weaponBonusEnumFromJson(e.toString()))
-      .toList();
+  return weaponBonusEnum.map((e) => weaponBonusEnumFromJson(e.toString())).toList();
 }
 
-String? jobPositionCasinoEnumNullableToJson(
-    enums.JobPositionCasinoEnum? jobPositionCasinoEnum) {
+String? jobPositionCasinoEnumNullableToJson(enums.JobPositionCasinoEnum? jobPositionCasinoEnum) {
   return jobPositionCasinoEnum?.value;
 }
 
-String? jobPositionCasinoEnumToJson(
-    enums.JobPositionCasinoEnum jobPositionCasinoEnum) {
+String? jobPositionCasinoEnumToJson(enums.JobPositionCasinoEnum jobPositionCasinoEnum) {
   return jobPositionCasinoEnum.value;
 }
 
@@ -13197,8 +12959,7 @@ enums.JobPositionCasinoEnum jobPositionCasinoEnumFromJson(
   Object? jobPositionCasinoEnum, [
   enums.JobPositionCasinoEnum? defaultValue,
 ]) {
-  return enums.JobPositionCasinoEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionCasinoEnum) ??
+  return enums.JobPositionCasinoEnum.values.firstWhereOrNull((e) => e.value == jobPositionCasinoEnum) ??
       defaultValue ??
       enums.JobPositionCasinoEnum.swaggerGeneratedUnknown;
 }
@@ -13210,18 +12971,14 @@ enums.JobPositionCasinoEnum? jobPositionCasinoEnumNullableFromJson(
   if (jobPositionCasinoEnum == null) {
     return null;
   }
-  return enums.JobPositionCasinoEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionCasinoEnum) ??
-      defaultValue;
+  return enums.JobPositionCasinoEnum.values.firstWhereOrNull((e) => e.value == jobPositionCasinoEnum) ?? defaultValue;
 }
 
-String jobPositionCasinoEnumExplodedListToJson(
-    List<enums.JobPositionCasinoEnum>? jobPositionCasinoEnum) {
+String jobPositionCasinoEnumExplodedListToJson(List<enums.JobPositionCasinoEnum>? jobPositionCasinoEnum) {
   return jobPositionCasinoEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> jobPositionCasinoEnumListToJson(
-    List<enums.JobPositionCasinoEnum>? jobPositionCasinoEnum) {
+List<String> jobPositionCasinoEnumListToJson(List<enums.JobPositionCasinoEnum>? jobPositionCasinoEnum) {
   if (jobPositionCasinoEnum == null) {
     return [];
   }
@@ -13237,9 +12994,7 @@ List<enums.JobPositionCasinoEnum> jobPositionCasinoEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return jobPositionCasinoEnum
-      .map((e) => jobPositionCasinoEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionCasinoEnum.map((e) => jobPositionCasinoEnumFromJson(e.toString())).toList();
 }
 
 List<enums.JobPositionCasinoEnum>? jobPositionCasinoEnumNullableListFromJson(
@@ -13250,18 +13005,14 @@ List<enums.JobPositionCasinoEnum>? jobPositionCasinoEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return jobPositionCasinoEnum
-      .map((e) => jobPositionCasinoEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionCasinoEnum.map((e) => jobPositionCasinoEnumFromJson(e.toString())).toList();
 }
 
-String? jobPositionMedicalEnumNullableToJson(
-    enums.JobPositionMedicalEnum? jobPositionMedicalEnum) {
+String? jobPositionMedicalEnumNullableToJson(enums.JobPositionMedicalEnum? jobPositionMedicalEnum) {
   return jobPositionMedicalEnum?.value;
 }
 
-String? jobPositionMedicalEnumToJson(
-    enums.JobPositionMedicalEnum jobPositionMedicalEnum) {
+String? jobPositionMedicalEnumToJson(enums.JobPositionMedicalEnum jobPositionMedicalEnum) {
   return jobPositionMedicalEnum.value;
 }
 
@@ -13269,8 +13020,7 @@ enums.JobPositionMedicalEnum jobPositionMedicalEnumFromJson(
   Object? jobPositionMedicalEnum, [
   enums.JobPositionMedicalEnum? defaultValue,
 ]) {
-  return enums.JobPositionMedicalEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionMedicalEnum) ??
+  return enums.JobPositionMedicalEnum.values.firstWhereOrNull((e) => e.value == jobPositionMedicalEnum) ??
       defaultValue ??
       enums.JobPositionMedicalEnum.swaggerGeneratedUnknown;
 }
@@ -13282,18 +13032,14 @@ enums.JobPositionMedicalEnum? jobPositionMedicalEnumNullableFromJson(
   if (jobPositionMedicalEnum == null) {
     return null;
   }
-  return enums.JobPositionMedicalEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionMedicalEnum) ??
-      defaultValue;
+  return enums.JobPositionMedicalEnum.values.firstWhereOrNull((e) => e.value == jobPositionMedicalEnum) ?? defaultValue;
 }
 
-String jobPositionMedicalEnumExplodedListToJson(
-    List<enums.JobPositionMedicalEnum>? jobPositionMedicalEnum) {
+String jobPositionMedicalEnumExplodedListToJson(List<enums.JobPositionMedicalEnum>? jobPositionMedicalEnum) {
   return jobPositionMedicalEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> jobPositionMedicalEnumListToJson(
-    List<enums.JobPositionMedicalEnum>? jobPositionMedicalEnum) {
+List<String> jobPositionMedicalEnumListToJson(List<enums.JobPositionMedicalEnum>? jobPositionMedicalEnum) {
   if (jobPositionMedicalEnum == null) {
     return [];
   }
@@ -13309,9 +13055,7 @@ List<enums.JobPositionMedicalEnum> jobPositionMedicalEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return jobPositionMedicalEnum
-      .map((e) => jobPositionMedicalEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionMedicalEnum.map((e) => jobPositionMedicalEnumFromJson(e.toString())).toList();
 }
 
 List<enums.JobPositionMedicalEnum>? jobPositionMedicalEnumNullableListFromJson(
@@ -13322,13 +13066,10 @@ List<enums.JobPositionMedicalEnum>? jobPositionMedicalEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return jobPositionMedicalEnum
-      .map((e) => jobPositionMedicalEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionMedicalEnum.map((e) => jobPositionMedicalEnumFromJson(e.toString())).toList();
 }
 
-String? jobPositionLawEnumNullableToJson(
-    enums.JobPositionLawEnum? jobPositionLawEnum) {
+String? jobPositionLawEnumNullableToJson(enums.JobPositionLawEnum? jobPositionLawEnum) {
   return jobPositionLawEnum?.value;
 }
 
@@ -13340,8 +13081,7 @@ enums.JobPositionLawEnum jobPositionLawEnumFromJson(
   Object? jobPositionLawEnum, [
   enums.JobPositionLawEnum? defaultValue,
 ]) {
-  return enums.JobPositionLawEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionLawEnum) ??
+  return enums.JobPositionLawEnum.values.firstWhereOrNull((e) => e.value == jobPositionLawEnum) ??
       defaultValue ??
       enums.JobPositionLawEnum.swaggerGeneratedUnknown;
 }
@@ -13353,18 +13093,14 @@ enums.JobPositionLawEnum? jobPositionLawEnumNullableFromJson(
   if (jobPositionLawEnum == null) {
     return null;
   }
-  return enums.JobPositionLawEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionLawEnum) ??
-      defaultValue;
+  return enums.JobPositionLawEnum.values.firstWhereOrNull((e) => e.value == jobPositionLawEnum) ?? defaultValue;
 }
 
-String jobPositionLawEnumExplodedListToJson(
-    List<enums.JobPositionLawEnum>? jobPositionLawEnum) {
+String jobPositionLawEnumExplodedListToJson(List<enums.JobPositionLawEnum>? jobPositionLawEnum) {
   return jobPositionLawEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> jobPositionLawEnumListToJson(
-    List<enums.JobPositionLawEnum>? jobPositionLawEnum) {
+List<String> jobPositionLawEnumListToJson(List<enums.JobPositionLawEnum>? jobPositionLawEnum) {
   if (jobPositionLawEnum == null) {
     return [];
   }
@@ -13380,9 +13116,7 @@ List<enums.JobPositionLawEnum> jobPositionLawEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return jobPositionLawEnum
-      .map((e) => jobPositionLawEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionLawEnum.map((e) => jobPositionLawEnumFromJson(e.toString())).toList();
 }
 
 List<enums.JobPositionLawEnum>? jobPositionLawEnumNullableListFromJson(
@@ -13393,18 +13127,14 @@ List<enums.JobPositionLawEnum>? jobPositionLawEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return jobPositionLawEnum
-      .map((e) => jobPositionLawEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionLawEnum.map((e) => jobPositionLawEnumFromJson(e.toString())).toList();
 }
 
-String? jobPositionEducationEnumNullableToJson(
-    enums.JobPositionEducationEnum? jobPositionEducationEnum) {
+String? jobPositionEducationEnumNullableToJson(enums.JobPositionEducationEnum? jobPositionEducationEnum) {
   return jobPositionEducationEnum?.value;
 }
 
-String? jobPositionEducationEnumToJson(
-    enums.JobPositionEducationEnum jobPositionEducationEnum) {
+String? jobPositionEducationEnumToJson(enums.JobPositionEducationEnum jobPositionEducationEnum) {
   return jobPositionEducationEnum.value;
 }
 
@@ -13412,8 +13142,7 @@ enums.JobPositionEducationEnum jobPositionEducationEnumFromJson(
   Object? jobPositionEducationEnum, [
   enums.JobPositionEducationEnum? defaultValue,
 ]) {
-  return enums.JobPositionEducationEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionEducationEnum) ??
+  return enums.JobPositionEducationEnum.values.firstWhereOrNull((e) => e.value == jobPositionEducationEnum) ??
       defaultValue ??
       enums.JobPositionEducationEnum.swaggerGeneratedUnknown;
 }
@@ -13425,18 +13154,15 @@ enums.JobPositionEducationEnum? jobPositionEducationEnumNullableFromJson(
   if (jobPositionEducationEnum == null) {
     return null;
   }
-  return enums.JobPositionEducationEnum.values
-          .firstWhereOrNull((e) => e.value == jobPositionEducationEnum) ??
+  return enums.JobPositionEducationEnum.values.firstWhereOrNull((e) => e.value == jobPositionEducationEnum) ??
       defaultValue;
 }
 
-String jobPositionEducationEnumExplodedListToJson(
-    List<enums.JobPositionEducationEnum>? jobPositionEducationEnum) {
+String jobPositionEducationEnumExplodedListToJson(List<enums.JobPositionEducationEnum>? jobPositionEducationEnum) {
   return jobPositionEducationEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> jobPositionEducationEnumListToJson(
-    List<enums.JobPositionEducationEnum>? jobPositionEducationEnum) {
+List<String> jobPositionEducationEnumListToJson(List<enums.JobPositionEducationEnum>? jobPositionEducationEnum) {
   if (jobPositionEducationEnum == null) {
     return [];
   }
@@ -13452,13 +13178,10 @@ List<enums.JobPositionEducationEnum> jobPositionEducationEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return jobPositionEducationEnum
-      .map((e) => jobPositionEducationEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionEducationEnum.map((e) => jobPositionEducationEnumFromJson(e.toString())).toList();
 }
 
-List<enums.JobPositionEducationEnum>?
-    jobPositionEducationEnumNullableListFromJson(
+List<enums.JobPositionEducationEnum>? jobPositionEducationEnumNullableListFromJson(
   List? jobPositionEducationEnum, [
   List<enums.JobPositionEducationEnum>? defaultValue,
 ]) {
@@ -13466,18 +13189,14 @@ List<enums.JobPositionEducationEnum>?
     return defaultValue;
   }
 
-  return jobPositionEducationEnum
-      .map((e) => jobPositionEducationEnumFromJson(e.toString()))
-      .toList();
+  return jobPositionEducationEnum.map((e) => jobPositionEducationEnumFromJson(e.toString())).toList();
 }
 
-String? raceCarUpgradeSubCategoryNullableToJson(
-    enums.RaceCarUpgradeSubCategory? raceCarUpgradeSubCategory) {
+String? raceCarUpgradeSubCategoryNullableToJson(enums.RaceCarUpgradeSubCategory? raceCarUpgradeSubCategory) {
   return raceCarUpgradeSubCategory?.value;
 }
 
-String? raceCarUpgradeSubCategoryToJson(
-    enums.RaceCarUpgradeSubCategory raceCarUpgradeSubCategory) {
+String? raceCarUpgradeSubCategoryToJson(enums.RaceCarUpgradeSubCategory raceCarUpgradeSubCategory) {
   return raceCarUpgradeSubCategory.value;
 }
 
@@ -13485,8 +13204,7 @@ enums.RaceCarUpgradeSubCategory raceCarUpgradeSubCategoryFromJson(
   Object? raceCarUpgradeSubCategory, [
   enums.RaceCarUpgradeSubCategory? defaultValue,
 ]) {
-  return enums.RaceCarUpgradeSubCategory.values
-          .firstWhereOrNull((e) => e.value == raceCarUpgradeSubCategory) ??
+  return enums.RaceCarUpgradeSubCategory.values.firstWhereOrNull((e) => e.value == raceCarUpgradeSubCategory) ??
       defaultValue ??
       enums.RaceCarUpgradeSubCategory.swaggerGeneratedUnknown;
 }
@@ -13498,18 +13216,15 @@ enums.RaceCarUpgradeSubCategory? raceCarUpgradeSubCategoryNullableFromJson(
   if (raceCarUpgradeSubCategory == null) {
     return null;
   }
-  return enums.RaceCarUpgradeSubCategory.values
-          .firstWhereOrNull((e) => e.value == raceCarUpgradeSubCategory) ??
+  return enums.RaceCarUpgradeSubCategory.values.firstWhereOrNull((e) => e.value == raceCarUpgradeSubCategory) ??
       defaultValue;
 }
 
-String raceCarUpgradeSubCategoryExplodedListToJson(
-    List<enums.RaceCarUpgradeSubCategory>? raceCarUpgradeSubCategory) {
+String raceCarUpgradeSubCategoryExplodedListToJson(List<enums.RaceCarUpgradeSubCategory>? raceCarUpgradeSubCategory) {
   return raceCarUpgradeSubCategory?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> raceCarUpgradeSubCategoryListToJson(
-    List<enums.RaceCarUpgradeSubCategory>? raceCarUpgradeSubCategory) {
+List<String> raceCarUpgradeSubCategoryListToJson(List<enums.RaceCarUpgradeSubCategory>? raceCarUpgradeSubCategory) {
   if (raceCarUpgradeSubCategory == null) {
     return [];
   }
@@ -13525,13 +13240,10 @@ List<enums.RaceCarUpgradeSubCategory> raceCarUpgradeSubCategoryListFromJson(
     return defaultValue ?? [];
   }
 
-  return raceCarUpgradeSubCategory
-      .map((e) => raceCarUpgradeSubCategoryFromJson(e.toString()))
-      .toList();
+  return raceCarUpgradeSubCategory.map((e) => raceCarUpgradeSubCategoryFromJson(e.toString())).toList();
 }
 
-List<enums.RaceCarUpgradeSubCategory>?
-    raceCarUpgradeSubCategoryNullableListFromJson(
+List<enums.RaceCarUpgradeSubCategory>? raceCarUpgradeSubCategoryNullableListFromJson(
   List? raceCarUpgradeSubCategory, [
   List<enums.RaceCarUpgradeSubCategory>? defaultValue,
 ]) {
@@ -13539,13 +13251,74 @@ List<enums.RaceCarUpgradeSubCategory>?
     return defaultValue;
   }
 
-  return raceCarUpgradeSubCategory
-      .map((e) => raceCarUpgradeSubCategoryFromJson(e.toString()))
-      .toList();
+  return raceCarUpgradeSubCategory.map((e) => raceCarUpgradeSubCategoryFromJson(e.toString())).toList();
 }
 
-int? forumFeedTypeEnumNullableToJson(
-    enums.ForumFeedTypeEnum? forumFeedTypeEnum) {
+String? factionApplicationStatusEnumNullableToJson(enums.FactionApplicationStatusEnum? factionApplicationStatusEnum) {
+  return factionApplicationStatusEnum?.value;
+}
+
+String? factionApplicationStatusEnumToJson(enums.FactionApplicationStatusEnum factionApplicationStatusEnum) {
+  return factionApplicationStatusEnum.value;
+}
+
+enums.FactionApplicationStatusEnum factionApplicationStatusEnumFromJson(
+  Object? factionApplicationStatusEnum, [
+  enums.FactionApplicationStatusEnum? defaultValue,
+]) {
+  return enums.FactionApplicationStatusEnum.values.firstWhereOrNull((e) => e.value == factionApplicationStatusEnum) ??
+      defaultValue ??
+      enums.FactionApplicationStatusEnum.swaggerGeneratedUnknown;
+}
+
+enums.FactionApplicationStatusEnum? factionApplicationStatusEnumNullableFromJson(
+  Object? factionApplicationStatusEnum, [
+  enums.FactionApplicationStatusEnum? defaultValue,
+]) {
+  if (factionApplicationStatusEnum == null) {
+    return null;
+  }
+  return enums.FactionApplicationStatusEnum.values.firstWhereOrNull((e) => e.value == factionApplicationStatusEnum) ??
+      defaultValue;
+}
+
+String factionApplicationStatusEnumExplodedListToJson(
+    List<enums.FactionApplicationStatusEnum>? factionApplicationStatusEnum) {
+  return factionApplicationStatusEnum?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> factionApplicationStatusEnumListToJson(
+    List<enums.FactionApplicationStatusEnum>? factionApplicationStatusEnum) {
+  if (factionApplicationStatusEnum == null) {
+    return [];
+  }
+
+  return factionApplicationStatusEnum.map((e) => e.value!).toList();
+}
+
+List<enums.FactionApplicationStatusEnum> factionApplicationStatusEnumListFromJson(
+  List? factionApplicationStatusEnum, [
+  List<enums.FactionApplicationStatusEnum>? defaultValue,
+]) {
+  if (factionApplicationStatusEnum == null) {
+    return defaultValue ?? [];
+  }
+
+  return factionApplicationStatusEnum.map((e) => factionApplicationStatusEnumFromJson(e.toString())).toList();
+}
+
+List<enums.FactionApplicationStatusEnum>? factionApplicationStatusEnumNullableListFromJson(
+  List? factionApplicationStatusEnum, [
+  List<enums.FactionApplicationStatusEnum>? defaultValue,
+]) {
+  if (factionApplicationStatusEnum == null) {
+    return defaultValue;
+  }
+
+  return factionApplicationStatusEnum.map((e) => factionApplicationStatusEnumFromJson(e.toString())).toList();
+}
+
+int? forumFeedTypeEnumNullableToJson(enums.ForumFeedTypeEnum? forumFeedTypeEnum) {
   return forumFeedTypeEnum?.value;
 }
 
@@ -13557,8 +13330,7 @@ enums.ForumFeedTypeEnum forumFeedTypeEnumFromJson(
   Object? forumFeedTypeEnum, [
   enums.ForumFeedTypeEnum? defaultValue,
 ]) {
-  return enums.ForumFeedTypeEnum.values
-          .firstWhereOrNull((e) => e.value == forumFeedTypeEnum) ??
+  return enums.ForumFeedTypeEnum.values.firstWhereOrNull((e) => e.value == forumFeedTypeEnum) ??
       defaultValue ??
       enums.ForumFeedTypeEnum.swaggerGeneratedUnknown;
 }
@@ -13570,18 +13342,14 @@ enums.ForumFeedTypeEnum? forumFeedTypeEnumNullableFromJson(
   if (forumFeedTypeEnum == null) {
     return null;
   }
-  return enums.ForumFeedTypeEnum.values
-          .firstWhereOrNull((e) => e.value == forumFeedTypeEnum) ??
-      defaultValue;
+  return enums.ForumFeedTypeEnum.values.firstWhereOrNull((e) => e.value == forumFeedTypeEnum) ?? defaultValue;
 }
 
-String forumFeedTypeEnumExplodedListToJson(
-    List<enums.ForumFeedTypeEnum>? forumFeedTypeEnum) {
+String forumFeedTypeEnumExplodedListToJson(List<enums.ForumFeedTypeEnum>? forumFeedTypeEnum) {
   return forumFeedTypeEnum?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<int> forumFeedTypeEnumListToJson(
-    List<enums.ForumFeedTypeEnum>? forumFeedTypeEnum) {
+List<int> forumFeedTypeEnumListToJson(List<enums.ForumFeedTypeEnum>? forumFeedTypeEnum) {
   if (forumFeedTypeEnum == null) {
     return [];
   }
@@ -13597,9 +13365,7 @@ List<enums.ForumFeedTypeEnum> forumFeedTypeEnumListFromJson(
     return defaultValue ?? [];
   }
 
-  return forumFeedTypeEnum
-      .map((e) => forumFeedTypeEnumFromJson(e.toString()))
-      .toList();
+  return forumFeedTypeEnum.map((e) => forumFeedTypeEnumFromJson(e.toString())).toList();
 }
 
 List<enums.ForumFeedTypeEnum>? forumFeedTypeEnumNullableListFromJson(
@@ -13610,9 +13376,7 @@ List<enums.ForumFeedTypeEnum>? forumFeedTypeEnumNullableListFromJson(
     return defaultValue;
   }
 
-  return forumFeedTypeEnum
-      .map((e) => forumFeedTypeEnumFromJson(e.toString()))
-      .toList();
+  return forumFeedTypeEnum.map((e) => forumFeedTypeEnumFromJson(e.toString())).toList();
 }
 
 String? reviveSettingNullableToJson(enums.ReviveSetting? reviveSetting) {
@@ -13627,8 +13391,7 @@ enums.ReviveSetting reviveSettingFromJson(
   Object? reviveSetting, [
   enums.ReviveSetting? defaultValue,
 ]) {
-  return enums.ReviveSetting.values
-          .firstWhereOrNull((e) => e.value == reviveSetting) ??
+  return enums.ReviveSetting.values.firstWhereOrNull((e) => e.value == reviveSetting) ??
       defaultValue ??
       enums.ReviveSetting.swaggerGeneratedUnknown;
 }
@@ -13640,13 +13403,10 @@ enums.ReviveSetting? reviveSettingNullableFromJson(
   if (reviveSetting == null) {
     return null;
   }
-  return enums.ReviveSetting.values
-          .firstWhereOrNull((e) => e.value == reviveSetting) ??
-      defaultValue;
+  return enums.ReviveSetting.values.firstWhereOrNull((e) => e.value == reviveSetting) ?? defaultValue;
 }
 
-String reviveSettingExplodedListToJson(
-    List<enums.ReviveSetting>? reviveSetting) {
+String reviveSettingExplodedListToJson(List<enums.ReviveSetting>? reviveSetting) {
   return reviveSetting?.map((e) => e.value!).join(',') ?? '';
 }
 
@@ -13680,6 +13440,516 @@ List<enums.ReviveSetting>? reviveSettingNullableListFromJson(
   return reviveSetting.map((e) => reviveSettingFromJson(e.toString())).toList();
 }
 
+String? factionSelectionNameNullableToJson(enums.FactionSelectionName? factionSelectionName) {
+  return factionSelectionName?.value;
+}
+
+String? factionSelectionNameToJson(enums.FactionSelectionName factionSelectionName) {
+  return factionSelectionName.value;
+}
+
+enums.FactionSelectionName factionSelectionNameFromJson(
+  Object? factionSelectionName, [
+  enums.FactionSelectionName? defaultValue,
+]) {
+  return enums.FactionSelectionName.values.firstWhereOrNull((e) => e.value == factionSelectionName) ??
+      defaultValue ??
+      enums.FactionSelectionName.swaggerGeneratedUnknown;
+}
+
+enums.FactionSelectionName? factionSelectionNameNullableFromJson(
+  Object? factionSelectionName, [
+  enums.FactionSelectionName? defaultValue,
+]) {
+  if (factionSelectionName == null) {
+    return null;
+  }
+  return enums.FactionSelectionName.values.firstWhereOrNull((e) => e.value == factionSelectionName) ?? defaultValue;
+}
+
+String factionSelectionNameExplodedListToJson(List<enums.FactionSelectionName>? factionSelectionName) {
+  return factionSelectionName?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> factionSelectionNameListToJson(List<enums.FactionSelectionName>? factionSelectionName) {
+  if (factionSelectionName == null) {
+    return [];
+  }
+
+  return factionSelectionName.map((e) => e.value!).toList();
+}
+
+List<enums.FactionSelectionName> factionSelectionNameListFromJson(
+  List? factionSelectionName, [
+  List<enums.FactionSelectionName>? defaultValue,
+]) {
+  if (factionSelectionName == null) {
+    return defaultValue ?? [];
+  }
+
+  return factionSelectionName.map((e) => factionSelectionNameFromJson(e.toString())).toList();
+}
+
+List<enums.FactionSelectionName>? factionSelectionNameNullableListFromJson(
+  List? factionSelectionName, [
+  List<enums.FactionSelectionName>? defaultValue,
+]) {
+  if (factionSelectionName == null) {
+    return defaultValue;
+  }
+
+  return factionSelectionName.map((e) => factionSelectionNameFromJson(e.toString())).toList();
+}
+
+String? forumSelectionNameNullableToJson(enums.ForumSelectionName? forumSelectionName) {
+  return forumSelectionName?.value;
+}
+
+String? forumSelectionNameToJson(enums.ForumSelectionName forumSelectionName) {
+  return forumSelectionName.value;
+}
+
+enums.ForumSelectionName forumSelectionNameFromJson(
+  Object? forumSelectionName, [
+  enums.ForumSelectionName? defaultValue,
+]) {
+  return enums.ForumSelectionName.values.firstWhereOrNull((e) => e.value == forumSelectionName) ??
+      defaultValue ??
+      enums.ForumSelectionName.swaggerGeneratedUnknown;
+}
+
+enums.ForumSelectionName? forumSelectionNameNullableFromJson(
+  Object? forumSelectionName, [
+  enums.ForumSelectionName? defaultValue,
+]) {
+  if (forumSelectionName == null) {
+    return null;
+  }
+  return enums.ForumSelectionName.values.firstWhereOrNull((e) => e.value == forumSelectionName) ?? defaultValue;
+}
+
+String forumSelectionNameExplodedListToJson(List<enums.ForumSelectionName>? forumSelectionName) {
+  return forumSelectionName?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> forumSelectionNameListToJson(List<enums.ForumSelectionName>? forumSelectionName) {
+  if (forumSelectionName == null) {
+    return [];
+  }
+
+  return forumSelectionName.map((e) => e.value!).toList();
+}
+
+List<enums.ForumSelectionName> forumSelectionNameListFromJson(
+  List? forumSelectionName, [
+  List<enums.ForumSelectionName>? defaultValue,
+]) {
+  if (forumSelectionName == null) {
+    return defaultValue ?? [];
+  }
+
+  return forumSelectionName.map((e) => forumSelectionNameFromJson(e.toString())).toList();
+}
+
+List<enums.ForumSelectionName>? forumSelectionNameNullableListFromJson(
+  List? forumSelectionName, [
+  List<enums.ForumSelectionName>? defaultValue,
+]) {
+  if (forumSelectionName == null) {
+    return defaultValue;
+  }
+
+  return forumSelectionName.map((e) => forumSelectionNameFromJson(e.toString())).toList();
+}
+
+String? itemMarketListingItemDetailsRarityNullableToJson(
+    enums.ItemMarketListingItemDetailsRarity? itemMarketListingItemDetailsRarity) {
+  return itemMarketListingItemDetailsRarity?.value;
+}
+
+String? itemMarketListingItemDetailsRarityToJson(
+    enums.ItemMarketListingItemDetailsRarity itemMarketListingItemDetailsRarity) {
+  return itemMarketListingItemDetailsRarity.value;
+}
+
+enums.ItemMarketListingItemDetailsRarity itemMarketListingItemDetailsRarityFromJson(
+  Object? itemMarketListingItemDetailsRarity, [
+  enums.ItemMarketListingItemDetailsRarity? defaultValue,
+]) {
+  return enums.ItemMarketListingItemDetailsRarity.values
+          .firstWhereOrNull((e) => e.value == itemMarketListingItemDetailsRarity) ??
+      defaultValue ??
+      enums.ItemMarketListingItemDetailsRarity.swaggerGeneratedUnknown;
+}
+
+enums.ItemMarketListingItemDetailsRarity? itemMarketListingItemDetailsRarityNullableFromJson(
+  Object? itemMarketListingItemDetailsRarity, [
+  enums.ItemMarketListingItemDetailsRarity? defaultValue,
+]) {
+  if (itemMarketListingItemDetailsRarity == null) {
+    return null;
+  }
+  return enums.ItemMarketListingItemDetailsRarity.values
+          .firstWhereOrNull((e) => e.value == itemMarketListingItemDetailsRarity) ??
+      defaultValue;
+}
+
+String itemMarketListingItemDetailsRarityExplodedListToJson(
+    List<enums.ItemMarketListingItemDetailsRarity>? itemMarketListingItemDetailsRarity) {
+  return itemMarketListingItemDetailsRarity?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> itemMarketListingItemDetailsRarityListToJson(
+    List<enums.ItemMarketListingItemDetailsRarity>? itemMarketListingItemDetailsRarity) {
+  if (itemMarketListingItemDetailsRarity == null) {
+    return [];
+  }
+
+  return itemMarketListingItemDetailsRarity.map((e) => e.value!).toList();
+}
+
+List<enums.ItemMarketListingItemDetailsRarity> itemMarketListingItemDetailsRarityListFromJson(
+  List? itemMarketListingItemDetailsRarity, [
+  List<enums.ItemMarketListingItemDetailsRarity>? defaultValue,
+]) {
+  if (itemMarketListingItemDetailsRarity == null) {
+    return defaultValue ?? [];
+  }
+
+  return itemMarketListingItemDetailsRarity
+      .map((e) => itemMarketListingItemDetailsRarityFromJson(e.toString()))
+      .toList();
+}
+
+List<enums.ItemMarketListingItemDetailsRarity>? itemMarketListingItemDetailsRarityNullableListFromJson(
+  List? itemMarketListingItemDetailsRarity, [
+  List<enums.ItemMarketListingItemDetailsRarity>? defaultValue,
+]) {
+  if (itemMarketListingItemDetailsRarity == null) {
+    return defaultValue;
+  }
+
+  return itemMarketListingItemDetailsRarity
+      .map((e) => itemMarketListingItemDetailsRarityFromJson(e.toString()))
+      .toList();
+}
+
+String? marketSelectionNameNullableToJson(enums.MarketSelectionName? marketSelectionName) {
+  return marketSelectionName?.value;
+}
+
+String? marketSelectionNameToJson(enums.MarketSelectionName marketSelectionName) {
+  return marketSelectionName.value;
+}
+
+enums.MarketSelectionName marketSelectionNameFromJson(
+  Object? marketSelectionName, [
+  enums.MarketSelectionName? defaultValue,
+]) {
+  return enums.MarketSelectionName.values.firstWhereOrNull((e) => e.value == marketSelectionName) ??
+      defaultValue ??
+      enums.MarketSelectionName.swaggerGeneratedUnknown;
+}
+
+enums.MarketSelectionName? marketSelectionNameNullableFromJson(
+  Object? marketSelectionName, [
+  enums.MarketSelectionName? defaultValue,
+]) {
+  if (marketSelectionName == null) {
+    return null;
+  }
+  return enums.MarketSelectionName.values.firstWhereOrNull((e) => e.value == marketSelectionName) ?? defaultValue;
+}
+
+String marketSelectionNameExplodedListToJson(List<enums.MarketSelectionName>? marketSelectionName) {
+  return marketSelectionName?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> marketSelectionNameListToJson(List<enums.MarketSelectionName>? marketSelectionName) {
+  if (marketSelectionName == null) {
+    return [];
+  }
+
+  return marketSelectionName.map((e) => e.value!).toList();
+}
+
+List<enums.MarketSelectionName> marketSelectionNameListFromJson(
+  List? marketSelectionName, [
+  List<enums.MarketSelectionName>? defaultValue,
+]) {
+  if (marketSelectionName == null) {
+    return defaultValue ?? [];
+  }
+
+  return marketSelectionName.map((e) => marketSelectionNameFromJson(e.toString())).toList();
+}
+
+List<enums.MarketSelectionName>? marketSelectionNameNullableListFromJson(
+  List? marketSelectionName, [
+  List<enums.MarketSelectionName>? defaultValue,
+]) {
+  if (marketSelectionName == null) {
+    return defaultValue;
+  }
+
+  return marketSelectionName.map((e) => marketSelectionNameFromJson(e.toString())).toList();
+}
+
+String? racingSelectionNameNullableToJson(enums.RacingSelectionName? racingSelectionName) {
+  return racingSelectionName?.value;
+}
+
+String? racingSelectionNameToJson(enums.RacingSelectionName racingSelectionName) {
+  return racingSelectionName.value;
+}
+
+enums.RacingSelectionName racingSelectionNameFromJson(
+  Object? racingSelectionName, [
+  enums.RacingSelectionName? defaultValue,
+]) {
+  return enums.RacingSelectionName.values.firstWhereOrNull((e) => e.value == racingSelectionName) ??
+      defaultValue ??
+      enums.RacingSelectionName.swaggerGeneratedUnknown;
+}
+
+enums.RacingSelectionName? racingSelectionNameNullableFromJson(
+  Object? racingSelectionName, [
+  enums.RacingSelectionName? defaultValue,
+]) {
+  if (racingSelectionName == null) {
+    return null;
+  }
+  return enums.RacingSelectionName.values.firstWhereOrNull((e) => e.value == racingSelectionName) ?? defaultValue;
+}
+
+String racingSelectionNameExplodedListToJson(List<enums.RacingSelectionName>? racingSelectionName) {
+  return racingSelectionName?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> racingSelectionNameListToJson(List<enums.RacingSelectionName>? racingSelectionName) {
+  if (racingSelectionName == null) {
+    return [];
+  }
+
+  return racingSelectionName.map((e) => e.value!).toList();
+}
+
+List<enums.RacingSelectionName> racingSelectionNameListFromJson(
+  List? racingSelectionName, [
+  List<enums.RacingSelectionName>? defaultValue,
+]) {
+  if (racingSelectionName == null) {
+    return defaultValue ?? [];
+  }
+
+  return racingSelectionName.map((e) => racingSelectionNameFromJson(e.toString())).toList();
+}
+
+List<enums.RacingSelectionName>? racingSelectionNameNullableListFromJson(
+  List? racingSelectionName, [
+  List<enums.RacingSelectionName>? defaultValue,
+]) {
+  if (racingSelectionName == null) {
+    return defaultValue;
+  }
+
+  return racingSelectionName.map((e) => racingSelectionNameFromJson(e.toString())).toList();
+}
+
+String? tornSelectionNameNullableToJson(enums.TornSelectionName? tornSelectionName) {
+  return tornSelectionName?.value;
+}
+
+String? tornSelectionNameToJson(enums.TornSelectionName tornSelectionName) {
+  return tornSelectionName.value;
+}
+
+enums.TornSelectionName tornSelectionNameFromJson(
+  Object? tornSelectionName, [
+  enums.TornSelectionName? defaultValue,
+]) {
+  return enums.TornSelectionName.values.firstWhereOrNull((e) => e.value == tornSelectionName) ??
+      defaultValue ??
+      enums.TornSelectionName.swaggerGeneratedUnknown;
+}
+
+enums.TornSelectionName? tornSelectionNameNullableFromJson(
+  Object? tornSelectionName, [
+  enums.TornSelectionName? defaultValue,
+]) {
+  if (tornSelectionName == null) {
+    return null;
+  }
+  return enums.TornSelectionName.values.firstWhereOrNull((e) => e.value == tornSelectionName) ?? defaultValue;
+}
+
+String tornSelectionNameExplodedListToJson(List<enums.TornSelectionName>? tornSelectionName) {
+  return tornSelectionName?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> tornSelectionNameListToJson(List<enums.TornSelectionName>? tornSelectionName) {
+  if (tornSelectionName == null) {
+    return [];
+  }
+
+  return tornSelectionName.map((e) => e.value!).toList();
+}
+
+List<enums.TornSelectionName> tornSelectionNameListFromJson(
+  List? tornSelectionName, [
+  List<enums.TornSelectionName>? defaultValue,
+]) {
+  if (tornSelectionName == null) {
+    return defaultValue ?? [];
+  }
+
+  return tornSelectionName.map((e) => tornSelectionNameFromJson(e.toString())).toList();
+}
+
+List<enums.TornSelectionName>? tornSelectionNameNullableListFromJson(
+  List? tornSelectionName, [
+  List<enums.TornSelectionName>? defaultValue,
+]) {
+  if (tornSelectionName == null) {
+    return defaultValue;
+  }
+
+  return tornSelectionName.map((e) => tornSelectionNameFromJson(e.toString())).toList();
+}
+
+String? userItemMarkeListingItemDetailsRarityNullableToJson(
+    enums.UserItemMarkeListingItemDetailsRarity? userItemMarkeListingItemDetailsRarity) {
+  return userItemMarkeListingItemDetailsRarity?.value;
+}
+
+String? userItemMarkeListingItemDetailsRarityToJson(
+    enums.UserItemMarkeListingItemDetailsRarity userItemMarkeListingItemDetailsRarity) {
+  return userItemMarkeListingItemDetailsRarity.value;
+}
+
+enums.UserItemMarkeListingItemDetailsRarity userItemMarkeListingItemDetailsRarityFromJson(
+  Object? userItemMarkeListingItemDetailsRarity, [
+  enums.UserItemMarkeListingItemDetailsRarity? defaultValue,
+]) {
+  return enums.UserItemMarkeListingItemDetailsRarity.values
+          .firstWhereOrNull((e) => e.value == userItemMarkeListingItemDetailsRarity) ??
+      defaultValue ??
+      enums.UserItemMarkeListingItemDetailsRarity.swaggerGeneratedUnknown;
+}
+
+enums.UserItemMarkeListingItemDetailsRarity? userItemMarkeListingItemDetailsRarityNullableFromJson(
+  Object? userItemMarkeListingItemDetailsRarity, [
+  enums.UserItemMarkeListingItemDetailsRarity? defaultValue,
+]) {
+  if (userItemMarkeListingItemDetailsRarity == null) {
+    return null;
+  }
+  return enums.UserItemMarkeListingItemDetailsRarity.values
+          .firstWhereOrNull((e) => e.value == userItemMarkeListingItemDetailsRarity) ??
+      defaultValue;
+}
+
+String userItemMarkeListingItemDetailsRarityExplodedListToJson(
+    List<enums.UserItemMarkeListingItemDetailsRarity>? userItemMarkeListingItemDetailsRarity) {
+  return userItemMarkeListingItemDetailsRarity?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> userItemMarkeListingItemDetailsRarityListToJson(
+    List<enums.UserItemMarkeListingItemDetailsRarity>? userItemMarkeListingItemDetailsRarity) {
+  if (userItemMarkeListingItemDetailsRarity == null) {
+    return [];
+  }
+
+  return userItemMarkeListingItemDetailsRarity.map((e) => e.value!).toList();
+}
+
+List<enums.UserItemMarkeListingItemDetailsRarity> userItemMarkeListingItemDetailsRarityListFromJson(
+  List? userItemMarkeListingItemDetailsRarity, [
+  List<enums.UserItemMarkeListingItemDetailsRarity>? defaultValue,
+]) {
+  if (userItemMarkeListingItemDetailsRarity == null) {
+    return defaultValue ?? [];
+  }
+
+  return userItemMarkeListingItemDetailsRarity
+      .map((e) => userItemMarkeListingItemDetailsRarityFromJson(e.toString()))
+      .toList();
+}
+
+List<enums.UserItemMarkeListingItemDetailsRarity>? userItemMarkeListingItemDetailsRarityNullableListFromJson(
+  List? userItemMarkeListingItemDetailsRarity, [
+  List<enums.UserItemMarkeListingItemDetailsRarity>? defaultValue,
+]) {
+  if (userItemMarkeListingItemDetailsRarity == null) {
+    return defaultValue;
+  }
+
+  return userItemMarkeListingItemDetailsRarity
+      .map((e) => userItemMarkeListingItemDetailsRarityFromJson(e.toString()))
+      .toList();
+}
+
+String? userSelectionNameNullableToJson(enums.UserSelectionName? userSelectionName) {
+  return userSelectionName?.value;
+}
+
+String? userSelectionNameToJson(enums.UserSelectionName userSelectionName) {
+  return userSelectionName.value;
+}
+
+enums.UserSelectionName userSelectionNameFromJson(
+  Object? userSelectionName, [
+  enums.UserSelectionName? defaultValue,
+]) {
+  return enums.UserSelectionName.values.firstWhereOrNull((e) => e.value == userSelectionName) ??
+      defaultValue ??
+      enums.UserSelectionName.swaggerGeneratedUnknown;
+}
+
+enums.UserSelectionName? userSelectionNameNullableFromJson(
+  Object? userSelectionName, [
+  enums.UserSelectionName? defaultValue,
+]) {
+  if (userSelectionName == null) {
+    return null;
+  }
+  return enums.UserSelectionName.values.firstWhereOrNull((e) => e.value == userSelectionName) ?? defaultValue;
+}
+
+String userSelectionNameExplodedListToJson(List<enums.UserSelectionName>? userSelectionName) {
+  return userSelectionName?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> userSelectionNameListToJson(List<enums.UserSelectionName>? userSelectionName) {
+  if (userSelectionName == null) {
+    return [];
+  }
+
+  return userSelectionName.map((e) => e.value!).toList();
+}
+
+List<enums.UserSelectionName> userSelectionNameListFromJson(
+  List? userSelectionName, [
+  List<enums.UserSelectionName>? defaultValue,
+]) {
+  if (userSelectionName == null) {
+    return defaultValue ?? [];
+  }
+
+  return userSelectionName.map((e) => userSelectionNameFromJson(e.toString())).toList();
+}
+
+List<enums.UserSelectionName>? userSelectionNameNullableListFromJson(
+  List? userSelectionName, [
+  List<enums.UserSelectionName>? defaultValue,
+]) {
+  if (userSelectionName == null) {
+    return defaultValue;
+  }
+
+  return userSelectionName.map((e) => userSelectionNameFromJson(e.toString())).toList();
+}
+
 String? apiSortNullableToJson(enums.ApiSort? apiSort) {
   return apiSort?.value;
 }
@@ -13704,8 +13974,7 @@ enums.ApiSort? apiSortNullableFromJson(
   if (apiSort == null) {
     return null;
   }
-  return enums.ApiSort.values.firstWhereOrNull((e) => e.value == apiSort) ??
-      defaultValue;
+  return enums.ApiSort.values.firstWhereOrNull((e) => e.value == apiSort) ?? defaultValue;
 }
 
 String apiSortExplodedListToJson(List<enums.ApiSort>? apiSort) {
@@ -13742,8 +14011,7 @@ List<enums.ApiSort>? apiSortNullableListFromJson(
   return apiSort.map((e) => apiSortFromJson(e.toString())).toList();
 }
 
-String? apiStripTagsTrueNullableToJson(
-    enums.ApiStripTagsTrue? apiStripTagsTrue) {
+String? apiStripTagsTrueNullableToJson(enums.ApiStripTagsTrue? apiStripTagsTrue) {
   return apiStripTagsTrue?.value;
 }
 
@@ -13755,8 +14023,7 @@ enums.ApiStripTagsTrue apiStripTagsTrueFromJson(
   Object? apiStripTagsTrue, [
   enums.ApiStripTagsTrue? defaultValue,
 ]) {
-  return enums.ApiStripTagsTrue.values
-          .firstWhereOrNull((e) => e.value == apiStripTagsTrue) ??
+  return enums.ApiStripTagsTrue.values.firstWhereOrNull((e) => e.value == apiStripTagsTrue) ??
       defaultValue ??
       enums.ApiStripTagsTrue.swaggerGeneratedUnknown;
 }
@@ -13768,18 +14035,14 @@ enums.ApiStripTagsTrue? apiStripTagsTrueNullableFromJson(
   if (apiStripTagsTrue == null) {
     return null;
   }
-  return enums.ApiStripTagsTrue.values
-          .firstWhereOrNull((e) => e.value == apiStripTagsTrue) ??
-      defaultValue;
+  return enums.ApiStripTagsTrue.values.firstWhereOrNull((e) => e.value == apiStripTagsTrue) ?? defaultValue;
 }
 
-String apiStripTagsTrueExplodedListToJson(
-    List<enums.ApiStripTagsTrue>? apiStripTagsTrue) {
+String apiStripTagsTrueExplodedListToJson(List<enums.ApiStripTagsTrue>? apiStripTagsTrue) {
   return apiStripTagsTrue?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> apiStripTagsTrueListToJson(
-    List<enums.ApiStripTagsTrue>? apiStripTagsTrue) {
+List<String> apiStripTagsTrueListToJson(List<enums.ApiStripTagsTrue>? apiStripTagsTrue) {
   if (apiStripTagsTrue == null) {
     return [];
   }
@@ -13795,9 +14058,7 @@ List<enums.ApiStripTagsTrue> apiStripTagsTrueListFromJson(
     return defaultValue ?? [];
   }
 
-  return apiStripTagsTrue
-      .map((e) => apiStripTagsTrueFromJson(e.toString()))
-      .toList();
+  return apiStripTagsTrue.map((e) => apiStripTagsTrueFromJson(e.toString())).toList();
 }
 
 List<enums.ApiStripTagsTrue>? apiStripTagsTrueNullableListFromJson(
@@ -13808,13 +14069,10 @@ List<enums.ApiStripTagsTrue>? apiStripTagsTrueNullableListFromJson(
     return defaultValue;
   }
 
-  return apiStripTagsTrue
-      .map((e) => apiStripTagsTrueFromJson(e.toString()))
-      .toList();
+  return apiStripTagsTrue.map((e) => apiStripTagsTrueFromJson(e.toString())).toList();
 }
 
-String? apiStripTagsFalseNullableToJson(
-    enums.ApiStripTagsFalse? apiStripTagsFalse) {
+String? apiStripTagsFalseNullableToJson(enums.ApiStripTagsFalse? apiStripTagsFalse) {
   return apiStripTagsFalse?.value;
 }
 
@@ -13826,8 +14084,7 @@ enums.ApiStripTagsFalse apiStripTagsFalseFromJson(
   Object? apiStripTagsFalse, [
   enums.ApiStripTagsFalse? defaultValue,
 ]) {
-  return enums.ApiStripTagsFalse.values
-          .firstWhereOrNull((e) => e.value == apiStripTagsFalse) ??
+  return enums.ApiStripTagsFalse.values.firstWhereOrNull((e) => e.value == apiStripTagsFalse) ??
       defaultValue ??
       enums.ApiStripTagsFalse.swaggerGeneratedUnknown;
 }
@@ -13839,18 +14096,14 @@ enums.ApiStripTagsFalse? apiStripTagsFalseNullableFromJson(
   if (apiStripTagsFalse == null) {
     return null;
   }
-  return enums.ApiStripTagsFalse.values
-          .firstWhereOrNull((e) => e.value == apiStripTagsFalse) ??
-      defaultValue;
+  return enums.ApiStripTagsFalse.values.firstWhereOrNull((e) => e.value == apiStripTagsFalse) ?? defaultValue;
 }
 
-String apiStripTagsFalseExplodedListToJson(
-    List<enums.ApiStripTagsFalse>? apiStripTagsFalse) {
+String apiStripTagsFalseExplodedListToJson(List<enums.ApiStripTagsFalse>? apiStripTagsFalse) {
   return apiStripTagsFalse?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> apiStripTagsFalseListToJson(
-    List<enums.ApiStripTagsFalse>? apiStripTagsFalse) {
+List<String> apiStripTagsFalseListToJson(List<enums.ApiStripTagsFalse>? apiStripTagsFalse) {
   if (apiStripTagsFalse == null) {
     return [];
   }
@@ -13866,9 +14119,7 @@ List<enums.ApiStripTagsFalse> apiStripTagsFalseListFromJson(
     return defaultValue ?? [];
   }
 
-  return apiStripTagsFalse
-      .map((e) => apiStripTagsFalseFromJson(e.toString()))
-      .toList();
+  return apiStripTagsFalse.map((e) => apiStripTagsFalseFromJson(e.toString())).toList();
 }
 
 List<enums.ApiStripTagsFalse>? apiStripTagsFalseNullableListFromJson(
@@ -13879,766 +14130,1237 @@ List<enums.ApiStripTagsFalse>? apiStripTagsFalseNullableListFromJson(
     return defaultValue;
   }
 
-  return apiStripTagsFalse
-      .map((e) => apiStripTagsFalseFromJson(e.toString()))
-      .toList();
+  return apiStripTagsFalse.map((e) => apiStripTagsFalseFromJson(e.toString())).toList();
 }
 
-String? factionSelectionsMembersGetStriptagsNullableToJson(
-    enums.FactionSelectionsMembersGetStriptags?
-        factionSelectionsMembersGetStriptags) {
-  return factionSelectionsMembersGetStriptags?.value;
+String? apiStripTagsNullableToJson(enums.ApiStripTags? apiStripTags) {
+  return apiStripTags?.value;
 }
 
-String? factionSelectionsMembersGetStriptagsToJson(
-    enums.FactionSelectionsMembersGetStriptags
-        factionSelectionsMembersGetStriptags) {
-  return factionSelectionsMembersGetStriptags.value;
+String? apiStripTagsToJson(enums.ApiStripTags apiStripTags) {
+  return apiStripTags.value;
 }
 
-enums.FactionSelectionsMembersGetStriptags
-    factionSelectionsMembersGetStriptagsFromJson(
-  Object? factionSelectionsMembersGetStriptags, [
-  enums.FactionSelectionsMembersGetStriptags? defaultValue,
+enums.ApiStripTags apiStripTagsFromJson(
+  Object? apiStripTags, [
+  enums.ApiStripTags? defaultValue,
 ]) {
-  return enums.FactionSelectionsMembersGetStriptags.values.firstWhereOrNull(
-          (e) => e.value == factionSelectionsMembersGetStriptags) ??
+  return enums.ApiStripTags.values.firstWhereOrNull((e) => e.value == apiStripTags) ??
       defaultValue ??
-      enums.FactionSelectionsMembersGetStriptags.swaggerGeneratedUnknown;
+      enums.ApiStripTags.swaggerGeneratedUnknown;
 }
 
-enums.FactionSelectionsMembersGetStriptags?
-    factionSelectionsMembersGetStriptagsNullableFromJson(
-  Object? factionSelectionsMembersGetStriptags, [
-  enums.FactionSelectionsMembersGetStriptags? defaultValue,
+enums.ApiStripTags? apiStripTagsNullableFromJson(
+  Object? apiStripTags, [
+  enums.ApiStripTags? defaultValue,
 ]) {
-  if (factionSelectionsMembersGetStriptags == null) {
+  if (apiStripTags == null) {
     return null;
   }
-  return enums.FactionSelectionsMembersGetStriptags.values.firstWhereOrNull(
-          (e) => e.value == factionSelectionsMembersGetStriptags) ??
-      defaultValue;
+  return enums.ApiStripTags.values.firstWhereOrNull((e) => e.value == apiStripTags) ?? defaultValue;
 }
 
-String factionSelectionsMembersGetStriptagsExplodedListToJson(
-    List<enums.FactionSelectionsMembersGetStriptags>?
-        factionSelectionsMembersGetStriptags) {
-  return factionSelectionsMembersGetStriptags?.map((e) => e.value!).join(',') ??
-      '';
+String apiStripTagsExplodedListToJson(List<enums.ApiStripTags>? apiStripTags) {
+  return apiStripTags?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> factionSelectionsMembersGetStriptagsListToJson(
-    List<enums.FactionSelectionsMembersGetStriptags>?
-        factionSelectionsMembersGetStriptags) {
-  if (factionSelectionsMembersGetStriptags == null) {
+List<String> apiStripTagsListToJson(List<enums.ApiStripTags>? apiStripTags) {
+  if (apiStripTags == null) {
     return [];
   }
 
-  return factionSelectionsMembersGetStriptags.map((e) => e.value!).toList();
+  return apiStripTags.map((e) => e.value!).toList();
 }
 
-List<enums.FactionSelectionsMembersGetStriptags>
-    factionSelectionsMembersGetStriptagsListFromJson(
-  List? factionSelectionsMembersGetStriptags, [
-  List<enums.FactionSelectionsMembersGetStriptags>? defaultValue,
+List<enums.ApiStripTags> apiStripTagsListFromJson(
+  List? apiStripTags, [
+  List<enums.ApiStripTags>? defaultValue,
 ]) {
-  if (factionSelectionsMembersGetStriptags == null) {
+  if (apiStripTags == null) {
     return defaultValue ?? [];
   }
 
-  return factionSelectionsMembersGetStriptags
-      .map((e) => factionSelectionsMembersGetStriptagsFromJson(e.toString()))
-      .toList();
+  return apiStripTags.map((e) => apiStripTagsFromJson(e.toString())).toList();
 }
 
-List<enums.FactionSelectionsMembersGetStriptags>?
-    factionSelectionsMembersGetStriptagsNullableListFromJson(
-  List? factionSelectionsMembersGetStriptags, [
-  List<enums.FactionSelectionsMembersGetStriptags>? defaultValue,
+List<enums.ApiStripTags>? apiStripTagsNullableListFromJson(
+  List? apiStripTags, [
+  List<enums.ApiStripTags>? defaultValue,
 ]) {
-  if (factionSelectionsMembersGetStriptags == null) {
+  if (apiStripTags == null) {
     return defaultValue;
   }
 
-  return factionSelectionsMembersGetStriptags
-      .map((e) => factionSelectionsMembersGetStriptagsFromJson(e.toString()))
-      .toList();
+  return apiStripTags.map((e) => apiStripTagsFromJson(e.toString())).toList();
 }
 
-String? forumSelectionsThreadsGetSortNullableToJson(
-    enums.ForumSelectionsThreadsGetSort? forumSelectionsThreadsGetSort) {
-  return forumSelectionsThreadsGetSort?.value;
+String? factionGetSortNullableToJson(enums.FactionGetSort? factionGetSort) {
+  return factionGetSort?.value;
 }
 
-String? forumSelectionsThreadsGetSortToJson(
-    enums.ForumSelectionsThreadsGetSort forumSelectionsThreadsGetSort) {
-  return forumSelectionsThreadsGetSort.value;
+String? factionGetSortToJson(enums.FactionGetSort factionGetSort) {
+  return factionGetSort.value;
 }
 
-enums.ForumSelectionsThreadsGetSort forumSelectionsThreadsGetSortFromJson(
-  Object? forumSelectionsThreadsGetSort, [
-  enums.ForumSelectionsThreadsGetSort? defaultValue,
+enums.FactionGetSort factionGetSortFromJson(
+  Object? factionGetSort, [
+  enums.FactionGetSort? defaultValue,
 ]) {
-  return enums.ForumSelectionsThreadsGetSort.values
-          .firstWhereOrNull((e) => e.value == forumSelectionsThreadsGetSort) ??
+  return enums.FactionGetSort.values.firstWhereOrNull((e) => e.value == factionGetSort) ??
       defaultValue ??
-      enums.ForumSelectionsThreadsGetSort.swaggerGeneratedUnknown;
+      enums.FactionGetSort.swaggerGeneratedUnknown;
 }
 
-enums.ForumSelectionsThreadsGetSort?
-    forumSelectionsThreadsGetSortNullableFromJson(
-  Object? forumSelectionsThreadsGetSort, [
-  enums.ForumSelectionsThreadsGetSort? defaultValue,
+enums.FactionGetSort? factionGetSortNullableFromJson(
+  Object? factionGetSort, [
+  enums.FactionGetSort? defaultValue,
 ]) {
-  if (forumSelectionsThreadsGetSort == null) {
+  if (factionGetSort == null) {
     return null;
   }
-  return enums.ForumSelectionsThreadsGetSort.values
-          .firstWhereOrNull((e) => e.value == forumSelectionsThreadsGetSort) ??
-      defaultValue;
+  return enums.FactionGetSort.values.firstWhereOrNull((e) => e.value == factionGetSort) ?? defaultValue;
 }
 
-String forumSelectionsThreadsGetSortExplodedListToJson(
-    List<enums.ForumSelectionsThreadsGetSort>? forumSelectionsThreadsGetSort) {
-  return forumSelectionsThreadsGetSort?.map((e) => e.value!).join(',') ?? '';
+String factionGetSortExplodedListToJson(List<enums.FactionGetSort>? factionGetSort) {
+  return factionGetSort?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> forumSelectionsThreadsGetSortListToJson(
-    List<enums.ForumSelectionsThreadsGetSort>? forumSelectionsThreadsGetSort) {
-  if (forumSelectionsThreadsGetSort == null) {
+List<String> factionGetSortListToJson(List<enums.FactionGetSort>? factionGetSort) {
+  if (factionGetSort == null) {
     return [];
   }
 
-  return forumSelectionsThreadsGetSort.map((e) => e.value!).toList();
+  return factionGetSort.map((e) => e.value!).toList();
 }
 
-List<enums.ForumSelectionsThreadsGetSort>
-    forumSelectionsThreadsGetSortListFromJson(
-  List? forumSelectionsThreadsGetSort, [
-  List<enums.ForumSelectionsThreadsGetSort>? defaultValue,
+List<enums.FactionGetSort> factionGetSortListFromJson(
+  List? factionGetSort, [
+  List<enums.FactionGetSort>? defaultValue,
 ]) {
-  if (forumSelectionsThreadsGetSort == null) {
+  if (factionGetSort == null) {
     return defaultValue ?? [];
   }
 
-  return forumSelectionsThreadsGetSort
-      .map((e) => forumSelectionsThreadsGetSortFromJson(e.toString()))
-      .toList();
+  return factionGetSort.map((e) => factionGetSortFromJson(e.toString())).toList();
 }
 
-List<enums.ForumSelectionsThreadsGetSort>?
-    forumSelectionsThreadsGetSortNullableListFromJson(
-  List? forumSelectionsThreadsGetSort, [
-  List<enums.ForumSelectionsThreadsGetSort>? defaultValue,
+List<enums.FactionGetSort>? factionGetSortNullableListFromJson(
+  List? factionGetSort, [
+  List<enums.FactionGetSort>? defaultValue,
 ]) {
-  if (forumSelectionsThreadsGetSort == null) {
+  if (factionGetSort == null) {
     return defaultValue;
   }
 
-  return forumSelectionsThreadsGetSort
-      .map((e) => forumSelectionsThreadsGetSortFromJson(e.toString()))
-      .toList();
+  return factionGetSort.map((e) => factionGetSortFromJson(e.toString())).toList();
 }
 
-String? forumSelectionsPostsGetCatNullableToJson(
-    enums.ForumSelectionsPostsGetCat? forumSelectionsPostsGetCat) {
-  return forumSelectionsPostsGetCat?.value;
+String? forumCategoryIdsThreadsGetSortNullableToJson(
+    enums.ForumCategoryIdsThreadsGetSort? forumCategoryIdsThreadsGetSort) {
+  return forumCategoryIdsThreadsGetSort?.value;
 }
 
-String? forumSelectionsPostsGetCatToJson(
-    enums.ForumSelectionsPostsGetCat forumSelectionsPostsGetCat) {
-  return forumSelectionsPostsGetCat.value;
+String? forumCategoryIdsThreadsGetSortToJson(enums.ForumCategoryIdsThreadsGetSort forumCategoryIdsThreadsGetSort) {
+  return forumCategoryIdsThreadsGetSort.value;
 }
 
-enums.ForumSelectionsPostsGetCat forumSelectionsPostsGetCatFromJson(
-  Object? forumSelectionsPostsGetCat, [
-  enums.ForumSelectionsPostsGetCat? defaultValue,
+enums.ForumCategoryIdsThreadsGetSort forumCategoryIdsThreadsGetSortFromJson(
+  Object? forumCategoryIdsThreadsGetSort, [
+  enums.ForumCategoryIdsThreadsGetSort? defaultValue,
 ]) {
-  return enums.ForumSelectionsPostsGetCat.values
-          .firstWhereOrNull((e) => e.value == forumSelectionsPostsGetCat) ??
+  return enums.ForumCategoryIdsThreadsGetSort.values
+          .firstWhereOrNull((e) => e.value == forumCategoryIdsThreadsGetSort) ??
       defaultValue ??
-      enums.ForumSelectionsPostsGetCat.swaggerGeneratedUnknown;
+      enums.ForumCategoryIdsThreadsGetSort.swaggerGeneratedUnknown;
 }
 
-enums.ForumSelectionsPostsGetCat? forumSelectionsPostsGetCatNullableFromJson(
-  Object? forumSelectionsPostsGetCat, [
-  enums.ForumSelectionsPostsGetCat? defaultValue,
+enums.ForumCategoryIdsThreadsGetSort? forumCategoryIdsThreadsGetSortNullableFromJson(
+  Object? forumCategoryIdsThreadsGetSort, [
+  enums.ForumCategoryIdsThreadsGetSort? defaultValue,
 ]) {
-  if (forumSelectionsPostsGetCat == null) {
+  if (forumCategoryIdsThreadsGetSort == null) {
     return null;
   }
-  return enums.ForumSelectionsPostsGetCat.values
-          .firstWhereOrNull((e) => e.value == forumSelectionsPostsGetCat) ??
+  return enums.ForumCategoryIdsThreadsGetSort.values
+          .firstWhereOrNull((e) => e.value == forumCategoryIdsThreadsGetSort) ??
       defaultValue;
 }
 
-String forumSelectionsPostsGetCatExplodedListToJson(
-    List<enums.ForumSelectionsPostsGetCat>? forumSelectionsPostsGetCat) {
-  return forumSelectionsPostsGetCat?.map((e) => e.value!).join(',') ?? '';
+String forumCategoryIdsThreadsGetSortExplodedListToJson(
+    List<enums.ForumCategoryIdsThreadsGetSort>? forumCategoryIdsThreadsGetSort) {
+  return forumCategoryIdsThreadsGetSort?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> forumSelectionsPostsGetCatListToJson(
-    List<enums.ForumSelectionsPostsGetCat>? forumSelectionsPostsGetCat) {
-  if (forumSelectionsPostsGetCat == null) {
+List<String> forumCategoryIdsThreadsGetSortListToJson(
+    List<enums.ForumCategoryIdsThreadsGetSort>? forumCategoryIdsThreadsGetSort) {
+  if (forumCategoryIdsThreadsGetSort == null) {
     return [];
   }
 
-  return forumSelectionsPostsGetCat.map((e) => e.value!).toList();
+  return forumCategoryIdsThreadsGetSort.map((e) => e.value!).toList();
 }
 
-List<enums.ForumSelectionsPostsGetCat> forumSelectionsPostsGetCatListFromJson(
-  List? forumSelectionsPostsGetCat, [
-  List<enums.ForumSelectionsPostsGetCat>? defaultValue,
+List<enums.ForumCategoryIdsThreadsGetSort> forumCategoryIdsThreadsGetSortListFromJson(
+  List? forumCategoryIdsThreadsGetSort, [
+  List<enums.ForumCategoryIdsThreadsGetSort>? defaultValue,
 ]) {
-  if (forumSelectionsPostsGetCat == null) {
+  if (forumCategoryIdsThreadsGetSort == null) {
     return defaultValue ?? [];
   }
 
-  return forumSelectionsPostsGetCat
-      .map((e) => forumSelectionsPostsGetCatFromJson(e.toString()))
-      .toList();
+  return forumCategoryIdsThreadsGetSort.map((e) => forumCategoryIdsThreadsGetSortFromJson(e.toString())).toList();
 }
 
-List<enums.ForumSelectionsPostsGetCat>?
-    forumSelectionsPostsGetCatNullableListFromJson(
-  List? forumSelectionsPostsGetCat, [
-  List<enums.ForumSelectionsPostsGetCat>? defaultValue,
+List<enums.ForumCategoryIdsThreadsGetSort>? forumCategoryIdsThreadsGetSortNullableListFromJson(
+  List? forumCategoryIdsThreadsGetSort, [
+  List<enums.ForumCategoryIdsThreadsGetSort>? defaultValue,
 ]) {
-  if (forumSelectionsPostsGetCat == null) {
+  if (forumCategoryIdsThreadsGetSort == null) {
     return defaultValue;
   }
 
-  return forumSelectionsPostsGetCat
-      .map((e) => forumSelectionsPostsGetCatFromJson(e.toString()))
-      .toList();
+  return forumCategoryIdsThreadsGetSort.map((e) => forumCategoryIdsThreadsGetSortFromJson(e.toString())).toList();
 }
 
-String? racingSelectionsRacesGetSortNullableToJson(
-    enums.RacingSelectionsRacesGetSort? racingSelectionsRacesGetSort) {
-  return racingSelectionsRacesGetSort?.value;
+String? forumThreadsGetSortNullableToJson(enums.ForumThreadsGetSort? forumThreadsGetSort) {
+  return forumThreadsGetSort?.value;
 }
 
-String? racingSelectionsRacesGetSortToJson(
-    enums.RacingSelectionsRacesGetSort racingSelectionsRacesGetSort) {
-  return racingSelectionsRacesGetSort.value;
+String? forumThreadsGetSortToJson(enums.ForumThreadsGetSort forumThreadsGetSort) {
+  return forumThreadsGetSort.value;
 }
 
-enums.RacingSelectionsRacesGetSort racingSelectionsRacesGetSortFromJson(
-  Object? racingSelectionsRacesGetSort, [
-  enums.RacingSelectionsRacesGetSort? defaultValue,
+enums.ForumThreadsGetSort forumThreadsGetSortFromJson(
+  Object? forumThreadsGetSort, [
+  enums.ForumThreadsGetSort? defaultValue,
 ]) {
-  return enums.RacingSelectionsRacesGetSort.values
-          .firstWhereOrNull((e) => e.value == racingSelectionsRacesGetSort) ??
+  return enums.ForumThreadsGetSort.values.firstWhereOrNull((e) => e.value == forumThreadsGetSort) ??
       defaultValue ??
-      enums.RacingSelectionsRacesGetSort.swaggerGeneratedUnknown;
+      enums.ForumThreadsGetSort.swaggerGeneratedUnknown;
 }
 
-enums.RacingSelectionsRacesGetSort?
-    racingSelectionsRacesGetSortNullableFromJson(
-  Object? racingSelectionsRacesGetSort, [
-  enums.RacingSelectionsRacesGetSort? defaultValue,
+enums.ForumThreadsGetSort? forumThreadsGetSortNullableFromJson(
+  Object? forumThreadsGetSort, [
+  enums.ForumThreadsGetSort? defaultValue,
 ]) {
-  if (racingSelectionsRacesGetSort == null) {
+  if (forumThreadsGetSort == null) {
     return null;
   }
-  return enums.RacingSelectionsRacesGetSort.values
-          .firstWhereOrNull((e) => e.value == racingSelectionsRacesGetSort) ??
+  return enums.ForumThreadsGetSort.values.firstWhereOrNull((e) => e.value == forumThreadsGetSort) ?? defaultValue;
+}
+
+String forumThreadsGetSortExplodedListToJson(List<enums.ForumThreadsGetSort>? forumThreadsGetSort) {
+  return forumThreadsGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> forumThreadsGetSortListToJson(List<enums.ForumThreadsGetSort>? forumThreadsGetSort) {
+  if (forumThreadsGetSort == null) {
+    return [];
+  }
+
+  return forumThreadsGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.ForumThreadsGetSort> forumThreadsGetSortListFromJson(
+  List? forumThreadsGetSort, [
+  List<enums.ForumThreadsGetSort>? defaultValue,
+]) {
+  if (forumThreadsGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return forumThreadsGetSort.map((e) => forumThreadsGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.ForumThreadsGetSort>? forumThreadsGetSortNullableListFromJson(
+  List? forumThreadsGetSort, [
+  List<enums.ForumThreadsGetSort>? defaultValue,
+]) {
+  if (forumThreadsGetSort == null) {
+    return defaultValue;
+  }
+
+  return forumThreadsGetSort.map((e) => forumThreadsGetSortFromJson(e.toString())).toList();
+}
+
+String? forumThreadIdPostsGetCatNullableToJson(enums.ForumThreadIdPostsGetCat? forumThreadIdPostsGetCat) {
+  return forumThreadIdPostsGetCat?.value;
+}
+
+String? forumThreadIdPostsGetCatToJson(enums.ForumThreadIdPostsGetCat forumThreadIdPostsGetCat) {
+  return forumThreadIdPostsGetCat.value;
+}
+
+enums.ForumThreadIdPostsGetCat forumThreadIdPostsGetCatFromJson(
+  Object? forumThreadIdPostsGetCat, [
+  enums.ForumThreadIdPostsGetCat? defaultValue,
+]) {
+  return enums.ForumThreadIdPostsGetCat.values.firstWhereOrNull((e) => e.value == forumThreadIdPostsGetCat) ??
+      defaultValue ??
+      enums.ForumThreadIdPostsGetCat.swaggerGeneratedUnknown;
+}
+
+enums.ForumThreadIdPostsGetCat? forumThreadIdPostsGetCatNullableFromJson(
+  Object? forumThreadIdPostsGetCat, [
+  enums.ForumThreadIdPostsGetCat? defaultValue,
+]) {
+  if (forumThreadIdPostsGetCat == null) {
+    return null;
+  }
+  return enums.ForumThreadIdPostsGetCat.values.firstWhereOrNull((e) => e.value == forumThreadIdPostsGetCat) ??
       defaultValue;
 }
 
-String racingSelectionsRacesGetSortExplodedListToJson(
-    List<enums.RacingSelectionsRacesGetSort>? racingSelectionsRacesGetSort) {
-  return racingSelectionsRacesGetSort?.map((e) => e.value!).join(',') ?? '';
+String forumThreadIdPostsGetCatExplodedListToJson(List<enums.ForumThreadIdPostsGetCat>? forumThreadIdPostsGetCat) {
+  return forumThreadIdPostsGetCat?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> racingSelectionsRacesGetSortListToJson(
-    List<enums.RacingSelectionsRacesGetSort>? racingSelectionsRacesGetSort) {
-  if (racingSelectionsRacesGetSort == null) {
+List<String> forumThreadIdPostsGetCatListToJson(List<enums.ForumThreadIdPostsGetCat>? forumThreadIdPostsGetCat) {
+  if (forumThreadIdPostsGetCat == null) {
     return [];
   }
 
-  return racingSelectionsRacesGetSort.map((e) => e.value!).toList();
+  return forumThreadIdPostsGetCat.map((e) => e.value!).toList();
 }
 
-List<enums.RacingSelectionsRacesGetSort>
-    racingSelectionsRacesGetSortListFromJson(
-  List? racingSelectionsRacesGetSort, [
-  List<enums.RacingSelectionsRacesGetSort>? defaultValue,
+List<enums.ForumThreadIdPostsGetCat> forumThreadIdPostsGetCatListFromJson(
+  List? forumThreadIdPostsGetCat, [
+  List<enums.ForumThreadIdPostsGetCat>? defaultValue,
 ]) {
-  if (racingSelectionsRacesGetSort == null) {
+  if (forumThreadIdPostsGetCat == null) {
     return defaultValue ?? [];
   }
 
-  return racingSelectionsRacesGetSort
-      .map((e) => racingSelectionsRacesGetSortFromJson(e.toString()))
-      .toList();
+  return forumThreadIdPostsGetCat.map((e) => forumThreadIdPostsGetCatFromJson(e.toString())).toList();
 }
 
-List<enums.RacingSelectionsRacesGetSort>?
-    racingSelectionsRacesGetSortNullableListFromJson(
-  List? racingSelectionsRacesGetSort, [
-  List<enums.RacingSelectionsRacesGetSort>? defaultValue,
+List<enums.ForumThreadIdPostsGetCat>? forumThreadIdPostsGetCatNullableListFromJson(
+  List? forumThreadIdPostsGetCat, [
+  List<enums.ForumThreadIdPostsGetCat>? defaultValue,
 ]) {
-  if (racingSelectionsRacesGetSort == null) {
+  if (forumThreadIdPostsGetCat == null) {
     return defaultValue;
   }
 
-  return racingSelectionsRacesGetSort
-      .map((e) => racingSelectionsRacesGetSortFromJson(e.toString()))
-      .toList();
+  return forumThreadIdPostsGetCat.map((e) => forumThreadIdPostsGetCatFromJson(e.toString())).toList();
 }
 
-String? racingSelectionsRacesGetCatNullableToJson(
-    enums.RacingSelectionsRacesGetCat? racingSelectionsRacesGetCat) {
-  return racingSelectionsRacesGetCat?.value;
+String? forumGetSortNullableToJson(enums.ForumGetSort? forumGetSort) {
+  return forumGetSort?.value;
 }
 
-String? racingSelectionsRacesGetCatToJson(
-    enums.RacingSelectionsRacesGetCat racingSelectionsRacesGetCat) {
-  return racingSelectionsRacesGetCat.value;
+String? forumGetSortToJson(enums.ForumGetSort forumGetSort) {
+  return forumGetSort.value;
 }
 
-enums.RacingSelectionsRacesGetCat racingSelectionsRacesGetCatFromJson(
-  Object? racingSelectionsRacesGetCat, [
-  enums.RacingSelectionsRacesGetCat? defaultValue,
+enums.ForumGetSort forumGetSortFromJson(
+  Object? forumGetSort, [
+  enums.ForumGetSort? defaultValue,
 ]) {
-  return enums.RacingSelectionsRacesGetCat.values
-          .firstWhereOrNull((e) => e.value == racingSelectionsRacesGetCat) ??
+  return enums.ForumGetSort.values.firstWhereOrNull((e) => e.value == forumGetSort) ??
       defaultValue ??
-      enums.RacingSelectionsRacesGetCat.swaggerGeneratedUnknown;
+      enums.ForumGetSort.swaggerGeneratedUnknown;
 }
 
-enums.RacingSelectionsRacesGetCat? racingSelectionsRacesGetCatNullableFromJson(
-  Object? racingSelectionsRacesGetCat, [
-  enums.RacingSelectionsRacesGetCat? defaultValue,
+enums.ForumGetSort? forumGetSortNullableFromJson(
+  Object? forumGetSort, [
+  enums.ForumGetSort? defaultValue,
 ]) {
-  if (racingSelectionsRacesGetCat == null) {
+  if (forumGetSort == null) {
     return null;
   }
-  return enums.RacingSelectionsRacesGetCat.values
-          .firstWhereOrNull((e) => e.value == racingSelectionsRacesGetCat) ??
+  return enums.ForumGetSort.values.firstWhereOrNull((e) => e.value == forumGetSort) ?? defaultValue;
+}
+
+String forumGetSortExplodedListToJson(List<enums.ForumGetSort>? forumGetSort) {
+  return forumGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> forumGetSortListToJson(List<enums.ForumGetSort>? forumGetSort) {
+  if (forumGetSort == null) {
+    return [];
+  }
+
+  return forumGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.ForumGetSort> forumGetSortListFromJson(
+  List? forumGetSort, [
+  List<enums.ForumGetSort>? defaultValue,
+]) {
+  if (forumGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return forumGetSort.map((e) => forumGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.ForumGetSort>? forumGetSortNullableListFromJson(
+  List? forumGetSort, [
+  List<enums.ForumGetSort>? defaultValue,
+]) {
+  if (forumGetSort == null) {
+    return defaultValue;
+  }
+
+  return forumGetSort.map((e) => forumGetSortFromJson(e.toString())).toList();
+}
+
+String? marketGetSortNullableToJson(enums.MarketGetSort? marketGetSort) {
+  return marketGetSort?.value;
+}
+
+String? marketGetSortToJson(enums.MarketGetSort marketGetSort) {
+  return marketGetSort.value;
+}
+
+enums.MarketGetSort marketGetSortFromJson(
+  Object? marketGetSort, [
+  enums.MarketGetSort? defaultValue,
+]) {
+  return enums.MarketGetSort.values.firstWhereOrNull((e) => e.value == marketGetSort) ??
+      defaultValue ??
+      enums.MarketGetSort.swaggerGeneratedUnknown;
+}
+
+enums.MarketGetSort? marketGetSortNullableFromJson(
+  Object? marketGetSort, [
+  enums.MarketGetSort? defaultValue,
+]) {
+  if (marketGetSort == null) {
+    return null;
+  }
+  return enums.MarketGetSort.values.firstWhereOrNull((e) => e.value == marketGetSort) ?? defaultValue;
+}
+
+String marketGetSortExplodedListToJson(List<enums.MarketGetSort>? marketGetSort) {
+  return marketGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> marketGetSortListToJson(List<enums.MarketGetSort>? marketGetSort) {
+  if (marketGetSort == null) {
+    return [];
+  }
+
+  return marketGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.MarketGetSort> marketGetSortListFromJson(
+  List? marketGetSort, [
+  List<enums.MarketGetSort>? defaultValue,
+]) {
+  if (marketGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return marketGetSort.map((e) => marketGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.MarketGetSort>? marketGetSortNullableListFromJson(
+  List? marketGetSort, [
+  List<enums.MarketGetSort>? defaultValue,
+]) {
+  if (marketGetSort == null) {
+    return defaultValue;
+  }
+
+  return marketGetSort.map((e) => marketGetSortFromJson(e.toString())).toList();
+}
+
+String? racingRacesGetSortNullableToJson(enums.RacingRacesGetSort? racingRacesGetSort) {
+  return racingRacesGetSort?.value;
+}
+
+String? racingRacesGetSortToJson(enums.RacingRacesGetSort racingRacesGetSort) {
+  return racingRacesGetSort.value;
+}
+
+enums.RacingRacesGetSort racingRacesGetSortFromJson(
+  Object? racingRacesGetSort, [
+  enums.RacingRacesGetSort? defaultValue,
+]) {
+  return enums.RacingRacesGetSort.values.firstWhereOrNull((e) => e.value == racingRacesGetSort) ??
+      defaultValue ??
+      enums.RacingRacesGetSort.swaggerGeneratedUnknown;
+}
+
+enums.RacingRacesGetSort? racingRacesGetSortNullableFromJson(
+  Object? racingRacesGetSort, [
+  enums.RacingRacesGetSort? defaultValue,
+]) {
+  if (racingRacesGetSort == null) {
+    return null;
+  }
+  return enums.RacingRacesGetSort.values.firstWhereOrNull((e) => e.value == racingRacesGetSort) ?? defaultValue;
+}
+
+String racingRacesGetSortExplodedListToJson(List<enums.RacingRacesGetSort>? racingRacesGetSort) {
+  return racingRacesGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> racingRacesGetSortListToJson(List<enums.RacingRacesGetSort>? racingRacesGetSort) {
+  if (racingRacesGetSort == null) {
+    return [];
+  }
+
+  return racingRacesGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.RacingRacesGetSort> racingRacesGetSortListFromJson(
+  List? racingRacesGetSort, [
+  List<enums.RacingRacesGetSort>? defaultValue,
+]) {
+  if (racingRacesGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return racingRacesGetSort.map((e) => racingRacesGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.RacingRacesGetSort>? racingRacesGetSortNullableListFromJson(
+  List? racingRacesGetSort, [
+  List<enums.RacingRacesGetSort>? defaultValue,
+]) {
+  if (racingRacesGetSort == null) {
+    return defaultValue;
+  }
+
+  return racingRacesGetSort.map((e) => racingRacesGetSortFromJson(e.toString())).toList();
+}
+
+String? racingRacesGetCatNullableToJson(enums.RacingRacesGetCat? racingRacesGetCat) {
+  return racingRacesGetCat?.value;
+}
+
+String? racingRacesGetCatToJson(enums.RacingRacesGetCat racingRacesGetCat) {
+  return racingRacesGetCat.value;
+}
+
+enums.RacingRacesGetCat racingRacesGetCatFromJson(
+  Object? racingRacesGetCat, [
+  enums.RacingRacesGetCat? defaultValue,
+]) {
+  return enums.RacingRacesGetCat.values.firstWhereOrNull((e) => e.value == racingRacesGetCat) ??
+      defaultValue ??
+      enums.RacingRacesGetCat.swaggerGeneratedUnknown;
+}
+
+enums.RacingRacesGetCat? racingRacesGetCatNullableFromJson(
+  Object? racingRacesGetCat, [
+  enums.RacingRacesGetCat? defaultValue,
+]) {
+  if (racingRacesGetCat == null) {
+    return null;
+  }
+  return enums.RacingRacesGetCat.values.firstWhereOrNull((e) => e.value == racingRacesGetCat) ?? defaultValue;
+}
+
+String racingRacesGetCatExplodedListToJson(List<enums.RacingRacesGetCat>? racingRacesGetCat) {
+  return racingRacesGetCat?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> racingRacesGetCatListToJson(List<enums.RacingRacesGetCat>? racingRacesGetCat) {
+  if (racingRacesGetCat == null) {
+    return [];
+  }
+
+  return racingRacesGetCat.map((e) => e.value!).toList();
+}
+
+List<enums.RacingRacesGetCat> racingRacesGetCatListFromJson(
+  List? racingRacesGetCat, [
+  List<enums.RacingRacesGetCat>? defaultValue,
+]) {
+  if (racingRacesGetCat == null) {
+    return defaultValue ?? [];
+  }
+
+  return racingRacesGetCat.map((e) => racingRacesGetCatFromJson(e.toString())).toList();
+}
+
+List<enums.RacingRacesGetCat>? racingRacesGetCatNullableListFromJson(
+  List? racingRacesGetCat, [
+  List<enums.RacingRacesGetCat>? defaultValue,
+]) {
+  if (racingRacesGetCat == null) {
+    return defaultValue;
+  }
+
+  return racingRacesGetCat.map((e) => racingRacesGetCatFromJson(e.toString())).toList();
+}
+
+String? racingGetSortNullableToJson(enums.RacingGetSort? racingGetSort) {
+  return racingGetSort?.value;
+}
+
+String? racingGetSortToJson(enums.RacingGetSort racingGetSort) {
+  return racingGetSort.value;
+}
+
+enums.RacingGetSort racingGetSortFromJson(
+  Object? racingGetSort, [
+  enums.RacingGetSort? defaultValue,
+]) {
+  return enums.RacingGetSort.values.firstWhereOrNull((e) => e.value == racingGetSort) ??
+      defaultValue ??
+      enums.RacingGetSort.swaggerGeneratedUnknown;
+}
+
+enums.RacingGetSort? racingGetSortNullableFromJson(
+  Object? racingGetSort, [
+  enums.RacingGetSort? defaultValue,
+]) {
+  if (racingGetSort == null) {
+    return null;
+  }
+  return enums.RacingGetSort.values.firstWhereOrNull((e) => e.value == racingGetSort) ?? defaultValue;
+}
+
+String racingGetSortExplodedListToJson(List<enums.RacingGetSort>? racingGetSort) {
+  return racingGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> racingGetSortListToJson(List<enums.RacingGetSort>? racingGetSort) {
+  if (racingGetSort == null) {
+    return [];
+  }
+
+  return racingGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.RacingGetSort> racingGetSortListFromJson(
+  List? racingGetSort, [
+  List<enums.RacingGetSort>? defaultValue,
+]) {
+  if (racingGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return racingGetSort.map((e) => racingGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.RacingGetSort>? racingGetSortNullableListFromJson(
+  List? racingGetSort, [
+  List<enums.RacingGetSort>? defaultValue,
+]) {
+  if (racingGetSort == null) {
+    return defaultValue;
+  }
+
+  return racingGetSort.map((e) => racingGetSortFromJson(e.toString())).toList();
+}
+
+String? tornGetSortNullableToJson(enums.TornGetSort? tornGetSort) {
+  return tornGetSort?.value;
+}
+
+String? tornGetSortToJson(enums.TornGetSort tornGetSort) {
+  return tornGetSort.value;
+}
+
+enums.TornGetSort tornGetSortFromJson(
+  Object? tornGetSort, [
+  enums.TornGetSort? defaultValue,
+]) {
+  return enums.TornGetSort.values.firstWhereOrNull((e) => e.value == tornGetSort) ??
+      defaultValue ??
+      enums.TornGetSort.swaggerGeneratedUnknown;
+}
+
+enums.TornGetSort? tornGetSortNullableFromJson(
+  Object? tornGetSort, [
+  enums.TornGetSort? defaultValue,
+]) {
+  if (tornGetSort == null) {
+    return null;
+  }
+  return enums.TornGetSort.values.firstWhereOrNull((e) => e.value == tornGetSort) ?? defaultValue;
+}
+
+String tornGetSortExplodedListToJson(List<enums.TornGetSort>? tornGetSort) {
+  return tornGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> tornGetSortListToJson(List<enums.TornGetSort>? tornGetSort) {
+  if (tornGetSort == null) {
+    return [];
+  }
+
+  return tornGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.TornGetSort> tornGetSortListFromJson(
+  List? tornGetSort, [
+  List<enums.TornGetSort>? defaultValue,
+]) {
+  if (tornGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return tornGetSort.map((e) => tornGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.TornGetSort>? tornGetSortNullableListFromJson(
+  List? tornGetSort, [
+  List<enums.TornGetSort>? defaultValue,
+]) {
+  if (tornGetSort == null) {
+    return defaultValue;
+  }
+
+  return tornGetSort.map((e) => tornGetSortFromJson(e.toString())).toList();
+}
+
+String? userRacesGetSortNullableToJson(enums.UserRacesGetSort? userRacesGetSort) {
+  return userRacesGetSort?.value;
+}
+
+String? userRacesGetSortToJson(enums.UserRacesGetSort userRacesGetSort) {
+  return userRacesGetSort.value;
+}
+
+enums.UserRacesGetSort userRacesGetSortFromJson(
+  Object? userRacesGetSort, [
+  enums.UserRacesGetSort? defaultValue,
+]) {
+  return enums.UserRacesGetSort.values.firstWhereOrNull((e) => e.value == userRacesGetSort) ??
+      defaultValue ??
+      enums.UserRacesGetSort.swaggerGeneratedUnknown;
+}
+
+enums.UserRacesGetSort? userRacesGetSortNullableFromJson(
+  Object? userRacesGetSort, [
+  enums.UserRacesGetSort? defaultValue,
+]) {
+  if (userRacesGetSort == null) {
+    return null;
+  }
+  return enums.UserRacesGetSort.values.firstWhereOrNull((e) => e.value == userRacesGetSort) ?? defaultValue;
+}
+
+String userRacesGetSortExplodedListToJson(List<enums.UserRacesGetSort>? userRacesGetSort) {
+  return userRacesGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> userRacesGetSortListToJson(List<enums.UserRacesGetSort>? userRacesGetSort) {
+  if (userRacesGetSort == null) {
+    return [];
+  }
+
+  return userRacesGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.UserRacesGetSort> userRacesGetSortListFromJson(
+  List? userRacesGetSort, [
+  List<enums.UserRacesGetSort>? defaultValue,
+]) {
+  if (userRacesGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return userRacesGetSort.map((e) => userRacesGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.UserRacesGetSort>? userRacesGetSortNullableListFromJson(
+  List? userRacesGetSort, [
+  List<enums.UserRacesGetSort>? defaultValue,
+]) {
+  if (userRacesGetSort == null) {
+    return defaultValue;
+  }
+
+  return userRacesGetSort.map((e) => userRacesGetSortFromJson(e.toString())).toList();
+}
+
+String? userRacesGetCatNullableToJson(enums.UserRacesGetCat? userRacesGetCat) {
+  return userRacesGetCat?.value;
+}
+
+String? userRacesGetCatToJson(enums.UserRacesGetCat userRacesGetCat) {
+  return userRacesGetCat.value;
+}
+
+enums.UserRacesGetCat userRacesGetCatFromJson(
+  Object? userRacesGetCat, [
+  enums.UserRacesGetCat? defaultValue,
+]) {
+  return enums.UserRacesGetCat.values.firstWhereOrNull((e) => e.value == userRacesGetCat) ??
+      defaultValue ??
+      enums.UserRacesGetCat.swaggerGeneratedUnknown;
+}
+
+enums.UserRacesGetCat? userRacesGetCatNullableFromJson(
+  Object? userRacesGetCat, [
+  enums.UserRacesGetCat? defaultValue,
+]) {
+  if (userRacesGetCat == null) {
+    return null;
+  }
+  return enums.UserRacesGetCat.values.firstWhereOrNull((e) => e.value == userRacesGetCat) ?? defaultValue;
+}
+
+String userRacesGetCatExplodedListToJson(List<enums.UserRacesGetCat>? userRacesGetCat) {
+  return userRacesGetCat?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> userRacesGetCatListToJson(List<enums.UserRacesGetCat>? userRacesGetCat) {
+  if (userRacesGetCat == null) {
+    return [];
+  }
+
+  return userRacesGetCat.map((e) => e.value!).toList();
+}
+
+List<enums.UserRacesGetCat> userRacesGetCatListFromJson(
+  List? userRacesGetCat, [
+  List<enums.UserRacesGetCat>? defaultValue,
+]) {
+  if (userRacesGetCat == null) {
+    return defaultValue ?? [];
+  }
+
+  return userRacesGetCat.map((e) => userRacesGetCatFromJson(e.toString())).toList();
+}
+
+List<enums.UserRacesGetCat>? userRacesGetCatNullableListFromJson(
+  List? userRacesGetCat, [
+  List<enums.UserRacesGetCat>? defaultValue,
+]) {
+  if (userRacesGetCat == null) {
+    return defaultValue;
+  }
+
+  return userRacesGetCat.map((e) => userRacesGetCatFromJson(e.toString())).toList();
+}
+
+String? userIdForumpostsGetCatNullableToJson(enums.UserIdForumpostsGetCat? userIdForumpostsGetCat) {
+  return userIdForumpostsGetCat?.value;
+}
+
+String? userIdForumpostsGetCatToJson(enums.UserIdForumpostsGetCat userIdForumpostsGetCat) {
+  return userIdForumpostsGetCat.value;
+}
+
+enums.UserIdForumpostsGetCat userIdForumpostsGetCatFromJson(
+  Object? userIdForumpostsGetCat, [
+  enums.UserIdForumpostsGetCat? defaultValue,
+]) {
+  return enums.UserIdForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userIdForumpostsGetCat) ??
+      defaultValue ??
+      enums.UserIdForumpostsGetCat.swaggerGeneratedUnknown;
+}
+
+enums.UserIdForumpostsGetCat? userIdForumpostsGetCatNullableFromJson(
+  Object? userIdForumpostsGetCat, [
+  enums.UserIdForumpostsGetCat? defaultValue,
+]) {
+  if (userIdForumpostsGetCat == null) {
+    return null;
+  }
+  return enums.UserIdForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userIdForumpostsGetCat) ?? defaultValue;
+}
+
+String userIdForumpostsGetCatExplodedListToJson(List<enums.UserIdForumpostsGetCat>? userIdForumpostsGetCat) {
+  return userIdForumpostsGetCat?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> userIdForumpostsGetCatListToJson(List<enums.UserIdForumpostsGetCat>? userIdForumpostsGetCat) {
+  if (userIdForumpostsGetCat == null) {
+    return [];
+  }
+
+  return userIdForumpostsGetCat.map((e) => e.value!).toList();
+}
+
+List<enums.UserIdForumpostsGetCat> userIdForumpostsGetCatListFromJson(
+  List? userIdForumpostsGetCat, [
+  List<enums.UserIdForumpostsGetCat>? defaultValue,
+]) {
+  if (userIdForumpostsGetCat == null) {
+    return defaultValue ?? [];
+  }
+
+  return userIdForumpostsGetCat.map((e) => userIdForumpostsGetCatFromJson(e.toString())).toList();
+}
+
+List<enums.UserIdForumpostsGetCat>? userIdForumpostsGetCatNullableListFromJson(
+  List? userIdForumpostsGetCat, [
+  List<enums.UserIdForumpostsGetCat>? defaultValue,
+]) {
+  if (userIdForumpostsGetCat == null) {
+    return defaultValue;
+  }
+
+  return userIdForumpostsGetCat.map((e) => userIdForumpostsGetCatFromJson(e.toString())).toList();
+}
+
+String? userIdForumpostsGetSortNullableToJson(enums.UserIdForumpostsGetSort? userIdForumpostsGetSort) {
+  return userIdForumpostsGetSort?.value;
+}
+
+String? userIdForumpostsGetSortToJson(enums.UserIdForumpostsGetSort userIdForumpostsGetSort) {
+  return userIdForumpostsGetSort.value;
+}
+
+enums.UserIdForumpostsGetSort userIdForumpostsGetSortFromJson(
+  Object? userIdForumpostsGetSort, [
+  enums.UserIdForumpostsGetSort? defaultValue,
+]) {
+  return enums.UserIdForumpostsGetSort.values.firstWhereOrNull((e) => e.value == userIdForumpostsGetSort) ??
+      defaultValue ??
+      enums.UserIdForumpostsGetSort.swaggerGeneratedUnknown;
+}
+
+enums.UserIdForumpostsGetSort? userIdForumpostsGetSortNullableFromJson(
+  Object? userIdForumpostsGetSort, [
+  enums.UserIdForumpostsGetSort? defaultValue,
+]) {
+  if (userIdForumpostsGetSort == null) {
+    return null;
+  }
+  return enums.UserIdForumpostsGetSort.values.firstWhereOrNull((e) => e.value == userIdForumpostsGetSort) ??
       defaultValue;
 }
 
-String racingSelectionsRacesGetCatExplodedListToJson(
-    List<enums.RacingSelectionsRacesGetCat>? racingSelectionsRacesGetCat) {
-  return racingSelectionsRacesGetCat?.map((e) => e.value!).join(',') ?? '';
+String userIdForumpostsGetSortExplodedListToJson(List<enums.UserIdForumpostsGetSort>? userIdForumpostsGetSort) {
+  return userIdForumpostsGetSort?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> racingSelectionsRacesGetCatListToJson(
-    List<enums.RacingSelectionsRacesGetCat>? racingSelectionsRacesGetCat) {
-  if (racingSelectionsRacesGetCat == null) {
+List<String> userIdForumpostsGetSortListToJson(List<enums.UserIdForumpostsGetSort>? userIdForumpostsGetSort) {
+  if (userIdForumpostsGetSort == null) {
     return [];
   }
 
-  return racingSelectionsRacesGetCat.map((e) => e.value!).toList();
+  return userIdForumpostsGetSort.map((e) => e.value!).toList();
 }
 
-List<enums.RacingSelectionsRacesGetCat> racingSelectionsRacesGetCatListFromJson(
-  List? racingSelectionsRacesGetCat, [
-  List<enums.RacingSelectionsRacesGetCat>? defaultValue,
+List<enums.UserIdForumpostsGetSort> userIdForumpostsGetSortListFromJson(
+  List? userIdForumpostsGetSort, [
+  List<enums.UserIdForumpostsGetSort>? defaultValue,
 ]) {
-  if (racingSelectionsRacesGetCat == null) {
+  if (userIdForumpostsGetSort == null) {
     return defaultValue ?? [];
   }
 
-  return racingSelectionsRacesGetCat
-      .map((e) => racingSelectionsRacesGetCatFromJson(e.toString()))
-      .toList();
+  return userIdForumpostsGetSort.map((e) => userIdForumpostsGetSortFromJson(e.toString())).toList();
 }
 
-List<enums.RacingSelectionsRacesGetCat>?
-    racingSelectionsRacesGetCatNullableListFromJson(
-  List? racingSelectionsRacesGetCat, [
-  List<enums.RacingSelectionsRacesGetCat>? defaultValue,
+List<enums.UserIdForumpostsGetSort>? userIdForumpostsGetSortNullableListFromJson(
+  List? userIdForumpostsGetSort, [
+  List<enums.UserIdForumpostsGetSort>? defaultValue,
 ]) {
-  if (racingSelectionsRacesGetCat == null) {
+  if (userIdForumpostsGetSort == null) {
     return defaultValue;
   }
 
-  return racingSelectionsRacesGetCat
-      .map((e) => racingSelectionsRacesGetCatFromJson(e.toString()))
-      .toList();
+  return userIdForumpostsGetSort.map((e) => userIdForumpostsGetSortFromJson(e.toString())).toList();
 }
 
-String? userSelectionsRacesGetSortNullableToJson(
-    enums.UserSelectionsRacesGetSort? userSelectionsRacesGetSort) {
-  return userSelectionsRacesGetSort?.value;
+String? userForumpostsGetCatNullableToJson(enums.UserForumpostsGetCat? userForumpostsGetCat) {
+  return userForumpostsGetCat?.value;
 }
 
-String? userSelectionsRacesGetSortToJson(
-    enums.UserSelectionsRacesGetSort userSelectionsRacesGetSort) {
-  return userSelectionsRacesGetSort.value;
+String? userForumpostsGetCatToJson(enums.UserForumpostsGetCat userForumpostsGetCat) {
+  return userForumpostsGetCat.value;
 }
 
-enums.UserSelectionsRacesGetSort userSelectionsRacesGetSortFromJson(
-  Object? userSelectionsRacesGetSort, [
-  enums.UserSelectionsRacesGetSort? defaultValue,
+enums.UserForumpostsGetCat userForumpostsGetCatFromJson(
+  Object? userForumpostsGetCat, [
+  enums.UserForumpostsGetCat? defaultValue,
 ]) {
-  return enums.UserSelectionsRacesGetSort.values
-          .firstWhereOrNull((e) => e.value == userSelectionsRacesGetSort) ??
+  return enums.UserForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userForumpostsGetCat) ??
       defaultValue ??
-      enums.UserSelectionsRacesGetSort.swaggerGeneratedUnknown;
+      enums.UserForumpostsGetCat.swaggerGeneratedUnknown;
 }
 
-enums.UserSelectionsRacesGetSort? userSelectionsRacesGetSortNullableFromJson(
-  Object? userSelectionsRacesGetSort, [
-  enums.UserSelectionsRacesGetSort? defaultValue,
+enums.UserForumpostsGetCat? userForumpostsGetCatNullableFromJson(
+  Object? userForumpostsGetCat, [
+  enums.UserForumpostsGetCat? defaultValue,
 ]) {
-  if (userSelectionsRacesGetSort == null) {
+  if (userForumpostsGetCat == null) {
     return null;
   }
-  return enums.UserSelectionsRacesGetSort.values
-          .firstWhereOrNull((e) => e.value == userSelectionsRacesGetSort) ??
+  return enums.UserForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userForumpostsGetCat) ?? defaultValue;
+}
+
+String userForumpostsGetCatExplodedListToJson(List<enums.UserForumpostsGetCat>? userForumpostsGetCat) {
+  return userForumpostsGetCat?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> userForumpostsGetCatListToJson(List<enums.UserForumpostsGetCat>? userForumpostsGetCat) {
+  if (userForumpostsGetCat == null) {
+    return [];
+  }
+
+  return userForumpostsGetCat.map((e) => e.value!).toList();
+}
+
+List<enums.UserForumpostsGetCat> userForumpostsGetCatListFromJson(
+  List? userForumpostsGetCat, [
+  List<enums.UserForumpostsGetCat>? defaultValue,
+]) {
+  if (userForumpostsGetCat == null) {
+    return defaultValue ?? [];
+  }
+
+  return userForumpostsGetCat.map((e) => userForumpostsGetCatFromJson(e.toString())).toList();
+}
+
+List<enums.UserForumpostsGetCat>? userForumpostsGetCatNullableListFromJson(
+  List? userForumpostsGetCat, [
+  List<enums.UserForumpostsGetCat>? defaultValue,
+]) {
+  if (userForumpostsGetCat == null) {
+    return defaultValue;
+  }
+
+  return userForumpostsGetCat.map((e) => userForumpostsGetCatFromJson(e.toString())).toList();
+}
+
+String? userForumpostsGetSortNullableToJson(enums.UserForumpostsGetSort? userForumpostsGetSort) {
+  return userForumpostsGetSort?.value;
+}
+
+String? userForumpostsGetSortToJson(enums.UserForumpostsGetSort userForumpostsGetSort) {
+  return userForumpostsGetSort.value;
+}
+
+enums.UserForumpostsGetSort userForumpostsGetSortFromJson(
+  Object? userForumpostsGetSort, [
+  enums.UserForumpostsGetSort? defaultValue,
+]) {
+  return enums.UserForumpostsGetSort.values.firstWhereOrNull((e) => e.value == userForumpostsGetSort) ??
+      defaultValue ??
+      enums.UserForumpostsGetSort.swaggerGeneratedUnknown;
+}
+
+enums.UserForumpostsGetSort? userForumpostsGetSortNullableFromJson(
+  Object? userForumpostsGetSort, [
+  enums.UserForumpostsGetSort? defaultValue,
+]) {
+  if (userForumpostsGetSort == null) {
+    return null;
+  }
+  return enums.UserForumpostsGetSort.values.firstWhereOrNull((e) => e.value == userForumpostsGetSort) ?? defaultValue;
+}
+
+String userForumpostsGetSortExplodedListToJson(List<enums.UserForumpostsGetSort>? userForumpostsGetSort) {
+  return userForumpostsGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> userForumpostsGetSortListToJson(List<enums.UserForumpostsGetSort>? userForumpostsGetSort) {
+  if (userForumpostsGetSort == null) {
+    return [];
+  }
+
+  return userForumpostsGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.UserForumpostsGetSort> userForumpostsGetSortListFromJson(
+  List? userForumpostsGetSort, [
+  List<enums.UserForumpostsGetSort>? defaultValue,
+]) {
+  if (userForumpostsGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return userForumpostsGetSort.map((e) => userForumpostsGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.UserForumpostsGetSort>? userForumpostsGetSortNullableListFromJson(
+  List? userForumpostsGetSort, [
+  List<enums.UserForumpostsGetSort>? defaultValue,
+]) {
+  if (userForumpostsGetSort == null) {
+    return defaultValue;
+  }
+
+  return userForumpostsGetSort.map((e) => userForumpostsGetSortFromJson(e.toString())).toList();
+}
+
+String? userIdForumthreadsGetSortNullableToJson(enums.UserIdForumthreadsGetSort? userIdForumthreadsGetSort) {
+  return userIdForumthreadsGetSort?.value;
+}
+
+String? userIdForumthreadsGetSortToJson(enums.UserIdForumthreadsGetSort userIdForumthreadsGetSort) {
+  return userIdForumthreadsGetSort.value;
+}
+
+enums.UserIdForumthreadsGetSort userIdForumthreadsGetSortFromJson(
+  Object? userIdForumthreadsGetSort, [
+  enums.UserIdForumthreadsGetSort? defaultValue,
+]) {
+  return enums.UserIdForumthreadsGetSort.values.firstWhereOrNull((e) => e.value == userIdForumthreadsGetSort) ??
+      defaultValue ??
+      enums.UserIdForumthreadsGetSort.swaggerGeneratedUnknown;
+}
+
+enums.UserIdForumthreadsGetSort? userIdForumthreadsGetSortNullableFromJson(
+  Object? userIdForumthreadsGetSort, [
+  enums.UserIdForumthreadsGetSort? defaultValue,
+]) {
+  if (userIdForumthreadsGetSort == null) {
+    return null;
+  }
+  return enums.UserIdForumthreadsGetSort.values.firstWhereOrNull((e) => e.value == userIdForumthreadsGetSort) ??
       defaultValue;
 }
 
-String userSelectionsRacesGetSortExplodedListToJson(
-    List<enums.UserSelectionsRacesGetSort>? userSelectionsRacesGetSort) {
-  return userSelectionsRacesGetSort?.map((e) => e.value!).join(',') ?? '';
+String userIdForumthreadsGetSortExplodedListToJson(List<enums.UserIdForumthreadsGetSort>? userIdForumthreadsGetSort) {
+  return userIdForumthreadsGetSort?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> userSelectionsRacesGetSortListToJson(
-    List<enums.UserSelectionsRacesGetSort>? userSelectionsRacesGetSort) {
-  if (userSelectionsRacesGetSort == null) {
+List<String> userIdForumthreadsGetSortListToJson(List<enums.UserIdForumthreadsGetSort>? userIdForumthreadsGetSort) {
+  if (userIdForumthreadsGetSort == null) {
     return [];
   }
 
-  return userSelectionsRacesGetSort.map((e) => e.value!).toList();
+  return userIdForumthreadsGetSort.map((e) => e.value!).toList();
 }
 
-List<enums.UserSelectionsRacesGetSort> userSelectionsRacesGetSortListFromJson(
-  List? userSelectionsRacesGetSort, [
-  List<enums.UserSelectionsRacesGetSort>? defaultValue,
+List<enums.UserIdForumthreadsGetSort> userIdForumthreadsGetSortListFromJson(
+  List? userIdForumthreadsGetSort, [
+  List<enums.UserIdForumthreadsGetSort>? defaultValue,
 ]) {
-  if (userSelectionsRacesGetSort == null) {
+  if (userIdForumthreadsGetSort == null) {
     return defaultValue ?? [];
   }
 
-  return userSelectionsRacesGetSort
-      .map((e) => userSelectionsRacesGetSortFromJson(e.toString()))
-      .toList();
+  return userIdForumthreadsGetSort.map((e) => userIdForumthreadsGetSortFromJson(e.toString())).toList();
 }
 
-List<enums.UserSelectionsRacesGetSort>?
-    userSelectionsRacesGetSortNullableListFromJson(
-  List? userSelectionsRacesGetSort, [
-  List<enums.UserSelectionsRacesGetSort>? defaultValue,
+List<enums.UserIdForumthreadsGetSort>? userIdForumthreadsGetSortNullableListFromJson(
+  List? userIdForumthreadsGetSort, [
+  List<enums.UserIdForumthreadsGetSort>? defaultValue,
 ]) {
-  if (userSelectionsRacesGetSort == null) {
+  if (userIdForumthreadsGetSort == null) {
     return defaultValue;
   }
 
-  return userSelectionsRacesGetSort
-      .map((e) => userSelectionsRacesGetSortFromJson(e.toString()))
-      .toList();
+  return userIdForumthreadsGetSort.map((e) => userIdForumthreadsGetSortFromJson(e.toString())).toList();
 }
 
-String? userSelectionsRacesGetCatNullableToJson(
-    enums.UserSelectionsRacesGetCat? userSelectionsRacesGetCat) {
-  return userSelectionsRacesGetCat?.value;
+String? userForumthreadsGetSortNullableToJson(enums.UserForumthreadsGetSort? userForumthreadsGetSort) {
+  return userForumthreadsGetSort?.value;
 }
 
-String? userSelectionsRacesGetCatToJson(
-    enums.UserSelectionsRacesGetCat userSelectionsRacesGetCat) {
-  return userSelectionsRacesGetCat.value;
+String? userForumthreadsGetSortToJson(enums.UserForumthreadsGetSort userForumthreadsGetSort) {
+  return userForumthreadsGetSort.value;
 }
 
-enums.UserSelectionsRacesGetCat userSelectionsRacesGetCatFromJson(
-  Object? userSelectionsRacesGetCat, [
-  enums.UserSelectionsRacesGetCat? defaultValue,
+enums.UserForumthreadsGetSort userForumthreadsGetSortFromJson(
+  Object? userForumthreadsGetSort, [
+  enums.UserForumthreadsGetSort? defaultValue,
 ]) {
-  return enums.UserSelectionsRacesGetCat.values
-          .firstWhereOrNull((e) => e.value == userSelectionsRacesGetCat) ??
+  return enums.UserForumthreadsGetSort.values.firstWhereOrNull((e) => e.value == userForumthreadsGetSort) ??
       defaultValue ??
-      enums.UserSelectionsRacesGetCat.swaggerGeneratedUnknown;
+      enums.UserForumthreadsGetSort.swaggerGeneratedUnknown;
 }
 
-enums.UserSelectionsRacesGetCat? userSelectionsRacesGetCatNullableFromJson(
-  Object? userSelectionsRacesGetCat, [
-  enums.UserSelectionsRacesGetCat? defaultValue,
+enums.UserForumthreadsGetSort? userForumthreadsGetSortNullableFromJson(
+  Object? userForumthreadsGetSort, [
+  enums.UserForumthreadsGetSort? defaultValue,
 ]) {
-  if (userSelectionsRacesGetCat == null) {
+  if (userForumthreadsGetSort == null) {
     return null;
   }
-  return enums.UserSelectionsRacesGetCat.values
-          .firstWhereOrNull((e) => e.value == userSelectionsRacesGetCat) ??
+  return enums.UserForumthreadsGetSort.values.firstWhereOrNull((e) => e.value == userForumthreadsGetSort) ??
       defaultValue;
 }
 
-String userSelectionsRacesGetCatExplodedListToJson(
-    List<enums.UserSelectionsRacesGetCat>? userSelectionsRacesGetCat) {
-  return userSelectionsRacesGetCat?.map((e) => e.value!).join(',') ?? '';
+String userForumthreadsGetSortExplodedListToJson(List<enums.UserForumthreadsGetSort>? userForumthreadsGetSort) {
+  return userForumthreadsGetSort?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> userSelectionsRacesGetCatListToJson(
-    List<enums.UserSelectionsRacesGetCat>? userSelectionsRacesGetCat) {
-  if (userSelectionsRacesGetCat == null) {
+List<String> userForumthreadsGetSortListToJson(List<enums.UserForumthreadsGetSort>? userForumthreadsGetSort) {
+  if (userForumthreadsGetSort == null) {
     return [];
   }
 
-  return userSelectionsRacesGetCat.map((e) => e.value!).toList();
+  return userForumthreadsGetSort.map((e) => e.value!).toList();
 }
 
-List<enums.UserSelectionsRacesGetCat> userSelectionsRacesGetCatListFromJson(
-  List? userSelectionsRacesGetCat, [
-  List<enums.UserSelectionsRacesGetCat>? defaultValue,
+List<enums.UserForumthreadsGetSort> userForumthreadsGetSortListFromJson(
+  List? userForumthreadsGetSort, [
+  List<enums.UserForumthreadsGetSort>? defaultValue,
 ]) {
-  if (userSelectionsRacesGetCat == null) {
+  if (userForumthreadsGetSort == null) {
     return defaultValue ?? [];
   }
 
-  return userSelectionsRacesGetCat
-      .map((e) => userSelectionsRacesGetCatFromJson(e.toString()))
-      .toList();
+  return userForumthreadsGetSort.map((e) => userForumthreadsGetSortFromJson(e.toString())).toList();
 }
 
-List<enums.UserSelectionsRacesGetCat>?
-    userSelectionsRacesGetCatNullableListFromJson(
-  List? userSelectionsRacesGetCat, [
-  List<enums.UserSelectionsRacesGetCat>? defaultValue,
+List<enums.UserForumthreadsGetSort>? userForumthreadsGetSortNullableListFromJson(
+  List? userForumthreadsGetSort, [
+  List<enums.UserForumthreadsGetSort>? defaultValue,
 ]) {
-  if (userSelectionsRacesGetCat == null) {
+  if (userForumthreadsGetSort == null) {
     return defaultValue;
   }
 
-  return userSelectionsRacesGetCat
-      .map((e) => userSelectionsRacesGetCatFromJson(e.toString()))
-      .toList();
+  return userForumthreadsGetSort.map((e) => userForumthreadsGetSortFromJson(e.toString())).toList();
 }
 
-String? userSelectionsForumpostsGetCatNullableToJson(
-    enums.UserSelectionsForumpostsGetCat? userSelectionsForumpostsGetCat) {
-  return userSelectionsForumpostsGetCat?.value;
+String? userGetSortNullableToJson(enums.UserGetSort? userGetSort) {
+  return userGetSort?.value;
 }
 
-String? userSelectionsForumpostsGetCatToJson(
-    enums.UserSelectionsForumpostsGetCat userSelectionsForumpostsGetCat) {
-  return userSelectionsForumpostsGetCat.value;
+String? userGetSortToJson(enums.UserGetSort userGetSort) {
+  return userGetSort.value;
 }
 
-enums.UserSelectionsForumpostsGetCat userSelectionsForumpostsGetCatFromJson(
-  Object? userSelectionsForumpostsGetCat, [
-  enums.UserSelectionsForumpostsGetCat? defaultValue,
+enums.UserGetSort userGetSortFromJson(
+  Object? userGetSort, [
+  enums.UserGetSort? defaultValue,
 ]) {
-  return enums.UserSelectionsForumpostsGetCat.values
-          .firstWhereOrNull((e) => e.value == userSelectionsForumpostsGetCat) ??
+  return enums.UserGetSort.values.firstWhereOrNull((e) => e.value == userGetSort) ??
       defaultValue ??
-      enums.UserSelectionsForumpostsGetCat.swaggerGeneratedUnknown;
+      enums.UserGetSort.swaggerGeneratedUnknown;
 }
 
-enums.UserSelectionsForumpostsGetCat?
-    userSelectionsForumpostsGetCatNullableFromJson(
-  Object? userSelectionsForumpostsGetCat, [
-  enums.UserSelectionsForumpostsGetCat? defaultValue,
+enums.UserGetSort? userGetSortNullableFromJson(
+  Object? userGetSort, [
+  enums.UserGetSort? defaultValue,
 ]) {
-  if (userSelectionsForumpostsGetCat == null) {
+  if (userGetSort == null) {
     return null;
   }
-  return enums.UserSelectionsForumpostsGetCat.values
-          .firstWhereOrNull((e) => e.value == userSelectionsForumpostsGetCat) ??
-      defaultValue;
+  return enums.UserGetSort.values.firstWhereOrNull((e) => e.value == userGetSort) ?? defaultValue;
 }
 
-String userSelectionsForumpostsGetCatExplodedListToJson(
-    List<enums.UserSelectionsForumpostsGetCat>?
-        userSelectionsForumpostsGetCat) {
-  return userSelectionsForumpostsGetCat?.map((e) => e.value!).join(',') ?? '';
+String userGetSortExplodedListToJson(List<enums.UserGetSort>? userGetSort) {
+  return userGetSort?.map((e) => e.value!).join(',') ?? '';
 }
 
-List<String> userSelectionsForumpostsGetCatListToJson(
-    List<enums.UserSelectionsForumpostsGetCat>?
-        userSelectionsForumpostsGetCat) {
-  if (userSelectionsForumpostsGetCat == null) {
+List<String> userGetSortListToJson(List<enums.UserGetSort>? userGetSort) {
+  if (userGetSort == null) {
     return [];
   }
 
-  return userSelectionsForumpostsGetCat.map((e) => e.value!).toList();
+  return userGetSort.map((e) => e.value!).toList();
 }
 
-List<enums.UserSelectionsForumpostsGetCat>
-    userSelectionsForumpostsGetCatListFromJson(
-  List? userSelectionsForumpostsGetCat, [
-  List<enums.UserSelectionsForumpostsGetCat>? defaultValue,
+List<enums.UserGetSort> userGetSortListFromJson(
+  List? userGetSort, [
+  List<enums.UserGetSort>? defaultValue,
 ]) {
-  if (userSelectionsForumpostsGetCat == null) {
+  if (userGetSort == null) {
     return defaultValue ?? [];
   }
 
-  return userSelectionsForumpostsGetCat
-      .map((e) => userSelectionsForumpostsGetCatFromJson(e.toString()))
-      .toList();
+  return userGetSort.map((e) => userGetSortFromJson(e.toString())).toList();
 }
 
-List<enums.UserSelectionsForumpostsGetCat>?
-    userSelectionsForumpostsGetCatNullableListFromJson(
-  List? userSelectionsForumpostsGetCat, [
-  List<enums.UserSelectionsForumpostsGetCat>? defaultValue,
+List<enums.UserGetSort>? userGetSortNullableListFromJson(
+  List? userGetSort, [
+  List<enums.UserGetSort>? defaultValue,
 ]) {
-  if (userSelectionsForumpostsGetCat == null) {
+  if (userGetSort == null) {
     return defaultValue;
   }
 
-  return userSelectionsForumpostsGetCat
-      .map((e) => userSelectionsForumpostsGetCatFromJson(e.toString()))
-      .toList();
-}
-
-String? userSelectionsForumpostsGetSortNullableToJson(
-    enums.UserSelectionsForumpostsGetSort? userSelectionsForumpostsGetSort) {
-  return userSelectionsForumpostsGetSort?.value;
-}
-
-String? userSelectionsForumpostsGetSortToJson(
-    enums.UserSelectionsForumpostsGetSort userSelectionsForumpostsGetSort) {
-  return userSelectionsForumpostsGetSort.value;
-}
-
-enums.UserSelectionsForumpostsGetSort userSelectionsForumpostsGetSortFromJson(
-  Object? userSelectionsForumpostsGetSort, [
-  enums.UserSelectionsForumpostsGetSort? defaultValue,
-]) {
-  return enums.UserSelectionsForumpostsGetSort.values.firstWhereOrNull(
-          (e) => e.value == userSelectionsForumpostsGetSort) ??
-      defaultValue ??
-      enums.UserSelectionsForumpostsGetSort.swaggerGeneratedUnknown;
-}
-
-enums.UserSelectionsForumpostsGetSort?
-    userSelectionsForumpostsGetSortNullableFromJson(
-  Object? userSelectionsForumpostsGetSort, [
-  enums.UserSelectionsForumpostsGetSort? defaultValue,
-]) {
-  if (userSelectionsForumpostsGetSort == null) {
-    return null;
-  }
-  return enums.UserSelectionsForumpostsGetSort.values.firstWhereOrNull(
-          (e) => e.value == userSelectionsForumpostsGetSort) ??
-      defaultValue;
-}
-
-String userSelectionsForumpostsGetSortExplodedListToJson(
-    List<enums.UserSelectionsForumpostsGetSort>?
-        userSelectionsForumpostsGetSort) {
-  return userSelectionsForumpostsGetSort?.map((e) => e.value!).join(',') ?? '';
-}
-
-List<String> userSelectionsForumpostsGetSortListToJson(
-    List<enums.UserSelectionsForumpostsGetSort>?
-        userSelectionsForumpostsGetSort) {
-  if (userSelectionsForumpostsGetSort == null) {
-    return [];
-  }
-
-  return userSelectionsForumpostsGetSort.map((e) => e.value!).toList();
-}
-
-List<enums.UserSelectionsForumpostsGetSort>
-    userSelectionsForumpostsGetSortListFromJson(
-  List? userSelectionsForumpostsGetSort, [
-  List<enums.UserSelectionsForumpostsGetSort>? defaultValue,
-]) {
-  if (userSelectionsForumpostsGetSort == null) {
-    return defaultValue ?? [];
-  }
-
-  return userSelectionsForumpostsGetSort
-      .map((e) => userSelectionsForumpostsGetSortFromJson(e.toString()))
-      .toList();
-}
-
-List<enums.UserSelectionsForumpostsGetSort>?
-    userSelectionsForumpostsGetSortNullableListFromJson(
-  List? userSelectionsForumpostsGetSort, [
-  List<enums.UserSelectionsForumpostsGetSort>? defaultValue,
-]) {
-  if (userSelectionsForumpostsGetSort == null) {
-    return defaultValue;
-  }
-
-  return userSelectionsForumpostsGetSort
-      .map((e) => userSelectionsForumpostsGetSortFromJson(e.toString()))
-      .toList();
-}
-
-String? userSelectionsForumthreadsGetSortNullableToJson(
-    enums.UserSelectionsForumthreadsGetSort?
-        userSelectionsForumthreadsGetSort) {
-  return userSelectionsForumthreadsGetSort?.value;
-}
-
-String? userSelectionsForumthreadsGetSortToJson(
-    enums.UserSelectionsForumthreadsGetSort userSelectionsForumthreadsGetSort) {
-  return userSelectionsForumthreadsGetSort.value;
-}
-
-enums.UserSelectionsForumthreadsGetSort
-    userSelectionsForumthreadsGetSortFromJson(
-  Object? userSelectionsForumthreadsGetSort, [
-  enums.UserSelectionsForumthreadsGetSort? defaultValue,
-]) {
-  return enums.UserSelectionsForumthreadsGetSort.values.firstWhereOrNull(
-          (e) => e.value == userSelectionsForumthreadsGetSort) ??
-      defaultValue ??
-      enums.UserSelectionsForumthreadsGetSort.swaggerGeneratedUnknown;
-}
-
-enums.UserSelectionsForumthreadsGetSort?
-    userSelectionsForumthreadsGetSortNullableFromJson(
-  Object? userSelectionsForumthreadsGetSort, [
-  enums.UserSelectionsForumthreadsGetSort? defaultValue,
-]) {
-  if (userSelectionsForumthreadsGetSort == null) {
-    return null;
-  }
-  return enums.UserSelectionsForumthreadsGetSort.values.firstWhereOrNull(
-          (e) => e.value == userSelectionsForumthreadsGetSort) ??
-      defaultValue;
-}
-
-String userSelectionsForumthreadsGetSortExplodedListToJson(
-    List<enums.UserSelectionsForumthreadsGetSort>?
-        userSelectionsForumthreadsGetSort) {
-  return userSelectionsForumthreadsGetSort?.map((e) => e.value!).join(',') ??
-      '';
-}
-
-List<String> userSelectionsForumthreadsGetSortListToJson(
-    List<enums.UserSelectionsForumthreadsGetSort>?
-        userSelectionsForumthreadsGetSort) {
-  if (userSelectionsForumthreadsGetSort == null) {
-    return [];
-  }
-
-  return userSelectionsForumthreadsGetSort.map((e) => e.value!).toList();
-}
-
-List<enums.UserSelectionsForumthreadsGetSort>
-    userSelectionsForumthreadsGetSortListFromJson(
-  List? userSelectionsForumthreadsGetSort, [
-  List<enums.UserSelectionsForumthreadsGetSort>? defaultValue,
-]) {
-  if (userSelectionsForumthreadsGetSort == null) {
-    return defaultValue ?? [];
-  }
-
-  return userSelectionsForumthreadsGetSort
-      .map((e) => userSelectionsForumthreadsGetSortFromJson(e.toString()))
-      .toList();
-}
-
-List<enums.UserSelectionsForumthreadsGetSort>?
-    userSelectionsForumthreadsGetSortNullableListFromJson(
-  List? userSelectionsForumthreadsGetSort, [
-  List<enums.UserSelectionsForumthreadsGetSort>? defaultValue,
-]) {
-  if (userSelectionsForumthreadsGetSort == null) {
-    return defaultValue;
-  }
-
-  return userSelectionsForumthreadsGetSort
-      .map((e) => userSelectionsForumthreadsGetSortFromJson(e.toString()))
-      .toList();
+  return userGetSort.map((e) => userGetSortFromJson(e.toString())).toList();
 }
 
 typedef $JsonFactory<T> = T Function(Map<String, dynamic> json);
@@ -14681,14 +15403,12 @@ class $CustomJsonDecoder {
     return jsonFactory(values);
   }
 
-  List<T> _decodeList<T>(Iterable values) =>
-      values.where((v) => v != null).map<T>((v) => decode<T>(v) as T).toList();
+  List<T> _decodeList<T>(Iterable values) => values.where((v) => v != null).map<T>((v) => decode<T>(v) as T).toList();
 }
 
 class $JsonSerializableConverter extends chopper.JsonConverter {
   @override
-  FutureOr<chopper.Response<ResultType>> convertResponse<ResultType, Item>(
-      chopper.Response response) async {
+  FutureOr<chopper.Response<ResultType>> convertResponse<ResultType, Item>(chopper.Response response) async {
     if (response.bodyString.isEmpty) {
       // In rare cases, when let's say 204 (no content) is returned -
       // we cannot decode the missing json with the result type specified
@@ -14700,14 +15420,11 @@ class $JsonSerializableConverter extends chopper.JsonConverter {
     }
 
     if (ResultType == DateTime) {
-      return response.copyWith(
-          body: DateTime.parse((response.body as String).replaceAll('"', ''))
-              as ResultType);
+      return response.copyWith(body: DateTime.parse((response.body as String).replaceAll('"', '')) as ResultType);
     }
 
     final jsonRes = await super.convertResponse(response);
-    return jsonRes.copyWith<ResultType>(
-        body: $jsonDecoder.decode<Item>(jsonRes.body) as ResultType);
+    return jsonRes.copyWith<ResultType>(body: $jsonDecoder.decode<Item>(jsonRes.body) as ResultType);
   }
 }
 

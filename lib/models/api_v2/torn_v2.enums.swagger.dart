@@ -1,5 +1,4 @@
 import 'package:json_annotation/json_annotation.dart';
-import 'package:collection/collection.dart';
 
 enum RaceClassEnum {
   @JsonValue(null)
@@ -283,138 +282,148 @@ enum WeaponBonusEnum {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
-  @JsonValue('Proficience')
-  proficience('Proficience'),
-  @JsonValue('Expose')
-  expose('Expose'),
-  @JsonValue('Stricken')
-  stricken('Stricken'),
-  @JsonValue('Plunder')
-  plunder('Plunder'),
-  @JsonValue('Burn')
-  burn('Burn'),
-  @JsonValue('Emasculate')
-  emasculate('Emasculate'),
-  @JsonValue('Poison')
-  poison('Poison'),
-  @JsonValue('Blindfire')
-  blindfire('Blindfire'),
-  @JsonValue('Hazardous')
-  hazardous('Hazardous'),
-  @JsonValue('Spray')
-  spray('Spray'),
-  @JsonValue('Demoralize')
-  demoralize('Demoralize'),
-  @JsonValue('Storage')
-  storage('Storage'),
-  @JsonValue('Freeze')
-  freeze('Freeze'),
-  @JsonValue('Sleep')
-  sleep('Sleep'),
-  @JsonValue('Revitalize')
-  revitalize('Revitalize'),
-  @JsonValue('Wither')
-  wither('Wither'),
-  @JsonValue('Roshambo')
-  roshambo('Roshambo'),
-  @JsonValue('Slow')
-  slow('Slow'),
-  @JsonValue('Cripple')
-  cripple('Cripple'),
-  @JsonValue('Weaken')
-  weaken('Weaken'),
-  @JsonValue('Cupid')
-  cupid('Cupid'),
-  @JsonValue('Throttle')
-  throttle('Throttle'),
-  @JsonValue('Crusher')
-  crusher('Crusher'),
+  @JsonValue('Any')
+  any('Any'),
+  @JsonValue('Double')
+  double('Double'),
+  @JsonValue('Yellow')
+  yellow('Yellow'),
+  @JsonValue('Orange')
+  orange('Orange'),
+  @JsonValue('Red')
+  red('Red'),
   @JsonValue('Achilles')
   achilles('Achilles'),
-  @JsonValue('Blindside')
-  blindside('Blindside'),
-  @JsonValue('Backstab')
-  backstab('Backstab'),
-  @JsonValue('Grace')
-  grace('Grace'),
-  @JsonValue('Berserk')
-  berserk('Berserk'),
-  @JsonValue('Conserve')
-  conserve('Conserve'),
-  @JsonValue('Eviscerate')
-  eviscerate('Eviscerate'),
-  @JsonValue('Bleed')
-  bleed('Bleed'),
-  @JsonValue('Stun')
-  stun('Stun'),
-  @JsonValue('Paralyze')
-  paralyze('Paralyze'),
-  @JsonValue('Suppress')
-  suppress('Suppress'),
-  @JsonValue('Motivation')
-  motivation('Motivation'),
-  @JsonValue('Deadly')
-  deadly('Deadly'),
-  @JsonValue('Deadeye')
-  deadeye('Deadeye'),
-  @JsonValue('Fury')
-  fury('Fury'),
-  @JsonValue('Rage')
-  rage('Rage'),
-  @JsonValue('Puncture')
-  puncture('Puncture'),
-  @JsonValue('Comeback')
-  comeback('Comeback'),
-  @JsonValue('Powerful')
-  powerful('Powerful'),
-  @JsonValue('Specialist')
-  specialist('Specialist'),
   @JsonValue('Assassinate')
   assassinate('Assassinate'),
-  @JsonValue('Smurf')
-  smurf('Smurf'),
-  @JsonValue('Double-edged')
-  doubleEdged('Double-edged'),
-  @JsonValue('Execute')
-  execute('Execute'),
-  @JsonValue('Shock')
-  shock('Shock'),
-  @JsonValue('Wind-up')
-  windUp('Wind-up'),
-  @JsonValue('Sure Shot')
-  sureShot('Sure Shot'),
-  @JsonValue('Focus')
-  focus('Focus'),
-  @JsonValue('Frenzy')
-  frenzy('Frenzy'),
-  @JsonValue('Warlord')
-  warlord('Warlord'),
-  @JsonValue('Finale')
-  finale('Finale'),
-  @JsonValue('Home run')
-  homeRun('Home run'),
-  @JsonValue('Parry')
-  parry('Parry'),
+  @JsonValue('Backstab')
+  backstab('Backstab'),
+  @JsonValue('Berserk')
+  berserk('Berserk'),
+  @JsonValue('Bleed')
+  bleed('Bleed'),
+  @JsonValue('Blindfire')
+  blindfire('Blindfire'),
+  @JsonValue('Blindside')
+  blindside('Blindside'),
   @JsonValue('Bloodlust')
   bloodlust('Bloodlust'),
+  @JsonValue('Burn')
+  burn('Burn'),
+  @JsonValue('Comeback')
+  comeback('Comeback'),
+  @JsonValue('Conserve')
+  conserve('Conserve'),
+  @JsonValue('Cripple')
+  cripple('Cripple'),
+  @JsonValue('Crusher')
+  crusher('Crusher'),
+  @JsonValue('Cupid')
+  cupid('Cupid'),
+  @JsonValue('Deadeye')
+  deadeye('Deadeye'),
+  @JsonValue('Deadly')
+  deadly('Deadly'),
+  @JsonValue('Demoralize')
+  demoralize('Demoralize'),
   @JsonValue('Disarm')
   disarm('Disarm'),
+  @JsonValue('Double-edged')
+  doubleEdged('Double-edged'),
+  @JsonValue('Double Tap')
+  doubleTap('Double Tap'),
+  @JsonValue('Emasculate')
+  emasculate('Emasculate'),
   @JsonValue('Empower')
   empower('Empower'),
-  @JsonValue('Quicken')
-  quicken('Quicken'),
-  @JsonValue('Lacerate')
-  lacerate('Lacerate'),
-  @JsonValue('Penetrate')
-  penetrate('Penetrate'),
+  @JsonValue('Eviscerate')
+  eviscerate('Eviscerate'),
+  @JsonValue('Execute')
+  execute('Execute'),
+  @JsonValue('Expose')
+  expose('Expose'),
+  @JsonValue('Finale')
+  finale('Finale'),
+  @JsonValue('Focus')
+  focus('Focus'),
+  @JsonValue('Freeze')
+  freeze('Freeze'),
+  @JsonValue('Frenzy')
+  frenzy('Frenzy'),
+  @JsonValue('Fury')
+  fury('Fury'),
+  @JsonValue('Grace')
+  grace('Grace'),
+  @JsonValue('Hazardous')
+  hazardous('Hazardous'),
+  @JsonValue('Home run')
+  homeRun('Home run'),
   @JsonValue('Irradiate')
   irradiate('Irradiate'),
-  @JsonValue('Toxin')
-  toxin('Toxin'),
+  @JsonValue('Lacerate')
+  lacerate('Lacerate'),
+  @JsonValue('Motivation')
+  motivation('Motivation'),
+  @JsonValue('Paralyze')
+  paralyze('Paralyze'),
+  @JsonValue('Parry')
+  parry('Parry'),
+  @JsonValue('Penetrate')
+  penetrate('Penetrate'),
+  @JsonValue('Plunder')
+  plunder('Plunder'),
+  @JsonValue('Poison')
+  poison('Poison'),
+  @JsonValue('Powerful')
+  powerful('Powerful'),
+  @JsonValue('Proficience')
+  proficience('Proficience'),
+  @JsonValue('Puncture')
+  puncture('Puncture'),
+  @JsonValue('Quicken')
+  quicken('Quicken'),
+  @JsonValue('Rage')
+  rage('Rage'),
+  @JsonValue('Revitalize')
+  revitalize('Revitalize'),
+  @JsonValue('Roshambo')
+  roshambo('Roshambo'),
+  @JsonValue('Shock')
+  shock('Shock'),
+  @JsonValue('Sleep')
+  sleep('Sleep'),
+  @JsonValue('Slow')
+  slow('Slow'),
   @JsonValue('Smash')
   smash('Smash'),
-  @JsonValue('Double Tap')
-  doubleTap('Double Tap');
+  @JsonValue('Smurf')
+  smurf('Smurf'),
+  @JsonValue('Specialist')
+  specialist('Specialist'),
+  @JsonValue('Spray')
+  spray('Spray'),
+  @JsonValue('Storage')
+  storage('Storage'),
+  @JsonValue('Stricken')
+  stricken('Stricken'),
+  @JsonValue('Stun')
+  stun('Stun'),
+  @JsonValue('Suppress')
+  suppress('Suppress'),
+  @JsonValue('Sure Shot')
+  sureShot('Sure Shot'),
+  @JsonValue('Throttle')
+  throttle('Throttle'),
+  @JsonValue('Toxin')
+  toxin('Toxin'),
+  @JsonValue('Warlord')
+  warlord('Warlord'),
+  @JsonValue('Weaken')
+  weaken('Weaken'),
+  @JsonValue('Wind-up')
+  windUp('Wind-up'),
+  @JsonValue('Wither')
+  wither('Wither');
 
   final String? value;
 
@@ -629,6 +638,22 @@ enum RaceCarUpgradeSubCategory {
   const RaceCarUpgradeSubCategory(this.value);
 }
 
+enum FactionApplicationStatusEnum {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('accepted')
+  accepted('accepted'),
+  @JsonValue('declined')
+  declined('declined'),
+  @JsonValue('withdrawn')
+  withdrawn('withdrawn');
+
+  final String? value;
+
+  const FactionApplicationStatusEnum(this.value);
+}
+
 enum ForumFeedTypeEnum {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
@@ -669,6 +694,402 @@ enum ReviveSetting {
   final String? value;
 
   const ReviveSetting(this.value);
+}
+
+enum FactionSelectionName {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('applications')
+  applications('applications'),
+  @JsonValue('armor')
+  armor('armor'),
+  @JsonValue('attacks')
+  attacks('attacks'),
+  @JsonValue('attacksfull')
+  attacksfull('attacksfull'),
+  @JsonValue('basic')
+  basic('basic'),
+  @JsonValue('boosters')
+  boosters('boosters'),
+  @JsonValue('caches')
+  caches('caches'),
+  @JsonValue('cesium')
+  cesium('cesium'),
+  @JsonValue('chain')
+  chain('chain'),
+  @JsonValue('chainreport')
+  chainreport('chainreport'),
+  @JsonValue('chains')
+  chains('chains'),
+  @JsonValue('contributors')
+  contributors('contributors'),
+  @JsonValue('crimeexp')
+  crimeexp('crimeexp'),
+  @JsonValue('crimenews')
+  crimenews('crimenews'),
+  @JsonValue('crimes')
+  crimes('crimes'),
+  @JsonValue('currency')
+  currency('currency'),
+  @JsonValue('donations')
+  donations('donations'),
+  @JsonValue('drugs')
+  drugs('drugs'),
+  @JsonValue('hof')
+  hof('hof'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('medical')
+  medical('medical'),
+  @JsonValue('members')
+  members('members'),
+  @JsonValue('news')
+  news('news'),
+  @JsonValue('positions')
+  positions('positions'),
+  @JsonValue('rankedwars')
+  rankedwars('rankedwars'),
+  @JsonValue('reports')
+  reports('reports'),
+  @JsonValue('revives')
+  revives('revives'),
+  @JsonValue('revivesfull')
+  revivesfull('revivesfull'),
+  @JsonValue('stats')
+  stats('stats'),
+  @JsonValue('temporary')
+  temporary('temporary'),
+  @JsonValue('territory')
+  territory('territory'),
+  @JsonValue('territorynews')
+  territorynews('territorynews'),
+  @JsonValue('timestamp')
+  timestamp('timestamp'),
+  @JsonValue('upgrades')
+  upgrades('upgrades'),
+  @JsonValue('wars')
+  wars('wars'),
+  @JsonValue('weapons')
+  weapons('weapons');
+
+  final String? value;
+
+  const FactionSelectionName(this.value);
+}
+
+enum ForumSelectionName {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('categories')
+  categories('categories'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('posts')
+  posts('posts'),
+  @JsonValue('thread')
+  thread('thread'),
+  @JsonValue('threads')
+  threads('threads'),
+  @JsonValue('timestamp')
+  timestamp('timestamp');
+
+  final String? value;
+
+  const ForumSelectionName(this.value);
+}
+
+enum ItemMarketListingItemDetailsRarity {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('yellow')
+  yellow('yellow'),
+  @JsonValue('orange')
+  orange('orange'),
+  @JsonValue('red')
+  red('red');
+
+  final String? value;
+
+  const ItemMarketListingItemDetailsRarity(this.value);
+}
+
+enum MarketSelectionName {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('itemmarket')
+  itemmarket('itemmarket'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('pointsmarket')
+  pointsmarket('pointsmarket'),
+  @JsonValue('timestamp')
+  timestamp('timestamp');
+
+  final String? value;
+
+  const MarketSelectionName(this.value);
+}
+
+enum RacingSelectionName {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('cars')
+  cars('cars'),
+  @JsonValue('carupgrades')
+  carupgrades('carupgrades'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('race')
+  race('race'),
+  @JsonValue('races')
+  races('races'),
+  @JsonValue('records')
+  records('records'),
+  @JsonValue('timestamp')
+  timestamp('timestamp'),
+  @JsonValue('tracks')
+  tracks('tracks');
+
+  final String? value;
+
+  const RacingSelectionName(this.value);
+}
+
+enum TornSelectionName {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('bank')
+  bank('bank'),
+  @JsonValue('calendar')
+  calendar('calendar'),
+  @JsonValue('cards')
+  cards('cards'),
+  @JsonValue('chainreport')
+  chainreport('chainreport'),
+  @JsonValue('cityshops')
+  cityshops('cityshops'),
+  @JsonValue('companies')
+  companies('companies'),
+  @JsonValue('competition')
+  competition('competition'),
+  @JsonValue('crimes')
+  crimes('crimes'),
+  @JsonValue('dirtybombs')
+  dirtybombs('dirtybombs'),
+  @JsonValue('education')
+  education('education'),
+  @JsonValue('factionHof')
+  factionhof('factionHof'),
+  @JsonValue('factiontree')
+  factiontree('factiontree'),
+  @JsonValue('gyms')
+  gyms('gyms'),
+  @JsonValue('hof')
+  hof('hof'),
+  @JsonValue('honors')
+  honors('honors'),
+  @JsonValue('itemdetails')
+  itemdetails('itemdetails'),
+  @JsonValue('items')
+  items('items'),
+  @JsonValue('itemstats')
+  itemstats('itemstats'),
+  @JsonValue('logcategories')
+  logcategories('logcategories'),
+  @JsonValue('logtypes')
+  logtypes('logtypes'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('medals')
+  medals('medals'),
+  @JsonValue('organisedcrimes')
+  organisedcrimes('organisedcrimes'),
+  @JsonValue('pawnshop')
+  pawnshop('pawnshop'),
+  @JsonValue('pokertables')
+  pokertables('pokertables'),
+  @JsonValue('properties')
+  properties('properties'),
+  @JsonValue('rackets')
+  rackets('rackets'),
+  @JsonValue('raidreport')
+  raidreport('raidreport'),
+  @JsonValue('raids')
+  raids('raids'),
+  @JsonValue('rankedwarreport')
+  rankedwarreport('rankedwarreport'),
+  @JsonValue('rankedwars')
+  rankedwars('rankedwars'),
+  @JsonValue('rockpaperscissors')
+  rockpaperscissors('rockpaperscissors'),
+  @JsonValue('searchforcash')
+  searchforcash('searchforcash'),
+  @JsonValue('shoplifting')
+  shoplifting('shoplifting'),
+  @JsonValue('stats')
+  stats('stats'),
+  @JsonValue('stocks')
+  stocks('stocks'),
+  @JsonValue('subcrimes')
+  subcrimes('subcrimes'),
+  @JsonValue('territory')
+  territory('territory'),
+  @JsonValue('territorynames')
+  territorynames('territorynames'),
+  @JsonValue('territorywarreport')
+  territorywarreport('territorywarreport'),
+  @JsonValue('territorywars')
+  territorywars('territorywars'),
+  @JsonValue('timestamp')
+  timestamp('timestamp');
+
+  final String? value;
+
+  const TornSelectionName(this.value);
+}
+
+enum UserItemMarkeListingItemDetailsRarity {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('yellow')
+  yellow('yellow'),
+  @JsonValue('orange')
+  orange('orange'),
+  @JsonValue('red')
+  red('red');
+
+  final String? value;
+
+  const UserItemMarkeListingItemDetailsRarity(this.value);
+}
+
+enum UserSelectionName {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('ammo')
+  ammo('ammo'),
+  @JsonValue('attacks')
+  attacks('attacks'),
+  @JsonValue('attacksfull')
+  attacksfull('attacksfull'),
+  @JsonValue('bars')
+  bars('bars'),
+  @JsonValue('basic')
+  basic('basic'),
+  @JsonValue('battlestats')
+  battlestats('battlestats'),
+  @JsonValue('bazaar')
+  bazaar('bazaar'),
+  @JsonValue('calendar')
+  calendar('calendar'),
+  @JsonValue('cooldowns')
+  cooldowns('cooldowns'),
+  @JsonValue('crimes')
+  crimes('crimes'),
+  @JsonValue('criminalrecord')
+  criminalrecord('criminalrecord'),
+  @JsonValue('discord')
+  discord('discord'),
+  @JsonValue('display')
+  display('display'),
+  @JsonValue('education')
+  education('education'),
+  @JsonValue('enlistedcars')
+  enlistedcars('enlistedcars'),
+  @JsonValue('equipment')
+  equipment('equipment'),
+  @JsonValue('events')
+  events('events'),
+  @JsonValue('forumfeed')
+  forumfeed('forumfeed'),
+  @JsonValue('forumfriends')
+  forumfriends('forumfriends'),
+  @JsonValue('forumposts')
+  forumposts('forumposts'),
+  @JsonValue('forumsubscribedthreads')
+  forumsubscribedthreads('forumsubscribedthreads'),
+  @JsonValue('forumthreads')
+  forumthreads('forumthreads'),
+  @JsonValue('gym')
+  gym('gym'),
+  @JsonValue('hof')
+  hof('hof'),
+  @JsonValue('honors')
+  honors('honors'),
+  @JsonValue('icons')
+  icons('icons'),
+  @JsonValue('inventory')
+  inventory('inventory'),
+  @JsonValue('itemmarket')
+  itemmarket('itemmarket'),
+  @JsonValue('jobpoints')
+  jobpoints('jobpoints'),
+  @JsonValue('log')
+  log('log'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('medals')
+  medals('medals'),
+  @JsonValue('merits')
+  merits('merits'),
+  @JsonValue('messages')
+  messages('messages'),
+  @JsonValue('missions')
+  missions('missions'),
+  @JsonValue('money')
+  money('money'),
+  @JsonValue('networth')
+  networth('networth'),
+  @JsonValue('newevents')
+  newevents('newevents'),
+  @JsonValue('newmessages')
+  newmessages('newmessages'),
+  @JsonValue('notifications')
+  notifications('notifications'),
+  @JsonValue('perks')
+  perks('perks'),
+  @JsonValue('personalstats')
+  personalstats('personalstats'),
+  @JsonValue('profile')
+  profile('profile'),
+  @JsonValue('properties')
+  properties('properties'),
+  @JsonValue('publicStatus')
+  publicstatus('publicStatus'),
+  @JsonValue('races')
+  races('races'),
+  @JsonValue('refills')
+  refills('refills'),
+  @JsonValue('reports')
+  reports('reports'),
+  @JsonValue('revives')
+  revives('revives'),
+  @JsonValue('revivesfull')
+  revivesfull('revivesfull'),
+  @JsonValue('skills')
+  skills('skills'),
+  @JsonValue('stocks')
+  stocks('stocks'),
+  @JsonValue('timestamp')
+  timestamp('timestamp'),
+  @JsonValue('travel')
+  travel('travel'),
+  @JsonValue('weaponexp')
+  weaponexp('weaponexp'),
+  @JsonValue('workstats')
+  workstats('workstats');
+
+  final String? value;
+
+  const UserSelectionName(this.value);
 }
 
 enum ApiSort {
@@ -713,7 +1134,7 @@ enum ApiStripTagsFalse {
   const ApiStripTagsFalse(this.value);
 }
 
-enum FactionSelectionsMembersGetStriptags {
+enum ApiStripTags {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -724,10 +1145,10 @@ enum FactionSelectionsMembersGetStriptags {
 
   final String? value;
 
-  const FactionSelectionsMembersGetStriptags(this.value);
+  const ApiStripTags(this.value);
 }
 
-enum ForumSelectionsThreadsGetSort {
+enum FactionGetSort {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -738,10 +1159,38 @@ enum ForumSelectionsThreadsGetSort {
 
   final String? value;
 
-  const ForumSelectionsThreadsGetSort(this.value);
+  const FactionGetSort(this.value);
 }
 
-enum ForumSelectionsPostsGetCat {
+enum ForumCategoryIdsThreadsGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const ForumCategoryIdsThreadsGetSort(this.value);
+}
+
+enum ForumThreadsGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const ForumThreadsGetSort(this.value);
+}
+
+enum ForumThreadIdPostsGetCat {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -752,10 +1201,10 @@ enum ForumSelectionsPostsGetCat {
 
   final String? value;
 
-  const ForumSelectionsPostsGetCat(this.value);
+  const ForumThreadIdPostsGetCat(this.value);
 }
 
-enum RacingSelectionsRacesGetSort {
+enum ForumGetSort {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -766,24 +1215,10 @@ enum RacingSelectionsRacesGetSort {
 
   final String? value;
 
-  const RacingSelectionsRacesGetSort(this.value);
+  const ForumGetSort(this.value);
 }
 
-enum RacingSelectionsRacesGetCat {
-  @JsonValue(null)
-  swaggerGeneratedUnknown(null),
-
-  @JsonValue('official')
-  official('official'),
-  @JsonValue('custom')
-  custom('custom');
-
-  final String? value;
-
-  const RacingSelectionsRacesGetCat(this.value);
-}
-
-enum UserSelectionsRacesGetSort {
+enum MarketGetSort {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -794,10 +1229,24 @@ enum UserSelectionsRacesGetSort {
 
   final String? value;
 
-  const UserSelectionsRacesGetSort(this.value);
+  const MarketGetSort(this.value);
 }
 
-enum UserSelectionsRacesGetCat {
+enum RacingRacesGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const RacingRacesGetSort(this.value);
+}
+
+enum RacingRacesGetCat {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -808,10 +1257,66 @@ enum UserSelectionsRacesGetCat {
 
   final String? value;
 
-  const UserSelectionsRacesGetCat(this.value);
+  const RacingRacesGetCat(this.value);
 }
 
-enum UserSelectionsForumpostsGetCat {
+enum RacingGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const RacingGetSort(this.value);
+}
+
+enum TornGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const TornGetSort(this.value);
+}
+
+enum UserRacesGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const UserRacesGetSort(this.value);
+}
+
+enum UserRacesGetCat {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('official')
+  official('official'),
+  @JsonValue('custom')
+  custom('custom');
+
+  final String? value;
+
+  const UserRacesGetCat(this.value);
+}
+
+enum UserIdForumpostsGetCat {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -822,10 +1327,10 @@ enum UserSelectionsForumpostsGetCat {
 
   final String? value;
 
-  const UserSelectionsForumpostsGetCat(this.value);
+  const UserIdForumpostsGetCat(this.value);
 }
 
-enum UserSelectionsForumpostsGetSort {
+enum UserIdForumpostsGetSort {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -836,10 +1341,24 @@ enum UserSelectionsForumpostsGetSort {
 
   final String? value;
 
-  const UserSelectionsForumpostsGetSort(this.value);
+  const UserIdForumpostsGetSort(this.value);
 }
 
-enum UserSelectionsForumthreadsGetSort {
+enum UserForumpostsGetCat {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('raw')
+  raw('raw'),
+  @JsonValue('plain')
+  plain('plain');
+
+  final String? value;
+
+  const UserForumpostsGetCat(this.value);
+}
+
+enum UserForumpostsGetSort {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
@@ -850,5 +1369,47 @@ enum UserSelectionsForumthreadsGetSort {
 
   final String? value;
 
-  const UserSelectionsForumthreadsGetSort(this.value);
+  const UserForumpostsGetSort(this.value);
+}
+
+enum UserIdForumthreadsGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const UserIdForumthreadsGetSort(this.value);
+}
+
+enum UserForumthreadsGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const UserForumthreadsGetSort(this.value);
+}
+
+enum UserGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const UserGetSort(this.value);
 }
