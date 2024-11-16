@@ -416,6 +416,33 @@ class AboutPageState extends State<AboutPage> {
                                 ),
                               ),
                             ),
+                            const TextSpan(
+                              text: ', ',
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
+                                  const url = 'https://www.torn.com/profiles.php?XID=2402357';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
+                                onLongPress: () {
+                                  const url = 'https://www.torn.com/profiles.php?XID=2402357';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: const Text(
+                                  'Mavri',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),

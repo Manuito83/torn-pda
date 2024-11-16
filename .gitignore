@@ -17,7 +17,8 @@
 .fvm
 
 # ENV
-.envs
+.env
+*env.g.dart
 
 # IntelliJ related
 *.iml
