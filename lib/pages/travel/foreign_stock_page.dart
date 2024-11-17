@@ -9,7 +9,6 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -23,7 +22,8 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_in.dart';
 import 'package:torn_pda/models/travel/foreign_stock_sort.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -1137,7 +1137,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Future tornItems() async {
-    dynamic itemsResponse = await Get.find<ApiCallerController>().getItems();
+    dynamic itemsResponse = await ApiCallsV1.getItems();
 
     String error = "";
     if (itemsResponse is ApiError) {
@@ -1156,7 +1156,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         contentPadding: const EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      itemsResponse = await (Get.find<ApiCallerController>().getItems());
+      itemsResponse = await (ApiCallsV1.getItems());
     }
 
     if (itemsResponse is ApiError) {
@@ -1184,7 +1184,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
     // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
     /*
-    dynamic inventoryResponse = await Get.find<ApiCallerController>().getInventory();
+    dynamic inventoryResponse = await ApiCallsV1.getInventory();
 
     String error = "";
     if (inventoryResponse is ApiError) {
@@ -1203,7 +1203,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         contentPadding: const EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      inventoryResponse = await (Get.find<ApiCallerController>().getInventory());
+      inventoryResponse = await (ApiCallsV1.getInventory());
     }
 
     if (inventoryResponse is ApiError) {
@@ -1228,7 +1228,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Future profileMisc() async {
-    dynamic profileResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
+    dynamic profileResponse = await ApiCallsV1.getOwnProfileExtended(limit: 3);
 
     String error = "";
     if (profileResponse is ApiError) {
@@ -1247,7 +1247,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         contentPadding: const EdgeInsets.all(10),
       );
       await Future.delayed(const Duration(seconds: 8));
-      profileResponse = await (Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3));
+      profileResponse = await (ApiCallsV1.getOwnProfileExtended(limit: 3));
     }
 
     if (profileResponse is ApiError) {
@@ -1617,7 +1617,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   _refreshMoney() async {
-    final profileModel = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
+    final profileModel = await ApiCallsV1.getOwnProfileExtended(limit: 3);
     if (profileModel is OwnProfileExtended && mounted) {
       setState(() {
         _profile = profileModel;

@@ -1,12 +1,13 @@
+import 'dart:developer';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/market/market_item_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -40,7 +41,7 @@ class ItemCardState extends State<ItemCard> {
   Future? _footerInformationRetrieved;
   bool _footerSuccessful = false;
 
-  late MarketItemModel _marketItem;
+  late ItemMarket _marketItem;
 
   final decimalFormat = NumberFormat("#,##0", "en_US");
 
@@ -345,38 +346,6 @@ class ItemCardState extends State<ItemCard> {
     }
 
     if (_footerSuccessful) {
-      // Bazaar
-      const Widget bazaarHeader = Text(
-        "Bazaar",
-        style: TextStyle(
-          fontSize: 12,
-        ),
-      );
-      Widget bazaarColumn = Text(
-        "Nothing found",
-        style: TextStyle(
-          fontSize: 10,
-          color: Colors.orange[800],
-        ),
-      );
-      if (_marketItem.bazaar != null) {
-        List<Widget> bazaarList = <Widget>[];
-        var bIndex = 0;
-        for (final b in _marketItem.bazaar!) {
-          if (bIndex >= 3) break;
-          bIndex++;
-          bazaarList.add(
-            Text(
-              "${b.quantity}x \$${decimalFormat.format(b.cost)}",
-              style: const TextStyle(
-                fontSize: 10,
-              ),
-            ),
-          );
-        }
-        bazaarColumn = Column(children: bazaarList);
-      }
-
       // Market
       const Widget marketHeader = Text(
         "Market",
@@ -384,6 +353,7 @@ class ItemCardState extends State<ItemCard> {
           fontSize: 12,
         ),
       );
+
       Widget marketColumn = Text(
         "Nothing found",
         style: TextStyle(
@@ -391,55 +361,43 @@ class ItemCardState extends State<ItemCard> {
           color: Colors.orange[800],
         ),
       );
-      if (_marketItem.itemmarket != null) {
-        List<Widget> marketList = <Widget>[];
-        var mIndex = 0;
-        for (final m in _marketItem.itemmarket!) {
-          if (mIndex >= 3) break;
-          mIndex++;
-          marketList.add(
-            Text(
-              "${m.quantity}x \$${decimalFormat.format(m.cost)}",
-              style: const TextStyle(
-                fontSize: 10,
-              ),
+
+      List<Widget> marketList = <Widget>[];
+      var mIndex = 0;
+      for (final m in _marketItem.listings!) {
+        if (mIndex >= 3) break;
+        mIndex++;
+
+        final Map<String, dynamic> item = m as Map<String, dynamic>;
+        final int amount = item['amount'] as int;
+        final int price = item['price'] as int;
+
+        marketList.add(
+          Text(
+            "${amount}x @ \$${decimalFormat.format(price)}",
+            style: const TextStyle(
+              fontSize: 10,
             ),
-          );
-        }
-        marketColumn = Column(children: marketList);
+          ),
+        );
       }
+      marketColumn = Column(children: marketList);
 
       return Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                children: [
-                  bazaarHeader,
-                  const SizedBox(height: 2),
-                  bazaarColumn,
-                ],
-              ),
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: SizedBox(
-                  height: 40,
-                  child: VerticalDivider(
-                    color: Colors.black,
-                  ),
+          if (marketList.isNotEmpty)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  children: [
+                    marketHeader,
+                    const SizedBox(height: 2),
+                    marketColumn,
+                  ],
                 ),
-              ),
-              Column(
-                children: [
-                  marketHeader,
-                  const SizedBox(height: 2),
-                  marketColumn,
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
           description,
           effect,
           requirement,
@@ -520,12 +478,21 @@ class ItemCardState extends State<ItemCard> {
   }
 
   Future _getFooterInformation() async {
-    final apiResponse = await Get.find<ApiCallerController>().getMarketItem(itemId: widget.item.id);
-    if (apiResponse is MarketItemModel) {
-      setState(() {
-        _footerSuccessful = true;
-        _marketItem = apiResponse;
-      });
+    try {
+      final apiResponse = await ApiCallsV2.getMarketItemApi_v2(
+        payload: {
+          "id": int.tryParse(widget.item.id!) ?? 0,
+        },
+      );
+
+      if (apiResponse is MarketItemMarketResponse) {
+        setState(() {
+          _footerSuccessful = true;
+          _marketItem = apiResponse.itemmarket!;
+        });
+      }
+    } catch (e) {
+      log("Error calling getMarketItemApi_v2: $e");
     }
     setState(() {});
     return;

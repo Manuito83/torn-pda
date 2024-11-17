@@ -30,7 +30,7 @@ import 'package:toastification/toastification.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/firebase_options.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';

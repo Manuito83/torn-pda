@@ -7,8 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/api_caller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -93,7 +94,7 @@ Future<void> pdaWidget_fetchData() async {
 
     if (apiKey.isNotEmpty) {
       // NOTE: we don't use the ApiCallerController with Getx here, but instead call directly
-      var user = await ApiCallerController().getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
+      var user = await ApiCallsV1.getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
 
       if (user is ApiError) {
         if (user.errorId == 100) {
