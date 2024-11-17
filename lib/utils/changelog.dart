@@ -72,6 +72,7 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isIOS) "Added option to manually override app icon",
           "Added app upgrade dialog",
           "Fixed market information in the Items section",
+          "Fixed targets backup import dialog",
           "Fixed multiple max buy buttons abroad",
           "Fixed Torn Stats pie chart representation",
         ],
