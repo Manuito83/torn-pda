@@ -54,7 +54,9 @@ class ApiCallsV1 {
 
   static Future<dynamic> getAppWidgetInfo({required int limit, required String? forcedApiKey}) async {
     dynamic apiResult;
-    final apiCaller = Get.find<ApiCallerController>();
+    // NOTE: we don't use the ApiCallerController with Getx here, but instead call directly
+    // as the app widget won'e be able to find the controller while in the background!
+    final apiCaller = ApiCallerController();
     await apiCaller
         .enqueueApiCall(apiSelection: ApiSelection_v1.appWidget, limit: limit, forcedApiKey: forcedApiKey)
         .then((value) {

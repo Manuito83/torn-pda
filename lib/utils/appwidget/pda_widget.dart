@@ -93,7 +93,6 @@ Future<void> pdaWidget_fetchData() async {
     }
 
     if (apiKey.isNotEmpty) {
-      // NOTE: we don't use the ApiCallerController with Getx here, but instead call directly
       var user = await ApiCallsV1.getAppWidgetInfo(forcedApiKey: apiKey, limit: 0);
 
       if (user is ApiError) {
@@ -468,7 +467,7 @@ Future<void> pdaWidget_fetchData() async {
 
 /// Start the main background task
 void pdaWidget_startBackgroundUpdate() async {
-  await Workmanager().cancelAll();
+  await cancelAllWidgetTasks();
   Workmanager().registerPeriodicTask('pdaWidget_background', 'wm_backgroundUpdate');
 }
 
@@ -483,7 +482,7 @@ void pdaWidget_handleBackgroundUpdateStatus() async {
     bool backgroundActive = await HomeWidget.getWidgetData<bool>('background_active', defaultValue: false) ?? false;
     if (backgroundActive) {
       log("Widget not present and service running: disabling appWidget background task");
-      await Workmanager().cancelAll();
+      await cancelAllWidgetTasks();
       HomeWidget.saveWidgetData<bool>('background_active', false);
     }
   }
@@ -492,4 +491,13 @@ void pdaWidget_handleBackgroundUpdateStatus() async {
   HomeWidget.saveWidgetData<bool>('reloading', false);
 
   HomeWidget.updateWidget(name: 'HomeWidgetTornPda', iOSName: 'HomeWidgetTornPda');
+}
+
+/// Avoids conflicts with other background tasks we might implement in the future!
+Future<void> cancelAllWidgetTasks() async {
+  await Workmanager().cancelByUniqueName('pdaWidget_background');
+  await Workmanager().cancelByUniqueName('pdaWidget_background_3');
+  await Workmanager().cancelByUniqueName('pdaWidget_background_6');
+  await Workmanager().cancelByUniqueName('pdaWidget_background_9');
+  await Workmanager().cancelByUniqueName('pdaWidget_background_12');
 }
