@@ -441,7 +441,7 @@ class TargetsProvider extends ChangeNotifier {
   /// CAREFUL!
   void wipeAllTargets() async {
     _targets.clear();
-    await await _saveTargetsSharedPrefs();
+    await _saveTargetsSharedPrefs();
     notifyListeners();
   }
 

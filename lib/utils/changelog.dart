@@ -71,6 +71,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Improved error handling for TSC [Mavri]",
           if (Platform.isIOS) "Added option to manually override app icon",
           "Added app upgrade dialog",
+          "Fixed targets backup import dialog",
           "Fixed multiple max buy buttons abroad",
           "Fixed Torn Stats pie chart representation",
         ],
