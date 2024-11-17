@@ -185,7 +185,7 @@ class ItemCardState extends State<ItemCard> {
                               ),
                               onTap: () async {
                                 final url =
-                                    "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
+                                    "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
 
                                 context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
@@ -195,7 +195,7 @@ class ItemCardState extends State<ItemCard> {
                               },
                               onLongPress: () async {
                                 final url =
-                                    "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
+                                    "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
                                 context.read<WebViewProvider>().openBrowserPreference(
                                       context: context,
                                       url: url,
