@@ -45,7 +45,7 @@ abstract class TipTextBuilder {
   String headerValue;
   bool isExpanded;
 
-  Text? buildExpandedText();
+  Widget? buildExpandedText();
 
   Text buildHeaderText() {
     return Text(
@@ -63,7 +63,7 @@ class ExpandableTip extends TipTextBuilder {
   String? expandedValue;
 
   @override
-  Text buildExpandedText() {
+  Widget buildExpandedText() {
     return Text(
       expandedValue!,
       style: const TextStyle(
@@ -74,15 +74,21 @@ class ExpandableTip extends TipTextBuilder {
 }
 
 class ComplexExpandableTip extends TipTextBuilder {
-  ComplexExpandableTip({Text Function()? buildExpandedText, super.headerValue, super.isExpanded}) {
-    _buildExpandedTextFn = buildExpandedText;
+  ComplexExpandableTip({
+    Widget Function()? buildExpandedWidget,
+    super.headerValue,
+    super.isExpanded,
+  }) {
+    _buildExpandedWidgetFn = buildExpandedWidget;
   }
 
-  Function? _buildExpandedTextFn;
+  Widget Function()? _buildExpandedWidgetFn;
 
   @override
-  Text? buildExpandedText() {
-    return _buildExpandedTextFn!();
+  Widget? buildExpandedText() {
+    return _buildExpandedWidgetFn != null
+        ? _buildExpandedWidgetFn!()
+        : const SizedBox(); // Return an empty widget if null
   }
 }
 
@@ -91,7 +97,10 @@ class TipsPage extends StatefulWidget {
   TipsPageState createState() => TipsPageState();
 }
 
-class TipsPageState extends State<TipsPage> {
+class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
+  static const platform = MethodChannel('tornpda.channel');
+  Future<bool?>? _batteryStatusFuture;
+
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
@@ -113,6 +122,19 @@ class TipsPageState extends State<TipsPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _batteryStatusFuture = _checkBatteryOptimization();
+
+    _buildLists();
+
+    analytics?.logScreenView(screenName: 'tips');
+
+    routeWithDrawer = true;
+    routeName = "tips";
+  }
+
+  void _buildLists() {
     _generalTipList = buildGeneralTips();
     _browserGeneralTipList = buildBrowserGeneralTips();
     _browserTabsTipList = buildBrowserTabsTips();
@@ -126,11 +148,29 @@ class TipsPageState extends State<TipsPage> {
     _tradingTipsList = buildTradingTips();
     _deepLinksTipsList = buildDeepLinksTips();
     _userScriptsTipsList = buildUserScriptsTipsList();
+  }
 
-    analytics?.logScreenView(screenName: 'tips');
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _batteryStatusFuture = _checkBatteryOptimization();
 
-    routeWithDrawer = true;
-    routeName = "tips";
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _buildLists();
+      });
+    }
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    _buildLists();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   @override
@@ -358,7 +398,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "What browser should I use?",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "You can choose between 'external' and 'in-app' browser. "
@@ -377,7 +417,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "How do I access the browser?",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "There are several ways:\n\n"
@@ -398,7 +438,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Short tap vs. long-press",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "The browser will open both after a short tap or a long-press in any of the widgets that redirect "
@@ -418,7 +458,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Browser styles",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "There are three different browser styles in Torn PDA: the 'default', the 'bottom bar' "
@@ -448,7 +488,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "File downloads (save & share)",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "Torn PDA allows you to save and share files from the browser."
@@ -475,7 +515,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Chaining tab",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text:
@@ -501,7 +541,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "How can I browse back or forward?",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "There are several ways: you can either swipe your finger right or left across the title bar "
@@ -518,7 +558,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "How do I browse to a custom URL?",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "Default style browser: short tap the title bar to open a small dialog with several options.\n\n"
@@ -535,7 +575,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "How do I copy the current URL?",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "Full browser: short tap the title bar to open a small dialog with several options.\n\n",
@@ -551,7 +591,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Save the current URL as a shortcut or navigate to an existing one",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "If you are using tabs, a quick menu icon (three dots) will appear to the right. "
@@ -570,7 +610,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Ellipsis (...) button",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "This '...' button appears in your tab bar and is relevant to access several functions. If used "
@@ -592,7 +632,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Pull to refresh",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "You can activate the pull to refresh functionality for the main browser in Settings.\n\n"
@@ -610,7 +650,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Full screen mode",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return Text.rich(
             TextSpan(
               text: "The browser supports full screen, which can be activated from the quick menu tab in the "
@@ -655,7 +695,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Use terminal (developers only)",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "There is a Terminal window (read only) available for development use (so that you can see "
@@ -764,39 +804,78 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Battery restrictions",
-        buildExpandedText: () {
-          return Text.rich(
-            TextSpan(
-              text: "Please be aware that the home screen widget has been built taking battery consumption into "
-                  "consideration. It fetches the API and updates the layout once every few minutes, trying to minimize the "
-                  "use of background tasks.\n\n"
-                  "However, depending on your device model or launcher selection, further restrictions might be applied; if "
-                  "that is the case, the widget might not update as much as expected.\n\n"
-                  "This is also the case for widget initialization after the device is rebooted, which is restricted by "
-                  "some launchers.\n\n"
-                  "Check your ",
-              style: const TextStyle(
-                fontSize: 13,
-              ),
-              children: [
-                TextSpan(
-                  text: "Android's app settings",
-                  style: const TextStyle(
-                    decoration: TextDecoration.underline,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                    fontSize: 13,
-                  ),
-                  recognizer: TapGestureRecognizer()
-                    ..onTap = () async {
-                      AppSettings.openAppSettings(type: AppSettingsType.batteryOptimization);
-                    },
-                ),
-                const TextSpan(
-                  text: ".",
-                ),
-              ],
-            ),
+        buildExpandedWidget: () {
+          return FutureBuilder<bool?>(
+            future: _batteryStatusFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (snapshot.hasError || snapshot.data == null) {
+                return const Text(
+                  "Unable to check battery optimization status. Please review manually.",
+                  style: TextStyle(fontSize: 13, color: Colors.red),
+                );
+              } else {
+                final isRestricted = snapshot.data!;
+                return Column(
+                  children: [
+                    Text(
+                      "Please be aware that the home screen widget has been built taking battery consumption into "
+                      "consideration. It fetches the API and updates the layout once every few minutes, trying to minimize the "
+                      "use of background tasks.\n\n"
+                      "However, depending on your device model or launcher selection, further restrictions might be applied; if "
+                      "that is the case, the widget might not update as much as expected.\n\n"
+                      "This is also the case for widget initialization after the device is rebooted, which is restricted by "
+                      "some launchers.\n\n",
+                      style: TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isRestricted ? Icons.warning : Icons.check_circle,
+                              color: isRestricted ? Colors.red : Colors.green,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                isRestricted
+                                    ? "Background baterry restrictions in place:\n\n"
+                                        "It's recommended to change the background batery restrictions for Torn PDA "
+                                        "to 'unrestricted' for optimal performance"
+                                    : "Battery optimization is properly configured",
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: isRestricted ? Colors.red : Colors.green,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        if (isRestricted)
+                          ElevatedButton(
+                            onPressed: () async {
+                              try {
+                                await platform.invokeMethod('openBatterySettings');
+                                _refreshBatteryStatus();
+                              } catch (e) {
+                                print("Error opening battery settings: $e");
+                              }
+                            },
+                            child: const Text("Battery Settings"),
+                          )
+                      ],
+                    ),
+                  ],
+                );
+              }
+            },
           );
         },
       ),
@@ -805,7 +884,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Widget interaction",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "As in the app, you can interact with almost every item in the widget (e.g.: tap the energy "
@@ -825,7 +904,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Widget theme",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return const Text.rich(
             TextSpan(
               text: "You can change the home widget theme in the Settings menu in Torn PDA!",
@@ -1140,7 +1219,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Deep/custom app links",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return Text.rich(
             TextSpan(
               text: "Torn PDA supports what's called deep linking or custom URLs. You can create a link outside "
@@ -1203,7 +1282,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Why is Torn PDA selected as my default browser for Torn?",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return Text.rich(
             TextSpan(
               text: "Thanks to the developers at Torn, Torn PDA is recognized as an official app to handle Torn "
@@ -1265,7 +1344,7 @@ class TipsPageState extends State<TipsPage> {
     tips.add(
       ComplexExpandableTip(
         headerValue: "Userscripts development",
-        buildExpandedText: () {
+        buildExpandedWidget: () {
           return Text.rich(
             TextSpan(
               text: "You can use custom userscripts with Torn PDA. For more information, please visit the "
@@ -1322,5 +1401,22 @@ class TipsPageState extends State<TipsPage> {
       ),
     );
     return tips;
+  }
+
+  Future<bool?> _checkBatteryOptimization() async {
+    try {
+      const platform = MethodChannel('tornpda.channel');
+      final bool isRestricted = await platform.invokeMethod('checkBatteryOptimization');
+      return isRestricted;
+    } catch (e) {
+      print("Error checking battery optimization: $e");
+      return null;
+    }
+  }
+
+  void _refreshBatteryStatus() {
+    setState(() {
+      _batteryStatusFuture = _checkBatteryOptimization();
+    });
   }
 }
