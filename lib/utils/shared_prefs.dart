@@ -369,7 +369,8 @@ class Prefs {
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
   final String _kAppwidgetRemoveShortcutsOneRowLayout = "pda_appwidgetRemoveShortcutsOneRowLayout";
   final String _kAppwidgetMoneyEnabled = "pda_appwidgetMoneyEnabled";
-  final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
+  // V2 after battery checks implemented
+  final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown_v2";
   final String _kAppwidgetCooldownTapOpensBrowser = "pda__appwidgetCooldownTapOpensBrowser";
   final String _kAppwidgetCooldownTapOpensBrowserDestination = "pda__appwidgetCooldownTapOpensBrowserDestination";
 

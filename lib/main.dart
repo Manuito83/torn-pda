@@ -261,10 +261,12 @@ Future<void> main() async {
       // ! Consider disabling for public release - Enable in beta to get plugins' method channel errors in Crashlytics
       // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
       // https://docs.flutter.dev/testing/errors#errors-not-caught-by-flutter
-      PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return false;
-      };
+      if (kDebugMode) {
+        PlatformDispatcher.instance.onError = (error, stack) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          return false;
+        };
+      }
     }
 
     // Pass all uncaught errors from the framework to Crashlytics

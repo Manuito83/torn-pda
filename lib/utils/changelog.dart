@@ -70,6 +70,15 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           "Improved error handling for TSC [Mavri]",
           if (Platform.isIOS) "Added option to manually override app icon",
+          if (Platform.isAndroid)
+            ComplexFeature(
+              "Added battery optimization checks for home widget",
+              explanation: "A battery optimization check has been added to Tips and the app widget "
+                  "installation process to warn the user about battery settings (since "
+                  "they might restrict the widget's funcionality).\n\n"
+                  "If you already have a home widget installed, this will cause "
+                  "the original dialog to be launched the next time you open Torn PDA.",
+            ),
           "Added app upgrade dialog",
           "Fixed targets backup import dialog",
           "Fixed multiple max buy buttons abroad",
