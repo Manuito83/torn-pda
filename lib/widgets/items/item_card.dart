@@ -42,6 +42,7 @@ class ItemCardState extends State<ItemCard> {
   bool _footerSuccessful = false;
 
   late ItemMarket _marketItem;
+  bool _isTradeable = false;
 
   final decimalFormat = NumberFormat("#,##0", "en_US");
 
@@ -53,6 +54,7 @@ class ItemCardState extends State<ItemCard> {
         _footerInformationRetrieved = _getFooterInformation();
       }
     });
+    _isTradeable = widget.item.tradeable ?? false;
   }
 
   @override
@@ -151,61 +153,62 @@ class ItemCardState extends State<ItemCard> {
                           ],
                         ),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 70,
-                            child: GestureDetector(
-                              child: Column(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/map/item_market.png',
-                                    color: widget.item.circulation == 0
-                                        ? Colors.red[400]
-                                        : widget.inventorySuccess
-                                            ? widget.item.inventoryOwned > 0
-                                                ? Colors.green
-                                                : widget.themeProvider!.mainText
-                                            : widget.themeProvider!.mainText,
-                                    height: 14,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  if (widget.inventorySuccess)
-                                    Text(
-                                      "inv: x${widget.item.inventoryOwned}",
-                                      style: const TextStyle(fontSize: 9),
+                      if (_isTradeable)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 70,
+                              child: GestureDetector(
+                                child: Column(
+                                  children: [
+                                    Image.asset(
+                                      'images/icons/map/item_market.png',
+                                      color: widget.item.circulation == 0
+                                          ? Colors.red[400]
+                                          : widget.inventorySuccess
+                                              ? widget.item.inventoryOwned > 0
+                                                  ? Colors.green
+                                                  : widget.themeProvider!.mainText
+                                              : widget.themeProvider!.mainText,
+                                      height: 14,
                                     ),
-                                  if (widget.item.totalValue > 0)
-                                    Text(
-                                      "\$${formatBigNumbers(widget.item.totalValue)}",
-                                      style: const TextStyle(fontSize: 9),
-                                    ),
-                                ],
-                              ),
-                              onTap: () async {
-                                final url =
-                                    "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
+                                    const SizedBox(height: 4),
+                                    if (widget.inventorySuccess)
+                                      Text(
+                                        "inv: x${widget.item.inventoryOwned}",
+                                        style: const TextStyle(fontSize: 9),
+                                      ),
+                                    if (widget.item.totalValue > 0)
+                                      Text(
+                                        "\$${formatBigNumbers(widget.item.totalValue)}",
+                                        style: const TextStyle(fontSize: 9),
+                                      ),
+                                  ],
+                                ),
+                                onTap: () async {
+                                  final url =
+                                      "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
 
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.short,
-                                    );
-                              },
-                              onLongPress: () async {
-                                final url =
-                                    "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.long,
-                                    );
-                              },
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
+                                onLongPress: () async {
+                                  final url =
+                                      "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     ],
                   ),
                   const SizedBox(width: 10),
@@ -384,25 +387,33 @@ class ItemCardState extends State<ItemCard> {
       marketColumn = Column(children: marketList);
 
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (marketList.isNotEmpty)
+          if (marketList.isNotEmpty && _isTradeable)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Column(
-                  children: [
-                    marketHeader,
-                    const SizedBox(height: 2),
-                    marketColumn,
-                  ],
+                Flexible(
+                  child: Column(
+                    children: [
+                      marketHeader,
+                      const SizedBox(height: 2),
+                      marketColumn,
+                    ],
+                  ),
                 ),
               ],
+            )
+          else if (!_isTradeable)
+            Text(
+              "non-tradeable",
+              style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
             ),
-          description,
-          effect,
-          requirement,
-          weaponType,
-          coverage,
+          Center(child: description),
+          Center(child: effect),
+          Center(child: requirement),
+          Center(child: weaponType),
+          Center(child: coverage),
         ],
       );
     }
@@ -411,7 +422,7 @@ class ItemCardState extends State<ItemCard> {
       child: Column(
         children: [
           Text(
-            "ERROR: could not contact API to retrieve bazaar and market details!",
+            "ERROR: could not contact API to retrieve details!",
             style: TextStyle(
               fontSize: 10,
               color: Colors.orange[800],
