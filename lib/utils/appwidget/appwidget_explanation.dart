@@ -1,10 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class AppwidgetExplanationDialog extends StatelessWidget {
-  static const platform = MethodChannel('tornpda.channel');
+class AppwidgetExplanationDialog extends StatefulWidget {
+  const AppwidgetExplanationDialog({Key? key}) : super(key: key);
 
-  const AppwidgetExplanationDialog({super.key});
+  @override
+  State<AppwidgetExplanationDialog> createState() => _AppwidgetExplanationDialogState();
+}
+
+class _AppwidgetExplanationDialogState extends State<AppwidgetExplanationDialog> with WidgetsBindingObserver {
+  static const platform = MethodChannel('tornpda.channel');
+  Future<bool?>? _batteryOptimizationFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _batteryOptimizationFuture = _checkBatteryOptimization();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _batteryOptimizationFuture = _checkBatteryOptimization();
+      });
+    }
+  }
 
   Future<bool?> _checkBatteryOptimization() async {
     try {
@@ -34,7 +62,7 @@ class AppwidgetExplanationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             FutureBuilder<bool?>(
-              future: _checkBatteryOptimization(),
+              future: _batteryOptimizationFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -43,9 +71,10 @@ class AppwidgetExplanationDialog extends StatelessWidget {
                 } else {
                   final isRestricted = snapshot.data!;
                   return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
                             isRestricted ? Icons.warning : Icons.check_circle,
@@ -55,7 +84,9 @@ class AppwidgetExplanationDialog extends StatelessWidget {
                           Expanded(
                             child: Text(
                               isRestricted
-                                  ? "Battery optimization is restricting the app's functionality"
+                                  ? "Background batery restrictions in place:\n\n"
+                                      "It's recommended to change the background batery restrictions for Torn PDA "
+                                      "to 'unrestricted' for optimal home widget performance"
                                   : "Battery optimization is properly configured",
                               style: TextStyle(
                                 fontSize: 13,
@@ -67,7 +98,7 @@ class AppwidgetExplanationDialog extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       if (isRestricted)
-                        TextButton(
+                        ElevatedButton(
                           onPressed: () {
                             try {
                               platform.invokeMethod('openBatterySettings');
@@ -75,7 +106,7 @@ class AppwidgetExplanationDialog extends StatelessWidget {
                               print("Error opening battery settings: $e");
                             }
                           },
-                          child: const Text("Adjust Battery Settings"),
+                          child: const Text("Battery Settings"),
                         ),
                     ],
                   );
