@@ -3,14 +3,13 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -533,7 +532,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
 
       // If an user ID was inserted, we need to transform it first
       if (_addFromUserId) {
-        final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+        final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
         String convertError = "";
         if (target is TargetModel) {
           inputId = target.faction!.factionId.toString();
@@ -590,7 +589,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         }
       }
 
-      final retrievedFaction = await Get.find<ApiCallerController>().getFaction(factionId: inputId);
+      final retrievedFaction = await ApiCallsV1.getFaction(factionId: inputId);
 
       if (retrievedFaction is FactionModel) {
         if (retrievedFaction.name!.isNotEmpty) {

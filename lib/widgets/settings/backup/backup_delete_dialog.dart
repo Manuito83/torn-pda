@@ -6,7 +6,7 @@ import 'package:torn_pda/utils/firebase_functions.dart';
 
 class BackupDeleteDialog extends StatefulWidget {
   final OwnProfileBasic userProfile;
-  const BackupDeleteDialog({Key? key, required this.userProfile}) : super(key: key);
+  const BackupDeleteDialog({super.key, required this.userProfile});
 
   @override
   BackupDeleteDialogState createState() => BackupDeleteDialogState();

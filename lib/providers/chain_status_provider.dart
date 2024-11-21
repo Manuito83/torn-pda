@@ -11,7 +11,8 @@ import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/chain_watcher_settings.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 
@@ -409,7 +410,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
     //log("Player status color: updating from provider!");
 
-    final dynamic myBars = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
+    final dynamic myBars = await ApiCallsV1.getBarsAndPlayerStatus();
     _barsAndStatusModel = myBars;
 
     // Update status color
@@ -453,7 +454,7 @@ class ChainStatusProvider extends ChangeNotifier {
   }
 
   Future<void> getChainStatus() async {
-    final chainResponse = await Get.find<ApiCallerController>().getChainStatus();
+    final chainResponse = await ApiCallsV1.getChainStatus();
 
     if (chainResponse is ChainModel) {
       _accumulatedErrors = 0;

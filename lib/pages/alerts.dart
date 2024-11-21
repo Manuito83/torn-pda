@@ -2,7 +2,6 @@
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
@@ -11,7 +10,8 @@ import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/pages/alerts/alerts_tsm_dialog.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -1718,7 +1718,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   Future _getFactionApiAccess() async {
     // Assess whether we have permits
-    final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+    final attacksResult = await ApiCallsV1.getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       _factionApiAccess = true;
     } else if (attacksResult is ApiError) {

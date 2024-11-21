@@ -48,8 +48,10 @@ import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/pages/stakeouts_page.dart';
 import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
@@ -443,6 +445,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
+
+      // Execute periodic tasks
+      Get.find<PeriodicExecutionController>().checkAndExecuteTasks();
 
       // Handle notifications
       _getBackgroundNotificationSavedData();
@@ -895,7 +900,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       } else {
         // Even if we meet above requirements, call the API and assess whether the user
         // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-        final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+        final attacksResult = await ApiCallsV1.getFactionAttacks();
         if (attacksResult is! FactionAttacksModel) {
           launchBrowserWithUrl = true;
           browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
@@ -922,7 +927,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
           int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-          final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+          final own = await ApiCallsV1.getOwnPersonalStats();
           if (own is OwnPersonalStatsModel) {
             final int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
             final int refillsComparison = otherRefills! - own.personalstats!.refills!;
@@ -1217,7 +1222,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         } else {
           // Even if we meet above requirements, call the API and assess whether the user
           // as API permits (if he does not, open the browser anyway as he can't use the retals section)
-          final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+          final attacksResult = await ApiCallsV1.getFactionAttacks();
           if (attacksResult is! FactionAttacksModel) {
             launchBrowserWithUrl = true;
             browserUrl = "https://www.torn.com/loader.php?sid=attack&user2ID=$assistId";
@@ -1248,7 +1253,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             int? otherRefills = int.tryParse(bulkList[1].split("refills:")[1]);
             int? otherDrinks = int.tryParse(bulkList[2].split("drinks:")[1]);
 
-            final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+            final own = await ApiCallsV1.getOwnPersonalStats();
             if (own is OwnPersonalStatsModel) {
               final int xanaxComparison = otherXanax! - own.personalstats!.xantaken!;
               final int refillsComparison = otherRefills! - own.personalstats!.refills!;
@@ -2000,7 +2005,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = _userProvider!.basic!.userApiKey;
-    final dynamic prof = await Get.find<ApiCallerController>().getOwnProfileBasic();
+    final dynamic prof = await ApiCallsV1.getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain
       prof

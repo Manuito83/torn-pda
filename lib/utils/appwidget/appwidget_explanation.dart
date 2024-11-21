@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppwidgetExplanationDialog extends StatefulWidget {
-  const AppwidgetExplanationDialog({Key? key}) : super(key: key);
+  const AppwidgetExplanationDialog({super.key});
 
   @override
   State<AppwidgetExplanationDialog> createState() => _AppwidgetExplanationDialogState();

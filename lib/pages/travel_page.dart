@@ -21,7 +21,8 @@ import 'package:torn_pda/models/travel/travel_model.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/pages/travel/travel_options_android.dart';
 import 'package:torn_pda/pages/travel/travel_options_ios.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -859,7 +860,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future<void> _fetchTornApi() async {
-    final myTravel = await Get.find<ApiCallerController>().getTravel();
+    final myTravel = await ApiCallsV1.getTravel();
     if (myTravel is TravelModel) {
       _apiRetries = 0;
       setState(() {

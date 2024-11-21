@@ -38,7 +38,8 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -4915,7 +4916,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber! > limit) limit = _messagesShowNumber!;
     if (_eventsShowNumber! > limit) limit = _eventsShowNumber!;
 
-    final apiResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: limit);
+    final apiResponse = await ApiCallsV1.getOwnProfileExtended(limit: limit);
 
     // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
     // Otherwise, call the API
@@ -4924,7 +4925,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_chainProvider.chainModel is ChainModel) {
       chain = _chainProvider.chainModel;
     } else {
-      chain = await Get.find<ApiCallerController>().getChainStatus();
+      chain = await ApiCallsV1.getChainStatus();
     }
 
     if (mounted) {
@@ -4997,9 +4998,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user == null) return;
 
     try {
-      final miscApiResponse = await Get.find<ApiCallerController>().getOwnProfileMisc();
+      final miscApiResponse = await ApiCallsV1.getOwnProfileMisc();
 
-      _tornEducationModel ??= await Get.find<ApiCallerController>().getEducation();
+      _tornEducationModel ??= await ApiCallsV1.getEducation();
 
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
@@ -5101,7 +5102,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_user!.faction!.factionId == 0) return;
       if (!_settingsProvider!.rankedWarsInProfile) return;
 
-      final dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
+      final dynamic apiResponse = await ApiCallsV1.getRankedWars();
       if (apiResponse is RankedWarsModel) {
         for (final warMap in apiResponse.rankedwars!.entries) {
           if (warMap.value.factions!.keys.contains(_user!.faction!.factionId.toString())) {
@@ -5138,7 +5139,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // If we should call the API, fetch the data and update SharedPreferences
       if (shouldCallApi || nextFetchTime == 0) {
         log("Fetching job addiction!");
-        final dynamic apiResponse = await Get.find<ApiCallerController>().getCompanyEmployees();
+        final dynamic apiResponse = await ApiCallsV1.getCompanyEmployees();
         if (apiResponse is CompanyEmployees) {
           for (final eMap in apiResponse.companyEmployees!.entries) {
             // Loop until we find the user
@@ -5194,7 +5195,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         int? lastTs = eventsSave[0].timestamp;
 
         // Get new events after that and add them
-        final dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs);
+        final dynamic newEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: lastTs);
         if (newEventsResponse is List<Event>) {
           if (newEventsResponse.isNotEmpty) {
             for (int i = 0; i < newEventsResponse.length; i++) {
@@ -5235,7 +5236,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // Calculate one month ago
       log("Events save elapse more than 30 minutes, getting all events");
       final int monthAgo = ((DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
-      final dynamic allEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: monthAgo);
+      final dynamic allEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: monthAgo);
       if (allEventsResponse is List<Event>) {
         // Save events and last retrieved timestamp
         List<String> eventsListToSave = [];
@@ -5269,8 +5270,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _getFactionCrimes() async {
     try {
       if (_user == null) return;
-      final factionCrimes =
-          await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user!.playerId.toString());
+      final factionCrimes = await ApiCallsV1.getFactionCrimes(playerId: _user!.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
@@ -7378,7 +7378,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (dynamic element) async {
-      final rentDetails = await Get.find<ApiCallerController>().getProperty(propertyId: element.toString());
+      final rentDetails = await ApiCallsV1.getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         final timeLeft = rentDetails.property!.rented!.daysLeft!;

@@ -283,8 +283,9 @@ class UserScriptsProvider extends ChangeNotifier {
           matches: decodedModel.matches,
         );
       } catch (e, trace) {
-        if (!Platform.isWindows)
+        if (!Platform.isWindows) {
           FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+        }
         if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }

@@ -283,6 +283,11 @@ class Prefs {
   final String _kWebViewSecondaryTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
+
+  final String _kRemoveUnusedTabs = "pda_removeUnusedTabs";
+  final String _kRemoveUnusedTabsIncludesLocked = "pda_removeUnusedTabsIncludesLocked";
+  final String _kRemoveUnusedTabsRangeDays = "pda_removeUnusedTabsRangeDays";
+
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
   final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
@@ -398,6 +403,9 @@ class Prefs {
   final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
 
   final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
+
+  // Periodic tasks
+  final String _taskPrefix = "pda_periodic_";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -3183,6 +3191,40 @@ class Prefs {
     return prefs.setBool(_kUseTabsInBrowserDialog, value);
   }
 
+  // -- Remove unused tabs
+
+  Future<bool> getRemoveUnusedTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRemoveUnusedTabs) ?? true;
+  }
+
+  Future<bool> setRemoveUnusedTabs(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRemoveUnusedTabs, value);
+  }
+
+  Future<bool> getRemoveUnusedTabsIncludesLocked() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRemoveUnusedTabsIncludesLocked) ?? false;
+  }
+
+  Future<bool> setRemoveUnusedTabsIncludesLocked(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRemoveUnusedTabsIncludesLocked, value);
+  }
+
+  Future<int> getRemoveUnusedTabsRangeDays() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRemoveUnusedTabsRangeDays) ?? 7;
+  }
+
+  Future<bool> setRemoveUnusedTabsRangeDays(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRemoveUnusedTabsRangeDays, value);
+  }
+
+  // ---------------------
+
   Future<bool> getOnlyLoadTabsWhenUsed() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kOnlyLoadTabsWhenUsed) ?? true;
@@ -3762,5 +3804,27 @@ class Prefs {
   Future<bool> setBringBrowserForwardOnStart(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kBringBrowserForwardOnStart, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for task periodic execution
+  /// -----------------------------------
+
+  /// Stores the last execution time for a given task name
+  Future<bool> setLastExecutionTime(String taskName, int timestamp) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt("$_taskPrefix$taskName", timestamp);
+  }
+
+  /// Retrieves the last execution time for a given task name
+  Future<int> getLastExecutionTime(String taskName) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt("$_taskPrefix$taskName") ?? 0;
+  }
+
+  /// Removes the stored execution time for a task
+  Future<bool> removeLastExecutionTime(String taskName) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.remove("$_taskPrefix$taskName");
   }
 }

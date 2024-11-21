@@ -51,13 +51,19 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.0 - Build 453 - 13/11/2024
+    // v3.6.0 - Build 455 - 17/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.5.2'
         ..date = '10 DEC 2024'
         ..features = [
           "Added browser links to the Events timeline in Profile",
+          ComplexFeature(
+            "Added option to remove unused tabs",
+            explanation: "Manual trigger: use the triple-dotted icon in the browser's tab bar, "
+                "then tab the red bin icon to see more options.\n\n"
+                "Automatic task: activate a periodic removal in Settings / Advanced Browser Settings / Tabs",
+          ),
           "War: added option to sort by travel distance",
           ComplexFeature(
             "Adapted auto-price script for new market [Kwack]",
@@ -80,6 +86,7 @@ class ChangeLogState extends State<ChangeLog> {
                   "the original dialog to be launched the next time you open Torn PDA.",
             ),
           "Added app upgrade dialog",
+          "Fixed market information in the Items section",
           "Fixed targets backup import dialog",
           "Fixed multiple max buy buttons abroad",
           "Fixed Torn Stats pie chart representation",
