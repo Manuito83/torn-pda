@@ -23,12 +23,12 @@ class StatsChart extends StatefulWidget {
   final Function callbackStatsUpdate;
 
   StatsChart({
-    Key? key,
+    super.key,
     required this.chartType,
     required this.statsData,
     required this.userController,
     required this.callbackStatsUpdate,
-  }) : super(key: key);
+  });
 
   @override
   State<StatsChart> createState() => _StatsChartState();

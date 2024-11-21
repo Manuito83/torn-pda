@@ -7,7 +7,7 @@ import 'package:torn_pda/widgets/pda_browser_icon.dart';
 class LockedTabsNavigationExceptionsPage extends StatefulWidget {
   final SettingsProvider settingsProvider;
 
-  const LockedTabsNavigationExceptionsPage({required this.settingsProvider, Key? key}) : super(key: key);
+  const LockedTabsNavigationExceptionsPage({required this.settingsProvider, super.key});
 
   @override
   LockedTabsNavigationExceptionsPageState createState() => LockedTabsNavigationExceptionsPageState();
