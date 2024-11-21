@@ -1404,6 +1404,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             log("Start URL: $uri");
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
+            _webViewProvider.updateLastTabUse();
+
             _webViewProvider.verticalMenuClose();
             if (!mounted) return;
 

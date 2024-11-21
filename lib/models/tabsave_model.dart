@@ -40,6 +40,7 @@ class TabsSave {
     this.customName = "",
     this.customNameInTitle = false,
     this.customNameInTab = true,
+    this.lastUsedTime = 0,
   });
 
   GlobalKey? tabKey;
@@ -53,6 +54,7 @@ class TabsSave {
   String customName;
   bool customNameInTitle;
   bool customNameInTab;
+  int lastUsedTime;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
         tabKey: json["tabKey"],
@@ -66,6 +68,7 @@ class TabsSave {
         customName: json["customName"] ?? "",
         customNameInTitle: json["customNameInTitle"] ?? false,
         customNameInTab: json["customNameInTab"] ?? true,
+        lastUsedTime: json["lastUsedTime"] ?? 0,
       );
 
   Map<String, dynamic> toJson() => {
@@ -80,5 +83,6 @@ class TabsSave {
         "customName": customName,
         "customNameInTitle": customNameInTitle,
         "customNameInTab": customNameInTab,
+        "lastUsedTime": lastUsedTime,
       };
 }

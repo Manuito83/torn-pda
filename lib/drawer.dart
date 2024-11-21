@@ -51,6 +51,7 @@ import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -424,6 +425,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
       _updateLastActiveTime();
+
+      // Execute periodic tasks
+      Get.find<PeriodicExecutionController>().checkAndExecuteTasks();
 
       // Handle notifications
       _getBackgroundNotificationSavedData();
