@@ -89,7 +89,7 @@ class YataComm {
   }
 
   static Future _getAuth() async {
-    final UserController u = Get.put(UserController());
+    final UserController u = Get.find<UserController>();
     Map<String, String> headers = {
       "authorization": 'Basic ${base64Encode(utf8.encode('$_user:$_pass'))}',
       "referer": _url,

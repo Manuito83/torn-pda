@@ -28,9 +28,9 @@ class SendbirdController extends GetxController {
   TimeOfDay endTime = TimeOfDay(hour: 0, minute: 0);
   String timeZoneName = DateTime.now().timeZoneName;
 
-  bool _sendBirdNotificationsEnabled = true;
+  bool _sendBirdNotificationsEnabled = false;
   bool get sendBirdNotificationsEnabled => _sendBirdNotificationsEnabled;
-  sendBirdNotificationsToogle({required bool enabled}) async {
+  sendBirdNotificationsToggle({required bool enabled}) async {
     if (enabled) {
       bool success = await register();
       if (success) {
@@ -40,16 +40,7 @@ class SendbirdController extends GetxController {
         toastification.show(
           closeOnClick: true,
           alignment: Alignment.bottomCenter,
-          title: Column(
-            children: [
-              Icon(
-                Icons.lock,
-                color: Colors.orange,
-              ),
-              SizedBox(height: 10),
-              Text("There was an error activating chat notifications!"),
-            ],
-          ),
+          title: Text("There was an error activating chat notifications!"),
         );
       }
     } else {
@@ -62,6 +53,8 @@ class SendbirdController extends GetxController {
   Future init() async {
     if (_initialised) return;
     _initialised = true;
+
+    _sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
 
     try {
       _sendbirdAppId = Env.sendbirdAppId;

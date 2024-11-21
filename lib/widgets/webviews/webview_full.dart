@@ -273,7 +273,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final List<String> _lastAttackedMembers = <String>[];
 
   UserDetailsProvider? _userProvider;
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
   late TerminalProvider _terminalProvider;
 
   late WebViewProvider _webViewProvider;

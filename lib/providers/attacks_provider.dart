@@ -39,7 +39,7 @@ class AttacksProvider extends ChangeNotifier {
 
   String _ownId = '';
 
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   Future initializeAttacks() async {
     await restoreSharedPreferences();

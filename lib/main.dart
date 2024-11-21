@@ -50,6 +50,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
@@ -67,8 +68,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.6.0';
-const String androidCompilation = '456';
-const String iosCompilation = '456';
+const String androidCompilation = '457';
+const String iosCompilation = '457';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -175,6 +176,9 @@ Future<void> main() async {
   Get.put(SpiesController(), permanent: true);
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
+  Get.put(UserController(), permanent: true);
+  Get.put(PeriodicExecutionController(), permanent: true);
+
   final sb = Get.put(SendbirdController(), permanent: true);
   await sb.init();
 
@@ -278,7 +282,6 @@ Future<void> main() async {
   if (Platform.isIOS) {
     DartPingIOS.register();
   }
-  Get.put(PeriodicExecutionController(), permanent: true);
 
   HttpOverrides.global = MyHttpOverrides();
 

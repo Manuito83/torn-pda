@@ -37,6 +37,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
@@ -3695,6 +3696,12 @@ class SettingsPageState extends State<SettingsPage> {
           _apiError = false;
           _userProfile = myProfile;
         });
+
+        final uc = Get.find<UserController>();
+        if (uc.playerId == 0 && myProfile.playerId != null) {
+          uc.playerId = myProfile.playerId!;
+          uc.apiKey = myProfile.userApiKey;
+        }
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {

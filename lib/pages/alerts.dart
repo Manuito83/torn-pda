@@ -1020,7 +1020,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                     ),
                                   ),
                                   onChanged: (enabled) async {
-                                    sendbird.sendBirdNotificationsToogle(enabled: enabled!);
+                                    sendbird.sendBirdNotificationsToggle(enabled: enabled!);
                                   },
                                 ),
                               ),
