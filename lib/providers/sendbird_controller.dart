@@ -61,13 +61,13 @@ class SendbirdController extends GetxController {
       _sendbirdAppToken = Env.sendbirdAppToken;
 
       if (_sendbirdAppId.isEmpty || _sendbirdAppToken.isEmpty) {
-        log("Empty Sendbird env. variables, can't init!");
+        logToUser("Empty Sendbird env. variables, can't init!");
         return;
       }
 
       await SendbirdChat.init(appId: _sendbirdAppId);
     } catch (e) {
-      log("Can't initialise Sendbird: $e");
+      logToUser("Can't initialise Sendbird: $e");
     }
   }
 
@@ -112,7 +112,7 @@ class SendbirdController extends GetxController {
         }
       }
     } catch (e) {
-      log("Can't connect to Sendbird: $e");
+      logToUser("Can't connect to Sendbird: $e");
     }
     return false;
   }
@@ -135,20 +135,20 @@ class SendbirdController extends GetxController {
       );
 
       if (response.statusCode == 200) {
-        log("Sendbird token obtained: ${response.data['token']}");
+        logToUser("Sendbird token obtained: ${response.data['token']}");
         Prefs().setSendbirdSessionToken(response.data['token']);
         Prefs().setSendbirdTokenTimestamp(DateTime.now().millisecondsSinceEpoch);
         return response.data['token'];
       } else {
-        log("Sendbird unexpected response: ${response.statusCode}");
+        logToUser("Sendbird unexpected response: ${response.statusCode}");
       }
     } on DioException catch (e) {
       switch (e.type) {
         case DioExceptionType.connectionTimeout:
-          log("Sendbird connection timed out");
+          logToUser("Sendbird connection timed out");
           break;
         default:
-          log("Sendbird crash: $e");
+          logToUser("Sendbird crash: $e");
           break;
       }
     }
@@ -168,16 +168,16 @@ class SendbirdController extends GetxController {
       );
 
       if (regStatus == PushTokenRegistrationStatus.success) {
-        log("Successfully registered user FCM token with Sendbird!");
+        logToUser("Successfully registered user FCM token with Sendbird!");
 
         // Ensure it's not just mentions
         await SendbirdChat.setPushTriggerOption(PushTriggerOption.all);
       } else {
-        log("Failed to register push token with Sendbird: [Status != completed]");
+        logToUser("Failed to register push token with Sendbird: [Status != completed]");
       }
       return true;
     } catch (e) {
-      log("Failed to register push token with Sendbird: $e");
+      logToUser("Failed to register push token with Sendbird: $e");
     }
     return false;
   }
@@ -194,7 +194,7 @@ class SendbirdController extends GetxController {
       );
       log("Sendbird push notifications disabled and token removed");
     } catch (e) {
-      log("Failed to unregister Sendbird push token: $e");
+      logToUser("Failed to unregister Sendbird push token: $e");
     }
   }
 
@@ -225,7 +225,7 @@ class SendbirdController extends GetxController {
       await SendbirdChat.connect(playerId, accessToken: sendbirdSessionToken);
       log("Connected Sendbird");
     } catch (e) {
-      log("Can't connect to Sendbird: $e");
+      logToUser("Can't connect to Sendbird: $e");
     }
   }
 
@@ -260,7 +260,7 @@ class SendbirdController extends GetxController {
       timeZoneName = result.timezone?.isNotEmpty == true ? result.timezone! : await getLocalTimeZone();
       update();
     } catch (e) {
-      log("Sendbird: error getting Do Not Disturb: $e");
+      logToUser("Sendbird: error getting Do Not Disturb: $e");
     }
   }
 
@@ -282,7 +282,7 @@ class SendbirdController extends GetxController {
       update();
       log("Sendbird: do not disturb updated");
     } catch (e) {
-      log("Sendbird: error updating Do Not Disturb: $e");
+      logToUser("Sendbird: error updating Do Not Disturb: $e");
     }
   }
 

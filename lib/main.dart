@@ -172,11 +172,11 @@ Future<void> main() async {
   // [isInDebugMode] sends notifications each time a task is performed
   if (Platform.isAndroid) Workmanager().initialize(pdaWidget_backgroundUpdate);
 
+  Get.put(UserController(), permanent: true);
   Get.put(AudioController(), permanent: true);
   Get.put(SpiesController(), permanent: true);
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
-  Get.put(UserController(), permanent: true);
   Get.put(PeriodicExecutionController(), permanent: true);
 
   final sb = Get.put(SendbirdController(), permanent: true);
