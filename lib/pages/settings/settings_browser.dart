@@ -26,6 +26,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
+import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   final UserDetailsProvider userDetailsProvider;
@@ -50,6 +51,16 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
   late WebViewProvider _webViewProvider;
+
+  final List<TabsWipeTimeRange> tabsRemoveTimeRangesList = [
+    TabsWipeTimeRange.oneDay,
+    TabsWipeTimeRange.twoDays,
+    TabsWipeTimeRange.threeDays,
+    TabsWipeTimeRange.fiveDays,
+    TabsWipeTimeRange.sevenDays,
+    TabsWipeTimeRange.fifteenDays,
+    TabsWipeTimeRange.oneMonth,
+  ];
 
   @override
   void initState() {
@@ -1724,15 +1735,17 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-              child: Text(
-                'Tabs might increase memory and processor usage; be sure that you get familiar with how tabs work (see '
-                'the Tips section). It is highly recommended to use tabs to improve your Torn PDA experience.',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                child: Text(
+                  'Tabs might increase memory and processor usage; be sure that you get familiar with how tabs work (see '
+                  'the Tips section). It is highly recommended to use tabs to improve your Torn PDA experience.',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ),
@@ -1824,6 +1837,103 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         ),
                       ),
                     ),
+                    // -- Unused tabs
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          const Text("Remove unused tabs"),
+                          Switch(
+                            value: _webViewProvider.removeUnusedTabs,
+                            onChanged: (enabled) {
+                              _webViewProvider.removeUnusedTabs = enabled;
+                              _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: enabled);
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                      child: Text(
+                        'Removes unused tabs periodically (checks are performed when the app starts and then once every 24 hours)',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    if (_webViewProvider.removeUnusedTabs)
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30, right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(child: Text("Include locked tabs")),
+                                    ],
+                                  ),
+                                ),
+                                Switch(
+                                  value: _webViewProvider.removeUnusedTabsIncludesLocked,
+                                  onChanged: (value) {
+                                    _webViewProvider.removeUnusedTabsIncludesLocked = value;
+                                    // Ensure we update the periodic task parameters
+                                    _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: true);
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30, right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(child: const Text("Inactive for")),
+                                    ],
+                                  ),
+                                ),
+                                DropdownButton<TabsWipeTimeRange>(
+                                  value: _webViewProvider.removeUnusedTabsRangeDays,
+                                  items: tabsRemoveTimeRangesList.map((TabsWipeTimeRange range) {
+                                    return DropdownMenuItem<TabsWipeTimeRange>(
+                                      value: range,
+                                      child: Text(range.displayName),
+                                    );
+                                  }).toList(),
+                                  onChanged: (TabsWipeTimeRange? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _webViewProvider.removeUnusedTabsRangeDays = newValue;
+                                      });
+                                      // Ensure we update the periodic task parameters
+                                      _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: true);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    // -- Unused tabs ENDS --
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(

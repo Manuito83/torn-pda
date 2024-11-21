@@ -372,13 +372,20 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
     _webViewProvider.clearCacheAndTabs();
   }
 
-  Future<void> _initialiseSecondary() async {
+  Future<bool> _initialiseSecondary() async {
     await Future.delayed(const Duration(milliseconds: 1000));
-    if (!mounted) return;
-    Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
+    if (!mounted) return false;
+    await Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
       useTabs: _settingsProvider.useTabsFullBrowser,
       recallLastSession: widget.recallLastSession,
     );
+
+    // Once secondary tabs are loaded for the first time, assess if any needs to be removes
+    // due to the user's preferences for auto-removal (unused tabs)
+    // Also start a periodic task if necessary
+    _webViewProvider.assessPeriodidTabRemovalOnLaunch();
+
+    return true;
   }
 
   @override
