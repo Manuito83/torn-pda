@@ -54,7 +54,7 @@ class ChangeLogState extends State<ChangeLog> {
     // v3.6.0 - Build 456 - 21/11/2024
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.5.2'
+        ..version = 'Torn PDA v3.6.0'
         ..date = '10 DEC 2024'
         ..features = [
           ComplexFeature(
