@@ -51,12 +51,16 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.0 - Build 455 - 17/11/2024
+    // v3.6.0 - Build 456 - 21/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.5.2'
         ..date = '10 DEC 2024'
         ..features = [
+          ComplexFeature(
+            "Added chat notifications (disabled by default)",
+            explanation: "You can toggle them in the Alerts section!",
+          ),
           "Added browser links to the Events timeline in Profile",
           ComplexFeature(
             "Added option to remove unused tabs",

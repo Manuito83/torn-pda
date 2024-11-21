@@ -3766,7 +3766,7 @@ class Prefs {
   /// ----------------------------
   Future<bool> getSendbirdNotificationsEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSendbirdnotificationsEnabled) ?? true;
+    return prefs.getBool(_kSendbirdnotificationsEnabled) ?? false;
   }
 
   Future<bool> setSendbirdNotificationsEnabled(bool value) async {
