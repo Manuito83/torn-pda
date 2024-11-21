@@ -240,10 +240,17 @@ class ItemCardState extends State<ItemCard> {
   }
 
   Widget _footerWidget() {
+    //log(widget.item.description!);
+
+    // Fixes issues with keepsakes (lines look the same, but are different)
+    // (it's necessary to copy/paste from the log above)
+    String des = widget.item.description ?? "";
+    des = des.replaceAll("â", "'");
+    des = des.replaceAll("â", "'");
     final Widget description = Padding(
       padding: const EdgeInsetsDirectional.only(top: 15),
       child: Text(
-        HtmlParser.fix(widget.item.description),
+        HtmlParser.fix(des),
         style: const TextStyle(
           fontStyle: FontStyle.italic,
           fontSize: 10,
