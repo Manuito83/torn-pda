@@ -1,12 +1,11 @@
 // Flutter imports:
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 
 class NpcAlertModel {
@@ -150,7 +149,7 @@ class LootAlertsDialogState extends State<LootAlertsDialog> {
       } else if (id == "21") {
         name = "Tiny";
       } else {
-        final tornTarget = await Get.find<ApiCallerController>().getTarget(playerId: id);
+        final tornTarget = await ApiCallsV1.getTarget(playerId: id);
         if (tornTarget is TargetModel) {
           name = tornTarget.name;
         } else {

@@ -44,6 +44,7 @@ class Item {
   int? circulation;
   String? image;
   Coverage? coverage;
+  bool? tradeable;
 
   Item({
     this.id,
@@ -61,6 +62,7 @@ class Item {
     this.circulation,
     this.image,
     this.coverage,
+    this.tradeable,
   });
 
   factory Item.fromJson(Map<String, dynamic> json) => Item(
@@ -76,6 +78,7 @@ class Item {
         circulation: json["circulation"],
         image: json["image"],
         coverage: json["coverage"] == null ? null : Coverage.fromJson(json["coverage"]),
+        tradeable: json["tradeable"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -91,6 +94,7 @@ class Item {
         "circulation": circulation,
         "image": image,
         "coverage": coverage?.toJson(),
+        "tradeable": tradeable,
       };
 }
 

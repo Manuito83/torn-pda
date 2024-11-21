@@ -19,7 +19,8 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -159,7 +160,7 @@ class WarController extends GetxController {
       }
     }
 
-    final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: factionId);
+    final apiResult = await ApiCallsV1.getFaction(factionId: factionId);
     if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
       return "";
     }
@@ -246,7 +247,7 @@ class WarController extends GetxController {
 
     // Perform update
     try {
-      final dynamic updatedTarget = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: memberKey);
+      final dynamic updatedTarget = await ApiCallsV1.getOtherProfileExtended(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
@@ -456,7 +457,7 @@ class WarController extends GetxController {
     int numberUpdated = 0;
 
     // Get player's current location
-    final apiPlayer = await Get.find<ApiCallerController>().getOwnProfileBasic();
+    final apiPlayer = await ApiCallsV1.getOwnProfileBasic();
     if (apiPlayer is ApiError) {
       return -1;
     }
@@ -467,7 +468,7 @@ class WarController extends GetxController {
     );
 
     for (final FactionModel f in factions) {
-      final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: f.id.toString());
+      final apiResult = await ApiCallsV1.getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return -1;
       }
@@ -730,7 +731,7 @@ class WarController extends GetxController {
   }
 
   dynamic getAllAttacks() async {
-    final result = await Get.find<ApiCallerController>().getAttacks();
+    final result = await ApiCallsV1.getAttacks();
     if (result is AttackModel) {
       return result;
     }
@@ -738,7 +739,7 @@ class WarController extends GetxController {
   }
 
   dynamic getOwnStats() async {
-    final result = await Get.find<ApiCallerController>().getOwnPersonalStats();
+    final result = await ApiCallsV1.getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -985,7 +986,7 @@ class WarController extends GetxController {
     }
 
     for (final FactionModel faction in factions) {
-      final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: faction.id.toString());
+      final apiResult = await ApiCallsV1.getFaction(factionId: faction.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return;
       }

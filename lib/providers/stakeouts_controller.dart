@@ -9,7 +9,8 @@ import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 // TODO: useful?
@@ -135,7 +136,7 @@ class StakeoutsController extends GetxController {
       }
     }
 
-    final dynamic basicModel = await Get.find<ApiCallerController>().getOtherProfileBasic(playerId: inputId);
+    final dynamic basicModel = await ApiCallsV1.getOtherProfileBasic(playerId: inputId);
 
     if (basicModel is BasicProfileModel) {
       final int millis = DateTime.now().millisecondsSinceEpoch;
@@ -413,7 +414,7 @@ class StakeoutsController extends GetxController {
     // [lastPass] always gets updated, even if no option are active;
     stakeoutPass.lastPass = currentMills;
 
-    final response = await Get.find<ApiCallerController>().getOtherProfileBasic(playerId: stakeoutPass.id);
+    final response = await ApiCallsV1.getOtherProfileBasic(playerId: stakeoutPass.id);
     if (response is BasicProfileModel) {
       final int currentMills = DateTime.now().millisecondsSinceEpoch;
       // Get minutes since last fetch, so that we don't alert if it's above a certain threshold
@@ -434,7 +435,7 @@ class StakeoutsController extends GetxController {
 
   /// Used when we need to quickly update all properties of a stakeout, since it was inactive before
   Future<bool> _fetchSingle({required Stakeout stakeout}) async {
-    final response = await Get.find<ApiCallerController>().getOtherProfileBasic(playerId: stakeout.id);
+    final response = await ApiCallsV1.getOtherProfileBasic(playerId: stakeout.id);
     if (response is BasicProfileModel) {
       _updateStakeout(updateStakeout: stakeout, tornProfile: response);
       return true;

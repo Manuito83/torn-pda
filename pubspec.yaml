@@ -62,7 +62,6 @@ dependencies:
   flutter_slidable: ^3.1.1
   flutter_speed_dial: 7.0.0
   flutter_xlider: 3.5.0
-  workmanager: 0.5.2
   font_awesome_flutter: ^10.7.0
   # Temporary as per https://github.com/jonataslaw/getx/issues/3100
   get: ^5.0.0-release-candidate-9.2.1
@@ -73,6 +72,7 @@ dependencies:
       ref: 8ecac9ede8c4a06a9409848da339f181169300db
   html: 0.15.4
   http: ^1.2.2
+  json_annotation: ^4.9.0 # Used by swagger_dart_code_generator
   lints: ^4.0.0
   ## flutter pub run import_sorter:main
   import_sorter: 4.6.0
@@ -99,7 +99,7 @@ dependencies:
   wakelock_plus: ^1.2.8
   webview_flutter: ^4.9.0
   windows_notification: ^1.3.0
-  collection: 1.18.0
+  workmanager: 0.5.2
 
 #dependency_overrides: 
   #flutter_inappwebview:
@@ -124,10 +124,14 @@ dependencies:
   #    path: ./flutter_inappwebview_ios
 
 dev_dependencies:
+  build_runner: ^2.4.13
+  chopper_generator: ^8.0.3 # Used by swagger_dart_code_generator
   flutter_launcher_icons: 0.13.1
   flutter_test:
     sdk: flutter
-
+  json_serializable: ^6.8.0 # Used by swagger_dart_code_generator
+  swagger_dart_code_generator: ^3.0.1
+  
 flutter_icons:
   android: true
   ios: true

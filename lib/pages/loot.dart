@@ -13,7 +13,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +26,7 @@ import 'package:torn_pda/models/loot/loot_rangers_model.dart';
 import 'package:torn_pda/pages/loot/loot_notification_android.dart';
 import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -1074,7 +1073,7 @@ class LootPageState extends State<LootPage> {
     try {
       for (final id in _npcIds) {
         // Get each target from our static list from Torn
-        final tornTarget = await Get.find<ApiCallerController>().getTarget(playerId: id);
+        final tornTarget = await ApiCallsV1.getTarget(playerId: id);
 
         final newNpcLoot = LootModel();
         if (tornTarget is TargetModel) {
