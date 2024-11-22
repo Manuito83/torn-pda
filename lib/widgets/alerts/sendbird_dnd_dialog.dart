@@ -1,6 +1,11 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 
 class SendbirdDoNotDisturbDialog extends StatefulWidget {
   @override
@@ -35,25 +40,167 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
   }
 
   Future<void> _selectStartTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _startTime,
-    );
+    TimeOfDay? picked;
+
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (BuildContext context) {
+          TimeOfDay initialTime = _startTime;
+
+          return Container(
+            height: 250,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Container(
+                  color: Colors.grey[200],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CupertinoButton(
+                        child: Text('Cancel'),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                      CupertinoButton(
+                        child: Text('Done'),
+                        onPressed: () {
+                          Navigator.pop(context, picked);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: CupertinoTimerPicker(
+                    mode: CupertinoTimerPickerMode.hm, // Modo de horas y minutos
+                    minuteInterval: 1, // Intervalos de minutos
+                    initialTimerDuration: Duration(
+                      hours: initialTime.hour,
+                      minutes: initialTime.minute,
+                    ),
+                    onTimerDurationChanged: (Duration newDuration) {
+                      picked = TimeOfDay(
+                        hour: newDuration.inHours,
+                        minute: newDuration.inMinutes % 60,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } else {
+      picked = await showTimePicker(
+        context: context,
+        builder: (context, child) {
+          final timePicker = MediaQuery(
+              data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+              child: Theme(
+                data: ThemeData.from(
+                  colorScheme: context.read<ThemeProvider>().currentTheme == AppTheme.light
+                      ? ColorScheme.light()
+                      : ColorScheme.dark(),
+                ),
+                child: child!,
+              ));
+          return timePicker;
+        },
+        initialTime: _startTime,
+        initialEntryMode: TimePickerEntryMode.dial,
+      );
+    }
+
     if (picked != null && picked != _startTime) {
       setState(() {
-        _startTime = picked;
+        _startTime = picked!;
       });
     }
   }
 
   Future<void> _selectEndTime(BuildContext context) async {
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: _endTime,
-    );
+    TimeOfDay? picked;
+
+    if (Platform.isIOS) {
+      await showCupertinoModalPopup(
+        context: context,
+        builder: (BuildContext context) {
+          TimeOfDay initialTime = _endTime;
+
+          return Container(
+            height: 250,
+            color: Colors.white,
+            child: Column(
+              children: [
+                Container(
+                  color: Colors.grey[200],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CupertinoButton(
+                        child: Text('Cancel'),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                      ),
+                      CupertinoButton(
+                        child: Text('Done'),
+                        onPressed: () {
+                          Navigator.pop(context, picked);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: CupertinoTimerPicker(
+                    mode: CupertinoTimerPickerMode.hm, // Modo de horas y minutos
+                    minuteInterval: 1, // Intervalos de minutos
+                    initialTimerDuration: Duration(
+                      hours: initialTime.hour,
+                      minutes: initialTime.minute,
+                    ),
+                    onTimerDurationChanged: (Duration newDuration) {
+                      picked = TimeOfDay(
+                        hour: newDuration.inHours,
+                        minute: newDuration.inMinutes % 60,
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } else {
+      picked = await showTimePicker(
+        context: context,
+        builder: (context, child) {
+          final timePicker = MediaQuery(
+              data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+              child: Theme(
+                data: ThemeData.from(
+                  colorScheme: context.read<ThemeProvider>().currentTheme == AppTheme.light
+                      ? ColorScheme.light()
+                      : ColorScheme.dark(),
+                ),
+                child: child!,
+              ));
+          return timePicker;
+        },
+        initialTime: _endTime,
+        initialEntryMode: TimePickerEntryMode.dial,
+      );
+    }
+
     if (picked != null && picked != _endTime) {
       setState(() {
-        _endTime = picked;
+        _endTime = picked!;
       });
     }
   }
