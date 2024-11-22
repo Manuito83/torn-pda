@@ -689,7 +689,7 @@ logToUser(String? message, {int duration = 3, Color? color, Color? borderColor})
                 child: Column(
                   children: [
                     Text("Debug Message\n", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    Text(message.toString(), style: TextStyle(color: Colors.white)),
+                    Text(message.toString(), maxLines: 10, style: TextStyle(color: Colors.white)),
                   ],
                 ),
               )),
