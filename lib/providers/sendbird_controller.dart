@@ -260,7 +260,7 @@ class SendbirdController extends GetxController {
       doNotDisturbEnabled = result.isDoNotDisturbOn;
       startTime = TimeOfDay(hour: result.startHour ?? 0, minute: result.startMin ?? 0);
       endTime = TimeOfDay(hour: result.endHour ?? 0, minute: result.endMin ?? 0);
-      timeZoneName = result.timezone?.isNotEmpty == true ? result.timezone! : await getLocalTimeZone();
+      timeZoneName = await getLocalTimeZone();
       update();
     } catch (e) {
       logToUser("Sendbird: error getting Do Not Disturb: $e");
