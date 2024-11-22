@@ -48,48 +48,70 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
         builder: (BuildContext context) {
           TimeOfDay initialTime = _startTime;
 
-          return Container(
-            height: 250,
-            color: Colors.white,
-            child: Column(
-              children: [
-                Container(
-                  color: Colors.grey[200],
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CupertinoButton(
-                        child: Text('Cancel'),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                      CupertinoButton(
-                        child: Text('Done'),
-                        onPressed: () {
-                          Navigator.pop(context, picked);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: CupertinoTimerPicker(
-                    mode: CupertinoTimerPickerMode.hm, // Modo de horas y minutos
-                    minuteInterval: 1, // Intervalos de minutos
-                    initialTimerDuration: Duration(
-                      hours: initialTime.hour,
-                      minutes: initialTime.minute,
+          final isLightTheme = context.read<ThemeProvider>().currentTheme == AppTheme.light;
+          final backgroundColor = isLightTheme ? Colors.white : Colors.black;
+          final buttonColor = isLightTheme ? Colors.blue : Colors.lightBlueAccent;
+          final textColor = isLightTheme ? Colors.black : Colors.white;
+          final overlayColor = isLightTheme ? Colors.grey[200] : Colors.grey[850];
+
+          return CupertinoTheme(
+            data: CupertinoThemeData(
+              primaryColor: buttonColor,
+              barBackgroundColor: backgroundColor,
+              textTheme: CupertinoTextThemeData(
+                primaryColor: textColor,
+                pickerTextStyle: TextStyle(color: textColor, fontSize: 22),
+              ),
+            ),
+            child: Container(
+              height: 250,
+              color: backgroundColor,
+              child: Column(
+                children: [
+                  Container(
+                    color: overlayColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CupertinoButton(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(color: buttonColor),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                        CupertinoButton(
+                          child: Text(
+                            'Done',
+                            style: TextStyle(color: buttonColor),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context, picked);
+                          },
+                        ),
+                      ],
                     ),
-                    onTimerDurationChanged: (Duration newDuration) {
-                      picked = TimeOfDay(
-                        hour: newDuration.inHours,
-                        minute: newDuration.inMinutes % 60,
-                      );
-                    },
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: CupertinoTimerPicker(
+                      mode: CupertinoTimerPickerMode.hm,
+                      minuteInterval: 1,
+                      initialTimerDuration: Duration(
+                        hours: initialTime.hour,
+                        minutes: initialTime.minute,
+                      ),
+                      onTimerDurationChanged: (Duration newDuration) {
+                        picked = TimeOfDay(
+                          hour: newDuration.inHours,
+                          minute: newDuration.inMinutes % 60,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
@@ -131,48 +153,70 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
         builder: (BuildContext context) {
           TimeOfDay initialTime = _endTime;
 
-          return Container(
-            height: 250,
-            color: Colors.white,
-            child: Column(
-              children: [
-                Container(
-                  color: Colors.grey[200],
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      CupertinoButton(
-                        child: Text('Cancel'),
-                        onPressed: () {
-                          Navigator.pop(context);
-                        },
-                      ),
-                      CupertinoButton(
-                        child: Text('Done'),
-                        onPressed: () {
-                          Navigator.pop(context, picked);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: CupertinoTimerPicker(
-                    mode: CupertinoTimerPickerMode.hm, // Modo de horas y minutos
-                    minuteInterval: 1, // Intervalos de minutos
-                    initialTimerDuration: Duration(
-                      hours: initialTime.hour,
-                      minutes: initialTime.minute,
+          final isLightTheme = context.read<ThemeProvider>().currentTheme == AppTheme.light;
+          final backgroundColor = isLightTheme ? Colors.white : Colors.black;
+          final buttonColor = isLightTheme ? Colors.blue : Colors.lightBlueAccent;
+          final textColor = isLightTheme ? Colors.black : Colors.white;
+          final overlayColor = isLightTheme ? Colors.grey[200] : Colors.grey[850];
+
+          return CupertinoTheme(
+            data: CupertinoThemeData(
+              primaryColor: buttonColor,
+              barBackgroundColor: backgroundColor,
+              textTheme: CupertinoTextThemeData(
+                primaryColor: textColor,
+                pickerTextStyle: TextStyle(color: textColor, fontSize: 22),
+              ),
+            ),
+            child: Container(
+              height: 250,
+              color: backgroundColor,
+              child: Column(
+                children: [
+                  Container(
+                    color: overlayColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        CupertinoButton(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(color: buttonColor),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                        CupertinoButton(
+                          child: Text(
+                            'Done',
+                            style: TextStyle(color: buttonColor),
+                          ),
+                          onPressed: () {
+                            Navigator.pop(context, picked);
+                          },
+                        ),
+                      ],
                     ),
-                    onTimerDurationChanged: (Duration newDuration) {
-                      picked = TimeOfDay(
-                        hour: newDuration.inHours,
-                        minute: newDuration.inMinutes % 60,
-                      );
-                    },
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: CupertinoTimerPicker(
+                      mode: CupertinoTimerPickerMode.hm,
+                      minuteInterval: 1,
+                      initialTimerDuration: Duration(
+                        hours: initialTime.hour,
+                        minutes: initialTime.minute,
+                      ),
+                      onTimerDurationChanged: (Duration newDuration) {
+                        picked = TimeOfDay(
+                          hour: newDuration.inHours,
+                          minute: newDuration.inMinutes % 60,
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },
