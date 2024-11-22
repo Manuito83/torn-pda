@@ -40,7 +40,10 @@ class SendbirdController extends GetxController {
         toastification.show(
           closeOnClick: true,
           alignment: Alignment.bottomCenter,
-          title: Text("There was an error activating chat notifications!"),
+          title: Text(
+            "There was an error activating chat notifications!",
+            maxLines: 2,
+          ),
         );
       }
     } else {
