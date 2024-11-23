@@ -373,7 +373,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     });
 
-    // Should bring browser forward?∫
+    // Should bring browser forward?
     _preferencesCompleter.future.whenComplete(() async {
       final fwd = await Prefs().getBringBrowserForwardOnStart();
       if (fwd) {
