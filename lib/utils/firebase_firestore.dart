@@ -54,7 +54,7 @@ class FirestoreHelper {
     // Generate or replace token if it already exists
     String token = "";
     if (!Platform.isWindows) {
-      token = await _getToken();
+      token = await _getMessagingToken();
     } else {
       token = "windows";
     }
@@ -379,12 +379,21 @@ class FirestoreHelper {
     });
   }
 
-  // Note: Messaging might return error on iOS emulators
-  Future<String> _getToken() async {
+  Future<String> _getMessagingToken() async {
+    // On iOS, ensure we have an APNS token before getting the FCM one
+    if (Platform.isIOS) {
+      await FirebaseMessaging.instance.getAPNSToken();
+    }
+
     final String? currentToken = await _messaging.getToken().onError((error, stackTrace) {
       log("TOKEN ERROR!");
       return "error";
     });
-    return currentToken ?? "error";
+
+    if (currentToken != null) {
+      Prefs().setFCMToken(currentToken);
+      return currentToken;
+    }
+    return "error";
   }
 }
