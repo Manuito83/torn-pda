@@ -16,7 +16,7 @@ enum SpiesSource {
 }
 
 class SpiesController extends GetxController {
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   http.Client? _httpClient;
   bool _isCancelled = false;

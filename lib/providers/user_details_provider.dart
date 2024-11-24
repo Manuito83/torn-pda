@@ -10,7 +10,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class UserDetailsProvider extends ChangeNotifier {
   OwnProfileBasic? basic;
 
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   void setUserDetails({required OwnProfileBasic userDetails}) {
     basic = userDetails;

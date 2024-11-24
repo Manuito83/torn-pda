@@ -22,7 +22,7 @@ class YataStatsDialog extends StatefulWidget {
 }
 
 class _YataStatsDialogState extends State<YataStatsDialog> {
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
   late Future yataDetailsFetched;
 
   @override

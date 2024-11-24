@@ -2,7 +2,7 @@
 /lib/config/
 /lib/torn-pda-native/
 
-# Miscellaneous
+# Miscellaneoussure
 *.class
 *.lock
 *.log

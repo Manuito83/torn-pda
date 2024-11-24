@@ -12,13 +12,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
-//import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -140,6 +140,9 @@ class WebViewProvider extends ChangeNotifier {
     if (webViewSplitActive) {
       return;
     }
+
+    SendbirdController sb = Get.find<SendbirdController>();
+    sb.webviewInForeground = bringToForeground;
 
     if (bringToForeground) {
       if (stackView is Container) {
@@ -1468,8 +1471,10 @@ class WebViewProvider extends ChangeNotifier {
   UiMode _decideBrowserScreenMode({required BrowserTapType tapType, required BuildContext context}) {
     final SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    if (tapType == BrowserTapType.chain) {
-      return UiMode.window;
+    if (tapType == BrowserTapType.chainShort && settings.fullScreenByShortChainingTap) {
+      return UiMode.fullScreen;
+    } else if (tapType == BrowserTapType.chainLong && settings.fullScreenByLongChainingTap) {
+      return UiMode.fullScreen;
     } else if (tapType == BrowserTapType.short && settings.fullScreenByShortTap) {
       return UiMode.fullScreen;
     } else if (tapType == BrowserTapType.long && settings.fullScreenByLongTap) {

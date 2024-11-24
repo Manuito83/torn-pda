@@ -32,10 +32,12 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
@@ -2544,7 +2546,7 @@ class SettingsPageState extends State<SettingsPage> {
                                     FocusScope.of(context).requestFocus(FocusNode());
                                     if (_formKey.currentState!.validate()) {
                                       _myCurrentKey = _apiKeyInputController.text.trim();
-                                      _getApiDetails(userTriggered: true, reload: true);
+                                      _getApiDetails(userTriggered: true);
                                     }
                                   },
                                 ),
@@ -3675,7 +3677,7 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _getApiDetails({required bool userTriggered, bool reload = false}) async {
+  Future<void> _getApiDetails({required bool userTriggered}) async {
     try {
       setState(() {
         _apiIsLoading = true;
@@ -3694,6 +3696,12 @@ class SettingsPageState extends State<SettingsPage> {
           _apiError = false;
           _userProfile = myProfile;
         });
+
+        final uc = Get.find<UserController>();
+        if (uc.playerId == 0 && myProfile.playerId != null) {
+          uc.playerId = myProfile.playerId!;
+          uc.apiKey = myProfile.userApiKey;
+        }
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
@@ -3715,6 +3723,12 @@ class SettingsPageState extends State<SettingsPage> {
             await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
             if (Platform.isAndroid) {
               FirestoreHelper().setVibrationPattern(_vibrationValue);
+            }
+
+            // Sendbird notifications
+            final sbController = Get.find<SendbirdController>();
+            if (sbController.sendBirdNotificationsEnabled) {
+              sbController.register();
             }
           } else {
             log("Windows: skipping Firestore sign up!");

@@ -380,6 +380,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenByShortChainingTap = false;
+  bool get fullScreenByShortChainingTap => _fullScreenByShortChainingTap;
+  set fullScreenByShortChainingTap(bool value) {
+    _fullScreenByShortChainingTap = value;
+    Prefs().setFullScreenByShortChainingTap(_fullScreenByShortChainingTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByLongChainingTap = false;
+  bool get fullScreenByLongChainingTap => _fullScreenByLongChainingTap;
+  set fullScreenByLongChainingTap(bool value) {
+    _fullScreenByLongChainingTap = value;
+    Prefs().setFullScreenByLongChainingTap(_fullScreenByLongChainingTap);
+    notifyListeners();
+  }
+
   var _lifeNotificationTapAction = "ownItems";
   get lifeNotificationTapAction => _lifeNotificationTapAction;
   set lifeNotificationTapAction(value) {
@@ -1087,6 +1103,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByShortTap = await Prefs().getFullScreenByShortTap();
     _fullScreenByLongTap = await Prefs().getFullScreenByLongTap();
     _fullScreenByNotificationTap = await Prefs().getFullScreenByNotificationTap();
+    _fullScreenByShortChainingTap = await Prefs().getFullScreenByShortChainingTap();
+    _fullScreenByLongChainingTap = await Prefs().getFullScreenByLongChainingTap();
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();

@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
@@ -40,6 +41,7 @@ import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -48,6 +50,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
@@ -56,6 +59,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -64,15 +68,15 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.6.0';
-const String androidCompilation = '455';
-const String iosCompilation = '455';
+const String androidCompilation = '459';
+const String iosCompilation = '459';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
 const bool pointFunctionsEmulatorToLocal = false;
 
 // TODO (App release)
-const bool enableWakelockForDebug = false;
+const bool enableWakelockForDebug = true;
 
 bool logAndShowToUser = false;
 
@@ -111,9 +115,10 @@ class ReceivedNotification {
   final String payload;
 }
 
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
-    if (message.data["channelId"].contains("Alerts stocks") == true) {
+    if (message.data["channelId"]?.contains("Alerts stocks") == true) {
       // Reload isolate (as we are reading from background)
       await Prefs().reload();
       final oldData = await Prefs().getDataStockMarket();
@@ -124,6 +129,19 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         newData = "$oldData${message.notification!.body}";
       }
       Prefs().setDataStockMarket(newData);
+    }
+
+    if (message.data["sendbird"] != null) {
+      Map<String, dynamic> sendbirdData = jsonDecode(message.data["sendbird"]);
+      String channelUrl = sendbirdData['channel']['channel_url'];
+
+      String sender = "";
+      String msg = "";
+      List<String> parts = message.data["message"].split(":");
+      sender = parts.isNotEmpty ? parts[0].trim() : "";
+      msg = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
+
+      await showSendbirdNotification(sender, msg, channelUrl);
     }
   } catch (e) {
     if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");
@@ -154,6 +172,18 @@ Future<void> main() async {
   // [isInDebugMode] sends notifications each time a task is performed
   if (Platform.isAndroid) Workmanager().initialize(pdaWidget_backgroundUpdate);
 
+  Get.put(UserController(), permanent: true);
+  Get.put(AudioController(), permanent: true);
+  Get.put(SpiesController(), permanent: true);
+  Get.put(ApiCallerController(), permanent: true);
+  Get.put(WarController(), permanent: true);
+  Get.put(PeriodicExecutionController(), permanent: true);
+
+  final sb = Get.put(SendbirdController(), permanent: true);
+  await sb.init();
+
+  tz.initializeTimeZones();
+
   // Flutter Local Notifications
   if (!Platform.isWindows) {
     if (Platform.isAndroid) {
@@ -163,7 +193,6 @@ Future<void> main() async {
       exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
     }
 
-    tz.initializeTimeZones();
     const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
     const initializationSettingsIOS = DarwinInitializationSettings();
 
@@ -175,13 +204,46 @@ Future<void> main() async {
     await flutterLocalNotificationsPlugin.initialize(
       initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-        final String? payload = notificationResponse.payload;
+        String? payload = notificationResponse.payload;
+
+        // Handle reply action on Sendbird notifications (while on background and foreground)
+        if (notificationResponse.id == 666) {
+          if (notificationResponse.actionId == "sb_reply_action") {
+            // Reply message
+            final message = notificationResponse.input ?? "";
+
+            // Get channel URL from notification payload
+            final payload = notificationResponse.payload;
+            Map<String, dynamic> decodedPayload = jsonDecode(payload ?? "{}");
+            final String channelUrl = decodedPayload["channelUrl"] ?? "";
+
+            // Send reply message
+            if (message.isNotEmpty && channelUrl.isNotEmpty) {
+              SendbirdController sb = Get.find<SendbirdController>();
+              sb.sendMessage(channelUrl: channelUrl, message: message);
+            }
+          }
+
+          // Reassign payload so that the browser opens in Drawwer
+          payload = "sendbird";
+        }
+
         if (notificationResponse.payload != null) {
           log('Notification payload: $payload');
           selectNotificationStream.add(payload);
         }
       },
     );
+
+    // Check if app was launched by tapping a notification (from killed state)
+    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+    if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+      // Handle tap
+      await Prefs().setBringBrowserForwardOnStart(true);
+      Future.delayed(Duration(seconds: 3)).then((value) {
+        handleNotificationTap(notificationAppLaunchDetails!.notificationResponse);
+      });
+    }
   }
 
   // END # Flutter Local Notifications
@@ -220,12 +282,6 @@ Future<void> main() async {
   if (Platform.isIOS) {
     DartPingIOS.register();
   }
-
-  Get.put(AudioController(), permanent: true);
-  Get.put(SpiesController(), permanent: true);
-  Get.put(ApiCallerController(), permanent: true);
-  Get.put(WarController(), permanent: true);
-  Get.put(PeriodicExecutionController(), permanent: true);
 
   HttpOverrides.global = MyHttpOverrides();
 
@@ -633,7 +689,7 @@ logToUser(String? message, {int duration = 3, Color? color, Color? borderColor})
                 child: Column(
                   children: [
                     Text("Debug Message\n", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    Text(message.toString(), style: TextStyle(color: Colors.white)),
+                    Text(message.toString(), maxLines: 10, style: TextStyle(color: Colors.white)),
                   ],
                 ),
               )),

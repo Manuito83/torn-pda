@@ -309,6 +309,8 @@ class Prefs {
   final String _kFullScreenByShortTap = "pda_fullScreenByShortTap";
   final String _kFullScreenByLongTap = "pda_fullScreenByLongTap";
   final String _kFullScreenByNotificationTap = "pda_fullScreenByNotificationTap";
+  final String _kFullScreenByShortChainingTap = "pda_fullScreenByShortChainingTap";
+  final String _kFullScreenByLongChainingTap = "pda_fullScreenByLongChainingTap";
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
@@ -393,6 +395,16 @@ class Prefs {
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
   final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
+
+  // FCM token
+  final String _kFCMToken = "pda_fcmToken";
+
+  // Sendbird notifications
+  final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
+  final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
+  final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
+
+  final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
 
   // Periodic tasks
   final String _taskPrefix = "pda_periodic_";
@@ -3443,6 +3455,28 @@ class Prefs {
 
   //--
 
+  Future<bool> getFullScreenByShortChainingTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByShortChainingTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByShortChainingTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByShortChainingTap, value);
+  }
+
+  Future<bool> getFullScreenByLongChainingTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByLongChainingTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByLongChainingTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByLongChainingTap, value);
+  }
+
+  //--
+
   Future<bool> getFullScreenByDeepLinkTap() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kFullScreenByDeepLinkTap) ?? false;
@@ -3736,6 +3770,64 @@ class Prefs {
   Future<bool> setSplitScreenRevertsToApp(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kSplitScreenRevertsToApp, value);
+  }
+
+  /// ----------------------------
+  /// FCM Token
+  /// ----------------------------
+  Future<String> getFCMToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFCMToken) ?? "";
+  }
+
+  Future<bool> setFCMToken(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFCMToken, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Sendbird notifications
+  /// ----------------------------
+  Future<bool> getSendbirdNotificationsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSendbirdnotificationsEnabled) ?? false;
+  }
+
+  Future<bool> setSendbirdNotificationsEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSendbirdnotificationsEnabled, value);
+  }
+
+  Future<String> getSendbirdSessionToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kSendbirdSessionToken) ?? "";
+  }
+
+  Future<bool> setSendbirdSessionToken(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kSendbirdSessionToken, value);
+  }
+
+  Future<int> getSendbirdTokenTimestamp() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kSendbirdTokenTimestamp) ?? 0;
+  }
+
+  Future<bool> setSendbirdTokenTimestamp(int timestamp) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kSendbirdTokenTimestamp, timestamp);
+  }
+
+  //
+
+  Future<bool> getBringBrowserForwardOnStart() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBringBrowserForwardOnStart) ?? false;
+  }
+
+  Future<bool> setBringBrowserForwardOnStart(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBringBrowserForwardOnStart, value);
   }
 
   /// -----------------------------------

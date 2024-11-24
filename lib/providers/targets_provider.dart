@@ -46,7 +46,7 @@ class TargetsProvider extends ChangeNotifier {
 
   List<TargetModel> _oldTargetsList = [];
 
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   String _currentWordFilter = '';
   String get currentWordFilter => _currentWordFilter;

@@ -30,7 +30,8 @@ import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 enum BrowserTapType {
   short,
   long,
-  chain,
+  chainShort,
+  chainLong,
   notification,
   deeplink,
   quickItem,

@@ -52,14 +52,9 @@ class FirestoreHelper {
             : "windows";
 
     // Generate or replace token if it already exists
-    // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
-    String? token = "";
+    String token = "";
     if (!Platform.isWindows) {
-      final String currentToken = await _getToken();
-      if (currentToken.isNotEmpty) {
-        await _messaging.deleteToken();
-      }
-      token = await _getToken();
+      token = await _getMessagingToken();
     } else {
       token = "windows";
     }
@@ -384,12 +379,21 @@ class FirestoreHelper {
     });
   }
 
-  // Note: Messaging might return error on iOS emulators
-  Future<String> _getToken() async {
+  Future<String> _getMessagingToken() async {
+    // On iOS, ensure we have an APNS token before getting the FCM one
+    if (Platform.isIOS) {
+      await FirebaseMessaging.instance.getAPNSToken();
+    }
+
     final String? currentToken = await _messaging.getToken().onError((error, stackTrace) {
       log("TOKEN ERROR!");
       return "error";
     });
-    return currentToken ?? "error";
+
+    if (currentToken != null) {
+      Prefs().setFCMToken(currentToken);
+      return currentToken;
+    }
+    return "error";
   }
 }

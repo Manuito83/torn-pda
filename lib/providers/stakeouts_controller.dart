@@ -37,7 +37,7 @@ class AddStakeoutResult {
 }
 
 class StakeoutsController extends GetxController {
-  //UserController _u = Get.put(UserController());
+  //UserController _u = Get.find<UserController>();
   late Function(String url) callbackBrowser;
 
   List<Stakeout> stakeouts = <Stakeout>[];

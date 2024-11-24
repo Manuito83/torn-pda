@@ -278,7 +278,7 @@ class ApiCallerController extends GetxController {
     if (forcedApiKey != "") {
       apiKey = forcedApiKey;
     } else {
-      final UserController user = Get.put(UserController());
+      final UserController user = Get.find<UserController>();
       apiKey = user.apiKey;
     }
 
@@ -442,7 +442,7 @@ class ApiCallerController extends GetxController {
     Map<String, dynamic>? payload,
     required Future<chopper.Response<T>> Function(TornV2 client, String apiKey) apiCall,
   }) async {
-    final UserController user = Get.put(UserController());
+    final UserController user = Get.find<UserController>();
     final String apiKey = user.apiKey!;
 
     final TornV2 client = TornV2.create(baseUrl: Uri.parse('https://api.torn.com:443/v2'));

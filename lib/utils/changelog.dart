@@ -51,12 +51,16 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.0 - Build 455 - 17/11/2024
+    // v3.6.0 - Build 459 - 24/11/2024
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.5.2'
+        ..version = 'Torn PDA v3.6.0'
         ..date = '10 DEC 2024'
         ..features = [
+          ComplexFeature(
+            "Added chat notifications (disabled by default)",
+            explanation: "You can toggle them in the Alerts section!",
+          ),
           "Added browser links to the Events timeline in Profile",
           ComplexFeature(
             "Added option to remove unused tabs",
@@ -75,7 +79,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "or restore the example scripts.",
           ),
           "Improved error handling for TSC [Mavri]",
-          if (Platform.isIOS) "Added option to manually override app icon",
+          if (Platform.isIOS) "Added option to manually override themed app icon",
           if (Platform.isAndroid)
             ComplexFeature(
               "Added battery optimization checks for home widget",
@@ -85,6 +89,7 @@ class ChangeLogState extends State<ChangeLog> {
                   "If you already have a home widget installed, this will cause "
                   "the original dialog to be launched the next time you open Torn PDA.",
             ),
+          "Chaining browser can now be opened in full-screen mode (disabled by default)",
           "Added app upgrade dialog",
           "Fixed market information in the Items section",
           "Fixed targets backup import dialog",

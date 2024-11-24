@@ -150,7 +150,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late ChainStatusProvider _chainProvider;
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
   final WarController _w = Get.find<WarController>();
 
   late int _travelNotificationAhead;
