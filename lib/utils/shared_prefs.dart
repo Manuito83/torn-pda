@@ -120,6 +120,7 @@ class Prefs {
   final String _kTravelAlarmAhead = "pda_travelAlarmAhead";
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
+  final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
@@ -1442,6 +1443,16 @@ class Prefs {
   Future<bool> setRemoveAirplane(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRemoveAirplane, value);
+  }
+
+  Future<bool> getRemoveTravelQuickReturnButton() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRemoveTravelQuickReturnButton) ?? false;
+  }
+
+  Future<bool> setRemoveTravelQuickReturnButton(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRemoveTravelQuickReturnButton, value);
   }
 
   /// ----------------------------

@@ -886,7 +886,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _travelHomeIcon(),
+                    if (!_settingsProvider.removeTravelQuickReturnButton) _travelHomeIcon(),
                     _crimesMenuIcon(),
                     _cityMenuIcon(),
                     _quickItemsMenuIcon(),
@@ -2548,7 +2548,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             : <Widget>[
                 _crimesMenuIcon(),
                 _quickItemsMenuIcon(),
-                _travelHomeIcon(),
+                if (!_settingsProvider.removeTravelQuickReturnButton) _travelHomeIcon(),
                 _vaultsPopUpIcon(),
                 _tradesMenuIcon(),
                 _vaultOptionsIcon(),

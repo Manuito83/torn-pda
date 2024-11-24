@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.0 - Build 459 - 24/11/2024
+    // v3.6.0 - Build 460 - 24/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.0'
@@ -90,6 +90,11 @@ class ChangeLogState extends State<ChangeLog> {
                   "the original dialog to be launched the next time you open Torn PDA.",
             ),
           "Chaining browser can now be opened in full-screen mode (disabled by default)",
+          ComplexFeature(
+            "Added option to remove quick return button when traveling",
+            explanation: "You can find this in Settings / Advanced Browser Settings / Travel\n\n"
+                "Defaults to disabled (return button will show)",
+          ),
           "Added app upgrade dialog",
           "Fixed market information in the Items section",
           "Fixed targets backup import dialog",

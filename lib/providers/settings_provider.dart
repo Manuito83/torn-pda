@@ -492,6 +492,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _removeTravelQuickReturnButton = false;
+  bool get removeTravelQuickReturnButton => _removeTravelQuickReturnButton;
+  set removeTravelQuickReturnButton(bool value) {
+    _removeTravelQuickReturnButton = value;
+    Prefs().setRemoveTravelQuickReturnButton(_removeTravelQuickReturnButton);
+    notifyListeners();
+  }
+
   var _extraPlayerInformation = false;
   bool get extraPlayerInformation => _extraPlayerInformation;
   set changeExtraPlayerInformation(bool value) {
@@ -1133,6 +1141,7 @@ class SettingsProvider extends ChangeNotifier {
     _highlightWordList = await Prefs().getHighlightWordList();
 
     _removeAirplane = await Prefs().getRemoveAirplane();
+    _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 

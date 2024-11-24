@@ -919,12 +919,52 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              Text(
-                'Removes airplane and cloud animation when travelling',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
+              Flexible(
+                child: Text(
+                  'Removes airplane and cloud animation when travelling',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Remove quick return button"),
+              Switch(
+                value: _settingsProvider.removeTravelQuickReturnButton,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.removeTravelQuickReturnButton = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  "By default, when abroad, you'll see a home icon button that you can "
+                  "double-tap to initiate your travel back to Torn. You can optionally disable "
+                  "it by using this option",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ],
