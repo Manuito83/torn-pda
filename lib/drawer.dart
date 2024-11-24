@@ -1027,7 +1027,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _webViewProvider.openBrowserPreference(
           context: context,
           url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-          browserTapType: BrowserTapType.chain,
+          browserTapType: BrowserTapType.chainShort,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..attackIdList = ids
@@ -1165,7 +1165,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _webViewProvider.openBrowserPreference(
           context: context,
           url: "https://www.torn.com/loader.php?sid=attack&user2ID=${lootRangersNpcsIds[0]}",
-          browserTapType: BrowserTapType.chain,
+          browserTapType: BrowserTapType.chainShort,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..attackIdList = lootRangersNpcsIds
@@ -1355,7 +1355,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _webViewProvider.openBrowserPreference(
             context: context,
             url: "https://www.torn.com/loader.php?sid=attack&user2ID=${ids[0]}",
-            browserTapType: BrowserTapType.chain,
+            browserTapType: BrowserTapType.chainShort,
             isChainingBrowser: true,
             chainingPayload: ChainingPayload()
               ..attackIdList = ids
@@ -1395,7 +1395,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case BrowserSetting.app:
         await _webViewProvider.openBrowserPreference(
           context: context,
-          browserTapType: BrowserTapType.chain,
+          browserTapType: BrowserTapType.chainShort,
           url: url,
         );
       case BrowserSetting.external:

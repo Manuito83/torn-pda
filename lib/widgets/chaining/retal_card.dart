@@ -1096,7 +1096,7 @@ class RetalCardState extends State<RetalCard> {
         await _webViewProvider.openBrowserPreference(
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: BrowserTapType.chain,
+          browserTapType: BrowserTapType.chainShort,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..war = true

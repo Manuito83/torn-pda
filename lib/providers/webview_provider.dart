@@ -1471,8 +1471,10 @@ class WebViewProvider extends ChangeNotifier {
   UiMode _decideBrowserScreenMode({required BrowserTapType tapType, required BuildContext context}) {
     final SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    if (tapType == BrowserTapType.chain) {
-      return UiMode.window;
+    if (tapType == BrowserTapType.chainShort && settings.fullScreenByShortChainingTap) {
+      return UiMode.fullScreen;
+    } else if (tapType == BrowserTapType.chainLong && settings.fullScreenByLongChainingTap) {
+      return UiMode.fullScreen;
     } else if (tapType == BrowserTapType.short && settings.fullScreenByShortTap) {
       return UiMode.fullScreen;
     } else if (tapType == BrowserTapType.long && settings.fullScreenByLongTap) {

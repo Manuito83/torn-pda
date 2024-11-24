@@ -309,6 +309,8 @@ class Prefs {
   final String _kFullScreenByShortTap = "pda_fullScreenByShortTap";
   final String _kFullScreenByLongTap = "pda_fullScreenByLongTap";
   final String _kFullScreenByNotificationTap = "pda_fullScreenByNotificationTap";
+  final String _kFullScreenByShortChainingTap = "pda_fullScreenByShortChainingTap";
+  final String _kFullScreenByLongChainingTap = "pda_fullScreenByLongChainingTap";
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
@@ -3449,6 +3451,28 @@ class Prefs {
   Future<bool> setFullScreenByNotificationTap(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kFullScreenByNotificationTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByShortChainingTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByShortChainingTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByShortChainingTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByShortChainingTap, value);
+  }
+
+  Future<bool> getFullScreenByLongChainingTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByLongChainingTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByLongChainingTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByLongChainingTap, value);
   }
 
   //--

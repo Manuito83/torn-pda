@@ -118,20 +118,17 @@ class TargetCardState extends State<TargetCard> {
                             onTap: () {
                               if (_target!.status!.state!.contains("Federal") ||
                                   _target!.status!.state!.contains("Fallen")) {
-                                BotToast.showText(
-                                  text: "This player is "
-                                      "${_target!.status!.state!.replaceAll("Federal", "in federal jail").toLowerCase()}"
-                                      " and cannot be attacked!",
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: Colors.red,
-                                  duration: const Duration(seconds: 5),
-                                  contentPadding: const EdgeInsets.all(10),
-                                );
+                                _warnFedetalOrFallen();
                               } else {
-                                _startAttack();
+                                _startAttack(shortTap: true);
+                              }
+                            },
+                            onLongPress: () {
+                              if (_target!.status!.state!.contains("Federal") ||
+                                  _target!.status!.state!.contains("Fallen")) {
+                                _warnFedetalOrFallen();
+                              } else {
+                                _startAttack(shortTap: false);
                               }
                             },
                             child: Row(
@@ -870,7 +867,7 @@ class TargetCardState extends State<TargetCard> {
     }
   }
 
-  Future<void> _startAttack() async {
+  Future<void> _startAttack({required bool shortTap}) async {
     final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
@@ -902,7 +899,7 @@ class TargetCardState extends State<TargetCard> {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: BrowserTapType.chain,
+          browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..attackIdList = attacksIds
@@ -921,5 +918,20 @@ class TargetCardState extends State<TargetCard> {
           await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
         }
     }
+  }
+
+  void _warnFedetalOrFallen() {
+    BotToast.showText(
+      text: "This player is "
+          "${_target!.status!.state!.replaceAll("Federal", "in federal jail").toLowerCase()}"
+          " and cannot be attacked!",
+      textStyle: const TextStyle(
+        fontSize: 14,
+        color: Colors.white,
+      ),
+      contentColor: Colors.red,
+      duration: const Duration(seconds: 5),
+      contentPadding: const EdgeInsets.all(10),
+    );
   }
 }

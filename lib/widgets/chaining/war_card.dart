@@ -159,7 +159,10 @@ class WarCardState extends State<WarCard> {
                               ],
                             ),
                             onTap: () {
-                              _startAttack();
+                              _startAttack(shortTap: true);
+                            },
+                            onLongPress: () {
+                              _startAttack(shortTap: false);
                             },
                           ),
                         ],
@@ -1143,7 +1146,7 @@ class WarCardState extends State<WarCard> {
     }
   }
 
-  Future<void> _startAttack() async {
+  Future<void> _startAttack({required bool shortTap}) async {
     final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
@@ -1170,7 +1173,7 @@ class WarCardState extends State<WarCard> {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: BrowserTapType.chain,
+          browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..war = true

@@ -2643,6 +2643,86 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        //--
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                  Text("Short tap opens full screen"),
+                ],
+              )),
+              Switch(
+                value: _settingsProvider.fullScreenByShortChainingTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByShortChainingTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a target is short-tapped in the Chaining section. "
+            "Defaul to OFF. Note that you can still access the chaining sequence controls by "
+            "double tapping the main tab",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        //--
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                  Text("Long tap opens full screen"),
+                ],
+              )),
+              Switch(
+                value: _settingsProvider.fullScreenByLongChainingTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByLongChainingTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a target is long-pressed in the Chaining section. "
+            "Defaul to OFF. Note that you can still access the chaining sequence controls by "
+            "double tapping the main tab",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

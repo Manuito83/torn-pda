@@ -921,7 +921,7 @@ class LootPageState extends State<LootPage> {
                       context.read<WebViewProvider>().openBrowserPreference(
                             context: context,
                             url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
-                            browserTapType: BrowserTapType.chain,
+                            browserTapType: BrowserTapType.chainShort,
                             isChainingBrowser: true,
                             chainingPayload: ChainingPayload()
                               ..attackIdList = _lootRangersIdOrder
