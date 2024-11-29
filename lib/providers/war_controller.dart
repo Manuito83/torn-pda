@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -1342,9 +1343,16 @@ class WarController extends GetxController {
       List<Member> nonPinnedMembers = [];
 
       for (final faction in factions) {
+        if (faction.hidden != null && faction.hidden! && !statsShareIncludeHiddenTargets) {
+          // Do not share hidden factions unless explicitly requested
+          continue;
+        }
+
         for (final memberId in faction.members!.keys) {
           final member = faction.members![memberId];
-          if (member != null && member.hidden != true) {
+          if (member != null) {
+            if (member.hidden == true && !statsShareIncludeHiddenTargets) continue;
+
             if (member.pinned) {
               pinnedMembers.add(member);
             } else {
@@ -1373,14 +1381,14 @@ class WarController extends GetxController {
           if (!statsShareIncludeTargetsWithNoStatsAvailable) {
             continue; // Skip member if no stats and we don't include targets without stats
           } else {
-            statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+            statsBuffer.writeln("${member.name} [${member.memberId}] - ${HtmlParser.fix(member.factionName)}");
             statsBuffer.writeln("Unknown stats!");
             statsBuffer.writeln("");
             continue;
           }
         }
 
-        statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+        statsBuffer.writeln("${member.name} [${member.memberId}] - ${HtmlParser.fix(member.factionName)}");
 
         if (hasExactStats) {
           if (statsShareShowOnlyTotals) {
@@ -1481,6 +1489,11 @@ class WarController extends GetxController {
       List<Member> nonPinnedMembers = [];
 
       for (final faction in factions) {
+        if (faction.hidden != null && faction.hidden! && !statsShareIncludeHiddenTargets) {
+          // Do not share hidden factions unless explicitly requested
+          continue;
+        }
+
         for (final memberId in faction.members!.keys) {
           final member = faction.members![memberId];
           if (member != null) {
@@ -1517,7 +1530,7 @@ class WarController extends GetxController {
         final List<String> rowData = [
           member.name ?? '',
           member.memberId?.toString() ?? '',
-          member.factionName ?? '',
+          HtmlParser.fix(member.factionName),
           '', // Type of Stats
           '', // Total
           '', // Total Updated
