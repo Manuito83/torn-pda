@@ -34,7 +34,7 @@ class SendbirdController extends GetxController {
     if (enabled) {
       bool success = await register();
       if (success) {
-        await Prefs().setSendbirdNotificationsEnabled(enabled);
+        await Prefs().setSendbirdNotificationsEnabled(true);
         _sendBirdNotificationsEnabled = true;
       } else {
         toastification.show(
@@ -48,6 +48,7 @@ class SendbirdController extends GetxController {
       }
     } else {
       await sendbirdUnregisterFCMToken();
+      await Prefs().setSendbirdNotificationsEnabled(false);
       _sendBirdNotificationsEnabled = false;
     }
     update();
@@ -68,7 +69,13 @@ class SendbirdController extends GetxController {
         return;
       }
 
-      await SendbirdChat.init(appId: _sendbirdAppId);
+      await SendbirdChat.init(
+        appId: _sendbirdAppId,
+        options: SendbirdChatOptions(
+          // No need to save cache for offline view
+          useCollectionCaching: false,
+        ),
+      );
     } catch (e) {
       logToUser("Can't initialise Sendbird: $e");
     }
