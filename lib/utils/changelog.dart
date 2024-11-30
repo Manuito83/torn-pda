@@ -51,11 +51,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.0 - Build 460 - 24/11/2024
+    // v3.6.0 - Build 461 - 30/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.0'
-        ..date = '10 DEC 2024'
+        ..date = '05 DEC 2024'
         ..features = [
           ComplexFeature(
             "Added chat notifications (disabled by default)",
