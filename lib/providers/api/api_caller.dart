@@ -297,13 +297,16 @@ class ApiCallerController extends GetxController {
       case ApiSelection_v1.events:
         url += 'user/?selections=events';
       case ApiSelection_v1.ownPersonalStats:
-        url += 'user/?selections=personalstats';
+        final stats = "xantaken,statenhancersused,refills,exttaken,lsdtaken,networth,energydrinkused";
+        url += 'user/?selections=personalstats&stat=$stats';
       case ApiSelection_v1.ownMisc:
         url += 'user/?selections=money,education,workstats,battlestats,jobpoints,properties,skills,bazaar';
       case ApiSelection_v1.bazaar:
         url += 'user/?selections=bazaar';
       case ApiSelection_v1.otherProfile:
-        url += 'user/$prefix?selections=profile,crimes,personalstats,bazaar';
+        final crimes = "criminaloffenses"; // To calculate estimated stats
+        final stats = "xantaken,statenhancersused,refills,exttaken,lsdtaken,networth,energydrinkused";
+        url += 'user/$prefix?selections=profile,crimes,bazaar,personalstats&stat=$stats,$crimes';
       case ApiSelection_v1.basicProfile:
         url += 'user/$prefix?selections=profile';
       case ApiSelection_v1.target:

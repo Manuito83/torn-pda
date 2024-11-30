@@ -553,13 +553,13 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       try {
         estimatedStats = StatsCalculator.calculateStats(
-          criminalRecordTotal: otherProfile.criminalrecord!.total,
+          criminalRecordTotal: otherProfile.personalstats!.criminaloffenses,
           level: otherProfile.level,
           networth: otherProfile.personalstats!.networth,
           rank: otherProfile.rank,
         );
       } catch (e) {
-        estimatedStats = "(EST) UNK";
+        estimatedStats = "UNK";
       }
     }
 

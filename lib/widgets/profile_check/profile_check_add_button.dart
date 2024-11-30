@@ -22,11 +22,13 @@ class ProfileCheckAddButton extends StatefulWidget {
   final int profileId;
   final int? factionId;
   final String? playerName;
+  final IconData? icon;
 
   const ProfileCheckAddButton({
     required this.profileId,
     required this.factionId,
     this.playerName = "Player",
+    this.icon,
     super.key,
   });
 
@@ -95,7 +97,7 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
                       descTextStyle: const TextStyle(fontSize: 13),
                       tooltipPadding: const EdgeInsets.all(20),
                       child: Icon(
-                        Icons.person,
+                        widget.icon ?? Icons.person,
                         color: anyExists ? Colors.orange : Colors.green,
                         size: 18,
                       ),
@@ -318,7 +320,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // FACTION
-            if (widget.factionId != 0)
+            if (widget.factionId != null && widget.factionId != 0)
               GetBuilder<WarController>(
                 builder: (w) {
                   if (w.initialised) {
