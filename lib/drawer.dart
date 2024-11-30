@@ -331,6 +331,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "tornexchange_enabled": true,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
+        // Revives
+        "revive_hela": "1 million or 1 Xanax",
+        "revive_revive": "1 million or 1 Xanax",
+        "revive_nuke": "1 million or 1 Xanax",
+        "revive_uhc": "1 million or 1 Xanax",
+        "revive_wtf": "1 million or 1 Xanax",
       });
 
       // Remote Config first fetch and live update
@@ -342,6 +348,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
         _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+        // Revives
+        _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
+        _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
+        _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
+        _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
+        _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
 
         // Dynamic App Icon depends on Remote Config
         if (Platform.isIOS) {
@@ -356,6 +368,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
           _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
           _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+          // Revives
+          _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
+          _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
+          _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
+          _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
+          _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
         });
       });
     }

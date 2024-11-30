@@ -155,9 +155,10 @@ openUhcReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExten
                                     }
                                   },
                               ),
-                              const TextSpan(
+                              TextSpan(
                                 text: "\n\nEach revive must be paid directly to the reviver and costs "
-                                    "\$1 million or 1 Xanax. There are special prices for faction contracts "
+                                    "${context.read<SettingsProvider>().reviveUhcPrice}. "
+                                    "There are special prices for faction contracts "
                                     "(more information in the forums).",
                               ),
                               const TextSpan(

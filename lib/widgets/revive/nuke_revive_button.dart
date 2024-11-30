@@ -155,9 +155,9 @@ Future<void> openNukeReviveDialog(BuildContext _, ThemeProvider themeProvider, O
                                     }
                                   },
                               ),
-                              const TextSpan(
+                              TextSpan(
                                 text: "\n\nEach revive must be paid directly to the reviver (unless under a "
-                                    "contract with Nuke) and costs \$1 million or 1 Xanax.",
+                                    "contract with Nuke) and costs ${context.read<SettingsProvider>().reviveNukePrice}.",
                               ),
                               const TextSpan(
                                 text: "\n\nPlease keep in mind if you don't pay for the requested revive, "

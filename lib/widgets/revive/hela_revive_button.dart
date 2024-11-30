@@ -158,9 +158,9 @@ openHelaReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExte
                                     }
                                   },
                               ),
-                              const TextSpan(
-                                text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
-                                    "Refusal to pay will result in getting blacklisted.",
+                              TextSpan(
+                                text: "\n\nRevives cost ${context.read<SettingsProvider>().reviveHelaPrice},"
+                                    " unless on contract. Refusal to pay will result in getting blacklisted.",
                               ),
                             ],
                           ),
@@ -216,6 +216,7 @@ openHelaReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExte
                               final hela = HelaRevive(
                                 tornId: user!.playerId,
                                 username: user!.name,
+                                price: context.read<SettingsProvider>().reviveHelaPrice,
                               );
 
                               hela.callMedic().then((value) {

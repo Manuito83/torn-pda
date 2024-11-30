@@ -158,9 +158,9 @@ openMidnightXReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfil
                                     }
                                   },
                               ),
-                              const TextSpan(
-                                text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
-                                    "Refusal to pay will result in getting blacklisted.",
+                              TextSpan(
+                                text: "\n\nRevives cost ${context.read<SettingsProvider>().reviveMidnightPrice}, "
+                                    "unless on contract. Refusal to pay will result in getting blacklisted.",
                               ),
                             ],
                           ),
@@ -216,6 +216,7 @@ openMidnightXReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfil
                               final midnightX = MidnightXRevive(
                                 tornId: user!.playerId,
                                 username: user!.name,
+                                price: context.read<SettingsProvider>().reviveMidnightPrice,
                               );
 
                               midnightX.callMedic().then((value) {

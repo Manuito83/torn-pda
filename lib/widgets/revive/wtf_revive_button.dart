@@ -159,9 +159,9 @@ openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExten
                                   },
                               ),
                               const TextSpan(text: ' for more information.'),
-                              const TextSpan(
-                                text: "\n\nRevives cost 1 million or 1 Xanax each, unless on contract. "
-                                    "Refusal to pay will result in getting blacklisted.",
+                              TextSpan(
+                                text: "\n\nRevives cost ${context.read<SettingsProvider>().reviveWtfPrice}, "
+                                    "unless on contract. Refusal to pay will result in getting blacklisted.",
                               ),
                             ],
                           ),

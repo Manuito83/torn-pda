@@ -1261,7 +1261,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         ),
                         if (!_dedicatedTravelCard) _travelWidget(),
                         descriptionWidget(),
-                        if (_user!.status!.state == 'Hospital' && _w.nukeReviveActive)
+                        if (_user!.status!.state != 'Hospital' && _w.nukeReviveActive)
                           Padding(
                             padding: const EdgeInsets.only(left: 13, top: 10),
                             child: NukeReviveButton(
