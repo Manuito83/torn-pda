@@ -19,7 +19,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -68,8 +70,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.6.0';
-const String androidCompilation = '461';
-const String iosCompilation = '461';
+const String androidCompilation = '463';
+const String iosCompilation = '463';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -376,6 +378,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         );
       },
     );
+
+    setAndroidDisplayMode();
   }
 
   @override
@@ -608,6 +612,21 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     if (nativeUser.isNativeUserEnabled()) {
       nativeAuth.authStatus = NativeAuthStatus.loggedIn;
     }
+  }
+
+  Future<void> setAndroidDisplayMode() async {
+    if (!Platform.isAndroid) return;
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await FlutterDisplayMode.setHighRefreshRate();
+        DisplayMode refresh = await FlutterDisplayMode.active;
+        log("Refresh rate at: $refresh");
+        setState(() {});
+      } on PlatformException catch (e, trace) {
+        log("Refresh rate error: $e");
+        FirebaseCrashlytics.instance.recordError("Refresh rate error: $e", trace);
+      }
+    });
   }
 }
 

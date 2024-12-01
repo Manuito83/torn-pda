@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.0 - Build 461 - 30/11/2024
+    // v3.6.0 - Build 463 - 01/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.0'
@@ -96,6 +96,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "Defaults to disabled (return button will show)",
           ),
           "Added app upgrade dialog",
+          if (Platform.isAndroid) "Fixed high screen refresh support",
           "Fixed market information in the Items section",
           "Fixed targets backup import dialog",
           "Fixed multiple max buy buttons abroad",
