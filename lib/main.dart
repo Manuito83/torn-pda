@@ -187,65 +187,68 @@ Future<void> main() async {
   tz.initializeTimeZones();
 
   // Flutter Local Notifications
-  if (!Platform.isWindows) {
-    if (Platform.isAndroid) {
-      final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
-      await androidImplementation.requestNotificationsPermission();
-      exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
-    }
+  if (Platform.isAndroid) {
+    final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
+    await androidImplementation.requestNotificationsPermission();
+    exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
+  }
+  const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+  const initializationSettingsIOS = DarwinInitializationSettings();
+  const initizationSettingsWindows = WindowsInitializationSettings(
+    appName: 'Torn PDA',
+    appUserModelId: 'com.manuito.tornpda',
+    guid: 'fdf9adab-cc5d-4660-aec3-f9b7e4b3e355',
+  );
 
-    const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-    const initializationSettingsIOS = DarwinInitializationSettings();
+  const initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS,
+    windows: initizationSettingsWindows,
+  );
 
-    const initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+      String? payload = notificationResponse.payload;
 
-    await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-        String? payload = notificationResponse.payload;
+      // Handle reply action on Sendbird notifications (while on background and foreground)
+      if (notificationResponse.id == 666) {
+        if (notificationResponse.actionId == "sb_reply_action") {
+          // Reply message
+          final message = notificationResponse.input ?? "";
 
-        // Handle reply action on Sendbird notifications (while on background and foreground)
-        if (notificationResponse.id == 666) {
-          if (notificationResponse.actionId == "sb_reply_action") {
-            // Reply message
-            final message = notificationResponse.input ?? "";
+          // Get channel URL from notification payload
+          final payload = notificationResponse.payload;
+          Map<String, dynamic> decodedPayload = jsonDecode(payload ?? "{}");
+          final String channelUrl = decodedPayload["channelUrl"] ?? "";
 
-            // Get channel URL from notification payload
-            final payload = notificationResponse.payload;
-            Map<String, dynamic> decodedPayload = jsonDecode(payload ?? "{}");
-            final String channelUrl = decodedPayload["channelUrl"] ?? "";
-
-            // Send reply message
-            if (message.isNotEmpty && channelUrl.isNotEmpty) {
-              SendbirdController sb = Get.find<SendbirdController>();
-              sb.sendMessage(channelUrl: channelUrl, message: message);
-            }
+          // Send reply message
+          if (message.isNotEmpty && channelUrl.isNotEmpty) {
+            SendbirdController sb = Get.find<SendbirdController>();
+            sb.sendMessage(channelUrl: channelUrl, message: message);
           }
-
-          // Reassign payload so that the browser opens in Drawwer
-          payload = "sendbird";
         }
 
-        if (notificationResponse.payload != null) {
-          log('Notification payload: $payload');
-          selectNotificationStream.add(payload);
-        }
-      },
-    );
+        // Reassign payload so that the browser opens in Drawwer
+        payload = "sendbird";
+      }
 
-    // Check if app was launched by tapping a notification (from killed state)
-    final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
-    if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
-      // Handle tap
-      await Prefs().setBringBrowserForwardOnStart(true);
-      Future.delayed(Duration(seconds: 3)).then((value) {
-        handleNotificationTap(notificationAppLaunchDetails!.notificationResponse);
-      });
-    }
+      if (notificationResponse.payload != null) {
+        log('Notification payload: $payload');
+        selectNotificationStream.add(payload);
+      }
+    },
+  );
+
+  // Check if app was launched by tapping a notification (from killed state)
+  final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+    // Handle tap
+    await Prefs().setBringBrowserForwardOnStart(true);
+    Future.delayed(Duration(seconds: 3)).then((value) {
+      handleNotificationTap(notificationAppLaunchDetails!.notificationResponse);
+    });
   }
 
   // END # Flutter Local Notifications

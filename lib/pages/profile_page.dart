@@ -2151,8 +2151,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     double size = 22,
     NotificationType? forcedTravelIcon,
   }) {
-    if (Platform.isWindows) return SizedBox.shrink();
-
     int? secondsToGo = 0;
     bool percentageError = false;
     late bool notificationsPending;
@@ -4964,7 +4962,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             );
           }
 
-          if (!Platform.isWindows) _checkIfNotificationsAreCurrent();
+          _checkIfNotificationsAreCurrent();
         } else {
           if (_apiGoodData && _apiRetries < 8) {
             _apiRetries++;
@@ -5646,8 +5644,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _scheduleNotification(ProfileNotification profileNotification) async {
-    if (Platform.isWindows) return;
-
     int? secondsToNotification;
     late String channelTitle;
     String? channelSubtitle;
@@ -5848,7 +5844,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       androidScheduleMode: exactAlarmsPermissionAndroid
           ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG
@@ -5859,8 +5854,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _retrievePendingNotifications() async {
-    if (Platform.isWindows) return;
-
     bool travel = false;
     bool energy = false;
     bool nerve = false;
@@ -5877,27 +5870,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     if (pendingNotificationRequests.isNotEmpty) {
       for (final notification in pendingNotificationRequests) {
-        if (notification.payload!.contains('travel')) {
+        if (notification.id == 201) {
           travel = true;
-        } else if (notification.payload!.contains('energy')) {
+        }
+        if (notification.id == 101) {
           energy = true;
-        } else if (notification.payload!.contains('nerve')) {
+        }
+        if (notification.id == 102) {
           nerve = true;
-        } else if (notification.payload!.contains('life')) {
+        }
+        if (notification.id == 103) {
           life = true;
-        } else if (notification.payload!.contains('drugs')) {
+        }
+        if (notification.id == 104) {
           drugs = true;
-        } else if (notification.payload!.contains('medical')) {
+        }
+        if (notification.id == 105) {
           medical = true;
-        } else if (notification.payload!.contains('booster')) {
+        }
+        if (notification.id == 106) {
           booster = true;
-        } else if (notification.payload!.contains('hospital')) {
+        }
+        if (notification.id == 107) {
           hospital = true;
-        } else if (notification.payload!.contains('jail')) {
+        }
+        if (notification.id == 108) {
           jail = true;
-        } else if (notification.payload!.contains('war')) {
+        }
+        if (notification.id == 109) {
           war = true;
-        } else if (notification.payload!.contains('raceStart')) {
+        }
+        if (notification.id == 201) {
           raceStart = true;
         }
       }

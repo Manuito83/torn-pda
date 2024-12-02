@@ -35,6 +35,7 @@ import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/about.dart';
 import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
+import 'package:torn_pda/pages/alerts_windows.dart';
 import 'package:torn_pda/pages/awards_page.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
@@ -1769,12 +1770,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           }
         }
 
-        if (Platform.isWindows) {
-          if (_drawerItemsList[i] == "Alerts") {
-            continue;
-          }
-        }
-
         // Adding divider just before SETTINGS
         if (i == _settingsPosition) {
           drawerOptions.add(
@@ -1832,6 +1827,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case 9:
         return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
       case 10:
+        if (Platform.isWindows) return AlertsSettingsWindows();
         return AlertsSettings(_onChangeStockMarketInMenu);
       case 11:
         return SettingsPage(
