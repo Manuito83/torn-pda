@@ -33,6 +33,7 @@
             android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize"
             android:exported="true">
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false" />
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme" />
@@ -57,14 +58,14 @@
                 <data android:scheme="https" android:host="wiki.torn.com" />
                 <data android:scheme="http" android:host="api.torn.com" />
                 <data android:scheme="https" android:host="api.torn.com" />
-                <data android:pathPattern="/.*" />
+                <data android:pathPattern=".*" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="tornpda" android:host="*" />
-                <data android:pathPattern="/.*" />
+                <data android:pathPattern=".*" />
             </intent-filter>
         </activity>
         <provider
