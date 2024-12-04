@@ -57,7 +57,9 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.6.1'
         ..date = '15 DEC 2024'
         ..features = [
-          "Fixes for deep links",
+          "Added channel info to chat notifications",
+          "Fixed cooldown calculations for traveling",
+          "Fixed deep links issues",
         ],
     );
 

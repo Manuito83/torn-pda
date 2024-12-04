@@ -26,7 +26,7 @@ import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 // 400 loot
 // 499 loot rangers
 // 555 chain watcher
-// 666 Torn chat (Sendbird)
+// 666 + timestamp Torn chat (Sendbird)
 // 777 script updates
 
 Future showNotification(Map payload, int notId) async {
@@ -911,6 +911,31 @@ showSendbirdNotification(String sender, String message, String channelUrl) async
   String channelSubtitle = "Torn chat ${modifier.channelIdModifier} s";
   const String channelDescription = 'Torn chat notifications';
 
+  // Map channels
+  final Map<String, String> patterns = {
+    "private-": "",
+    "faction-": "(faction)",
+    "company-": "(company)",
+    "public_global": "(global)",
+    "public_trade": "(trade)",
+    "public_competition": "(competition)",
+    "public_jail": "(jail)",
+    "public_hospital": "(hospital)",
+    "public_travelling": "(travel)",
+  };
+
+  String suffix = "";
+  for (final entry in patterns.entries) {
+    if (channelUrl.contains(entry.key)) {
+      suffix = entry.value;
+      break;
+    }
+  }
+
+  if (suffix.isNotEmpty) {
+    sender = "$sender $suffix";
+  }
+
   final androidPlatformChannelSpecifics = AndroidNotificationDetails(
     channelTitle,
     channelSubtitle,
@@ -919,6 +944,7 @@ showSendbirdNotification(String sender, String message, String channelUrl) async
     sound: const RawResourceAndroidNotificationSound('keyboard'),
     icon: 'notification_chat',
     color: Colors.green,
+    styleInformation: BigTextStyleInformation(message),
     actions: <AndroidNotificationAction>[
       AndroidNotificationAction(
         'sb_reply_action',
@@ -950,8 +976,12 @@ showSendbirdNotification(String sender, String message, String channelUrl) async
     iOS: iOSPlatformChannelSpecifics,
   );
 
+  // Ensure notifications can stack
+  final tsSuffix = DateTime.now().millisecondsSinceEpoch % 100000;
+  final notificationId = int.parse('666$tsSuffix');
+
   flutterLocalNotificationsPlugin.show(
-    666,
+    notificationId, // 666 + timestamp
     sender,
     message,
     platformChannelSpecifics,
@@ -964,7 +994,7 @@ showSendbirdNotification(String sender, String message, String channelUrl) async
 /// Fired from main() when notification is tapped (or interacted with) in a killed state
 void handleNotificationTap(NotificationResponse? notificationResponse) {
   // Handle Sendbird reply messages when app is killed
-  if (notificationResponse != null && notificationResponse.id == 666) {
+  if (notificationResponse != null && notificationResponse.id.toString().startsWith('666')) {
     final payload = notificationResponse.payload;
 
     if (payload != null && payload.contains("channelUrl") && notificationResponse.input != null) {

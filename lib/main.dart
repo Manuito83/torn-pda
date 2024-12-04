@@ -213,7 +213,7 @@ Future<void> main() async {
       String? payload = notificationResponse.payload;
 
       // Handle reply action on Sendbird notifications (while on background and foreground)
-      if (notificationResponse.id == 666) {
+      if (notificationResponse.id.toString().startsWith('666')) {
         if (notificationResponse.actionId == "sb_reply_action") {
           // Reply message
           final message = notificationResponse.input ?? "";
