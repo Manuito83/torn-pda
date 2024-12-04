@@ -65,7 +65,6 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:windows_notification/windows_notification.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
@@ -86,11 +85,6 @@ final FirebaseAnalytics? analytics = Platform.isWindows ? null : FirebaseAnalyti
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-// TODO Run [flutter run --machine] to set up
-final winNotifyPlugin = WindowsNotification(
-  applicationId: kDebugMode ? r"{fdf9adab-cc5d-4660-aec3-f9b7e4b3e355}\WindowsPowerShell\v1.0\powershell.exe" : null,
-);
 
 final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
     StreamController<ReceivedNotification>.broadcast();
@@ -198,6 +192,7 @@ Future<void> main() async {
   const initizationSettingsWindows = WindowsInitializationSettings(
     appName: 'Torn PDA',
     appUserModelId: 'com.manuito.tornpda',
+    // Run [flutter run --machine] to set up ??
     guid: 'fdf9adab-cc5d-4660-aec3-f9b7e4b3e355',
   );
 

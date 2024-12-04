@@ -445,7 +445,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
-    if (Platform.isWindows) return;
+    // For Windows, just execute what's needed and return (other tasks are not compatible or make no sense)
+    if (Platform.isWindows) {
+      if (state == AppLifecycleState.resumed) {
+        checkForScriptUpdates();
+        _syncThemeWithDeviceSettings();
+        Get.find<PeriodicExecutionController>().checkAndExecuteTasks();
+      }
+      return;
+    }
 
     if (state == AppLifecycleState.paused) {
       // Stop stakeouts
