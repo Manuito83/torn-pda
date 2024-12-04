@@ -2052,23 +2052,20 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    _showColorPickerTabs(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        const Text("Choose hide bar color"),
-                        Container(
-                          width: 25,
-                          height: 25,
-                          color: Color(_settingsProvider.tabsHideBarColor),
-                        )
-                      ],
-                    ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      const Text("Select hide bar color"),
+                      ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(_settingsProvider.tabsHideBarColor).withAlpha(255),
+                            foregroundColor: Colors.white, // Ensures icon color is always white
+                          ),
+                          child: Icon(Icons.palette), // No need to set icon color explicitly
+                          onPressed: () => _showColorPickerTabs(context)),
+                    ],
                   ),
                 ),
                 Padding(
