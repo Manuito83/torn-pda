@@ -69,9 +69,9 @@ import 'package:windows_notification/windows_notification.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.6.0';
-const String androidCompilation = '463';
-const String iosCompilation = '463';
+const String appVersion = '3.6.1';
+const String androidCompilation = '464';
+const String iosCompilation = '464';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
