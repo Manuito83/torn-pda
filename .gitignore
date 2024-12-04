@@ -2,7 +2,7 @@
 /lib/config/
 /lib/torn-pda-native/
 
-# Miscellaneous
+# Miscellaneoussure
 *.class
 *.lock
 *.log
@@ -15,6 +15,10 @@
 .svn/
 .VSCodeCounter/
 .fvm
+
+# ENV
+.env
+*env.g.dart
 
 # IntelliJ related
 *.iml

@@ -33,7 +33,7 @@ class AboutPageState extends State<AboutPage> {
   @override
   void initState() {
     super.initState();
-    analytics.logScreenView(screenName: 'about');
+    analytics?.logScreenView(screenName: 'about');
 
     routeWithDrawer = true;
     routeName = "about";
@@ -412,6 +412,33 @@ class AboutPageState extends State<AboutPage> {
                                 },
                                 child: const Text(
                                   'Kwack',
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                ),
+                              ),
+                            ),
+                            const TextSpan(
+                              text: ', ',
+                            ),
+                            WidgetSpan(
+                              child: GestureDetector(
+                                onTap: () {
+                                  const url = 'https://www.torn.com/profiles.php?XID=2402357';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
+                                onLongPress: () {
+                                  const url = 'https://www.torn.com/profiles.php?XID=2402357';
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                                child: const Text(
+                                  'Mavri',
                                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
                                 ),
                               ),

@@ -380,6 +380,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenByShortChainingTap = false;
+  bool get fullScreenByShortChainingTap => _fullScreenByShortChainingTap;
+  set fullScreenByShortChainingTap(bool value) {
+    _fullScreenByShortChainingTap = value;
+    Prefs().setFullScreenByShortChainingTap(_fullScreenByShortChainingTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByLongChainingTap = false;
+  bool get fullScreenByLongChainingTap => _fullScreenByLongChainingTap;
+  set fullScreenByLongChainingTap(bool value) {
+    _fullScreenByLongChainingTap = value;
+    Prefs().setFullScreenByLongChainingTap(_fullScreenByLongChainingTap);
+    notifyListeners();
+  }
+
   var _lifeNotificationTapAction = "ownItems";
   get lifeNotificationTapAction => _lifeNotificationTapAction;
   set lifeNotificationTapAction(value) {
@@ -473,6 +489,14 @@ class SettingsProvider extends ChangeNotifier {
   set changeRemoveAirplane(bool value) {
     _removeAirplane = value;
     Prefs().setRemoveAirplane(_removeAirplane);
+    notifyListeners();
+  }
+
+  var _removeTravelQuickReturnButton = false;
+  bool get removeTravelQuickReturnButton => _removeTravelQuickReturnButton;
+  set removeTravelQuickReturnButton(bool value) {
+    _removeTravelQuickReturnButton = value;
+    Prefs().setRemoveTravelQuickReturnButton(_removeTravelQuickReturnButton);
     notifyListeners();
   }
 
@@ -953,6 +977,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _dynamicAppIconsManual = "off";
+  String get dynamicAppIconsManual => _dynamicAppIconsManual;
+  set dynamicAppIconsManual(String value) {
+    _dynamicAppIconsManual = value;
+    Prefs().setDynamicAppIconsManual(_dynamicAppIconsManual);
+    notifyListeners();
+  }
+
   var _dynamicAppIconEnabledRemoteConfig = false;
   bool get dynamicAppIconEnabledRemoteConfig => _dynamicAppIconEnabledRemoteConfig;
   set dynamicAppIconEnabledRemoteConfig(bool enabled) {
@@ -1032,6 +1064,42 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // REVIVES
+  String _reviveHelaPrice = "1 million or 1 Xanax each";
+  String get reviveHelaPrice => _reviveHelaPrice;
+  set reviveHelaPrice(String value) {
+    _reviveHelaPrice = value;
+    notifyListeners();
+  }
+
+  String _reviveMidnightPrice = "1 million or 1 Xanax each";
+  String get reviveMidnightPrice => _reviveMidnightPrice;
+  set reviveMidnightPrice(String value) {
+    _reviveMidnightPrice = value;
+    notifyListeners();
+  }
+
+  String _reviveNukePrice = "1 million or 1 Xanax each";
+  String get reviveNukePrice => _reviveNukePrice;
+  set reviveNukePrice(String value) {
+    _reviveNukePrice = value;
+    notifyListeners();
+  }
+
+  String _reviveUhcPrice = "1 million or 1 Xanax each";
+  String get reviveUhcPrice => _reviveUhcPrice;
+  set reviveUhcPrice(String value) {
+    _reviveUhcPrice = value;
+    notifyListeners();
+  }
+
+  String _reviveWtfPrice = "1 million or 1 Xanax each";
+  String get reviveWtfPrice => _reviveWtfPrice;
+  set reviveWtfPrice(String value) {
+    _reviveWtfPrice = value;
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1079,6 +1147,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByShortTap = await Prefs().getFullScreenByShortTap();
     _fullScreenByLongTap = await Prefs().getFullScreenByLongTap();
     _fullScreenByNotificationTap = await Prefs().getFullScreenByNotificationTap();
+    _fullScreenByShortChainingTap = await Prefs().getFullScreenByShortChainingTap();
+    _fullScreenByLongChainingTap = await Prefs().getFullScreenByLongChainingTap();
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
@@ -1107,6 +1177,7 @@ class SettingsProvider extends ChangeNotifier {
     _highlightWordList = await Prefs().getHighlightWordList();
 
     _removeAirplane = await Prefs().getRemoveAirplane();
+    _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 
@@ -1230,6 +1301,7 @@ class SettingsProvider extends ChangeNotifier {
     _darkThemeToSync = await Prefs().getDarkThemeToSync();
 
     _dynamicAppIcons = await Prefs().getDynamicAppIcons();
+    _dynamicAppIconsManual = await Prefs().getDynamicAppIconsManual();
 
     _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
@@ -1261,15 +1333,40 @@ class SettingsProvider extends ChangeNotifier {
     if (!dynamicAppIcons) return;
 
     const platform = MethodChannel('tornpda/icon');
-    DateTime now = DateTime.now();
     String? iconName;
 
-    // Determine the icon based on the current date
-    // TODO: change to (now.month == 10 && now.day >= 25) || (now.month == 11 && now.day <= 1)
-    if ((now.month == 10 && now.day >= 10) || (now.month == 11 && now.day <= 1)) {
-      iconName = "AppIconHalloween";
+    DateTime now = DateTime.now();
+
+    if (_dynamicAppIconsManual == "off") {
+      // Define the date ranges
+      final awarenessWeekStart = DateTime(now.year, 01, 15);
+      final awarenessWeekEnd = DateTime(now.year, 01, 21, 23, 59, 59);
+      final halloweenStart = DateTime(now.year, 10, 25);
+      final halloweenEnd = DateTime(now.year, 11, 1, 23, 59, 59);
+      final christmasStart = DateTime(now.year, 12, 19);
+      final christmasEnd = DateTime(now.year, 12, 31, 23, 59, 59);
+
+      // Determine the icon based on date ranges
+      if (now.isAfter(awarenessWeekStart) && now.isBefore(awarenessWeekEnd)) {
+        iconName = "AppIconAwareness";
+      } else if (now.isAfter(halloweenStart) && now.isBefore(halloweenEnd)) {
+        iconName = "AppIconHalloween";
+      } else if (now.isAfter(christmasStart) && now.isBefore(christmasEnd)) {
+        iconName = "AppIconChristmas";
+      } else {
+        iconName = null; // Default icon
+      }
     } else {
-      iconName = null; // Default icon
+      switch (_dynamicAppIconsManual) {
+        case "awareness":
+          iconName = "AppIconAwareness";
+        case "halloween":
+          iconName = "AppIconHalloween";
+        case "christmas":
+          iconName = "AppIconChristmas";
+        default:
+          iconName = null;
+      }
     }
 
     try {

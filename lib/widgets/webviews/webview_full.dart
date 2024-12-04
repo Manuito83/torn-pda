@@ -44,7 +44,7 @@ import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/config/webview_config.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
@@ -273,7 +273,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final List<String> _lastAttackedMembers = <String>[];
 
   UserDetailsProvider? _userProvider;
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
   late TerminalProvider _terminalProvider;
 
   late WebViewProvider _webViewProvider;
@@ -305,7 +305,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
-  final _findInteractionController = FindInteractionController();
+  final _findInteractionController = null;
 
   bool _omitTabHistory = false;
 
@@ -341,6 +341,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final GlobalKey _showCaseCloseButton = GlobalKey();
   final GlobalKey _showCasePlayPauseChain = GlobalKey();
   final GlobalKey _showCaseTradeOptions = GlobalKey();
+
+  final _scrollControllerBugsReport = ScrollController();
 
   @override
   void initState() {
@@ -437,19 +439,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
     );
 
-    _pullToRefreshController = PullToRefreshController(
-      settings: PullToRefreshSettings(
-        color: Colors.orange[800],
-        size: PullToRefreshSize.DEFAULT,
-        backgroundColor: _themeProvider.secondBackground,
-        enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
-        slingshotDistance: 300,
-        distanceToTriggerSync: 300,
-      ),
-      onRefresh: () async {
-        await _reload();
-      },
-    );
+    _pullToRefreshController = Platform.isWindows
+        ? null
+        : PullToRefreshController(
+            settings: PullToRefreshSettings(
+              color: Colors.orange[800],
+              size: PullToRefreshSize.DEFAULT,
+              backgroundColor: _themeProvider.secondBackground,
+              enabled: _settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon || false,
+              slingshotDistance: 300,
+              distanceToTriggerSync: 300,
+            ),
+            onRefresh: () async {
+              await _reload();
+            },
+          );
   }
 
   @override
@@ -458,17 +462,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webViewController?.dispose();
       _findController.dispose();
       _chainWidgetController.dispose();
+      _scrollControllerBugsReport.dispose();
       WidgetsBinding.instance.removeObserver(this);
       super.dispose();
     } catch (e) {
-      FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
       logToUser("PDA Crash at WebviewFull dispose: $e");
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (Platform.isWindows) return;
+
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
         webViewController?.pauseTimers();
@@ -879,7 +886,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    _travelHomeIcon(),
+                    if (!_settingsProvider.removeTravelQuickReturnButton) _travelHomeIcon(),
                     _crimesMenuIcon(),
                     _cityMenuIcon(),
                     _quickItemsMenuIcon(),
@@ -1156,20 +1163,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           initialUrlRequest: _initialUrl,
           pullToRefreshController: _pullToRefreshController,
           findInteractionController: _findInteractionController,
+          webViewEnvironment: _webViewProvider.webViewEnvironment, // Only assigned in Windows
           initialSettings: _initialWebViewSettings,
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
 
             // Clear cache (except for cookies) for each new session
-            if (!_settingsProvider.webviewCacheEnabled) {
+            if (!_settingsProvider.webviewCacheEnabled && !Platform.isWindows) {
               await InAppWebViewController.clearAllCache();
             }
 
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
@@ -1285,7 +1293,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
@@ -1395,6 +1403,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           onLoadStart: (c, uri) async {
             log("Start URL: $uri");
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
+
+            _webViewProvider.updateLastTabUse();
 
             _webViewProvider.verticalMenuClose();
             if (!mounted) return;
@@ -2005,7 +2015,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  /// Analysis of hit elements to change navigation behaviour
+  /// Analysis of hit elements to change navigation behavior
   Future<bool> _hitShouldOpenNewTab(
     InAppWebViewController c,
     NavigationAction request,
@@ -2258,9 +2268,26 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       webViewController!.evaluateJavascript(
         source: chatHighlightJS(highlights: hlMap),
       );
-      webViewController!.injectCSSCode(
-        source: css,
-      );
+
+      if (!Platform.isWindows) {
+        webViewController!.injectCSSCode(
+          source: css,
+        );
+      } else {
+        // Inject CSS using JavaScript
+        final String jsToInjectCSS = '''
+          (function() {
+            var style = document.createElement('style');
+            style.type = 'text/css';
+            style.innerHTML = `$css`;
+            document.head.appendChild(style);
+          })();
+        ''';
+
+        webViewController!.evaluateJavascript(
+          source: jsToInjectCSS,
+        );
+      }
     }
   }
 
@@ -2521,7 +2548,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             : <Widget>[
                 _crimesMenuIcon(),
                 _quickItemsMenuIcon(),
-                _travelHomeIcon(),
+                if (!_settingsProvider.removeTravelQuickReturnButton) _travelHomeIcon(),
                 _vaultsPopUpIcon(),
                 _tradesMenuIcon(),
                 _vaultOptionsIcon(),
@@ -2563,10 +2590,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
                     }
                   }
 
-                  _scrollX = await webViewController!.getScrollX();
-                  _scrollY = await webViewController!.getScrollY();
+                  if (!Platform.isWindows) {
+                    _scrollX = await webViewController!.getScrollX();
+                    _scrollY = await webViewController!.getScrollY();
+                  }
+
                   await _reload();
-                  _scrollAfterLoad = true;
+
+                  if (!Platform.isWindows) {
+                    _scrollAfterLoad = true;
+                  }
 
                   BotToast.showText(
                     text: "Reloading...",
@@ -2860,7 +2893,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     bool showTitle = false,
   }) async {
     String? title = '';
-    final h4 = document.querySelector(".content-title > h4");
+
+    dom.Element? h4 = document.querySelector(".content-title > h4");
+    // Some desktop views might incorporate different elements for the title
+    h4 ??= document.querySelector("[class^='titleContainer___'] h4");
+
     if (h4 != null) {
       title = pda_parser.HtmlParser.fix(h4.innerHtml.substring(0).trim());
     }
@@ -2969,8 +3006,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
 
           if (error.isNotEmpty) {
-            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
-            FirebaseCrashlytics.instance.recordError(error, null);
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
             logToUser("Error sending Foreign Stocks to YATA");
           }
         }
@@ -2998,8 +3035,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           }
 
           if (error.isNotEmpty) {
-            FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
-            FirebaseCrashlytics.instance.recordError(error, null);
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
             logToUser("Error sending Foreign Stocks to Prometheus");
           }
         }
@@ -3661,7 +3698,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     // Pass items to widget (if nothing found, widget's list will be empty)
     try {
-      final dynamic apiResponse = await Get.find<ApiCallerController>().getItems();
+      final dynamic apiResponse = await ApiCallsV1.getItems();
       if (apiResponse is ItemsModel) {
         apiResponse.items!.forEach((key, value) {
           // Assign correct ids
@@ -3919,8 +3956,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         builder: (_) => AlertDialog(
           title: const Text("WARNING"),
           content: Scrollbar(
+            controller: _scrollControllerBugsReport,
             thumbVisibility: true,
             child: SingleChildScrollView(
+              controller: _scrollControllerBugsReport,
               child: Padding(
                 padding: const EdgeInsets.only(right: 12),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -4149,7 +4188,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
 
-    if (Platform.isAndroid) {
+    if (Platform.isAndroid || Platform.isWindows) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: webViewController!.getUrl().toString(),
         apiKey: _userProvider?.basic?.userApiKey ?? "",
@@ -4254,7 +4293,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/gym.php') || easyUrl.contains('index.php?page=hunting')) {
-      final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
+      final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is BarsStatusCooldownsModel) {
         var message = "";
         if (stats.chain!.current! > 10 && stats.chain!.cooldown == 0) {
@@ -4295,7 +4334,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     final easyUrl = targetUrl.replaceAll('#', '');
     if (easyUrl.contains('www.torn.com/travelagency.php')) {
-      final stats = await Get.find<ApiCallerController>().getBarsAndPlayerStatus();
+      final stats = await ApiCallsV1.getBarsAndPlayerStatus();
       if (stats is! BarsStatusCooldownsModel) return;
 
       final List<Widget> warnRows = [];
@@ -5483,7 +5522,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 10 targets
       for (var i = 0; i < 10; i++) {
         // Get the status of our next target
-        final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload!.attackIdList[i]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: _chainingPayload!.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -5495,8 +5534,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user =
-                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: _userProvider!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -5584,7 +5622,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // This will show the note of the first target, if applicable
     if (_chainingPayload!.showNotes) {
       if (_chainingPayload!.showOnlineFactionWarning) {
-        final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: _chainingPayload!.attackIdList[0]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: _chainingPayload!.attackIdList[0]);
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction!.factionName;
           _lastOnline = nextTarget.lastAction!.timestamp;
@@ -5621,8 +5659,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       // We'll skip maximum of 8 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        final nextTarget = await Get.find<ApiCallerController>()
-            .getTarget(playerId: _chainingPayload!.attackIdList[_attackNumber + 1]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: _chainingPayload!.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -5634,8 +5671,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user =
-                await Get.find<ApiCallerController>().getTarget(playerId: _userProvider!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: _userProvider!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -5706,8 +5742,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     // from the API
     else {
       if (_chainingPayload!.showOnlineFactionWarning) {
-        final nextTarget = await Get.find<ApiCallerController>()
-            .getTarget(playerId: _chainingPayload!.attackIdList[_attackNumber + 1]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: _chainingPayload!.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction!.factionName;
@@ -5846,7 +5881,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   clearCacheAndReload() async {
-    await InAppWebViewController.clearAllCache();
+    if (!Platform.isWindows) {
+      await InAppWebViewController.clearAllCache();
+    }
     CookieManager cookieManager = CookieManager.instance();
     cookieManager.deleteAllCookies();
     webViewController!.evaluateJavascript(

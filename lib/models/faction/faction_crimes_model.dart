@@ -4,6 +4,7 @@
 
 // Dart imports:
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
@@ -36,8 +37,8 @@ class FactionCrimesModel {
           : json['crimes'] == null
               ? "Null JSON Crimes"
               : "Other";
-      FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model");
-      FirebaseCrashlytics.instance.recordError("Player ID: $playerId, Response: $response, Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("Player ID: $playerId, Response: $response, Error: $e", null);
       */
     }
     return FactionCrimesModel();
@@ -106,8 +107,8 @@ class Crime {
 
       return crimes;
     } catch (e) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model [Crime]");
-      FirebaseCrashlytics.instance.recordError("Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model [Crime]");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("Error: $e", null);
       throw ArgumentError("PDA Crash at Faction Crimes Model [Crime]");
     }
   }
@@ -164,8 +165,8 @@ class Participant {
 
       return participant;
     } catch (e) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model [Participant]");
-      FirebaseCrashlytics.instance.recordError("Error: $e", null);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Faction Crimes Model [Participant]");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("Error: $e", null);
       throw ArgumentError("PDA Crash at Faction Crimes Model [Participant]");
     }
   }

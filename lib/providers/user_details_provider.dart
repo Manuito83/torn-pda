@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class UserDetailsProvider extends ChangeNotifier {
   OwnProfileBasic? basic;
 
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   void setUserDetails({required OwnProfileBasic userDetails}) {
     basic = userDetails;
@@ -84,7 +84,7 @@ class UserDetailsProvider extends ChangeNotifier {
         // NOTE: calling basic to make things faster
         // Basic includes:
         // + Battle stats for TAC
-        final apiVerify = await Get.find<ApiCallerController>().getOwnProfileBasic();
+        final apiVerify = await ApiCallsV1.getOwnProfileBasic();
 
         if (apiVerify is OwnProfileBasic) {
           // Reassign from saved user, as these don't come with the API

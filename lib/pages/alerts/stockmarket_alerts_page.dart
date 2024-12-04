@@ -1,6 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 // Package imports:
 import 'package:provider/provider.dart';
@@ -9,7 +10,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -66,7 +67,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       routeWithDrawer = true;
     }
     _stocksInitialised = _initialiseStocks();
-    analytics.logScreenView(screenName: 'stockMarket');
+    analytics?.logScreenView(screenName: 'stockMarket');
   }
 
   @override
@@ -113,8 +114,13 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
                             child: SingleChildScrollView(
                               child: Column(
                                 children: <Widget>[
-                                  _alertActivator(),
-                                  const Divider(),
+                                  if (!Platform.isWindows)
+                                    Column(
+                                      children: [
+                                        _alertActivator(),
+                                        const Divider(),
+                                      ],
+                                    ),
                                   const Text("Traded Companies"),
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -232,21 +238,22 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           },
         ),
         const SizedBox(width: 5),
-        IconButton(
-          icon: const Icon(
-            Icons.settings,
+        if (!Platform.isWindows)
+          IconButton(
+            icon: const Icon(
+              Icons.settings,
+            ),
+            onPressed: () async {
+              return showDialog(
+                useRootNavigator: false,
+                context: context,
+                barrierDismissible: true,
+                builder: (BuildContext context) {
+                  return SharePriceOptions(_themeProvider, _settingsP, widget.stockMarketInMenuCallback);
+                },
+              );
+            },
           ),
-          onPressed: () async {
-            return showDialog(
-              useRootNavigator: false,
-              context: context,
-              barrierDismissible: true,
-              builder: (BuildContext context) {
-                return SharePriceOptions(_themeProvider, _settingsP, widget.stockMarketInMenuCallback);
-              },
-            );
-          },
-        ),
       ],
     );
   }
@@ -270,7 +277,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
           setState(() {
             _fbUser?.stockMarketNotification = value;
           });
-          firestore.subscribeToStockMarketNotification(value);
+          FirestoreHelper().subscribeToStockMarketNotification(value);
         },
       ),
     );
@@ -311,11 +318,11 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
       // the alerts pages, like in other cases
       if (widget.calledFromMenu) {
-        _fbUser = await firestore.getUserProfile(); // We are NOT getting updated stocks every time
+        _fbUser = await FirestoreHelper().getUserProfile(); // We are NOT getting updated stocks every time
       }
 
-      final allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
-      final userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
+      final allStocksReply = await ApiCallsV1.getAllStocks();
+      final userStocksReply = await ApiCallsV1.getUserStocks();
 
       if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
         _errorInitializing = true;

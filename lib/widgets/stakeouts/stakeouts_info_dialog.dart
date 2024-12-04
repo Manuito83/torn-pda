@@ -17,7 +17,15 @@ class StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
   final _maxDelayController = TextEditingController();
   final _maxDelayFormState = GlobalKey<FormState>();
 
+  final _scrollController = ScrollController();
+
   final bool _firstLoad = true;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +39,10 @@ class StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
           child: AlertDialog(
             title: const Text("Stakeouts...?"),
             content: Scrollbar(
+              controller: _scrollController,
               thumbVisibility: true,
               child: SingleChildScrollView(
-                reverse: true,
+                controller: _scrollController,
                 child: Padding(
                   padding: const EdgeInsets.only(right: 12),
                   child: Column(
@@ -44,7 +53,7 @@ class StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
-                      const Text.rich(
+                      Text.rich(
                         TextSpan(
                           text:
                               "The Stakeouts section allows you configure specific alerts for players of your choice.\n\n"
@@ -72,7 +81,7 @@ class StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 10),
+                        padding: const EdgeInsets.only(top: 10, bottom: 50),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: <Widget>[

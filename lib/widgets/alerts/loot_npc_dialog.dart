@@ -1,12 +1,11 @@
 // Flutter imports:
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 
 class NpcAlertModel {
@@ -32,11 +31,19 @@ class LootAlertsDialogState extends State<LootAlertsDialog> {
 
   Future? _npcsInitialised;
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _firebaseUserModel = widget.userModel;
     _npcsInitialised = _initialiseNpcs();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -46,8 +53,10 @@ class LootAlertsDialogState extends State<LootAlertsDialog> {
       content: SizedBox(
         width: double.maxFinite,
         child: Scrollbar(
+          controller: _scrollController,
           thumbVisibility: true,
           child: SingleChildScrollView(
+            controller: _scrollController,
             child: Column(
               children: [
                 const Text(
@@ -140,7 +149,7 @@ class LootAlertsDialogState extends State<LootAlertsDialog> {
       } else if (id == "21") {
         name = "Tiny";
       } else {
-        final tornTarget = await Get.find<ApiCallerController>().getTarget(playerId: id);
+        final tornTarget = await ApiCallsV1.getTarget(playerId: id);
         if (tornTarget is TargetModel) {
           name = tornTarget.name;
         } else {
@@ -214,7 +223,7 @@ class NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
                 value: widget.firebaseUserModel!.lootAlerts.contains("${widget.npcAlertModel.id}:4"),
                 onChanged: (value) {
                   setState(() {
-                    firestore.toggleNpcAlert(id: widget.npcAlertModel.id, level: 4, active: value);
+                    FirestoreHelper().toggleNpcAlert(id: widget.npcAlertModel.id, level: 4, active: value);
                   });
                 },
               ),
@@ -236,7 +245,7 @@ class NpcAlertConfigLineState extends State<NpcAlertConfigLine> {
                 value: widget.firebaseUserModel!.lootAlerts.contains("${widget.npcAlertModel.id}:5"),
                 onChanged: (value) {
                   setState(() {
-                    firestore.toggleNpcAlert(id: widget.npcAlertModel.id, level: 5, active: value);
+                    FirestoreHelper().toggleNpcAlert(id: widget.npcAlertModel.id, level: 5, active: value);
                   });
                 },
               ),

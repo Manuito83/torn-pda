@@ -1,10 +1,9 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -156,9 +155,9 @@ Future<void> openNukeReviveDialog(BuildContext _, ThemeProvider themeProvider, O
                                     }
                                   },
                               ),
-                              const TextSpan(
+                              TextSpan(
                                 text: "\n\nEach revive must be paid directly to the reviver (unless under a "
-                                    "contract with Nuke) and costs \$1 million or 1 Xanax.",
+                                    "contract with Nuke) and costs ${context.read<SettingsProvider>().reviveNukePrice}.",
                               ),
                               const TextSpan(
                                 text: "\n\nPlease keep in mind if you don't pay for the requested revive, "
@@ -177,8 +176,7 @@ Future<void> openNukeReviveDialog(BuildContext _, ThemeProvider themeProvider, O
                             onPressed: () async {
                               // User can be null if we are not accessing from the Profile page
                               if (user == null) {
-                                final apiResponse =
-                                    await Get.find<ApiCallerController>().getOwnProfileExtended(limit: 3);
+                                final apiResponse = await ApiCallsV1.getOwnProfileExtended(limit: 3);
                                 if (apiResponse is OwnProfileExtended) {
                                   user = apiResponse;
                                 }

@@ -12,7 +12,7 @@ import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -194,8 +194,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    final otherProfile =
-        await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: widget.profileId.toString());
+    final otherProfile = await ApiCallsV1.getOtherProfileExtended(playerId: widget.profileId.toString());
 
     // FRIEND CHECK
     if (!mounted) return; // We could be unmounted when rapidly skipping the first target
@@ -554,13 +553,13 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       try {
         estimatedStats = StatsCalculator.calculateStats(
-          criminalRecordTotal: otherProfile.criminalrecord!.total,
+          criminalRecordTotal: otherProfile.personalstats!.criminaloffenses,
           level: otherProfile.level,
           networth: otherProfile.personalstats!.networth,
           rank: otherProfile.rank,
         );
       } catch (e) {
-        estimatedStats = "(EST) UNK";
+        estimatedStats = "UNK";
       }
     }
 
@@ -579,7 +578,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     int? lsd = 0;
 
     List<Widget> additional = <Widget>[];
-    final own = await Get.find<ApiCallerController>().getOwnPersonalStats();
+    final own = await ApiCallsV1.getOwnPersonalStats();
     if (own is OwnPersonalStatsModel) {
       // XANAX
       final int otherXanax = otherProfile.personalstats!.xantaken!;

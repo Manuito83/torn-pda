@@ -4,6 +4,7 @@
 
 // Dart imports:
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:torn_pda/main.dart';
@@ -404,8 +405,8 @@ class Competition {
         position: json["position"]?.toString(),
       );
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Competition model");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Competition model");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
       logToUser("PDA Error at Competition model: $e, $trace");
       throw ArgumentError("PDA Crash at Competition model");
     }

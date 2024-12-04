@@ -15,7 +15,7 @@ import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -153,7 +153,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Navigator.of(context).pop();
 
                             final String attackId = widget.url.split("user2ID=")[1];
-                            final t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
+                            final t = await ApiCallsV1.getOtherProfileExtended(playerId: attackId);
                             dynamic attackAssistMessageArg;
                             if (t is OtherProfileModel) {
                               final SpiesController spyController = Get.find<SpiesController>();
@@ -294,7 +294,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     ),
                     const SizedBox(height: 4),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -321,7 +321,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -361,7 +361,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         onPressed: _shortcutsProvider.activeShortcuts.isNotEmpty
                             ? () {
@@ -391,7 +391,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -420,7 +420,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                     ),
                     if (widget.inAppWebview != null)
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                         child: ElevatedButton(
                           child: const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -448,7 +448,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                       ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      padding: EdgeInsets.symmetric(horizontal: 10, vertical: Platform.isWindows ? 2 : 0),
                       child: ElevatedButton(
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,

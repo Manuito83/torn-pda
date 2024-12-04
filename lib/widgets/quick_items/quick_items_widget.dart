@@ -38,6 +38,8 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
 
   late Timer _inventoryRefreshTimer;
 
+  final _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
@@ -47,6 +49,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   @override
   void dispose() {
     _inventoryRefreshTimer.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -69,7 +72,9 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                     3,
               ),
               child: Scrollbar(
+                controller: _scrollController,
                 child: SingleChildScrollView(
+                  controller: _scrollController,
                   child: Wrap(
                     alignment: WrapAlignment.center,
                     spacing: 5,

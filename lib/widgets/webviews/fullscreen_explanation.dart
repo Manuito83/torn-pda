@@ -55,7 +55,7 @@ class FullScreenExplanationDialog extends StatelessWidget {
                       "rounded corners make tabs difficult to select.\n\n"
                       "It is also possible to launch the browser in full screen mode by default, or select which "
                       "action (single tap or long-press) does what.\n\n"
-                      "You can exit the fullscreen mode by taping again the full screen / window icon in the vertical "
+                      "You can exit the fullscreen mode by tapping again the full screen / window icon in the vertical "
                       "menu in the tab bar, or directly by long-pressing the three-dotted-icon "
                       "(highlighted now in orange color) which might be faster to do. If you are not using tabs, it is "
                       "also possible to exit the fullscreen mode by double tapping or swiping down at the top of the "

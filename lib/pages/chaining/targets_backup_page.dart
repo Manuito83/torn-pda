@@ -441,26 +441,36 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
       existing = '';
       _targetsProvider.wipeAllTargets();
     }
-    await _importTargets();
+
+    final totalTargets = _tentativeImportModel.targetBackup!.length;
+
+    _importHintText = "Starting import of $totalTargets targets...";
+    _importHintStyle = Colors.blue;
+    _importHintWeight = FontWeight.normal;
+    if (mounted) setState(() {});
+
+    await for (final progress in _importTargets()) {
+      if (mounted) {
+        setState(() {
+          _importHintText = "Imported $progress of $totalTargets targets...";
+        });
+      }
+    }
+
     if (mounted) {
       setState(() {
-        // More readable variables makes it easier
-        final total = _tentativeImportModel.targetBackup!.length;
-        final numWorked = _importSuccessEvents;
-        _importInputController.text = "";
-        if (numWorked == 0) {
-          _importHintText = "Import of all $total targets failed! "
+        if (_importSuccessEvents == 0) {
+          _importHintText = "Import of all $totalTargets targets failed! "
               "Probably repeated or incorrect IDs?";
           _importHintStyle = Colors.red;
           _importHintWeight = FontWeight.bold;
-        } else if (numWorked == total) {
-          _importHintText = "Imported $numWorked new targets$existing!";
+        } else if (_importSuccessEvents == totalTargets) {
+          _importHintText = "Imported $_importSuccessEvents new targets$existing!";
           _importHintStyle = Colors.green;
           _importHintWeight = FontWeight.bold;
         } else {
-          _importHintText = "Imported $numWorked new targets$existing, "
-              "but there were ${total - _importSuccessEvents} "
-              "targets that failed to import! "
+          _importHintText = "Imported $_importSuccessEvents new targets$existing, "
+              "but ${totalTargets - _importSuccessEvents} targets failed! "
               "Probably repeated or incorrect IDs?";
           _importHintStyle = Colors.red;
           _importHintWeight = FontWeight.bold;
@@ -469,27 +479,37 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
     }
   }
 
-  Future<void> _importTargets() async {
+  Stream<int> _importTargets() async* {
     _importActive = true; // Show import status
     _importSuccessEvents = 0;
+
     final dynamic attacks = await _targetsProvider.getAttacks();
-    for (final import in _tentativeImportModel.targetBackup!) {
-      final importResult = await _targetsProvider.addTarget(
-        targetId: import.id.toString(),
-        attacks: attacks,
-        notes: import.notes,
-        notesColor: import.notesColor,
-      );
-      if (importResult.success) {
-        if (mounted) {
-          setState(() {
-            _importSuccessEvents++;
-          });
+    for (final importedTarget in _tentativeImportModel.targetBackup!) {
+      // Clear the target so that we can import the last one
+      for (final existingTarget in _targetsProvider.allTargets) {
+        if (existingTarget.playerId == importedTarget.id) {
+          _targetsProvider.deleteTarget(existingTarget);
+          break;
         }
       }
+
+      final importResult = await _targetsProvider.addTarget(
+        targetId: importedTarget.id.toString(),
+        attacks: attacks,
+        notes: importedTarget.notes,
+        notesColor: importedTarget.notesColor,
+      );
+
+      if (importResult.success) {
+        _importSuccessEvents++;
+      }
+
+      // Emit the current progress
+      yield _importSuccessEvents;
+
       // Avoid issues with API limits
       if (_tentativeImportModel.targetBackup!.length > 60) {
-        await Future.delayed(const Duration(seconds: 1), () {});
+        await Future.delayed(const Duration(seconds: 1));
       }
     }
   }

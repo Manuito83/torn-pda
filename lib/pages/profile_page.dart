@@ -38,7 +38,8 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -50,6 +51,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/profile/events_timeline_fixes.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/profile/arrival_button.dart';
@@ -148,7 +150,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late ChainStatusProvider _chainProvider;
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
   final WarController _w = Get.find<WarController>();
 
   late int _travelNotificationAhead;
@@ -322,7 +324,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _resetApiTimer(initCall: true);
     });
 
-    analytics.logScreenView(screenName: 'profile');
+    analytics?.logScreenView(screenName: 'profile');
 
     routeWithDrawer = true;
     routeName = "profile`";
@@ -371,6 +373,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   Future<void> didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (Platform.isWindows) return;
+
     if (state == AppLifecycleState.resumed) {
       _resetApiTimer(initCall: true);
     } else if (state == AppLifecycleState.paused) {
@@ -1212,7 +1216,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ],
                           )
                         else
-                          // Travelling while in hospital (repatriation)
+                          // Traveling while in hospital (repatriation)
                           Column(
                             children: [
                               Row(
@@ -1257,7 +1261,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         ),
                         if (!_dedicatedTravelCard) _travelWidget(),
                         descriptionWidget(),
-                        if (_user!.status!.state == 'Hospital' && _w.nukeReviveActive)
+                        if (_user!.status!.state != 'Hospital' && _w.nukeReviveActive)
                           Padding(
                             padding: const EdgeInsets.only(left: 13, top: 10),
                             child: NukeReviveButton(
@@ -2894,22 +2898,24 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     for (final Event e in _events) {
-      String message = HtmlParser.fix(e.event);
-      message = message;
-      message = message.replaceAll('View the details here!', '');
-      message = message.replaceAll('Please click here to continue.', '');
-      message = message.replaceAll(' [view]', '.');
-      message = message.replaceAll(' [View]', '');
-      message = message.replaceAll(' Please click here.', '');
-      message = message.replaceAll(' Please click here to collect your funds.', '');
+      if (e.event == null) continue;
+
+      // Determine font weight based on unread status
+      final FontWeight fontWeight = unreadCount! >= loopCount ? FontWeight.bold : FontWeight.normal;
+
+      // Adapt text
+      e.event = processEventMessage(e.event!);
+
+      // Build the message widget
+      // (the events API v1 has got many issues in http links, so we need to correct them manually)
+      final Widget messageWidget = buildEventMessageWidget(e.event!, fontWeight, _launchBrowser, _themeProvider!);
 
       final Widget insideIcon = EventIcons(
-        message: message,
+        message: e.event!,
         themeProvider: _themeProvider,
       );
 
-      IndicatorStyle iconBubble;
-      iconBubble = IndicatorStyle(
+      IndicatorStyle iconBubble = IndicatorStyle(
         width: 30,
         height: 30,
         drawGap: true,
@@ -2928,32 +2934,22 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final eventTime = DateTime.fromMillisecondsSinceEpoch(e.timestamp! * 1000);
 
       final event = TimelineTile(
-        isFirst: loopCount == 1 ? true : false,
-        isLast: loopCount == maxCount ? true : false,
+        isFirst: loopCount == 1,
+        isLast: loopCount == maxCount,
         alignment: TimelineAlign.manual,
         indicatorStyle: iconBubble,
         lineXY: 0.25,
         endChild: Container(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              message,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: unreadCount! >= loopCount ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ),
+          padding: const EdgeInsets.all(8.0),
+          child: messageWidget,
         ),
         startChild: Container(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 5.0),
-            child: Text(
-              _occurrenceTimeFormatted(eventTime),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: unreadCount >= loopCount ? FontWeight.bold : FontWeight.normal,
-              ),
+          padding: const EdgeInsets.only(right: 5.0),
+          child: Text(
+            _occurrenceTimeFormatted(eventTime),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: fontWeight,
             ),
           ),
         ),
@@ -3015,9 +3011,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 onTap: () {
                   _launchBrowser(url: 'https://www.torn.com/events.php#/step=all', shortTap: true);
                 },
-                child: Padding(
+                child: const Padding(
                   padding: EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size: 18),
+                  child: Icon(Icons.open_in_new, size: 18),
                 ),
               ),
             ],
@@ -4918,7 +4914,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber! > limit) limit = _messagesShowNumber!;
     if (_eventsShowNumber! > limit) limit = _eventsShowNumber!;
 
-    final apiResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: limit);
+    final apiResponse = await ApiCallsV1.getOwnProfileExtended(limit: limit);
 
     // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
     // Otherwise, call the API
@@ -4927,7 +4923,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_chainProvider.chainModel is ChainModel) {
       chain = _chainProvider.chainModel;
     } else {
-      chain = await Get.find<ApiCallerController>().getChainStatus();
+      chain = await ApiCallsV1.getChainStatus();
     }
 
     if (mounted) {
@@ -5000,9 +4996,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user == null) return;
 
     try {
-      final miscApiResponse = await Get.find<ApiCallerController>().getOwnProfileMisc();
+      final miscApiResponse = await ApiCallsV1.getOwnProfileMisc();
 
-      _tornEducationModel ??= await Get.find<ApiCallerController>().getEducation();
+      _tornEducationModel ??= await ApiCallsV1.getEducation();
 
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
@@ -5104,7 +5100,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_user!.faction!.factionId == 0) return;
       if (!_settingsProvider!.rankedWarsInProfile) return;
 
-      final dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
+      final dynamic apiResponse = await ApiCallsV1.getRankedWars();
       if (apiResponse is RankedWarsModel) {
         for (final warMap in apiResponse.rankedwars!.entries) {
           if (warMap.value.factions!.keys.contains(_user!.faction!.factionId.toString())) {
@@ -5141,7 +5137,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // If we should call the API, fetch the data and update SharedPreferences
       if (shouldCallApi || nextFetchTime == 0) {
         log("Fetching job addiction!");
-        final dynamic apiResponse = await Get.find<ApiCallerController>().getCompanyEmployees();
+        final dynamic apiResponse = await ApiCallsV1.getCompanyEmployees();
         if (apiResponse is CompanyEmployees) {
           for (final eMap in apiResponse.companyEmployees!.entries) {
             // Loop until we find the user
@@ -5197,7 +5193,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         int? lastTs = eventsSave[0].timestamp;
 
         // Get new events after that and add them
-        final dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs);
+        final dynamic newEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: lastTs);
         if (newEventsResponse is List<Event>) {
           if (newEventsResponse.isNotEmpty) {
             for (int i = 0; i < newEventsResponse.length; i++) {
@@ -5238,7 +5234,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // Calculate one month ago
       log("Events save elapse more than 30 minutes, getting all events");
       final int monthAgo = ((DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
-      final dynamic allEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: monthAgo);
+      final dynamic allEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: monthAgo);
       if (allEventsResponse is List<Event>) {
         // Save events and last retrieved timestamp
         List<String> eventsListToSave = [];
@@ -5264,16 +5260,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e, trace) {
       logToUser("PDA Error at Profile Events: $e, $trace");
-      FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Profile Events");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
   Future<void> _getFactionCrimes() async {
     try {
       if (_user == null) return;
-      final factionCrimes =
-          await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user!.playerId.toString());
+      final factionCrimes = await ApiCallsV1.getFactionCrimes(playerId: _user!.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
@@ -5849,7 +5844,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       androidScheduleMode: exactAlarmsPermissionAndroid
           ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG
@@ -5876,27 +5870,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     if (pendingNotificationRequests.isNotEmpty) {
       for (final notification in pendingNotificationRequests) {
-        if (notification.payload!.contains('travel')) {
+        if (notification.id == 201) {
           travel = true;
-        } else if (notification.payload!.contains('energy')) {
+        }
+        if (notification.id == 101) {
           energy = true;
-        } else if (notification.payload!.contains('nerve')) {
+        }
+        if (notification.id == 102) {
           nerve = true;
-        } else if (notification.payload!.contains('life')) {
+        }
+        if (notification.id == 103) {
           life = true;
-        } else if (notification.payload!.contains('drugs')) {
+        }
+        if (notification.id == 104) {
           drugs = true;
-        } else if (notification.payload!.contains('medical')) {
+        }
+        if (notification.id == 105) {
           medical = true;
-        } else if (notification.payload!.contains('booster')) {
+        }
+        if (notification.id == 106) {
           booster = true;
-        } else if (notification.payload!.contains('hospital')) {
+        }
+        if (notification.id == 107) {
           hospital = true;
-        } else if (notification.payload!.contains('jail')) {
+        }
+        if (notification.id == 108) {
           jail = true;
-        } else if (notification.payload!.contains('war')) {
+        }
+        if (notification.id == 109) {
           war = true;
-        } else if (notification.payload!.contains('raceStart')) {
+        }
+        if (notification.id == 201) {
           raceStart = true;
         }
       }
@@ -7377,7 +7381,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (dynamic element) async {
-      final rentDetails = await Get.find<ApiCallerController>().getProperty(propertyId: element.toString());
+      final rentDetails = await ApiCallsV1.getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         final timeLeft = rentDetails.property!.rented!.daysLeft!;

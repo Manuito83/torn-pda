@@ -26,6 +26,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
+import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   final UserDetailsProvider userDetailsProvider;
@@ -50,6 +51,16 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
   late WebViewProvider _webViewProvider;
+
+  final List<TabsWipeTimeRange> tabsRemoveTimeRangesList = [
+    TabsWipeTimeRange.oneDay,
+    TabsWipeTimeRange.twoDays,
+    TabsWipeTimeRange.threeDays,
+    TabsWipeTimeRange.fiveDays,
+    TabsWipeTimeRange.sevenDays,
+    TabsWipeTimeRange.fifteenDays,
+    TabsWipeTimeRange.oneMonth,
+  ];
 
   @override
   void initState() {
@@ -188,6 +199,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _profile() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -199,6 +211,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ],
         ),
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -274,6 +287,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               */
             if (_settingsProvider.extraPlayerInformation)
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -312,6 +326,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ),
             if (_settingsProvider.extraPlayerInformation)
               Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -430,6 +445,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _userScripts() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -441,6 +457,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ],
         ),
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -531,6 +548,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _linkPreview() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -542,6 +560,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ],
         ),
         Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -582,6 +601,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _pinchGesture() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -592,28 +612,24 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ],
         ),
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text("Zoom in/out pinch gestures"),
-                  Switch(
-                    value: _settingsProvider.iosBrowserPinch,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.setIosBrowserPinch = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
-                  ),
-                ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Zoom in/out pinch gestures"),
+              Switch(
+                value: _settingsProvider.iosBrowserPinch,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.setIosBrowserPinch = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -621,42 +637,39 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _iosDisallowOverScroll() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text("Disallow overscroll"),
-                  Switch(
-                    value: _settingsProvider.iosDisallowOverscroll,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.setIosDisallowOverscroll = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
-                  ),
-                ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Disallow overscroll"),
+              Switch(
+                value: _settingsProvider.iosDisallowOverscroll,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.setIosDisallowOverscroll = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
               ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Certain iOS versions (e.g.: iOS 16) might have issues with Torn overs-scrolling horizontally. '
+            'By using this option you might get rid of such behavior. NOTE: this will restrict pull-to-refresh '
+            'to work only from swipes at the top part of the browser.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'Certain iOS versions (e.g.: iOS 16) might have issues with Torn overs-scrolling horizontally. '
-                'By using this option you might get rid of such behavior. NOTE: this will restrict pull-to-refresh '
-                'to work only from swipes at the top part of the browser.',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -664,41 +677,38 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _reverseNavigationSwipe() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text("Reverse navigation swipe"),
-                  Switch(
-                    value: _settingsProvider.browserReverseNavitagtionSwipe,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.browserReverseNavigationSwipe = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
-                  ),
-                ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Reverse navigation swipe"),
+              Switch(
+                value: _settingsProvider.browserReverseNavitagtionSwipe,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.browserReverseNavigationSwipe = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
               ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'By default, swiping left-to-right in the page title navigates backwards, and right-to-left navigates '
+            ' forwards. Enable this option to reverse the swipe direction',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                'By default, swiping left-to-right in the page title navigates backwards, and right-to-left navigates '
-                ' forwards. Enable this option to reverse the swipe direction',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -706,6 +716,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _maintenance() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -716,42 +727,60 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ],
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text("Cache enabled"),
-                  Switch(
-                    value: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Cache enabled"),
+              Switch(
+                value: Platform.isWindows
+                    ? true
+                    : _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
                         ? _settingsProvider.webviewCacheEnabled
                         : _settingsProvider.webviewCacheEnabledRemoteConfig == "on"
                             ? true
                             : false,
-                    onChanged: _settingsProvider.webviewCacheEnabledRemoteConfig != "user"
+                onChanged: Platform.isWindows
+                    ? null
+                    : _settingsProvider.webviewCacheEnabledRemoteConfig != "user"
                         ? null
                         : (value) {
                             setState(() {
                               _settingsProvider.webviewCacheEnabled = value;
                             });
                           },
-                    activeTrackColor: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                activeTrackColor: Platform.isWindows
+                    ? Colors.grey[700]
+                    : _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
                         ? Colors.lightGreenAccent
                         : Colors.grey[700],
-                    activeColor:
-                        _settingsProvider.webviewCacheEnabledRemoteConfig == "user" ? Colors.green : Colors.grey[700],
-                    inactiveThumbColor:
-                        _settingsProvider.webviewCacheEnabledRemoteConfig == "user" ? null : Colors.grey[800],
-                  ),
-                ],
+                activeColor: Platform.isWindows
+                    ? Colors.grey[700]
+                    : _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                        ? Colors.green
+                        : Colors.grey[700],
+                inactiveThumbColor: Platform.isWindows
+                    ? Colors.grey[800]
+                    : _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+                        ? null
+                        : Colors.grey[800],
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Platform.isWindows
+              ? Text(
+                  "Cache is enabled from PDA and can't be changed right now",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
+              : _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
                   ? Text(
                       "Enable webview cache to improve performance (recommended). Disabling this might be useful if "
                       "you experience issues with Torn's website cache, such as images loading incorrectly, increased "
@@ -779,78 +808,76 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                             fontStyle: FontStyle.italic,
                           ),
                         ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text("Browser cache"),
-                  ElevatedButton(
-                    child: const Text("Clear"),
-                    onPressed: () async {
-                      _webViewProvider.clearCacheAndTabs();
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Browser cache"),
+              ElevatedButton(
+                child: const Text("Clear"),
+                onPressed: () async {
+                  _webViewProvider.clearCacheAndTabs();
 
-                      BotToast.showText(
-                        text: "Browser cache and tabs have been reset!",
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.grey[600]!,
-                        duration: const Duration(seconds: 3),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    },
-                  ),
-                ],
+                  BotToast.showText(
+                    text: "Browser cache and tabs have been reset!",
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: Colors.grey[600]!,
+                    duration: const Duration(seconds: 3),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                },
               ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Note: this will clear your browser's cache and current tabs. It can be "
+            'useful in case of errors (sections not loading correctly, etc.). '
+            "You'll be logged-out from Torn and all other sites",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                "Note: this will clear your browser's cache and current tabs. It can be "
-                'useful in case of errors (sections not loading correctly, etc.). '
-                "You'll be logged-out from Torn and all other sites",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Restore session cookie"),
+              Switch(
+                value: _settingsProvider.restoreSessionCookie,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.restoreSessionCookie = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
               ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Text(
+            'Enable this option if you are getting logged out from Torn consistently; '
+            'Torn PDA will try to reestablish your session ID when the browser opens',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Text("Restore session cookie"),
-                  Switch(
-                    value: _settingsProvider.restoreSessionCookie,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.restoreSessionCookie = value;
-                      });
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Text(
-                'Enable this option if you are getting logged out from Torn consistently; '
-                'Torn PDA will try to reestablish your session ID when the browser opens',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
@@ -858,6 +885,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _travel() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -891,12 +919,52 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              Text(
-                'Removes airplane and cloud animation when travelling',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
+              Flexible(
+                child: Text(
+                  'Removes airplane and cloud animation when traveling',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Remove quick return button"),
+              Switch(
+                value: _settingsProvider.removeTravelQuickReturnButton,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.removeTravelQuickReturnButton = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  "By default, when abroad, you'll see a home icon button that you can "
+                  "double-tap to initiate your travel back to Torn. You can optionally disable "
+                  "it by using this option",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ],
@@ -908,6 +976,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _energyExpenditureWarning() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1035,6 +1104,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     final currentLifeMax = widget.userDetailsProvider.basic?.life?.maximum ?? -1;
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1539,6 +1609,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _general() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1690,6 +1761,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   Column _tabs() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1700,17 +1772,24 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ],
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-          child: Text(
-            'Tabs might increase memory and processor usage; be sure that you get familiar with how tabs work (see '
-            'the Tips section). It is highly recommended to use tabs to improve your Torn PDA experience.',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                child: Text(
+                  'Tabs might increase memory and processor usage; be sure that you get familiar with how tabs work (see '
+                  'the Tips section). It is highly recommended to use tabs to improve your Torn PDA experience.',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1762,9 +1841,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         */
         if (_settingsProvider.useTabsFullBrowser)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (_settingsProvider.useTabsFullBrowser)
                 Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -1796,6 +1877,103 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         ),
                       ),
                     ),
+                    // -- Unused tabs
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          const Text("Remove unused tabs"),
+                          Switch(
+                            value: _webViewProvider.removeUnusedTabs,
+                            onChanged: (enabled) {
+                              _webViewProvider.removeUnusedTabs = enabled;
+                              _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: enabled);
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                      child: Text(
+                        'Removes unused tabs periodically (checks are performed when the app starts and then once every 24 hours)',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    if (_webViewProvider.removeUnusedTabs)
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30, right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(child: Text("Include locked tabs")),
+                                    ],
+                                  ),
+                                ),
+                                Switch(
+                                  value: _webViewProvider.removeUnusedTabsIncludesLocked,
+                                  onChanged: (value) {
+                                    _webViewProvider.removeUnusedTabsIncludesLocked = value;
+                                    // Ensure we update the periodic task parameters
+                                    _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: true);
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30, right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(child: const Text("Inactive for")),
+                                    ],
+                                  ),
+                                ),
+                                DropdownButton<TabsWipeTimeRange>(
+                                  value: _webViewProvider.removeUnusedTabsRangeDays,
+                                  items: tabsRemoveTimeRangesList.map((TabsWipeTimeRange range) {
+                                    return DropdownMenuItem<TabsWipeTimeRange>(
+                                      value: range,
+                                      child: Text(range.displayName),
+                                    );
+                                  }).toList(),
+                                  onChanged: (TabsWipeTimeRange? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _webViewProvider.removeUnusedTabsRangeDays = newValue;
+                                      });
+                                      // Ensure we update the periodic task parameters
+                                      _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: true);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    // -- Unused tabs ENDS --
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
@@ -1874,29 +2052,26 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    _showColorPickerTabs(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        const Text("Choose hide bar colour"),
-                        Container(
-                          width: 25,
-                          height: 25,
-                          color: Color(_settingsProvider.tabsHideBarColor),
-                        )
-                      ],
-                    ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      const Text("Select hide bar color"),
+                      ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(_settingsProvider.tabsHideBarColor).withAlpha(255),
+                            foregroundColor: Colors.white, // Ensures icon color is always white
+                          ),
+                          child: Icon(Icons.palette), // No need to set icon color explicitly
+                          onPressed: () => _showColorPickerTabs(context)),
+                    ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    'Choose the colour of the bar that indicates that tabs are hidden',
+                    'Choose the color of the bar that indicates that tabs are hidden',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,
@@ -1909,6 +2084,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         if (_settingsProvider.useTabsFullBrowser)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 30),
               const Row(
@@ -1987,6 +2163,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         if (_settingsProvider.useTabsFullBrowser)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
@@ -2503,12 +2680,93 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        //--
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                  Text("Short tap opens full screen"),
+                ],
+              )),
+              Switch(
+                value: _settingsProvider.fullScreenByShortChainingTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByShortChainingTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a target is short-tapped in the Chaining section. "
+            "Defaul to OFF. Note that you can still access the chaining sequence controls by "
+            "double tapping the main tab",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        //--
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                  Text("Long tap opens full screen"),
+                ],
+              )),
+              Switch(
+                value: _settingsProvider.fullScreenByLongChainingTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByLongChainingTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a target is long-pressed in the Chaining section. "
+            "Defaul to OFF. Note that you can still access the chaining sequence controls by "
+            "double tapping the main tab",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }
 
   Column _downloads() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -2761,14 +3019,14 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
         switch (value) {
           case 0:
-            analytics.setUserProperty(name: "browser_style", value: "default");
+            analytics?.setUserProperty(name: "browser_style", value: "default");
             _webViewProvider.bottomBarStyleEnabled = false;
           case 1:
-            analytics.setUserProperty(name: "browser_style", value: "bottom_bar");
+            analytics?.setUserProperty(name: "browser_style", value: "bottom_bar");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 1;
           case 2:
-            analytics.setUserProperty(name: "browser_style", value: "dialog");
+            analytics?.setUserProperty(name: "browser_style", value: "dialog");
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 2;
         }

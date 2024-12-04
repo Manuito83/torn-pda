@@ -29,7 +29,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
   final TextEditingController _tornStatsKeyController = TextEditingController();
   final TextEditingController _tscKeyController = TextEditingController();
 
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   @override
   void initState() {

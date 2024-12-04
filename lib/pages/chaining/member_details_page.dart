@@ -3,13 +3,12 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -436,7 +435,7 @@ class MemberDetailsPageState extends State<MemberDetailsPage> {
   }
 
   Future _fetchMemberDetails() async {
-    final dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: widget.memberId);
+    final dynamic myNewTargetModel = await ApiCallsV1.getTarget(playerId: widget.memberId);
 
     if (myNewTargetModel is TargetModel) {
       _member = myNewTargetModel;

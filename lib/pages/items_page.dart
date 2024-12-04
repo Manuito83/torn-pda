@@ -14,7 +14,8 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/inventory_model.dart';
 import 'package:torn_pda/models/items/items_sort.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -88,7 +89,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     super.initState();
     _loadedApiItems = _getAllItems();
     _searchController.addListener(onSearchInputTextChange);
-    analytics.logScreenView(screenName: 'items');
+    analytics?.logScreenView(screenName: 'items');
 
     routeWithDrawer = true;
     routeName = "items";
@@ -545,10 +546,10 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   Future _getAllItems() async {
     // First get all Torn items
-    final apiItems = await Get.find<ApiCallerController>().getItems();
+    final apiItems = await ApiCallsV1.getItems();
 
     // Removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
-    final apiInventory = null; // = await Get.find<ApiCallerController>().getInventory();
+    final apiInventory = null; // = await ApiCallsV1.getInventory();
 
     if (apiItems is! ItemsModel) {
       final ApiError error = apiItems as ApiError;

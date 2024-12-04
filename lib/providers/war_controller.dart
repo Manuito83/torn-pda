@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:developer' as dev;
 import 'package:csv/csv.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -19,9 +18,11 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
+import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -50,6 +51,8 @@ class WarController extends GetxController {
 
   bool updating = false;
   bool _stopUpdate = false;
+
+  bool _integrityChecking = false;
 
   bool showCaseStart = false;
 
@@ -159,7 +162,7 @@ class WarController extends GetxController {
       }
     }
 
-    final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: factionId);
+    final apiResult = await ApiCallsV1.getFaction(factionId: factionId);
     if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
       return "";
     }
@@ -246,7 +249,7 @@ class WarController extends GetxController {
 
     // Perform update
     try {
-      final dynamic updatedTarget = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: memberKey);
+      final dynamic updatedTarget = await ApiCallsV1.getOtherProfileExtended(playerId: memberKey);
       if (updatedTarget is OtherProfileModel) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
@@ -456,7 +459,7 @@ class WarController extends GetxController {
     int numberUpdated = 0;
 
     // Get player's current location
-    final apiPlayer = await Get.find<ApiCallerController>().getOwnProfileBasic();
+    final apiPlayer = await ApiCallsV1.getOwnProfileBasic();
     if (apiPlayer is ApiError) {
       return -1;
     }
@@ -467,7 +470,7 @@ class WarController extends GetxController {
     );
 
     for (final FactionModel f in factions) {
-      final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: f.id.toString());
+      final apiResult = await ApiCallsV1.getFaction(factionId: f.id.toString());
       if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
         return -1;
       }
@@ -730,7 +733,7 @@ class WarController extends GetxController {
   }
 
   dynamic getAllAttacks() async {
-    final result = await Get.find<ApiCallerController>().getAttacks();
+    final result = await ApiCallsV1.getAttacks();
     if (result is AttackModel) {
       return result;
     }
@@ -738,7 +741,7 @@ class WarController extends GetxController {
   }
 
   dynamic getOwnStats() async {
-    final result = await Get.find<ApiCallerController>().getOwnPersonalStats();
+    final result = await ApiCallsV1.getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -879,6 +882,10 @@ class WarController extends GetxController {
         currentSort = WarSortType.notesAsc;
       case 'bounty':
         currentSort = WarSortType.bounty;
+      case 'travelDistanceDes':
+        currentSort = WarSortType.travelDistanceDesc;
+      case 'travelDistanceAsc':
+        currentSort = WarSortType.travelDistanceAsc;
     }
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
@@ -892,6 +899,11 @@ class WarController extends GetxController {
   }
 
   void savePreferences() {
+    // Remove any duplicate members within each faction
+    for (final faction in factions) {
+      faction.members = Map.fromEntries(faction.members!.entries.toSet());
+    }
+
     List<String> factionList = [];
     for (final element in factions) {
       factionList.add(factionModelToJson(element));
@@ -946,6 +958,10 @@ class WarController extends GetxController {
         sortToSave = 'notesAsc';
       case WarSortType.bounty:
         sortToSave = 'bounty';
+      case WarSortType.travelDistanceDesc:
+        sortToSave = 'travelDistanceDes';
+      case WarSortType.travelDistanceAsc:
+        sortToSave = 'travelDistanceAsc';
     }
     Prefs().setWarMembersSort(sortToSave);
   }
@@ -971,52 +987,52 @@ class WarController extends GetxController {
     update();
   }
 
-  Future _integrityCheck({bool force = false}) async {
-    if (!force && DateTime.now().difference(_lastIntegrityCheck).inMinutes < 10) {
-      return;
-    }
+  Future<void> _integrityCheck({bool force = false}) async {
+    // Prevent concurrent execution
+    if (_integrityChecking) return;
+    _integrityChecking = true;
 
-    for (final FactionModel faction in factions) {
-      final apiResult = await Get.find<ApiCallerController>().getFaction(factionId: faction.id.toString());
-      if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
+    try {
+      if (!force && DateTime.now().difference(_lastIntegrityCheck).inMinutes < 10) {
         return;
       }
-      final FactionModel apiImport = apiResult as FactionModel;
 
-      bool changes = false;
+      // Parallel API calls for efficiency
+      final results = await Future.wait(factions.map((f) => ApiCallsV1.getFaction(factionId: f.id.toString())));
 
-      // Get a copy of the in-app faction members so that we can iterate safety and add/delete members
-      Map<String, Member> oldFactionMembers = Map.from(faction.members!);
+      for (int i = 0; i < factions.length; i++) {
+        final FactionModel faction = factions[i];
+        final dynamic apiResult = results[i];
 
-      // Remove members that do not longer belong to the faction
-      oldFactionMembers.removeWhere((memberId, memberDetails) {
-        if (!apiImport.members!.containsKey(memberId)) {
-          dev.log("${memberDetails.name} left faction!");
-          changes = true;
-          return true;
+        if (apiResult is ApiError || (apiResult is FactionModel && apiResult.id == null)) {
+          continue;
         }
-        return false;
-      });
+        final FactionModel apiImport = apiResult as FactionModel;
 
-      // If some members have left, update [faction.members] from the changes in [oldFactionMembers]
-      if (changes) {
-        faction.members = Map.from(oldFactionMembers);
+        // Remove members that no longer belong to the faction
+        faction.members = Map.fromEntries(faction.members!.entries.where(
+          (entry) => apiImport.members!.containsKey(entry.key),
+        ));
+
+        // Add new members without overwriting
+        apiImport.members!.forEach((key, value) {
+          if (!faction.members!.containsKey(key)) {
+            faction.members![key] = value;
+            updateSingleMemberFull(faction.members![key]!);
+          }
+        });
+
+        // Ensure no duplicates exist in the member list
+        faction.members = Map.fromEntries(faction.members!.entries.toSet());
       }
 
-      // Add new members that were not here before. We add them directly in [faction.members] so there is no need
-      // to track changes or use [oldFactionMembers] again here
-      apiImport.members!.forEach((key, value) {
-        if (!oldFactionMembers.containsKey(key)) {
-          faction.members![key] = apiImport.members![key];
-          updateSingleMemberFull(faction.members![key]!);
-        }
-      });
+      Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
+      savePreferences();
+      assessPendingNotifications();
+      update();
+    } finally {
+      _integrityChecking = false;
     }
-
-    Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
-    savePreferences();
-    assessPendingNotifications();
-    update();
   }
 
   int membersSortHospitalTime(Member m) {
@@ -1037,6 +1053,7 @@ class WarController extends GetxController {
       member.statsSpd = spy.speed;
       member.statsDef = spy.defense;
       member.statsDex = spy.dexterity;
+
       int known = 0;
       if (spy.strength != -1) known += spy.strength!;
       if (spy.speed != -1) known += spy.speed!;
@@ -1058,6 +1075,7 @@ class WarController extends GetxController {
       member.statsDefUpdated = spy.defenseTimestamp;
       member.statsDex = spy.dexterity;
       member.statsDexUpdated = spy.dexterityTimestamp;
+
       int known = 0;
       if (spy.strength != -1) known += spy.strength!;
       if (spy.speed != -1) known += spy.speed!;
@@ -1066,9 +1084,10 @@ class WarController extends GetxController {
       member.statsExactTotalKnown = known;
     }
 
+    // Continue with existing logic to determine spy source
     bool spyFound = false;
 
-    // Delete spy information if we don't allow mixed spies sources
+    // Clean stats if not allowed to mix spy sources
     if ((!spyController.allowMixedSpiesSources &&
             member.spySource != SpiesSource.yata &&
             spyController.spiesSource == SpiesSource.yata) ||
@@ -1078,7 +1097,7 @@ class WarController extends GetxController {
       _deleteSpiedStats(member);
     }
 
-    // Find the spy based in the current selected spy source
+    // Assign spies based on the source
     if (spyController.spiesSource == SpiesSource.yata) {
       final spy = spyController.getYataSpy(userId: member.memberId.toString(), name: member.name);
       if (spy != null) {
@@ -1152,6 +1171,8 @@ class WarController extends GetxController {
   }
 
   void assessPendingNotifications() async {
+    if (Platform.isWindows) return;
+
     try {
       // Get the current active notifications
       List<PendingNotificationRequest> active = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
@@ -1229,8 +1250,8 @@ class WarController extends GetxController {
 
       update();
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Assess Pending Notifications");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Assess Pending Notifications");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
@@ -1293,6 +1314,13 @@ class WarController extends GetxController {
         int aBounty = a.bountyAmount ?? 0;
         int bBounty = b.bountyAmount ?? 0;
         return bBounty.compareTo(aBounty);
+
+      // Trip distance (time)
+      case WarSortType.travelDistanceAsc:
+        return getTripTime(a).compareTo(getTripTime(b));
+      case WarSortType.travelDistanceDesc:
+        return getTripTime(b).compareTo(getTripTime(a));
+
       default:
         return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
     }
@@ -1315,9 +1343,16 @@ class WarController extends GetxController {
       List<Member> nonPinnedMembers = [];
 
       for (final faction in factions) {
+        if (faction.hidden != null && faction.hidden! && !statsShareIncludeHiddenTargets) {
+          // Do not share hidden factions unless explicitly requested
+          continue;
+        }
+
         for (final memberId in faction.members!.keys) {
           final member = faction.members![memberId];
-          if (member != null && member.hidden != true) {
+          if (member != null) {
+            if (member.hidden == true && !statsShareIncludeHiddenTargets) continue;
+
             if (member.pinned) {
               pinnedMembers.add(member);
             } else {
@@ -1346,14 +1381,14 @@ class WarController extends GetxController {
           if (!statsShareIncludeTargetsWithNoStatsAvailable) {
             continue; // Skip member if no stats and we don't include targets without stats
           } else {
-            statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+            statsBuffer.writeln("${member.name} [${member.memberId}] - ${HtmlParser.fix(member.factionName)}");
             statsBuffer.writeln("Unknown stats!");
             statsBuffer.writeln("");
             continue;
           }
         }
 
-        statsBuffer.writeln("${member.name} [${member.memberId}] - ${member.factionName}");
+        statsBuffer.writeln("${member.name} [${member.memberId}] - ${HtmlParser.fix(member.factionName)}");
 
         if (hasExactStats) {
           if (statsShareShowOnlyTotals) {
@@ -1406,8 +1441,8 @@ class WarController extends GetxController {
         ),
       );
     } catch (e, t) {
-      FirebaseCrashlytics.instance.log("PDA Crash at War Stats Share");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at War Stats Share");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
     }
   }
 
@@ -1454,6 +1489,11 @@ class WarController extends GetxController {
       List<Member> nonPinnedMembers = [];
 
       for (final faction in factions) {
+        if (faction.hidden != null && faction.hidden! && !statsShareIncludeHiddenTargets) {
+          // Do not share hidden factions unless explicitly requested
+          continue;
+        }
+
         for (final memberId in faction.members!.keys) {
           final member = faction.members![memberId];
           if (member != null) {
@@ -1490,7 +1530,7 @@ class WarController extends GetxController {
         final List<String> rowData = [
           member.name ?? '',
           member.memberId?.toString() ?? '',
-          member.factionName ?? '',
+          HtmlParser.fix(member.factionName),
           '', // Type of Stats
           '', // Total
           '', // Total Updated
@@ -1543,8 +1583,8 @@ class WarController extends GetxController {
       // Clean the temporary file
       await file.delete();
     } catch (e, t) {
-      FirebaseCrashlytics.instance.log("PDA Crash at War Stats CSV Generation");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at War Stats CSV Generation");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
     }
   }
 
@@ -1562,6 +1602,40 @@ class WarController extends GetxController {
       return "high";
     } else {
       return "unknown";
+    }
+  }
+
+  int getTripTime(Member member) {
+    String destination = "Torn";
+    destination = countryCheck(state: member.status!.state, description: member.status!.description);
+
+    switch (destination) {
+      case 'Torn':
+        return 0;
+      case 'Japan':
+        return 225;
+      case 'Hawaii':
+        return 134;
+      case 'China':
+        return 242;
+      case 'Argentina':
+        return 167;
+      case 'UK':
+        return 159;
+      case 'Cayman':
+        return 35;
+      case 'South Africa':
+        return 297;
+      case 'Switzerland':
+        return 175;
+      case 'Mexico':
+        return 26;
+      case 'UAE':
+        return 271;
+      case 'Canada':
+        return 41;
+      default:
+        return 9999;
     }
   }
 }

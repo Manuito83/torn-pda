@@ -30,7 +30,7 @@ class TSCStatsDialog extends StatefulWidget {
 }
 
 class _TSCStatsDialogState extends State<TSCStatsDialog> {
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
   late Future tscDetailsFetched;
 
   bool tscPreEnabled = false;

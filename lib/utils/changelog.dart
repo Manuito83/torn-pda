@@ -51,6 +51,71 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.6.1 - Build 464 - 04/11/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.6.1'
+        ..date = '15 DEC 2024'
+        ..features = [
+          "Added channel info to chat notifications",
+          "Fixed cooldown calculations for traveling",
+          "Fixed deep links issues",
+        ],
+    );
+
+    // v3.6.0 - Build 463 - 01/11/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.6.0'
+        ..date = '05 DEC 2024'
+        ..features = [
+          ComplexFeature(
+            "Added chat notifications (disabled by default)",
+            explanation: "You can toggle them in the Alerts section!",
+          ),
+          "Added browser links to the Events timeline in Profile",
+          ComplexFeature(
+            "Added option to remove unused tabs",
+            explanation: "Manual trigger: use the triple-dotted icon in the browser's tab bar, "
+                "then tab the red bin icon to see more options.\n\n"
+                "Automatic task: activate a periodic removal in Settings / Advanced Browser Settings / Tabs",
+          ),
+          "War: added option to sort by travel distance",
+          ComplexFeature(
+            "Adapted auto-price script for new market [Kwack]",
+            explanation: "With the introduction of the new market system, "
+                "the old bazaar auto-price script has been adapted to work with "
+                "this new market.\n\nIf you had the official script installed, "
+                "you will receive a notification to update; if you installed "
+                "it manually, you will need to update the code manually "
+                "or restore the example scripts.",
+          ),
+          "Improved error handling for TSC [Mavri]",
+          if (Platform.isIOS) "Added option to manually override themed app icon",
+          if (Platform.isAndroid)
+            ComplexFeature(
+              "Added battery optimization checks for home widget",
+              explanation: "A battery optimization check has been added to Tips and the app widget "
+                  "installation process to warn the user about battery settings (since "
+                  "they might restrict the widget's funcionality).\n\n"
+                  "If you already have a home widget installed, this will cause "
+                  "the original dialog to be launched the next time you open Torn PDA.",
+            ),
+          "Chaining browser can now be opened in full-screen mode (disabled by default)",
+          ComplexFeature(
+            "Added option to remove quick return button when traveling",
+            explanation: "You can find this in Settings / Advanced Browser Settings / Travel\n\n"
+                "Defaults to disabled (return button will show)",
+          ),
+          "Added app upgrade dialog",
+          if (Platform.isAndroid) "Fixed high screen refresh support",
+          "Fixed market information in the Items section",
+          "Fixed targets backup import dialog",
+          "Fixed multiple max buy buttons abroad",
+          "Fixed Torn Stats pie chart representation",
+        ],
+    );
+
     // v3.5.2 - Build 450 - 13/10/2024
     itemList.add(
       ChangeLogItem()
@@ -939,7 +1004,7 @@ class ChangeLogState extends State<ChangeLog> {
         "with link preview, consider disabling it)";
     const String feat2_6_1_6 = "Browser: restore the previous browsing session, including browser type and active tab, "
         "by long-pressing the T menu floating icon in the Profile section";
-    const String feat2_6_1_7 = "Browser: you can now choose the colour of the tabs hide bar";
+    const String feat2_6_1_7 = "Browser: you can now choose the color of the tabs hide bar";
     const String feat2_6_1_8 = "Profile: properly separated jail from hospital manual notifications";
     const String feat2_6_1_9 = "Fixed incorrect spied stats total and dexterity comparison";
     const String feat2_6_1_10 = "Fixed life sorting for war targets";
@@ -1014,7 +1079,7 @@ class ChangeLogState extends State<ChangeLog> {
     const String feat2_5_2_1 = "Added jail widget with quick bail/bust and filters";
     const String feat2_5_2_2 = "Added app deep links (see Tips section)";
     const String feat2_5_2_3 = "Added Reading Book icon";
-    const String feat2_5_2_4 = "Added return time information when travelling";
+    const String feat2_5_2_4 = "Added return time information when traveling";
     const String feat2_5_2_5 = "Added showcase on first tab use";
     const String feat2_5_2_6 = "Added energy alerts for hunting";
     const String feat2_5_2_7 = "Fixed some quick crimes (please remove/add the crime again if you were affected)";
@@ -1277,7 +1342,7 @@ class ChangeLogState extends State<ChangeLog> {
     v2_3_1.date = '02 APR 2021';
     const String feat2_3_1_1 = "Added Easter Bunny (NPC).";
     const String feat2_3_1_2 =
-        "Browser: the pull to refresh feature has been temporarily deactivated due to unexpected behaviours.";
+        "Browser: the pull to refresh feature has been temporarily deactivated due to unexpected behaviors.";
     const String feat2_3_1_3 = "Events alerts reliability has been improved.";
     const String feat2_3_1_4 = "Fixed user scripts page opening a blank menu.";
     const String feat2_3_1_5 = "Fixed reported typos in the Profile section.";
@@ -1654,10 +1719,10 @@ class ChangeLogState extends State<ChangeLog> {
     final v1_8_5 = ChangeLogItem();
     v1_8_5.version = 'Torn PDA v1.8.5';
     const String feat1_8_5_1 =
-        "The colour of your targets' notes is now exported and imported to/from YATA (in the process, blue colour was transformed into orange for standardization)";
+        "The color of your targets' notes is now exported and imported to/from YATA (in the process, blue color was transformed into orange for standardization)";
     const String feat1_8_5_2 =
         "While chaining, you'll be shown your note for each target before attacking, so that you can adjust your strategy accordingly (can be disabled)";
-    const String feat1_8_5_3 = "You can now sort targets by note colour";
+    const String feat1_8_5_3 = "You can now sort targets by note color";
     const String feat1_8_5_4 = "Fixed an issue where the target note could not be updated right after attacking";
     v1_8_5.features.add(feat1_8_5_1);
     v1_8_5.features.add(feat1_8_5_2);

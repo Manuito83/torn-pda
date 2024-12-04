@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -8,9 +9,11 @@ import 'package:flutter/services.dart';
 
 // Package imports:
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
@@ -23,6 +26,7 @@ import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 // 400 loot
 // 499 loot rangers
 // 555 chain watcher
+// 666 + timestamp Torn chat (Sendbird)
 // 777 script updates
 
 Future showNotification(Map payload, int notId) async {
@@ -42,18 +46,14 @@ Future showNotificationBoth(Map payload, int notId) async {
   String bulkDetails = '';
 
   if (payload.isNotEmpty) {
-    if (Platform.isAndroid) {
-      channel = payload["channelId"] ?? '';
-      messageId = payload["tornMessageId"] ?? '';
-      tradeId = payload["tornTradeId"] ?? '';
-      assistId = payload["assistId"] ?? '';
-      bulkDetails = payload["bulkDetails"] ?? '';
-    } else {
-      channel = payload["channelId"] ?? '';
-      messageId = payload["tornMessageId"] ?? '';
-      tradeId = payload["tornTradeId"] ?? '';
-      assistId = payload["assistId"] ?? '';
-      bulkDetails = payload["bulkDetails"] ?? '';
+    channel = payload["channelId"] ?? '';
+    messageId = payload["tornMessageId"] ?? '';
+    tradeId = payload["tornTradeId"] ?? '';
+    assistId = payload["assistId"] ?? '';
+    bulkDetails = payload["bulkDetails"] ?? '';
+    if (payload["sendbird"] != null) {
+      channel = 'sendbird';
+      bulkDetails = payload["message"] ?? 'Chat message received';
     }
   }
 
@@ -202,13 +202,32 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts test';
     channelName = 'Alerts test';
     channelDescription = 'Alerts troubleshooting notification';
+  } else if (channel.contains("sendbird")) {
+    channelId = "Torn chat";
+    channelName = "Torn chat";
+    channelDescription = 'Torn chat notifications';
+    onTapPayload += 'sendbird';
+    notificationIcon = "notification_chat";
+    notificationColor = Colors.green;
+  }
+
+  String title = payload["title"] ?? "";
+  String body = payload["body"] ?? "";
+  if (channel.contains("sendbird")) {
+    List<String> parts = (payload["message"] ?? "").split(":");
+
+    title = parts.isNotEmpty ? parts[0].trim() : "";
+    body = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
   }
 
   if (Platform.isAndroid) {
     final modifier = await getNotificationChannelsModifiers();
 
     // Add s for custom sounds
-    if (channelId.contains("travel") || channelId.contains("assists") || channelId.contains("loot")) {
+    if (channelId.contains("travel") ||
+        channelId.contains("assists") ||
+        channelId.contains("loot") ||
+        channelId.contains("Torn chat")) {
       channelId = "$channelId ${modifier.channelIdModifier} s";
       channelName = "$channelName ${modifier.channelIdModifier} s";
     } else {
@@ -222,7 +241,7 @@ Future showNotificationBoth(Map payload, int notId) async {
         channelName,
         channelDescription: channelDescription,
         styleInformation: const BigTextStyleInformation(''),
-        priority: Priority.high,
+        priority: Priority.max,
         visibility: NotificationVisibility.public,
         icon: notificationIcon,
         color: notificationColor,
@@ -234,8 +253,8 @@ Future showNotificationBoth(Map payload, int notId) async {
 
     await flutterLocalNotificationsPlugin.show(
       notId,
-      payload["title"],
-      payload["body"],
+      title,
+      body,
       platformChannelSpecifics,
       // Set payload to be handled by local notifications
       payload: onTapPayload,
@@ -282,12 +301,19 @@ Future showNotificationBoth(Map payload, int notId) async {
           sound: 'car_start.aiff',
         ),
       );
+    } else if (channelName.contains("sendbird")) {
+      platformChannelSpecifics = const NotificationDetails(
+        iOS: DarwinNotificationDetails(
+          presentSound: true,
+          sound: 'keyboard.aiff',
+        ),
+      );
     }
 
     await flutterLocalNotificationsPlugin.show(
       notId,
-      payload["title"],
-      payload["body"],
+      title,
+      body,
       platformChannelSpecifics,
       // Set payload to be handled by local notifications
       payload: onTapPayload,
@@ -821,6 +847,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
     ),
   );
 
+  channels.add(
+    AndroidNotificationChannel(
+      'Torn chat ${modifier.channelIdModifier} s',
+      'Torn chat ${modifier.channelIdModifier} s',
+      description: 'Torn chat notifications',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('keyboard'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
   for (final channel in channels) {
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
@@ -862,6 +901,107 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
           return AlarmPermissionsDialog();
         },
       );
+    }
+  }
+}
+
+showSendbirdNotification(String sender, String message, String channelUrl) async {
+  final modifier = await getNotificationChannelsModifiers();
+  String channelTitle = "Torn chat ${modifier.channelIdModifier} s";
+  String channelSubtitle = "Torn chat ${modifier.channelIdModifier} s";
+  const String channelDescription = 'Torn chat notifications';
+
+  // Map channels
+  final Map<String, String> patterns = {
+    "private-": "",
+    "faction-": "(faction)",
+    "company-": "(company)",
+    "public_global": "(global)",
+    "public_trade": "(trade)",
+    "public_competition": "(competition)",
+    "public_jail": "(jail)",
+    "public_hospital": "(hospital)",
+    "public_travelling": "(travel)",
+  };
+
+  String suffix = "";
+  for (final entry in patterns.entries) {
+    if (channelUrl.contains(entry.key)) {
+      suffix = entry.value;
+      break;
+    }
+  }
+
+  if (suffix.isNotEmpty) {
+    sender = "$sender $suffix";
+  }
+
+  final androidPlatformChannelSpecifics = AndroidNotificationDetails(
+    channelTitle,
+    channelSubtitle,
+    channelDescription: channelDescription,
+    importance: Importance.max,
+    sound: const RawResourceAndroidNotificationSound('keyboard'),
+    icon: 'notification_chat',
+    color: Colors.green,
+    styleInformation: BigTextStyleInformation(message),
+    actions: <AndroidNotificationAction>[
+      AndroidNotificationAction(
+        'sb_reply_action',
+        'Reply',
+        showsUserInterface: true,
+        inputs: <AndroidNotificationActionInput>[
+          AndroidNotificationActionInput(
+            label: 'Type your reply',
+            allowFreeFormInput: true,
+          ),
+        ],
+      ),
+      /*
+      AndroidNotificationAction(
+        'sb_silence_action',
+        'Silence (1 min)',
+      ),
+      */
+    ],
+  );
+
+  const iOSPlatformChannelSpecifics = DarwinNotificationDetails(
+    presentSound: true,
+    sound: 'keyboard.aiff',
+  );
+
+  final platformChannelSpecifics = NotificationDetails(
+    android: androidPlatformChannelSpecifics,
+    iOS: iOSPlatformChannelSpecifics,
+  );
+
+  // Ensure notifications can stack
+  final tsSuffix = DateTime.now().millisecondsSinceEpoch % 100000;
+  final notificationId = int.parse('666$tsSuffix');
+
+  flutterLocalNotificationsPlugin.show(
+    notificationId, // 666 + timestamp
+    sender,
+    message,
+    platformChannelSpecifics,
+    payload: jsonEncode({
+      'channelUrl': channelUrl,
+    }),
+  );
+}
+
+/// Fired from main() when notification is tapped (or interacted with) in a killed state
+void handleNotificationTap(NotificationResponse? notificationResponse) {
+  // Handle Sendbird reply messages when app is killed
+  if (notificationResponse != null && notificationResponse.id.toString().startsWith('666')) {
+    final payload = notificationResponse.payload;
+
+    if (payload != null && payload.contains("channelUrl") && notificationResponse.input != null) {
+      Map<String, dynamic> decodedJson = jsonDecode(payload);
+      String channelUrl = decodedJson['channelUrl'];
+      SendbirdController sb = Get.find<SendbirdController>();
+      sb.sendMessage(channelUrl: channelUrl, message: notificationResponse.input!);
     }
   }
 }

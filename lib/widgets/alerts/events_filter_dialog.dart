@@ -48,11 +48,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('crimes');
+                          FirestoreHelper().addToEventsFilter('crimes');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('crimes');
+                          FirestoreHelper().removeFromEventsFilter('crimes');
                         });
                       }
                     },
@@ -74,11 +74,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('trains');
+                          FirestoreHelper().addToEventsFilter('trains');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('trains');
+                          FirestoreHelper().removeFromEventsFilter('trains');
                         });
                       }
                     },
@@ -100,11 +100,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('racing');
+                          FirestoreHelper().addToEventsFilter('racing');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('racing');
+                          FirestoreHelper().removeFromEventsFilter('racing');
                         });
                       }
                     },
@@ -126,11 +126,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('bazaar');
+                          FirestoreHelper().addToEventsFilter('bazaar');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('bazaar');
+                          FirestoreHelper().removeFromEventsFilter('bazaar');
                         });
                       }
                     },
@@ -152,11 +152,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('attacks');
+                          FirestoreHelper().addToEventsFilter('attacks');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('attacks');
+                          FirestoreHelper().removeFromEventsFilter('attacks');
                         });
                       }
                     },
@@ -178,11 +178,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('revives');
+                          FirestoreHelper().addToEventsFilter('revives');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('revives');
+                          FirestoreHelper().removeFromEventsFilter('revives');
                         });
                       }
                     },
@@ -204,11 +204,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('trades');
+                          FirestoreHelper().addToEventsFilter('trades');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('trades');
+                          FirestoreHelper().removeFromEventsFilter('trades');
                         });
                       }
                     },
@@ -230,11 +230,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('bounty_claims');
+                          FirestoreHelper().addToEventsFilter('bounty_claims');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('bounty_claims');
+                          FirestoreHelper().removeFromEventsFilter('bounty_claims');
                         });
                       }
                     },
@@ -256,11 +256,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('referrals');
+                          FirestoreHelper().addToEventsFilter('referrals');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('referrals');
+                          FirestoreHelper().removeFromEventsFilter('referrals');
                         });
                       }
                     },
@@ -282,11 +282,11 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToEventsFilter('faction_applications');
+                          FirestoreHelper().addToEventsFilter('faction_applications');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromEventsFilter('faction_applications');
+                          FirestoreHelper().removeFromEventsFilter('faction_applications');
                         });
                       }
                     },

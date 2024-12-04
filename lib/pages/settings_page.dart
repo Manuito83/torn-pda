@@ -28,12 +28,16 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
@@ -122,7 +126,7 @@ class SettingsPageState extends State<SettingsPage> {
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
     _ticker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    analytics.logScreenView(screenName: 'settings');
+    analytics?.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
     routeName = "settings";
@@ -236,10 +240,15 @@ class SettingsPageState extends State<SettingsPage> {
                       const SizedBox(height: 15),
                       const Divider(),
                       const SizedBox(height: 5),
-                      _saveSettingsSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
+                      // Cloud functions are not supported on Windows
+                      Column(
+                        children: [
+                          _saveSettingsSection(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 5),
+                        ],
+                      ),
                       _troubleshootingSection(),
                       const SizedBox(height: 50),
                     ],
@@ -429,6 +438,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _spiesSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -663,6 +673,7 @@ class SettingsPageState extends State<SettingsPage> {
         ),
         if (_settingsProvider.tscEnabledStatusRemoteConfig)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -757,6 +768,7 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         if (_settingsProvider.yataStatsEnabledStatusRemoteConfig)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -823,6 +835,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _ocSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -868,6 +881,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _apiRateSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1025,6 +1039,7 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         if (_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -1185,6 +1200,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _troubleshootingSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1335,6 +1351,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _externalPartnersSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1385,6 +1402,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _shortcutsSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1487,6 +1505,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _screenConfigurationSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1597,6 +1616,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _themeSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1697,6 +1717,7 @@ class SettingsPageState extends State<SettingsPage> {
         ),
         if (_settingsProvider.syncTornWebTheme)
           Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
                 padding: const EdgeInsets.only(left: 20, right: 20),
@@ -1735,6 +1756,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _appIconSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1805,12 +1827,56 @@ class SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig ? false : _settingsProvider.dynamicAppIcons)
+          Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Flexible(
+                  child: Text(
+                    "Override icon",
+                  ),
+                ),
+                Flexible(
+                  child: _manualAppIconDropdown(),
+                ),
+              ],
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "By using this option, you can manually trigger (some) app icons even if the conditions "
+                "are not met",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig)
+                Text(
+                  "Deactivated remotely for the time being",
+                  style: TextStyle(
+                    color: Colors.orange[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
   Column _miscSection() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1938,6 +2004,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _revivingServicesSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -1990,6 +2057,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _notificationsSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -2034,7 +2102,7 @@ class SettingsPageState extends State<SettingsPage> {
                 onChanged: (value) {
                   setState(() {
                     _settingsProvider.discreetNotifications = value;
-                    firestore.toggleDiscreet(value);
+                    FirestoreHelper().toggleDiscreet(value);
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -2198,6 +2266,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   Column _appWidgetSection(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -2477,7 +2546,7 @@ class SettingsPageState extends State<SettingsPage> {
                                     FocusScope.of(context).requestFocus(FocusNode());
                                     if (_formKey.currentState!.validate()) {
                                       _myCurrentKey = _apiKeyInputController.text.trim();
-                                      _getApiDetails(userTriggered: true, reload: true);
+                                      _getApiDetails(userTriggered: true);
                                     }
                                   },
                                 ),
@@ -2497,8 +2566,8 @@ class SettingsPageState extends State<SettingsPage> {
                                       _userToLoad = false;
                                       _apiError = false;
                                     });
-                                    await FirebaseMessaging.instance.deleteToken();
-                                    await firestore.deleteUserProfile();
+                                    if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
+                                    await FirestoreHelper().deleteUserProfile();
                                     await firebaseAuth.signOut();
                                     widget.changeUID("");
                                   },
@@ -2820,6 +2889,71 @@ class SettingsPageState extends State<SettingsPage> {
               _webViewProvider.browserForegroundWithSplitTransition();
             }
           }
+        });
+      },
+    );
+  }
+
+  DropdownButton _manualAppIconDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.dynamicAppIconsManual,
+      items: const [
+        DropdownMenuItem(
+          value: "off",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Off",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "awareness",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Awareness",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "halloween",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Halloween",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "christmas",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Christmas",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _settingsProvider.dynamicAppIconsManual = value;
+          _settingsProvider.appIconChangeBasedOnCondition();
         });
       },
     );
@@ -3336,7 +3470,7 @@ class SettingsPageState extends State<SettingsPage> {
         // Deletes current channels and create new ones
         reconfigureNotificationChannels(mod: value);
         // Update channel preferences
-        firestore.setVibrationPattern(value);
+        FirestoreHelper().setVibrationPattern(value);
         Prefs().setVibrationPattern(value!);
         setState(() {
           _vibrationValue = value;
@@ -3543,13 +3677,13 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _getApiDetails({required bool userTriggered, bool reload = false}) async {
+  Future<void> _getApiDetails({required bool userTriggered}) async {
     try {
       setState(() {
         _apiIsLoading = true;
       });
 
-      final dynamic myProfile = await _apiController.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
+      final dynamic myProfile = await ApiCallsV1.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
@@ -3563,24 +3697,41 @@ class SettingsPageState extends State<SettingsPage> {
           _userProfile = myProfile;
         });
 
+        final uc = Get.find<UserController>();
+        if (uc.playerId == 0 && myProfile.playerId != null) {
+          uc.playerId = myProfile.playerId!;
+          uc.apiKey = myProfile.userApiKey;
+        }
+
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
-          final user = await firebaseAuth.getUID();
-          // Only sign in if there is currently no user registered (to avoid duplicates)
-          if (user == null || (user is User && user.uid.isEmpty)) {
-            final User mFirebaseUser = await (firebaseAuth.signInAnon());
-            firestore.setUID(mFirebaseUser.uid);
-            // Returns UID to Drawer so that it can be passed to settings
-            widget.changeUID(mFirebaseUser.uid);
-            log("Settings: signed in with UID ${mFirebaseUser.uid}");
-          } else {
-            log("Settings: existing user UID $user");
-          }
+          if (!Platform.isWindows) {
+            // See note in [firebase_auth.dart]
+            final user = await firebaseAuth.getUID();
+            // Only sign in if there is currently no user registered (to avoid duplicates)
+            if (user == null || (user is User && user.uid.isEmpty)) {
+              final User mFirebaseUser = await (firebaseAuth.signInAnon());
+              await FirestoreHelper().setUID(mFirebaseUser.uid);
+              // Returns UID to Drawer so that it can be passed to settings
+              widget.changeUID(mFirebaseUser.uid);
+              log("Settings: signed in with UID ${mFirebaseUser.uid}");
+            } else {
+              log("Settings: existing user UID $user");
+            }
 
-          await firestore.uploadUsersProfileDetail(myProfile, userTriggered: true);
-          await firestore.uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
-          if (Platform.isAndroid) {
-            firestore.setVibrationPattern(_vibrationValue);
+            await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
+            await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+            if (Platform.isAndroid) {
+              FirestoreHelper().setVibrationPattern(_vibrationValue);
+            }
+
+            // Sendbird notifications
+            final sbController = Get.find<SendbirdController>();
+            if (sbController.sendBirdNotificationsEnabled) {
+              sbController.register();
+            }
+          } else {
+            log("Windows: skipping Firestore sign up!");
           }
 
           // Signal stat counter initialization
@@ -3610,9 +3761,11 @@ class SettingsPageState extends State<SettingsPage> {
         }
       }
     } catch (e, stack) {
-      FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
-          "Error: $e. Stack: $stack");
-      FirebaseCrashlytics.instance.recordError(e, null);
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+            "Error: $e. Stack: $stack");
+        FirebaseCrashlytics.instance.recordError(e, null);
+      }
     }
   }
 

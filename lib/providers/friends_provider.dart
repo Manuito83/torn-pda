@@ -3,13 +3,13 @@ import 'dart:collection';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AddFriendResult {
@@ -55,7 +55,7 @@ class FriendsProvider extends ChangeNotifier {
       }
     }
 
-    final dynamic myNewFriendModel = await Get.find<ApiCallerController>().getFriends(playerId: friendId);
+    final dynamic myNewFriendModel = await ApiCallsV1.getFriends(playerId: friendId);
 
     if (myNewFriendModel is FriendModel) {
       _getFriendFaction(myNewFriendModel);
@@ -99,8 +99,7 @@ class FriendsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dynamic myUpdatedFriendModel =
-          await Get.find<ApiCallerController>().getFriends(playerId: oldFriend.playerId.toString());
+      final dynamic myUpdatedFriendModel = await ApiCallsV1.getFriends(playerId: oldFriend.playerId.toString());
       if (myUpdatedFriendModel is FriendModel) {
         _getFriendFaction(myUpdatedFriendModel);
         _friends[_friends.indexOf(oldFriend)] = myUpdatedFriendModel;
@@ -136,8 +135,7 @@ class FriendsProvider extends ChangeNotifier {
     // Then start the real update
     for (var i = 0; i < _friends.length; i++) {
       try {
-        final dynamic myUpdatedFriendModel =
-            await Get.find<ApiCallerController>().getFriends(playerId: _friends[i].playerId.toString());
+        final dynamic myUpdatedFriendModel = await ApiCallsV1.getFriends(playerId: _friends[i].playerId.toString());
         if (myUpdatedFriendModel is FriendModel) {
           _getFriendFaction(myUpdatedFriendModel);
           final notes = _friends[i].personalNote;

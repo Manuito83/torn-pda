@@ -7,7 +7,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 // Project imports:
 import 'package:torn_pda/providers/chain_status_provider.dart';
@@ -1271,7 +1271,7 @@ class AddChainTargetDialogState extends State<AddChainTargetDialog> {
                         String inputId = _addIdController.text;
                         _addIdController.text = '';
 
-                        final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+                        final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
                         String message = "";
                         Color? messageColor = Colors.green[700];
                         if (target is TargetModel) {

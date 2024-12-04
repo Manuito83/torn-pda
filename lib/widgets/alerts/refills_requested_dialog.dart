@@ -49,11 +49,11 @@ class RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToRefillsRequested('energy');
+                          FirestoreHelper().addToRefillsRequested('energy');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromRefillsRequested('energy');
+                          FirestoreHelper().removeFromRefillsRequested('energy');
                         });
                       }
                     },
@@ -72,11 +72,11 @@ class RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToRefillsRequested('nerve');
+                          FirestoreHelper().addToRefillsRequested('nerve');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromRefillsRequested('nerve');
+                          FirestoreHelper().removeFromRefillsRequested('nerve');
                         });
                       }
                     },
@@ -95,11 +95,11 @@ class RefillsRequestedDialogState extends State<RefillsRequestedDialog> {
                     onChanged: (value) {
                       if (value) {
                         setState(() {
-                          firestore.addToRefillsRequested('token');
+                          FirestoreHelper().addToRefillsRequested('token');
                         });
                       } else {
                         setState(() {
-                          firestore.removeFromRefillsRequested('token');
+                          FirestoreHelper().removeFromRefillsRequested('token');
                         });
                       }
                     },

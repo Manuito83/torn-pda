@@ -108,7 +108,7 @@ class TacPageState extends State<TacPage> {
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _preferencesLoaded = _restorePreferences();
 
-    analytics.logScreenView(screenName: 'tac');
+    analytics?.logScreenView(screenName: 'tac');
 
     routeWithDrawer = true;
     routeName = "chaining_tac";
@@ -859,7 +859,7 @@ class TacPageState extends State<TacPage> {
           "TAC will help you find targets depending on several factors. There is also a Premium package and "
           "other features you can benefit from. Make sure to visit their website and forum if you wish to learn more."
           "\n\n"
-          "To configure notes behaviour when chaining or if would like to deactivate TAC, please tab the settings icon "
+          "To configure notes behavior when chaining or if would like to deactivate TAC, please tab the settings icon "
           "in the main target's screen (Chaining section)."
           "\n\n"
           "IMPORTANT: Torn PDA does not benefit from TAC and does not share any information (e.g. API key) with it.",

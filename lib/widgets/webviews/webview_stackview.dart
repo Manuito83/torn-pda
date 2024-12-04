@@ -1,5 +1,6 @@
 // ignore: unused_import
 import 'dart:developer';
+import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +30,8 @@ import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 enum BrowserTapType {
   short,
   long,
-  chain,
+  chainShort,
+  chainLong,
   notification,
   deeplink,
   quickItem,
@@ -215,8 +217,10 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                 children: allWebViews,
                               );
                             } catch (e) {
-                              FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
-                              FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                              if (!Platform.isWindows) {
+                                FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with tabs): $e");
+                              }
+                              if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e.toString(), null);
                               logToUser("PDA Crash at StackView (webview with tabs): $e");
                               _closeWithError();
                             }
@@ -231,8 +235,10 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                 ],
                               );
                             } catch (e) {
-                              FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
-                              FirebaseCrashlytics.instance.recordError(e.toString(), null);
+                              if (!Platform.isWindows) {
+                                FirebaseCrashlytics.instance.log("PDA Crash at StackView (webview with no tabs): $e");
+                              }
+                              if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e.toString(), null);
                               logToUser("PDA Crash at StackView (webview with no tabs): $e");
                               _closeWithError();
                             }
@@ -367,13 +373,20 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
     _webViewProvider.clearCacheAndTabs();
   }
 
-  Future<void> _initialiseSecondary() async {
+  Future<bool> _initialiseSecondary() async {
     await Future.delayed(const Duration(milliseconds: 1000));
-    if (!mounted) return;
-    Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
+    if (!mounted) return false;
+    await Provider.of<WebViewProvider>(context, listen: false).initialiseSecondary(
       useTabs: _settingsProvider.useTabsFullBrowser,
       recallLastSession: widget.recallLastSession,
     );
+
+    // Once secondary tabs are loaded for the first time, assess if any needs to be removes
+    // due to the user's preferences for auto-removal (unused tabs)
+    // Also start a periodic task if necessary
+    _webViewProvider.assessPeriodidTabRemovalOnLaunch();
+
+    return true;
   }
 
   @override

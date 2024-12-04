@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:io';
 
 // Flutter imports:
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -282,8 +283,10 @@ class UserScriptsProvider extends ChangeNotifier {
           matches: decodedModel.matches,
         );
       } catch (e, trace) {
-        FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
-        FirebaseCrashlytics.instance.recordError(e, trace);
+        if (!Platform.isWindows) {
+          FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+        }
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
@@ -343,8 +346,10 @@ class UserScriptsProvider extends ChangeNotifier {
                 isExample: decodedModel.isExample,
               );
             } catch (e, trace) {
-              FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
-              FirebaseCrashlytics.instance.recordError(e, trace);
+              if (!Platform.isWindows) {
+                FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
+              }
+              if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
               logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
             }
           }
@@ -357,8 +362,10 @@ class UserScriptsProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e, trace) {
       // Pass (scripts will be empty)
-      FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
-      FirebaseCrashlytics.instance.recordError(e, trace);
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
+      }
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
       logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
     }
   }

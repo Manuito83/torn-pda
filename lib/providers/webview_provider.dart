@@ -7,15 +7,18 @@ import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-//import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/tabsave_model.dart';
+import 'package:torn_pda/providers/periodic_execution_controller.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -25,6 +28,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
+import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 
 // Package imports:
 
@@ -56,7 +60,7 @@ class TabDetails {
   List<String?> historyBack = <String?>[];
   List<String?> historyForward = <String?>[];
   bool isChainingBrowser = false;
-  DateTime? lastUsedTime;
+  DateTime? lastUsedTimeDT;
   bool isLocked = false;
   bool isLockFull = false;
   String customName = "";
@@ -89,6 +93,9 @@ class SleepingWebView {
 class WebViewProvider extends ChangeNotifier {
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
+
+  // Windows user data folder
+  WebViewEnvironment? webViewEnvironment;
 
   // Controls successive toastification activations for full lock awareness, since
   // using [toastification.dismissAll()] leaves quite a long gap until next activation is possible
@@ -133,6 +140,9 @@ class WebViewProvider extends ChangeNotifier {
     if (webViewSplitActive) {
       return;
     }
+
+    SendbirdController sb = Get.find<SendbirdController>();
+    sb.webviewInForeground = bringToForeground;
 
     if (bringToForeground) {
       if (stackView is Container) {
@@ -332,6 +342,50 @@ class WebViewProvider extends ChangeNotifier {
 
   DateTime? _lastBrowserOpenedTime;
 
+  var _removeUnusedTabs = true;
+  bool get removeUnusedTabs => _removeUnusedTabs;
+  set removeUnusedTabs(bool value) {
+    _removeUnusedTabs = value;
+    Prefs().setRemoveUnusedTabs(_removeUnusedTabs);
+    notifyListeners();
+  }
+
+  var _removeUnusedTabsIncludesLocked = true;
+  bool get removeUnusedTabsIncludesLocked => _removeUnusedTabsIncludesLocked;
+  set removeUnusedTabsIncludesLocked(bool value) {
+    _removeUnusedTabsIncludesLocked = value;
+    Prefs().setRemoveUnusedTabsIncludesLocked(_removeUnusedTabsIncludesLocked);
+    notifyListeners();
+  }
+
+  var _removeUnusedTabsRangeDays = TabsWipeTimeRange.sevenDays;
+  TabsWipeTimeRange get removeUnusedTabsRangeDays => _removeUnusedTabsRangeDays;
+  set removeUnusedTabsRangeDays(TabsWipeTimeRange value) {
+    _removeUnusedTabsRangeDays = value;
+    int daysToSave = 7;
+    switch (_removeUnusedTabsRangeDays) {
+      // We are not including 'any' as we do in the browser wipe tabs option
+      case TabsWipeTimeRange.oneDay:
+        daysToSave = 1;
+      case TabsWipeTimeRange.twoDays:
+        daysToSave = 2;
+      case TabsWipeTimeRange.threeDays:
+        daysToSave = 3;
+      case TabsWipeTimeRange.fiveDays:
+        daysToSave = 5;
+      case TabsWipeTimeRange.sevenDays:
+        daysToSave = 7;
+      case TabsWipeTimeRange.fifteenDays:
+        daysToSave = 15;
+      case TabsWipeTimeRange.oneMonth:
+        daysToSave = 30;
+      default:
+        daysToSave = 7;
+    }
+    Prefs().setRemoveUnusedTabsRangeDays(daysToSave);
+    notifyListeners();
+  }
+
   var _onlyLoadTabsWhenUsed = true;
   bool get onlyLoadTabsWhenUsed => _onlyLoadTabsWhenUsed;
   set onlyLoadTabsWhenUsed(bool value) {
@@ -460,7 +514,7 @@ class WebViewProvider extends ChangeNotifier {
 
     for (final wv in savedWebViews.tabsSave!) {
       if (useTabs) {
-        addTab(
+        await addTab(
           tabKey: wv.tabKey,
           sleepTab: sleepTabsByDefault,
           url: wv.url,
@@ -473,9 +527,10 @@ class WebViewProvider extends ChangeNotifier {
           customName: wv.customName,
           customNameInTitle: wv.customNameInTitle,
           customNameInTab: wv.customNameInTab,
+          lastUsedTime: wv.lastUsedTime,
         );
       } else {
-        addHiddenTab(
+        await addHiddenTab(
           url: wv.url,
           pageTitle: wv.pageTitle,
           chatRemovalActive: wv.chatRemovalActive,
@@ -493,7 +548,8 @@ class WebViewProvider extends ChangeNotifier {
     // Make sure we start at the first tab. We don't need to call activateTab because we have
     // still not initialised completely and the StackView is not live
     if (recallLastSession && useTabs) {
-      final int lastActive = await Prefs().getWebViewLastActiveTab();
+      int lastActive = await Prefs().getWebViewLastActiveTab();
+      if (lastActive < 0) lastActive = 0;
       if (lastActive <= _tabList.length - 1) {
         _currentTab = lastActive;
       } else {
@@ -527,6 +583,7 @@ class WebViewProvider extends ChangeNotifier {
     String customName = "",
     bool customNameInTitle = false,
     bool customNameInTab = true,
+    int lastUsedTime = 0,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     final key = GlobalKey<WebViewFullState>();
@@ -567,7 +624,8 @@ class WebViewProvider extends ChangeNotifier {
         ..isLockFull = isLockFull
         ..customName = customName
         ..customNameInTitle = customNameInTitle
-        ..customNameInTab = customNameInTab,
+        ..customNameInTab = customNameInTab
+        ..lastUsedTimeDT = DateTime.fromMillisecondsSinceEpoch(lastUsedTime),
     );
     notifyListeners();
     _callAssessMethods();
@@ -576,7 +634,7 @@ class WebViewProvider extends ChangeNotifier {
   /// If we are not using tabs, we still need to add 'hidden tabs' (that is, with the main info that needs to be
   /// saved, but without the actual webView), so that if the other browser type uses tabs, these are not lost
   /// between sessions.
-  void addHiddenTab({
+  Future addHiddenTab({
     String? url = "https://www.torn.com",
     String? pageTitle = "Torn",
     bool? chatRemovalActive,
@@ -587,7 +645,7 @@ class WebViewProvider extends ChangeNotifier {
     String customName = "",
     bool customNameInTitle = false,
     bool customNameInTab = true,
-  }) {
+  }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     _tabList.add(
       TabDetails()
@@ -648,10 +706,56 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  Future<void> wipeTabs() async {
+  wipeTabs({
+    required bool includeLockedTabs,
+    required TabsWipeTimeRange timeRange,
+  }) {
+    DateTime now = DateTime.now();
+    Duration thresholdDuration = timeRange.duration;
+    DateTime thresholdTime = now.subtract(thresholdDuration);
+
+    if (timeRange == TabsWipeTimeRange.any) {
+      // If 'any', remove all tabs except the first and maybe locked
+      _tabList.removeWhere((tab) {
+        // Keep first tab
+        if (tab == _tabList[0]) {
+          return false;
+        }
+
+        if (!includeLockedTabs && tab.isLocked) {
+          return false;
+        }
+
+        return true;
+      });
+    } else {
+      // If other than 'any', apply time conditino
+      _tabList.removeWhere((tab) {
+        if (tab == _tabList[0]) {
+          return false;
+        }
+
+        if (!includeLockedTabs && tab.isLocked) {
+          return false;
+        }
+
+        // DEBUG
+        if (kDebugMode) {
+          _debugLogTabWipeDetails(now, tab, thresholdDuration);
+        }
+
+        if (tab.lastUsedTimeDT!.isBefore(thresholdTime)) {
+          return true;
+        }
+
+        return false;
+      });
+    }
+
+    // Default to tab 0 to avoid issues
     _currentTab = 0;
     _tabList[0].webViewKey?.currentState?.resumeThisWebview();
-    _tabList.removeRange(1, _tabList.length);
+
     notifyListeners();
     _saveTabs();
   }
@@ -668,8 +772,8 @@ class WebViewProvider extends ChangeNotifier {
     _currentTab = newActiveTab;
     final activated = _tabList[_currentTab];
 
-    // Log time at which the tab is used
-    activated.lastUsedTime = DateTime.now();
+    // Log time at which time the tab is last used
+    activated.lastUsedTimeDT = DateTime.now();
 
     // Awake WebView if necessary
     if (activated.sleepTab) {
@@ -695,10 +799,10 @@ class WebViewProvider extends ChangeNotifier {
       if (i == 0) continue;
 
       // Might happen when users upgrade to v3.1.0
-      if (_tabList[i].lastUsedTime == null) return;
+      if (_tabList[i].lastUsedTimeDT == null) return;
 
       // Only sleep if 24 hours have elapsed
-      final Duration timeDifference = now.difference(_tabList[i].lastUsedTime!);
+      final Duration timeDifference = now.difference(_tabList[i].lastUsedTimeDT!);
       if (timeDifference.inHours < 24) return;
 
       if (_tabList[i].webView != null && !_tabList[i].isChainingBrowser && _tabList[i] != _tabList[currentTab]) {
@@ -714,6 +818,12 @@ class WebViewProvider extends ChangeNotifier {
         log("Slept tab with ${timeDifference.inHours} hours!");
       }
     }
+  }
+
+  updateLastTabUse() {
+    final tab = _tabList[_currentTab];
+    // Log time at which time the tab is last used
+    tab.lastUsedTimeDT = DateTime.now();
   }
 
   Widget _buildRealWebViewFromSleeping(SleepingWebView sleeping) {
@@ -767,19 +877,21 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void pauseAllWebviews() {
+    if (Platform.isWindows) return;
     try {
       if (_tabList.isEmpty) return;
       final currentTab = _tabList[_currentTab];
       // NOTE: IOS only stops the current active webview
       currentTab.webViewKey?.currentState?.webViewController?.pauseTimers();
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Pausing Webviews");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
   void resumeAllWebviews() {
     try {
+      if (Platform.isWindows) return;
       if (_tabList.isEmpty) return;
 
       final currentTab = _tabList[_currentTab];
@@ -799,8 +911,8 @@ class WebViewProvider extends ChangeNotifier {
         }
       }
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at Resuming Webviews");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Resuming Webviews");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 
@@ -1207,7 +1319,8 @@ class WebViewProvider extends ChangeNotifier {
             ..isLockFull = _tabList[i].isLockFull
             ..customName = _tabList[i].customName
             ..customNameInTitle = _tabList[i].customNameInTitle
-            ..customNameInTab = _tabList[i].customNameInTab,
+            ..customNameInTab = _tabList[i].customNameInTab
+            ..lastUsedTime = _tabList[i].lastUsedTimeDT?.millisecondsSinceEpoch ?? 0,
         );
       }
     }
@@ -1324,7 +1437,7 @@ class WebViewProvider extends ChangeNotifier {
 
     final browserType = await Prefs().getDefaultBrowser();
     if (browserType == 'app') {
-      analytics.logScreenView(screenName: 'browser_full');
+      analytics?.logScreenView(screenName: 'browser_full');
 
       String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
 
@@ -1358,8 +1471,10 @@ class WebViewProvider extends ChangeNotifier {
   UiMode _decideBrowserScreenMode({required BrowserTapType tapType, required BuildContext context}) {
     final SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
 
-    if (tapType == BrowserTapType.chain) {
-      return UiMode.window;
+    if (tapType == BrowserTapType.chainShort && settings.fullScreenByShortChainingTap) {
+      return UiMode.fullScreen;
+    } else if (tapType == BrowserTapType.chainLong && settings.fullScreenByLongChainingTap) {
+      return UiMode.fullScreen;
     } else if (tapType == BrowserTapType.short && settings.fullScreenByShortTap) {
       return UiMode.fullScreen;
     } else if (tapType == BrowserTapType.long && settings.fullScreenByLongTap) {
@@ -1574,6 +1689,28 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   Future restorePreferences() async {
+    _removeUnusedTabs = await Prefs().getRemoveUnusedTabs();
+    _removeUnusedTabsIncludesLocked = await Prefs().getRemoveUnusedTabsIncludesLocked();
+    final daysFromSave = await Prefs().getRemoveUnusedTabsRangeDays();
+    switch (daysFromSave) {
+      case 1:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.oneDay;
+      case 2:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.twoDays;
+      case 3:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.threeDays;
+      case 5:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.fiveDays;
+      case 7:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.sevenDays;
+      case 15:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.fifteenDays;
+      case 30:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.oneMonth;
+      default:
+        _removeUnusedTabsRangeDays = TabsWipeTimeRange.sevenDays;
+    }
+
     _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
     _automaticChangeToNewTabFromURL = await Prefs().getAutomaticChangeToNewTabFromURL();
 
@@ -1592,5 +1729,63 @@ class WebViewProvider extends ChangeNotifier {
 
   bool splitScreenAndBrowserLeft() {
     return webViewSplitActive && splitScreenPosition == WebViewSplitPosition.left;
+  }
+
+  void _debugLogTabWipeDetails(DateTime now, TabDetails tab, Duration thresholdDuration) {
+    if (tab.lastUsedTimeDT == null) return;
+
+    Duration elapsedTime = now.difference(tab.lastUsedTimeDT!);
+    Duration requiredDuration = thresholdDuration;
+    Duration remainingTime = requiredDuration - elapsedTime;
+
+    String formatDuration(Duration duration) {
+      String twoDigits(int n) => n.toString().padLeft(2, '0');
+      String twoDigitHours = twoDigits(duration.inHours.remainder(24));
+      String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
+      String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
+      return '${duration.inDays}d ${twoDigitHours}h ${twoDigitMinutes}m ${twoDigitSeconds}s';
+    }
+
+    log(
+      'Tab: ${tab.pageTitle}, '
+      'Elapsed: ${formatDuration(elapsedTime)}, '
+      'Required duration: ${formatDuration(requiredDuration)}, '
+      'Time to wipe remaining: ${formatDuration(remainingTime)}',
+      name: 'wipeTabs',
+    );
+  }
+
+  togglePeriodicUnusedTabsRemovalRequest({required bool enable}) {
+    final pc = Get.find<PeriodicExecutionController>();
+    if (enable) {
+      pc.registerTask(
+        "removeUnusedTabs",
+        () => wipeTabs(
+          includeLockedTabs: removeUnusedTabsIncludesLocked,
+          timeRange: removeUnusedTabsRangeDays,
+        ),
+        intervalInHours: 24,
+        executeImmediately: true,
+        overwrite: true,
+      );
+    } else {
+      pc.cancelTask("removeUnusedTabs");
+    }
+  }
+
+  assessPeriodidTabRemovalOnLaunch() {
+    if (!removeUnusedTabs) return;
+
+    final pc = Get.find<PeriodicExecutionController>();
+
+    pc.registerTask(
+      "removeUnusedTabs",
+      () => wipeTabs(
+        includeLockedTabs: removeUnusedTabsIncludesLocked,
+        timeRange: removeUnusedTabsRangeDays,
+      ),
+      intervalInHours: 24,
+      executeImmediately: true,
+    );
   }
 }

@@ -1,5 +1,7 @@
 // Flutter imports:
 // Package imports:
+import 'dart:developer';
+
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +36,8 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
 
   double _currentImportPercentage = 0;
   String? _currentImportTarget = "";
+
+  bool _isCancelled = false;
 
   @override
   Widget build(BuildContext context) {
@@ -249,6 +253,7 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
             TextButton(
               child: const Text("Cancel"),
               onPressed: () {
+                _isCancelled = true;
                 Navigator.of(context).pop();
               },
             ),
@@ -305,12 +310,18 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
   }
 
   Future<void> _startImport() async {
-    // We add all targets coming from YATA
-    for (var i = 0; i <= widget.onlyYata.length - 1; i++) {
-      if (mounted) {
+    try {
+      // We add all targets coming from YATA
+      final dynamic attacks = await _targetsProvider.getAttacks();
+      for (var i = 0; i <= widget.onlyYata.length - 1; i++) {
+        if (_isCancelled || !mounted) {
+          log("Cancelled import, returning!");
+          return;
+        }
+
         final importResult = await _targetsProvider.addTarget(
           targetId: widget.onlyYata[i].id,
-          attacks: await _targetsProvider.getAttacks(),
+          attacks: attacks,
           notes: widget.onlyYata[i].noteYata,
           notesColor: _localColorCode(widget.onlyYata[i].colorYata),
         );
@@ -324,14 +335,12 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
           }
         }
         // Avoid issues with API limits
-        if (widget.onlyYata.length > 70) {
-          await Future.delayed(const Duration(seconds: 1), () {});
+        if (widget.onlyYata.length > 60) {
+          await Future.delayed(const Duration(seconds: 1));
         }
       }
-    }
 
-    // Those target that we already have, only see their notes updated
-    if (mounted) {
+      // Those target that we already have, only see their notes updated
       for (final bothSidesTarget in widget.bothSides) {
         for (final localTarget in _targetsProvider.allTargets) {
           if (bothSidesTarget.id == localTarget.playerId.toString()) {
@@ -344,20 +353,27 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
           }
         }
       }
-    }
 
-    // Only to look good
-    if (mounted) {
+      // Only to look good
       setState(() {
         _currentImportTarget = "Updating notes...";
         _currentImportPercentage = 1;
       });
       await Future.delayed(const Duration(seconds: 2), () {});
-    }
 
-    // Auto close at the end
-    if (mounted) {
+      // Auto close at the end
       Navigator.of(context).pop();
+    } catch (e) {
+      BotToast.showText(
+        text: "There was an error importing!\n\n$e",
+        textStyle: const TextStyle(
+          fontSize: 13,
+          color: Colors.white,
+        ),
+        contentColor: Colors.red[800]!,
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
+      );
     }
   }
 

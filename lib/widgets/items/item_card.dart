@@ -1,12 +1,13 @@
+import 'dart:developer';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/items_model.dart';
-import 'package:torn_pda/models/market/market_item_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -40,7 +41,8 @@ class ItemCardState extends State<ItemCard> {
   Future? _footerInformationRetrieved;
   bool _footerSuccessful = false;
 
-  late MarketItemModel _marketItem;
+  late ItemMarket _marketItem;
+  bool _isTradeable = false;
 
   final decimalFormat = NumberFormat("#,##0", "en_US");
 
@@ -52,6 +54,7 @@ class ItemCardState extends State<ItemCard> {
         _footerInformationRetrieved = _getFooterInformation();
       }
     });
+    _isTradeable = widget.item.tradeable ?? false;
   }
 
   @override
@@ -150,61 +153,62 @@ class ItemCardState extends State<ItemCard> {
                           ],
                         ),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(
-                            width: 70,
-                            child: GestureDetector(
-                              child: Column(
-                                children: [
-                                  Image.asset(
-                                    'images/icons/map/item_market.png',
-                                    color: widget.item.circulation == 0
-                                        ? Colors.red[400]
-                                        : widget.inventorySuccess
-                                            ? widget.item.inventoryOwned > 0
-                                                ? Colors.green
-                                                : widget.themeProvider!.mainText
-                                            : widget.themeProvider!.mainText,
-                                    height: 14,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  if (widget.inventorySuccess)
-                                    Text(
-                                      "inv: x${widget.item.inventoryOwned}",
-                                      style: const TextStyle(fontSize: 9),
+                      if (_isTradeable)
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              width: 70,
+                              child: GestureDetector(
+                                child: Column(
+                                  children: [
+                                    Image.asset(
+                                      'images/icons/map/item_market.png',
+                                      color: widget.item.circulation == 0
+                                          ? Colors.red[400]
+                                          : widget.inventorySuccess
+                                              ? widget.item.inventoryOwned > 0
+                                                  ? Colors.green
+                                                  : widget.themeProvider!.mainText
+                                              : widget.themeProvider!.mainText,
+                                      height: 14,
                                     ),
-                                  if (widget.item.totalValue > 0)
-                                    Text(
-                                      "\$${formatBigNumbers(widget.item.totalValue)}",
-                                      style: const TextStyle(fontSize: 9),
-                                    ),
-                                ],
-                              ),
-                              onTap: () async {
-                                final url =
-                                    "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
+                                    const SizedBox(height: 4),
+                                    if (widget.inventorySuccess)
+                                      Text(
+                                        "inv: x${widget.item.inventoryOwned}",
+                                        style: const TextStyle(fontSize: 9),
+                                      ),
+                                    if (widget.item.totalValue > 0)
+                                      Text(
+                                        "\$${formatBigNumbers(widget.item.totalValue)}",
+                                        style: const TextStyle(fontSize: 9),
+                                      ),
+                                  ],
+                                ),
+                                onTap: () async {
+                                  final url =
+                                      "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
 
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.short,
-                                    );
-                              },
-                              onLongPress: () async {
-                                final url =
-                                    "https://www.torn.com/imarket.php#/p=shop&step=shop&type=&searchname=${widget.item.name}";
-                                context.read<WebViewProvider>().openBrowserPreference(
-                                      context: context,
-                                      url: url,
-                                      browserTapType: BrowserTapType.long,
-                                    );
-                              },
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.short,
+                                      );
+                                },
+                                onLongPress: () async {
+                                  final url =
+                                      "https://www.torn.com/page.php?sid=ItemMarket#/market/view=search&itemID=${widget.item.id}";
+                                  context.read<WebViewProvider>().openBrowserPreference(
+                                        context: context,
+                                        url: url,
+                                        browserTapType: BrowserTapType.long,
+                                      );
+                                },
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                     ],
                   ),
                   const SizedBox(width: 10),
@@ -236,10 +240,17 @@ class ItemCardState extends State<ItemCard> {
   }
 
   Widget _footerWidget() {
+    //log(widget.item.description!);
+
+    // Fixes issues with keepsakes (lines look the same, but are different)
+    // (it's necessary to copy/paste from the log above)
+    String des = widget.item.description ?? "";
+    des = des.replaceAll("â", "'");
+    des = des.replaceAll("â", "'");
     final Widget description = Padding(
       padding: const EdgeInsetsDirectional.only(top: 15),
       child: Text(
-        HtmlParser.fix(widget.item.description),
+        HtmlParser.fix(des),
         style: const TextStyle(
           fontStyle: FontStyle.italic,
           fontSize: 10,
@@ -345,38 +356,6 @@ class ItemCardState extends State<ItemCard> {
     }
 
     if (_footerSuccessful) {
-      // Bazaar
-      const Widget bazaarHeader = Text(
-        "Bazaar",
-        style: TextStyle(
-          fontSize: 12,
-        ),
-      );
-      Widget bazaarColumn = Text(
-        "Nothing found",
-        style: TextStyle(
-          fontSize: 10,
-          color: Colors.orange[800],
-        ),
-      );
-      if (_marketItem.bazaar != null) {
-        List<Widget> bazaarList = <Widget>[];
-        var bIndex = 0;
-        for (final b in _marketItem.bazaar!) {
-          if (bIndex >= 3) break;
-          bIndex++;
-          bazaarList.add(
-            Text(
-              "${b.quantity}x \$${decimalFormat.format(b.cost)}",
-              style: const TextStyle(
-                fontSize: 10,
-              ),
-            ),
-          );
-        }
-        bazaarColumn = Column(children: bazaarList);
-      }
-
       // Market
       const Widget marketHeader = Text(
         "Market",
@@ -384,6 +363,7 @@ class ItemCardState extends State<ItemCard> {
           fontSize: 12,
         ),
       );
+
       Widget marketColumn = Text(
         "Nothing found",
         style: TextStyle(
@@ -391,60 +371,56 @@ class ItemCardState extends State<ItemCard> {
           color: Colors.orange[800],
         ),
       );
-      if (_marketItem.itemmarket != null) {
-        List<Widget> marketList = <Widget>[];
-        var mIndex = 0;
-        for (final m in _marketItem.itemmarket!) {
-          if (mIndex >= 3) break;
-          mIndex++;
-          marketList.add(
-            Text(
-              "${m.quantity}x \$${decimalFormat.format(m.cost)}",
-              style: const TextStyle(
-                fontSize: 10,
-              ),
+
+      List<Widget> marketList = <Widget>[];
+      var mIndex = 0;
+      for (final m in _marketItem.listings!) {
+        if (mIndex >= 3) break;
+        mIndex++;
+
+        final Map<String, dynamic> item = m as Map<String, dynamic>;
+        final int amount = item['amount'] as int;
+        final int price = item['price'] as int;
+
+        marketList.add(
+          Text(
+            "${amount}x @ \$${decimalFormat.format(price)}",
+            style: const TextStyle(
+              fontSize: 10,
             ),
-          );
-        }
-        marketColumn = Column(children: marketList);
+          ),
+        );
       }
+      marketColumn = Column(children: marketList);
 
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Column(
-                children: [
-                  bazaarHeader,
-                  const SizedBox(height: 2),
-                  bazaarColumn,
-                ],
-              ),
-              const Padding(
-                padding: EdgeInsets.only(top: 8),
-                child: SizedBox(
-                  height: 40,
-                  child: VerticalDivider(
-                    color: Colors.black,
+          if (marketList.isNotEmpty && _isTradeable)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Column(
+                    children: [
+                      marketHeader,
+                      const SizedBox(height: 2),
+                      marketColumn,
+                    ],
                   ),
                 ),
-              ),
-              Column(
-                children: [
-                  marketHeader,
-                  const SizedBox(height: 2),
-                  marketColumn,
-                ],
-              ),
-            ],
-          ),
-          description,
-          effect,
-          requirement,
-          weaponType,
-          coverage,
+              ],
+            )
+          else if (!_isTradeable)
+            Text(
+              "non-tradeable",
+              style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+            ),
+          Center(child: description),
+          Center(child: effect),
+          Center(child: requirement),
+          Center(child: weaponType),
+          Center(child: coverage),
         ],
       );
     }
@@ -453,7 +429,7 @@ class ItemCardState extends State<ItemCard> {
       child: Column(
         children: [
           Text(
-            "ERROR: could not contact API to retrieve bazaar and market details!",
+            "ERROR: could not contact API to retrieve details!",
             style: TextStyle(
               fontSize: 10,
               color: Colors.orange[800],
@@ -520,12 +496,21 @@ class ItemCardState extends State<ItemCard> {
   }
 
   Future _getFooterInformation() async {
-    final apiResponse = await Get.find<ApiCallerController>().getMarketItem(itemId: widget.item.id);
-    if (apiResponse is MarketItemModel) {
-      setState(() {
-        _footerSuccessful = true;
-        _marketItem = apiResponse;
-      });
+    try {
+      final apiResponse = await ApiCallsV2.getMarketItemApi_v2(
+        payload: {
+          "id": int.tryParse(widget.item.id!) ?? 0,
+        },
+      );
+
+      if (apiResponse is MarketItemMarketResponse) {
+        setState(() {
+          _footerSuccessful = true;
+          _marketItem = apiResponse.itemmarket!;
+        });
+      }
+    } catch (e) {
+      log("Error calling getMarketItemApi_v2: $e");
     }
     setState(() {});
     return;

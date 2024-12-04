@@ -12,10 +12,12 @@ import 'package:torn_pda/models/profile/revive_services/midnightx_revive_model.d
 class MidnightXRevive {
   int? tornId;
   String? username;
+  String? price;
 
   MidnightXRevive({
     required this.tornId,
     required this.username,
+    required this.price,
   });
 
   Future<String> callMedic() async {
@@ -42,7 +44,7 @@ class MidnightXRevive {
         if (details["contract"]) {
           return "Contract request has been sent to Midnight X. Thank you!";
         } else {
-          return "Request has been sent to Midnight X. Please pay your reviver a Xanax or 1 million TCD. Thank you!";
+          return "Request has been sent to Midnight X. Please pay your reviver $price. Thank you!";
         }
       } else if (response.statusCode == 400) {
         return "Error: bad payload sent";

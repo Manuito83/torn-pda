@@ -3,6 +3,7 @@ import 'dart:async';
 import "dart:collection";
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:io';
 import 'dart:math' as math;
 
 // Package imports:
@@ -43,9 +44,9 @@ class ForeignStockCard extends StatefulWidget {
   final TravelTicket? ticket;
   final Map<String, dynamic>? activeRestocks;
 
-  final int? travellingTimeStamp;
-  final CountryName travellingCountry;
-  final String? travellingCountryFullName;
+  final int? travelingTimeStamp;
+  final CountryName travelingCountry;
+  final String? travelingCountryFullName;
 
   final bool displayShowcase;
 
@@ -61,9 +62,9 @@ class ForeignStockCard extends StatefulWidget {
     required this.memberHiddenCallback,
     required this.ticket,
     required this.activeRestocks,
-    required this.travellingTimeStamp,
-    required this.travellingCountry,
-    required this.travellingCountryFullName,
+    required this.travelingTimeStamp,
+    required this.travelingCountry,
+    required this.travelingCountryFullName,
     required this.displayShowcase,
     required Key key,
   }) : super(key: key);
@@ -520,35 +521,36 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                     ),
                   ),
                   const SizedBox(height: 15),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                    child: CheckboxListTile(
-                      checkColor: Colors.white,
-                      activeColor: Colors.blue,
-                      value: widget.activeRestocks!.keys.contains(_codeName) ? true : false,
-                      title: const Text(
-                        "Restock alert (auto)",
-                        style: TextStyle(
-                          fontSize: 12,
+                  if (!Platform.isWindows)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+                      child: CheckboxListTile(
+                        checkColor: Colors.white,
+                        activeColor: Colors.blue,
+                        value: widget.activeRestocks!.keys.contains(_codeName) ? true : false,
+                        title: const Text(
+                          "Restock alert (auto)",
+                          style: TextStyle(
+                            fontSize: 12,
+                          ),
                         ),
-                      ),
-                      subtitle: Text(
-                        "Get notified whenever ${widget.foreignStock.name} is restocked in "
-                        "${widget.foreignStock.countryFullName}",
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontStyle: FontStyle.italic,
+                        subtitle: Text(
+                          "Get notified whenever ${widget.foreignStock.name} is restocked in "
+                          "${widget.foreignStock.countryFullName}",
+                          style: const TextStyle(
+                            fontSize: 11,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
+                        onChanged: (ticked) async {
+                          if (ticked!) {
+                            await _addToActiveRestockAlerts();
+                          } else {
+                            await _removeToActiveRestockAlerts();
+                          }
+                        },
                       ),
-                      onChanged: (ticked) async {
-                        if (ticked!) {
-                          await _addToActiveRestockAlerts();
-                        } else {
-                          await _removeToActiveRestockAlerts();
-                        }
-                      },
                     ),
-                  ),
                 ],
               ),
             );
@@ -591,7 +593,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     if (!widget.activeRestocks!.keys.contains(_codeName)) {
       Map<String, dynamic> tempMap = widget.activeRestocks!;
       tempMap.addAll({_codeName: time});
-      firestore.updateActiveRestockAlerts(tempMap).then((success) async {
+      FirestoreHelper().updateActiveRestockAlerts(tempMap).then((success) async {
         if (success) {
           setState(() {
             widget.activeRestocks!.addAll({_codeName: time});
@@ -621,7 +623,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     if (widget.activeRestocks!.keys.contains(_codeName)) {
       Map<String, dynamic> tempMap = widget.activeRestocks!;
       tempMap.removeWhere((key, value) => key == _codeName);
-      firestore.updateActiveRestockAlerts(tempMap).then((success) {
+      FirestoreHelper().updateActiveRestockAlerts(tempMap).then((success) {
         if (success) {
           setState(() {
             widget.activeRestocks!.removeWhere((key, value) => key == _codeName);
@@ -999,7 +1001,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   Future _getFooterInformation() async {
     try {
       // Get the stock
-      final firestoreData = await firestore.getStockInformation(_codeName);
+      final firestoreData = await FirestoreHelper().getStockInformation(_codeName);
 
       // Chart date
       final responseMap = firestoreData.get('periodicMap');
@@ -1103,7 +1105,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            energyTime.isBefore(DateTime.now())
+            widget.profile!.energy!.fulltime! == 0 || energyTime.isBefore(DateTime.now())
                 ? "- Energy is full"
                 : energyGap.inHours > 24
                     ? "- Energy will be full more than a day before your return"
@@ -1138,7 +1140,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            nerveTime.isBefore(DateTime.now())
+            widget.profile!.nerve!.fulltime! == 0 || nerveTime.isBefore(DateTime.now())
                 ? "- Nerve is full"
                 : nerveGap.inHours > 24
                     ? "- Nerve will be full more than a day before your return"
@@ -1173,7 +1175,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            drugsTime.isBefore(DateTime.now())
+            widget.profile!.cooldowns!.drug! == 0 || drugsTime.isBefore(DateTime.now())
                 ? "- No drug cooldown"
                 : drugsGap.inHours > 24
                     ? "- Drug cooldown will be over more than a day before your return"
@@ -1208,7 +1210,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            medicalTime.isBefore(DateTime.now())
+            widget.profile!.cooldowns!.medical! == 0 || medicalTime.isBefore(DateTime.now())
                 ? "- No medical cooldown"
                 : medicalGap.inHours > 24
                     ? "- Medical cooldown will be over more than a day before your return"
@@ -1243,7 +1245,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            boosterTime.isBefore(DateTime.now())
+            widget.profile!.cooldowns!.booster! == 0 || boosterTime.isBefore(DateTime.now())
                 ? "- No booster cooldown"
                 : boosterGap.inHours > 24
                     ? "- Booster cooldown will be over more than a day before your return"
@@ -1317,7 +1319,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              energyTime.isBefore(DateTime.now())
+              widget.profile!.energy!.fulltime! == 0 || energyTime.isBefore(DateTime.now())
                   ? "- Energy is full"
                   : energyGap.inHours > 24
                       ? "- Energy will be full more than a day before your return"
@@ -1339,7 +1341,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              nerveTime.isBefore(DateTime.now())
+              widget.profile!.nerve!.fulltime! == 0 || nerveTime.isBefore(DateTime.now())
                   ? "- Nerve is full"
                   : nerveGap.inHours > 24
                       ? "- Nerve will be full more than a day before your return"
@@ -1361,7 +1363,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              drugsTime.isBefore(DateTime.now())
+              widget.profile!.cooldowns!.drug! == 0 || drugsTime.isBefore(DateTime.now())
                   ? "- No drug cooldown"
                   : drugsGap.inHours > 24
                       ? "- Drug cooldown will be over more than a day before your return"
@@ -1383,7 +1385,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              medicalTime.isBefore(DateTime.now())
+              widget.profile!.cooldowns!.medical! == 0 || medicalTime.isBefore(DateTime.now())
                   ? "- No medical cooldown"
                   : medicalsGap.inHours > 24
                       ? "- Medical cooldown will be over more than a day before your return"
@@ -1405,7 +1407,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              boosterTime.isBefore(DateTime.now())
+              widget.profile!.cooldowns!.booster! == 0 || boosterTime.isBefore(DateTime.now())
                   ? "- No booster cooldown"
                   : boostersGap.inHours > 24
                       ? "- Booster cooldown will be over more than a day before your return"
@@ -1681,12 +1683,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     _tripExplanatory = "";
 
     final now = DateTime.now();
-    final travelTs = DateTime.fromMillisecondsSinceEpoch(widget.travellingTimeStamp! * 1000);
+    final travelTs = DateTime.fromMillisecondsSinceEpoch(widget.travelingTimeStamp! * 1000);
 
-    // If we are travelling or stopped in another country abroad
-    if (travelTs.isAfter(now) || widget.travellingCountry != CountryName.TORN) {
+    // If we are traveling or stopped in another country abroad
+    if (travelTs.isAfter(now) || widget.travelingCountry != CountryName.TORN) {
       // If we are in flight to Torn
-      if (widget.travellingCountry == CountryName.TORN) {
+      if (widget.travelingCountry == CountryName.TORN) {
         _flyingElsewhere = true;
         var timeToTorn = travelTs.difference(now).inSeconds;
         if (timeToTorn < 0) {
@@ -1709,7 +1711,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         _earliestBackToTorn = DateTime.now().add(Duration(seconds: timeToWidgetCountry * 2 + timeToTorn));
       }
       // If this stock is in the country we are flying to, just look at time remaining
-      else if (widget.travellingCountry == widget.foreignStock.country) {
+      else if (widget.travelingCountry == widget.foreignStock.country) {
         _flyingToThisCountry = true;
         var timeToWidgetCountry = travelTs.difference(now).inSeconds;
         if (timeToWidgetCountry < 0) {
@@ -1729,11 +1731,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final earliestArrivalToSame = DateTime.now().add(Duration(seconds: totalNeeded));
 
         if (timeToWidgetCountry == 0) {
-          _tripExplanatory = "You are visiting ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are visiting ${widget.travelingCountryFullName}\n\n"
               "If you like it here and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave now";
         } else {
-          _tripExplanatory = "You are flying to ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are flying to ${widget.travelingCountryFullName}\n\n"
               "If you like it there and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave quickly";
         }
@@ -1742,7 +1744,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       }
       // If we are flying to a different country, account for the whole trip and
       // return flight from the first country
-      else if (widget.travellingCountry != widget.foreignStock.country) {
+      else if (widget.travelingCountry != widget.foreignStock.country) {
         _flyingElsewhere = true;
         var timeToFirstCountryFromTorn = travelTs.difference(now).inSeconds;
         if (timeToFirstCountryFromTorn < 0) {
@@ -1750,7 +1752,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         }
         final timeBackToTorn = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
-              countryCode: widget.travellingCountry,
+              countryCode: widget.travelingCountry,
             ) *
             60;
         final timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
@@ -1762,11 +1764,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
 
         if (timeToFirstCountryFromTorn == 0) {
-          _tripExplanatory = "You are visiting ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are visiting ${widget.travelingCountryFullName}\n\n"
               "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time "
               "to ${widget.foreignStock.countryFullName} after you make your way back to Torn.";
         } else {
-          _tripExplanatory = "You are flying to ${widget.travellingCountryFullName}.\n\n"
+          _tripExplanatory = "You are flying to ${widget.travelingCountryFullName}.\n\n"
               "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time to ${widget.foreignStock.countryFullName} "
               "after you make your way back to Torn.";
         }

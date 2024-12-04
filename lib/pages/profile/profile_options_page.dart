@@ -309,8 +309,8 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                               Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 15),
                                 child: Text(
-                                  "If active, you\'ll see a colored shadow under the status card depending on the "
-                                  "actual player status colour in Torn",
+                                  "If active, you'll see a colored shadow under the status card depending on the "
+                                  "actual player status color in Torn",
                                   style: TextStyle(
                                     color: Colors.grey[600],
                                     fontSize: 12,

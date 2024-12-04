@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -21,7 +22,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -125,6 +126,8 @@ class WarPageState extends State<WarPage> {
     WarSort(type: WarSortType.notesDes),
     WarSort(type: WarSortType.notesAsc),
     WarSort(type: WarSortType.bounty),
+    WarSort(type: WarSortType.travelDistanceDesc),
+    WarSort(type: WarSortType.travelDistanceAsc),
   ];
 
   final _popupOptionsChoices = <WarOptions>[
@@ -1136,8 +1139,8 @@ class WarPageState extends State<WarPage> {
         });
       }
     } catch (e, trace) {
-      FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at War Quick Update");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
       logToUser("PDA Error at War Quick Update: $e, $trace");
     }
   }
@@ -1212,6 +1215,10 @@ class WarPageState extends State<WarPage> {
         _w.sortTargets(WarSortType.notesAsc);
       case WarSortType.bounty:
         _w.sortTargets(WarSortType.bounty);
+      case WarSortType.travelDistanceDesc:
+        _w.sortTargets(WarSortType.travelDistanceDesc);
+      case WarSortType.travelDistanceAsc:
+        _w.sortTargets(WarSortType.travelDistanceAsc);
       default:
         _w.sortTargets(WarSortType.nameAsc);
         break;
@@ -1373,7 +1380,7 @@ class AddFactionDialog extends StatelessWidget {
 
                         // If an user ID was inserted, we need to transform it first
                         if (warController.addFromUserId) {
-                          final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+                          final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
                           String convertError = "";
                           if (target is TargetModel) {
                             inputId = target.faction!.factionId.toString();

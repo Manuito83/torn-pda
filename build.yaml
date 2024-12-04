@@ -1,0 +1,20 @@
+targets:
+  $default:
+    sources:
+      - $package$
+      - lib/$lib$
+      - pubspec.yaml
+      - lib/models/api_v2/**
+      - lib/models/api_v2/swagger/**
+    builders:
+      chopper_generator:
+        options:
+          header: "//Generated code"
+      swagger_dart_code_generator:
+        options:
+          input_folder: "lib/models/api_v2/swagger/"
+          output_folder: "lib/models/api_v2/"
+          type_mappings:
+            "ForumId": "int"
+
+

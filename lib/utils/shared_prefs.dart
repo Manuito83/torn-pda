@@ -74,6 +74,7 @@ class Prefs {
   final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
   final String _kDarkThemeToSync = "tornLite_themeToSync";
   final String _kDynamicAppIcons = "pda_dynamicAppIcons";
+  final String _kDynamicAppIconsManual = "pda_dynamicAppIconsManual";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kDefaultSection = "pda_defaultSection";
@@ -119,6 +120,7 @@ class Prefs {
   final String _kTravelAlarmAhead = "pda_travelAlarmAhead";
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
+  final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
@@ -282,6 +284,11 @@ class Prefs {
   final String _kWebViewSecondaryTabs = "pda_webViewTabs";
   final String _kUseTabsInFullBrowser = "pda_useTabsInFullBrowser";
   final String _kUseTabsInBrowserDialog = "pda_useTabsInBrowserDialog";
+
+  final String _kRemoveUnusedTabs = "pda_removeUnusedTabs";
+  final String _kRemoveUnusedTabsIncludesLocked = "pda_removeUnusedTabsIncludesLocked";
+  final String _kRemoveUnusedTabsRangeDays = "pda_removeUnusedTabsRangeDays";
+
   final String _kOnlyLoadTabsWhenUsed = "pda_onlyLoadTabsWhenUsed";
   final String _kAutomaticChangeToNewTabFromURL = "pda_automaticChangeToNewTabFromURL";
   final String _kUseTabsHideFeature = "pda_useTabsHideFeature";
@@ -303,6 +310,8 @@ class Prefs {
   final String _kFullScreenByShortTap = "pda_fullScreenByShortTap";
   final String _kFullScreenByLongTap = "pda_fullScreenByLongTap";
   final String _kFullScreenByNotificationTap = "pda_fullScreenByNotificationTap";
+  final String _kFullScreenByShortChainingTap = "pda_fullScreenByShortChainingTap";
+  final String _kFullScreenByLongChainingTap = "pda_fullScreenByLongChainingTap";
   final String _kFullScreenByDeepLinkTap = "pda_fullScreenByDeepLinkTap";
   final String _kFullScreenByQuickItemTap = "pda_fullScreenByQuickItemTap";
   final String _kFullScreenIncludesPDAButtonTap = "pda_fullScreenIncludesPDAButtonTap";
@@ -368,7 +377,8 @@ class Prefs {
   final String _kAppwidgetDarkMode = "pda_appwidgetDarkMode";
   final String _kAppwidgetRemoveShortcutsOneRowLayout = "pda_appwidgetRemoveShortcutsOneRowLayout";
   final String _kAppwidgetMoneyEnabled = "pda_appwidgetMoneyEnabled";
-  final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown";
+  // V2 after battery checks implemented
+  final String _kAppwidgetExplanationShown = "pda_appwidgetExplanationShown_v2";
   final String _kAppwidgetCooldownTapOpensBrowser = "pda__appwidgetCooldownTapOpensBrowser";
   final String _kAppwidgetCooldownTapOpensBrowserDestination = "pda__appwidgetCooldownTapOpensBrowserDestination";
 
@@ -386,6 +396,19 @@ class Prefs {
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
   final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
+
+  // FCM token
+  final String _kFCMToken = "pda_fcmToken";
+
+  // Sendbird notifications
+  final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
+  final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
+  final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
+
+  final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
+
+  // Periodic tasks
+  final String _taskPrefix = "pda_periodic_";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -911,6 +934,18 @@ class Prefs {
     return prefs.setBool(_kDynamicAppIcons, value);
   }
 
+  //--
+
+  Future<String> getDynamicAppIconsManual() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kDynamicAppIconsManual) ?? "off";
+  }
+
+  Future<bool> setDynamicAppIconsManual(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kDynamicAppIconsManual, value);
+  }
+
   /// ----------------------------
   /// Methods for vibration pattern
   /// ----------------------------
@@ -1408,6 +1443,16 @@ class Prefs {
   Future<bool> setRemoveAirplane(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kRemoveAirplane, value);
+  }
+
+  Future<bool> getRemoveTravelQuickReturnButton() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRemoveTravelQuickReturnButton) ?? false;
+  }
+
+  Future<bool> setRemoveTravelQuickReturnButton(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRemoveTravelQuickReturnButton, value);
   }
 
   /// ----------------------------
@@ -3159,6 +3204,40 @@ class Prefs {
     return prefs.setBool(_kUseTabsInBrowserDialog, value);
   }
 
+  // -- Remove unused tabs
+
+  Future<bool> getRemoveUnusedTabs() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRemoveUnusedTabs) ?? true;
+  }
+
+  Future<bool> setRemoveUnusedTabs(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRemoveUnusedTabs, value);
+  }
+
+  Future<bool> getRemoveUnusedTabsIncludesLocked() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kRemoveUnusedTabsIncludesLocked) ?? false;
+  }
+
+  Future<bool> setRemoveUnusedTabsIncludesLocked(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kRemoveUnusedTabsIncludesLocked, value);
+  }
+
+  Future<int> getRemoveUnusedTabsRangeDays() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kRemoveUnusedTabsRangeDays) ?? 7;
+  }
+
+  Future<bool> setRemoveUnusedTabsRangeDays(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kRemoveUnusedTabsRangeDays, value);
+  }
+
+  // ---------------------
+
   Future<bool> getOnlyLoadTabsWhenUsed() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kOnlyLoadTabsWhenUsed) ?? true;
@@ -3383,6 +3462,28 @@ class Prefs {
   Future<bool> setFullScreenByNotificationTap(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kFullScreenByNotificationTap, value);
+  }
+
+  //--
+
+  Future<bool> getFullScreenByShortChainingTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByShortChainingTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByShortChainingTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByShortChainingTap, value);
+  }
+
+  Future<bool> getFullScreenByLongChainingTap() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kFullScreenByLongChainingTap) ?? false;
+  }
+
+  Future<bool> setFullScreenByLongChainingTap(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kFullScreenByLongChainingTap, value);
   }
 
   //--
@@ -3680,5 +3781,85 @@ class Prefs {
   Future<bool> setSplitScreenRevertsToApp(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kSplitScreenRevertsToApp, value);
+  }
+
+  /// ----------------------------
+  /// FCM Token
+  /// ----------------------------
+  Future<String> getFCMToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kFCMToken) ?? "";
+  }
+
+  Future<bool> setFCMToken(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kFCMToken, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Sendbird notifications
+  /// ----------------------------
+  Future<bool> getSendbirdNotificationsEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSendbirdnotificationsEnabled) ?? false;
+  }
+
+  Future<bool> setSendbirdNotificationsEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSendbirdnotificationsEnabled, value);
+  }
+
+  Future<String> getSendbirdSessionToken() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kSendbirdSessionToken) ?? "";
+  }
+
+  Future<bool> setSendbirdSessionToken(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kSendbirdSessionToken, value);
+  }
+
+  Future<int> getSendbirdTokenTimestamp() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kSendbirdTokenTimestamp) ?? 0;
+  }
+
+  Future<bool> setSendbirdTokenTimestamp(int timestamp) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kSendbirdTokenTimestamp, timestamp);
+  }
+
+  //
+
+  Future<bool> getBringBrowserForwardOnStart() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBringBrowserForwardOnStart) ?? false;
+  }
+
+  Future<bool> setBringBrowserForwardOnStart(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBringBrowserForwardOnStart, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for task periodic execution
+  /// -----------------------------------
+
+  /// Stores the last execution time for a given task name
+  Future<bool> setLastExecutionTime(String taskName, int timestamp) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt("$_taskPrefix$taskName", timestamp);
+  }
+
+  /// Retrieves the last execution time for a given task name
+  Future<int> getLastExecutionTime(String taskName) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt("$_taskPrefix$taskName") ?? 0;
+  }
+
+  /// Removes the stored execution time for a task
+  Future<bool> removeLastExecutionTime(String taskName) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.remove("$_taskPrefix$taskName");
   }
 }

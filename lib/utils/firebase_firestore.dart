@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
@@ -13,17 +14,27 @@ import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-final firestore = FirestoreHelper();
-
 class FirestoreHelper {
+  static final FirestoreHelper _instance = FirestoreHelper._internal();
+  FirestoreHelper._internal();
+
+  factory FirestoreHelper() {
+    return _instance;
+  }
+
+  final Completer uidCompleter = Completer();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   bool _alreadyUploaded = false;
   FirebaseUserModel? _firebaseUserModel;
 
   String? _uid;
-  void setUID(String userUID) {
+  Future setUID(String userUID) async {
     _uid = userUID;
+    if (!uidCompleter.isCompleted) {
+      uidCompleter.complete();
+    }
   }
 
   // Settings, when user initialized after API key validated
@@ -34,16 +45,19 @@ class FirestoreHelper {
     if (_alreadyUploaded && !userTriggered) return null;
     _alreadyUploaded = true;
 
-    final platform = Platform.isAndroid ? "android" : "ios";
+    final platform = Platform.isAndroid
+        ? "android"
+        : Platform.isIOS
+            ? "ios"
+            : "windows";
 
     // Generate or replace token if it already exists
-    // This avoids having multiple UIDs with a repeated token in case that the UID is artificially regenerated
-    String? token = "";
-    final String currentToken = (await _messaging.getToken())!;
-    if (currentToken.isNotEmpty) {
-      await FirebaseMessaging.instance.deleteToken();
+    String token = "";
+    if (!Platform.isWindows) {
+      token = await _getMessagingToken();
+    } else {
+      token = "windows";
     }
-    token = (await _messaging.getToken())!;
     log("FCM token: $token");
 
     // Gets what's saved in Firebase in case we need to use it or there are some options from previous installations.
@@ -363,5 +377,23 @@ class FirestoreHelper {
     await _firestore.collection("players").doc(_uid).update({
       "lootRangersNotification": subscribe,
     });
+  }
+
+  Future<String> _getMessagingToken() async {
+    // On iOS, ensure we have an APNS token before getting the FCM one
+    if (Platform.isIOS) {
+      await FirebaseMessaging.instance.getAPNSToken();
+    }
+
+    final String? currentToken = await _messaging.getToken().onError((error, stackTrace) {
+      log("TOKEN ERROR!");
+      return "error";
+    });
+
+    if (currentToken != null) {
+      Prefs().setFCMToken(currentToken);
+      return currentToken;
+    }
+    return "error";
   }
 }

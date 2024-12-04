@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -273,8 +275,8 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
     } catch (e, trace) {
       message = "Error: $e";
       color = Colors.red;
-      FirebaseCrashlytics.instance.log("PDA Crash at Send Online Backup");
-      FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Send Online Backup");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
       logToUser("PDA Crash at WebviewFull dispose: $e, $trace");
     }
 

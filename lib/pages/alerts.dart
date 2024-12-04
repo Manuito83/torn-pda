@@ -11,7 +11,9 @@ import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/pages/alerts/alerts_tsm_dialog.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -19,6 +21,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
+import 'package:torn_pda/widgets/alerts/sendbird_dnd_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 
 class AlertsSettings extends StatefulWidget {
@@ -43,16 +46,19 @@ class AlertsSettingsState extends State<AlertsSettings> {
   late WebViewProvider _webViewProvider;
 
   final _scrollController = ScrollController();
+  final _scrollControllerRetalsGeneral = ScrollController();
+  final _scrollControllerRetalsNotification = ScrollController();
+  final _scrollControllerRetalsDonor = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _getFirebaseAndTornDetails = Future.wait([
-      firestore.getUserProfile(),
+      FirestoreHelper().getUserProfile(),
       _getFactionApiAccess(),
     ]);
-    analytics.logScreenView(screenName: 'alerts');
+    analytics?.logScreenView(screenName: 'alerts');
 
     routeWithDrawer = true;
     routeName = "alerts";
@@ -61,6 +67,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _scrollControllerRetalsGeneral.dispose();
+    _scrollControllerRetalsNotification.dispose();
+    _scrollControllerRetalsDonor.dispose();
     super.dispose();
   }
 
@@ -84,7 +93,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           future: _getFirebaseAndTornDetails,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.data[0] is FirebaseUserModel) {
+              if (snapshot.data != null && snapshot.data[0] is FirebaseUserModel) {
                 _firebaseUserModel ??= snapshot.data[0] as FirebaseUserModel?;
                 return SingleChildScrollView(
                   controller: _scrollController,
@@ -118,7 +127,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.energyNotification = value;
                             });
-                            firestore.subscribeToEnergyNotification(value);
+                            FirestoreHelper().subscribeToEnergyNotification(value);
                           },
                         ),
                       ),
@@ -140,7 +149,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.nerveNotification = value;
                             });
-                            firestore.subscribeToNerveNotification(value);
+                            FirestoreHelper().subscribeToNerveNotification(value);
                           },
                         ),
                       ),
@@ -162,7 +171,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.lifeNotification = value;
                             });
-                            firestore.subscribeToLifeNotification(value);
+                            FirestoreHelper().subscribeToLifeNotification(value);
                           },
                         ),
                       ),
@@ -185,7 +194,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.travelNotification = value;
                             });
-                            firestore.subscribeToTravelNotification(value);
+                            FirestoreHelper().subscribeToTravelNotification(value);
                           },
                         ),
                       ),
@@ -208,7 +217,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.foreignRestockNotification = value;
                             });
-                            firestore.subscribeToForeignRestockNotification(value);
+                            FirestoreHelper().subscribeToForeignRestockNotification(value);
                           },
                         ),
                       ),
@@ -242,7 +251,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                     setState(() {
                                       _firebaseUserModel?.foreignRestockNotificationOnlyCurrentCountry = value;
                                     });
-                                    firestore.changeForeignRestockNotificationOnlyCurrentCountry(value);
+                                    FirestoreHelper().changeForeignRestockNotificationOnlyCurrentCountry(value);
                                   },
                                 ),
                               ),
@@ -268,7 +277,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.hospitalNotification = value;
                             });
-                            firestore.subscribeToHospitalNotification(value);
+                            FirestoreHelper().subscribeToHospitalNotification(value);
                           },
                         ),
                       ),
@@ -291,7 +300,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.drugsNotification = value;
                             });
-                            firestore.subscribeToDrugsNotification(value);
+                            FirestoreHelper().subscribeToDrugsNotification(value);
                           },
                         ),
                       ),
@@ -315,7 +324,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.medicalNotification = value;
                             });
-                            firestore.subscribeToMedicalNotification(value);
+                            FirestoreHelper().subscribeToMedicalNotification(value);
                           },
                         ),
                       ),
@@ -339,7 +348,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.boosterNotification = value;
                             });
-                            firestore.subscribeToBoosterNotification(value);
+                            FirestoreHelper().subscribeToBoosterNotification(value);
                           },
                         ),
                       ),
@@ -415,7 +424,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.lootRangersAlerts = value;
                             });
-                            firestore.subscribeToLootRangersNotification(value);
+                            FirestoreHelper().subscribeToLootRangersNotification(value);
                           },
                         ),
                       ),
@@ -437,7 +446,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.racingNotification = value;
                             });
-                            firestore.subscribeToRacingNotification(value);
+                            FirestoreHelper().subscribeToRacingNotification(value);
                           },
                         ),
                       ),
@@ -459,7 +468,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.messagesNotification = value;
                             });
-                            firestore.subscribeToMessagesNotification(value);
+                            FirestoreHelper().subscribeToMessagesNotification(value);
                           },
                         ),
                       ),
@@ -481,7 +490,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.eventsNotification = value;
                             });
-                            firestore.subscribeToEventsNotification(value);
+                            FirestoreHelper().subscribeToEventsNotification(value);
                           },
                         ),
                       ),
@@ -536,7 +545,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.refillsNotification = value;
                             });
-                            firestore.subscribeToRefillsNotification(value);
+                            FirestoreHelper().subscribeToRefillsNotification(value);
                           },
                         ),
                       ),
@@ -668,7 +677,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   setState(() {
                                     _firebaseUserModel?.refillsTime = value;
                                   });
-                                  firestore.setRefillTime(value);
+                                  FirestoreHelper().setRefillTime(value);
                                 },
                               ),
                             ],
@@ -760,7 +769,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             setState(() {
                               _firebaseUserModel?.factionAssistMessage = value;
                             });
-                            firestore.toggleFactionAssistMessage(value);
+                            FirestoreHelper().toggleFactionAssistMessage(value);
                           },
                         ),
                       ),
@@ -814,7 +823,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                               setState(() {
                                 _firebaseUserModel?.retalsNotification = enabled;
                               });
-                              firestore.toggleRetaliationNotification(enabled);
+                              FirestoreHelper().toggleRetaliationNotification(enabled);
                               return;
                             }
 
@@ -822,7 +831,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                               setState(() {
                                 _firebaseUserModel?.retalsNotification = enabled;
                               });
-                              firestore.toggleRetaliationNotification(enabled);
+                              FirestoreHelper().toggleRetaliationNotification(enabled);
 
                               // Makes sure to scroll down so that the new 2 options are visible
                               _scrollController.animateTo(
@@ -838,7 +847,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 setState(() {
                                   _firebaseUserModel?.retalsNotification = enabled;
                                 });
-                                firestore.toggleRetaliationNotification(enabled, host: false);
+                                FirestoreHelper().toggleRetaliationNotification(enabled, host: false);
                                 message = "You have no faction API permissions (talk to your leadership about it).\n\n"
                                     "This alert has been activated, but it won't work unless someone with proper "
                                     "permissions in your faction activates it as well.";
@@ -973,12 +982,87 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   setState(() {
                                     _firebaseUserModel?.retalsNotificationDonor = enabled;
                                   });
-                                  firestore.toggleRetaliationDonor(enabled);
+                                  FirestoreHelper().toggleRetaliationDonor(enabled);
                                 },
                               ),
                             ],
                           ),
                         ),
+                      GetBuilder(
+                        init: SendbirdController(),
+                        builder: (sendbird) {
+                          return Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                                child: CheckboxListTile(
+                                  checkColor: Colors.white,
+                                  activeColor: Colors.blueGrey,
+                                  value: sendbird.sendBirdNotificationsEnabled,
+                                  title: Row(
+                                    children: [
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 5),
+                                        child: Text(
+                                          "Torn chat messages",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  subtitle: const Text(
+                                    "Enable notifications for TORN chat messages",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  onChanged: (enabled) async {
+                                    sendbird.sendBirdNotificationsToggle(enabled: enabled!);
+                                  },
+                                ),
+                              ),
+                              if (sendbird.sendBirdNotificationsEnabled)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 30, right: 32),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.keyboard_arrow_right_outlined),
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 10),
+                                            child: Text(
+                                              "Do not disturb",
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      GestureDetector(
+                                        child: Icon(Icons.more_time_outlined),
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return SendbirdDoNotDisturbDialog();
+                                            },
+                                          );
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -1476,8 +1560,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
     return AlertDialog(
       title: const Text("Retaliation alerts"),
       content: Scrollbar(
+        controller: _scrollControllerRetalsGeneral,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollControllerRetalsGeneral,
           child: Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Column(
@@ -1549,9 +1635,11 @@ class AlertsSettingsState extends State<AlertsSettings> {
   AlertDialog _retalsNotificationExplanation() {
     return AlertDialog(
       title: const Text("Retaliation notification"),
-      content: const Scrollbar(
+      content: Scrollbar(
+        controller: _scrollControllerRetalsNotification,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollControllerRetalsNotification,
           child: Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
@@ -1590,9 +1678,11 @@ class AlertsSettingsState extends State<AlertsSettings> {
   AlertDialog _retalsDonorExplanation() {
     return AlertDialog(
       title: const Text("Retaliation API Faction permissions donor"),
-      content: const Scrollbar(
+      content: Scrollbar(
+        controller: _scrollControllerRetalsDonor,
         thumbVisibility: true,
         child: SingleChildScrollView(
+          controller: _scrollControllerRetalsDonor,
           child: Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
@@ -1629,7 +1719,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   Future _getFactionApiAccess() async {
     // Assess whether we have permits
-    final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+    final attacksResult = await ApiCallsV1.getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       _factionApiAccess = true;
     } else if (attacksResult is ApiError) {
