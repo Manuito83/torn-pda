@@ -2567,8 +2567,8 @@ class SettingsPageState extends State<SettingsPage> {
                                       _apiError = false;
                                     });
                                     if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
-                                    await FirestoreHelper().deleteUserProfile();
-                                    await firebaseAuth.signOut();
+                                    if (!Platform.isWindows) await FirestoreHelper().deleteUserProfile();
+                                    if (!Platform.isWindows) await firebaseAuth.signOut();
                                     widget.changeUID("");
                                   },
                                 ),

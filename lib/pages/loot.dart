@@ -275,7 +275,7 @@ class LootPageState extends State<LootPage> {
           )
         else
           const SizedBox.shrink(),
-        if (_apiSuccess && Platform.isIOS)
+        if (_apiSuccess && (Platform.isIOS || Platform.isWindows))
           IconButton(
             icon: Icon(
               Icons.alarm_on,
@@ -427,7 +427,7 @@ class LootPageState extends State<LootPage> {
             }
 
             Widget notificationIcon;
-            if (!Platform.isWindows && (!isPast && !isCurrent)) {
+            if (!isPast && !isCurrent) {
               bool isPending = false;
               for (final id in _activeNotificationsIds) {
                 if (id == int.parse('400$npcId$levelNumber')) {
@@ -935,13 +935,12 @@ class LootPageState extends State<LootPage> {
                     },
                   ),
                 ),
-                if (!Platform.isWindows)
-                  Row(
-                    children: [
-                      const SizedBox(width: 15),
-                      notificationIcon,
-                    ],
-                  ),
+                Row(
+                  children: [
+                    const SizedBox(width: 15),
+                    notificationIcon,
+                  ],
+                ),
               ],
             ),
         ],
@@ -1292,8 +1291,6 @@ class LootPageState extends State<LootPage> {
   }
 
   Future _retrievePendingNotifications() async {
-    if (Platform.isWindows) return;
-
     try {
       final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -1309,8 +1306,6 @@ class LootPageState extends State<LootPage> {
   }
 
   Future _cancelPassedNotifications() async {
-    if (Platform.isWindows) return;
-
     try {
       final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
