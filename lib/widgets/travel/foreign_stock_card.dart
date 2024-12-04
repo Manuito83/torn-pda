@@ -1105,7 +1105,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            energyTime.isBefore(DateTime.now())
+            widget.profile!.energy!.fulltime! == 0 || energyTime.isBefore(DateTime.now())
                 ? "- Energy is full"
                 : energyGap.inHours > 24
                     ? "- Energy will be full more than a day before your return"
@@ -1140,7 +1140,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            nerveTime.isBefore(DateTime.now())
+            widget.profile!.nerve!.fulltime! == 0 || nerveTime.isBefore(DateTime.now())
                 ? "- Nerve is full"
                 : nerveGap.inHours > 24
                     ? "- Nerve will be full more than a day before your return"
@@ -1175,7 +1175,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            drugsTime.isBefore(DateTime.now())
+            widget.profile!.cooldowns!.drug! == 0 || drugsTime.isBefore(DateTime.now())
                 ? "- No drug cooldown"
                 : drugsGap.inHours > 24
                     ? "- Drug cooldown will be over more than a day before your return"
@@ -1210,7 +1210,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            medicalTime.isBefore(DateTime.now())
+            widget.profile!.cooldowns!.medical! == 0 || medicalTime.isBefore(DateTime.now())
                 ? "- No medical cooldown"
                 : medicalGap.inHours > 24
                     ? "- Medical cooldown will be over more than a day before your return"
@@ -1245,7 +1245,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         Padding(
           padding: const EdgeInsets.only(left: 5),
           child: Text(
-            boosterTime.isBefore(DateTime.now())
+            widget.profile!.cooldowns!.booster! == 0 || boosterTime.isBefore(DateTime.now())
                 ? "- No booster cooldown"
                 : boosterGap.inHours > 24
                     ? "- Booster cooldown will be over more than a day before your return"
@@ -1319,7 +1319,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              energyTime.isBefore(DateTime.now())
+              widget.profile!.energy!.fulltime! == 0 || energyTime.isBefore(DateTime.now())
                   ? "- Energy is full"
                   : energyGap.inHours > 24
                       ? "- Energy will be full more than a day before your return"
@@ -1341,7 +1341,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              nerveTime.isBefore(DateTime.now())
+              widget.profile!.nerve!.fulltime! == 0 || nerveTime.isBefore(DateTime.now())
                   ? "- Nerve is full"
                   : nerveGap.inHours > 24
                       ? "- Nerve will be full more than a day before your return"
@@ -1363,7 +1363,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              drugsTime.isBefore(DateTime.now())
+              widget.profile!.cooldowns!.drug! == 0 || drugsTime.isBefore(DateTime.now())
                   ? "- No drug cooldown"
                   : drugsGap.inHours > 24
                       ? "- Drug cooldown will be over more than a day before your return"
@@ -1385,7 +1385,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              medicalTime.isBefore(DateTime.now())
+              widget.profile!.cooldowns!.medical! == 0 || medicalTime.isBefore(DateTime.now())
                   ? "- No medical cooldown"
                   : medicalsGap.inHours > 24
                       ? "- Medical cooldown will be over more than a day before your return"
@@ -1407,7 +1407,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           Padding(
             padding: const EdgeInsets.only(left: 5),
             child: Text(
-              boosterTime.isBefore(DateTime.now())
+              widget.profile!.cooldowns!.booster! == 0 || boosterTime.isBefore(DateTime.now())
                   ? "- No booster cooldown"
                   : boostersGap.inHours > 24
                       ? "- Booster cooldown will be over more than a day before your return"
