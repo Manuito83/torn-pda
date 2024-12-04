@@ -60,6 +60,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added channel info to chat notifications",
           "Fixed cooldown calculations for traveling",
           "Fixed deep links issues",
+          "Fixed revive icon in Profile",
         ],
     );
 
