@@ -44,9 +44,9 @@ class ForeignStockCard extends StatefulWidget {
   final TravelTicket? ticket;
   final Map<String, dynamic>? activeRestocks;
 
-  final int? travellingTimeStamp;
-  final CountryName travellingCountry;
-  final String? travellingCountryFullName;
+  final int? travelingTimeStamp;
+  final CountryName travelingCountry;
+  final String? travelingCountryFullName;
 
   final bool displayShowcase;
 
@@ -62,9 +62,9 @@ class ForeignStockCard extends StatefulWidget {
     required this.memberHiddenCallback,
     required this.ticket,
     required this.activeRestocks,
-    required this.travellingTimeStamp,
-    required this.travellingCountry,
-    required this.travellingCountryFullName,
+    required this.travelingTimeStamp,
+    required this.travelingCountry,
+    required this.travelingCountryFullName,
     required this.displayShowcase,
     required Key key,
   }) : super(key: key);
@@ -1683,12 +1683,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     _tripExplanatory = "";
 
     final now = DateTime.now();
-    final travelTs = DateTime.fromMillisecondsSinceEpoch(widget.travellingTimeStamp! * 1000);
+    final travelTs = DateTime.fromMillisecondsSinceEpoch(widget.travelingTimeStamp! * 1000);
 
-    // If we are travelling or stopped in another country abroad
-    if (travelTs.isAfter(now) || widget.travellingCountry != CountryName.TORN) {
+    // If we are traveling or stopped in another country abroad
+    if (travelTs.isAfter(now) || widget.travelingCountry != CountryName.TORN) {
       // If we are in flight to Torn
-      if (widget.travellingCountry == CountryName.TORN) {
+      if (widget.travelingCountry == CountryName.TORN) {
         _flyingElsewhere = true;
         var timeToTorn = travelTs.difference(now).inSeconds;
         if (timeToTorn < 0) {
@@ -1711,7 +1711,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         _earliestBackToTorn = DateTime.now().add(Duration(seconds: timeToWidgetCountry * 2 + timeToTorn));
       }
       // If this stock is in the country we are flying to, just look at time remaining
-      else if (widget.travellingCountry == widget.foreignStock.country) {
+      else if (widget.travelingCountry == widget.foreignStock.country) {
         _flyingToThisCountry = true;
         var timeToWidgetCountry = travelTs.difference(now).inSeconds;
         if (timeToWidgetCountry < 0) {
@@ -1731,11 +1731,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         final earliestArrivalToSame = DateTime.now().add(Duration(seconds: totalNeeded));
 
         if (timeToWidgetCountry == 0) {
-          _tripExplanatory = "You are visiting ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are visiting ${widget.travelingCountryFullName}\n\n"
               "If you like it here and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave now";
         } else {
-          _tripExplanatory = "You are flying to ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are flying to ${widget.travelingCountryFullName}\n\n"
               "If you like it there and would like to come back later, ${_timeFormatter(earliestArrivalToSame)} "
               "is your earliest possible return time if you leave quickly";
         }
@@ -1744,7 +1744,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       }
       // If we are flying to a different country, account for the whole trip and
       // return flight from the first country
-      else if (widget.travellingCountry != widget.foreignStock.country) {
+      else if (widget.travelingCountry != widget.foreignStock.country) {
         _flyingElsewhere = true;
         var timeToFirstCountryFromTorn = travelTs.difference(now).inSeconds;
         if (timeToFirstCountryFromTorn < 0) {
@@ -1752,7 +1752,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         }
         final timeBackToTorn = TravelTimes.travelTimeMinutesOneWay(
               ticket: widget.ticket,
-              countryCode: widget.travellingCountry,
+              countryCode: widget.travelingCountry,
             ) *
             60;
         final timeToWidgetCountry = TravelTimes.travelTimeMinutesOneWay(
@@ -1764,11 +1764,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         _earliestArrival = DateTime.now().add(Duration(seconds: totalNeeded));
 
         if (timeToFirstCountryFromTorn == 0) {
-          _tripExplanatory = "You are visiting ${widget.travellingCountryFullName}\n\n"
+          _tripExplanatory = "You are visiting ${widget.travelingCountryFullName}\n\n"
               "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time "
               "to ${widget.foreignStock.countryFullName} after you make your way back to Torn.";
         } else {
-          _tripExplanatory = "You are flying to ${widget.travellingCountryFullName}.\n\n"
+          _tripExplanatory = "You are flying to ${widget.travelingCountryFullName}.\n\n"
               "${_timeFormatter(_earliestArrival)} is your earliest possible arrival time to ${widget.foreignStock.countryFullName} "
               "after you make your way back to Torn.";
         }

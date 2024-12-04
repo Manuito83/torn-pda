@@ -921,7 +921,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             children: [
               Flexible(
                 child: Text(
-                  'Removes airplane and cloud animation when travelling',
+                  'Removes airplane and cloud animation when traveling',
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -2061,7 +2061,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        const Text("Choose hide bar colour"),
+                        const Text("Choose hide bar color"),
                         Container(
                           width: 25,
                           height: 25,
@@ -2074,7 +2074,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    'Choose the colour of the bar that indicates that tabs are hidden',
+                    'Choose the color of the bar that indicates that tabs are hidden',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,

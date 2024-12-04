@@ -2015,7 +2015,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
     }
   }
 
-  /// Analysis of hit elements to change navigation behaviour
+  /// Analysis of hit elements to change navigation behavior
   Future<bool> _hitShouldOpenNewTab(
     InAppWebViewController c,
     NavigationAction request,

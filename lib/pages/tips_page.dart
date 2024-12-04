@@ -735,7 +735,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         headerValue: "Use the chat in different tabs",
         expandedValue: "You can activate or deactivate the chat in separate tabs by short-tapping the chat icon "
             "(enabled in Settings by default)."
-            "\n\nIf you wish to change the standard behaviour of the chat when a new tab is opened, long-press the "
+            "\n\nIf you wish to change the standard behavior of the chat when a new tab is opened, long-press the "
             "chat icon in any tab and you'll get a confirmation message of the change.",
       ),
     );

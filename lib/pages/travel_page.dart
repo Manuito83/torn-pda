@@ -532,7 +532,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         ),
       ];
     }
-    // API was correct: are we travelling or not?
+    // API was correct: are we traveling or not?
     if (_travelModel.abroad) {
       // If we have reached another country
       if (_travelModel.destination != 'Torn' && _travelModel.timeLeft! < 15) {
@@ -656,7 +656,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
           const Padding(
             padding: EdgeInsetsDirectional.only(bottom: 30),
             child: Text(
-              'TRAVELLING',
+              'TRAVELING',
               style: TextStyle(
                 color: Colors.green,
                 fontSize: 20,
@@ -738,7 +738,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         ];
       }
     } else {
-      // We are in Torn, not travelling
+      // We are in Torn, not traveling
       return <Widget>[
         Column(
           children: <Widget>[

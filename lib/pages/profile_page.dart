@@ -1216,7 +1216,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ],
                           )
                         else
-                          // Travelling while in hospital (repatriation)
+                          // Traveling while in hospital (repatriation)
                           Column(
                             children: [
                               Row(
