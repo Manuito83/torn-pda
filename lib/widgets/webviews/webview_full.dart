@@ -305,7 +305,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
-  final _findInteractionController = null;
+  final _findInteractionController = Platform.isWindows ? null : FindInteractionController();
 
   bool _omitTabHistory = false;
 
@@ -651,11 +651,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: () async {
+                if (_findInteractionController == null) return;
                 setState(() {
                   _findInPageActive = false;
                 });
                 _findController.text = "";
-                _findInteractionController.clearMatches();
+                _findInteractionController!.clearMatches();
                 _findFirstSubmitted = false;
               },
             ),
@@ -2319,6 +2320,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           leading: IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () async {
+              if (_findInteractionController == null) return;
+
               setState(() {
                 _findInPageActive = false;
               });
@@ -2329,7 +2332,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               }
 
               _findController.text = "";
-              _findInteractionController.clearMatches();
+              _findInteractionController!.clearMatches();
               _findFirstSubmitted = false;
             },
           ),
@@ -4260,16 +4263,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _findAll() {
+    if (_findInteractionController == null) return;
     if (_findController.text.isNotEmpty) {
       setState(() {
         _findFirstSubmitted = true;
       });
-      _findInteractionController.findAll(find: _findController.text);
+      _findInteractionController!.findAll(find: _findController.text);
     }
   }
 
   void _findNext({required bool forward}) {
-    _findInteractionController.findNext(forward: forward);
+    if (_findInteractionController == null) return;
+    _findInteractionController!.findNext(forward: forward);
     if (_findFocus.hasFocus) _findFocus.unfocus();
   }
 
