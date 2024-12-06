@@ -1178,7 +1178,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows && widget.windowId == null) {
+            if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
@@ -1298,7 +1298,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows && widget.windowId == null) {
+            if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
@@ -1501,7 +1501,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
                 url: uri.toString(),
               );
-              if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+              if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
                 for (final group in scriptsToRemove) {
                   await c.removeUserScriptsByGroupName(groupName: group!);
                 }
@@ -4992,7 +4992,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     inputUrl.replaceAll("http://", "https://");
 
-    if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+    if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
       // Loads userscripts that are not triggered in shouldOverrideUrlLoading
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
