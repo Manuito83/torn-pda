@@ -51,17 +51,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.1 - Build 464 - 05/11/2024
+    // v3.6.1 - Build 465 - 06/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.1'
         ..date = '8 DEC 2024'
         ..features = [
           "Added channel info to chat notifications",
+          "Fixed notifications for own chat messages",
           "Fixed cooldown calculations for traveling",
           "Fixed deep links issues",
           "Fixed revive icon in Profile",
-          "Fixed webview search",
+          "Fixed browser search",
         ],
     );
 

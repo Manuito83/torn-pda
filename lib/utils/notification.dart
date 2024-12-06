@@ -15,6 +15,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 
@@ -906,6 +907,8 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
 }
 
 showSendbirdNotification(String sender, String message, String channelUrl) async {
+  if (sender.toLowerCase() == Get.find<UserController>().playerName.toLowerCase()) return;
+
   final modifier = await getNotificationChannelsModifiers();
   String channelTitle = "Torn chat ${modifier.channelIdModifier} s";
   String channelSubtitle = "Torn chat ${modifier.channelIdModifier} s";

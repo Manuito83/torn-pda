@@ -3701,6 +3701,7 @@ class SettingsPageState extends State<SettingsPage> {
         if (uc.playerId == 0 && myProfile.playerId != null) {
           uc.playerId = myProfile.playerId!;
           uc.apiKey = myProfile.userApiKey;
+          uc.playerName = myProfile.name!;
         }
 
         // Firestore uploading, but only if "Load" pressed by user
