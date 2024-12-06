@@ -1178,7 +1178,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows && widget.windowId == null) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
@@ -1193,6 +1193,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
                   "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
+                  "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+            } else if (Platform.isWindows && widget.windowId != null) {
+              _terminalProvider.addInstruction(
+                  "TORN PDA NOTE: Windows does not support user scripts injection in new windows (like this one), but only in "
                   "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             }
 
@@ -1294,7 +1298,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
+            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows && widget.windowId == null) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
