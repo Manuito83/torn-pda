@@ -65,13 +65,12 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:windows_notification/windows_notification.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.6.0';
-const String androidCompilation = '463';
-const String iosCompilation = '463';
+const String appVersion = '3.6.1';
+const String androidCompilation = '465';
+const String iosCompilation = '465';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -86,11 +85,6 @@ final FirebaseAnalytics? analytics = Platform.isWindows ? null : FirebaseAnalyti
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-// TODO Run [flutter run --machine] to set up
-final winNotifyPlugin = WindowsNotification(
-  applicationId: kDebugMode ? r"{fdf9adab-cc5d-4660-aec3-f9b7e4b3e355}\WindowsPowerShell\v1.0\powershell.exe" : null,
-);
 
 final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
     StreamController<ReceivedNotification>.broadcast();
@@ -198,6 +192,7 @@ Future<void> main() async {
   const initizationSettingsWindows = WindowsInitializationSettings(
     appName: 'Torn PDA',
     appUserModelId: 'com.manuito.tornpda',
+    // Run [flutter run --machine] to set up ??
     guid: 'fdf9adab-cc5d-4660-aec3-f9b7e4b3e355',
   );
 

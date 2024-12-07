@@ -2567,8 +2567,8 @@ class SettingsPageState extends State<SettingsPage> {
                                       _apiError = false;
                                     });
                                     if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
-                                    await FirestoreHelper().deleteUserProfile();
-                                    await firebaseAuth.signOut();
+                                    if (!Platform.isWindows) await FirestoreHelper().deleteUserProfile();
+                                    if (!Platform.isWindows) await firebaseAuth.signOut();
                                     widget.changeUID("");
                                   },
                                 ),
@@ -3701,6 +3701,7 @@ class SettingsPageState extends State<SettingsPage> {
         if (uc.playerId == 0 && myProfile.playerId != null) {
           uc.playerId = myProfile.playerId!;
           uc.apiKey = myProfile.userApiKey;
+          uc.playerName = myProfile.name!;
         }
 
         // Firestore uploading, but only if "Load" pressed by user

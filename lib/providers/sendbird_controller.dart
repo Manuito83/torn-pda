@@ -261,7 +261,7 @@ class SendbirdController extends GetxController {
     }
   }
 
-  Future<void> getDoNotDisturbSettings() async {
+  Future<bool> getDoNotDisturbSettings() async {
     try {
       final result = await SendbirdChat.getDoNotDisturb();
       doNotDisturbEnabled = result.isDoNotDisturbOn;
@@ -271,10 +271,12 @@ class SendbirdController extends GetxController {
       update();
     } catch (e) {
       logToUser("Sendbird: error getting Do Not Disturb: $e");
+      return false;
     }
+    return true;
   }
 
-  Future<void> setDoNotDisturbSettings(bool enabled, TimeOfDay start, TimeOfDay end) async {
+  Future<bool> setDoNotDisturbSettings(bool enabled, TimeOfDay start, TimeOfDay end) async {
     try {
       String timezone = await getLocalTimeZone();
       await SendbirdChat.setDoNotDisturb(
@@ -293,7 +295,9 @@ class SendbirdController extends GetxController {
       log("Sendbird: do not disturb updated");
     } catch (e) {
       logToUser("Sendbird: error updating Do Not Disturb: $e");
+      return false;
     }
+    return true;
   }
 
   Future<String> getLocalTimeZone() async {

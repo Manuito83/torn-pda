@@ -52,6 +52,7 @@ class UserDetailsProvider extends ChangeNotifier {
 
       // Set Player ID in the controller, so that certain providers can use it while avoiding multi-providers
       _u.playerId = basic!.playerId ?? 0;
+      _u.playerName = basic!.name ?? "";
 
       final bool alternativeYataKey = await Prefs().getAlternativeYataKeyEnabled();
       if (alternativeYataKey) {

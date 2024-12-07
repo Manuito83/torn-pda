@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -257,6 +259,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // TARGET
+            if (Platform.isWindows) SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -278,6 +281,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // STAKEOUT
+            if (Platform.isWindows) SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -299,6 +303,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // PANIC
+            if (Platform.isWindows) SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -320,6 +325,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // FACTION
+            if (Platform.isWindows) SizedBox(height: 6),
             if (widget.factionId != null && widget.factionId != 0)
               GetBuilder<WarController>(
                 builder: (w) {

@@ -305,7 +305,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
   var _findPreviousText = "";
-  final _findInteractionController = null;
+  final _findInteractionController = Platform.isWindows ? null : FindInteractionController();
 
   bool _omitTabHistory = false;
 
@@ -651,11 +651,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             IconButton(
               icon: const Icon(Icons.close),
               onPressed: () async {
+                if (_findInteractionController == null) return;
                 setState(() {
                   _findInPageActive = false;
                 });
                 _findController.text = "";
-                _findInteractionController.clearMatches();
+                _findInteractionController!.clearMatches();
                 _findFirstSubmitted = false;
               },
             ),
@@ -1177,7 +1178,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             _terminalProvider.terminal = "Terminal";
 
             // Userscripts initial load
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
+            if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
               );
@@ -1192,6 +1193,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
                   "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
+                  "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
+            } else if (Platform.isWindows && widget.windowId != null) {
+              _terminalProvider.addInstruction(
+                  "TORN PDA NOTE: Windows does not support user scripts injection in new windows (like this one), but only in "
                   "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             }
 
@@ -1293,7 +1298,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
-            if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null) || Platform.isWindows) {
+            if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: _userProvider?.basic?.userApiKey ?? "",
@@ -1496,7 +1501,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               List<String?> scriptsToRemove = _userScriptsProvider.getScriptsToRemove(
                 url: uri.toString(),
               );
-              if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+              if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
                 for (final group in scriptsToRemove) {
                   await c.removeUserScriptsByGroupName(groupName: group!);
                 }
@@ -2319,6 +2324,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           leading: IconButton(
             icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () async {
+              if (_findInteractionController == null) return;
+
               setState(() {
                 _findInPageActive = false;
               });
@@ -2329,7 +2336,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               }
 
               _findController.text = "";
-              _findInteractionController.clearMatches();
+              _findInteractionController!.clearMatches();
               _findFirstSubmitted = false;
             },
           ),
@@ -4260,16 +4267,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   void _findAll() {
+    if (_findInteractionController == null) return;
     if (_findController.text.isNotEmpty) {
       setState(() {
         _findFirstSubmitted = true;
       });
-      _findInteractionController.findAll(find: _findController.text);
+      _findInteractionController!.findAll(find: _findController.text);
     }
   }
 
   void _findNext({required bool forward}) {
-    _findInteractionController.findNext(forward: forward);
+    if (_findInteractionController == null) return;
+    _findInteractionController!.findNext(forward: forward);
     if (_findFocus.hasFocus) _findFocus.unfocus();
   }
 
@@ -4983,7 +4992,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
     inputUrl.replaceAll("http://", "https://");
 
-    if (Platform.isAndroid || (Platform.isIOS && widget.windowId == null)) {
+    if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
       // Loads userscripts that are not triggered in shouldOverrideUrlLoading
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
