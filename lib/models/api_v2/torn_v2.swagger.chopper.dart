@@ -236,6 +236,115 @@ final class _$TornV2 extends TornV2 {
   }
 
   @override
+  Future<Response<FactionOngoingChainResponse>> _factionIdChainGet({
+    required String? key,
+    required int? id,
+  }) {
+    final Uri $url = Uri.parse('/faction/${id}/chain');
+    final Map<String, dynamic> $params = <String, dynamic>{'key': key};
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<FactionOngoingChainResponse, FactionOngoingChainResponse>($request);
+  }
+
+  @override
+  Future<Response<FactionOngoingChainResponse>> _factionChainGet({required String? key}) {
+    final Uri $url = Uri.parse('/faction/chain');
+    final Map<String, dynamic> $params = <String, dynamic>{'key': key};
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<FactionOngoingChainResponse, FactionOngoingChainResponse>($request);
+  }
+
+  @override
+  Future<Response<FactionChainsResponse>> _factionIdChainsGet({
+    required String? key,
+    required int? id,
+    int? limit,
+    String? sort,
+    int? to,
+    int? from,
+  }) {
+    final Uri $url = Uri.parse('/faction/${id}/chains');
+    final Map<String, dynamic> $params = <String, dynamic>{
+      'key': key,
+      'limit': limit,
+      'sort': sort,
+      'to': to,
+      'from': from,
+    };
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<FactionChainsResponse, FactionChainsResponse>($request);
+  }
+
+  @override
+  Future<Response<FactionChainsResponse>> _factionChainsGet({
+    required String? key,
+    int? limit,
+    String? sort,
+    int? to,
+    int? from,
+  }) {
+    final Uri $url = Uri.parse('/faction/chains');
+    final Map<String, dynamic> $params = <String, dynamic>{
+      'key': key,
+      'limit': limit,
+      'sort': sort,
+      'to': to,
+      'from': from,
+    };
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<FactionChainsResponse, FactionChainsResponse>($request);
+  }
+
+  @override
+  Future<Response<FactionChainReportResponse>> _factionChainIdChainreportGet({
+    required String? key,
+    required int? chainId,
+  }) {
+    final Uri $url = Uri.parse('/faction/${chainId}/chainreport');
+    final Map<String, dynamic> $params = <String, dynamic>{'key': key};
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<FactionChainReportResponse, FactionChainReportResponse>($request);
+  }
+
+  @override
+  Future<Response<FactionChainReportResponse>> _factionChainreportGet({required String? key}) {
+    final Uri $url = Uri.parse('/faction/chainreport');
+    final Map<String, dynamic> $params = <String, dynamic>{'key': key};
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<FactionChainReportResponse, FactionChainReportResponse>($request);
+  }
+
+  @override
   Future<Response<FactionLookupResponse>> _factionLookupGet({required String? key}) {
     final Uri $url = Uri.parse('/faction/lookup');
     final Map<String, dynamic> $params = <String, dynamic>{'key': key};
@@ -380,7 +489,6 @@ final class _$TornV2 extends TornV2 {
   Future<Response<ForumPostsResponse>> _forumThreadIdPostsGet({
     required String? key,
     int? offset,
-    String? cat,
     String? striptags,
     required int? threadId,
   }) {
@@ -388,7 +496,6 @@ final class _$TornV2 extends TornV2 {
     final Map<String, dynamic> $params = <String, dynamic>{
       'key': key,
       'offset': offset,
-      'cat': cat,
       'striptags': striptags,
     };
     final Request $request = Request(
@@ -465,14 +572,12 @@ final class _$TornV2 extends TornV2 {
   Future<Response<MarketItemMarketResponse>> _marketIdItemmarketGet({
     required String? key,
     required int? id,
-    String? cat,
     String? bonus,
     int? offset,
   }) {
     final Uri $url = Uri.parse('/market/${id}/itemmarket');
     final Map<String, dynamic> $params = <String, dynamic>{
       'key': key,
-      'cat': cat,
       'bonus': bonus,
       'offset': offset,
     };
@@ -914,6 +1019,53 @@ final class _$TornV2 extends TornV2 {
   }
 
   @override
+  Future<Response<UserPersonalStatsResponse>> _userIdPersonalstatsGet({
+    required String? key,
+    required int? id,
+    String? cat,
+    List<Object?>? stat,
+    int? timestamp,
+  }) {
+    final Uri $url = Uri.parse('/user/${id}/personalstats');
+    final Map<String, dynamic> $params = <String, dynamic>{
+      'key': key,
+      'cat': cat,
+      'stat': stat,
+      'timestamp': timestamp,
+    };
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<UserPersonalStatsResponse, UserPersonalStatsResponse>($request);
+  }
+
+  @override
+  Future<Response<UserPersonalStatsResponse>> _userPersonalstatsGet({
+    required String? key,
+    String? cat,
+    List<Object?>? stat,
+    int? timestamp,
+  }) {
+    final Uri $url = Uri.parse('/user/personalstats');
+    final Map<String, dynamic> $params = <String, dynamic>{
+      'key': key,
+      'cat': cat,
+      'stat': stat,
+      'timestamp': timestamp,
+    };
+    final Request $request = Request(
+      'GET',
+      $url,
+      client.baseUrl,
+      parameters: $params,
+    );
+    return client.send<UserPersonalStatsResponse, UserPersonalStatsResponse>($request);
+  }
+
+  @override
   Future<Response<UserCrimesResponse>> _userCrimeIdCrimesGet({
     required String? key,
     required String? crimeId,
@@ -1002,7 +1154,6 @@ final class _$TornV2 extends TornV2 {
   @override
   Future<Response<UserForumPostsResponse>> _userForumpostsGet({
     required String? key,
-    String? cat,
     String? striptags,
     int? limit,
     String? sort,
@@ -1012,7 +1163,6 @@ final class _$TornV2 extends TornV2 {
     final Uri $url = Uri.parse('/user/forumposts');
     final Map<String, dynamic> $params = <String, dynamic>{
       'key': key,
-      'cat': cat,
       'striptags': striptags,
       'limit': limit,
       'sort': sort,
@@ -1256,6 +1406,7 @@ final class _$TornV2 extends TornV2 {
     int? to,
     int? from,
     String? cat,
+    String? stat,
     String? striptags,
     String? sort,
     int? offset,
@@ -1269,6 +1420,7 @@ final class _$TornV2 extends TornV2 {
       'to': to,
       'from': from,
       'cat': cat,
+      'stat': stat,
       'striptags': striptags,
       'sort': sort,
       'offset': offset,

@@ -423,6 +423,215 @@
                 }
             }
         },
+        "/faction/{id}/chain": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Unstable"
+                ],
+                "summary": "Get a faction's current chain",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Faction id",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/FactionId"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionOngoingChainResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/chain": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Unstable"
+                ],
+                "summary": "Get your faction's current chain",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionOngoingChainResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/{id}/chains": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Unstable"
+                ],
+                "summary": "Get a list of a faction's completed chains",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Faction id",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/FactionId"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit100"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiSort"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiTo"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiFrom"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionChainsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/chains": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Unstable"
+                ],
+                "summary": "Get a list of your faction's completed chains",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiLimit100"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiSort"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiTo"
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiFrom"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionChainsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/{chainId}/chainreport": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Unstable"
+                ],
+                "summary": "Get a chain report",
+                "description": "Chain reports for ongoing chains are available only for your own faction.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "chainId",
+                        "in": "path",
+                        "description": "Chain id",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/ChainId"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionChainReportResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/faction/chainreport": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Unstable"
+                ],
+                "summary": "Get your faction's latest chain report",
+                "description": "This includes currently ongoing chains.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionChainReportResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/faction/lookup": {
             "get": {
                 "tags": [
@@ -591,6 +800,15 @@
                                         },
                                         {
                                             "$ref": "#/components/schemas/FactionApplicationsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionOngoingChainResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionChainsResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/FactionChainReportResponse"
                                         },
                                         {
                                             "$ref": "#/components/schemas/FactionLookupResponse"
@@ -827,21 +1045,6 @@
                         }
                     },
                     {
-                        "name": "cat",
-                        "in": "query",
-                        "description": "This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text",
-                        "required": false,
-                        "deprecated": true,
-                        "schema": {
-                            "type": "string",
-                            "default": "plain",
-                            "enum": [
-                                "raw",
-                                "plain"
-                            ]
-                        }
-                    },
-                    {
                         "$ref": "#/components/parameters/ApiStripTagsTrue"
                     },
                     {
@@ -1058,16 +1261,6 @@
                         "required": true,
                         "schema": {
                             "$ref": "#/components/schemas/ItemId"
-                        }
-                    },
-                    {
-                        "name": "cat",
-                        "in": "query",
-                        "description": "This parameter is being replaced with 'bonus' parameter and will be removed on 1st December 2024.",
-                        "required": false,
-                        "deprecated": true,
-                        "schema": {
-                            "$ref": "#/components/schemas/WeaponBonusEnum"
                         }
                     },
                     {
@@ -2146,6 +2339,133 @@
                 }
             }
         },
+        "/user/{id}/personalstats": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Unstable"
+                ],
+                "summary": "Get a player's personal stats",
+                "description": "\n *  UserPersonalStatsFull is returned only when this selection is requested for the key owner with Limited, Full or Custom key.\n *  UserPersonalStatsFullPublic is returned when the requested category is 'all'.\n *  UserPersonalStatsPopular is returned when the requested category is 'popular'. Please try to use UserPersonalStatsPopular over UserPersonalStatsFullPublic wherever possible in order to reduce the server load.\n *  Otherwise, UserPersonalStatsCategory is returned for the matched category.\n *  It's possible to request specific stats via 'stat' parameter. In this case the response will vary depending on the stats requested. Private stats are still available only to the key owner (with Limited or higher key).\n *  Additionally, historical stats can also be fetched via 'stat' query parameter, but 'timestamp' parameter must be provided as well. It's only possible to pass up to 10 historical stats at once (the rest is trimmed). When requesting historical stats the response will be of type UserPersonalStatsHistoric.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "User id",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/components/schemas/UserId"
+                        }
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/PersonalStatsCategoryEnum"
+                        }
+                    },
+                    {
+                        "name": "stat",
+                        "in": "query",
+                        "description": "Stat names (10 maximum). Used to fetch historical stat values",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/PersonalStatsStatName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "timestamp",
+                        "in": "query",
+                        "description": "Returns stats until this timestamp (converted to nearest date).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserPersonalStatsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/personalstats": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Unstable"
+                ],
+                "summary": "Get your personal stats",
+                "description": "\n * UserPersonalStatsFull is returned only when this selection is requested with Limited, Full or Custom key access key.\n * UserPersonalStatsFullPublic is returned when the requested category is 'all'.\n * UserPersonalStatsPopular is returned when the requested category is 'popular'. Please try to use UserPersonalStatsPopular over UserPersonalStatsFullPublic wherever possible in order to reduce the server load.\n * Otherwise, UserPersonalStatsCategory is returned for the matched category.\n * It's possible to request specific stats via 'stat' parameter. In this case the response will vary depending on the stats requested. Private stats are still available only to the key owner (with Limited or higher key).\n * Additionally, historical stats can also be fetched via 'stat' query parameter, but 'timestamp' parameter must be provided as well. It's only possible to pass up to 10 historical stats at once (the rest is trimmed). When requesting historical stats the response will be of type UserPersonalStatsHistoric.",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/ApiKeyPublic"
+                    },
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Stats category. Required unless requesting specific stats via 'stat' query parameter",
+                        "required": false,
+                        "schema": {
+                            "$ref": "#/components/schemas/PersonalStatsCategoryEnum"
+                        }
+                    },
+                    {
+                        "name": "stat",
+                        "in": "query",
+                        "description": "Stat names (10 maximum). Used to fetch historical stat values",
+                        "required": false,
+                        "style": "form",
+                        "explode": false,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/components/schemas/PersonalStatsStatName"
+                            }
+                        }
+                    },
+                    {
+                        "name": "timestamp",
+                        "in": "query",
+                        "description": "Returns stats until this timestamp (converted to nearest date).",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserPersonalStatsResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/user/{crimeId}/crimes": {
             "get": {
                 "tags": [
@@ -2153,8 +2473,8 @@
                     "Crimes 2.0",
                     "Stable"
                 ],
-                "summary": "Get user's crime statistics",
-                "description": "Return the details and statistics about a user's specific crime.",
+                "summary": "Get your crime statistics",
+                "description": "Return the details and statistics about for a specific crime.",
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyMinimal"
@@ -2398,21 +2718,6 @@
                 "parameters": [
                     {
                         "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
-                    {
-                        "name": "cat",
-                        "in": "query",
-                        "description": "This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text",
-                        "required": false,
-                        "deprecated": true,
-                        "schema": {
-                            "type": "string",
-                            "default": "plain",
-                            "enum": [
-                                "raw",
-                                "plain"
-                            ]
-                        }
                     },
                     {
                         "$ref": "#/components/parameters/ApiStripTagsTrue"
@@ -3040,6 +3345,15 @@
                         }
                     },
                     {
+                        "name": "stat",
+                        "in": "query",
+                        "description": "Selection stat",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "$ref": "#/components/parameters/ApiStripTags"
                     },
                     {
@@ -3104,6 +3418,9 @@
                                         },
                                         {
                                             "$ref": "#/components/schemas/UserItemMarketResponse"
+                                        },
+                                        {
+                                            "$ref": "#/components/schemas/UserPersonalStatsResponse"
                                         },
                                         {
                                             "$ref": "#/components/schemas/UserLookupResponse"
@@ -3477,6 +3794,9 @@
                 "type": "integer"
             },
             "FactionId": {
+                "type": "integer"
+            },
+            "ChainId": {
                 "type": "integer"
             },
             "AttackId": {
@@ -4263,6 +4583,268 @@
                 },
                 "type": "object"
             },
+            "FactionOngoingChain": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/ChainId"
+                    },
+                    "current": {
+                        "type": "integer"
+                    },
+                    "max": {
+                        "type": "integer"
+                    },
+                    "timeout": {
+                        "description": "Seconds until chain breaks.",
+                        "type": "integer"
+                    },
+                    "modifier": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "cooldown": {
+                        "description": "Timestamp until when chain is on cooldown.",
+                        "type": "integer"
+                    },
+                    "start": {
+                        "type": "integer"
+                    },
+                    "end": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionOngoingChainResponse": {
+                "properties": {
+                    "chain": {
+                        "$ref": "#/components/schemas/FactionOngoingChain"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChain": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/ChainId"
+                    },
+                    "chain": {
+                        "type": "integer"
+                    },
+                    "respect": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "start": {
+                        "type": "integer"
+                    },
+                    "end": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainsResponse": {
+                "properties": {
+                    "chains": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionChain"
+                        }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainReportResponse": {
+                "properties": {
+                    "chainreport": {
+                        "$ref": "#/components/schemas/FactionChainReport"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainReport": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/ChainId"
+                    },
+                    "faction_id": {
+                        "$ref": "#/components/schemas/FactionId"
+                    },
+                    "start": {
+                        "type": "integer"
+                    },
+                    "end": {
+                        "type": "integer"
+                    },
+                    "details": {
+                        "$ref": "#/components/schemas/FactionChainReportDetails"
+                    },
+                    "bonuses": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionChainReportBonus"
+                        }
+                    },
+                    "attackers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionChainReportAttacker"
+                        }
+                    },
+                    "non-attackers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserId"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainReportDetails": {
+                "properties": {
+                    "chain": {
+                        "type": "integer"
+                    },
+                    "respect": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "members": {
+                        "type": "integer"
+                    },
+                    "targets": {
+                        "type": "integer"
+                    },
+                    "war": {
+                        "type": "integer"
+                    },
+                    "best": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "leave": {
+                        "type": "integer"
+                    },
+                    "mug": {
+                        "type": "integer"
+                    },
+                    "hospitalize": {
+                        "type": "integer"
+                    },
+                    "assists": {
+                        "type": "integer"
+                    },
+                    "retaliations": {
+                        "type": "integer"
+                    },
+                    "overseas": {
+                        "type": "integer"
+                    },
+                    "draws": {
+                        "type": "integer"
+                    },
+                    "escapes": {
+                        "type": "integer"
+                    },
+                    "losses": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainReportBonus": {
+                "properties": {
+                    "attacker_id": {
+                        "$ref": "#/components/schemas/UserId"
+                    },
+                    "defender_id": {
+                        "$ref": "#/components/schemas/UserId"
+                    },
+                    "chain": {
+                        "type": "integer"
+                    },
+                    "respect": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainReportAttacker": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/UserId"
+                    },
+                    "respect": {
+                        "$ref": "#/components/schemas/FactionChainReportAttackerRespect"
+                    },
+                    "attacks": {
+                        "$ref": "#/components/schemas/FactionChainReportAttackerAttacks"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainReportAttackerRespect": {
+                "properties": {
+                    "total": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "average": {
+                        "type": "number",
+                        "format": "float"
+                    },
+                    "best": {
+                        "type": "number",
+                        "format": "float"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionChainReportAttackerAttacks": {
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "leave": {
+                        "type": "integer"
+                    },
+                    "mug": {
+                        "type": "integer"
+                    },
+                    "hospitalize": {
+                        "type": "integer"
+                    },
+                    "assists": {
+                        "type": "integer"
+                    },
+                    "retaliations": {
+                        "type": "integer"
+                    },
+                    "overseas": {
+                        "type": "integer"
+                    },
+                    "draws": {
+                        "type": "integer"
+                    },
+                    "escapes": {
+                        "type": "integer"
+                    },
+                    "losses": {
+                        "type": "integer"
+                    },
+                    "war": {
+                        "type": "integer"
+                    },
+                    "bonuses": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
             "FactionSelectionName": {
                 "type": "string",
                 "enum": [
@@ -4585,9 +5167,6 @@
                             "$ref": "#/components/schemas/ForumThreadBase"
                         }
                     },
-                    "_links": {
-                        "$ref": "#/components/schemas/RequestLinks"
-                    },
                     "_metadata": {
                         "$ref": "#/components/schemas/RequestMetadataWithLinks"
                     }
@@ -4609,9 +5188,6 @@
                         "items": {
                             "$ref": "#/components/schemas/ForumPost"
                         }
-                    },
-                    "_links": {
-                        "$ref": "#/components/schemas/RequestLinks"
                     },
                     "_metadata": {
                         "$ref": "#/components/schemas/RequestMetadataWithLinks"
@@ -5312,9 +5888,6 @@
                             "$ref": "#/components/schemas/TornHof"
                         }
                     },
-                    "_links": {
-                        "$ref": "#/components/schemas/RequestLinks"
-                    },
                     "_metadata": {
                         "$ref": "#/components/schemas/RequestMetadataWithLinks"
                     }
@@ -5372,9 +5945,6 @@
                         "items": {
                             "$ref": "#/components/schemas/TornFactionHof"
                         }
-                    },
-                    "_links": {
-                        "$ref": "#/components/schemas/RequestLinks"
                     },
                     "_metadata": {
                         "$ref": "#/components/schemas/RequestMetadataWithLinks"
@@ -5482,9 +6052,6 @@
                             "$ref": "#/components/schemas/Bounty"
                         }
                     },
-                    "_links": {
-                        "$ref": "#/components/schemas/RequestLinks"
-                    },
                     "_metadata": {
                         "$ref": "#/components/schemas/RequestMetadataWithLinks"
                     }
@@ -5548,6 +6115,1961 @@
                     }
                 },
                 "type": "object"
+            },
+            "PersonalStatsOther": {
+                "properties": {
+                    "other": {
+                        "properties": {
+                            "time_played": {
+                                "type": "integer"
+                            },
+                            "current_streak": {
+                                "type": "integer"
+                            },
+                            "best_streak": {
+                                "type": "integer"
+                            },
+                            "awards": {
+                                "type": "integer"
+                            },
+                            "merits_bought": {
+                                "type": "integer"
+                            },
+                            "refills": {
+                                "properties": {
+                                    "energy": {
+                                        "type": "integer"
+                                    },
+                                    "nerve": {
+                                        "type": "integer"
+                                    },
+                                    "token": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "donator_days": {
+                                "type": "integer"
+                            },
+                            "ranked_war_wins": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsOtherPopular": {
+                "properties": {
+                    "other": {
+                        "properties": {
+                            "time_played": {
+                                "type": "integer"
+                            },
+                            "current_streak": {
+                                "type": "integer"
+                            },
+                            "best_streak": {
+                                "type": "integer"
+                            },
+                            "awards": {
+                                "type": "integer"
+                            },
+                            "merits_bought": {
+                                "type": "integer"
+                            },
+                            "refills": {
+                                "properties": {
+                                    "energy": {
+                                        "type": "integer"
+                                    },
+                                    "nerve": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "donator_days": {
+                                "type": "integer"
+                            },
+                            "ranked_war_wins": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsNetworthExtended": {
+                "properties": {
+                    "networth": {
+                        "properties": {
+                            "total": {
+                                "type": "integer"
+                            },
+                            "wallet": {
+                                "type": "integer"
+                            },
+                            "vaults": {
+                                "type": "integer"
+                            },
+                            "bank": {
+                                "type": "integer"
+                            },
+                            "overseas_bank": {
+                                "type": "integer"
+                            },
+                            "points": {
+                                "type": "integer"
+                            },
+                            "inventory": {
+                                "type": "integer"
+                            },
+                            "display_case": {
+                                "type": "integer"
+                            },
+                            "bazaar": {
+                                "type": "integer"
+                            },
+                            "item_market": {
+                                "type": "integer"
+                            },
+                            "property": {
+                                "type": "integer"
+                            },
+                            "stock_market": {
+                                "type": "integer"
+                            },
+                            "auction_house": {
+                                "type": "integer"
+                            },
+                            "bookie": {
+                                "type": "integer"
+                            },
+                            "company": {
+                                "type": "integer"
+                            },
+                            "enlisted_cars": {
+                                "type": "integer"
+                            },
+                            "piggy_bank": {
+                                "type": "integer"
+                            },
+                            "pending": {
+                                "type": "integer"
+                            },
+                            "loans": {
+                                "type": "integer"
+                            },
+                            "unpaid_fees": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsNetworthPublic": {
+                "properties": {
+                    "networth": {
+                        "properties": {
+                            "total": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsRacing": {
+                "properties": {
+                    "racing": {
+                        "properties": {
+                            "skill": {
+                                "type": "integer"
+                            },
+                            "points": {
+                                "type": "integer"
+                            },
+                            "races": {
+                                "properties": {
+                                    "entered": {
+                                        "type": "integer"
+                                    },
+                                    "won": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsMissions": {
+                "properties": {
+                    "missions": {
+                        "properties": {
+                            "missions": {
+                                "type": "integer"
+                            },
+                            "contracts": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "duke": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "credits": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsDrugs": {
+                "properties": {
+                    "drugs": {
+                        "properties": {
+                            "cannabis": {
+                                "type": "integer"
+                            },
+                            "ecstasy": {
+                                "type": "integer"
+                            },
+                            "ketamine": {
+                                "type": "integer"
+                            },
+                            "lsd": {
+                                "type": "integer"
+                            },
+                            "opium": {
+                                "type": "integer"
+                            },
+                            "pcp": {
+                                "type": "integer"
+                            },
+                            "shrooms": {
+                                "type": "integer"
+                            },
+                            "speed": {
+                                "type": "integer"
+                            },
+                            "vicodin": {
+                                "type": "integer"
+                            },
+                            "xanax": {
+                                "type": "integer"
+                            },
+                            "total": {
+                                "type": "integer"
+                            },
+                            "overdoses": {
+                                "type": "integer"
+                            },
+                            "rehabilitations": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "integer"
+                                    },
+                                    "fees": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsTravel": {
+                "properties": {
+                    "travel": {
+                        "properties": {
+                            "total": {
+                                "type": "integer"
+                            },
+                            "time_spent": {
+                                "type": "integer"
+                            },
+                            "items_bought": {
+                                "type": "integer"
+                            },
+                            "hunting_skill": {
+                                "type": "number"
+                            },
+                            "attacks_won": {
+                                "type": "integer"
+                            },
+                            "defends_lost": {
+                                "type": "integer"
+                            },
+                            "argentina": {
+                                "type": "integer"
+                            },
+                            "canada": {
+                                "type": "integer"
+                            },
+                            "cayman_islands": {
+                                "type": "integer"
+                            },
+                            "china": {
+                                "type": "integer"
+                            },
+                            "hawaii": {
+                                "type": "integer"
+                            },
+                            "japan": {
+                                "type": "integer"
+                            },
+                            "mexico": {
+                                "type": "integer"
+                            },
+                            "united_arab_emirates": {
+                                "type": "integer"
+                            },
+                            "united_kingdom": {
+                                "type": "integer"
+                            },
+                            "south_africa": {
+                                "type": "integer"
+                            },
+                            "switzerland": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsTravelPopular": {
+                "properties": {
+                    "travel": {
+                        "properties": {
+                            "total": {
+                                "type": "integer"
+                            },
+                            "time_spent": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsItems": {
+                "properties": {
+                    "items": {
+                        "properties": {
+                            "found": {
+                                "properties": {
+                                    "city": {
+                                        "type": "integer"
+                                    },
+                                    "trash": {
+                                        "type": "integer"
+                                    },
+                                    "easter_eggs": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "trashed": {
+                                "type": "integer"
+                            },
+                            "used": {
+                                "properties": {
+                                    "books": {
+                                        "type": "integer"
+                                    },
+                                    "boosters": {
+                                        "type": "integer"
+                                    },
+                                    "consumables": {
+                                        "type": "integer"
+                                    },
+                                    "candy": {
+                                        "type": "integer"
+                                    },
+                                    "alcohol": {
+                                        "type": "integer"
+                                    },
+                                    "energy": {
+                                        "type": "integer"
+                                    },
+                                    "stat_enhancers": {
+                                        "type": "integer"
+                                    },
+                                    "easter_eggs": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "viruses_coded": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsItemsPopular": {
+                "properties": {
+                    "items": {
+                        "properties": {
+                            "found": {
+                                "properties": {
+                                    "trash": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "used": {
+                                "properties": {
+                                    "books": {
+                                        "type": "integer"
+                                    },
+                                    "boosters": {
+                                        "type": "integer"
+                                    },
+                                    "consumables": {
+                                        "type": "integer"
+                                    },
+                                    "candy": {
+                                        "type": "integer"
+                                    },
+                                    "alcohol": {
+                                        "type": "integer"
+                                    },
+                                    "energy": {
+                                        "type": "integer"
+                                    },
+                                    "stat_enhancers": {
+                                        "type": "integer"
+                                    },
+                                    "easter_eggs": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsInvestments": {
+                "properties": {
+                    "investments": {
+                        "properties": {
+                            "bank": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "profit": {
+                                        "type": "integer"
+                                    },
+                                    "current": {
+                                        "type": "integer"
+                                    },
+                                    "time_remaining": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "stocks": {
+                                "properties": {
+                                    "profits": {
+                                        "type": "integer"
+                                    },
+                                    "losses": {
+                                        "type": "integer"
+                                    },
+                                    "fees": {
+                                        "type": "integer"
+                                    },
+                                    "net_profits": {
+                                        "type": "integer"
+                                    },
+                                    "payouts": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsBounties": {
+                "properties": {
+                    "bounties": {
+                        "properties": {
+                            "placed": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "integer"
+                                    },
+                                    "value": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "collected": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "integer"
+                                    },
+                                    "value": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "received": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "integer"
+                                    },
+                                    "value": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsCriminalOffensesV2": {
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "vandalism": {
+                        "type": "integer"
+                    },
+                    "theft": {
+                        "type": "integer"
+                    },
+                    "counterfeiting": {
+                        "type": "integer"
+                    },
+                    "illicit_services": {
+                        "type": "integer"
+                    },
+                    "cybercrime": {
+                        "type": "integer"
+                    },
+                    "extortion": {
+                        "type": "integer"
+                    },
+                    "illegal_production": {
+                        "type": "integer"
+                    },
+                    "organized_crimes": {
+                        "type": "integer"
+                    },
+                    "version": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsCriminalOffensesV1": {
+                "properties": {
+                    "total": {
+                        "type": "integer"
+                    },
+                    "sell_illegal_goods": {
+                        "type": "integer"
+                    },
+                    "theft": {
+                        "type": "integer"
+                    },
+                    "auto_theft": {
+                        "type": "integer"
+                    },
+                    "drug_deals": {
+                        "type": "integer"
+                    },
+                    "computer": {
+                        "type": "integer"
+                    },
+                    "fraud": {
+                        "type": "integer"
+                    },
+                    "murder": {
+                        "type": "integer"
+                    },
+                    "other": {
+                        "type": "integer"
+                    },
+                    "organized_crimes": {
+                        "type": "integer"
+                    },
+                    "version": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsCriminalOffensesPopular": {
+                "properties": {
+                    "criminal_offenses": {
+                        "properties": {
+                            "total": {
+                                "type": "integer"
+                            },
+                            "version": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsCommunication": {
+                "properties": {
+                    "communication": {
+                        "properties": {
+                            "mails_sent": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "friends": {
+                                        "type": "integer"
+                                    },
+                                    "faction": {
+                                        "type": "integer"
+                                    },
+                                    "colleagues": {
+                                        "type": "integer"
+                                    },
+                                    "spouse": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "classified_ads": {
+                                "type": "integer"
+                            },
+                            "personals": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsFinishingHits": {
+                "properties": {
+                    "finishing_hits": {
+                        "properties": {
+                            "heavy_artillery": {
+                                "type": "integer"
+                            },
+                            "machine_guns": {
+                                "type": "integer"
+                            },
+                            "rifles": {
+                                "type": "integer"
+                            },
+                            "sub_machine_guns": {
+                                "type": "integer"
+                            },
+                            "shotguns": {
+                                "type": "integer"
+                            },
+                            "pistols": {
+                                "type": "integer"
+                            },
+                            "temporary": {
+                                "type": "integer"
+                            },
+                            "piercing": {
+                                "type": "integer"
+                            },
+                            "slashing": {
+                                "type": "integer"
+                            },
+                            "clubbing": {
+                                "type": "integer"
+                            },
+                            "mechanical": {
+                                "type": "integer"
+                            },
+                            "hand_to_hand": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsHospital": {
+                "properties": {
+                    "hospital": {
+                        "properties": {
+                            "times_hospitalized": {
+                                "type": "integer"
+                            },
+                            "medical_items_used": {
+                                "type": "integer"
+                            },
+                            "blood_withdrawn": {
+                                "type": "integer"
+                            },
+                            "reviving": {
+                                "properties": {
+                                    "skill": {
+                                        "type": "integer"
+                                    },
+                                    "revives": {
+                                        "type": "integer"
+                                    },
+                                    "revives_received": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsHospitalPopular": {
+                "properties": {
+                    "hospital": {
+                        "properties": {
+                            "medical_items_used": {
+                                "type": "integer"
+                            },
+                            "reviving": {
+                                "properties": {
+                                    "skill": {
+                                        "type": "integer"
+                                    },
+                                    "revives": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsJail": {
+                "properties": {
+                    "jail": {
+                        "properties": {
+                            "times_jailed": {
+                                "type": "integer"
+                            },
+                            "busts": {
+                                "properties": {
+                                    "success": {
+                                        "type": "integer"
+                                    },
+                                    "fails": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "bails": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "integer"
+                                    },
+                                    "fees": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsTrading": {
+                "properties": {
+                    "trading": {
+                        "properties": {
+                            "items": {
+                                "properties": {
+                                    "bought": {
+                                        "properties": {
+                                            "market": {
+                                                "type": "integer"
+                                            },
+                                            "shops": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "auctions": {
+                                        "properties": {
+                                            "won": {
+                                                "type": "integer"
+                                            },
+                                            "sold": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    "sent": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "trades": {
+                                "type": "integer"
+                            },
+                            "points": {
+                                "properties": {
+                                    "bought": {
+                                        "type": "integer"
+                                    },
+                                    "sold": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "bazaar": {
+                                "properties": {
+                                    "customers": {
+                                        "type": "integer"
+                                    },
+                                    "sales": {
+                                        "type": "integer"
+                                    },
+                                    "profit": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsJobsPublic": {
+                "properties": {
+                    "jobs": {
+                        "properties": {
+                            "job_points_used": {
+                                "type": "integer"
+                            },
+                            "trains_received": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsJobsExtended": {
+                "properties": {
+                    "jobs": {
+                        "properties": {
+                            "job_points_used": {
+                                "type": "integer"
+                            },
+                            "trains_received": {
+                                "type": "integer"
+                            },
+                            "stats": {
+                                "properties": {
+                                    "manual": {
+                                        "type": "integer"
+                                    },
+                                    "intelligence": {
+                                        "type": "integer"
+                                    },
+                                    "endurance": {
+                                        "type": "integer"
+                                    },
+                                    "total": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsBattleStats": {
+                "properties": {
+                    "battle_stats": {
+                        "properties": {
+                            "strength": {
+                                "type": "integer"
+                            },
+                            "defense": {
+                                "type": "integer"
+                            },
+                            "speed": {
+                                "type": "integer"
+                            },
+                            "dexterity": {
+                                "type": "integer"
+                            },
+                            "total": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsAttackingPublic": {
+                "properties": {
+                    "attacking": {
+                        "properties": {
+                            "attacks": {
+                                "properties": {
+                                    "won": {
+                                        "type": "integer"
+                                    },
+                                    "lost": {
+                                        "type": "integer"
+                                    },
+                                    "stalemate": {
+                                        "type": "integer"
+                                    },
+                                    "assist": {
+                                        "type": "integer"
+                                    },
+                                    "stealth": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "defends": {
+                                "properties": {
+                                    "won": {
+                                        "type": "integer"
+                                    },
+                                    "lost": {
+                                        "type": "integer"
+                                    },
+                                    "stalemate": {
+                                        "type": "integer"
+                                    },
+                                    "total": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "elo": {
+                                "type": "integer"
+                            },
+                            "unarmored_wins": {
+                                "type": "integer"
+                            },
+                            "highest_level_beaten": {
+                                "type": "integer"
+                            },
+                            "escapes": {
+                                "properties": {
+                                    "player": {
+                                        "type": "integer"
+                                    },
+                                    "foes": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "killstreak": {
+                                "properties": {
+                                    "best": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "hits": {
+                                "properties": {
+                                    "success": {
+                                        "type": "integer"
+                                    },
+                                    "miss": {
+                                        "type": "integer"
+                                    },
+                                    "critical": {
+                                        "type": "integer"
+                                    },
+                                    "one_hit_kills": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "damage": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "best": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "networth": {
+                                "properties": {
+                                    "money_mugged": {
+                                        "type": "integer"
+                                    },
+                                    "largest_mug": {
+                                        "type": "integer"
+                                    },
+                                    "items_looted": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "ammunition": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "special": {
+                                        "type": "integer"
+                                    },
+                                    "hollow_point": {
+                                        "type": "integer"
+                                    },
+                                    "tracer": {
+                                        "type": "integer"
+                                    },
+                                    "piercing": {
+                                        "type": "integer"
+                                    },
+                                    "incendiary": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "faction": {
+                                "properties": {
+                                    "respect": {
+                                        "type": "integer"
+                                    },
+                                    "retaliations": {
+                                        "type": "integer"
+                                    },
+                                    "ranked_war_hits": {
+                                        "type": "integer"
+                                    },
+                                    "raid_hits": {
+                                        "type": "integer"
+                                    },
+                                    "territory": {
+                                        "properties": {
+                                            "wall_joins": {
+                                                "type": "integer"
+                                            },
+                                            "wall_clears": {
+                                                "type": "integer"
+                                            },
+                                            "wall_time": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsAttackingExtended": {
+                "properties": {
+                    "attacking": {
+                        "properties": {
+                            "attacks": {
+                                "properties": {
+                                    "won": {
+                                        "type": "integer"
+                                    },
+                                    "lost": {
+                                        "type": "integer"
+                                    },
+                                    "stalemate": {
+                                        "type": "integer"
+                                    },
+                                    "assist": {
+                                        "type": "integer"
+                                    },
+                                    "stealth": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "defends": {
+                                "properties": {
+                                    "won": {
+                                        "type": "integer"
+                                    },
+                                    "lost": {
+                                        "type": "integer"
+                                    },
+                                    "stalemate": {
+                                        "type": "integer"
+                                    },
+                                    "total": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "elo": {
+                                "type": "integer"
+                            },
+                            "unarmored_wins": {
+                                "type": "integer"
+                            },
+                            "highest_level_beaten": {
+                                "type": "integer"
+                            },
+                            "escapes": {
+                                "properties": {
+                                    "player": {
+                                        "type": "integer"
+                                    },
+                                    "foes": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "killstreak": {
+                                "properties": {
+                                    "best": {
+                                        "type": "integer"
+                                    },
+                                    "current": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "hits": {
+                                "properties": {
+                                    "success": {
+                                        "type": "integer"
+                                    },
+                                    "miss": {
+                                        "type": "integer"
+                                    },
+                                    "critical": {
+                                        "type": "integer"
+                                    },
+                                    "one_hit_kills": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "damage": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "best": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "networth": {
+                                "properties": {
+                                    "money_mugged": {
+                                        "type": "integer"
+                                    },
+                                    "largest_mug": {
+                                        "type": "integer"
+                                    },
+                                    "items_looted": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "ammunition": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "special": {
+                                        "type": "integer"
+                                    },
+                                    "hollow_point": {
+                                        "type": "integer"
+                                    },
+                                    "tracer": {
+                                        "type": "integer"
+                                    },
+                                    "piercing": {
+                                        "type": "integer"
+                                    },
+                                    "incendiary": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "faction": {
+                                "properties": {
+                                    "respect": {
+                                        "type": "integer"
+                                    },
+                                    "retaliations": {
+                                        "type": "integer"
+                                    },
+                                    "ranked_war_hits": {
+                                        "type": "integer"
+                                    },
+                                    "raid_hits": {
+                                        "type": "integer"
+                                    },
+                                    "territory": {
+                                        "properties": {
+                                            "wall_joins": {
+                                                "type": "integer"
+                                            },
+                                            "wall_clears": {
+                                                "type": "integer"
+                                            },
+                                            "wall_time": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsAttackingPopular": {
+                "properties": {
+                    "attacking": {
+                        "properties": {
+                            "attacks": {
+                                "properties": {
+                                    "won": {
+                                        "type": "integer"
+                                    },
+                                    "lost": {
+                                        "type": "integer"
+                                    },
+                                    "stalemate": {
+                                        "type": "integer"
+                                    },
+                                    "assist": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "defends": {
+                                "properties": {
+                                    "won": {
+                                        "type": "integer"
+                                    },
+                                    "lost": {
+                                        "type": "integer"
+                                    },
+                                    "stalemate": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "elo": {
+                                "type": "integer"
+                            },
+                            "escapes": {
+                                "properties": {
+                                    "player": {
+                                        "type": "integer"
+                                    },
+                                    "foes": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "killstreak": {
+                                "properties": {
+                                    "best": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "hits": {
+                                "properties": {
+                                    "success": {
+                                        "type": "integer"
+                                    },
+                                    "miss": {
+                                        "type": "integer"
+                                    },
+                                    "critical": {
+                                        "type": "integer"
+                                    },
+                                    "one_hit_kills": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "damage": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "best": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "networth": {
+                                "properties": {
+                                    "money_mugged": {
+                                        "type": "integer"
+                                    },
+                                    "largest_mug": {
+                                        "type": "integer"
+                                    },
+                                    "items_looted": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "ammunition": {
+                                "properties": {
+                                    "total": {
+                                        "type": "integer"
+                                    },
+                                    "special": {
+                                        "type": "integer"
+                                    },
+                                    "hollow_point": {
+                                        "type": "integer"
+                                    },
+                                    "tracer": {
+                                        "type": "integer"
+                                    },
+                                    "piercing": {
+                                        "type": "integer"
+                                    },
+                                    "incendiary": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "faction": {
+                                "properties": {
+                                    "respect": {
+                                        "type": "integer"
+                                    },
+                                    "ranked_war_hits": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsHistoricStat": {
+                "properties": {
+                    "name": {
+                        "description": "Requested stat name",
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "integer"
+                    },
+                    "timestamp": {
+                        "description": "Timestamp when the stat was last updated",
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "UserPersonalStatsHistoric": {
+                "properties": {
+                    "personalstats": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PersonalStatsHistoricStat"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "PersonalStatsCriminalOffenses": {
+                "description": "Response for PersonalStatsCriminalOffenses depends on which crime version user is currently.",
+                "properties": {
+                    "criminal_offenses": {
+                        "type": "object",
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCriminalOffensesV1"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCriminalOffensesV2"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UserPersonalStatsPopular": {
+                "properties": {
+                    "personalstats": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsAttackingPopular"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsJobsPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsHospitalPopular"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCriminalOffensesPopular"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsItemsPopular"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsTravelPopular"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsDrugs"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsNetworthPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsOtherPopular"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UserPersonalStatsCategory": {
+                "description": "Schema name corresponds to the requested category",
+                "properties": {
+                    "personalstats": {
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsAttackingPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsJobsPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsTrading"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsJail"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsHospital"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsFinishingHits"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCommunication"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCriminalOffenses"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsBounties"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsItems"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsTravel"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsDrugs"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsMissions"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsRacing"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsNetworthPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsOther"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UserPersonalStatsFull": {
+                "properties": {
+                    "personalstats": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsAttackingExtended"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsBattleStats"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsJobsExtended"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsTrading"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsJail"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsHospital"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsFinishingHits"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCommunication"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCriminalOffenses"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsBounties"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsInvestments"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsItems"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsTravel"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsDrugs"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsMissions"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsRacing"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsNetworthExtended"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsOther"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UserPersonalStatsFullPublic": {
+                "properties": {
+                    "personalstats": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsAttackingPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsJobsPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsTrading"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsJail"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsHospital"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsFinishingHits"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCommunication"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsCriminalOffenses"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsBounties"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsItems"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsTravel"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsDrugs"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsMissions"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsRacing"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsNetworthPublic"
+                            },
+                            {
+                                "$ref": "#/components/schemas/PersonalStatsOther"
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UserPersonalStatsResponse": {
+                "oneOf": [
+                    {
+                        "$ref": "#/components/schemas/UserPersonalStatsFull"
+                    },
+                    {
+                        "$ref": "#/components/schemas/UserPersonalStatsFullPublic"
+                    },
+                    {
+                        "$ref": "#/components/schemas/UserPersonalStatsCategory"
+                    },
+                    {
+                        "$ref": "#/components/schemas/UserPersonalStatsPopular"
+                    },
+                    {
+                        "$ref": "#/components/schemas/UserPersonalStatsHistoric"
+                    }
+                ]
+            },
+            "PersonalStatsCategoryEnum": {
+                "type": "string",
+                "enum": [
+                    "all",
+                    "popular",
+                    "attacking",
+                    "battle_stats",
+                    "jobs",
+                    "trading",
+                    "jail",
+                    "hospital",
+                    "finishing_hits",
+                    "communication",
+                    "criminal_offenses",
+                    "bounties",
+                    "investments",
+                    "items",
+                    "travel",
+                    "drugs",
+                    "missions",
+                    "racing",
+                    "networth",
+                    "other"
+                ]
+            },
+            "PersonalStatsStatName": {
+                "type": "string",
+                "enum": [
+                    "attackswon",
+                    "attackslost",
+                    "attacksdraw",
+                    "attacksassisted",
+                    "defendswon",
+                    "defendslost",
+                    "defendsstalemated",
+                    "elo",
+                    "yourunaway",
+                    "theyrunaway",
+                    "unarmoredwon",
+                    "bestkillstreak",
+                    "attackhits",
+                    "attackmisses",
+                    "attackdamage",
+                    "bestdamage",
+                    "onehitkills",
+                    "attackcriticalhits",
+                    "roundsfired",
+                    "specialammoused",
+                    "hollowammoused",
+                    "tracerammoused",
+                    "piercingammoused",
+                    "incendiaryammoused",
+                    "attacksstealthed",
+                    "retals",
+                    "moneymugged",
+                    "largestmug",
+                    "itemslooted",
+                    "highestbeaten",
+                    "respectforfaction",
+                    "rankedwarhits",
+                    "raidhits",
+                    "territoryjoins",
+                    "territoryclears",
+                    "territorytime",
+                    "jobpointsused",
+                    "trainsreceived",
+                    "marketitemsbought",
+                    "auctionswon",
+                    "auctionsells",
+                    "itemssent",
+                    "trades",
+                    "cityitemsbought",
+                    "pointsbought",
+                    "pointssold",
+                    "bazaarcustomers",
+                    "bazaarsales",
+                    "bazaarprofit",
+                    "jailed",
+                    "peoplebusted",
+                    "failedbusts",
+                    "peoplebought",
+                    "peopleboughtspent",
+                    "hospital",
+                    "medicalitemsused",
+                    "bloodwithdrawn",
+                    "reviveskill",
+                    "revives",
+                    "revivesreceived",
+                    "heavyhits",
+                    "machinehits",
+                    "riflehits",
+                    "smghits",
+                    "shotgunhits",
+                    "pistolhits",
+                    "temphits",
+                    "piercinghits",
+                    "slashinghits",
+                    "clubbinghits",
+                    "mechanicalhits",
+                    "h2hhits",
+                    "mailssent",
+                    "friendmailssent",
+                    "factionmailssent",
+                    "companymailssent",
+                    "spousemailssent",
+                    "classifiedadsplaced",
+                    "personalsplaced",
+                    "criminaloffensesold",
+                    "sellillegalgoods",
+                    "theftold",
+                    "autotheftcrime",
+                    "drugdealscrime",
+                    "computercrime",
+                    "arsoncrime",
+                    "murdercrime",
+                    "othercrime",
+                    "organizedcrimes",
+                    "bountiesplaced",
+                    "totalbountyspent",
+                    "bountiescollected",
+                    "totalbountyreward",
+                    "bountiesreceived",
+                    "receivedbountyvalue",
+                    "cityfinds",
+                    "dumpfinds",
+                    "itemsdumped",
+                    "booksread",
+                    "boostersused",
+                    "consumablesused",
+                    "candyused",
+                    "alcoholused",
+                    "energydrinkused",
+                    "statenhancersused",
+                    "eastereggsfound",
+                    "eastereggsused",
+                    "virusescoded",
+                    "traveltimes",
+                    "timespenttraveling",
+                    "itemsboughtabroad",
+                    "hunting",
+                    "attackswonabroad",
+                    "defendslostabroad",
+                    "argtravel",
+                    "mextravel",
+                    "uaetravel",
+                    "hawtravel",
+                    "japtravel",
+                    "uktravel",
+                    "satravel",
+                    "switravel",
+                    "chitravel",
+                    "cantravel",
+                    "caytravel",
+                    "drugsused",
+                    "overdosed",
+                    "rehabs",
+                    "rehabcost",
+                    "cantaken",
+                    "exttaken",
+                    "kettaken",
+                    "lsdtaken",
+                    "opitaken",
+                    "pcptaken",
+                    "shrtaken",
+                    "spetaken",
+                    "victaken",
+                    "xantaken",
+                    "missionscompleted",
+                    "contractscompleted",
+                    "dukecontractscompleted",
+                    "missioncreditsearned",
+                    "racingskill",
+                    "racingpointsearned",
+                    "racesentered",
+                    "raceswon",
+                    "networth",
+                    "timeplayed",
+                    "activestreak",
+                    "bestactivestreak",
+                    "awards",
+                    "refills",
+                    "nerverefills",
+                    "tokenrefills",
+                    "meritsbought",
+                    "daysbeendonator",
+                    "daysbeendonator",
+                    "criminaloffenses",
+                    "vandalism",
+                    "theft",
+                    "counterfeiting",
+                    "fraud",
+                    "illicitservices",
+                    "cybercrime",
+                    "extortion",
+                    "illegalproduction",
+                    "currentkillstreak",
+                    "strength",
+                    "defense",
+                    "speed",
+                    "dexterity",
+                    "totalstats",
+                    "manuallabor",
+                    "intelligence",
+                    "endurance",
+                    "totalworkingstats",
+                    "moneyinvested",
+                    "investedprofit",
+                    "investamount",
+                    "banktimeleft",
+                    "stockprofits",
+                    "stocklosses",
+                    "stockfees",
+                    "stocknetprofits",
+                    "stockpayouts",
+                    "networthwallet",
+                    "networthvault",
+                    "networthbank",
+                    "networthcayman",
+                    "networthpoints",
+                    "networthitems",
+                    "networthdisplaycase",
+                    "networthbazaar",
+                    "networthitemmarket",
+                    "networthproperties",
+                    "networthstockmarket",
+                    "networthauctionhouse",
+                    "networthbookie",
+                    "networthcompany",
+                    "networthenlistedcars",
+                    "networthpiggybank",
+                    "networthpending",
+                    "networthloan",
+                    "networthunpaidfees"
+                ]
             },
             "UserCrimeDetailsBootlegging": {
                 "properties": {
@@ -5990,14 +8512,6 @@
                     "progression_bonus": {
                         "type": "integer"
                     },
-                    "achieved_uniques": {
-                        "description": "This field is being replaced by 'uniques' field which provides more information about achieved uniques. This field will be removed on 1st of December.",
-                        "type": "array",
-                        "items": {
-                            "type": "integer"
-                        },
-                        "deprecated": true
-                    },
                     "rewards": {
                         "$ref": "#/components/schemas/UserCrimeRewards"
                     },
@@ -6112,9 +8626,6 @@
                             "$ref": "#/components/schemas/ForumPost"
                         }
                     },
-                    "_links": {
-                        "$ref": "#/components/schemas/RequestLinks"
-                    },
                     "_metadata": {
                         "$ref": "#/components/schemas/RequestMetadataWithLinks"
                     }
@@ -6128,9 +8639,6 @@
                         "items": {
                             "$ref": "#/components/schemas/ForumThreadUserExtended"
                         }
-                    },
-                    "_links": {
-                        "$ref": "#/components/schemas/RequestLinks"
                     },
                     "_metadata": {
                         "$ref": "#/components/schemas/RequestMetadataWithLinks"

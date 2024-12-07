@@ -647,6 +647,265 @@ Map<String, dynamic> _$FactionApplicationsResponseToJson(
       'applications': instance.applications?.map((e) => e.toJson()).toList(),
     };
 
+FactionOngoingChain _$FactionOngoingChainFromJson(Map<String, dynamic> json) =>
+    FactionOngoingChain(
+      id: (json['id'] as num?)?.toInt(),
+      current: (json['current'] as num?)?.toInt(),
+      max: (json['max'] as num?)?.toInt(),
+      timeout: (json['timeout'] as num?)?.toInt(),
+      modifier: (json['modifier'] as num?)?.toDouble(),
+      cooldown: (json['cooldown'] as num?)?.toInt(),
+      start: (json['start'] as num?)?.toInt(),
+      end: (json['end'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$FactionOngoingChainToJson(
+        FactionOngoingChain instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'current': instance.current,
+      'max': instance.max,
+      'timeout': instance.timeout,
+      'modifier': instance.modifier,
+      'cooldown': instance.cooldown,
+      'start': instance.start,
+      'end': instance.end,
+    };
+
+FactionOngoingChainResponse _$FactionOngoingChainResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionOngoingChainResponse(
+      chain: json['chain'] == null
+          ? null
+          : FactionOngoingChain.fromJson(json['chain'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionOngoingChainResponseToJson(
+        FactionOngoingChainResponse instance) =>
+    <String, dynamic>{
+      'chain': instance.chain?.toJson(),
+    };
+
+FactionChain _$FactionChainFromJson(Map<String, dynamic> json) => FactionChain(
+      id: (json['id'] as num?)?.toInt(),
+      chain: (json['chain'] as num?)?.toInt(),
+      respect: (json['respect'] as num?)?.toDouble(),
+      start: (json['start'] as num?)?.toInt(),
+      end: (json['end'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$FactionChainToJson(FactionChain instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'chain': instance.chain,
+      'respect': instance.respect,
+      'start': instance.start,
+      'end': instance.end,
+    };
+
+FactionChainsResponse _$FactionChainsResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionChainsResponse(
+      chains: (json['chains'] as List<dynamic>?)
+              ?.map((e) => FactionChain.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      metadata: json['_metadata'] == null
+          ? null
+          : RequestMetadataWithLinks.fromJson(
+              json['_metadata'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionChainsResponseToJson(
+        FactionChainsResponse instance) =>
+    <String, dynamic>{
+      'chains': instance.chains?.map((e) => e.toJson()).toList(),
+      '_metadata': instance.metadata?.toJson(),
+    };
+
+FactionChainReportResponse _$FactionChainReportResponseFromJson(
+        Map<String, dynamic> json) =>
+    FactionChainReportResponse(
+      chainreport: json['chainreport'] == null
+          ? null
+          : FactionChainReport.fromJson(
+              json['chainreport'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionChainReportResponseToJson(
+        FactionChainReportResponse instance) =>
+    <String, dynamic>{
+      'chainreport': instance.chainreport?.toJson(),
+    };
+
+FactionChainReport _$FactionChainReportFromJson(Map<String, dynamic> json) =>
+    FactionChainReport(
+      id: (json['id'] as num?)?.toInt(),
+      factionId: (json['faction_id'] as num?)?.toInt(),
+      start: (json['start'] as num?)?.toInt(),
+      end: (json['end'] as num?)?.toInt(),
+      details: json['details'] == null
+          ? null
+          : FactionChainReportDetails.fromJson(
+              json['details'] as Map<String, dynamic>),
+      bonuses: (json['bonuses'] as List<dynamic>?)
+              ?.map((e) =>
+                  FactionChainReportBonus.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      attackers: (json['attackers'] as List<dynamic>?)
+              ?.map((e) => FactionChainReportAttacker.fromJson(
+                  e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      nonAttackers: (json['non-attackers'] as List<dynamic>?)
+              ?.map((e) => (e as num).toInt())
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$FactionChainReportToJson(FactionChainReport instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'faction_id': instance.factionId,
+      'start': instance.start,
+      'end': instance.end,
+      'details': instance.details?.toJson(),
+      'bonuses': instance.bonuses?.map((e) => e.toJson()).toList(),
+      'attackers': instance.attackers?.map((e) => e.toJson()).toList(),
+      'non-attackers': instance.nonAttackers,
+    };
+
+FactionChainReportDetails _$FactionChainReportDetailsFromJson(
+        Map<String, dynamic> json) =>
+    FactionChainReportDetails(
+      chain: (json['chain'] as num?)?.toInt(),
+      respect: (json['respect'] as num?)?.toDouble(),
+      members: (json['members'] as num?)?.toInt(),
+      targets: (json['targets'] as num?)?.toInt(),
+      war: (json['war'] as num?)?.toInt(),
+      best: (json['best'] as num?)?.toDouble(),
+      leave: (json['leave'] as num?)?.toInt(),
+      mug: (json['mug'] as num?)?.toInt(),
+      hospitalize: (json['hospitalize'] as num?)?.toInt(),
+      assists: (json['assists'] as num?)?.toInt(),
+      retaliations: (json['retaliations'] as num?)?.toInt(),
+      overseas: (json['overseas'] as num?)?.toInt(),
+      draws: (json['draws'] as num?)?.toInt(),
+      escapes: (json['escapes'] as num?)?.toInt(),
+      losses: (json['losses'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$FactionChainReportDetailsToJson(
+        FactionChainReportDetails instance) =>
+    <String, dynamic>{
+      'chain': instance.chain,
+      'respect': instance.respect,
+      'members': instance.members,
+      'targets': instance.targets,
+      'war': instance.war,
+      'best': instance.best,
+      'leave': instance.leave,
+      'mug': instance.mug,
+      'hospitalize': instance.hospitalize,
+      'assists': instance.assists,
+      'retaliations': instance.retaliations,
+      'overseas': instance.overseas,
+      'draws': instance.draws,
+      'escapes': instance.escapes,
+      'losses': instance.losses,
+    };
+
+FactionChainReportBonus _$FactionChainReportBonusFromJson(
+        Map<String, dynamic> json) =>
+    FactionChainReportBonus(
+      attackerId: (json['attacker_id'] as num?)?.toInt(),
+      defenderId: (json['defender_id'] as num?)?.toInt(),
+      chain: (json['chain'] as num?)?.toInt(),
+      respect: (json['respect'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$FactionChainReportBonusToJson(
+        FactionChainReportBonus instance) =>
+    <String, dynamic>{
+      'attacker_id': instance.attackerId,
+      'defender_id': instance.defenderId,
+      'chain': instance.chain,
+      'respect': instance.respect,
+    };
+
+FactionChainReportAttacker _$FactionChainReportAttackerFromJson(
+        Map<String, dynamic> json) =>
+    FactionChainReportAttacker(
+      id: (json['id'] as num?)?.toInt(),
+      respect: json['respect'] == null
+          ? null
+          : FactionChainReportAttackerRespect.fromJson(
+              json['respect'] as Map<String, dynamic>),
+      attacks: json['attacks'] == null
+          ? null
+          : FactionChainReportAttackerAttacks.fromJson(
+              json['attacks'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$FactionChainReportAttackerToJson(
+        FactionChainReportAttacker instance) =>
+    <String, dynamic>{
+      'id': instance.id,
+      'respect': instance.respect?.toJson(),
+      'attacks': instance.attacks?.toJson(),
+    };
+
+FactionChainReportAttackerRespect _$FactionChainReportAttackerRespectFromJson(
+        Map<String, dynamic> json) =>
+    FactionChainReportAttackerRespect(
+      total: (json['total'] as num?)?.toDouble(),
+      average: (json['average'] as num?)?.toDouble(),
+      best: (json['best'] as num?)?.toDouble(),
+    );
+
+Map<String, dynamic> _$FactionChainReportAttackerRespectToJson(
+        FactionChainReportAttackerRespect instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'average': instance.average,
+      'best': instance.best,
+    };
+
+FactionChainReportAttackerAttacks _$FactionChainReportAttackerAttacksFromJson(
+        Map<String, dynamic> json) =>
+    FactionChainReportAttackerAttacks(
+      total: (json['total'] as num?)?.toInt(),
+      leave: (json['leave'] as num?)?.toInt(),
+      mug: (json['mug'] as num?)?.toInt(),
+      hospitalize: (json['hospitalize'] as num?)?.toInt(),
+      assists: (json['assists'] as num?)?.toInt(),
+      retaliations: (json['retaliations'] as num?)?.toInt(),
+      overseas: (json['overseas'] as num?)?.toInt(),
+      draws: (json['draws'] as num?)?.toInt(),
+      escapes: (json['escapes'] as num?)?.toInt(),
+      losses: (json['losses'] as num?)?.toInt(),
+      war: (json['war'] as num?)?.toInt(),
+      bonuses: (json['bonuses'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$FactionChainReportAttackerAttacksToJson(
+        FactionChainReportAttackerAttacks instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'leave': instance.leave,
+      'mug': instance.mug,
+      'hospitalize': instance.hospitalize,
+      'assists': instance.assists,
+      'retaliations': instance.retaliations,
+      'overseas': instance.overseas,
+      'draws': instance.draws,
+      'escapes': instance.escapes,
+      'losses': instance.losses,
+      'war': instance.war,
+      'bonuses': instance.bonuses,
+    };
+
 FactionLookupResponse _$FactionLookupResponseFromJson(
         Map<String, dynamic> json) =>
     FactionLookupResponse(
@@ -951,9 +1210,6 @@ ForumThreadsResponse _$ForumThreadsResponseFromJson(
               ?.map((e) => ForumThreadBase.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
       metadata: json['_metadata'] == null
           ? null
           : RequestMetadataWithLinks.fromJson(
@@ -964,7 +1220,6 @@ Map<String, dynamic> _$ForumThreadsResponseToJson(
         ForumThreadsResponse instance) =>
     <String, dynamic>{
       'threads': instance.threads?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
       '_metadata': instance.metadata?.toJson(),
     };
 
@@ -988,9 +1243,6 @@ ForumPostsResponse _$ForumPostsResponseFromJson(Map<String, dynamic> json) =>
               ?.map((e) => ForumPost.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
       metadata: json['_metadata'] == null
           ? null
           : RequestMetadataWithLinks.fromJson(
@@ -1000,7 +1252,6 @@ ForumPostsResponse _$ForumPostsResponseFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$ForumPostsResponseToJson(ForumPostsResponse instance) =>
     <String, dynamic>{
       'posts': instance.posts?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
       '_metadata': instance.metadata?.toJson(),
     };
 
@@ -1589,9 +1840,6 @@ TornHofResponse _$TornHofResponseFromJson(Map<String, dynamic> json) =>
               ?.map((e) => TornHof.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
       metadata: json['_metadata'] == null
           ? null
           : RequestMetadataWithLinks.fromJson(
@@ -1601,7 +1849,6 @@ TornHofResponse _$TornHofResponseFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$TornHofResponseToJson(TornHofResponse instance) =>
     <String, dynamic>{
       'hof': instance.hof?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
       '_metadata': instance.metadata?.toJson(),
     };
 
@@ -1648,9 +1895,6 @@ TornFactionHofResponse _$TornFactionHofResponseFromJson(
               ?.map((e) => TornFactionHof.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
       metadata: json['_metadata'] == null
           ? null
           : RequestMetadataWithLinks.fromJson(
@@ -1661,7 +1905,6 @@ Map<String, dynamic> _$TornFactionHofResponseToJson(
         TornFactionHofResponse instance) =>
     <String, dynamic>{
       'factionhof': instance.factionhof?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
       '_metadata': instance.metadata?.toJson(),
     };
 
@@ -1750,9 +1993,6 @@ TornBountiesResponse _$TornBountiesResponseFromJson(
               ?.map((e) => Bounty.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
       metadata: json['_metadata'] == null
           ? null
           : RequestMetadataWithLinks.fromJson(
@@ -1763,7 +2003,6 @@ Map<String, dynamic> _$TornBountiesResponseToJson(
         TornBountiesResponse instance) =>
     <String, dynamic>{
       'bounties': instance.bounties?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
       '_metadata': instance.metadata?.toJson(),
     };
 
@@ -1776,6 +2015,548 @@ Map<String, dynamic> _$TornLookupResponseToJson(TornLookupResponse instance) =>
     <String, dynamic>{
       'selections': tornSelectionNameListToJson(instance.selections),
     };
+
+PersonalStatsOther _$PersonalStatsOtherFromJson(Map<String, dynamic> json) =>
+    PersonalStatsOther(
+      other: json['other'] == null
+          ? null
+          : PersonalStatsOther$Other.fromJson(
+              json['other'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsOtherToJson(PersonalStatsOther instance) =>
+    <String, dynamic>{
+      'other': instance.other?.toJson(),
+    };
+
+PersonalStatsOtherPopular _$PersonalStatsOtherPopularFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsOtherPopular(
+      other: json['other'] == null
+          ? null
+          : PersonalStatsOtherPopular$Other.fromJson(
+              json['other'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsOtherPopularToJson(
+        PersonalStatsOtherPopular instance) =>
+    <String, dynamic>{
+      'other': instance.other?.toJson(),
+    };
+
+PersonalStatsNetworthExtended _$PersonalStatsNetworthExtendedFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsNetworthExtended(
+      networth: json['networth'] == null
+          ? null
+          : PersonalStatsNetworthExtended$Networth.fromJson(
+              json['networth'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsNetworthExtendedToJson(
+        PersonalStatsNetworthExtended instance) =>
+    <String, dynamic>{
+      'networth': instance.networth?.toJson(),
+    };
+
+PersonalStatsNetworthPublic _$PersonalStatsNetworthPublicFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsNetworthPublic(
+      networth: json['networth'] == null
+          ? null
+          : PersonalStatsNetworthPublic$Networth.fromJson(
+              json['networth'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsNetworthPublicToJson(
+        PersonalStatsNetworthPublic instance) =>
+    <String, dynamic>{
+      'networth': instance.networth?.toJson(),
+    };
+
+PersonalStatsRacing _$PersonalStatsRacingFromJson(Map<String, dynamic> json) =>
+    PersonalStatsRacing(
+      racing: json['racing'] == null
+          ? null
+          : PersonalStatsRacing$Racing.fromJson(
+              json['racing'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsRacingToJson(
+        PersonalStatsRacing instance) =>
+    <String, dynamic>{
+      'racing': instance.racing?.toJson(),
+    };
+
+PersonalStatsMissions _$PersonalStatsMissionsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsMissions(
+      missions: json['missions'] == null
+          ? null
+          : PersonalStatsMissions$Missions.fromJson(
+              json['missions'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsMissionsToJson(
+        PersonalStatsMissions instance) =>
+    <String, dynamic>{
+      'missions': instance.missions?.toJson(),
+    };
+
+PersonalStatsDrugs _$PersonalStatsDrugsFromJson(Map<String, dynamic> json) =>
+    PersonalStatsDrugs(
+      drugs: json['drugs'] == null
+          ? null
+          : PersonalStatsDrugs$Drugs.fromJson(
+              json['drugs'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsDrugsToJson(PersonalStatsDrugs instance) =>
+    <String, dynamic>{
+      'drugs': instance.drugs?.toJson(),
+    };
+
+PersonalStatsTravel _$PersonalStatsTravelFromJson(Map<String, dynamic> json) =>
+    PersonalStatsTravel(
+      travel: json['travel'] == null
+          ? null
+          : PersonalStatsTravel$Travel.fromJson(
+              json['travel'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsTravelToJson(
+        PersonalStatsTravel instance) =>
+    <String, dynamic>{
+      'travel': instance.travel?.toJson(),
+    };
+
+PersonalStatsTravelPopular _$PersonalStatsTravelPopularFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsTravelPopular(
+      travel: json['travel'] == null
+          ? null
+          : PersonalStatsTravelPopular$Travel.fromJson(
+              json['travel'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsTravelPopularToJson(
+        PersonalStatsTravelPopular instance) =>
+    <String, dynamic>{
+      'travel': instance.travel?.toJson(),
+    };
+
+PersonalStatsItems _$PersonalStatsItemsFromJson(Map<String, dynamic> json) =>
+    PersonalStatsItems(
+      items: json['items'] == null
+          ? null
+          : PersonalStatsItems$Items.fromJson(
+              json['items'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsItemsToJson(PersonalStatsItems instance) =>
+    <String, dynamic>{
+      'items': instance.items?.toJson(),
+    };
+
+PersonalStatsItemsPopular _$PersonalStatsItemsPopularFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsItemsPopular(
+      items: json['items'] == null
+          ? null
+          : PersonalStatsItemsPopular$Items.fromJson(
+              json['items'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsItemsPopularToJson(
+        PersonalStatsItemsPopular instance) =>
+    <String, dynamic>{
+      'items': instance.items?.toJson(),
+    };
+
+PersonalStatsInvestments _$PersonalStatsInvestmentsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsInvestments(
+      investments: json['investments'] == null
+          ? null
+          : PersonalStatsInvestments$Investments.fromJson(
+              json['investments'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsInvestmentsToJson(
+        PersonalStatsInvestments instance) =>
+    <String, dynamic>{
+      'investments': instance.investments?.toJson(),
+    };
+
+PersonalStatsBounties _$PersonalStatsBountiesFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsBounties(
+      bounties: json['bounties'] == null
+          ? null
+          : PersonalStatsBounties$Bounties.fromJson(
+              json['bounties'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsBountiesToJson(
+        PersonalStatsBounties instance) =>
+    <String, dynamic>{
+      'bounties': instance.bounties?.toJson(),
+    };
+
+PersonalStatsCriminalOffensesV2 _$PersonalStatsCriminalOffensesV2FromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsCriminalOffensesV2(
+      total: (json['total'] as num?)?.toInt(),
+      vandalism: (json['vandalism'] as num?)?.toInt(),
+      theft: (json['theft'] as num?)?.toInt(),
+      counterfeiting: (json['counterfeiting'] as num?)?.toInt(),
+      illicitServices: (json['illicit_services'] as num?)?.toInt(),
+      cybercrime: (json['cybercrime'] as num?)?.toInt(),
+      extortion: (json['extortion'] as num?)?.toInt(),
+      illegalProduction: (json['illegal_production'] as num?)?.toInt(),
+      organizedCrimes: (json['organized_crimes'] as num?)?.toInt(),
+      version: json['version'] as String?,
+    );
+
+Map<String, dynamic> _$PersonalStatsCriminalOffensesV2ToJson(
+        PersonalStatsCriminalOffensesV2 instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'vandalism': instance.vandalism,
+      'theft': instance.theft,
+      'counterfeiting': instance.counterfeiting,
+      'illicit_services': instance.illicitServices,
+      'cybercrime': instance.cybercrime,
+      'extortion': instance.extortion,
+      'illegal_production': instance.illegalProduction,
+      'organized_crimes': instance.organizedCrimes,
+      'version': instance.version,
+    };
+
+PersonalStatsCriminalOffensesV1 _$PersonalStatsCriminalOffensesV1FromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsCriminalOffensesV1(
+      total: (json['total'] as num?)?.toInt(),
+      sellIllegalGoods: (json['sell_illegal_goods'] as num?)?.toInt(),
+      theft: (json['theft'] as num?)?.toInt(),
+      autoTheft: (json['auto_theft'] as num?)?.toInt(),
+      drugDeals: (json['drug_deals'] as num?)?.toInt(),
+      computer: (json['computer'] as num?)?.toInt(),
+      fraud: (json['fraud'] as num?)?.toInt(),
+      murder: (json['murder'] as num?)?.toInt(),
+      other: (json['other'] as num?)?.toInt(),
+      organizedCrimes: (json['organized_crimes'] as num?)?.toInt(),
+      version: json['version'] as String?,
+    );
+
+Map<String, dynamic> _$PersonalStatsCriminalOffensesV1ToJson(
+        PersonalStatsCriminalOffensesV1 instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'sell_illegal_goods': instance.sellIllegalGoods,
+      'theft': instance.theft,
+      'auto_theft': instance.autoTheft,
+      'drug_deals': instance.drugDeals,
+      'computer': instance.computer,
+      'fraud': instance.fraud,
+      'murder': instance.murder,
+      'other': instance.other,
+      'organized_crimes': instance.organizedCrimes,
+      'version': instance.version,
+    };
+
+PersonalStatsCriminalOffensesPopular
+    _$PersonalStatsCriminalOffensesPopularFromJson(Map<String, dynamic> json) =>
+        PersonalStatsCriminalOffensesPopular(
+          criminalOffenses: json['criminal_offenses'] == null
+              ? null
+              : PersonalStatsCriminalOffensesPopular$CriminalOffenses.fromJson(
+                  json['criminal_offenses'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsCriminalOffensesPopularToJson(
+        PersonalStatsCriminalOffensesPopular instance) =>
+    <String, dynamic>{
+      'criminal_offenses': instance.criminalOffenses?.toJson(),
+    };
+
+PersonalStatsCommunication _$PersonalStatsCommunicationFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsCommunication(
+      communication: json['communication'] == null
+          ? null
+          : PersonalStatsCommunication$Communication.fromJson(
+              json['communication'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsCommunicationToJson(
+        PersonalStatsCommunication instance) =>
+    <String, dynamic>{
+      'communication': instance.communication?.toJson(),
+    };
+
+PersonalStatsFinishingHits _$PersonalStatsFinishingHitsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsFinishingHits(
+      finishingHits: json['finishing_hits'] == null
+          ? null
+          : PersonalStatsFinishingHits$FinishingHits.fromJson(
+              json['finishing_hits'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsFinishingHitsToJson(
+        PersonalStatsFinishingHits instance) =>
+    <String, dynamic>{
+      'finishing_hits': instance.finishingHits?.toJson(),
+    };
+
+PersonalStatsHospital _$PersonalStatsHospitalFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsHospital(
+      hospital: json['hospital'] == null
+          ? null
+          : PersonalStatsHospital$Hospital.fromJson(
+              json['hospital'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsHospitalToJson(
+        PersonalStatsHospital instance) =>
+    <String, dynamic>{
+      'hospital': instance.hospital?.toJson(),
+    };
+
+PersonalStatsHospitalPopular _$PersonalStatsHospitalPopularFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsHospitalPopular(
+      hospital: json['hospital'] == null
+          ? null
+          : PersonalStatsHospitalPopular$Hospital.fromJson(
+              json['hospital'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsHospitalPopularToJson(
+        PersonalStatsHospitalPopular instance) =>
+    <String, dynamic>{
+      'hospital': instance.hospital?.toJson(),
+    };
+
+PersonalStatsJail _$PersonalStatsJailFromJson(Map<String, dynamic> json) =>
+    PersonalStatsJail(
+      jail: json['jail'] == null
+          ? null
+          : PersonalStatsJail$Jail.fromJson(
+              json['jail'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsJailToJson(PersonalStatsJail instance) =>
+    <String, dynamic>{
+      'jail': instance.jail?.toJson(),
+    };
+
+PersonalStatsTrading _$PersonalStatsTradingFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsTrading(
+      trading: json['trading'] == null
+          ? null
+          : PersonalStatsTrading$Trading.fromJson(
+              json['trading'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsTradingToJson(
+        PersonalStatsTrading instance) =>
+    <String, dynamic>{
+      'trading': instance.trading?.toJson(),
+    };
+
+PersonalStatsJobsPublic _$PersonalStatsJobsPublicFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsJobsPublic(
+      jobs: json['jobs'] == null
+          ? null
+          : PersonalStatsJobsPublic$Jobs.fromJson(
+              json['jobs'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsJobsPublicToJson(
+        PersonalStatsJobsPublic instance) =>
+    <String, dynamic>{
+      'jobs': instance.jobs?.toJson(),
+    };
+
+PersonalStatsJobsExtended _$PersonalStatsJobsExtendedFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsJobsExtended(
+      jobs: json['jobs'] == null
+          ? null
+          : PersonalStatsJobsExtended$Jobs.fromJson(
+              json['jobs'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsJobsExtendedToJson(
+        PersonalStatsJobsExtended instance) =>
+    <String, dynamic>{
+      'jobs': instance.jobs?.toJson(),
+    };
+
+PersonalStatsBattleStats _$PersonalStatsBattleStatsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsBattleStats(
+      battleStats: json['battle_stats'] == null
+          ? null
+          : PersonalStatsBattleStats$BattleStats.fromJson(
+              json['battle_stats'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsBattleStatsToJson(
+        PersonalStatsBattleStats instance) =>
+    <String, dynamic>{
+      'battle_stats': instance.battleStats?.toJson(),
+    };
+
+PersonalStatsAttackingPublic _$PersonalStatsAttackingPublicFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsAttackingPublic(
+      attacking: json['attacking'] == null
+          ? null
+          : PersonalStatsAttackingPublic$Attacking.fromJson(
+              json['attacking'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublicToJson(
+        PersonalStatsAttackingPublic instance) =>
+    <String, dynamic>{
+      'attacking': instance.attacking?.toJson(),
+    };
+
+PersonalStatsAttackingExtended _$PersonalStatsAttackingExtendedFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsAttackingExtended(
+      attacking: json['attacking'] == null
+          ? null
+          : PersonalStatsAttackingExtended$Attacking.fromJson(
+              json['attacking'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtendedToJson(
+        PersonalStatsAttackingExtended instance) =>
+    <String, dynamic>{
+      'attacking': instance.attacking?.toJson(),
+    };
+
+PersonalStatsAttackingPopular _$PersonalStatsAttackingPopularFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsAttackingPopular(
+      attacking: json['attacking'] == null
+          ? null
+          : PersonalStatsAttackingPopular$Attacking.fromJson(
+              json['attacking'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopularToJson(
+        PersonalStatsAttackingPopular instance) =>
+    <String, dynamic>{
+      'attacking': instance.attacking?.toJson(),
+    };
+
+PersonalStatsHistoricStat _$PersonalStatsHistoricStatFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsHistoricStat(
+      name: json['name'] as String?,
+      $value: (json['value'] as num?)?.toInt(),
+      timestamp: (json['timestamp'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsHistoricStatToJson(
+        PersonalStatsHistoricStat instance) =>
+    <String, dynamic>{
+      'name': instance.name,
+      'value': instance.$value,
+      'timestamp': instance.timestamp,
+    };
+
+UserPersonalStatsHistoric _$UserPersonalStatsHistoricFromJson(
+        Map<String, dynamic> json) =>
+    UserPersonalStatsHistoric(
+      personalstats: (json['personalstats'] as List<dynamic>?)
+              ?.map((e) =>
+                  PersonalStatsHistoricStat.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+    );
+
+Map<String, dynamic> _$UserPersonalStatsHistoricToJson(
+        UserPersonalStatsHistoric instance) =>
+    <String, dynamic>{
+      'personalstats': instance.personalstats?.map((e) => e.toJson()).toList(),
+    };
+
+PersonalStatsCriminalOffenses _$PersonalStatsCriminalOffensesFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsCriminalOffenses(
+      criminalOffenses: json['criminal_offenses'],
+    );
+
+Map<String, dynamic> _$PersonalStatsCriminalOffensesToJson(
+        PersonalStatsCriminalOffenses instance) =>
+    <String, dynamic>{
+      'criminal_offenses': instance.criminalOffenses,
+    };
+
+UserPersonalStatsPopular _$UserPersonalStatsPopularFromJson(
+        Map<String, dynamic> json) =>
+    UserPersonalStatsPopular(
+      personalstats: json['personalstats'],
+    );
+
+Map<String, dynamic> _$UserPersonalStatsPopularToJson(
+        UserPersonalStatsPopular instance) =>
+    <String, dynamic>{
+      'personalstats': instance.personalstats,
+    };
+
+UserPersonalStatsCategory _$UserPersonalStatsCategoryFromJson(
+        Map<String, dynamic> json) =>
+    UserPersonalStatsCategory(
+      personalstats: json['personalstats'],
+    );
+
+Map<String, dynamic> _$UserPersonalStatsCategoryToJson(
+        UserPersonalStatsCategory instance) =>
+    <String, dynamic>{
+      'personalstats': instance.personalstats,
+    };
+
+UserPersonalStatsFull _$UserPersonalStatsFullFromJson(
+        Map<String, dynamic> json) =>
+    UserPersonalStatsFull(
+      personalstats: json['personalstats'],
+    );
+
+Map<String, dynamic> _$UserPersonalStatsFullToJson(
+        UserPersonalStatsFull instance) =>
+    <String, dynamic>{
+      'personalstats': instance.personalstats,
+    };
+
+UserPersonalStatsFullPublic _$UserPersonalStatsFullPublicFromJson(
+        Map<String, dynamic> json) =>
+    UserPersonalStatsFullPublic(
+      personalstats: json['personalstats'],
+    );
+
+Map<String, dynamic> _$UserPersonalStatsFullPublicToJson(
+        UserPersonalStatsFullPublic instance) =>
+    <String, dynamic>{
+      'personalstats': instance.personalstats,
+    };
+
+UserPersonalStatsResponse _$UserPersonalStatsResponseFromJson(
+        Map<String, dynamic> json) =>
+    UserPersonalStatsResponse();
+
+Map<String, dynamic> _$UserPersonalStatsResponseToJson(
+        UserPersonalStatsResponse instance) =>
+    <String, dynamic>{};
 
 UserCrimeDetailsBootlegging _$UserCrimeDetailsBootleggingFromJson(
         Map<String, dynamic> json) =>
@@ -2093,10 +2874,6 @@ UserCrime _$UserCrimeFromJson(Map<String, dynamic> json) => UserCrime(
       nerveSpent: (json['nerve_spent'] as num?)?.toInt(),
       skill: (json['skill'] as num?)?.toInt(),
       progressionBonus: (json['progression_bonus'] as num?)?.toInt(),
-      achievedUniques: (json['achieved_uniques'] as List<dynamic>?)
-              ?.map((e) => (e as num).toInt())
-              .toList() ??
-          [],
       rewards: json['rewards'] == null
           ? null
           : UserCrimeRewards.fromJson(json['rewards'] as Map<String, dynamic>),
@@ -2115,7 +2892,6 @@ Map<String, dynamic> _$UserCrimeToJson(UserCrime instance) => <String, dynamic>{
       'nerve_spent': instance.nerveSpent,
       'skill': instance.skill,
       'progression_bonus': instance.progressionBonus,
-      'achieved_uniques': instance.achievedUniques,
       'rewards': instance.rewards?.toJson(),
       'attempts': instance.attempts?.toJson(),
       'uniques': instance.uniques?.map((e) => e.toJson()).toList(),
@@ -2211,9 +2987,6 @@ UserForumPostsResponse _$UserForumPostsResponseFromJson(
               ?.map((e) => ForumPost.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
       metadata: json['_metadata'] == null
           ? null
           : RequestMetadataWithLinks.fromJson(
@@ -2224,7 +2997,6 @@ Map<String, dynamic> _$UserForumPostsResponseToJson(
         UserForumPostsResponse instance) =>
     <String, dynamic>{
       'forumPosts': instance.forumPosts?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
       '_metadata': instance.metadata?.toJson(),
     };
 
@@ -2236,9 +3008,6 @@ UserForumThreadsResponse _$UserForumThreadsResponseFromJson(
                   ForumThreadUserExtended.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
-      links: json['_links'] == null
-          ? null
-          : RequestLinks.fromJson(json['_links'] as Map<String, dynamic>),
       metadata: json['_metadata'] == null
           ? null
           : RequestMetadataWithLinks.fromJson(
@@ -2249,7 +3018,6 @@ Map<String, dynamic> _$UserForumThreadsResponseToJson(
         UserForumThreadsResponse instance) =>
     <String, dynamic>{
       'forumThreads': instance.forumThreads?.map((e) => e.toJson()).toList(),
-      '_links': instance.links?.toJson(),
       '_metadata': instance.metadata?.toJson(),
     };
 
@@ -2793,6 +3561,745 @@ Map<String, dynamic> _$TornCalendarResponse$CalendarToJson(
       'events': instance.events?.map((e) => e.toJson()).toList(),
     };
 
+PersonalStatsOther$Other _$PersonalStatsOther$OtherFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsOther$Other(
+      timePlayed: (json['time_played'] as num?)?.toInt(),
+      currentStreak: (json['current_streak'] as num?)?.toInt(),
+      bestStreak: (json['best_streak'] as num?)?.toInt(),
+      awards: (json['awards'] as num?)?.toInt(),
+      meritsBought: (json['merits_bought'] as num?)?.toInt(),
+      refills: json['refills'] == null
+          ? null
+          : PersonalStatsOther$Other$Refills.fromJson(
+              json['refills'] as Map<String, dynamic>),
+      donatorDays: (json['donator_days'] as num?)?.toInt(),
+      rankedWarWins: (json['ranked_war_wins'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsOther$OtherToJson(
+        PersonalStatsOther$Other instance) =>
+    <String, dynamic>{
+      'time_played': instance.timePlayed,
+      'current_streak': instance.currentStreak,
+      'best_streak': instance.bestStreak,
+      'awards': instance.awards,
+      'merits_bought': instance.meritsBought,
+      'refills': instance.refills?.toJson(),
+      'donator_days': instance.donatorDays,
+      'ranked_war_wins': instance.rankedWarWins,
+    };
+
+PersonalStatsOtherPopular$Other _$PersonalStatsOtherPopular$OtherFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsOtherPopular$Other(
+      timePlayed: (json['time_played'] as num?)?.toInt(),
+      currentStreak: (json['current_streak'] as num?)?.toInt(),
+      bestStreak: (json['best_streak'] as num?)?.toInt(),
+      awards: (json['awards'] as num?)?.toInt(),
+      meritsBought: (json['merits_bought'] as num?)?.toInt(),
+      refills: json['refills'] == null
+          ? null
+          : PersonalStatsOtherPopular$Other$Refills.fromJson(
+              json['refills'] as Map<String, dynamic>),
+      donatorDays: (json['donator_days'] as num?)?.toInt(),
+      rankedWarWins: (json['ranked_war_wins'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsOtherPopular$OtherToJson(
+        PersonalStatsOtherPopular$Other instance) =>
+    <String, dynamic>{
+      'time_played': instance.timePlayed,
+      'current_streak': instance.currentStreak,
+      'best_streak': instance.bestStreak,
+      'awards': instance.awards,
+      'merits_bought': instance.meritsBought,
+      'refills': instance.refills?.toJson(),
+      'donator_days': instance.donatorDays,
+      'ranked_war_wins': instance.rankedWarWins,
+    };
+
+PersonalStatsNetworthExtended$Networth
+    _$PersonalStatsNetworthExtended$NetworthFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsNetworthExtended$Networth(
+          total: (json['total'] as num?)?.toInt(),
+          wallet: (json['wallet'] as num?)?.toInt(),
+          vaults: (json['vaults'] as num?)?.toInt(),
+          bank: (json['bank'] as num?)?.toInt(),
+          overseasBank: (json['overseas_bank'] as num?)?.toInt(),
+          points: (json['points'] as num?)?.toInt(),
+          inventory: (json['inventory'] as num?)?.toInt(),
+          displayCase: (json['display_case'] as num?)?.toInt(),
+          bazaar: (json['bazaar'] as num?)?.toInt(),
+          itemMarket: (json['item_market'] as num?)?.toInt(),
+          property: (json['property'] as num?)?.toInt(),
+          stockMarket: (json['stock_market'] as num?)?.toInt(),
+          auctionHouse: (json['auction_house'] as num?)?.toInt(),
+          bookie: (json['bookie'] as num?)?.toInt(),
+          company: (json['company'] as num?)?.toInt(),
+          enlistedCars: (json['enlisted_cars'] as num?)?.toInt(),
+          piggyBank: (json['piggy_bank'] as num?)?.toInt(),
+          pending: (json['pending'] as num?)?.toInt(),
+          loans: (json['loans'] as num?)?.toInt(),
+          unpaidFees: (json['unpaid_fees'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsNetworthExtended$NetworthToJson(
+        PersonalStatsNetworthExtended$Networth instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'wallet': instance.wallet,
+      'vaults': instance.vaults,
+      'bank': instance.bank,
+      'overseas_bank': instance.overseasBank,
+      'points': instance.points,
+      'inventory': instance.inventory,
+      'display_case': instance.displayCase,
+      'bazaar': instance.bazaar,
+      'item_market': instance.itemMarket,
+      'property': instance.property,
+      'stock_market': instance.stockMarket,
+      'auction_house': instance.auctionHouse,
+      'bookie': instance.bookie,
+      'company': instance.company,
+      'enlisted_cars': instance.enlistedCars,
+      'piggy_bank': instance.piggyBank,
+      'pending': instance.pending,
+      'loans': instance.loans,
+      'unpaid_fees': instance.unpaidFees,
+    };
+
+PersonalStatsNetworthPublic$Networth
+    _$PersonalStatsNetworthPublic$NetworthFromJson(Map<String, dynamic> json) =>
+        PersonalStatsNetworthPublic$Networth(
+          total: (json['total'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsNetworthPublic$NetworthToJson(
+        PersonalStatsNetworthPublic$Networth instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+    };
+
+PersonalStatsRacing$Racing _$PersonalStatsRacing$RacingFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsRacing$Racing(
+      skill: (json['skill'] as num?)?.toInt(),
+      points: (json['points'] as num?)?.toInt(),
+      races: json['races'] == null
+          ? null
+          : PersonalStatsRacing$Racing$Races.fromJson(
+              json['races'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsRacing$RacingToJson(
+        PersonalStatsRacing$Racing instance) =>
+    <String, dynamic>{
+      'skill': instance.skill,
+      'points': instance.points,
+      'races': instance.races?.toJson(),
+    };
+
+PersonalStatsMissions$Missions _$PersonalStatsMissions$MissionsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsMissions$Missions(
+      missions: (json['missions'] as num?)?.toInt(),
+      contracts: json['contracts'] == null
+          ? null
+          : PersonalStatsMissions$Missions$Contracts.fromJson(
+              json['contracts'] as Map<String, dynamic>),
+      credits: (json['credits'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsMissions$MissionsToJson(
+        PersonalStatsMissions$Missions instance) =>
+    <String, dynamic>{
+      'missions': instance.missions,
+      'contracts': instance.contracts?.toJson(),
+      'credits': instance.credits,
+    };
+
+PersonalStatsDrugs$Drugs _$PersonalStatsDrugs$DrugsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsDrugs$Drugs(
+      cannabis: (json['cannabis'] as num?)?.toInt(),
+      ecstasy: (json['ecstasy'] as num?)?.toInt(),
+      ketamine: (json['ketamine'] as num?)?.toInt(),
+      lsd: (json['lsd'] as num?)?.toInt(),
+      opium: (json['opium'] as num?)?.toInt(),
+      pcp: (json['pcp'] as num?)?.toInt(),
+      shrooms: (json['shrooms'] as num?)?.toInt(),
+      speed: (json['speed'] as num?)?.toInt(),
+      vicodin: (json['vicodin'] as num?)?.toInt(),
+      xanax: (json['xanax'] as num?)?.toInt(),
+      total: (json['total'] as num?)?.toInt(),
+      overdoses: (json['overdoses'] as num?)?.toInt(),
+      rehabilitations: json['rehabilitations'] == null
+          ? null
+          : PersonalStatsDrugs$Drugs$Rehabilitations.fromJson(
+              json['rehabilitations'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsDrugs$DrugsToJson(
+        PersonalStatsDrugs$Drugs instance) =>
+    <String, dynamic>{
+      'cannabis': instance.cannabis,
+      'ecstasy': instance.ecstasy,
+      'ketamine': instance.ketamine,
+      'lsd': instance.lsd,
+      'opium': instance.opium,
+      'pcp': instance.pcp,
+      'shrooms': instance.shrooms,
+      'speed': instance.speed,
+      'vicodin': instance.vicodin,
+      'xanax': instance.xanax,
+      'total': instance.total,
+      'overdoses': instance.overdoses,
+      'rehabilitations': instance.rehabilitations?.toJson(),
+    };
+
+PersonalStatsTravel$Travel _$PersonalStatsTravel$TravelFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsTravel$Travel(
+      total: (json['total'] as num?)?.toInt(),
+      timeSpent: (json['time_spent'] as num?)?.toInt(),
+      itemsBought: (json['items_bought'] as num?)?.toInt(),
+      huntingSkill: (json['hunting_skill'] as num?)?.toDouble(),
+      attacksWon: (json['attacks_won'] as num?)?.toInt(),
+      defendsLost: (json['defends_lost'] as num?)?.toInt(),
+      argentina: (json['argentina'] as num?)?.toInt(),
+      canada: (json['canada'] as num?)?.toInt(),
+      caymanIslands: (json['cayman_islands'] as num?)?.toInt(),
+      china: (json['china'] as num?)?.toInt(),
+      hawaii: (json['hawaii'] as num?)?.toInt(),
+      japan: (json['japan'] as num?)?.toInt(),
+      mexico: (json['mexico'] as num?)?.toInt(),
+      unitedArabEmirates: (json['united_arab_emirates'] as num?)?.toInt(),
+      unitedKingdom: (json['united_kingdom'] as num?)?.toInt(),
+      southAfrica: (json['south_africa'] as num?)?.toInt(),
+      switzerland: (json['switzerland'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsTravel$TravelToJson(
+        PersonalStatsTravel$Travel instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'time_spent': instance.timeSpent,
+      'items_bought': instance.itemsBought,
+      'hunting_skill': instance.huntingSkill,
+      'attacks_won': instance.attacksWon,
+      'defends_lost': instance.defendsLost,
+      'argentina': instance.argentina,
+      'canada': instance.canada,
+      'cayman_islands': instance.caymanIslands,
+      'china': instance.china,
+      'hawaii': instance.hawaii,
+      'japan': instance.japan,
+      'mexico': instance.mexico,
+      'united_arab_emirates': instance.unitedArabEmirates,
+      'united_kingdom': instance.unitedKingdom,
+      'south_africa': instance.southAfrica,
+      'switzerland': instance.switzerland,
+    };
+
+PersonalStatsTravelPopular$Travel _$PersonalStatsTravelPopular$TravelFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsTravelPopular$Travel(
+      total: (json['total'] as num?)?.toInt(),
+      timeSpent: (json['time_spent'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsTravelPopular$TravelToJson(
+        PersonalStatsTravelPopular$Travel instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'time_spent': instance.timeSpent,
+    };
+
+PersonalStatsItems$Items _$PersonalStatsItems$ItemsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsItems$Items(
+      found: json['found'] == null
+          ? null
+          : PersonalStatsItems$Items$Found.fromJson(
+              json['found'] as Map<String, dynamic>),
+      trashed: (json['trashed'] as num?)?.toInt(),
+      used: json['used'] == null
+          ? null
+          : PersonalStatsItems$Items$Used.fromJson(
+              json['used'] as Map<String, dynamic>),
+      virusesCoded: (json['viruses_coded'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsItems$ItemsToJson(
+        PersonalStatsItems$Items instance) =>
+    <String, dynamic>{
+      'found': instance.found?.toJson(),
+      'trashed': instance.trashed,
+      'used': instance.used?.toJson(),
+      'viruses_coded': instance.virusesCoded,
+    };
+
+PersonalStatsItemsPopular$Items _$PersonalStatsItemsPopular$ItemsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsItemsPopular$Items(
+      found: json['found'] == null
+          ? null
+          : PersonalStatsItemsPopular$Items$Found.fromJson(
+              json['found'] as Map<String, dynamic>),
+      used: json['used'] == null
+          ? null
+          : PersonalStatsItemsPopular$Items$Used.fromJson(
+              json['used'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsItemsPopular$ItemsToJson(
+        PersonalStatsItemsPopular$Items instance) =>
+    <String, dynamic>{
+      'found': instance.found?.toJson(),
+      'used': instance.used?.toJson(),
+    };
+
+PersonalStatsInvestments$Investments
+    _$PersonalStatsInvestments$InvestmentsFromJson(Map<String, dynamic> json) =>
+        PersonalStatsInvestments$Investments(
+          bank: json['bank'] == null
+              ? null
+              : PersonalStatsInvestments$Investments$Bank.fromJson(
+                  json['bank'] as Map<String, dynamic>),
+          stocks: json['stocks'] == null
+              ? null
+              : PersonalStatsInvestments$Investments$Stocks.fromJson(
+                  json['stocks'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsInvestments$InvestmentsToJson(
+        PersonalStatsInvestments$Investments instance) =>
+    <String, dynamic>{
+      'bank': instance.bank?.toJson(),
+      'stocks': instance.stocks?.toJson(),
+    };
+
+PersonalStatsBounties$Bounties _$PersonalStatsBounties$BountiesFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsBounties$Bounties(
+      placed: json['placed'] == null
+          ? null
+          : PersonalStatsBounties$Bounties$Placed.fromJson(
+              json['placed'] as Map<String, dynamic>),
+      collected: json['collected'] == null
+          ? null
+          : PersonalStatsBounties$Bounties$Collected.fromJson(
+              json['collected'] as Map<String, dynamic>),
+      received: json['received'] == null
+          ? null
+          : PersonalStatsBounties$Bounties$Received.fromJson(
+              json['received'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsBounties$BountiesToJson(
+        PersonalStatsBounties$Bounties instance) =>
+    <String, dynamic>{
+      'placed': instance.placed?.toJson(),
+      'collected': instance.collected?.toJson(),
+      'received': instance.received?.toJson(),
+    };
+
+PersonalStatsCriminalOffensesPopular$CriminalOffenses
+    _$PersonalStatsCriminalOffensesPopular$CriminalOffensesFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsCriminalOffensesPopular$CriminalOffenses(
+          total: (json['total'] as num?)?.toInt(),
+          version: json['version'] as String?,
+        );
+
+Map<String, dynamic>
+    _$PersonalStatsCriminalOffensesPopular$CriminalOffensesToJson(
+            PersonalStatsCriminalOffensesPopular$CriminalOffenses instance) =>
+        <String, dynamic>{
+          'total': instance.total,
+          'version': instance.version,
+        };
+
+PersonalStatsCommunication$Communication
+    _$PersonalStatsCommunication$CommunicationFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsCommunication$Communication(
+          mailsSent: json['mails_sent'] == null
+              ? null
+              : PersonalStatsCommunication$Communication$MailsSent.fromJson(
+                  json['mails_sent'] as Map<String, dynamic>),
+          classifiedAds: (json['classified_ads'] as num?)?.toInt(),
+          personals: (json['personals'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsCommunication$CommunicationToJson(
+        PersonalStatsCommunication$Communication instance) =>
+    <String, dynamic>{
+      'mails_sent': instance.mailsSent?.toJson(),
+      'classified_ads': instance.classifiedAds,
+      'personals': instance.personals,
+    };
+
+PersonalStatsFinishingHits$FinishingHits
+    _$PersonalStatsFinishingHits$FinishingHitsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsFinishingHits$FinishingHits(
+          heavyArtillery: (json['heavy_artillery'] as num?)?.toInt(),
+          machineGuns: (json['machine_guns'] as num?)?.toInt(),
+          rifles: (json['rifles'] as num?)?.toInt(),
+          subMachineGuns: (json['sub_machine_guns'] as num?)?.toInt(),
+          shotguns: (json['shotguns'] as num?)?.toInt(),
+          pistols: (json['pistols'] as num?)?.toInt(),
+          temporary: (json['temporary'] as num?)?.toInt(),
+          piercing: (json['piercing'] as num?)?.toInt(),
+          slashing: (json['slashing'] as num?)?.toInt(),
+          clubbing: (json['clubbing'] as num?)?.toInt(),
+          mechanical: (json['mechanical'] as num?)?.toInt(),
+          handToHand: (json['hand_to_hand'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsFinishingHits$FinishingHitsToJson(
+        PersonalStatsFinishingHits$FinishingHits instance) =>
+    <String, dynamic>{
+      'heavy_artillery': instance.heavyArtillery,
+      'machine_guns': instance.machineGuns,
+      'rifles': instance.rifles,
+      'sub_machine_guns': instance.subMachineGuns,
+      'shotguns': instance.shotguns,
+      'pistols': instance.pistols,
+      'temporary': instance.temporary,
+      'piercing': instance.piercing,
+      'slashing': instance.slashing,
+      'clubbing': instance.clubbing,
+      'mechanical': instance.mechanical,
+      'hand_to_hand': instance.handToHand,
+    };
+
+PersonalStatsHospital$Hospital _$PersonalStatsHospital$HospitalFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsHospital$Hospital(
+      timesHospitalized: (json['times_hospitalized'] as num?)?.toInt(),
+      medicalItemsUsed: (json['medical_items_used'] as num?)?.toInt(),
+      bloodWithdrawn: (json['blood_withdrawn'] as num?)?.toInt(),
+      reviving: json['reviving'] == null
+          ? null
+          : PersonalStatsHospital$Hospital$Reviving.fromJson(
+              json['reviving'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsHospital$HospitalToJson(
+        PersonalStatsHospital$Hospital instance) =>
+    <String, dynamic>{
+      'times_hospitalized': instance.timesHospitalized,
+      'medical_items_used': instance.medicalItemsUsed,
+      'blood_withdrawn': instance.bloodWithdrawn,
+      'reviving': instance.reviving?.toJson(),
+    };
+
+PersonalStatsHospitalPopular$Hospital
+    _$PersonalStatsHospitalPopular$HospitalFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsHospitalPopular$Hospital(
+          medicalItemsUsed: (json['medical_items_used'] as num?)?.toInt(),
+          reviving: json['reviving'] == null
+              ? null
+              : PersonalStatsHospitalPopular$Hospital$Reviving.fromJson(
+                  json['reviving'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsHospitalPopular$HospitalToJson(
+        PersonalStatsHospitalPopular$Hospital instance) =>
+    <String, dynamic>{
+      'medical_items_used': instance.medicalItemsUsed,
+      'reviving': instance.reviving?.toJson(),
+    };
+
+PersonalStatsJail$Jail _$PersonalStatsJail$JailFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsJail$Jail(
+      timesJailed: (json['times_jailed'] as num?)?.toInt(),
+      busts: json['busts'] == null
+          ? null
+          : PersonalStatsJail$Jail$Busts.fromJson(
+              json['busts'] as Map<String, dynamic>),
+      bails: json['bails'] == null
+          ? null
+          : PersonalStatsJail$Jail$Bails.fromJson(
+              json['bails'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsJail$JailToJson(
+        PersonalStatsJail$Jail instance) =>
+    <String, dynamic>{
+      'times_jailed': instance.timesJailed,
+      'busts': instance.busts?.toJson(),
+      'bails': instance.bails?.toJson(),
+    };
+
+PersonalStatsTrading$Trading _$PersonalStatsTrading$TradingFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsTrading$Trading(
+      items: json['items'] == null
+          ? null
+          : PersonalStatsTrading$Trading$Items.fromJson(
+              json['items'] as Map<String, dynamic>),
+      trades: (json['trades'] as num?)?.toInt(),
+      points: json['points'] == null
+          ? null
+          : PersonalStatsTrading$Trading$Points.fromJson(
+              json['points'] as Map<String, dynamic>),
+      bazaar: json['bazaar'] == null
+          ? null
+          : PersonalStatsTrading$Trading$Bazaar.fromJson(
+              json['bazaar'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsTrading$TradingToJson(
+        PersonalStatsTrading$Trading instance) =>
+    <String, dynamic>{
+      'items': instance.items?.toJson(),
+      'trades': instance.trades,
+      'points': instance.points?.toJson(),
+      'bazaar': instance.bazaar?.toJson(),
+    };
+
+PersonalStatsJobsPublic$Jobs _$PersonalStatsJobsPublic$JobsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsJobsPublic$Jobs(
+      jobPointsUsed: (json['job_points_used'] as num?)?.toInt(),
+      trainsReceived: (json['trains_received'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsJobsPublic$JobsToJson(
+        PersonalStatsJobsPublic$Jobs instance) =>
+    <String, dynamic>{
+      'job_points_used': instance.jobPointsUsed,
+      'trains_received': instance.trainsReceived,
+    };
+
+PersonalStatsJobsExtended$Jobs _$PersonalStatsJobsExtended$JobsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsJobsExtended$Jobs(
+      jobPointsUsed: (json['job_points_used'] as num?)?.toInt(),
+      trainsReceived: (json['trains_received'] as num?)?.toInt(),
+      stats: json['stats'] == null
+          ? null
+          : PersonalStatsJobsExtended$Jobs$Stats.fromJson(
+              json['stats'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$PersonalStatsJobsExtended$JobsToJson(
+        PersonalStatsJobsExtended$Jobs instance) =>
+    <String, dynamic>{
+      'job_points_used': instance.jobPointsUsed,
+      'trains_received': instance.trainsReceived,
+      'stats': instance.stats?.toJson(),
+    };
+
+PersonalStatsBattleStats$BattleStats
+    _$PersonalStatsBattleStats$BattleStatsFromJson(Map<String, dynamic> json) =>
+        PersonalStatsBattleStats$BattleStats(
+          strength: (json['strength'] as num?)?.toInt(),
+          defense: (json['defense'] as num?)?.toInt(),
+          speed: (json['speed'] as num?)?.toInt(),
+          dexterity: (json['dexterity'] as num?)?.toInt(),
+          total: (json['total'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsBattleStats$BattleStatsToJson(
+        PersonalStatsBattleStats$BattleStats instance) =>
+    <String, dynamic>{
+      'strength': instance.strength,
+      'defense': instance.defense,
+      'speed': instance.speed,
+      'dexterity': instance.dexterity,
+      'total': instance.total,
+    };
+
+PersonalStatsAttackingPublic$Attacking
+    _$PersonalStatsAttackingPublic$AttackingFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking(
+          attacks: json['attacks'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Attacks.fromJson(
+                  json['attacks'] as Map<String, dynamic>),
+          defends: json['defends'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Defends.fromJson(
+                  json['defends'] as Map<String, dynamic>),
+          elo: (json['elo'] as num?)?.toInt(),
+          unarmoredWins: (json['unarmored_wins'] as num?)?.toInt(),
+          highestLevelBeaten: (json['highest_level_beaten'] as num?)?.toInt(),
+          escapes: json['escapes'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Escapes.fromJson(
+                  json['escapes'] as Map<String, dynamic>),
+          killstreak: json['killstreak'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Killstreak.fromJson(
+                  json['killstreak'] as Map<String, dynamic>),
+          hits: json['hits'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Hits.fromJson(
+                  json['hits'] as Map<String, dynamic>),
+          damage: json['damage'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Damage.fromJson(
+                  json['damage'] as Map<String, dynamic>),
+          networth: json['networth'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Networth.fromJson(
+                  json['networth'] as Map<String, dynamic>),
+          ammunition: json['ammunition'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Ammunition.fromJson(
+                  json['ammunition'] as Map<String, dynamic>),
+          faction: json['faction'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Faction.fromJson(
+                  json['faction'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$AttackingToJson(
+        PersonalStatsAttackingPublic$Attacking instance) =>
+    <String, dynamic>{
+      'attacks': instance.attacks?.toJson(),
+      'defends': instance.defends?.toJson(),
+      'elo': instance.elo,
+      'unarmored_wins': instance.unarmoredWins,
+      'highest_level_beaten': instance.highestLevelBeaten,
+      'escapes': instance.escapes?.toJson(),
+      'killstreak': instance.killstreak?.toJson(),
+      'hits': instance.hits?.toJson(),
+      'damage': instance.damage?.toJson(),
+      'networth': instance.networth?.toJson(),
+      'ammunition': instance.ammunition?.toJson(),
+      'faction': instance.faction?.toJson(),
+    };
+
+PersonalStatsAttackingExtended$Attacking
+    _$PersonalStatsAttackingExtended$AttackingFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking(
+          attacks: json['attacks'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Attacks.fromJson(
+                  json['attacks'] as Map<String, dynamic>),
+          defends: json['defends'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Defends.fromJson(
+                  json['defends'] as Map<String, dynamic>),
+          elo: (json['elo'] as num?)?.toInt(),
+          unarmoredWins: (json['unarmored_wins'] as num?)?.toInt(),
+          highestLevelBeaten: (json['highest_level_beaten'] as num?)?.toInt(),
+          escapes: json['escapes'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Escapes.fromJson(
+                  json['escapes'] as Map<String, dynamic>),
+          killstreak: json['killstreak'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Killstreak.fromJson(
+                  json['killstreak'] as Map<String, dynamic>),
+          hits: json['hits'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Hits.fromJson(
+                  json['hits'] as Map<String, dynamic>),
+          damage: json['damage'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Damage.fromJson(
+                  json['damage'] as Map<String, dynamic>),
+          networth: json['networth'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Networth.fromJson(
+                  json['networth'] as Map<String, dynamic>),
+          ammunition: json['ammunition'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Ammunition.fromJson(
+                  json['ammunition'] as Map<String, dynamic>),
+          faction: json['faction'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Faction.fromJson(
+                  json['faction'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$AttackingToJson(
+        PersonalStatsAttackingExtended$Attacking instance) =>
+    <String, dynamic>{
+      'attacks': instance.attacks?.toJson(),
+      'defends': instance.defends?.toJson(),
+      'elo': instance.elo,
+      'unarmored_wins': instance.unarmoredWins,
+      'highest_level_beaten': instance.highestLevelBeaten,
+      'escapes': instance.escapes?.toJson(),
+      'killstreak': instance.killstreak?.toJson(),
+      'hits': instance.hits?.toJson(),
+      'damage': instance.damage?.toJson(),
+      'networth': instance.networth?.toJson(),
+      'ammunition': instance.ammunition?.toJson(),
+      'faction': instance.faction?.toJson(),
+    };
+
+PersonalStatsAttackingPopular$Attacking
+    _$PersonalStatsAttackingPopular$AttackingFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking(
+          attacks: json['attacks'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Attacks.fromJson(
+                  json['attacks'] as Map<String, dynamic>),
+          defends: json['defends'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Defends.fromJson(
+                  json['defends'] as Map<String, dynamic>),
+          elo: (json['elo'] as num?)?.toInt(),
+          escapes: json['escapes'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Escapes.fromJson(
+                  json['escapes'] as Map<String, dynamic>),
+          killstreak: json['killstreak'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Killstreak.fromJson(
+                  json['killstreak'] as Map<String, dynamic>),
+          hits: json['hits'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Hits.fromJson(
+                  json['hits'] as Map<String, dynamic>),
+          damage: json['damage'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Damage.fromJson(
+                  json['damage'] as Map<String, dynamic>),
+          networth: json['networth'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Networth.fromJson(
+                  json['networth'] as Map<String, dynamic>),
+          ammunition: json['ammunition'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Ammunition.fromJson(
+                  json['ammunition'] as Map<String, dynamic>),
+          faction: json['faction'] == null
+              ? null
+              : PersonalStatsAttackingPopular$Attacking$Faction.fromJson(
+                  json['faction'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$AttackingToJson(
+        PersonalStatsAttackingPopular$Attacking instance) =>
+    <String, dynamic>{
+      'attacks': instance.attacks?.toJson(),
+      'defends': instance.defends?.toJson(),
+      'elo': instance.elo,
+      'escapes': instance.escapes?.toJson(),
+      'killstreak': instance.killstreak?.toJson(),
+      'hits': instance.hits?.toJson(),
+      'damage': instance.damage?.toJson(),
+      'networth': instance.networth?.toJson(),
+      'ammunition': instance.ammunition?.toJson(),
+      'faction': instance.faction?.toJson(),
+    };
+
 UserCrimeDetailsBootlegging$OnlineStore
     _$UserCrimeDetailsBootlegging$OnlineStoreFromJson(
             Map<String, dynamic> json) =>
@@ -2976,6 +4483,887 @@ Map<String, dynamic> _$FactionApplication$User$StatsToJson(
       'defense': instance.defense,
     };
 
+PersonalStatsOther$Other$Refills _$PersonalStatsOther$Other$RefillsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsOther$Other$Refills(
+      energy: (json['energy'] as num?)?.toInt(),
+      nerve: (json['nerve'] as num?)?.toInt(),
+      token: (json['token'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsOther$Other$RefillsToJson(
+        PersonalStatsOther$Other$Refills instance) =>
+    <String, dynamic>{
+      'energy': instance.energy,
+      'nerve': instance.nerve,
+      'token': instance.token,
+    };
+
+PersonalStatsOtherPopular$Other$Refills
+    _$PersonalStatsOtherPopular$Other$RefillsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsOtherPopular$Other$Refills(
+          energy: (json['energy'] as num?)?.toInt(),
+          nerve: (json['nerve'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsOtherPopular$Other$RefillsToJson(
+        PersonalStatsOtherPopular$Other$Refills instance) =>
+    <String, dynamic>{
+      'energy': instance.energy,
+      'nerve': instance.nerve,
+    };
+
+PersonalStatsRacing$Racing$Races _$PersonalStatsRacing$Racing$RacesFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsRacing$Racing$Races(
+      entered: (json['entered'] as num?)?.toInt(),
+      won: (json['won'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsRacing$Racing$RacesToJson(
+        PersonalStatsRacing$Racing$Races instance) =>
+    <String, dynamic>{
+      'entered': instance.entered,
+      'won': instance.won,
+    };
+
+PersonalStatsMissions$Missions$Contracts
+    _$PersonalStatsMissions$Missions$ContractsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsMissions$Missions$Contracts(
+          total: (json['total'] as num?)?.toInt(),
+          duke: (json['duke'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsMissions$Missions$ContractsToJson(
+        PersonalStatsMissions$Missions$Contracts instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'duke': instance.duke,
+    };
+
+PersonalStatsDrugs$Drugs$Rehabilitations
+    _$PersonalStatsDrugs$Drugs$RehabilitationsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsDrugs$Drugs$Rehabilitations(
+          amount: (json['amount'] as num?)?.toInt(),
+          fees: (json['fees'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsDrugs$Drugs$RehabilitationsToJson(
+        PersonalStatsDrugs$Drugs$Rehabilitations instance) =>
+    <String, dynamic>{
+      'amount': instance.amount,
+      'fees': instance.fees,
+    };
+
+PersonalStatsItems$Items$Found _$PersonalStatsItems$Items$FoundFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsItems$Items$Found(
+      city: (json['city'] as num?)?.toInt(),
+      trash: (json['trash'] as num?)?.toInt(),
+      easterEggs: (json['easter_eggs'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsItems$Items$FoundToJson(
+        PersonalStatsItems$Items$Found instance) =>
+    <String, dynamic>{
+      'city': instance.city,
+      'trash': instance.trash,
+      'easter_eggs': instance.easterEggs,
+    };
+
+PersonalStatsItems$Items$Used _$PersonalStatsItems$Items$UsedFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsItems$Items$Used(
+      books: (json['books'] as num?)?.toInt(),
+      boosters: (json['boosters'] as num?)?.toInt(),
+      consumables: (json['consumables'] as num?)?.toInt(),
+      candy: (json['candy'] as num?)?.toInt(),
+      alcohol: (json['alcohol'] as num?)?.toInt(),
+      energy: (json['energy'] as num?)?.toInt(),
+      statEnhancers: (json['stat_enhancers'] as num?)?.toInt(),
+      easterEggs: (json['easter_eggs'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsItems$Items$UsedToJson(
+        PersonalStatsItems$Items$Used instance) =>
+    <String, dynamic>{
+      'books': instance.books,
+      'boosters': instance.boosters,
+      'consumables': instance.consumables,
+      'candy': instance.candy,
+      'alcohol': instance.alcohol,
+      'energy': instance.energy,
+      'stat_enhancers': instance.statEnhancers,
+      'easter_eggs': instance.easterEggs,
+    };
+
+PersonalStatsItemsPopular$Items$Found
+    _$PersonalStatsItemsPopular$Items$FoundFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsItemsPopular$Items$Found(
+          trash: (json['trash'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsItemsPopular$Items$FoundToJson(
+        PersonalStatsItemsPopular$Items$Found instance) =>
+    <String, dynamic>{
+      'trash': instance.trash,
+    };
+
+PersonalStatsItemsPopular$Items$Used
+    _$PersonalStatsItemsPopular$Items$UsedFromJson(Map<String, dynamic> json) =>
+        PersonalStatsItemsPopular$Items$Used(
+          books: (json['books'] as num?)?.toInt(),
+          boosters: (json['boosters'] as num?)?.toInt(),
+          consumables: (json['consumables'] as num?)?.toInt(),
+          candy: (json['candy'] as num?)?.toInt(),
+          alcohol: (json['alcohol'] as num?)?.toInt(),
+          energy: (json['energy'] as num?)?.toInt(),
+          statEnhancers: (json['stat_enhancers'] as num?)?.toInt(),
+          easterEggs: (json['easter_eggs'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsItemsPopular$Items$UsedToJson(
+        PersonalStatsItemsPopular$Items$Used instance) =>
+    <String, dynamic>{
+      'books': instance.books,
+      'boosters': instance.boosters,
+      'consumables': instance.consumables,
+      'candy': instance.candy,
+      'alcohol': instance.alcohol,
+      'energy': instance.energy,
+      'stat_enhancers': instance.statEnhancers,
+      'easter_eggs': instance.easterEggs,
+    };
+
+PersonalStatsInvestments$Investments$Bank
+    _$PersonalStatsInvestments$Investments$BankFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsInvestments$Investments$Bank(
+          total: (json['total'] as num?)?.toInt(),
+          profit: (json['profit'] as num?)?.toInt(),
+          current: (json['current'] as num?)?.toInt(),
+          timeRemaining: (json['time_remaining'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsInvestments$Investments$BankToJson(
+        PersonalStatsInvestments$Investments$Bank instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'profit': instance.profit,
+      'current': instance.current,
+      'time_remaining': instance.timeRemaining,
+    };
+
+PersonalStatsInvestments$Investments$Stocks
+    _$PersonalStatsInvestments$Investments$StocksFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsInvestments$Investments$Stocks(
+          profits: (json['profits'] as num?)?.toInt(),
+          losses: (json['losses'] as num?)?.toInt(),
+          fees: (json['fees'] as num?)?.toInt(),
+          netProfits: (json['net_profits'] as num?)?.toInt(),
+          payouts: (json['payouts'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsInvestments$Investments$StocksToJson(
+        PersonalStatsInvestments$Investments$Stocks instance) =>
+    <String, dynamic>{
+      'profits': instance.profits,
+      'losses': instance.losses,
+      'fees': instance.fees,
+      'net_profits': instance.netProfits,
+      'payouts': instance.payouts,
+    };
+
+PersonalStatsBounties$Bounties$Placed
+    _$PersonalStatsBounties$Bounties$PlacedFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsBounties$Bounties$Placed(
+          amount: (json['amount'] as num?)?.toInt(),
+          $value: (json['value'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsBounties$Bounties$PlacedToJson(
+        PersonalStatsBounties$Bounties$Placed instance) =>
+    <String, dynamic>{
+      'amount': instance.amount,
+      'value': instance.$value,
+    };
+
+PersonalStatsBounties$Bounties$Collected
+    _$PersonalStatsBounties$Bounties$CollectedFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsBounties$Bounties$Collected(
+          amount: (json['amount'] as num?)?.toInt(),
+          $value: (json['value'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsBounties$Bounties$CollectedToJson(
+        PersonalStatsBounties$Bounties$Collected instance) =>
+    <String, dynamic>{
+      'amount': instance.amount,
+      'value': instance.$value,
+    };
+
+PersonalStatsBounties$Bounties$Received
+    _$PersonalStatsBounties$Bounties$ReceivedFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsBounties$Bounties$Received(
+          amount: (json['amount'] as num?)?.toInt(),
+          $value: (json['value'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsBounties$Bounties$ReceivedToJson(
+        PersonalStatsBounties$Bounties$Received instance) =>
+    <String, dynamic>{
+      'amount': instance.amount,
+      'value': instance.$value,
+    };
+
+PersonalStatsCommunication$Communication$MailsSent
+    _$PersonalStatsCommunication$Communication$MailsSentFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsCommunication$Communication$MailsSent(
+          total: (json['total'] as num?)?.toInt(),
+          friends: (json['friends'] as num?)?.toInt(),
+          faction: (json['faction'] as num?)?.toInt(),
+          colleagues: (json['colleagues'] as num?)?.toInt(),
+          spouse: (json['spouse'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsCommunication$Communication$MailsSentToJson(
+        PersonalStatsCommunication$Communication$MailsSent instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'friends': instance.friends,
+      'faction': instance.faction,
+      'colleagues': instance.colleagues,
+      'spouse': instance.spouse,
+    };
+
+PersonalStatsHospital$Hospital$Reviving
+    _$PersonalStatsHospital$Hospital$RevivingFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsHospital$Hospital$Reviving(
+          skill: (json['skill'] as num?)?.toInt(),
+          revives: (json['revives'] as num?)?.toInt(),
+          revivesReceived: (json['revives_received'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsHospital$Hospital$RevivingToJson(
+        PersonalStatsHospital$Hospital$Reviving instance) =>
+    <String, dynamic>{
+      'skill': instance.skill,
+      'revives': instance.revives,
+      'revives_received': instance.revivesReceived,
+    };
+
+PersonalStatsHospitalPopular$Hospital$Reviving
+    _$PersonalStatsHospitalPopular$Hospital$RevivingFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsHospitalPopular$Hospital$Reviving(
+          skill: (json['skill'] as num?)?.toInt(),
+          revives: (json['revives'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsHospitalPopular$Hospital$RevivingToJson(
+        PersonalStatsHospitalPopular$Hospital$Reviving instance) =>
+    <String, dynamic>{
+      'skill': instance.skill,
+      'revives': instance.revives,
+    };
+
+PersonalStatsJail$Jail$Busts _$PersonalStatsJail$Jail$BustsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsJail$Jail$Busts(
+      success: (json['success'] as num?)?.toInt(),
+      fails: (json['fails'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsJail$Jail$BustsToJson(
+        PersonalStatsJail$Jail$Busts instance) =>
+    <String, dynamic>{
+      'success': instance.success,
+      'fails': instance.fails,
+    };
+
+PersonalStatsJail$Jail$Bails _$PersonalStatsJail$Jail$BailsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsJail$Jail$Bails(
+      amount: (json['amount'] as num?)?.toInt(),
+      fees: (json['fees'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsJail$Jail$BailsToJson(
+        PersonalStatsJail$Jail$Bails instance) =>
+    <String, dynamic>{
+      'amount': instance.amount,
+      'fees': instance.fees,
+    };
+
+PersonalStatsTrading$Trading$Items _$PersonalStatsTrading$Trading$ItemsFromJson(
+        Map<String, dynamic> json) =>
+    PersonalStatsTrading$Trading$Items(
+      bought: json['bought'] == null
+          ? null
+          : PersonalStatsTrading$Trading$Items$Bought.fromJson(
+              json['bought'] as Map<String, dynamic>),
+      auctions: json['auctions'] == null
+          ? null
+          : PersonalStatsTrading$Trading$Items$Auctions.fromJson(
+              json['auctions'] as Map<String, dynamic>),
+      sent: (json['sent'] as num?)?.toInt(),
+    );
+
+Map<String, dynamic> _$PersonalStatsTrading$Trading$ItemsToJson(
+        PersonalStatsTrading$Trading$Items instance) =>
+    <String, dynamic>{
+      'bought': instance.bought?.toJson(),
+      'auctions': instance.auctions?.toJson(),
+      'sent': instance.sent,
+    };
+
+PersonalStatsTrading$Trading$Points
+    _$PersonalStatsTrading$Trading$PointsFromJson(Map<String, dynamic> json) =>
+        PersonalStatsTrading$Trading$Points(
+          bought: (json['bought'] as num?)?.toInt(),
+          sold: (json['sold'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsTrading$Trading$PointsToJson(
+        PersonalStatsTrading$Trading$Points instance) =>
+    <String, dynamic>{
+      'bought': instance.bought,
+      'sold': instance.sold,
+    };
+
+PersonalStatsTrading$Trading$Bazaar
+    _$PersonalStatsTrading$Trading$BazaarFromJson(Map<String, dynamic> json) =>
+        PersonalStatsTrading$Trading$Bazaar(
+          customers: (json['customers'] as num?)?.toInt(),
+          sales: (json['sales'] as num?)?.toInt(),
+          profit: (json['profit'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsTrading$Trading$BazaarToJson(
+        PersonalStatsTrading$Trading$Bazaar instance) =>
+    <String, dynamic>{
+      'customers': instance.customers,
+      'sales': instance.sales,
+      'profit': instance.profit,
+    };
+
+PersonalStatsJobsExtended$Jobs$Stats
+    _$PersonalStatsJobsExtended$Jobs$StatsFromJson(Map<String, dynamic> json) =>
+        PersonalStatsJobsExtended$Jobs$Stats(
+          manual: (json['manual'] as num?)?.toInt(),
+          intelligence: (json['intelligence'] as num?)?.toInt(),
+          endurance: (json['endurance'] as num?)?.toInt(),
+          total: (json['total'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsJobsExtended$Jobs$StatsToJson(
+        PersonalStatsJobsExtended$Jobs$Stats instance) =>
+    <String, dynamic>{
+      'manual': instance.manual,
+      'intelligence': instance.intelligence,
+      'endurance': instance.endurance,
+      'total': instance.total,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Attacks
+    _$PersonalStatsAttackingPublic$Attacking$AttacksFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Attacks(
+          won: (json['won'] as num?)?.toInt(),
+          lost: (json['lost'] as num?)?.toInt(),
+          stalemate: (json['stalemate'] as num?)?.toInt(),
+          assist: (json['assist'] as num?)?.toInt(),
+          stealth: (json['stealth'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$AttacksToJson(
+        PersonalStatsAttackingPublic$Attacking$Attacks instance) =>
+    <String, dynamic>{
+      'won': instance.won,
+      'lost': instance.lost,
+      'stalemate': instance.stalemate,
+      'assist': instance.assist,
+      'stealth': instance.stealth,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Defends
+    _$PersonalStatsAttackingPublic$Attacking$DefendsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Defends(
+          won: (json['won'] as num?)?.toInt(),
+          lost: (json['lost'] as num?)?.toInt(),
+          stalemate: (json['stalemate'] as num?)?.toInt(),
+          total: (json['total'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$DefendsToJson(
+        PersonalStatsAttackingPublic$Attacking$Defends instance) =>
+    <String, dynamic>{
+      'won': instance.won,
+      'lost': instance.lost,
+      'stalemate': instance.stalemate,
+      'total': instance.total,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Escapes
+    _$PersonalStatsAttackingPublic$Attacking$EscapesFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Escapes(
+          player: (json['player'] as num?)?.toInt(),
+          foes: (json['foes'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$EscapesToJson(
+        PersonalStatsAttackingPublic$Attacking$Escapes instance) =>
+    <String, dynamic>{
+      'player': instance.player,
+      'foes': instance.foes,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Killstreak
+    _$PersonalStatsAttackingPublic$Attacking$KillstreakFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Killstreak(
+          best: (json['best'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$KillstreakToJson(
+        PersonalStatsAttackingPublic$Attacking$Killstreak instance) =>
+    <String, dynamic>{
+      'best': instance.best,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Hits
+    _$PersonalStatsAttackingPublic$Attacking$HitsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Hits(
+          success: (json['success'] as num?)?.toInt(),
+          miss: (json['miss'] as num?)?.toInt(),
+          critical: (json['critical'] as num?)?.toInt(),
+          oneHitKills: (json['one_hit_kills'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$HitsToJson(
+        PersonalStatsAttackingPublic$Attacking$Hits instance) =>
+    <String, dynamic>{
+      'success': instance.success,
+      'miss': instance.miss,
+      'critical': instance.critical,
+      'one_hit_kills': instance.oneHitKills,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Damage
+    _$PersonalStatsAttackingPublic$Attacking$DamageFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Damage(
+          total: (json['total'] as num?)?.toInt(),
+          best: (json['best'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$DamageToJson(
+        PersonalStatsAttackingPublic$Attacking$Damage instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'best': instance.best,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Networth
+    _$PersonalStatsAttackingPublic$Attacking$NetworthFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Networth(
+          moneyMugged: (json['money_mugged'] as num?)?.toInt(),
+          largestMug: (json['largest_mug'] as num?)?.toInt(),
+          itemsLooted: (json['items_looted'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$NetworthToJson(
+        PersonalStatsAttackingPublic$Attacking$Networth instance) =>
+    <String, dynamic>{
+      'money_mugged': instance.moneyMugged,
+      'largest_mug': instance.largestMug,
+      'items_looted': instance.itemsLooted,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Ammunition
+    _$PersonalStatsAttackingPublic$Attacking$AmmunitionFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Ammunition(
+          total: (json['total'] as num?)?.toInt(),
+          special: (json['special'] as num?)?.toInt(),
+          hollowPoint: (json['hollow_point'] as num?)?.toInt(),
+          tracer: (json['tracer'] as num?)?.toInt(),
+          piercing: (json['piercing'] as num?)?.toInt(),
+          incendiary: (json['incendiary'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$AmmunitionToJson(
+        PersonalStatsAttackingPublic$Attacking$Ammunition instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'special': instance.special,
+      'hollow_point': instance.hollowPoint,
+      'tracer': instance.tracer,
+      'piercing': instance.piercing,
+      'incendiary': instance.incendiary,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Faction
+    _$PersonalStatsAttackingPublic$Attacking$FactionFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Faction(
+          respect: (json['respect'] as num?)?.toInt(),
+          retaliations: (json['retaliations'] as num?)?.toInt(),
+          rankedWarHits: (json['ranked_war_hits'] as num?)?.toInt(),
+          raidHits: (json['raid_hits'] as num?)?.toInt(),
+          territory: json['territory'] == null
+              ? null
+              : PersonalStatsAttackingPublic$Attacking$Faction$Territory
+                  .fromJson(json['territory'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPublic$Attacking$FactionToJson(
+        PersonalStatsAttackingPublic$Attacking$Faction instance) =>
+    <String, dynamic>{
+      'respect': instance.respect,
+      'retaliations': instance.retaliations,
+      'ranked_war_hits': instance.rankedWarHits,
+      'raid_hits': instance.raidHits,
+      'territory': instance.territory?.toJson(),
+    };
+
+PersonalStatsAttackingExtended$Attacking$Attacks
+    _$PersonalStatsAttackingExtended$Attacking$AttacksFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Attacks(
+          won: (json['won'] as num?)?.toInt(),
+          lost: (json['lost'] as num?)?.toInt(),
+          stalemate: (json['stalemate'] as num?)?.toInt(),
+          assist: (json['assist'] as num?)?.toInt(),
+          stealth: (json['stealth'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$Attacking$AttacksToJson(
+        PersonalStatsAttackingExtended$Attacking$Attacks instance) =>
+    <String, dynamic>{
+      'won': instance.won,
+      'lost': instance.lost,
+      'stalemate': instance.stalemate,
+      'assist': instance.assist,
+      'stealth': instance.stealth,
+    };
+
+PersonalStatsAttackingExtended$Attacking$Defends
+    _$PersonalStatsAttackingExtended$Attacking$DefendsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Defends(
+          won: (json['won'] as num?)?.toInt(),
+          lost: (json['lost'] as num?)?.toInt(),
+          stalemate: (json['stalemate'] as num?)?.toInt(),
+          total: (json['total'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$Attacking$DefendsToJson(
+        PersonalStatsAttackingExtended$Attacking$Defends instance) =>
+    <String, dynamic>{
+      'won': instance.won,
+      'lost': instance.lost,
+      'stalemate': instance.stalemate,
+      'total': instance.total,
+    };
+
+PersonalStatsAttackingExtended$Attacking$Escapes
+    _$PersonalStatsAttackingExtended$Attacking$EscapesFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Escapes(
+          player: (json['player'] as num?)?.toInt(),
+          foes: (json['foes'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$Attacking$EscapesToJson(
+        PersonalStatsAttackingExtended$Attacking$Escapes instance) =>
+    <String, dynamic>{
+      'player': instance.player,
+      'foes': instance.foes,
+    };
+
+PersonalStatsAttackingExtended$Attacking$Killstreak
+    _$PersonalStatsAttackingExtended$Attacking$KillstreakFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Killstreak(
+          best: (json['best'] as num?)?.toInt(),
+          current: (json['current'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic>
+    _$PersonalStatsAttackingExtended$Attacking$KillstreakToJson(
+            PersonalStatsAttackingExtended$Attacking$Killstreak instance) =>
+        <String, dynamic>{
+          'best': instance.best,
+          'current': instance.current,
+        };
+
+PersonalStatsAttackingExtended$Attacking$Hits
+    _$PersonalStatsAttackingExtended$Attacking$HitsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Hits(
+          success: (json['success'] as num?)?.toInt(),
+          miss: (json['miss'] as num?)?.toInt(),
+          critical: (json['critical'] as num?)?.toInt(),
+          oneHitKills: (json['one_hit_kills'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$Attacking$HitsToJson(
+        PersonalStatsAttackingExtended$Attacking$Hits instance) =>
+    <String, dynamic>{
+      'success': instance.success,
+      'miss': instance.miss,
+      'critical': instance.critical,
+      'one_hit_kills': instance.oneHitKills,
+    };
+
+PersonalStatsAttackingExtended$Attacking$Damage
+    _$PersonalStatsAttackingExtended$Attacking$DamageFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Damage(
+          total: (json['total'] as num?)?.toInt(),
+          best: (json['best'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$Attacking$DamageToJson(
+        PersonalStatsAttackingExtended$Attacking$Damage instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'best': instance.best,
+    };
+
+PersonalStatsAttackingExtended$Attacking$Networth
+    _$PersonalStatsAttackingExtended$Attacking$NetworthFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Networth(
+          moneyMugged: (json['money_mugged'] as num?)?.toInt(),
+          largestMug: (json['largest_mug'] as num?)?.toInt(),
+          itemsLooted: (json['items_looted'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$Attacking$NetworthToJson(
+        PersonalStatsAttackingExtended$Attacking$Networth instance) =>
+    <String, dynamic>{
+      'money_mugged': instance.moneyMugged,
+      'largest_mug': instance.largestMug,
+      'items_looted': instance.itemsLooted,
+    };
+
+PersonalStatsAttackingExtended$Attacking$Ammunition
+    _$PersonalStatsAttackingExtended$Attacking$AmmunitionFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Ammunition(
+          total: (json['total'] as num?)?.toInt(),
+          special: (json['special'] as num?)?.toInt(),
+          hollowPoint: (json['hollow_point'] as num?)?.toInt(),
+          tracer: (json['tracer'] as num?)?.toInt(),
+          piercing: (json['piercing'] as num?)?.toInt(),
+          incendiary: (json['incendiary'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic>
+    _$PersonalStatsAttackingExtended$Attacking$AmmunitionToJson(
+            PersonalStatsAttackingExtended$Attacking$Ammunition instance) =>
+        <String, dynamic>{
+          'total': instance.total,
+          'special': instance.special,
+          'hollow_point': instance.hollowPoint,
+          'tracer': instance.tracer,
+          'piercing': instance.piercing,
+          'incendiary': instance.incendiary,
+        };
+
+PersonalStatsAttackingExtended$Attacking$Faction
+    _$PersonalStatsAttackingExtended$Attacking$FactionFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Faction(
+          respect: (json['respect'] as num?)?.toInt(),
+          retaliations: (json['retaliations'] as num?)?.toInt(),
+          rankedWarHits: (json['ranked_war_hits'] as num?)?.toInt(),
+          raidHits: (json['raid_hits'] as num?)?.toInt(),
+          territory: json['territory'] == null
+              ? null
+              : PersonalStatsAttackingExtended$Attacking$Faction$Territory
+                  .fromJson(json['territory'] as Map<String, dynamic>),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingExtended$Attacking$FactionToJson(
+        PersonalStatsAttackingExtended$Attacking$Faction instance) =>
+    <String, dynamic>{
+      'respect': instance.respect,
+      'retaliations': instance.retaliations,
+      'ranked_war_hits': instance.rankedWarHits,
+      'raid_hits': instance.raidHits,
+      'territory': instance.territory?.toJson(),
+    };
+
+PersonalStatsAttackingPopular$Attacking$Attacks
+    _$PersonalStatsAttackingPopular$Attacking$AttacksFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Attacks(
+          won: (json['won'] as num?)?.toInt(),
+          lost: (json['lost'] as num?)?.toInt(),
+          stalemate: (json['stalemate'] as num?)?.toInt(),
+          assist: (json['assist'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$AttacksToJson(
+        PersonalStatsAttackingPopular$Attacking$Attacks instance) =>
+    <String, dynamic>{
+      'won': instance.won,
+      'lost': instance.lost,
+      'stalemate': instance.stalemate,
+      'assist': instance.assist,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Defends
+    _$PersonalStatsAttackingPopular$Attacking$DefendsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Defends(
+          won: (json['won'] as num?)?.toInt(),
+          lost: (json['lost'] as num?)?.toInt(),
+          stalemate: (json['stalemate'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$DefendsToJson(
+        PersonalStatsAttackingPopular$Attacking$Defends instance) =>
+    <String, dynamic>{
+      'won': instance.won,
+      'lost': instance.lost,
+      'stalemate': instance.stalemate,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Escapes
+    _$PersonalStatsAttackingPopular$Attacking$EscapesFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Escapes(
+          player: (json['player'] as num?)?.toInt(),
+          foes: (json['foes'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$EscapesToJson(
+        PersonalStatsAttackingPopular$Attacking$Escapes instance) =>
+    <String, dynamic>{
+      'player': instance.player,
+      'foes': instance.foes,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Killstreak
+    _$PersonalStatsAttackingPopular$Attacking$KillstreakFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Killstreak(
+          best: (json['best'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$KillstreakToJson(
+        PersonalStatsAttackingPopular$Attacking$Killstreak instance) =>
+    <String, dynamic>{
+      'best': instance.best,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Hits
+    _$PersonalStatsAttackingPopular$Attacking$HitsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Hits(
+          success: (json['success'] as num?)?.toInt(),
+          miss: (json['miss'] as num?)?.toInt(),
+          critical: (json['critical'] as num?)?.toInt(),
+          oneHitKills: (json['one_hit_kills'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$HitsToJson(
+        PersonalStatsAttackingPopular$Attacking$Hits instance) =>
+    <String, dynamic>{
+      'success': instance.success,
+      'miss': instance.miss,
+      'critical': instance.critical,
+      'one_hit_kills': instance.oneHitKills,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Damage
+    _$PersonalStatsAttackingPopular$Attacking$DamageFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Damage(
+          total: (json['total'] as num?)?.toInt(),
+          best: (json['best'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$DamageToJson(
+        PersonalStatsAttackingPopular$Attacking$Damage instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'best': instance.best,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Networth
+    _$PersonalStatsAttackingPopular$Attacking$NetworthFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Networth(
+          moneyMugged: (json['money_mugged'] as num?)?.toInt(),
+          largestMug: (json['largest_mug'] as num?)?.toInt(),
+          itemsLooted: (json['items_looted'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$NetworthToJson(
+        PersonalStatsAttackingPopular$Attacking$Networth instance) =>
+    <String, dynamic>{
+      'money_mugged': instance.moneyMugged,
+      'largest_mug': instance.largestMug,
+      'items_looted': instance.itemsLooted,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Ammunition
+    _$PersonalStatsAttackingPopular$Attacking$AmmunitionFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Ammunition(
+          total: (json['total'] as num?)?.toInt(),
+          special: (json['special'] as num?)?.toInt(),
+          hollowPoint: (json['hollow_point'] as num?)?.toInt(),
+          tracer: (json['tracer'] as num?)?.toInt(),
+          piercing: (json['piercing'] as num?)?.toInt(),
+          incendiary: (json['incendiary'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$AmmunitionToJson(
+        PersonalStatsAttackingPopular$Attacking$Ammunition instance) =>
+    <String, dynamic>{
+      'total': instance.total,
+      'special': instance.special,
+      'hollow_point': instance.hollowPoint,
+      'tracer': instance.tracer,
+      'piercing': instance.piercing,
+      'incendiary': instance.incendiary,
+    };
+
+PersonalStatsAttackingPopular$Attacking$Faction
+    _$PersonalStatsAttackingPopular$Attacking$FactionFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPopular$Attacking$Faction(
+          respect: (json['respect'] as num?)?.toInt(),
+          rankedWarHits: (json['ranked_war_hits'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsAttackingPopular$Attacking$FactionToJson(
+        PersonalStatsAttackingPopular$Attacking$Faction instance) =>
+    <String, dynamic>{
+      'respect': instance.respect,
+      'ranked_war_hits': instance.rankedWarHits,
+    };
+
 UserCrimeDetailsCardSkimming$CardDetails$Areas$Item
     _$UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemFromJson(
             Map<String, dynamic> json) =>
@@ -2991,3 +5379,69 @@ Map<String, dynamic>
           'id': instance.id,
           'amount': instance.amount,
         };
+
+PersonalStatsTrading$Trading$Items$Bought
+    _$PersonalStatsTrading$Trading$Items$BoughtFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsTrading$Trading$Items$Bought(
+          market: (json['market'] as num?)?.toInt(),
+          shops: (json['shops'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsTrading$Trading$Items$BoughtToJson(
+        PersonalStatsTrading$Trading$Items$Bought instance) =>
+    <String, dynamic>{
+      'market': instance.market,
+      'shops': instance.shops,
+    };
+
+PersonalStatsTrading$Trading$Items$Auctions
+    _$PersonalStatsTrading$Trading$Items$AuctionsFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsTrading$Trading$Items$Auctions(
+          won: (json['won'] as num?)?.toInt(),
+          sold: (json['sold'] as num?)?.toInt(),
+        );
+
+Map<String, dynamic> _$PersonalStatsTrading$Trading$Items$AuctionsToJson(
+        PersonalStatsTrading$Trading$Items$Auctions instance) =>
+    <String, dynamic>{
+      'won': instance.won,
+      'sold': instance.sold,
+    };
+
+PersonalStatsAttackingPublic$Attacking$Faction$Territory
+    _$PersonalStatsAttackingPublic$Attacking$Faction$TerritoryFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingPublic$Attacking$Faction$Territory(
+          wallJoins: (json['wall_joins'] as num?)?.toInt(),
+          wallClears: (json['wall_clears'] as num?)?.toInt(),
+          wallTime: (json['wall_time'] as num?)?.toInt(),
+        );
+
+Map<String,
+    dynamic> _$PersonalStatsAttackingPublic$Attacking$Faction$TerritoryToJson(
+        PersonalStatsAttackingPublic$Attacking$Faction$Territory instance) =>
+    <String, dynamic>{
+      'wall_joins': instance.wallJoins,
+      'wall_clears': instance.wallClears,
+      'wall_time': instance.wallTime,
+    };
+
+PersonalStatsAttackingExtended$Attacking$Faction$Territory
+    _$PersonalStatsAttackingExtended$Attacking$Faction$TerritoryFromJson(
+            Map<String, dynamic> json) =>
+        PersonalStatsAttackingExtended$Attacking$Faction$Territory(
+          wallJoins: (json['wall_joins'] as num?)?.toInt(),
+          wallClears: (json['wall_clears'] as num?)?.toInt(),
+          wallTime: (json['wall_time'] as num?)?.toInt(),
+        );
+
+Map<String,
+    dynamic> _$PersonalStatsAttackingExtended$Attacking$Faction$TerritoryToJson(
+        PersonalStatsAttackingExtended$Attacking$Faction$Territory instance) =>
+    <String, dynamic>{
+      'wall_joins': instance.wallJoins,
+      'wall_clears': instance.wallClears,
+      'wall_time': instance.wallTime,
+    };

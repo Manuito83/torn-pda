@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -194,7 +195,11 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    final otherProfile = await ApiCallsV1.getOtherProfileExtended(playerId: widget.profileId.toString());
+    final dynamic otherProfile = await ApiCallsV2.getOtherUserProfile_v2(
+      payload: {
+        "id": widget.profileId.toString(),
+      },
+    );
 
     // FRIEND CHECK
     if (!mounted) return; // We could be unmounted when rapidly skipping the first target
@@ -484,7 +489,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                 const SizedBox(width: 10),
                 Flexible(
                   child: Text(
-                    formatBigNumbers(otherProfile.personalstats!.networth!),
+                    formatBigNumbers(otherProfile.personalstats!.networth!.total!),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -553,9 +558,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       try {
         estimatedStats = StatsCalculator.calculateStats(
-          criminalRecordTotal: otherProfile.personalstats!.criminaloffenses,
+          criminalRecordTotal: otherProfile.personalstats?.criminalOffenses?.total,
           level: otherProfile.level,
-          networth: otherProfile.personalstats!.networth,
+          networth: otherProfile.personalstats!.networth!.total,
           rank: otherProfile.rank,
         );
       } catch (e) {
@@ -581,7 +586,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     final own = await ApiCallsV1.getOwnPersonalStats();
     if (own is OwnPersonalStatsModel) {
       // XANAX
-      final int otherXanax = otherProfile.personalstats!.xantaken!;
+      final int otherXanax = otherProfile.personalstats!.drugs!.xanax!;
       final int myXanax = own.personalstats!.xantaken!;
       xanaxComparison = otherXanax - myXanax;
       if (xanaxComparison < -10) {
@@ -595,7 +600,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
 
       // REFILLS
-      final int otherRefill = otherProfile.personalstats!.refills!;
+      final int otherRefill = otherProfile.personalstats!.other!.refills!.energy!;
       final int myRefill = own.personalstats!.refills!;
       refillComparison = otherRefill - myRefill;
       refillColor = Colors.orange;
@@ -610,7 +615,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
 
       // ENHANCEMENT
-      final int otherEnhancement = otherProfile.personalstats!.statenhancersused!;
+      final int otherEnhancement = otherProfile.personalstats!.items!.used!.statEnhancers!;
       final int myEnhancement = own.personalstats!.statenhancersused!;
       enhancementComparison = otherEnhancement - myEnhancement;
       if (enhancementComparison < 0) {
@@ -624,7 +629,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
 
       // CANS
-      final int otherCans = otherProfile.personalstats!.energydrinkused!;
+      final int otherCans = otherProfile.personalstats!.items!.used!.energy!;
       final int myCans = own.personalstats!.energydrinkused!;
       cansComparison = otherCans - myCans;
       if (cansComparison < 0) {
@@ -644,8 +649,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       /// if (esc + xan) < 150 & LSD > 100 SSL is red
       Widget sslWidget = const SizedBox.shrink();
       sslColor = Colors.green;
-      ecstasy = otherProfile.personalstats!.exttaken;
-      lsd = otherProfile.personalstats!.lsdtaken;
+      ecstasy = otherProfile.personalstats!.drugs!.ecstasy;
+      lsd = otherProfile.personalstats!.drugs!.lsd;
       if (otherXanax + ecstasy! > 150) {
         sslProb = false;
       } else {
@@ -965,9 +970,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 cansColor: cansColor,
                                 sslColor: sslColor,
                                 sslProb: sslProb,
-                                otherXanTaken: otherProfile.personalstats!.xantaken!,
-                                otherEctTaken: otherProfile.personalstats!.exttaken!,
-                                otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
+                                otherXanTaken: otherProfile.personalstats!.drugs!.xanax!,
+                                otherEctTaken: otherProfile.personalstats!.drugs!.ecstasy!,
+                                otherLsdTaken: otherProfile.personalstats!.drugs!.lsd!,
                                 otherName: otherProfile.name!,
                                 otherFactionName: otherProfile.faction!.factionName!,
                                 otherLastActionRelative: otherProfile.lastAction!.relative!,
@@ -1062,9 +1067,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             cansColor: cansColor,
                             sslColor: sslColor,
                             sslProb: sslProb,
-                            otherXanTaken: otherProfile.personalstats!.xantaken!,
-                            otherEctTaken: otherProfile.personalstats!.exttaken!,
-                            otherLsdTaken: otherProfile.personalstats!.lsdtaken!,
+                            otherXanTaken: otherProfile.personalstats!.drugs!.xanax!,
+                            otherEctTaken: otherProfile.personalstats!.drugs!.ecstasy!,
+                            otherLsdTaken: otherProfile.personalstats!.drugs!.lsd!,
                             otherName: otherProfile.name!,
                             otherFactionName: otherProfile.faction!.factionName!,
                             otherLastActionRelative: otherProfile.lastAction!.relative!,

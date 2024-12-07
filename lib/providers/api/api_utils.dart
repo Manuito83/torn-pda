@@ -11,7 +11,6 @@ enum ApiSelection_v1 {
   ownPersonalStats,
   ownMisc,
   bazaar,
-  otherProfile,
   basicProfile,
   target,
   attacks,
@@ -35,6 +34,7 @@ enum ApiSelection_v1 {
 
 enum ApiSelection_v2 {
   marketItem,
+  otherUserProfile,
 }
 
 class ApiError {
