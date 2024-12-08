@@ -1840,7 +1840,7 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   Future<chopper.Response> userGet({
     required String? key,
-    List<enums.UserSelectionName>? selections,
+    String? selections,
     String? id,
     int? limit,
     int? to,
@@ -1853,7 +1853,7 @@ abstract class TornV2 extends ChopperService {
   }) {
     return _userGet(
         key: key,
-        selections: userSelectionNameListToJson(selections),
+        selections: selections,
         id: id,
         limit: limit,
         to: to,
@@ -1880,7 +1880,7 @@ abstract class TornV2 extends ChopperService {
   @Get(path: '/user')
   Future<chopper.Response> _userGet({
     @Query('key') required String? key,
-    @Query('selections') List<Object?>? selections,
+    @Query('selections') String? selections,
     @Query('id') String? id,
     @Query('limit') int? limit,
     @Query('to') int? to,

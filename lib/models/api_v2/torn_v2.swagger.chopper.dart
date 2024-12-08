@@ -1400,7 +1400,7 @@ final class _$TornV2 extends TornV2 {
   @override
   Future<Response<dynamic>> _userGet({
     required String? key,
-    List<Object?>? selections,
+    String? selections,
     String? id,
     int? limit,
     int? to,

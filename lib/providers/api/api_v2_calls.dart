@@ -38,11 +38,7 @@ class ApiCallsV2 {
         return client.userGet(
           key: apiKey,
           id: payload["id"],
-          selections: [
-            UserSelectionName.profile,
-            UserSelectionName.personalstats,
-            UserSelectionName.bazaar,
-          ],
+          selections: "profile,personalstats,bazaar",
           cat: "all",
         );
       },

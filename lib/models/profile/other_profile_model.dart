@@ -333,16 +333,16 @@ class Personalstats {
   Jobs? jobs;
   Trading? trading;
   Jail? jail;
-  Hospital? hospital;
+  //Hospital? hospital; // Avoid type issues (int/double)
   FinishingHits? finishingHits;
   Communication? communication;
   CriminalOffenses? criminalOffenses;
   Bounties? bounties;
   PersonalstatsItems? items;
-  Travel? travel;
+  //Travel? travel; // Avoid type issues (int/double)
   Drugs? drugs;
   Missions? missions;
-  Racing? racing;
+  //Racing? racing; // Avoid type issues (int/double)
   PersonalstatsNetworth? networth;
   Other? other;
 
@@ -351,16 +351,16 @@ class Personalstats {
     this.jobs,
     this.trading,
     this.jail,
-    this.hospital,
+    //this.hospital,
     this.finishingHits,
     this.communication,
     this.criminalOffenses,
     this.bounties,
     this.items,
-    this.travel,
+    //this.travel,
     this.drugs,
     this.missions,
-    this.racing,
+    //this.racing,
     this.networth,
     this.other,
   });
@@ -370,17 +370,17 @@ class Personalstats {
         jobs: json["jobs"] == null ? null : Jobs.fromJson(json["jobs"]),
         trading: json["trading"] == null ? null : Trading.fromJson(json["trading"]),
         jail: json["jail"] == null ? null : Jail.fromJson(json["jail"]),
-        hospital: json["hospital"] == null ? null : Hospital.fromJson(json["hospital"]),
+        //hospital: json["hospital"] == null ? null : Hospital.fromJson(json["hospital"]),
         finishingHits: json["finishing_hits"] == null ? null : FinishingHits.fromJson(json["finishing_hits"]),
         communication: json["communication"] == null ? null : Communication.fromJson(json["communication"]),
         criminalOffenses:
             json["criminal_offenses"] == null ? null : CriminalOffenses.fromJson(json["criminal_offenses"]),
         bounties: json["bounties"] == null ? null : Bounties.fromJson(json["bounties"]),
         items: json["items"] == null ? null : PersonalstatsItems.fromJson(json["items"]),
-        travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
+        //travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
         drugs: json["drugs"] == null ? null : Drugs.fromJson(json["drugs"]),
         missions: json["missions"] == null ? null : Missions.fromJson(json["missions"]),
-        racing: json["racing"] == null ? null : Racing.fromJson(json["racing"]),
+        //racing: json["racing"] == null ? null : Racing.fromJson(json["racing"]),
         networth: json["networth"] == null ? null : PersonalstatsNetworth.fromJson(json["networth"]),
         other: json["other"] == null ? null : Other.fromJson(json["other"]),
       );
@@ -390,16 +390,16 @@ class Personalstats {
         "jobs": jobs?.toJson(),
         "trading": trading?.toJson(),
         "jail": jail?.toJson(),
-        "hospital": hospital?.toJson(),
+        //"hospital": hospital?.toJson(),
         "finishing_hits": finishingHits?.toJson(),
         "communication": communication?.toJson(),
         "criminal_offenses": criminalOffenses?.toJson(),
         "bounties": bounties?.toJson(),
         "items": items?.toJson(),
-        "travel": travel?.toJson(),
+        //"travel": travel?.toJson(),
         "drugs": drugs?.toJson(),
         "missions": missions?.toJson(),
-        "racing": racing?.toJson(),
+        //"racing": racing?.toJson(),
         "networth": networth?.toJson(),
         "other": other?.toJson(),
       };
@@ -1584,7 +1584,7 @@ class Travel {
         total: json["total"],
         timeSpent: json["time_spent"],
         itemsBought: json["items_bought"],
-        huntingSkill: json["hunting_skill"],
+        huntingSkill: json["hunting_skill"].toDouble(),
         attacksWon: json["attacks_won"],
         defendsLost: json["defends_lost"],
         argentina: json["argentina"],
