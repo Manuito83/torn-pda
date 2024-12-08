@@ -47,7 +47,7 @@ dependencies:
   ## ffi: ^1.0.0
   firebase_analytics: 11.3.4
   firebase_auth: 5.3.3
-  firebase_core: 3.7.0
+  firebase_core: 3.8.0
   firebase_crashlytics: 4.1.4
   firebase_database: 11.1.5
   firebase_messaging: 15.1.4
@@ -90,7 +90,7 @@ dependencies:
   receive_intent: 0.2.5
   rxdart: 0.28.0
   sendbird_chat_sdk: 4.2.26
-  share_plus: 10.0.0
+  share_plus: 10.1.2
   shared_preferences: 2.3.2
   showcaseview: 3.0.0
   sliding_up_panel: 2.0.0+1
@@ -99,7 +99,7 @@ dependencies:
   toastification: 2.3.0
   toggle_switch: 2.3.0
   upgrader: 11.3.0
-  url_launcher: 6.3.0
+  url_launcher: 6.3.1
   vibration: 2.0.0
   wakelock_plus: 1.2.8
   webview_flutter: 4.9.0
