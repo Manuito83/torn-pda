@@ -20,6 +20,7 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -249,7 +250,12 @@ class WarController extends GetxController {
 
     // Perform update
     try {
-      final dynamic updatedTarget = await ApiCallsV1.getOtherProfileExtended(playerId: memberKey);
+      final dynamic updatedTarget = await ApiCallsV2.getOtherUserProfile_v2(
+        payload: {
+          "id": memberKey,
+        },
+      );
+
       if (updatedTarget is OtherProfileModel) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
@@ -263,7 +269,7 @@ class WarController extends GetxController {
         member.status!.state = updatedTarget.status!.state;
         member.status!.until = updatedTarget.status!.until;
         member.status!.color = updatedTarget.status!.color;
-        member.bounty = updatedTarget.basicicons?.icon13 ?? "";
+        member.bounty = updatedTarget.basicicons!.icon13 ?? "";
 
         // Erase previous bounties and calculate new ones
         _calculateMemberBounty(updatedTarget, member);
@@ -277,25 +283,29 @@ class WarController extends GetxController {
         _assignSpiedStats(member);
 
         member.statsEstimated = StatsCalculator.calculateStats(
-          criminalRecordTotal: updatedTarget.criminalrecord!.total,
+          criminalRecordTotal: updatedTarget.personalstats!.networth!.total,
           level: updatedTarget.level,
-          networth: updatedTarget.personalstats!.networth,
+          networth: updatedTarget.personalstats!.networth!.total,
           rank: updatedTarget.rank,
         );
 
         member.statsComparisonSuccess = false;
         if (ownStatsSuccess is OwnPersonalStatsModel) {
           member.statsComparisonSuccess = true;
-          member.memberXanax = updatedTarget.personalstats!.xantaken;
+          member.memberXanax = updatedTarget.personalstats!.drugs!.xanax;
           member.myXanax = ownStatsSuccess.personalstats!.xantaken;
-          member.memberRefill = updatedTarget.personalstats!.refills;
+
+          member.memberRefill = updatedTarget.personalstats!.other!.refills!.energy;
           member.myRefill = ownStatsSuccess.personalstats!.refills;
-          member.memberEnhancement = updatedTarget.personalstats!.statenhancersused;
-          member.memberCans = updatedTarget.personalstats!.energydrinkused;
+
+          member.memberEnhancement = updatedTarget.personalstats!.items!.used!.statEnhancers;
+          member.memberCans = updatedTarget.personalstats!.items!.used!.energy;
+
           member.myCans = ownStatsSuccess.personalstats!.energydrinkused;
           member.myEnhancement = ownStatsSuccess.personalstats!.statenhancersused;
-          member.memberEcstasy = updatedTarget.personalstats!.exttaken;
-          member.memberLsd = updatedTarget.personalstats!.lsdtaken;
+
+          member.memberEcstasy = updatedTarget.personalstats!.drugs!.ecstasy;
+          member.memberLsd = updatedTarget.personalstats!.drugs!.lsd;
         }
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
