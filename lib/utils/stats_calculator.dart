@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class StatsCalculator {
   static final statsLevelTriggers = [2, 6, 11, 26, 31, 50, 71, 100];
   static final statsCrimesTriggers = [100, 5000, 10000, 20000, 30000, 50000];
@@ -48,19 +50,23 @@ class StatsCalculator {
     required int? networth,
     required String? rank,
   }) {
-    final levelIndex = statsLevelTriggers.lastIndexWhere((x) => x <= level!) + 1;
-    final crimeIndex = statsCrimesTriggers.lastIndexWhere((x) => x <= criminalRecordTotal!) + 1;
-    final networthIndex = statsNetworthTriggers.lastIndexWhere((x) => x <= networth!) + 1;
-    var rankIndex = 0;
-    statsRanksTriggers.forEach((tornRank, index) {
-      if (rank!.contains(tornRank)) {
-        rankIndex = index;
-      }
-    });
+    try {
+      final levelIndex = statsLevelTriggers.lastIndexWhere((x) => x <= level!) + 1;
+      final crimeIndex = statsCrimesTriggers.lastIndexWhere((x) => x <= criminalRecordTotal!) + 1;
+      final networthIndex = statsNetworthTriggers.lastIndexWhere((x) => x <= networth!) + 1;
+      var rankIndex = 0;
+      statsRanksTriggers.forEach((tornRank, index) {
+        if (rank!.contains(tornRank)) {
+          rankIndex = index;
+        }
+      });
 
-    final finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
-    if (finalIndex >= 0 && finalIndex <= 6) {
-      return statsResults[finalIndex];
+      final finalIndex = rankIndex - levelIndex - crimeIndex - networthIndex - 1;
+      if (finalIndex >= 0 && finalIndex <= 6) {
+        return statsResults[finalIndex];
+      }
+    } catch (e) {
+      log(e.toString());
     }
     return "unk";
   }

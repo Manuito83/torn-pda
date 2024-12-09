@@ -138,7 +138,7 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
                 if (!mounted) return;
                 _onTabTapped(context);
               },
-              child: ReorderableDragStartListener(
+              child: ReorderableDelayedDragStartListener(
                 index: widget.tabIndex,
                 child: Container(
                   alignment: Alignment.center,

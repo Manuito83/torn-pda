@@ -64,6 +64,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/webview/webview_utils.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
@@ -2838,7 +2839,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
       _cityTriggered = false;
       _profileTriggered = false;
       _attackTriggered = false;
-    } else if (_currentUrl.contains("torn.com/profiles.php?XID=") && _profileTriggered) {
+    } else if ((_currentUrl.contains("torn.com/profiles.php?XID=") ||
+            _currentUrl.contains("torn.com/profiles.php?NID=")) &&
+        _profileTriggered) {
       _crimesTriggered = false;
       _gymTriggered = false;
       _vaultTriggered = false;
@@ -4007,7 +4010,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   // ASSESS PROFILES
-  Future _assessProfileAttack({dom.Document? document, String pageTitle = ""}) async {
+  Future _assessProfileAttack({required dom.Document document, String pageTitle = ""}) async {
     if (mounted) {
       if (!_currentUrl.contains('loader.php?sid=attack&user2ID=') &&
           !_currentUrl.contains('loader2.php?sid=getInAttack&user2ID=') &&
@@ -4046,29 +4049,34 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             // When the URL is constructed with name instead of ID (e.g.: when the heart icon is pressed),
             // we capture the ID from the profile element, ensuring that it's besides the correct name
 
-            final RegExp regId = RegExp(r"php\?NID=([^&]+)");
-            final matches = regId.allMatches(_currentUrl);
-            final String username = matches.elementAt(0).group(1)!;
+            final result = await WebViewUtils.waitForElement(
+              webViewController: webViewController!,
+              selector: 'a.profile-image-wrapper[href*="XID="]',
+              maxSeconds: 6,
+              intervalSeconds: 1,
+              returnElements: true,
+            );
 
-            final dom.Element userInfoValue = document!.querySelector('div.user-info-value')!;
-            final String textContent = userInfoValue.querySelector('span.bold')!.text.trim();
-            final RegExp regUsername = RegExp('($username' r')\s*\[([0-9]+)\]');
-            final match = regUsername.firstMatch(textContent);
-            if (match != null) {
-              setState(() {
-                _profileAttackWidget = ProfileAttackCheckWidget(
-                  key: UniqueKey(),
-                  profileId: int.parse(match.group(2)!),
-                  apiKey: _userProvider?.basic?.userApiKey ?? "",
-                  profileCheckType: ProfileCheckType.profile,
-                  themeProvider: _themeProvider,
-                );
-              });
-            }
-          } else {
-            userId = 0;
+            if (result == null) throw ("No html tag found");
+
+            document = result['document'] as dom.Document;
+            final elements = result['elements'] as List<dom.Element>;
+            final anchor = elements.first;
+            final match = RegExp(r"XID=([^&]+)").firstMatch(anchor.attributes['href']!)!;
+            userId = int.parse(match.group(1)!);
+
+            setState(() {
+              _profileAttackWidget = ProfileAttackCheckWidget(
+                key: UniqueKey(),
+                profileId: userId,
+                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                profileCheckType: ProfileCheckType.profile,
+                themeProvider: _themeProvider,
+              );
+            });
           }
-        } catch (e) {
+        } catch (e, trace) {
+          log("Issue locating NID user ID: $e, $trace", name: "Profile Check");
           userId = 0;
         }
       } else if (_currentUrl.contains('loader.php?sid=attack&user2ID=') ||
