@@ -20,7 +20,6 @@ import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/perks/user_perks_model.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -166,24 +165,6 @@ class ApiCallsV1 {
     if (apiResult is! ApiError) {
       try {
         return OwnProfileMisc.fromJson(apiResult as Map<String, dynamic>);
-      } catch (e, trace) {
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
-      }
-    } else {
-      return apiResult;
-    }
-  }
-
-  static Future<dynamic> getOtherProfileExtended({required String playerId}) async {
-    dynamic apiResult;
-    final apiCaller = Get.find<ApiCallerController>();
-    await apiCaller.enqueueApiCall(prefix: playerId, apiSelection: ApiSelection_v1.otherProfile).then((value) {
-      apiResult = value;
-    });
-    if (apiResult is! ApiError) {
-      try {
-        return OtherProfileModel.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");

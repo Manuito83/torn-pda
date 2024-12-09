@@ -303,10 +303,6 @@ class ApiCallerController extends GetxController {
         url += 'user/?selections=money,education,workstats,battlestats,jobpoints,properties,skills,bazaar';
       case ApiSelection_v1.bazaar:
         url += 'user/?selections=bazaar';
-      case ApiSelection_v1.otherProfile:
-        final crimes = "criminaloffenses"; // To calculate estimated stats
-        final stats = "xantaken,statenhancersused,refills,exttaken,lsdtaken,networth,energydrinkused";
-        url += 'user/$prefix?selections=profile,crimes,bazaar,personalstats&stat=$stats,$crimes';
       case ApiSelection_v1.basicProfile:
         url += 'user/$prefix?selections=profile';
       case ApiSelection_v1.target:
@@ -469,21 +465,22 @@ class ApiCallerController extends GetxController {
             tornErrorDetails: errorMessage,
           ),
           statusCode,
+          null,
         );
       }
 
       return response.body;
-    } catch (e) {
-      throw _handleError_v2(e, statusCode);
+    } catch (e, trace) {
+      throw _handleError_v2(e, statusCode, trace);
     }
   }
 
   // TODO: Probably needs to be completed with more use cases as in API V1
-  _handleError_v2(dynamic e, int? statusCode) {
+  _handleError_v2(dynamic e, int? statusCode, StackTrace? trace) {
     if (e is TimeoutException) {
       return ApiError(errorId: 100);
     } else if (e is ApiError) {
-      log("TORN API ERROR: [${e.tornErrorDetails}]");
+      log("TORN API ERROR: [${e.tornErrorDetails}], trace: $trace");
       analytics?.logEvent(
         name: 'api_status_error',
         parameters: {
@@ -496,7 +493,7 @@ class ApiCallerController extends GetxController {
         pdaErrorDetails: "TORN API ERROR\n[${e.toString().length > 300 ? e.toString().substring(0, 300) : e}]",
       );
     } else {
-      log("API CALL ERROR: [$e]");
+      log("API CALL ERROR: [$e], trace: $trace");
       // Analytics limits at 100 chars
       final String platform = Platform.isAndroid ? "a" : "i";
       final String versionError = "$appVersion$platform: $e";

@@ -321,6 +321,144 @@ abstract class TornV2 extends ChopperService {
   @Get(path: '/faction/applications')
   Future<chopper.Response<FactionApplicationsResponse>> _factionApplicationsGet({@Query('key') required String? key});
 
+  ///Get a faction's current chain
+  ///@param key API key (Public)
+  ///@param id Faction id
+  Future<chopper.Response<FactionOngoingChainResponse>> factionIdChainGet({
+    required String? key,
+    required int? id,
+  }) {
+    generatedMapping.putIfAbsent(FactionOngoingChainResponse, () => FactionOngoingChainResponse.fromJsonFactory);
+
+    return _factionIdChainGet(key: key, id: id);
+  }
+
+  ///Get a faction's current chain
+  ///@param key API key (Public)
+  ///@param id Faction id
+  @Get(path: '/faction/{id}/chain')
+  Future<chopper.Response<FactionOngoingChainResponse>> _factionIdChainGet({
+    @Query('key') required String? key,
+    @Path('id') required int? id,
+  });
+
+  ///Get your faction's current chain
+  ///@param key API key (Public)
+  Future<chopper.Response<FactionOngoingChainResponse>> factionChainGet({required String? key}) {
+    generatedMapping.putIfAbsent(FactionOngoingChainResponse, () => FactionOngoingChainResponse.fromJsonFactory);
+
+    return _factionChainGet(key: key);
+  }
+
+  ///Get your faction's current chain
+  ///@param key API key (Public)
+  @Get(path: '/faction/chain')
+  Future<chopper.Response<FactionOngoingChainResponse>> _factionChainGet({@Query('key') required String? key});
+
+  ///Get a list of a faction's completed chains
+  ///@param key API key (Public)
+  ///@param id Faction id
+  ///@param limit
+  ///@param sort Sorted by the greatest timestamps
+  ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
+  ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
+  Future<chopper.Response<FactionChainsResponse>> factionIdChainsGet({
+    required String? key,
+    required int? id,
+    int? limit,
+    enums.ApiSort? sort,
+    int? to,
+    int? from,
+  }) {
+    generatedMapping.putIfAbsent(FactionChainsResponse, () => FactionChainsResponse.fromJsonFactory);
+
+    return _factionIdChainsGet(key: key, id: id, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+  }
+
+  ///Get a list of a faction's completed chains
+  ///@param key API key (Public)
+  ///@param id Faction id
+  ///@param limit
+  ///@param sort Sorted by the greatest timestamps
+  ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
+  ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
+  @Get(path: '/faction/{id}/chains')
+  Future<chopper.Response<FactionChainsResponse>> _factionIdChainsGet({
+    @Query('key') required String? key,
+    @Path('id') required int? id,
+    @Query('limit') int? limit,
+    @Query('sort') String? sort,
+    @Query('to') int? to,
+    @Query('from') int? from,
+  });
+
+  ///Get a list of your faction's completed chains
+  ///@param key API key (Public)
+  ///@param limit
+  ///@param sort Sorted by the greatest timestamps
+  ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
+  ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
+  Future<chopper.Response<FactionChainsResponse>> factionChainsGet({
+    required String? key,
+    int? limit,
+    enums.ApiSort? sort,
+    int? to,
+    int? from,
+  }) {
+    generatedMapping.putIfAbsent(FactionChainsResponse, () => FactionChainsResponse.fromJsonFactory);
+
+    return _factionChainsGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+  }
+
+  ///Get a list of your faction's completed chains
+  ///@param key API key (Public)
+  ///@param limit
+  ///@param sort Sorted by the greatest timestamps
+  ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
+  ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
+  @Get(path: '/faction/chains')
+  Future<chopper.Response<FactionChainsResponse>> _factionChainsGet({
+    @Query('key') required String? key,
+    @Query('limit') int? limit,
+    @Query('sort') String? sort,
+    @Query('to') int? to,
+    @Query('from') int? from,
+  });
+
+  ///Get a chain report
+  ///@param key API key (Public)
+  ///@param chainId Chain id
+  Future<chopper.Response<FactionChainReportResponse>> factionChainIdChainreportGet({
+    required String? key,
+    required int? chainId,
+  }) {
+    generatedMapping.putIfAbsent(FactionChainReportResponse, () => FactionChainReportResponse.fromJsonFactory);
+
+    return _factionChainIdChainreportGet(key: key, chainId: chainId);
+  }
+
+  ///Get a chain report
+  ///@param key API key (Public)
+  ///@param chainId Chain id
+  @Get(path: '/faction/{chainId}/chainreport')
+  Future<chopper.Response<FactionChainReportResponse>> _factionChainIdChainreportGet({
+    @Query('key') required String? key,
+    @Path('chainId') required int? chainId,
+  });
+
+  ///Get your faction's latest chain report
+  ///@param key API key (Public)
+  Future<chopper.Response<FactionChainReportResponse>> factionChainreportGet({required String? key}) {
+    generatedMapping.putIfAbsent(FactionChainReportResponse, () => FactionChainReportResponse.fromJsonFactory);
+
+    return _factionChainreportGet(key: key);
+  }
+
+  ///Get your faction's latest chain report
+  ///@param key API key (Public)
+  @Get(path: '/faction/chainreport')
+  Future<chopper.Response<FactionChainReportResponse>> _factionChainreportGet({@Query('key') required String? key});
+
   ///Get all available faction selections
   ///@param key API key (Public)
   Future<chopper.Response<FactionLookupResponse>> factionLookupGet({required String? key}) {
@@ -516,37 +654,29 @@ abstract class TornV2 extends ChopperService {
   ///Get specific forum thread posts
   ///@param key API key (Public)
   ///@param offset
-  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param threadId Thread id
   Future<chopper.Response<ForumPostsResponse>> forumThreadIdPostsGet({
     required String? key,
     int? offset,
-    enums.ForumThreadIdPostsGetCat? cat,
     enums.ApiStripTagsTrue? striptags,
     required int? threadId,
   }) {
     generatedMapping.putIfAbsent(ForumPostsResponse, () => ForumPostsResponse.fromJsonFactory);
 
     return _forumThreadIdPostsGet(
-        key: key,
-        offset: offset,
-        cat: cat?.value?.toString(),
-        striptags: striptags?.value?.toString(),
-        threadId: threadId);
+        key: key, offset: offset, striptags: striptags?.value?.toString(), threadId: threadId);
   }
 
   ///Get specific forum thread posts
   ///@param key API key (Public)
   ///@param offset
-  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param threadId Thread id
   @Get(path: '/forum/{threadId}/posts')
   Future<chopper.Response<ForumPostsResponse>> _forumThreadIdPostsGet({
     @Query('key') required String? key,
     @Query('offset') int? offset,
-    @Query('cat') String? cat,
     @Query('striptags') String? striptags,
     @Path('threadId') required int? threadId,
   });
@@ -641,33 +771,28 @@ abstract class TornV2 extends ChopperService {
   ///Get item market listings
   ///@param key API key (Public)
   ///@param id Item id
-  ///@param cat This parameter is being replaced with 'bonus' parameter and will be removed on 1st December 2024.
   ///@param bonus Used to filter weapons with a specific bonus.
   ///@param offset
   Future<chopper.Response<MarketItemMarketResponse>> marketIdItemmarketGet({
     required String? key,
     required int? id,
-    enums.WeaponBonusEnum? cat,
     enums.WeaponBonusEnum? bonus,
     int? offset,
   }) {
     generatedMapping.putIfAbsent(MarketItemMarketResponse, () => MarketItemMarketResponse.fromJsonFactory);
 
-    return _marketIdItemmarketGet(
-        key: key, id: id, cat: cat?.value?.toString(), bonus: bonus?.value?.toString(), offset: offset);
+    return _marketIdItemmarketGet(key: key, id: id, bonus: bonus?.value?.toString(), offset: offset);
   }
 
   ///Get item market listings
   ///@param key API key (Public)
   ///@param id Item id
-  ///@param cat This parameter is being replaced with 'bonus' parameter and will be removed on 1st December 2024.
   ///@param bonus Used to filter weapons with a specific bonus.
   ///@param offset
   @Get(path: '/market/{id}/itemmarket')
   Future<chopper.Response<MarketItemMarketResponse>> _marketIdItemmarketGet({
     @Query('key') required String? key,
     @Path('id') required int? id,
-    @Query('cat') String? cat,
     @Query('bonus') String? bonus,
     @Query('offset') int? offset,
   });
@@ -1213,7 +1338,75 @@ abstract class TornV2 extends ChopperService {
     @Query('offset') int? offset,
   });
 
-  ///Get user's crime statistics
+  ///Get a player's personal stats
+  ///@param key API key (Public)
+  ///@param id User id
+  ///@param cat
+  ///@param stat Stat names (10 maximum). Used to fetch historical stat values
+  ///@param timestamp Returns stats until this timestamp (converted to nearest date).
+  Future<chopper.Response<UserPersonalStatsResponse>> userIdPersonalstatsGet({
+    required String? key,
+    required int? id,
+    enums.PersonalStatsCategoryEnum? cat,
+    List<enums.PersonalStatsStatName>? stat,
+    int? timestamp,
+  }) {
+    generatedMapping.putIfAbsent(UserPersonalStatsResponse, () => UserPersonalStatsResponse.fromJsonFactory);
+
+    return _userIdPersonalstatsGet(
+        key: key,
+        id: id,
+        cat: cat?.value?.toString(),
+        stat: personalStatsStatNameListToJson(stat),
+        timestamp: timestamp);
+  }
+
+  ///Get a player's personal stats
+  ///@param key API key (Public)
+  ///@param id User id
+  ///@param cat
+  ///@param stat Stat names (10 maximum). Used to fetch historical stat values
+  ///@param timestamp Returns stats until this timestamp (converted to nearest date).
+  @Get(path: '/user/{id}/personalstats')
+  Future<chopper.Response<UserPersonalStatsResponse>> _userIdPersonalstatsGet({
+    @Query('key') required String? key,
+    @Path('id') required int? id,
+    @Query('cat') String? cat,
+    @Query('stat') List<Object?>? stat,
+    @Query('timestamp') int? timestamp,
+  });
+
+  ///Get your personal stats
+  ///@param key API key (Public)
+  ///@param cat Stats category. Required unless requesting specific stats via 'stat' query parameter
+  ///@param stat Stat names (10 maximum). Used to fetch historical stat values
+  ///@param timestamp Returns stats until this timestamp (converted to nearest date).
+  Future<chopper.Response<UserPersonalStatsResponse>> userPersonalstatsGet({
+    required String? key,
+    enums.PersonalStatsCategoryEnum? cat,
+    List<enums.PersonalStatsStatName>? stat,
+    int? timestamp,
+  }) {
+    generatedMapping.putIfAbsent(UserPersonalStatsResponse, () => UserPersonalStatsResponse.fromJsonFactory);
+
+    return _userPersonalstatsGet(
+        key: key, cat: cat?.value?.toString(), stat: personalStatsStatNameListToJson(stat), timestamp: timestamp);
+  }
+
+  ///Get your personal stats
+  ///@param key API key (Public)
+  ///@param cat Stats category. Required unless requesting specific stats via 'stat' query parameter
+  ///@param stat Stat names (10 maximum). Used to fetch historical stat values
+  ///@param timestamp Returns stats until this timestamp (converted to nearest date).
+  @Get(path: '/user/personalstats')
+  Future<chopper.Response<UserPersonalStatsResponse>> _userPersonalstatsGet({
+    @Query('key') required String? key,
+    @Query('cat') String? cat,
+    @Query('stat') List<Object?>? stat,
+    @Query('timestamp') int? timestamp,
+  });
+
+  ///Get your crime statistics
   ///@param key API key (Minimal)
   ///@param crimeId Crime id
   Future<chopper.Response<UserCrimesResponse>> userCrimeIdCrimesGet({
@@ -1225,7 +1418,7 @@ abstract class TornV2 extends ChopperService {
     return _userCrimeIdCrimesGet(key: key, crimeId: crimeId);
   }
 
-  ///Get user's crime statistics
+  ///Get your crime statistics
   ///@param key API key (Minimal)
   ///@param crimeId Crime id
   @Get(path: '/user/{crimeId}/crimes')
@@ -1340,7 +1533,6 @@ abstract class TornV2 extends ChopperService {
 
   ///Get your posts
   ///@param key API key (Public)
-  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by post created timestamp
@@ -1348,7 +1540,6 @@ abstract class TornV2 extends ChopperService {
   ///@param from Returns posts created after this timestamp
   Future<chopper.Response<UserForumPostsResponse>> userForumpostsGet({
     required String? key,
-    enums.UserForumpostsGetCat? cat,
     enums.ApiStripTagsTrue? striptags,
     int? limit,
     enums.UserForumpostsGetSort? sort,
@@ -1359,7 +1550,6 @@ abstract class TornV2 extends ChopperService {
 
     return _userForumpostsGet(
         key: key,
-        cat: cat?.value?.toString(),
         striptags: striptags?.value?.toString(),
         limit: limit,
         sort: sort?.value?.toString(),
@@ -1369,7 +1559,6 @@ abstract class TornV2 extends ChopperService {
 
   ///Get your posts
   ///@param key API key (Public)
-  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by post created timestamp
@@ -1378,7 +1567,6 @@ abstract class TornV2 extends ChopperService {
   @Get(path: '/user/forumposts')
   Future<chopper.Response<UserForumPostsResponse>> _userForumpostsGet({
     @Query('key') required String? key,
-    @Query('cat') String? cat,
     @Query('striptags') String? striptags,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -1646,29 +1834,32 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp until when rows are returned
   ///@param from Timestamp after when rows are returned
   ///@param cat Selection category
+  ///@param stat Selection stat
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param sort Direction to sort rows in
   ///@param offset
   Future<chopper.Response> userGet({
     required String? key,
-    List<enums.UserSelectionName>? selections,
+    String? selections,
     String? id,
     int? limit,
     int? to,
     int? from,
     String? cat,
+    String? stat,
     enums.ApiStripTags? striptags,
     enums.UserGetSort? sort,
     int? offset,
   }) {
     return _userGet(
         key: key,
-        selections: userSelectionNameListToJson(selections),
+        selections: selections,
         id: id,
         limit: limit,
         to: to,
         from: from,
         cat: cat,
+        stat: stat,
         striptags: striptags?.value?.toString(),
         sort: sort?.value?.toString(),
         offset: offset);
@@ -1682,18 +1873,20 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp until when rows are returned
   ///@param from Timestamp after when rows are returned
   ///@param cat Selection category
+  ///@param stat Selection stat
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param sort Direction to sort rows in
   ///@param offset
   @Get(path: '/user')
   Future<chopper.Response> _userGet({
     @Query('key') required String? key,
-    @Query('selections') List<Object?>? selections,
+    @Query('selections') String? selections,
     @Query('id') String? id,
     @Query('limit') int? limit,
     @Query('to') int? to,
     @Query('from') int? from,
     @Query('cat') String? cat,
+    @Query('stat') String? stat,
     @Query('striptags') String? striptags,
     @Query('sort') String? sort,
     @Query('offset') int? offset,
@@ -3987,6 +4180,922 @@ extension $FactionApplicationsResponseExtension on FactionApplicationsResponse {
 }
 
 @JsonSerializable(explicitToJson: true)
+class FactionOngoingChain {
+  const FactionOngoingChain({
+    this.id,
+    this.current,
+    this.max,
+    this.timeout,
+    this.modifier,
+    this.cooldown,
+    this.start,
+    this.end,
+  });
+
+  factory FactionOngoingChain.fromJson(Map<String, dynamic> json) => _$FactionOngoingChainFromJson(json);
+
+  static const toJsonFactory = _$FactionOngoingChainToJson;
+  Map<String, dynamic> toJson() => _$FactionOngoingChainToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'current')
+  final int? current;
+  @JsonKey(name: 'max')
+  final int? max;
+  @JsonKey(name: 'timeout')
+  final int? timeout;
+  @JsonKey(name: 'modifier')
+  final double? modifier;
+  @JsonKey(name: 'cooldown')
+  final int? cooldown;
+  @JsonKey(name: 'start')
+  final int? start;
+  @JsonKey(name: 'end')
+  final int? end;
+  static const fromJsonFactory = _$FactionOngoingChainFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionOngoingChain &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)) &&
+            (identical(other.max, max) || const DeepCollectionEquality().equals(other.max, max)) &&
+            (identical(other.timeout, timeout) || const DeepCollectionEquality().equals(other.timeout, timeout)) &&
+            (identical(other.modifier, modifier) || const DeepCollectionEquality().equals(other.modifier, modifier)) &&
+            (identical(other.cooldown, cooldown) || const DeepCollectionEquality().equals(other.cooldown, cooldown)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(current) ^
+      const DeepCollectionEquality().hash(max) ^
+      const DeepCollectionEquality().hash(timeout) ^
+      const DeepCollectionEquality().hash(modifier) ^
+      const DeepCollectionEquality().hash(cooldown) ^
+      const DeepCollectionEquality().hash(start) ^
+      const DeepCollectionEquality().hash(end) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionOngoingChainExtension on FactionOngoingChain {
+  FactionOngoingChain copyWith(
+      {int? id, int? current, int? max, int? timeout, double? modifier, int? cooldown, int? start, int? end}) {
+    return FactionOngoingChain(
+        id: id ?? this.id,
+        current: current ?? this.current,
+        max: max ?? this.max,
+        timeout: timeout ?? this.timeout,
+        modifier: modifier ?? this.modifier,
+        cooldown: cooldown ?? this.cooldown,
+        start: start ?? this.start,
+        end: end ?? this.end);
+  }
+
+  FactionOngoingChain copyWithWrapped(
+      {Wrapped<int?>? id,
+      Wrapped<int?>? current,
+      Wrapped<int?>? max,
+      Wrapped<int?>? timeout,
+      Wrapped<double?>? modifier,
+      Wrapped<int?>? cooldown,
+      Wrapped<int?>? start,
+      Wrapped<int?>? end}) {
+    return FactionOngoingChain(
+        id: (id != null ? id.value : this.id),
+        current: (current != null ? current.value : this.current),
+        max: (max != null ? max.value : this.max),
+        timeout: (timeout != null ? timeout.value : this.timeout),
+        modifier: (modifier != null ? modifier.value : this.modifier),
+        cooldown: (cooldown != null ? cooldown.value : this.cooldown),
+        start: (start != null ? start.value : this.start),
+        end: (end != null ? end.value : this.end));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionOngoingChainResponse {
+  const FactionOngoingChainResponse({
+    this.chain,
+  });
+
+  factory FactionOngoingChainResponse.fromJson(Map<String, dynamic> json) =>
+      _$FactionOngoingChainResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionOngoingChainResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionOngoingChainResponseToJson(this);
+
+  @JsonKey(name: 'chain')
+  final FactionOngoingChain? chain;
+  static const fromJsonFactory = _$FactionOngoingChainResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionOngoingChainResponse &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(chain) ^ runtimeType.hashCode;
+}
+
+extension $FactionOngoingChainResponseExtension on FactionOngoingChainResponse {
+  FactionOngoingChainResponse copyWith({FactionOngoingChain? chain}) {
+    return FactionOngoingChainResponse(chain: chain ?? this.chain);
+  }
+
+  FactionOngoingChainResponse copyWithWrapped({Wrapped<FactionOngoingChain?>? chain}) {
+    return FactionOngoingChainResponse(chain: (chain != null ? chain.value : this.chain));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChain {
+  const FactionChain({
+    this.id,
+    this.chain,
+    this.respect,
+    this.start,
+    this.end,
+  });
+
+  factory FactionChain.fromJson(Map<String, dynamic> json) => _$FactionChainFromJson(json);
+
+  static const toJsonFactory = _$FactionChainToJson;
+  Map<String, dynamic> toJson() => _$FactionChainToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'chain')
+  final int? chain;
+  @JsonKey(name: 'respect')
+  final double? respect;
+  @JsonKey(name: 'start')
+  final int? start;
+  @JsonKey(name: 'end')
+  final int? end;
+  static const fromJsonFactory = _$FactionChainFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChain &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(chain) ^
+      const DeepCollectionEquality().hash(respect) ^
+      const DeepCollectionEquality().hash(start) ^
+      const DeepCollectionEquality().hash(end) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainExtension on FactionChain {
+  FactionChain copyWith({int? id, int? chain, double? respect, int? start, int? end}) {
+    return FactionChain(
+        id: id ?? this.id,
+        chain: chain ?? this.chain,
+        respect: respect ?? this.respect,
+        start: start ?? this.start,
+        end: end ?? this.end);
+  }
+
+  FactionChain copyWithWrapped(
+      {Wrapped<int?>? id, Wrapped<int?>? chain, Wrapped<double?>? respect, Wrapped<int?>? start, Wrapped<int?>? end}) {
+    return FactionChain(
+        id: (id != null ? id.value : this.id),
+        chain: (chain != null ? chain.value : this.chain),
+        respect: (respect != null ? respect.value : this.respect),
+        start: (start != null ? start.value : this.start),
+        end: (end != null ? end.value : this.end));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainsResponse {
+  const FactionChainsResponse({
+    this.chains,
+    this.metadata,
+  });
+
+  factory FactionChainsResponse.fromJson(Map<String, dynamic> json) => _$FactionChainsResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionChainsResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionChainsResponseToJson(this);
+
+  @JsonKey(name: 'chains', defaultValue: <FactionChain>[])
+  final List<FactionChain>? chains;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$FactionChainsResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainsResponse &&
+            (identical(other.chains, chains) || const DeepCollectionEquality().equals(other.chains, chains)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(chains) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainsResponseExtension on FactionChainsResponse {
+  FactionChainsResponse copyWith({List<FactionChain>? chains, RequestMetadataWithLinks? metadata}) {
+    return FactionChainsResponse(chains: chains ?? this.chains, metadata: metadata ?? this.metadata);
+  }
+
+  FactionChainsResponse copyWithWrapped(
+      {Wrapped<List<FactionChain>?>? chains, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return FactionChainsResponse(
+        chains: (chains != null ? chains.value : this.chains),
+        metadata: (metadata != null ? metadata.value : this.metadata));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainReportResponse {
+  const FactionChainReportResponse({
+    this.chainreport,
+  });
+
+  factory FactionChainReportResponse.fromJson(Map<String, dynamic> json) => _$FactionChainReportResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionChainReportResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionChainReportResponseToJson(this);
+
+  @JsonKey(name: 'chainreport')
+  final FactionChainReport? chainreport;
+  static const fromJsonFactory = _$FactionChainReportResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainReportResponse &&
+            (identical(other.chainreport, chainreport) ||
+                const DeepCollectionEquality().equals(other.chainreport, chainreport)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(chainreport) ^ runtimeType.hashCode;
+}
+
+extension $FactionChainReportResponseExtension on FactionChainReportResponse {
+  FactionChainReportResponse copyWith({FactionChainReport? chainreport}) {
+    return FactionChainReportResponse(chainreport: chainreport ?? this.chainreport);
+  }
+
+  FactionChainReportResponse copyWithWrapped({Wrapped<FactionChainReport?>? chainreport}) {
+    return FactionChainReportResponse(chainreport: (chainreport != null ? chainreport.value : this.chainreport));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainReport {
+  const FactionChainReport({
+    this.id,
+    this.factionId,
+    this.start,
+    this.end,
+    this.details,
+    this.bonuses,
+    this.attackers,
+    this.nonAttackers,
+  });
+
+  factory FactionChainReport.fromJson(Map<String, dynamic> json) => _$FactionChainReportFromJson(json);
+
+  static const toJsonFactory = _$FactionChainReportToJson;
+  Map<String, dynamic> toJson() => _$FactionChainReportToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'faction_id')
+  final int? factionId;
+  @JsonKey(name: 'start')
+  final int? start;
+  @JsonKey(name: 'end')
+  final int? end;
+  @JsonKey(name: 'details')
+  final FactionChainReportDetails? details;
+  @JsonKey(name: 'bonuses', defaultValue: <FactionChainReportBonus>[])
+  final List<FactionChainReportBonus>? bonuses;
+  @JsonKey(name: 'attackers', defaultValue: <FactionChainReportAttacker>[])
+  final List<FactionChainReportAttacker>? attackers;
+  @JsonKey(name: 'non-attackers', defaultValue: <int>[])
+  final List<int>? nonAttackers;
+  static const fromJsonFactory = _$FactionChainReportFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainReport &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.factionId, factionId) ||
+                const DeepCollectionEquality().equals(other.factionId, factionId)) &&
+            (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)) &&
+            (identical(other.details, details) || const DeepCollectionEquality().equals(other.details, details)) &&
+            (identical(other.bonuses, bonuses) || const DeepCollectionEquality().equals(other.bonuses, bonuses)) &&
+            (identical(other.attackers, attackers) ||
+                const DeepCollectionEquality().equals(other.attackers, attackers)) &&
+            (identical(other.nonAttackers, nonAttackers) ||
+                const DeepCollectionEquality().equals(other.nonAttackers, nonAttackers)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(factionId) ^
+      const DeepCollectionEquality().hash(start) ^
+      const DeepCollectionEquality().hash(end) ^
+      const DeepCollectionEquality().hash(details) ^
+      const DeepCollectionEquality().hash(bonuses) ^
+      const DeepCollectionEquality().hash(attackers) ^
+      const DeepCollectionEquality().hash(nonAttackers) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainReportExtension on FactionChainReport {
+  FactionChainReport copyWith(
+      {int? id,
+      int? factionId,
+      int? start,
+      int? end,
+      FactionChainReportDetails? details,
+      List<FactionChainReportBonus>? bonuses,
+      List<FactionChainReportAttacker>? attackers,
+      List<int>? nonAttackers}) {
+    return FactionChainReport(
+        id: id ?? this.id,
+        factionId: factionId ?? this.factionId,
+        start: start ?? this.start,
+        end: end ?? this.end,
+        details: details ?? this.details,
+        bonuses: bonuses ?? this.bonuses,
+        attackers: attackers ?? this.attackers,
+        nonAttackers: nonAttackers ?? this.nonAttackers);
+  }
+
+  FactionChainReport copyWithWrapped(
+      {Wrapped<int?>? id,
+      Wrapped<int?>? factionId,
+      Wrapped<int?>? start,
+      Wrapped<int?>? end,
+      Wrapped<FactionChainReportDetails?>? details,
+      Wrapped<List<FactionChainReportBonus>?>? bonuses,
+      Wrapped<List<FactionChainReportAttacker>?>? attackers,
+      Wrapped<List<int>?>? nonAttackers}) {
+    return FactionChainReport(
+        id: (id != null ? id.value : this.id),
+        factionId: (factionId != null ? factionId.value : this.factionId),
+        start: (start != null ? start.value : this.start),
+        end: (end != null ? end.value : this.end),
+        details: (details != null ? details.value : this.details),
+        bonuses: (bonuses != null ? bonuses.value : this.bonuses),
+        attackers: (attackers != null ? attackers.value : this.attackers),
+        nonAttackers: (nonAttackers != null ? nonAttackers.value : this.nonAttackers));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainReportDetails {
+  const FactionChainReportDetails({
+    this.chain,
+    this.respect,
+    this.members,
+    this.targets,
+    this.war,
+    this.best,
+    this.leave,
+    this.mug,
+    this.hospitalize,
+    this.assists,
+    this.retaliations,
+    this.overseas,
+    this.draws,
+    this.escapes,
+    this.losses,
+  });
+
+  factory FactionChainReportDetails.fromJson(Map<String, dynamic> json) => _$FactionChainReportDetailsFromJson(json);
+
+  static const toJsonFactory = _$FactionChainReportDetailsToJson;
+  Map<String, dynamic> toJson() => _$FactionChainReportDetailsToJson(this);
+
+  @JsonKey(name: 'chain')
+  final int? chain;
+  @JsonKey(name: 'respect')
+  final double? respect;
+  @JsonKey(name: 'members')
+  final int? members;
+  @JsonKey(name: 'targets')
+  final int? targets;
+  @JsonKey(name: 'war')
+  final int? war;
+  @JsonKey(name: 'best')
+  final double? best;
+  @JsonKey(name: 'leave')
+  final int? leave;
+  @JsonKey(name: 'mug')
+  final int? mug;
+  @JsonKey(name: 'hospitalize')
+  final int? hospitalize;
+  @JsonKey(name: 'assists')
+  final int? assists;
+  @JsonKey(name: 'retaliations')
+  final int? retaliations;
+  @JsonKey(name: 'overseas')
+  final int? overseas;
+  @JsonKey(name: 'draws')
+  final int? draws;
+  @JsonKey(name: 'escapes')
+  final int? escapes;
+  @JsonKey(name: 'losses')
+  final int? losses;
+  static const fromJsonFactory = _$FactionChainReportDetailsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainReportDetails &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.members, members) || const DeepCollectionEquality().equals(other.members, members)) &&
+            (identical(other.targets, targets) || const DeepCollectionEquality().equals(other.targets, targets)) &&
+            (identical(other.war, war) || const DeepCollectionEquality().equals(other.war, war)) &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)) &&
+            (identical(other.leave, leave) || const DeepCollectionEquality().equals(other.leave, leave)) &&
+            (identical(other.mug, mug) || const DeepCollectionEquality().equals(other.mug, mug)) &&
+            (identical(other.hospitalize, hospitalize) ||
+                const DeepCollectionEquality().equals(other.hospitalize, hospitalize)) &&
+            (identical(other.assists, assists) || const DeepCollectionEquality().equals(other.assists, assists)) &&
+            (identical(other.retaliations, retaliations) ||
+                const DeepCollectionEquality().equals(other.retaliations, retaliations)) &&
+            (identical(other.overseas, overseas) || const DeepCollectionEquality().equals(other.overseas, overseas)) &&
+            (identical(other.draws, draws) || const DeepCollectionEquality().equals(other.draws, draws)) &&
+            (identical(other.escapes, escapes) || const DeepCollectionEquality().equals(other.escapes, escapes)) &&
+            (identical(other.losses, losses) || const DeepCollectionEquality().equals(other.losses, losses)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(chain) ^
+      const DeepCollectionEquality().hash(respect) ^
+      const DeepCollectionEquality().hash(members) ^
+      const DeepCollectionEquality().hash(targets) ^
+      const DeepCollectionEquality().hash(war) ^
+      const DeepCollectionEquality().hash(best) ^
+      const DeepCollectionEquality().hash(leave) ^
+      const DeepCollectionEquality().hash(mug) ^
+      const DeepCollectionEquality().hash(hospitalize) ^
+      const DeepCollectionEquality().hash(assists) ^
+      const DeepCollectionEquality().hash(retaliations) ^
+      const DeepCollectionEquality().hash(overseas) ^
+      const DeepCollectionEquality().hash(draws) ^
+      const DeepCollectionEquality().hash(escapes) ^
+      const DeepCollectionEquality().hash(losses) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainReportDetailsExtension on FactionChainReportDetails {
+  FactionChainReportDetails copyWith(
+      {int? chain,
+      double? respect,
+      int? members,
+      int? targets,
+      int? war,
+      double? best,
+      int? leave,
+      int? mug,
+      int? hospitalize,
+      int? assists,
+      int? retaliations,
+      int? overseas,
+      int? draws,
+      int? escapes,
+      int? losses}) {
+    return FactionChainReportDetails(
+        chain: chain ?? this.chain,
+        respect: respect ?? this.respect,
+        members: members ?? this.members,
+        targets: targets ?? this.targets,
+        war: war ?? this.war,
+        best: best ?? this.best,
+        leave: leave ?? this.leave,
+        mug: mug ?? this.mug,
+        hospitalize: hospitalize ?? this.hospitalize,
+        assists: assists ?? this.assists,
+        retaliations: retaliations ?? this.retaliations,
+        overseas: overseas ?? this.overseas,
+        draws: draws ?? this.draws,
+        escapes: escapes ?? this.escapes,
+        losses: losses ?? this.losses);
+  }
+
+  FactionChainReportDetails copyWithWrapped(
+      {Wrapped<int?>? chain,
+      Wrapped<double?>? respect,
+      Wrapped<int?>? members,
+      Wrapped<int?>? targets,
+      Wrapped<int?>? war,
+      Wrapped<double?>? best,
+      Wrapped<int?>? leave,
+      Wrapped<int?>? mug,
+      Wrapped<int?>? hospitalize,
+      Wrapped<int?>? assists,
+      Wrapped<int?>? retaliations,
+      Wrapped<int?>? overseas,
+      Wrapped<int?>? draws,
+      Wrapped<int?>? escapes,
+      Wrapped<int?>? losses}) {
+    return FactionChainReportDetails(
+        chain: (chain != null ? chain.value : this.chain),
+        respect: (respect != null ? respect.value : this.respect),
+        members: (members != null ? members.value : this.members),
+        targets: (targets != null ? targets.value : this.targets),
+        war: (war != null ? war.value : this.war),
+        best: (best != null ? best.value : this.best),
+        leave: (leave != null ? leave.value : this.leave),
+        mug: (mug != null ? mug.value : this.mug),
+        hospitalize: (hospitalize != null ? hospitalize.value : this.hospitalize),
+        assists: (assists != null ? assists.value : this.assists),
+        retaliations: (retaliations != null ? retaliations.value : this.retaliations),
+        overseas: (overseas != null ? overseas.value : this.overseas),
+        draws: (draws != null ? draws.value : this.draws),
+        escapes: (escapes != null ? escapes.value : this.escapes),
+        losses: (losses != null ? losses.value : this.losses));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainReportBonus {
+  const FactionChainReportBonus({
+    this.attackerId,
+    this.defenderId,
+    this.chain,
+    this.respect,
+  });
+
+  factory FactionChainReportBonus.fromJson(Map<String, dynamic> json) => _$FactionChainReportBonusFromJson(json);
+
+  static const toJsonFactory = _$FactionChainReportBonusToJson;
+  Map<String, dynamic> toJson() => _$FactionChainReportBonusToJson(this);
+
+  @JsonKey(name: 'attacker_id')
+  final int? attackerId;
+  @JsonKey(name: 'defender_id')
+  final int? defenderId;
+  @JsonKey(name: 'chain')
+  final int? chain;
+  @JsonKey(name: 'respect')
+  final int? respect;
+  static const fromJsonFactory = _$FactionChainReportBonusFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainReportBonus &&
+            (identical(other.attackerId, attackerId) ||
+                const DeepCollectionEquality().equals(other.attackerId, attackerId)) &&
+            (identical(other.defenderId, defenderId) ||
+                const DeepCollectionEquality().equals(other.defenderId, defenderId)) &&
+            (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(attackerId) ^
+      const DeepCollectionEquality().hash(defenderId) ^
+      const DeepCollectionEquality().hash(chain) ^
+      const DeepCollectionEquality().hash(respect) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainReportBonusExtension on FactionChainReportBonus {
+  FactionChainReportBonus copyWith({int? attackerId, int? defenderId, int? chain, int? respect}) {
+    return FactionChainReportBonus(
+        attackerId: attackerId ?? this.attackerId,
+        defenderId: defenderId ?? this.defenderId,
+        chain: chain ?? this.chain,
+        respect: respect ?? this.respect);
+  }
+
+  FactionChainReportBonus copyWithWrapped(
+      {Wrapped<int?>? attackerId, Wrapped<int?>? defenderId, Wrapped<int?>? chain, Wrapped<int?>? respect}) {
+    return FactionChainReportBonus(
+        attackerId: (attackerId != null ? attackerId.value : this.attackerId),
+        defenderId: (defenderId != null ? defenderId.value : this.defenderId),
+        chain: (chain != null ? chain.value : this.chain),
+        respect: (respect != null ? respect.value : this.respect));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainReportAttacker {
+  const FactionChainReportAttacker({
+    this.id,
+    this.respect,
+    this.attacks,
+  });
+
+  factory FactionChainReportAttacker.fromJson(Map<String, dynamic> json) => _$FactionChainReportAttackerFromJson(json);
+
+  static const toJsonFactory = _$FactionChainReportAttackerToJson;
+  Map<String, dynamic> toJson() => _$FactionChainReportAttackerToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'respect')
+  final FactionChainReportAttackerRespect? respect;
+  @JsonKey(name: 'attacks')
+  final FactionChainReportAttackerAttacks? attacks;
+  static const fromJsonFactory = _$FactionChainReportAttackerFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainReportAttacker &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.attacks, attacks) || const DeepCollectionEquality().equals(other.attacks, attacks)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(respect) ^
+      const DeepCollectionEquality().hash(attacks) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainReportAttackerExtension on FactionChainReportAttacker {
+  FactionChainReportAttacker copyWith(
+      {int? id, FactionChainReportAttackerRespect? respect, FactionChainReportAttackerAttacks? attacks}) {
+    return FactionChainReportAttacker(
+        id: id ?? this.id, respect: respect ?? this.respect, attacks: attacks ?? this.attacks);
+  }
+
+  FactionChainReportAttacker copyWithWrapped(
+      {Wrapped<int?>? id,
+      Wrapped<FactionChainReportAttackerRespect?>? respect,
+      Wrapped<FactionChainReportAttackerAttacks?>? attacks}) {
+    return FactionChainReportAttacker(
+        id: (id != null ? id.value : this.id),
+        respect: (respect != null ? respect.value : this.respect),
+        attacks: (attacks != null ? attacks.value : this.attacks));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainReportAttackerRespect {
+  const FactionChainReportAttackerRespect({
+    this.total,
+    this.average,
+    this.best,
+  });
+
+  factory FactionChainReportAttackerRespect.fromJson(Map<String, dynamic> json) =>
+      _$FactionChainReportAttackerRespectFromJson(json);
+
+  static const toJsonFactory = _$FactionChainReportAttackerRespectToJson;
+  Map<String, dynamic> toJson() => _$FactionChainReportAttackerRespectToJson(this);
+
+  @JsonKey(name: 'total')
+  final double? total;
+  @JsonKey(name: 'average')
+  final double? average;
+  @JsonKey(name: 'best')
+  final double? best;
+  static const fromJsonFactory = _$FactionChainReportAttackerRespectFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainReportAttackerRespect &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.average, average) || const DeepCollectionEquality().equals(other.average, average)) &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(average) ^
+      const DeepCollectionEquality().hash(best) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainReportAttackerRespectExtension on FactionChainReportAttackerRespect {
+  FactionChainReportAttackerRespect copyWith({double? total, double? average, double? best}) {
+    return FactionChainReportAttackerRespect(
+        total: total ?? this.total, average: average ?? this.average, best: best ?? this.best);
+  }
+
+  FactionChainReportAttackerRespect copyWithWrapped(
+      {Wrapped<double?>? total, Wrapped<double?>? average, Wrapped<double?>? best}) {
+    return FactionChainReportAttackerRespect(
+        total: (total != null ? total.value : this.total),
+        average: (average != null ? average.value : this.average),
+        best: (best != null ? best.value : this.best));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionChainReportAttackerAttacks {
+  const FactionChainReportAttackerAttacks({
+    this.total,
+    this.leave,
+    this.mug,
+    this.hospitalize,
+    this.assists,
+    this.retaliations,
+    this.overseas,
+    this.draws,
+    this.escapes,
+    this.losses,
+    this.war,
+    this.bonuses,
+  });
+
+  factory FactionChainReportAttackerAttacks.fromJson(Map<String, dynamic> json) =>
+      _$FactionChainReportAttackerAttacksFromJson(json);
+
+  static const toJsonFactory = _$FactionChainReportAttackerAttacksToJson;
+  Map<String, dynamic> toJson() => _$FactionChainReportAttackerAttacksToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'leave')
+  final int? leave;
+  @JsonKey(name: 'mug')
+  final int? mug;
+  @JsonKey(name: 'hospitalize')
+  final int? hospitalize;
+  @JsonKey(name: 'assists')
+  final int? assists;
+  @JsonKey(name: 'retaliations')
+  final int? retaliations;
+  @JsonKey(name: 'overseas')
+  final int? overseas;
+  @JsonKey(name: 'draws')
+  final int? draws;
+  @JsonKey(name: 'escapes')
+  final int? escapes;
+  @JsonKey(name: 'losses')
+  final int? losses;
+  @JsonKey(name: 'war')
+  final int? war;
+  @JsonKey(name: 'bonuses')
+  final int? bonuses;
+  static const fromJsonFactory = _$FactionChainReportAttackerAttacksFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionChainReportAttackerAttacks &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.leave, leave) || const DeepCollectionEquality().equals(other.leave, leave)) &&
+            (identical(other.mug, mug) || const DeepCollectionEquality().equals(other.mug, mug)) &&
+            (identical(other.hospitalize, hospitalize) ||
+                const DeepCollectionEquality().equals(other.hospitalize, hospitalize)) &&
+            (identical(other.assists, assists) || const DeepCollectionEquality().equals(other.assists, assists)) &&
+            (identical(other.retaliations, retaliations) ||
+                const DeepCollectionEquality().equals(other.retaliations, retaliations)) &&
+            (identical(other.overseas, overseas) || const DeepCollectionEquality().equals(other.overseas, overseas)) &&
+            (identical(other.draws, draws) || const DeepCollectionEquality().equals(other.draws, draws)) &&
+            (identical(other.escapes, escapes) || const DeepCollectionEquality().equals(other.escapes, escapes)) &&
+            (identical(other.losses, losses) || const DeepCollectionEquality().equals(other.losses, losses)) &&
+            (identical(other.war, war) || const DeepCollectionEquality().equals(other.war, war)) &&
+            (identical(other.bonuses, bonuses) || const DeepCollectionEquality().equals(other.bonuses, bonuses)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(leave) ^
+      const DeepCollectionEquality().hash(mug) ^
+      const DeepCollectionEquality().hash(hospitalize) ^
+      const DeepCollectionEquality().hash(assists) ^
+      const DeepCollectionEquality().hash(retaliations) ^
+      const DeepCollectionEquality().hash(overseas) ^
+      const DeepCollectionEquality().hash(draws) ^
+      const DeepCollectionEquality().hash(escapes) ^
+      const DeepCollectionEquality().hash(losses) ^
+      const DeepCollectionEquality().hash(war) ^
+      const DeepCollectionEquality().hash(bonuses) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionChainReportAttackerAttacksExtension on FactionChainReportAttackerAttacks {
+  FactionChainReportAttackerAttacks copyWith(
+      {int? total,
+      int? leave,
+      int? mug,
+      int? hospitalize,
+      int? assists,
+      int? retaliations,
+      int? overseas,
+      int? draws,
+      int? escapes,
+      int? losses,
+      int? war,
+      int? bonuses}) {
+    return FactionChainReportAttackerAttacks(
+        total: total ?? this.total,
+        leave: leave ?? this.leave,
+        mug: mug ?? this.mug,
+        hospitalize: hospitalize ?? this.hospitalize,
+        assists: assists ?? this.assists,
+        retaliations: retaliations ?? this.retaliations,
+        overseas: overseas ?? this.overseas,
+        draws: draws ?? this.draws,
+        escapes: escapes ?? this.escapes,
+        losses: losses ?? this.losses,
+        war: war ?? this.war,
+        bonuses: bonuses ?? this.bonuses);
+  }
+
+  FactionChainReportAttackerAttacks copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? leave,
+      Wrapped<int?>? mug,
+      Wrapped<int?>? hospitalize,
+      Wrapped<int?>? assists,
+      Wrapped<int?>? retaliations,
+      Wrapped<int?>? overseas,
+      Wrapped<int?>? draws,
+      Wrapped<int?>? escapes,
+      Wrapped<int?>? losses,
+      Wrapped<int?>? war,
+      Wrapped<int?>? bonuses}) {
+    return FactionChainReportAttackerAttacks(
+        total: (total != null ? total.value : this.total),
+        leave: (leave != null ? leave.value : this.leave),
+        mug: (mug != null ? mug.value : this.mug),
+        hospitalize: (hospitalize != null ? hospitalize.value : this.hospitalize),
+        assists: (assists != null ? assists.value : this.assists),
+        retaliations: (retaliations != null ? retaliations.value : this.retaliations),
+        overseas: (overseas != null ? overseas.value : this.overseas),
+        draws: (draws != null ? draws.value : this.draws),
+        escapes: (escapes != null ? escapes.value : this.escapes),
+        losses: (losses != null ? losses.value : this.losses),
+        war: (war != null ? war.value : this.war),
+        bonuses: (bonuses != null ? bonuses.value : this.bonuses));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class FactionLookupResponse {
   const FactionLookupResponse({
     this.selections,
@@ -5137,7 +6246,6 @@ extension $ForumFeedExtension on ForumFeed {
 class ForumThreadsResponse {
   const ForumThreadsResponse({
     this.threads,
-    this.links,
     this.metadata,
   });
 
@@ -5148,8 +6256,6 @@ class ForumThreadsResponse {
 
   @JsonKey(name: 'threads', defaultValue: <ForumThreadBase>[])
   final List<ForumThreadBase>? threads;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
   static const fromJsonFactory = _$ForumThreadsResponseFromJson;
@@ -5159,7 +6265,6 @@ class ForumThreadsResponse {
     return identical(this, other) ||
         (other is ForumThreadsResponse &&
             (identical(other.threads, threads) || const DeepCollectionEquality().equals(other.threads, threads)) &&
-            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
             (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
@@ -5169,25 +6274,19 @@ class ForumThreadsResponse {
   @override
   int get hashCode =>
       const DeepCollectionEquality().hash(threads) ^
-      const DeepCollectionEquality().hash(links) ^
       const DeepCollectionEquality().hash(metadata) ^
       runtimeType.hashCode;
 }
 
 extension $ForumThreadsResponseExtension on ForumThreadsResponse {
-  ForumThreadsResponse copyWith(
-      {List<ForumThreadBase>? threads, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
-    return ForumThreadsResponse(
-        threads: threads ?? this.threads, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  ForumThreadsResponse copyWith({List<ForumThreadBase>? threads, RequestMetadataWithLinks? metadata}) {
+    return ForumThreadsResponse(threads: threads ?? this.threads, metadata: metadata ?? this.metadata);
   }
 
   ForumThreadsResponse copyWithWrapped(
-      {Wrapped<List<ForumThreadBase>?>? threads,
-      Wrapped<RequestLinks?>? links,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+      {Wrapped<List<ForumThreadBase>?>? threads, Wrapped<RequestMetadataWithLinks?>? metadata}) {
     return ForumThreadsResponse(
         threads: (threads != null ? threads.value : this.threads),
-        links: (links != null ? links.value : this.links),
         metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
@@ -5235,7 +6334,6 @@ extension $ForumThreadResponseExtension on ForumThreadResponse {
 class ForumPostsResponse {
   const ForumPostsResponse({
     this.posts,
-    this.links,
     this.metadata,
   });
 
@@ -5246,8 +6344,6 @@ class ForumPostsResponse {
 
   @JsonKey(name: 'posts', defaultValue: <ForumPost>[])
   final List<ForumPost>? posts;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
   static const fromJsonFactory = _$ForumPostsResponseFromJson;
@@ -5257,7 +6353,6 @@ class ForumPostsResponse {
     return identical(this, other) ||
         (other is ForumPostsResponse &&
             (identical(other.posts, posts) || const DeepCollectionEquality().equals(other.posts, posts)) &&
-            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
             (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
@@ -5266,23 +6361,17 @@ class ForumPostsResponse {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(posts) ^
-      const DeepCollectionEquality().hash(links) ^
-      const DeepCollectionEquality().hash(metadata) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(posts) ^ const DeepCollectionEquality().hash(metadata) ^ runtimeType.hashCode;
 }
 
 extension $ForumPostsResponseExtension on ForumPostsResponse {
-  ForumPostsResponse copyWith({List<ForumPost>? posts, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
-    return ForumPostsResponse(
-        posts: posts ?? this.posts, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  ForumPostsResponse copyWith({List<ForumPost>? posts, RequestMetadataWithLinks? metadata}) {
+    return ForumPostsResponse(posts: posts ?? this.posts, metadata: metadata ?? this.metadata);
   }
 
-  ForumPostsResponse copyWithWrapped(
-      {Wrapped<List<ForumPost>?>? posts, Wrapped<RequestLinks?>? links, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+  ForumPostsResponse copyWithWrapped({Wrapped<List<ForumPost>?>? posts, Wrapped<RequestMetadataWithLinks?>? metadata}) {
     return ForumPostsResponse(
         posts: (posts != null ? posts.value : this.posts),
-        links: (links != null ? links.value : this.links),
         metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
@@ -7394,7 +8483,6 @@ extension $TornHofExtension on TornHof {
 class TornHofResponse {
   const TornHofResponse({
     this.hof,
-    this.links,
     this.metadata,
   });
 
@@ -7405,8 +8493,6 @@ class TornHofResponse {
 
   @JsonKey(name: 'hof', defaultValue: <TornHof>[])
   final List<TornHof>? hof;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
   static const fromJsonFactory = _$TornHofResponseFromJson;
@@ -7416,7 +8502,6 @@ class TornHofResponse {
     return identical(this, other) ||
         (other is TornHofResponse &&
             (identical(other.hof, hof) || const DeepCollectionEquality().equals(other.hof, hof)) &&
-            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
             (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
@@ -7425,23 +8510,17 @@ class TornHofResponse {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(hof) ^
-      const DeepCollectionEquality().hash(links) ^
-      const DeepCollectionEquality().hash(metadata) ^
-      runtimeType.hashCode;
+      const DeepCollectionEquality().hash(hof) ^ const DeepCollectionEquality().hash(metadata) ^ runtimeType.hashCode;
 }
 
 extension $TornHofResponseExtension on TornHofResponse {
-  TornHofResponse copyWith({List<TornHof>? hof, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
-    return TornHofResponse(hof: hof ?? this.hof, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  TornHofResponse copyWith({List<TornHof>? hof, RequestMetadataWithLinks? metadata}) {
+    return TornHofResponse(hof: hof ?? this.hof, metadata: metadata ?? this.metadata);
   }
 
-  TornHofResponse copyWithWrapped(
-      {Wrapped<List<TornHof>?>? hof, Wrapped<RequestLinks?>? links, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+  TornHofResponse copyWithWrapped({Wrapped<List<TornHof>?>? hof, Wrapped<RequestMetadataWithLinks?>? metadata}) {
     return TornHofResponse(
-        hof: (hof != null ? hof.value : this.hof),
-        links: (links != null ? links.value : this.links),
-        metadata: (metadata != null ? metadata.value : this.metadata));
+        hof: (hof != null ? hof.value : this.hof), metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
 
@@ -7593,7 +8672,6 @@ extension $TornFactionHofExtension on TornFactionHof {
 class TornFactionHofResponse {
   const TornFactionHofResponse({
     this.factionhof,
-    this.links,
     this.metadata,
   });
 
@@ -7604,8 +8682,6 @@ class TornFactionHofResponse {
 
   @JsonKey(name: 'factionhof', defaultValue: <TornFactionHof>[])
   final List<TornFactionHof>? factionhof;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
   static const fromJsonFactory = _$TornFactionHofResponseFromJson;
@@ -7616,7 +8692,6 @@ class TornFactionHofResponse {
         (other is TornFactionHofResponse &&
             (identical(other.factionhof, factionhof) ||
                 const DeepCollectionEquality().equals(other.factionhof, factionhof)) &&
-            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
             (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
@@ -7626,25 +8701,19 @@ class TornFactionHofResponse {
   @override
   int get hashCode =>
       const DeepCollectionEquality().hash(factionhof) ^
-      const DeepCollectionEquality().hash(links) ^
       const DeepCollectionEquality().hash(metadata) ^
       runtimeType.hashCode;
 }
 
 extension $TornFactionHofResponseExtension on TornFactionHofResponse {
-  TornFactionHofResponse copyWith(
-      {List<TornFactionHof>? factionhof, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
-    return TornFactionHofResponse(
-        factionhof: factionhof ?? this.factionhof, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  TornFactionHofResponse copyWith({List<TornFactionHof>? factionhof, RequestMetadataWithLinks? metadata}) {
+    return TornFactionHofResponse(factionhof: factionhof ?? this.factionhof, metadata: metadata ?? this.metadata);
   }
 
   TornFactionHofResponse copyWithWrapped(
-      {Wrapped<List<TornFactionHof>?>? factionhof,
-      Wrapped<RequestLinks?>? links,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+      {Wrapped<List<TornFactionHof>?>? factionhof, Wrapped<RequestMetadataWithLinks?>? metadata}) {
     return TornFactionHofResponse(
         factionhof: (factionhof != null ? factionhof.value : this.factionhof),
-        links: (links != null ? links.value : this.links),
         metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
@@ -7951,7 +9020,6 @@ extension $BountyExtension on Bounty {
 class TornBountiesResponse {
   const TornBountiesResponse({
     this.bounties,
-    this.links,
     this.metadata,
   });
 
@@ -7962,8 +9030,6 @@ class TornBountiesResponse {
 
   @JsonKey(name: 'bounties', defaultValue: <Bounty>[])
   final List<Bounty>? bounties;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
   static const fromJsonFactory = _$TornBountiesResponseFromJson;
@@ -7973,7 +9039,6 @@ class TornBountiesResponse {
     return identical(this, other) ||
         (other is TornBountiesResponse &&
             (identical(other.bounties, bounties) || const DeepCollectionEquality().equals(other.bounties, bounties)) &&
-            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
             (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
@@ -7983,22 +9048,19 @@ class TornBountiesResponse {
   @override
   int get hashCode =>
       const DeepCollectionEquality().hash(bounties) ^
-      const DeepCollectionEquality().hash(links) ^
       const DeepCollectionEquality().hash(metadata) ^
       runtimeType.hashCode;
 }
 
 extension $TornBountiesResponseExtension on TornBountiesResponse {
-  TornBountiesResponse copyWith({List<Bounty>? bounties, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
-    return TornBountiesResponse(
-        bounties: bounties ?? this.bounties, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  TornBountiesResponse copyWith({List<Bounty>? bounties, RequestMetadataWithLinks? metadata}) {
+    return TornBountiesResponse(bounties: bounties ?? this.bounties, metadata: metadata ?? this.metadata);
   }
 
   TornBountiesResponse copyWithWrapped(
-      {Wrapped<List<Bounty>?>? bounties, Wrapped<RequestLinks?>? links, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+      {Wrapped<List<Bounty>?>? bounties, Wrapped<RequestMetadataWithLinks?>? metadata}) {
     return TornBountiesResponse(
         bounties: (bounties != null ? bounties.value : this.bounties),
-        links: (links != null ? links.value : this.links),
         metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
@@ -8045,6 +9107,1632 @@ extension $TornLookupResponseExtension on TornLookupResponse {
   TornLookupResponse copyWithWrapped({Wrapped<List<enums.TornSelectionName>?>? selections}) {
     return TornLookupResponse(selections: (selections != null ? selections.value : this.selections));
   }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsOther {
+  const PersonalStatsOther({
+    this.other,
+  });
+
+  factory PersonalStatsOther.fromJson(Map<String, dynamic> json) => _$PersonalStatsOtherFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOtherToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOtherToJson(this);
+
+  @JsonKey(name: 'other')
+  final PersonalStatsOther$Other? other;
+  static const fromJsonFactory = _$PersonalStatsOtherFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOther &&
+            (identical(other.other, other) || const DeepCollectionEquality().equals(other.other, other)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(other) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsOtherExtension on PersonalStatsOther {
+  PersonalStatsOther copyWith({PersonalStatsOther$Other? other}) {
+    return PersonalStatsOther(other: other ?? this.other);
+  }
+
+  PersonalStatsOther copyWithWrapped({Wrapped<PersonalStatsOther$Other?>? other}) {
+    return PersonalStatsOther(other: (other != null ? other.value : this.other));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsOtherPopular {
+  const PersonalStatsOtherPopular({
+    this.other,
+  });
+
+  factory PersonalStatsOtherPopular.fromJson(Map<String, dynamic> json) => _$PersonalStatsOtherPopularFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOtherPopularToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOtherPopularToJson(this);
+
+  @JsonKey(name: 'other')
+  final PersonalStatsOtherPopular$Other? other;
+  static const fromJsonFactory = _$PersonalStatsOtherPopularFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOtherPopular &&
+            (identical(other.other, other) || const DeepCollectionEquality().equals(other.other, other)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(other) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsOtherPopularExtension on PersonalStatsOtherPopular {
+  PersonalStatsOtherPopular copyWith({PersonalStatsOtherPopular$Other? other}) {
+    return PersonalStatsOtherPopular(other: other ?? this.other);
+  }
+
+  PersonalStatsOtherPopular copyWithWrapped({Wrapped<PersonalStatsOtherPopular$Other?>? other}) {
+    return PersonalStatsOtherPopular(other: (other != null ? other.value : this.other));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsNetworthExtended {
+  const PersonalStatsNetworthExtended({
+    this.networth,
+  });
+
+  factory PersonalStatsNetworthExtended.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsNetworthExtendedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsNetworthExtendedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsNetworthExtendedToJson(this);
+
+  @JsonKey(name: 'networth')
+  final PersonalStatsNetworthExtended$Networth? networth;
+  static const fromJsonFactory = _$PersonalStatsNetworthExtendedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsNetworthExtended &&
+            (identical(other.networth, networth) || const DeepCollectionEquality().equals(other.networth, networth)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(networth) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsNetworthExtendedExtension on PersonalStatsNetworthExtended {
+  PersonalStatsNetworthExtended copyWith({PersonalStatsNetworthExtended$Networth? networth}) {
+    return PersonalStatsNetworthExtended(networth: networth ?? this.networth);
+  }
+
+  PersonalStatsNetworthExtended copyWithWrapped({Wrapped<PersonalStatsNetworthExtended$Networth?>? networth}) {
+    return PersonalStatsNetworthExtended(networth: (networth != null ? networth.value : this.networth));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsNetworthPublic {
+  const PersonalStatsNetworthPublic({
+    this.networth,
+  });
+
+  factory PersonalStatsNetworthPublic.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsNetworthPublicFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsNetworthPublicToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsNetworthPublicToJson(this);
+
+  @JsonKey(name: 'networth')
+  final PersonalStatsNetworthPublic$Networth? networth;
+  static const fromJsonFactory = _$PersonalStatsNetworthPublicFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsNetworthPublic &&
+            (identical(other.networth, networth) || const DeepCollectionEquality().equals(other.networth, networth)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(networth) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsNetworthPublicExtension on PersonalStatsNetworthPublic {
+  PersonalStatsNetworthPublic copyWith({PersonalStatsNetworthPublic$Networth? networth}) {
+    return PersonalStatsNetworthPublic(networth: networth ?? this.networth);
+  }
+
+  PersonalStatsNetworthPublic copyWithWrapped({Wrapped<PersonalStatsNetworthPublic$Networth?>? networth}) {
+    return PersonalStatsNetworthPublic(networth: (networth != null ? networth.value : this.networth));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsRacing {
+  const PersonalStatsRacing({
+    this.racing,
+  });
+
+  factory PersonalStatsRacing.fromJson(Map<String, dynamic> json) => _$PersonalStatsRacingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsRacingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsRacingToJson(this);
+
+  @JsonKey(name: 'racing')
+  final PersonalStatsRacing$Racing? racing;
+  static const fromJsonFactory = _$PersonalStatsRacingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsRacing &&
+            (identical(other.racing, racing) || const DeepCollectionEquality().equals(other.racing, racing)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(racing) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsRacingExtension on PersonalStatsRacing {
+  PersonalStatsRacing copyWith({PersonalStatsRacing$Racing? racing}) {
+    return PersonalStatsRacing(racing: racing ?? this.racing);
+  }
+
+  PersonalStatsRacing copyWithWrapped({Wrapped<PersonalStatsRacing$Racing?>? racing}) {
+    return PersonalStatsRacing(racing: (racing != null ? racing.value : this.racing));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsMissions {
+  const PersonalStatsMissions({
+    this.missions,
+  });
+
+  factory PersonalStatsMissions.fromJson(Map<String, dynamic> json) => _$PersonalStatsMissionsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsMissionsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsMissionsToJson(this);
+
+  @JsonKey(name: 'missions')
+  final PersonalStatsMissions$Missions? missions;
+  static const fromJsonFactory = _$PersonalStatsMissionsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsMissions &&
+            (identical(other.missions, missions) || const DeepCollectionEquality().equals(other.missions, missions)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(missions) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsMissionsExtension on PersonalStatsMissions {
+  PersonalStatsMissions copyWith({PersonalStatsMissions$Missions? missions}) {
+    return PersonalStatsMissions(missions: missions ?? this.missions);
+  }
+
+  PersonalStatsMissions copyWithWrapped({Wrapped<PersonalStatsMissions$Missions?>? missions}) {
+    return PersonalStatsMissions(missions: (missions != null ? missions.value : this.missions));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsDrugs {
+  const PersonalStatsDrugs({
+    this.drugs,
+  });
+
+  factory PersonalStatsDrugs.fromJson(Map<String, dynamic> json) => _$PersonalStatsDrugsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsDrugsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsDrugsToJson(this);
+
+  @JsonKey(name: 'drugs')
+  final PersonalStatsDrugs$Drugs? drugs;
+  static const fromJsonFactory = _$PersonalStatsDrugsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsDrugs &&
+            (identical(other.drugs, drugs) || const DeepCollectionEquality().equals(other.drugs, drugs)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(drugs) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsDrugsExtension on PersonalStatsDrugs {
+  PersonalStatsDrugs copyWith({PersonalStatsDrugs$Drugs? drugs}) {
+    return PersonalStatsDrugs(drugs: drugs ?? this.drugs);
+  }
+
+  PersonalStatsDrugs copyWithWrapped({Wrapped<PersonalStatsDrugs$Drugs?>? drugs}) {
+    return PersonalStatsDrugs(drugs: (drugs != null ? drugs.value : this.drugs));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTravel {
+  const PersonalStatsTravel({
+    this.travel,
+  });
+
+  factory PersonalStatsTravel.fromJson(Map<String, dynamic> json) => _$PersonalStatsTravelFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTravelToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTravelToJson(this);
+
+  @JsonKey(name: 'travel')
+  final PersonalStatsTravel$Travel? travel;
+  static const fromJsonFactory = _$PersonalStatsTravelFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTravel &&
+            (identical(other.travel, travel) || const DeepCollectionEquality().equals(other.travel, travel)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(travel) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsTravelExtension on PersonalStatsTravel {
+  PersonalStatsTravel copyWith({PersonalStatsTravel$Travel? travel}) {
+    return PersonalStatsTravel(travel: travel ?? this.travel);
+  }
+
+  PersonalStatsTravel copyWithWrapped({Wrapped<PersonalStatsTravel$Travel?>? travel}) {
+    return PersonalStatsTravel(travel: (travel != null ? travel.value : this.travel));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTravelPopular {
+  const PersonalStatsTravelPopular({
+    this.travel,
+  });
+
+  factory PersonalStatsTravelPopular.fromJson(Map<String, dynamic> json) => _$PersonalStatsTravelPopularFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTravelPopularToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTravelPopularToJson(this);
+
+  @JsonKey(name: 'travel')
+  final PersonalStatsTravelPopular$Travel? travel;
+  static const fromJsonFactory = _$PersonalStatsTravelPopularFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTravelPopular &&
+            (identical(other.travel, travel) || const DeepCollectionEquality().equals(other.travel, travel)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(travel) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsTravelPopularExtension on PersonalStatsTravelPopular {
+  PersonalStatsTravelPopular copyWith({PersonalStatsTravelPopular$Travel? travel}) {
+    return PersonalStatsTravelPopular(travel: travel ?? this.travel);
+  }
+
+  PersonalStatsTravelPopular copyWithWrapped({Wrapped<PersonalStatsTravelPopular$Travel?>? travel}) {
+    return PersonalStatsTravelPopular(travel: (travel != null ? travel.value : this.travel));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItems {
+  const PersonalStatsItems({
+    this.items,
+  });
+
+  factory PersonalStatsItems.fromJson(Map<String, dynamic> json) => _$PersonalStatsItemsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItemsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItemsToJson(this);
+
+  @JsonKey(name: 'items')
+  final PersonalStatsItems$Items? items;
+  static const fromJsonFactory = _$PersonalStatsItemsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItems &&
+            (identical(other.items, items) || const DeepCollectionEquality().equals(other.items, items)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(items) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsItemsExtension on PersonalStatsItems {
+  PersonalStatsItems copyWith({PersonalStatsItems$Items? items}) {
+    return PersonalStatsItems(items: items ?? this.items);
+  }
+
+  PersonalStatsItems copyWithWrapped({Wrapped<PersonalStatsItems$Items?>? items}) {
+    return PersonalStatsItems(items: (items != null ? items.value : this.items));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItemsPopular {
+  const PersonalStatsItemsPopular({
+    this.items,
+  });
+
+  factory PersonalStatsItemsPopular.fromJson(Map<String, dynamic> json) => _$PersonalStatsItemsPopularFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItemsPopularToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItemsPopularToJson(this);
+
+  @JsonKey(name: 'items')
+  final PersonalStatsItemsPopular$Items? items;
+  static const fromJsonFactory = _$PersonalStatsItemsPopularFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItemsPopular &&
+            (identical(other.items, items) || const DeepCollectionEquality().equals(other.items, items)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(items) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsItemsPopularExtension on PersonalStatsItemsPopular {
+  PersonalStatsItemsPopular copyWith({PersonalStatsItemsPopular$Items? items}) {
+    return PersonalStatsItemsPopular(items: items ?? this.items);
+  }
+
+  PersonalStatsItemsPopular copyWithWrapped({Wrapped<PersonalStatsItemsPopular$Items?>? items}) {
+    return PersonalStatsItemsPopular(items: (items != null ? items.value : this.items));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsInvestments {
+  const PersonalStatsInvestments({
+    this.investments,
+  });
+
+  factory PersonalStatsInvestments.fromJson(Map<String, dynamic> json) => _$PersonalStatsInvestmentsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsInvestmentsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsInvestmentsToJson(this);
+
+  @JsonKey(name: 'investments')
+  final PersonalStatsInvestments$Investments? investments;
+  static const fromJsonFactory = _$PersonalStatsInvestmentsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsInvestments &&
+            (identical(other.investments, investments) ||
+                const DeepCollectionEquality().equals(other.investments, investments)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(investments) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsInvestmentsExtension on PersonalStatsInvestments {
+  PersonalStatsInvestments copyWith({PersonalStatsInvestments$Investments? investments}) {
+    return PersonalStatsInvestments(investments: investments ?? this.investments);
+  }
+
+  PersonalStatsInvestments copyWithWrapped({Wrapped<PersonalStatsInvestments$Investments?>? investments}) {
+    return PersonalStatsInvestments(investments: (investments != null ? investments.value : this.investments));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsBounties {
+  const PersonalStatsBounties({
+    this.bounties,
+  });
+
+  factory PersonalStatsBounties.fromJson(Map<String, dynamic> json) => _$PersonalStatsBountiesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsBountiesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsBountiesToJson(this);
+
+  @JsonKey(name: 'bounties')
+  final PersonalStatsBounties$Bounties? bounties;
+  static const fromJsonFactory = _$PersonalStatsBountiesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsBounties &&
+            (identical(other.bounties, bounties) || const DeepCollectionEquality().equals(other.bounties, bounties)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(bounties) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsBountiesExtension on PersonalStatsBounties {
+  PersonalStatsBounties copyWith({PersonalStatsBounties$Bounties? bounties}) {
+    return PersonalStatsBounties(bounties: bounties ?? this.bounties);
+  }
+
+  PersonalStatsBounties copyWithWrapped({Wrapped<PersonalStatsBounties$Bounties?>? bounties}) {
+    return PersonalStatsBounties(bounties: (bounties != null ? bounties.value : this.bounties));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCriminalOffensesV2 {
+  const PersonalStatsCriminalOffensesV2({
+    this.total,
+    this.vandalism,
+    this.theft,
+    this.counterfeiting,
+    this.illicitServices,
+    this.cybercrime,
+    this.extortion,
+    this.illegalProduction,
+    this.organizedCrimes,
+    this.version,
+  });
+
+  factory PersonalStatsCriminalOffensesV2.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCriminalOffensesV2FromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCriminalOffensesV2ToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesV2ToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'vandalism')
+  final int? vandalism;
+  @JsonKey(name: 'theft')
+  final int? theft;
+  @JsonKey(name: 'counterfeiting')
+  final int? counterfeiting;
+  @JsonKey(name: 'illicit_services')
+  final int? illicitServices;
+  @JsonKey(name: 'cybercrime')
+  final int? cybercrime;
+  @JsonKey(name: 'extortion')
+  final int? extortion;
+  @JsonKey(name: 'illegal_production')
+  final int? illegalProduction;
+  @JsonKey(name: 'organized_crimes')
+  final int? organizedCrimes;
+  @JsonKey(name: 'version')
+  final String? version;
+  static const fromJsonFactory = _$PersonalStatsCriminalOffensesV2FromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCriminalOffensesV2 &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.vandalism, vandalism) ||
+                const DeepCollectionEquality().equals(other.vandalism, vandalism)) &&
+            (identical(other.theft, theft) || const DeepCollectionEquality().equals(other.theft, theft)) &&
+            (identical(other.counterfeiting, counterfeiting) ||
+                const DeepCollectionEquality().equals(other.counterfeiting, counterfeiting)) &&
+            (identical(other.illicitServices, illicitServices) ||
+                const DeepCollectionEquality().equals(other.illicitServices, illicitServices)) &&
+            (identical(other.cybercrime, cybercrime) ||
+                const DeepCollectionEquality().equals(other.cybercrime, cybercrime)) &&
+            (identical(other.extortion, extortion) ||
+                const DeepCollectionEquality().equals(other.extortion, extortion)) &&
+            (identical(other.illegalProduction, illegalProduction) ||
+                const DeepCollectionEquality().equals(other.illegalProduction, illegalProduction)) &&
+            (identical(other.organizedCrimes, organizedCrimes) ||
+                const DeepCollectionEquality().equals(other.organizedCrimes, organizedCrimes)) &&
+            (identical(other.version, version) || const DeepCollectionEquality().equals(other.version, version)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(vandalism) ^
+      const DeepCollectionEquality().hash(theft) ^
+      const DeepCollectionEquality().hash(counterfeiting) ^
+      const DeepCollectionEquality().hash(illicitServices) ^
+      const DeepCollectionEquality().hash(cybercrime) ^
+      const DeepCollectionEquality().hash(extortion) ^
+      const DeepCollectionEquality().hash(illegalProduction) ^
+      const DeepCollectionEquality().hash(organizedCrimes) ^
+      const DeepCollectionEquality().hash(version) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsCriminalOffensesV2Extension on PersonalStatsCriminalOffensesV2 {
+  PersonalStatsCriminalOffensesV2 copyWith(
+      {int? total,
+      int? vandalism,
+      int? theft,
+      int? counterfeiting,
+      int? illicitServices,
+      int? cybercrime,
+      int? extortion,
+      int? illegalProduction,
+      int? organizedCrimes,
+      String? version}) {
+    return PersonalStatsCriminalOffensesV2(
+        total: total ?? this.total,
+        vandalism: vandalism ?? this.vandalism,
+        theft: theft ?? this.theft,
+        counterfeiting: counterfeiting ?? this.counterfeiting,
+        illicitServices: illicitServices ?? this.illicitServices,
+        cybercrime: cybercrime ?? this.cybercrime,
+        extortion: extortion ?? this.extortion,
+        illegalProduction: illegalProduction ?? this.illegalProduction,
+        organizedCrimes: organizedCrimes ?? this.organizedCrimes,
+        version: version ?? this.version);
+  }
+
+  PersonalStatsCriminalOffensesV2 copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? vandalism,
+      Wrapped<int?>? theft,
+      Wrapped<int?>? counterfeiting,
+      Wrapped<int?>? illicitServices,
+      Wrapped<int?>? cybercrime,
+      Wrapped<int?>? extortion,
+      Wrapped<int?>? illegalProduction,
+      Wrapped<int?>? organizedCrimes,
+      Wrapped<String?>? version}) {
+    return PersonalStatsCriminalOffensesV2(
+        total: (total != null ? total.value : this.total),
+        vandalism: (vandalism != null ? vandalism.value : this.vandalism),
+        theft: (theft != null ? theft.value : this.theft),
+        counterfeiting: (counterfeiting != null ? counterfeiting.value : this.counterfeiting),
+        illicitServices: (illicitServices != null ? illicitServices.value : this.illicitServices),
+        cybercrime: (cybercrime != null ? cybercrime.value : this.cybercrime),
+        extortion: (extortion != null ? extortion.value : this.extortion),
+        illegalProduction: (illegalProduction != null ? illegalProduction.value : this.illegalProduction),
+        organizedCrimes: (organizedCrimes != null ? organizedCrimes.value : this.organizedCrimes),
+        version: (version != null ? version.value : this.version));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCriminalOffensesV1 {
+  const PersonalStatsCriminalOffensesV1({
+    this.total,
+    this.sellIllegalGoods,
+    this.theft,
+    this.autoTheft,
+    this.drugDeals,
+    this.computer,
+    this.fraud,
+    this.murder,
+    this.other,
+    this.organizedCrimes,
+    this.version,
+  });
+
+  factory PersonalStatsCriminalOffensesV1.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCriminalOffensesV1FromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCriminalOffensesV1ToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesV1ToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'sell_illegal_goods')
+  final int? sellIllegalGoods;
+  @JsonKey(name: 'theft')
+  final int? theft;
+  @JsonKey(name: 'auto_theft')
+  final int? autoTheft;
+  @JsonKey(name: 'drug_deals')
+  final int? drugDeals;
+  @JsonKey(name: 'computer')
+  final int? computer;
+  @JsonKey(name: 'fraud')
+  final int? fraud;
+  @JsonKey(name: 'murder')
+  final int? murder;
+  @JsonKey(name: 'other')
+  final int? other;
+  @JsonKey(name: 'organized_crimes')
+  final int? organizedCrimes;
+  @JsonKey(name: 'version')
+  final String? version;
+  static const fromJsonFactory = _$PersonalStatsCriminalOffensesV1FromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCriminalOffensesV1 &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.sellIllegalGoods, sellIllegalGoods) ||
+                const DeepCollectionEquality().equals(other.sellIllegalGoods, sellIllegalGoods)) &&
+            (identical(other.theft, theft) || const DeepCollectionEquality().equals(other.theft, theft)) &&
+            (identical(other.autoTheft, autoTheft) ||
+                const DeepCollectionEquality().equals(other.autoTheft, autoTheft)) &&
+            (identical(other.drugDeals, drugDeals) ||
+                const DeepCollectionEquality().equals(other.drugDeals, drugDeals)) &&
+            (identical(other.computer, computer) || const DeepCollectionEquality().equals(other.computer, computer)) &&
+            (identical(other.fraud, fraud) || const DeepCollectionEquality().equals(other.fraud, fraud)) &&
+            (identical(other.murder, murder) || const DeepCollectionEquality().equals(other.murder, murder)) &&
+            (identical(other.other, other) || const DeepCollectionEquality().equals(other.other, other)) &&
+            (identical(other.organizedCrimes, organizedCrimes) ||
+                const DeepCollectionEquality().equals(other.organizedCrimes, organizedCrimes)) &&
+            (identical(other.version, version) || const DeepCollectionEquality().equals(other.version, version)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(sellIllegalGoods) ^
+      const DeepCollectionEquality().hash(theft) ^
+      const DeepCollectionEquality().hash(autoTheft) ^
+      const DeepCollectionEquality().hash(drugDeals) ^
+      const DeepCollectionEquality().hash(computer) ^
+      const DeepCollectionEquality().hash(fraud) ^
+      const DeepCollectionEquality().hash(murder) ^
+      const DeepCollectionEquality().hash(other) ^
+      const DeepCollectionEquality().hash(organizedCrimes) ^
+      const DeepCollectionEquality().hash(version) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsCriminalOffensesV1Extension on PersonalStatsCriminalOffensesV1 {
+  PersonalStatsCriminalOffensesV1 copyWith(
+      {int? total,
+      int? sellIllegalGoods,
+      int? theft,
+      int? autoTheft,
+      int? drugDeals,
+      int? computer,
+      int? fraud,
+      int? murder,
+      int? other,
+      int? organizedCrimes,
+      String? version}) {
+    return PersonalStatsCriminalOffensesV1(
+        total: total ?? this.total,
+        sellIllegalGoods: sellIllegalGoods ?? this.sellIllegalGoods,
+        theft: theft ?? this.theft,
+        autoTheft: autoTheft ?? this.autoTheft,
+        drugDeals: drugDeals ?? this.drugDeals,
+        computer: computer ?? this.computer,
+        fraud: fraud ?? this.fraud,
+        murder: murder ?? this.murder,
+        other: other ?? this.other,
+        organizedCrimes: organizedCrimes ?? this.organizedCrimes,
+        version: version ?? this.version);
+  }
+
+  PersonalStatsCriminalOffensesV1 copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? sellIllegalGoods,
+      Wrapped<int?>? theft,
+      Wrapped<int?>? autoTheft,
+      Wrapped<int?>? drugDeals,
+      Wrapped<int?>? computer,
+      Wrapped<int?>? fraud,
+      Wrapped<int?>? murder,
+      Wrapped<int?>? other,
+      Wrapped<int?>? organizedCrimes,
+      Wrapped<String?>? version}) {
+    return PersonalStatsCriminalOffensesV1(
+        total: (total != null ? total.value : this.total),
+        sellIllegalGoods: (sellIllegalGoods != null ? sellIllegalGoods.value : this.sellIllegalGoods),
+        theft: (theft != null ? theft.value : this.theft),
+        autoTheft: (autoTheft != null ? autoTheft.value : this.autoTheft),
+        drugDeals: (drugDeals != null ? drugDeals.value : this.drugDeals),
+        computer: (computer != null ? computer.value : this.computer),
+        fraud: (fraud != null ? fraud.value : this.fraud),
+        murder: (murder != null ? murder.value : this.murder),
+        other: (other != null ? other.value : this.other),
+        organizedCrimes: (organizedCrimes != null ? organizedCrimes.value : this.organizedCrimes),
+        version: (version != null ? version.value : this.version));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCriminalOffensesPopular {
+  const PersonalStatsCriminalOffensesPopular({
+    this.criminalOffenses,
+  });
+
+  factory PersonalStatsCriminalOffensesPopular.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCriminalOffensesPopularFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCriminalOffensesPopularToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesPopularToJson(this);
+
+  @JsonKey(name: 'criminal_offenses')
+  final PersonalStatsCriminalOffensesPopular$CriminalOffenses? criminalOffenses;
+  static const fromJsonFactory = _$PersonalStatsCriminalOffensesPopularFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCriminalOffensesPopular &&
+            (identical(other.criminalOffenses, criminalOffenses) ||
+                const DeepCollectionEquality().equals(other.criminalOffenses, criminalOffenses)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(criminalOffenses) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsCriminalOffensesPopularExtension on PersonalStatsCriminalOffensesPopular {
+  PersonalStatsCriminalOffensesPopular copyWith(
+      {PersonalStatsCriminalOffensesPopular$CriminalOffenses? criminalOffenses}) {
+    return PersonalStatsCriminalOffensesPopular(criminalOffenses: criminalOffenses ?? this.criminalOffenses);
+  }
+
+  PersonalStatsCriminalOffensesPopular copyWithWrapped(
+      {Wrapped<PersonalStatsCriminalOffensesPopular$CriminalOffenses?>? criminalOffenses}) {
+    return PersonalStatsCriminalOffensesPopular(
+        criminalOffenses: (criminalOffenses != null ? criminalOffenses.value : this.criminalOffenses));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCommunication {
+  const PersonalStatsCommunication({
+    this.communication,
+  });
+
+  factory PersonalStatsCommunication.fromJson(Map<String, dynamic> json) => _$PersonalStatsCommunicationFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCommunicationToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCommunicationToJson(this);
+
+  @JsonKey(name: 'communication')
+  final PersonalStatsCommunication$Communication? communication;
+  static const fromJsonFactory = _$PersonalStatsCommunicationFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCommunication &&
+            (identical(other.communication, communication) ||
+                const DeepCollectionEquality().equals(other.communication, communication)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(communication) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsCommunicationExtension on PersonalStatsCommunication {
+  PersonalStatsCommunication copyWith({PersonalStatsCommunication$Communication? communication}) {
+    return PersonalStatsCommunication(communication: communication ?? this.communication);
+  }
+
+  PersonalStatsCommunication copyWithWrapped({Wrapped<PersonalStatsCommunication$Communication?>? communication}) {
+    return PersonalStatsCommunication(
+        communication: (communication != null ? communication.value : this.communication));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsFinishingHits {
+  const PersonalStatsFinishingHits({
+    this.finishingHits,
+  });
+
+  factory PersonalStatsFinishingHits.fromJson(Map<String, dynamic> json) => _$PersonalStatsFinishingHitsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsFinishingHitsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsFinishingHitsToJson(this);
+
+  @JsonKey(name: 'finishing_hits')
+  final PersonalStatsFinishingHits$FinishingHits? finishingHits;
+  static const fromJsonFactory = _$PersonalStatsFinishingHitsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsFinishingHits &&
+            (identical(other.finishingHits, finishingHits) ||
+                const DeepCollectionEquality().equals(other.finishingHits, finishingHits)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(finishingHits) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsFinishingHitsExtension on PersonalStatsFinishingHits {
+  PersonalStatsFinishingHits copyWith({PersonalStatsFinishingHits$FinishingHits? finishingHits}) {
+    return PersonalStatsFinishingHits(finishingHits: finishingHits ?? this.finishingHits);
+  }
+
+  PersonalStatsFinishingHits copyWithWrapped({Wrapped<PersonalStatsFinishingHits$FinishingHits?>? finishingHits}) {
+    return PersonalStatsFinishingHits(
+        finishingHits: (finishingHits != null ? finishingHits.value : this.finishingHits));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsHospital {
+  const PersonalStatsHospital({
+    this.hospital,
+  });
+
+  factory PersonalStatsHospital.fromJson(Map<String, dynamic> json) => _$PersonalStatsHospitalFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsHospitalToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsHospitalToJson(this);
+
+  @JsonKey(name: 'hospital')
+  final PersonalStatsHospital$Hospital? hospital;
+  static const fromJsonFactory = _$PersonalStatsHospitalFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsHospital &&
+            (identical(other.hospital, hospital) || const DeepCollectionEquality().equals(other.hospital, hospital)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(hospital) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsHospitalExtension on PersonalStatsHospital {
+  PersonalStatsHospital copyWith({PersonalStatsHospital$Hospital? hospital}) {
+    return PersonalStatsHospital(hospital: hospital ?? this.hospital);
+  }
+
+  PersonalStatsHospital copyWithWrapped({Wrapped<PersonalStatsHospital$Hospital?>? hospital}) {
+    return PersonalStatsHospital(hospital: (hospital != null ? hospital.value : this.hospital));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsHospitalPopular {
+  const PersonalStatsHospitalPopular({
+    this.hospital,
+  });
+
+  factory PersonalStatsHospitalPopular.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsHospitalPopularFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsHospitalPopularToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsHospitalPopularToJson(this);
+
+  @JsonKey(name: 'hospital')
+  final PersonalStatsHospitalPopular$Hospital? hospital;
+  static const fromJsonFactory = _$PersonalStatsHospitalPopularFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsHospitalPopular &&
+            (identical(other.hospital, hospital) || const DeepCollectionEquality().equals(other.hospital, hospital)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(hospital) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsHospitalPopularExtension on PersonalStatsHospitalPopular {
+  PersonalStatsHospitalPopular copyWith({PersonalStatsHospitalPopular$Hospital? hospital}) {
+    return PersonalStatsHospitalPopular(hospital: hospital ?? this.hospital);
+  }
+
+  PersonalStatsHospitalPopular copyWithWrapped({Wrapped<PersonalStatsHospitalPopular$Hospital?>? hospital}) {
+    return PersonalStatsHospitalPopular(hospital: (hospital != null ? hospital.value : this.hospital));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJail {
+  const PersonalStatsJail({
+    this.jail,
+  });
+
+  factory PersonalStatsJail.fromJson(Map<String, dynamic> json) => _$PersonalStatsJailFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJailToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJailToJson(this);
+
+  @JsonKey(name: 'jail')
+  final PersonalStatsJail$Jail? jail;
+  static const fromJsonFactory = _$PersonalStatsJailFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJail &&
+            (identical(other.jail, jail) || const DeepCollectionEquality().equals(other.jail, jail)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(jail) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsJailExtension on PersonalStatsJail {
+  PersonalStatsJail copyWith({PersonalStatsJail$Jail? jail}) {
+    return PersonalStatsJail(jail: jail ?? this.jail);
+  }
+
+  PersonalStatsJail copyWithWrapped({Wrapped<PersonalStatsJail$Jail?>? jail}) {
+    return PersonalStatsJail(jail: (jail != null ? jail.value : this.jail));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTrading {
+  const PersonalStatsTrading({
+    this.trading,
+  });
+
+  factory PersonalStatsTrading.fromJson(Map<String, dynamic> json) => _$PersonalStatsTradingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTradingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTradingToJson(this);
+
+  @JsonKey(name: 'trading')
+  final PersonalStatsTrading$Trading? trading;
+  static const fromJsonFactory = _$PersonalStatsTradingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTrading &&
+            (identical(other.trading, trading) || const DeepCollectionEquality().equals(other.trading, trading)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(trading) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsTradingExtension on PersonalStatsTrading {
+  PersonalStatsTrading copyWith({PersonalStatsTrading$Trading? trading}) {
+    return PersonalStatsTrading(trading: trading ?? this.trading);
+  }
+
+  PersonalStatsTrading copyWithWrapped({Wrapped<PersonalStatsTrading$Trading?>? trading}) {
+    return PersonalStatsTrading(trading: (trading != null ? trading.value : this.trading));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJobsPublic {
+  const PersonalStatsJobsPublic({
+    this.jobs,
+  });
+
+  factory PersonalStatsJobsPublic.fromJson(Map<String, dynamic> json) => _$PersonalStatsJobsPublicFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJobsPublicToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJobsPublicToJson(this);
+
+  @JsonKey(name: 'jobs')
+  final PersonalStatsJobsPublic$Jobs? jobs;
+  static const fromJsonFactory = _$PersonalStatsJobsPublicFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJobsPublic &&
+            (identical(other.jobs, jobs) || const DeepCollectionEquality().equals(other.jobs, jobs)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(jobs) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsJobsPublicExtension on PersonalStatsJobsPublic {
+  PersonalStatsJobsPublic copyWith({PersonalStatsJobsPublic$Jobs? jobs}) {
+    return PersonalStatsJobsPublic(jobs: jobs ?? this.jobs);
+  }
+
+  PersonalStatsJobsPublic copyWithWrapped({Wrapped<PersonalStatsJobsPublic$Jobs?>? jobs}) {
+    return PersonalStatsJobsPublic(jobs: (jobs != null ? jobs.value : this.jobs));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJobsExtended {
+  const PersonalStatsJobsExtended({
+    this.jobs,
+  });
+
+  factory PersonalStatsJobsExtended.fromJson(Map<String, dynamic> json) => _$PersonalStatsJobsExtendedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJobsExtendedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJobsExtendedToJson(this);
+
+  @JsonKey(name: 'jobs')
+  final PersonalStatsJobsExtended$Jobs? jobs;
+  static const fromJsonFactory = _$PersonalStatsJobsExtendedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJobsExtended &&
+            (identical(other.jobs, jobs) || const DeepCollectionEquality().equals(other.jobs, jobs)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(jobs) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsJobsExtendedExtension on PersonalStatsJobsExtended {
+  PersonalStatsJobsExtended copyWith({PersonalStatsJobsExtended$Jobs? jobs}) {
+    return PersonalStatsJobsExtended(jobs: jobs ?? this.jobs);
+  }
+
+  PersonalStatsJobsExtended copyWithWrapped({Wrapped<PersonalStatsJobsExtended$Jobs?>? jobs}) {
+    return PersonalStatsJobsExtended(jobs: (jobs != null ? jobs.value : this.jobs));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsBattleStats {
+  const PersonalStatsBattleStats({
+    this.battleStats,
+  });
+
+  factory PersonalStatsBattleStats.fromJson(Map<String, dynamic> json) => _$PersonalStatsBattleStatsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsBattleStatsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsBattleStatsToJson(this);
+
+  @JsonKey(name: 'battle_stats')
+  final PersonalStatsBattleStats$BattleStats? battleStats;
+  static const fromJsonFactory = _$PersonalStatsBattleStatsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsBattleStats &&
+            (identical(other.battleStats, battleStats) ||
+                const DeepCollectionEquality().equals(other.battleStats, battleStats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(battleStats) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsBattleStatsExtension on PersonalStatsBattleStats {
+  PersonalStatsBattleStats copyWith({PersonalStatsBattleStats$BattleStats? battleStats}) {
+    return PersonalStatsBattleStats(battleStats: battleStats ?? this.battleStats);
+  }
+
+  PersonalStatsBattleStats copyWithWrapped({Wrapped<PersonalStatsBattleStats$BattleStats?>? battleStats}) {
+    return PersonalStatsBattleStats(battleStats: (battleStats != null ? battleStats.value : this.battleStats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic {
+  const PersonalStatsAttackingPublic({
+    this.attacking,
+  });
+
+  factory PersonalStatsAttackingPublic.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublicFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublicToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublicToJson(this);
+
+  @JsonKey(name: 'attacking')
+  final PersonalStatsAttackingPublic$Attacking? attacking;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublicFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic &&
+            (identical(other.attacking, attacking) ||
+                const DeepCollectionEquality().equals(other.attacking, attacking)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(attacking) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublicExtension on PersonalStatsAttackingPublic {
+  PersonalStatsAttackingPublic copyWith({PersonalStatsAttackingPublic$Attacking? attacking}) {
+    return PersonalStatsAttackingPublic(attacking: attacking ?? this.attacking);
+  }
+
+  PersonalStatsAttackingPublic copyWithWrapped({Wrapped<PersonalStatsAttackingPublic$Attacking?>? attacking}) {
+    return PersonalStatsAttackingPublic(attacking: (attacking != null ? attacking.value : this.attacking));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended {
+  const PersonalStatsAttackingExtended({
+    this.attacking,
+  });
+
+  factory PersonalStatsAttackingExtended.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtendedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtendedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtendedToJson(this);
+
+  @JsonKey(name: 'attacking')
+  final PersonalStatsAttackingExtended$Attacking? attacking;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtendedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended &&
+            (identical(other.attacking, attacking) ||
+                const DeepCollectionEquality().equals(other.attacking, attacking)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(attacking) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtendedExtension on PersonalStatsAttackingExtended {
+  PersonalStatsAttackingExtended copyWith({PersonalStatsAttackingExtended$Attacking? attacking}) {
+    return PersonalStatsAttackingExtended(attacking: attacking ?? this.attacking);
+  }
+
+  PersonalStatsAttackingExtended copyWithWrapped({Wrapped<PersonalStatsAttackingExtended$Attacking?>? attacking}) {
+    return PersonalStatsAttackingExtended(attacking: (attacking != null ? attacking.value : this.attacking));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular {
+  const PersonalStatsAttackingPopular({
+    this.attacking,
+  });
+
+  factory PersonalStatsAttackingPopular.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopularFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopularToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopularToJson(this);
+
+  @JsonKey(name: 'attacking')
+  final PersonalStatsAttackingPopular$Attacking? attacking;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopularFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular &&
+            (identical(other.attacking, attacking) ||
+                const DeepCollectionEquality().equals(other.attacking, attacking)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(attacking) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopularExtension on PersonalStatsAttackingPopular {
+  PersonalStatsAttackingPopular copyWith({PersonalStatsAttackingPopular$Attacking? attacking}) {
+    return PersonalStatsAttackingPopular(attacking: attacking ?? this.attacking);
+  }
+
+  PersonalStatsAttackingPopular copyWithWrapped({Wrapped<PersonalStatsAttackingPopular$Attacking?>? attacking}) {
+    return PersonalStatsAttackingPopular(attacking: (attacking != null ? attacking.value : this.attacking));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsHistoricStat {
+  const PersonalStatsHistoricStat({
+    this.name,
+    this.$value,
+    this.timestamp,
+  });
+
+  factory PersonalStatsHistoricStat.fromJson(Map<String, dynamic> json) => _$PersonalStatsHistoricStatFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsHistoricStatToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsHistoricStatToJson(this);
+
+  @JsonKey(name: 'name')
+  final String? name;
+  @JsonKey(name: 'value')
+  final int? $value;
+  @JsonKey(name: 'timestamp')
+  final int? timestamp;
+  static const fromJsonFactory = _$PersonalStatsHistoricStatFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsHistoricStat &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.$value, $value) || const DeepCollectionEquality().equals(other.$value, $value)) &&
+            (identical(other.timestamp, timestamp) ||
+                const DeepCollectionEquality().equals(other.timestamp, timestamp)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(name) ^
+      const DeepCollectionEquality().hash($value) ^
+      const DeepCollectionEquality().hash(timestamp) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsHistoricStatExtension on PersonalStatsHistoricStat {
+  PersonalStatsHistoricStat copyWith({String? name, int? $value, int? timestamp}) {
+    return PersonalStatsHistoricStat(
+        name: name ?? this.name, $value: $value ?? this.$value, timestamp: timestamp ?? this.timestamp);
+  }
+
+  PersonalStatsHistoricStat copyWithWrapped({Wrapped<String?>? name, Wrapped<int?>? $value, Wrapped<int?>? timestamp}) {
+    return PersonalStatsHistoricStat(
+        name: (name != null ? name.value : this.name),
+        $value: ($value != null ? $value.value : this.$value),
+        timestamp: (timestamp != null ? timestamp.value : this.timestamp));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserPersonalStatsHistoric {
+  const UserPersonalStatsHistoric({
+    this.personalstats,
+  });
+
+  factory UserPersonalStatsHistoric.fromJson(Map<String, dynamic> json) => _$UserPersonalStatsHistoricFromJson(json);
+
+  static const toJsonFactory = _$UserPersonalStatsHistoricToJson;
+  Map<String, dynamic> toJson() => _$UserPersonalStatsHistoricToJson(this);
+
+  @JsonKey(name: 'personalstats', defaultValue: <PersonalStatsHistoricStat>[])
+  final List<PersonalStatsHistoricStat>? personalstats;
+  static const fromJsonFactory = _$UserPersonalStatsHistoricFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserPersonalStatsHistoric &&
+            (identical(other.personalstats, personalstats) ||
+                const DeepCollectionEquality().equals(other.personalstats, personalstats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(personalstats) ^ runtimeType.hashCode;
+}
+
+extension $UserPersonalStatsHistoricExtension on UserPersonalStatsHistoric {
+  UserPersonalStatsHistoric copyWith({List<PersonalStatsHistoricStat>? personalstats}) {
+    return UserPersonalStatsHistoric(personalstats: personalstats ?? this.personalstats);
+  }
+
+  UserPersonalStatsHistoric copyWithWrapped({Wrapped<List<PersonalStatsHistoricStat>?>? personalstats}) {
+    return UserPersonalStatsHistoric(personalstats: (personalstats != null ? personalstats.value : this.personalstats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCriminalOffenses {
+  const PersonalStatsCriminalOffenses({
+    this.criminalOffenses,
+  });
+
+  factory PersonalStatsCriminalOffenses.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCriminalOffensesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCriminalOffensesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesToJson(this);
+
+  @JsonKey(name: 'criminal_offenses')
+  final Object? criminalOffenses;
+  static const fromJsonFactory = _$PersonalStatsCriminalOffensesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCriminalOffenses &&
+            (identical(other.criminalOffenses, criminalOffenses) ||
+                const DeepCollectionEquality().equals(other.criminalOffenses, criminalOffenses)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(criminalOffenses) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsCriminalOffensesExtension on PersonalStatsCriminalOffenses {
+  PersonalStatsCriminalOffenses copyWith({Object? criminalOffenses}) {
+    return PersonalStatsCriminalOffenses(criminalOffenses: criminalOffenses ?? this.criminalOffenses);
+  }
+
+  PersonalStatsCriminalOffenses copyWithWrapped({Wrapped<Object?>? criminalOffenses}) {
+    return PersonalStatsCriminalOffenses(
+        criminalOffenses: (criminalOffenses != null ? criminalOffenses.value : this.criminalOffenses));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserPersonalStatsPopular {
+  const UserPersonalStatsPopular({
+    this.personalstats,
+  });
+
+  factory UserPersonalStatsPopular.fromJson(Map<String, dynamic> json) => _$UserPersonalStatsPopularFromJson(json);
+
+  static const toJsonFactory = _$UserPersonalStatsPopularToJson;
+  Map<String, dynamic> toJson() => _$UserPersonalStatsPopularToJson(this);
+
+  @JsonKey(name: 'personalstats')
+  final dynamic personalstats;
+  static const fromJsonFactory = _$UserPersonalStatsPopularFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserPersonalStatsPopular &&
+            (identical(other.personalstats, personalstats) ||
+                const DeepCollectionEquality().equals(other.personalstats, personalstats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(personalstats) ^ runtimeType.hashCode;
+}
+
+extension $UserPersonalStatsPopularExtension on UserPersonalStatsPopular {
+  UserPersonalStatsPopular copyWith({dynamic personalstats}) {
+    return UserPersonalStatsPopular(personalstats: personalstats ?? this.personalstats);
+  }
+
+  UserPersonalStatsPopular copyWithWrapped({Wrapped<dynamic>? personalstats}) {
+    return UserPersonalStatsPopular(personalstats: (personalstats != null ? personalstats.value : this.personalstats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserPersonalStatsCategory {
+  const UserPersonalStatsCategory({
+    this.personalstats,
+  });
+
+  factory UserPersonalStatsCategory.fromJson(Map<String, dynamic> json) => _$UserPersonalStatsCategoryFromJson(json);
+
+  static const toJsonFactory = _$UserPersonalStatsCategoryToJson;
+  Map<String, dynamic> toJson() => _$UserPersonalStatsCategoryToJson(this);
+
+  @JsonKey(name: 'personalstats')
+  final dynamic personalstats;
+  static const fromJsonFactory = _$UserPersonalStatsCategoryFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserPersonalStatsCategory &&
+            (identical(other.personalstats, personalstats) ||
+                const DeepCollectionEquality().equals(other.personalstats, personalstats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(personalstats) ^ runtimeType.hashCode;
+}
+
+extension $UserPersonalStatsCategoryExtension on UserPersonalStatsCategory {
+  UserPersonalStatsCategory copyWith({dynamic personalstats}) {
+    return UserPersonalStatsCategory(personalstats: personalstats ?? this.personalstats);
+  }
+
+  UserPersonalStatsCategory copyWithWrapped({Wrapped<dynamic>? personalstats}) {
+    return UserPersonalStatsCategory(personalstats: (personalstats != null ? personalstats.value : this.personalstats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserPersonalStatsFull {
+  const UserPersonalStatsFull({
+    this.personalstats,
+  });
+
+  factory UserPersonalStatsFull.fromJson(Map<String, dynamic> json) => _$UserPersonalStatsFullFromJson(json);
+
+  static const toJsonFactory = _$UserPersonalStatsFullToJson;
+  Map<String, dynamic> toJson() => _$UserPersonalStatsFullToJson(this);
+
+  @JsonKey(name: 'personalstats')
+  final dynamic personalstats;
+  static const fromJsonFactory = _$UserPersonalStatsFullFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserPersonalStatsFull &&
+            (identical(other.personalstats, personalstats) ||
+                const DeepCollectionEquality().equals(other.personalstats, personalstats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(personalstats) ^ runtimeType.hashCode;
+}
+
+extension $UserPersonalStatsFullExtension on UserPersonalStatsFull {
+  UserPersonalStatsFull copyWith({dynamic personalstats}) {
+    return UserPersonalStatsFull(personalstats: personalstats ?? this.personalstats);
+  }
+
+  UserPersonalStatsFull copyWithWrapped({Wrapped<dynamic>? personalstats}) {
+    return UserPersonalStatsFull(personalstats: (personalstats != null ? personalstats.value : this.personalstats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserPersonalStatsFullPublic {
+  const UserPersonalStatsFullPublic({
+    this.personalstats,
+  });
+
+  factory UserPersonalStatsFullPublic.fromJson(Map<String, dynamic> json) =>
+      _$UserPersonalStatsFullPublicFromJson(json);
+
+  static const toJsonFactory = _$UserPersonalStatsFullPublicToJson;
+  Map<String, dynamic> toJson() => _$UserPersonalStatsFullPublicToJson(this);
+
+  @JsonKey(name: 'personalstats')
+  final dynamic personalstats;
+  static const fromJsonFactory = _$UserPersonalStatsFullPublicFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserPersonalStatsFullPublic &&
+            (identical(other.personalstats, personalstats) ||
+                const DeepCollectionEquality().equals(other.personalstats, personalstats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(personalstats) ^ runtimeType.hashCode;
+}
+
+extension $UserPersonalStatsFullPublicExtension on UserPersonalStatsFullPublic {
+  UserPersonalStatsFullPublic copyWith({dynamic personalstats}) {
+    return UserPersonalStatsFullPublic(personalstats: personalstats ?? this.personalstats);
+  }
+
+  UserPersonalStatsFullPublic copyWithWrapped({Wrapped<dynamic>? personalstats}) {
+    return UserPersonalStatsFullPublic(
+        personalstats: (personalstats != null ? personalstats.value : this.personalstats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserPersonalStatsResponse {
+  const UserPersonalStatsResponse();
+
+  factory UserPersonalStatsResponse.fromJson(Map<String, dynamic> json) => _$UserPersonalStatsResponseFromJson(json);
+
+  static const toJsonFactory = _$UserPersonalStatsResponseToJson;
+  Map<String, dynamic> toJson() => _$UserPersonalStatsResponseToJson(this);
+
+  static const fromJsonFactory = _$UserPersonalStatsResponseFromJson;
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => runtimeType.hashCode;
 }
 
 @JsonSerializable(explicitToJson: true)
@@ -9071,7 +11759,6 @@ class UserCrime {
     this.nerveSpent,
     this.skill,
     this.progressionBonus,
-    this.achievedUniques,
     this.rewards,
     this.attempts,
     this.uniques,
@@ -9089,9 +11776,6 @@ class UserCrime {
   final int? skill;
   @JsonKey(name: 'progression_bonus')
   final int? progressionBonus;
-  @JsonKey(name: 'achieved_uniques', defaultValue: <int>[])
-  @deprecated
-  final List<int>? achievedUniques;
   @JsonKey(name: 'rewards')
   final UserCrimeRewards? rewards;
   @JsonKey(name: 'attempts')
@@ -9111,8 +11795,6 @@ class UserCrime {
             (identical(other.skill, skill) || const DeepCollectionEquality().equals(other.skill, skill)) &&
             (identical(other.progressionBonus, progressionBonus) ||
                 const DeepCollectionEquality().equals(other.progressionBonus, progressionBonus)) &&
-            (identical(other.achievedUniques, achievedUniques) ||
-                const DeepCollectionEquality().equals(other.achievedUniques, achievedUniques)) &&
             (identical(other.rewards, rewards) || const DeepCollectionEquality().equals(other.rewards, rewards)) &&
             (identical(other.attempts, attempts) || const DeepCollectionEquality().equals(other.attempts, attempts)) &&
             (identical(other.uniques, uniques) || const DeepCollectionEquality().equals(other.uniques, uniques)) &&
@@ -9128,7 +11810,6 @@ class UserCrime {
       const DeepCollectionEquality().hash(nerveSpent) ^
       const DeepCollectionEquality().hash(skill) ^
       const DeepCollectionEquality().hash(progressionBonus) ^
-      const DeepCollectionEquality().hash(achievedUniques) ^
       const DeepCollectionEquality().hash(rewards) ^
       const DeepCollectionEquality().hash(attempts) ^
       const DeepCollectionEquality().hash(uniques) ^
@@ -9141,7 +11822,6 @@ extension $UserCrimeExtension on UserCrime {
       {int? nerveSpent,
       int? skill,
       int? progressionBonus,
-      List<int>? achievedUniques,
       UserCrimeRewards? rewards,
       UserCrimeAttempts? attempts,
       List<UserCrimeUniques>? uniques,
@@ -9150,7 +11830,6 @@ extension $UserCrimeExtension on UserCrime {
         nerveSpent: nerveSpent ?? this.nerveSpent,
         skill: skill ?? this.skill,
         progressionBonus: progressionBonus ?? this.progressionBonus,
-        achievedUniques: achievedUniques ?? this.achievedUniques,
         rewards: rewards ?? this.rewards,
         attempts: attempts ?? this.attempts,
         uniques: uniques ?? this.uniques,
@@ -9161,7 +11840,6 @@ extension $UserCrimeExtension on UserCrime {
       {Wrapped<int?>? nerveSpent,
       Wrapped<int?>? skill,
       Wrapped<int?>? progressionBonus,
-      Wrapped<List<int>?>? achievedUniques,
       Wrapped<UserCrimeRewards?>? rewards,
       Wrapped<UserCrimeAttempts?>? attempts,
       Wrapped<List<UserCrimeUniques>?>? uniques,
@@ -9170,7 +11848,6 @@ extension $UserCrimeExtension on UserCrime {
         nerveSpent: (nerveSpent != null ? nerveSpent.value : this.nerveSpent),
         skill: (skill != null ? skill.value : this.skill),
         progressionBonus: (progressionBonus != null ? progressionBonus.value : this.progressionBonus),
-        achievedUniques: (achievedUniques != null ? achievedUniques.value : this.achievedUniques),
         rewards: (rewards != null ? rewards.value : this.rewards),
         attempts: (attempts != null ? attempts.value : this.attempts),
         uniques: (uniques != null ? uniques.value : this.uniques),
@@ -9477,7 +12154,6 @@ extension $UserEnlistedCarsResponseExtension on UserEnlistedCarsResponse {
 class UserForumPostsResponse {
   const UserForumPostsResponse({
     this.forumPosts,
-    this.links,
     this.metadata,
   });
 
@@ -9488,8 +12164,6 @@ class UserForumPostsResponse {
 
   @JsonKey(name: 'forumPosts', defaultValue: <ForumPost>[])
   final List<ForumPost>? forumPosts;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
   static const fromJsonFactory = _$UserForumPostsResponseFromJson;
@@ -9500,7 +12174,6 @@ class UserForumPostsResponse {
         (other is UserForumPostsResponse &&
             (identical(other.forumPosts, forumPosts) ||
                 const DeepCollectionEquality().equals(other.forumPosts, forumPosts)) &&
-            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
             (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
@@ -9510,25 +12183,19 @@ class UserForumPostsResponse {
   @override
   int get hashCode =>
       const DeepCollectionEquality().hash(forumPosts) ^
-      const DeepCollectionEquality().hash(links) ^
       const DeepCollectionEquality().hash(metadata) ^
       runtimeType.hashCode;
 }
 
 extension $UserForumPostsResponseExtension on UserForumPostsResponse {
-  UserForumPostsResponse copyWith(
-      {List<ForumPost>? forumPosts, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
-    return UserForumPostsResponse(
-        forumPosts: forumPosts ?? this.forumPosts, links: links ?? this.links, metadata: metadata ?? this.metadata);
+  UserForumPostsResponse copyWith({List<ForumPost>? forumPosts, RequestMetadataWithLinks? metadata}) {
+    return UserForumPostsResponse(forumPosts: forumPosts ?? this.forumPosts, metadata: metadata ?? this.metadata);
   }
 
   UserForumPostsResponse copyWithWrapped(
-      {Wrapped<List<ForumPost>?>? forumPosts,
-      Wrapped<RequestLinks?>? links,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+      {Wrapped<List<ForumPost>?>? forumPosts, Wrapped<RequestMetadataWithLinks?>? metadata}) {
     return UserForumPostsResponse(
         forumPosts: (forumPosts != null ? forumPosts.value : this.forumPosts),
-        links: (links != null ? links.value : this.links),
         metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
@@ -9537,7 +12204,6 @@ extension $UserForumPostsResponseExtension on UserForumPostsResponse {
 class UserForumThreadsResponse {
   const UserForumThreadsResponse({
     this.forumThreads,
-    this.links,
     this.metadata,
   });
 
@@ -9548,8 +12214,6 @@ class UserForumThreadsResponse {
 
   @JsonKey(name: 'forumThreads', defaultValue: <ForumThreadUserExtended>[])
   final List<ForumThreadUserExtended>? forumThreads;
-  @JsonKey(name: '_links')
-  final RequestLinks? links;
   @JsonKey(name: '_metadata')
   final RequestMetadataWithLinks? metadata;
   static const fromJsonFactory = _$UserForumThreadsResponseFromJson;
@@ -9560,7 +12224,6 @@ class UserForumThreadsResponse {
         (other is UserForumThreadsResponse &&
             (identical(other.forumThreads, forumThreads) ||
                 const DeepCollectionEquality().equals(other.forumThreads, forumThreads)) &&
-            (identical(other.links, links) || const DeepCollectionEquality().equals(other.links, links)) &&
             (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
   }
 
@@ -9570,27 +12233,20 @@ class UserForumThreadsResponse {
   @override
   int get hashCode =>
       const DeepCollectionEquality().hash(forumThreads) ^
-      const DeepCollectionEquality().hash(links) ^
       const DeepCollectionEquality().hash(metadata) ^
       runtimeType.hashCode;
 }
 
 extension $UserForumThreadsResponseExtension on UserForumThreadsResponse {
-  UserForumThreadsResponse copyWith(
-      {List<ForumThreadUserExtended>? forumThreads, RequestLinks? links, RequestMetadataWithLinks? metadata}) {
+  UserForumThreadsResponse copyWith({List<ForumThreadUserExtended>? forumThreads, RequestMetadataWithLinks? metadata}) {
     return UserForumThreadsResponse(
-        forumThreads: forumThreads ?? this.forumThreads,
-        links: links ?? this.links,
-        metadata: metadata ?? this.metadata);
+        forumThreads: forumThreads ?? this.forumThreads, metadata: metadata ?? this.metadata);
   }
 
   UserForumThreadsResponse copyWithWrapped(
-      {Wrapped<List<ForumThreadUserExtended>?>? forumThreads,
-      Wrapped<RequestLinks?>? links,
-      Wrapped<RequestMetadataWithLinks?>? metadata}) {
+      {Wrapped<List<ForumThreadUserExtended>?>? forumThreads, Wrapped<RequestMetadataWithLinks?>? metadata}) {
     return UserForumThreadsResponse(
         forumThreads: (forumThreads != null ? forumThreads.value : this.forumThreads),
-        links: (links != null ? links.value : this.links),
         metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
@@ -11472,6 +14128,2401 @@ extension $TornCalendarResponse$CalendarExtension on TornCalendarResponse$Calend
 }
 
 @JsonSerializable(explicitToJson: true)
+class PersonalStatsOther$Other {
+  const PersonalStatsOther$Other({
+    this.timePlayed,
+    this.currentStreak,
+    this.bestStreak,
+    this.awards,
+    this.meritsBought,
+    this.refills,
+    this.donatorDays,
+    this.rankedWarWins,
+  });
+
+  factory PersonalStatsOther$Other.fromJson(Map<String, dynamic> json) => _$PersonalStatsOther$OtherFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOther$OtherToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOther$OtherToJson(this);
+
+  @JsonKey(name: 'time_played')
+  final int? timePlayed;
+  @JsonKey(name: 'current_streak')
+  final int? currentStreak;
+  @JsonKey(name: 'best_streak')
+  final int? bestStreak;
+  @JsonKey(name: 'awards')
+  final int? awards;
+  @JsonKey(name: 'merits_bought')
+  final int? meritsBought;
+  @JsonKey(name: 'refills')
+  final PersonalStatsOther$Other$Refills? refills;
+  @JsonKey(name: 'donator_days')
+  final int? donatorDays;
+  @JsonKey(name: 'ranked_war_wins')
+  final int? rankedWarWins;
+  static const fromJsonFactory = _$PersonalStatsOther$OtherFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOther$Other &&
+            (identical(other.timePlayed, timePlayed) ||
+                const DeepCollectionEquality().equals(other.timePlayed, timePlayed)) &&
+            (identical(other.currentStreak, currentStreak) ||
+                const DeepCollectionEquality().equals(other.currentStreak, currentStreak)) &&
+            (identical(other.bestStreak, bestStreak) ||
+                const DeepCollectionEquality().equals(other.bestStreak, bestStreak)) &&
+            (identical(other.awards, awards) || const DeepCollectionEquality().equals(other.awards, awards)) &&
+            (identical(other.meritsBought, meritsBought) ||
+                const DeepCollectionEquality().equals(other.meritsBought, meritsBought)) &&
+            (identical(other.refills, refills) || const DeepCollectionEquality().equals(other.refills, refills)) &&
+            (identical(other.donatorDays, donatorDays) ||
+                const DeepCollectionEquality().equals(other.donatorDays, donatorDays)) &&
+            (identical(other.rankedWarWins, rankedWarWins) ||
+                const DeepCollectionEquality().equals(other.rankedWarWins, rankedWarWins)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(timePlayed) ^
+      const DeepCollectionEquality().hash(currentStreak) ^
+      const DeepCollectionEquality().hash(bestStreak) ^
+      const DeepCollectionEquality().hash(awards) ^
+      const DeepCollectionEquality().hash(meritsBought) ^
+      const DeepCollectionEquality().hash(refills) ^
+      const DeepCollectionEquality().hash(donatorDays) ^
+      const DeepCollectionEquality().hash(rankedWarWins) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsOther$OtherExtension on PersonalStatsOther$Other {
+  PersonalStatsOther$Other copyWith(
+      {int? timePlayed,
+      int? currentStreak,
+      int? bestStreak,
+      int? awards,
+      int? meritsBought,
+      PersonalStatsOther$Other$Refills? refills,
+      int? donatorDays,
+      int? rankedWarWins}) {
+    return PersonalStatsOther$Other(
+        timePlayed: timePlayed ?? this.timePlayed,
+        currentStreak: currentStreak ?? this.currentStreak,
+        bestStreak: bestStreak ?? this.bestStreak,
+        awards: awards ?? this.awards,
+        meritsBought: meritsBought ?? this.meritsBought,
+        refills: refills ?? this.refills,
+        donatorDays: donatorDays ?? this.donatorDays,
+        rankedWarWins: rankedWarWins ?? this.rankedWarWins);
+  }
+
+  PersonalStatsOther$Other copyWithWrapped(
+      {Wrapped<int?>? timePlayed,
+      Wrapped<int?>? currentStreak,
+      Wrapped<int?>? bestStreak,
+      Wrapped<int?>? awards,
+      Wrapped<int?>? meritsBought,
+      Wrapped<PersonalStatsOther$Other$Refills?>? refills,
+      Wrapped<int?>? donatorDays,
+      Wrapped<int?>? rankedWarWins}) {
+    return PersonalStatsOther$Other(
+        timePlayed: (timePlayed != null ? timePlayed.value : this.timePlayed),
+        currentStreak: (currentStreak != null ? currentStreak.value : this.currentStreak),
+        bestStreak: (bestStreak != null ? bestStreak.value : this.bestStreak),
+        awards: (awards != null ? awards.value : this.awards),
+        meritsBought: (meritsBought != null ? meritsBought.value : this.meritsBought),
+        refills: (refills != null ? refills.value : this.refills),
+        donatorDays: (donatorDays != null ? donatorDays.value : this.donatorDays),
+        rankedWarWins: (rankedWarWins != null ? rankedWarWins.value : this.rankedWarWins));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsOtherPopular$Other {
+  const PersonalStatsOtherPopular$Other({
+    this.timePlayed,
+    this.currentStreak,
+    this.bestStreak,
+    this.awards,
+    this.meritsBought,
+    this.refills,
+    this.donatorDays,
+    this.rankedWarWins,
+  });
+
+  factory PersonalStatsOtherPopular$Other.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsOtherPopular$OtherFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOtherPopular$OtherToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOtherPopular$OtherToJson(this);
+
+  @JsonKey(name: 'time_played')
+  final int? timePlayed;
+  @JsonKey(name: 'current_streak')
+  final int? currentStreak;
+  @JsonKey(name: 'best_streak')
+  final int? bestStreak;
+  @JsonKey(name: 'awards')
+  final int? awards;
+  @JsonKey(name: 'merits_bought')
+  final int? meritsBought;
+  @JsonKey(name: 'refills')
+  final PersonalStatsOtherPopular$Other$Refills? refills;
+  @JsonKey(name: 'donator_days')
+  final int? donatorDays;
+  @JsonKey(name: 'ranked_war_wins')
+  final int? rankedWarWins;
+  static const fromJsonFactory = _$PersonalStatsOtherPopular$OtherFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOtherPopular$Other &&
+            (identical(other.timePlayed, timePlayed) ||
+                const DeepCollectionEquality().equals(other.timePlayed, timePlayed)) &&
+            (identical(other.currentStreak, currentStreak) ||
+                const DeepCollectionEquality().equals(other.currentStreak, currentStreak)) &&
+            (identical(other.bestStreak, bestStreak) ||
+                const DeepCollectionEquality().equals(other.bestStreak, bestStreak)) &&
+            (identical(other.awards, awards) || const DeepCollectionEquality().equals(other.awards, awards)) &&
+            (identical(other.meritsBought, meritsBought) ||
+                const DeepCollectionEquality().equals(other.meritsBought, meritsBought)) &&
+            (identical(other.refills, refills) || const DeepCollectionEquality().equals(other.refills, refills)) &&
+            (identical(other.donatorDays, donatorDays) ||
+                const DeepCollectionEquality().equals(other.donatorDays, donatorDays)) &&
+            (identical(other.rankedWarWins, rankedWarWins) ||
+                const DeepCollectionEquality().equals(other.rankedWarWins, rankedWarWins)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(timePlayed) ^
+      const DeepCollectionEquality().hash(currentStreak) ^
+      const DeepCollectionEquality().hash(bestStreak) ^
+      const DeepCollectionEquality().hash(awards) ^
+      const DeepCollectionEquality().hash(meritsBought) ^
+      const DeepCollectionEquality().hash(refills) ^
+      const DeepCollectionEquality().hash(donatorDays) ^
+      const DeepCollectionEquality().hash(rankedWarWins) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsOtherPopular$OtherExtension on PersonalStatsOtherPopular$Other {
+  PersonalStatsOtherPopular$Other copyWith(
+      {int? timePlayed,
+      int? currentStreak,
+      int? bestStreak,
+      int? awards,
+      int? meritsBought,
+      PersonalStatsOtherPopular$Other$Refills? refills,
+      int? donatorDays,
+      int? rankedWarWins}) {
+    return PersonalStatsOtherPopular$Other(
+        timePlayed: timePlayed ?? this.timePlayed,
+        currentStreak: currentStreak ?? this.currentStreak,
+        bestStreak: bestStreak ?? this.bestStreak,
+        awards: awards ?? this.awards,
+        meritsBought: meritsBought ?? this.meritsBought,
+        refills: refills ?? this.refills,
+        donatorDays: donatorDays ?? this.donatorDays,
+        rankedWarWins: rankedWarWins ?? this.rankedWarWins);
+  }
+
+  PersonalStatsOtherPopular$Other copyWithWrapped(
+      {Wrapped<int?>? timePlayed,
+      Wrapped<int?>? currentStreak,
+      Wrapped<int?>? bestStreak,
+      Wrapped<int?>? awards,
+      Wrapped<int?>? meritsBought,
+      Wrapped<PersonalStatsOtherPopular$Other$Refills?>? refills,
+      Wrapped<int?>? donatorDays,
+      Wrapped<int?>? rankedWarWins}) {
+    return PersonalStatsOtherPopular$Other(
+        timePlayed: (timePlayed != null ? timePlayed.value : this.timePlayed),
+        currentStreak: (currentStreak != null ? currentStreak.value : this.currentStreak),
+        bestStreak: (bestStreak != null ? bestStreak.value : this.bestStreak),
+        awards: (awards != null ? awards.value : this.awards),
+        meritsBought: (meritsBought != null ? meritsBought.value : this.meritsBought),
+        refills: (refills != null ? refills.value : this.refills),
+        donatorDays: (donatorDays != null ? donatorDays.value : this.donatorDays),
+        rankedWarWins: (rankedWarWins != null ? rankedWarWins.value : this.rankedWarWins));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsNetworthExtended$Networth {
+  const PersonalStatsNetworthExtended$Networth({
+    this.total,
+    this.wallet,
+    this.vaults,
+    this.bank,
+    this.overseasBank,
+    this.points,
+    this.inventory,
+    this.displayCase,
+    this.bazaar,
+    this.itemMarket,
+    this.property,
+    this.stockMarket,
+    this.auctionHouse,
+    this.bookie,
+    this.company,
+    this.enlistedCars,
+    this.piggyBank,
+    this.pending,
+    this.loans,
+    this.unpaidFees,
+  });
+
+  factory PersonalStatsNetworthExtended$Networth.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsNetworthExtended$NetworthFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsNetworthExtended$NetworthToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsNetworthExtended$NetworthToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'wallet')
+  final int? wallet;
+  @JsonKey(name: 'vaults')
+  final int? vaults;
+  @JsonKey(name: 'bank')
+  final int? bank;
+  @JsonKey(name: 'overseas_bank')
+  final int? overseasBank;
+  @JsonKey(name: 'points')
+  final int? points;
+  @JsonKey(name: 'inventory')
+  final int? inventory;
+  @JsonKey(name: 'display_case')
+  final int? displayCase;
+  @JsonKey(name: 'bazaar')
+  final int? bazaar;
+  @JsonKey(name: 'item_market')
+  final int? itemMarket;
+  @JsonKey(name: 'property')
+  final int? property;
+  @JsonKey(name: 'stock_market')
+  final int? stockMarket;
+  @JsonKey(name: 'auction_house')
+  final int? auctionHouse;
+  @JsonKey(name: 'bookie')
+  final int? bookie;
+  @JsonKey(name: 'company')
+  final int? company;
+  @JsonKey(name: 'enlisted_cars')
+  final int? enlistedCars;
+  @JsonKey(name: 'piggy_bank')
+  final int? piggyBank;
+  @JsonKey(name: 'pending')
+  final int? pending;
+  @JsonKey(name: 'loans')
+  final int? loans;
+  @JsonKey(name: 'unpaid_fees')
+  final int? unpaidFees;
+  static const fromJsonFactory = _$PersonalStatsNetworthExtended$NetworthFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsNetworthExtended$Networth &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.wallet, wallet) || const DeepCollectionEquality().equals(other.wallet, wallet)) &&
+            (identical(other.vaults, vaults) || const DeepCollectionEquality().equals(other.vaults, vaults)) &&
+            (identical(other.bank, bank) || const DeepCollectionEquality().equals(other.bank, bank)) &&
+            (identical(other.overseasBank, overseasBank) ||
+                const DeepCollectionEquality().equals(other.overseasBank, overseasBank)) &&
+            (identical(other.points, points) || const DeepCollectionEquality().equals(other.points, points)) &&
+            (identical(other.inventory, inventory) ||
+                const DeepCollectionEquality().equals(other.inventory, inventory)) &&
+            (identical(other.displayCase, displayCase) ||
+                const DeepCollectionEquality().equals(other.displayCase, displayCase)) &&
+            (identical(other.bazaar, bazaar) || const DeepCollectionEquality().equals(other.bazaar, bazaar)) &&
+            (identical(other.itemMarket, itemMarket) ||
+                const DeepCollectionEquality().equals(other.itemMarket, itemMarket)) &&
+            (identical(other.property, property) || const DeepCollectionEquality().equals(other.property, property)) &&
+            (identical(other.stockMarket, stockMarket) ||
+                const DeepCollectionEquality().equals(other.stockMarket, stockMarket)) &&
+            (identical(other.auctionHouse, auctionHouse) ||
+                const DeepCollectionEquality().equals(other.auctionHouse, auctionHouse)) &&
+            (identical(other.bookie, bookie) || const DeepCollectionEquality().equals(other.bookie, bookie)) &&
+            (identical(other.company, company) || const DeepCollectionEquality().equals(other.company, company)) &&
+            (identical(other.enlistedCars, enlistedCars) ||
+                const DeepCollectionEquality().equals(other.enlistedCars, enlistedCars)) &&
+            (identical(other.piggyBank, piggyBank) ||
+                const DeepCollectionEquality().equals(other.piggyBank, piggyBank)) &&
+            (identical(other.pending, pending) || const DeepCollectionEquality().equals(other.pending, pending)) &&
+            (identical(other.loans, loans) || const DeepCollectionEquality().equals(other.loans, loans)) &&
+            (identical(other.unpaidFees, unpaidFees) ||
+                const DeepCollectionEquality().equals(other.unpaidFees, unpaidFees)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(wallet) ^
+      const DeepCollectionEquality().hash(vaults) ^
+      const DeepCollectionEquality().hash(bank) ^
+      const DeepCollectionEquality().hash(overseasBank) ^
+      const DeepCollectionEquality().hash(points) ^
+      const DeepCollectionEquality().hash(inventory) ^
+      const DeepCollectionEquality().hash(displayCase) ^
+      const DeepCollectionEquality().hash(bazaar) ^
+      const DeepCollectionEquality().hash(itemMarket) ^
+      const DeepCollectionEquality().hash(property) ^
+      const DeepCollectionEquality().hash(stockMarket) ^
+      const DeepCollectionEquality().hash(auctionHouse) ^
+      const DeepCollectionEquality().hash(bookie) ^
+      const DeepCollectionEquality().hash(company) ^
+      const DeepCollectionEquality().hash(enlistedCars) ^
+      const DeepCollectionEquality().hash(piggyBank) ^
+      const DeepCollectionEquality().hash(pending) ^
+      const DeepCollectionEquality().hash(loans) ^
+      const DeepCollectionEquality().hash(unpaidFees) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsNetworthExtended$NetworthExtension on PersonalStatsNetworthExtended$Networth {
+  PersonalStatsNetworthExtended$Networth copyWith(
+      {int? total,
+      int? wallet,
+      int? vaults,
+      int? bank,
+      int? overseasBank,
+      int? points,
+      int? inventory,
+      int? displayCase,
+      int? bazaar,
+      int? itemMarket,
+      int? property,
+      int? stockMarket,
+      int? auctionHouse,
+      int? bookie,
+      int? company,
+      int? enlistedCars,
+      int? piggyBank,
+      int? pending,
+      int? loans,
+      int? unpaidFees}) {
+    return PersonalStatsNetworthExtended$Networth(
+        total: total ?? this.total,
+        wallet: wallet ?? this.wallet,
+        vaults: vaults ?? this.vaults,
+        bank: bank ?? this.bank,
+        overseasBank: overseasBank ?? this.overseasBank,
+        points: points ?? this.points,
+        inventory: inventory ?? this.inventory,
+        displayCase: displayCase ?? this.displayCase,
+        bazaar: bazaar ?? this.bazaar,
+        itemMarket: itemMarket ?? this.itemMarket,
+        property: property ?? this.property,
+        stockMarket: stockMarket ?? this.stockMarket,
+        auctionHouse: auctionHouse ?? this.auctionHouse,
+        bookie: bookie ?? this.bookie,
+        company: company ?? this.company,
+        enlistedCars: enlistedCars ?? this.enlistedCars,
+        piggyBank: piggyBank ?? this.piggyBank,
+        pending: pending ?? this.pending,
+        loans: loans ?? this.loans,
+        unpaidFees: unpaidFees ?? this.unpaidFees);
+  }
+
+  PersonalStatsNetworthExtended$Networth copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? wallet,
+      Wrapped<int?>? vaults,
+      Wrapped<int?>? bank,
+      Wrapped<int?>? overseasBank,
+      Wrapped<int?>? points,
+      Wrapped<int?>? inventory,
+      Wrapped<int?>? displayCase,
+      Wrapped<int?>? bazaar,
+      Wrapped<int?>? itemMarket,
+      Wrapped<int?>? property,
+      Wrapped<int?>? stockMarket,
+      Wrapped<int?>? auctionHouse,
+      Wrapped<int?>? bookie,
+      Wrapped<int?>? company,
+      Wrapped<int?>? enlistedCars,
+      Wrapped<int?>? piggyBank,
+      Wrapped<int?>? pending,
+      Wrapped<int?>? loans,
+      Wrapped<int?>? unpaidFees}) {
+    return PersonalStatsNetworthExtended$Networth(
+        total: (total != null ? total.value : this.total),
+        wallet: (wallet != null ? wallet.value : this.wallet),
+        vaults: (vaults != null ? vaults.value : this.vaults),
+        bank: (bank != null ? bank.value : this.bank),
+        overseasBank: (overseasBank != null ? overseasBank.value : this.overseasBank),
+        points: (points != null ? points.value : this.points),
+        inventory: (inventory != null ? inventory.value : this.inventory),
+        displayCase: (displayCase != null ? displayCase.value : this.displayCase),
+        bazaar: (bazaar != null ? bazaar.value : this.bazaar),
+        itemMarket: (itemMarket != null ? itemMarket.value : this.itemMarket),
+        property: (property != null ? property.value : this.property),
+        stockMarket: (stockMarket != null ? stockMarket.value : this.stockMarket),
+        auctionHouse: (auctionHouse != null ? auctionHouse.value : this.auctionHouse),
+        bookie: (bookie != null ? bookie.value : this.bookie),
+        company: (company != null ? company.value : this.company),
+        enlistedCars: (enlistedCars != null ? enlistedCars.value : this.enlistedCars),
+        piggyBank: (piggyBank != null ? piggyBank.value : this.piggyBank),
+        pending: (pending != null ? pending.value : this.pending),
+        loans: (loans != null ? loans.value : this.loans),
+        unpaidFees: (unpaidFees != null ? unpaidFees.value : this.unpaidFees));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsNetworthPublic$Networth {
+  const PersonalStatsNetworthPublic$Networth({
+    this.total,
+  });
+
+  factory PersonalStatsNetworthPublic$Networth.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsNetworthPublic$NetworthFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsNetworthPublic$NetworthToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsNetworthPublic$NetworthToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  static const fromJsonFactory = _$PersonalStatsNetworthPublic$NetworthFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsNetworthPublic$Networth &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(total) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsNetworthPublic$NetworthExtension on PersonalStatsNetworthPublic$Networth {
+  PersonalStatsNetworthPublic$Networth copyWith({int? total}) {
+    return PersonalStatsNetworthPublic$Networth(total: total ?? this.total);
+  }
+
+  PersonalStatsNetworthPublic$Networth copyWithWrapped({Wrapped<int?>? total}) {
+    return PersonalStatsNetworthPublic$Networth(total: (total != null ? total.value : this.total));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsRacing$Racing {
+  const PersonalStatsRacing$Racing({
+    this.skill,
+    this.points,
+    this.races,
+  });
+
+  factory PersonalStatsRacing$Racing.fromJson(Map<String, dynamic> json) => _$PersonalStatsRacing$RacingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsRacing$RacingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsRacing$RacingToJson(this);
+
+  @JsonKey(name: 'skill')
+  final int? skill;
+  @JsonKey(name: 'points')
+  final int? points;
+  @JsonKey(name: 'races')
+  final PersonalStatsRacing$Racing$Races? races;
+  static const fromJsonFactory = _$PersonalStatsRacing$RacingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsRacing$Racing &&
+            (identical(other.skill, skill) || const DeepCollectionEquality().equals(other.skill, skill)) &&
+            (identical(other.points, points) || const DeepCollectionEquality().equals(other.points, points)) &&
+            (identical(other.races, races) || const DeepCollectionEquality().equals(other.races, races)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(skill) ^
+      const DeepCollectionEquality().hash(points) ^
+      const DeepCollectionEquality().hash(races) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsRacing$RacingExtension on PersonalStatsRacing$Racing {
+  PersonalStatsRacing$Racing copyWith({int? skill, int? points, PersonalStatsRacing$Racing$Races? races}) {
+    return PersonalStatsRacing$Racing(
+        skill: skill ?? this.skill, points: points ?? this.points, races: races ?? this.races);
+  }
+
+  PersonalStatsRacing$Racing copyWithWrapped(
+      {Wrapped<int?>? skill, Wrapped<int?>? points, Wrapped<PersonalStatsRacing$Racing$Races?>? races}) {
+    return PersonalStatsRacing$Racing(
+        skill: (skill != null ? skill.value : this.skill),
+        points: (points != null ? points.value : this.points),
+        races: (races != null ? races.value : this.races));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsMissions$Missions {
+  const PersonalStatsMissions$Missions({
+    this.missions,
+    this.contracts,
+    this.credits,
+  });
+
+  factory PersonalStatsMissions$Missions.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsMissions$MissionsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsMissions$MissionsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsMissions$MissionsToJson(this);
+
+  @JsonKey(name: 'missions')
+  final int? missions;
+  @JsonKey(name: 'contracts')
+  final PersonalStatsMissions$Missions$Contracts? contracts;
+  @JsonKey(name: 'credits')
+  final int? credits;
+  static const fromJsonFactory = _$PersonalStatsMissions$MissionsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsMissions$Missions &&
+            (identical(other.missions, missions) || const DeepCollectionEquality().equals(other.missions, missions)) &&
+            (identical(other.contracts, contracts) ||
+                const DeepCollectionEquality().equals(other.contracts, contracts)) &&
+            (identical(other.credits, credits) || const DeepCollectionEquality().equals(other.credits, credits)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(missions) ^
+      const DeepCollectionEquality().hash(contracts) ^
+      const DeepCollectionEquality().hash(credits) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsMissions$MissionsExtension on PersonalStatsMissions$Missions {
+  PersonalStatsMissions$Missions copyWith(
+      {int? missions, PersonalStatsMissions$Missions$Contracts? contracts, int? credits}) {
+    return PersonalStatsMissions$Missions(
+        missions: missions ?? this.missions, contracts: contracts ?? this.contracts, credits: credits ?? this.credits);
+  }
+
+  PersonalStatsMissions$Missions copyWithWrapped(
+      {Wrapped<int?>? missions,
+      Wrapped<PersonalStatsMissions$Missions$Contracts?>? contracts,
+      Wrapped<int?>? credits}) {
+    return PersonalStatsMissions$Missions(
+        missions: (missions != null ? missions.value : this.missions),
+        contracts: (contracts != null ? contracts.value : this.contracts),
+        credits: (credits != null ? credits.value : this.credits));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsDrugs$Drugs {
+  const PersonalStatsDrugs$Drugs({
+    this.cannabis,
+    this.ecstasy,
+    this.ketamine,
+    this.lsd,
+    this.opium,
+    this.pcp,
+    this.shrooms,
+    this.speed,
+    this.vicodin,
+    this.xanax,
+    this.total,
+    this.overdoses,
+    this.rehabilitations,
+  });
+
+  factory PersonalStatsDrugs$Drugs.fromJson(Map<String, dynamic> json) => _$PersonalStatsDrugs$DrugsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsDrugs$DrugsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsDrugs$DrugsToJson(this);
+
+  @JsonKey(name: 'cannabis')
+  final int? cannabis;
+  @JsonKey(name: 'ecstasy')
+  final int? ecstasy;
+  @JsonKey(name: 'ketamine')
+  final int? ketamine;
+  @JsonKey(name: 'lsd')
+  final int? lsd;
+  @JsonKey(name: 'opium')
+  final int? opium;
+  @JsonKey(name: 'pcp')
+  final int? pcp;
+  @JsonKey(name: 'shrooms')
+  final int? shrooms;
+  @JsonKey(name: 'speed')
+  final int? speed;
+  @JsonKey(name: 'vicodin')
+  final int? vicodin;
+  @JsonKey(name: 'xanax')
+  final int? xanax;
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'overdoses')
+  final int? overdoses;
+  @JsonKey(name: 'rehabilitations')
+  final PersonalStatsDrugs$Drugs$Rehabilitations? rehabilitations;
+  static const fromJsonFactory = _$PersonalStatsDrugs$DrugsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsDrugs$Drugs &&
+            (identical(other.cannabis, cannabis) || const DeepCollectionEquality().equals(other.cannabis, cannabis)) &&
+            (identical(other.ecstasy, ecstasy) || const DeepCollectionEquality().equals(other.ecstasy, ecstasy)) &&
+            (identical(other.ketamine, ketamine) || const DeepCollectionEquality().equals(other.ketamine, ketamine)) &&
+            (identical(other.lsd, lsd) || const DeepCollectionEquality().equals(other.lsd, lsd)) &&
+            (identical(other.opium, opium) || const DeepCollectionEquality().equals(other.opium, opium)) &&
+            (identical(other.pcp, pcp) || const DeepCollectionEquality().equals(other.pcp, pcp)) &&
+            (identical(other.shrooms, shrooms) || const DeepCollectionEquality().equals(other.shrooms, shrooms)) &&
+            (identical(other.speed, speed) || const DeepCollectionEquality().equals(other.speed, speed)) &&
+            (identical(other.vicodin, vicodin) || const DeepCollectionEquality().equals(other.vicodin, vicodin)) &&
+            (identical(other.xanax, xanax) || const DeepCollectionEquality().equals(other.xanax, xanax)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.overdoses, overdoses) ||
+                const DeepCollectionEquality().equals(other.overdoses, overdoses)) &&
+            (identical(other.rehabilitations, rehabilitations) ||
+                const DeepCollectionEquality().equals(other.rehabilitations, rehabilitations)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(cannabis) ^
+      const DeepCollectionEquality().hash(ecstasy) ^
+      const DeepCollectionEquality().hash(ketamine) ^
+      const DeepCollectionEquality().hash(lsd) ^
+      const DeepCollectionEquality().hash(opium) ^
+      const DeepCollectionEquality().hash(pcp) ^
+      const DeepCollectionEquality().hash(shrooms) ^
+      const DeepCollectionEquality().hash(speed) ^
+      const DeepCollectionEquality().hash(vicodin) ^
+      const DeepCollectionEquality().hash(xanax) ^
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(overdoses) ^
+      const DeepCollectionEquality().hash(rehabilitations) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsDrugs$DrugsExtension on PersonalStatsDrugs$Drugs {
+  PersonalStatsDrugs$Drugs copyWith(
+      {int? cannabis,
+      int? ecstasy,
+      int? ketamine,
+      int? lsd,
+      int? opium,
+      int? pcp,
+      int? shrooms,
+      int? speed,
+      int? vicodin,
+      int? xanax,
+      int? total,
+      int? overdoses,
+      PersonalStatsDrugs$Drugs$Rehabilitations? rehabilitations}) {
+    return PersonalStatsDrugs$Drugs(
+        cannabis: cannabis ?? this.cannabis,
+        ecstasy: ecstasy ?? this.ecstasy,
+        ketamine: ketamine ?? this.ketamine,
+        lsd: lsd ?? this.lsd,
+        opium: opium ?? this.opium,
+        pcp: pcp ?? this.pcp,
+        shrooms: shrooms ?? this.shrooms,
+        speed: speed ?? this.speed,
+        vicodin: vicodin ?? this.vicodin,
+        xanax: xanax ?? this.xanax,
+        total: total ?? this.total,
+        overdoses: overdoses ?? this.overdoses,
+        rehabilitations: rehabilitations ?? this.rehabilitations);
+  }
+
+  PersonalStatsDrugs$Drugs copyWithWrapped(
+      {Wrapped<int?>? cannabis,
+      Wrapped<int?>? ecstasy,
+      Wrapped<int?>? ketamine,
+      Wrapped<int?>? lsd,
+      Wrapped<int?>? opium,
+      Wrapped<int?>? pcp,
+      Wrapped<int?>? shrooms,
+      Wrapped<int?>? speed,
+      Wrapped<int?>? vicodin,
+      Wrapped<int?>? xanax,
+      Wrapped<int?>? total,
+      Wrapped<int?>? overdoses,
+      Wrapped<PersonalStatsDrugs$Drugs$Rehabilitations?>? rehabilitations}) {
+    return PersonalStatsDrugs$Drugs(
+        cannabis: (cannabis != null ? cannabis.value : this.cannabis),
+        ecstasy: (ecstasy != null ? ecstasy.value : this.ecstasy),
+        ketamine: (ketamine != null ? ketamine.value : this.ketamine),
+        lsd: (lsd != null ? lsd.value : this.lsd),
+        opium: (opium != null ? opium.value : this.opium),
+        pcp: (pcp != null ? pcp.value : this.pcp),
+        shrooms: (shrooms != null ? shrooms.value : this.shrooms),
+        speed: (speed != null ? speed.value : this.speed),
+        vicodin: (vicodin != null ? vicodin.value : this.vicodin),
+        xanax: (xanax != null ? xanax.value : this.xanax),
+        total: (total != null ? total.value : this.total),
+        overdoses: (overdoses != null ? overdoses.value : this.overdoses),
+        rehabilitations: (rehabilitations != null ? rehabilitations.value : this.rehabilitations));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTravel$Travel {
+  const PersonalStatsTravel$Travel({
+    this.total,
+    this.timeSpent,
+    this.itemsBought,
+    this.huntingSkill,
+    this.attacksWon,
+    this.defendsLost,
+    this.argentina,
+    this.canada,
+    this.caymanIslands,
+    this.china,
+    this.hawaii,
+    this.japan,
+    this.mexico,
+    this.unitedArabEmirates,
+    this.unitedKingdom,
+    this.southAfrica,
+    this.switzerland,
+  });
+
+  factory PersonalStatsTravel$Travel.fromJson(Map<String, dynamic> json) => _$PersonalStatsTravel$TravelFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTravel$TravelToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTravel$TravelToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'time_spent')
+  final int? timeSpent;
+  @JsonKey(name: 'items_bought')
+  final int? itemsBought;
+  @JsonKey(name: 'hunting_skill')
+  final double? huntingSkill;
+  @JsonKey(name: 'attacks_won')
+  final int? attacksWon;
+  @JsonKey(name: 'defends_lost')
+  final int? defendsLost;
+  @JsonKey(name: 'argentina')
+  final int? argentina;
+  @JsonKey(name: 'canada')
+  final int? canada;
+  @JsonKey(name: 'cayman_islands')
+  final int? caymanIslands;
+  @JsonKey(name: 'china')
+  final int? china;
+  @JsonKey(name: 'hawaii')
+  final int? hawaii;
+  @JsonKey(name: 'japan')
+  final int? japan;
+  @JsonKey(name: 'mexico')
+  final int? mexico;
+  @JsonKey(name: 'united_arab_emirates')
+  final int? unitedArabEmirates;
+  @JsonKey(name: 'united_kingdom')
+  final int? unitedKingdom;
+  @JsonKey(name: 'south_africa')
+  final int? southAfrica;
+  @JsonKey(name: 'switzerland')
+  final int? switzerland;
+  static const fromJsonFactory = _$PersonalStatsTravel$TravelFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTravel$Travel &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.timeSpent, timeSpent) ||
+                const DeepCollectionEquality().equals(other.timeSpent, timeSpent)) &&
+            (identical(other.itemsBought, itemsBought) ||
+                const DeepCollectionEquality().equals(other.itemsBought, itemsBought)) &&
+            (identical(other.huntingSkill, huntingSkill) ||
+                const DeepCollectionEquality().equals(other.huntingSkill, huntingSkill)) &&
+            (identical(other.attacksWon, attacksWon) ||
+                const DeepCollectionEquality().equals(other.attacksWon, attacksWon)) &&
+            (identical(other.defendsLost, defendsLost) ||
+                const DeepCollectionEquality().equals(other.defendsLost, defendsLost)) &&
+            (identical(other.argentina, argentina) ||
+                const DeepCollectionEquality().equals(other.argentina, argentina)) &&
+            (identical(other.canada, canada) || const DeepCollectionEquality().equals(other.canada, canada)) &&
+            (identical(other.caymanIslands, caymanIslands) ||
+                const DeepCollectionEquality().equals(other.caymanIslands, caymanIslands)) &&
+            (identical(other.china, china) || const DeepCollectionEquality().equals(other.china, china)) &&
+            (identical(other.hawaii, hawaii) || const DeepCollectionEquality().equals(other.hawaii, hawaii)) &&
+            (identical(other.japan, japan) || const DeepCollectionEquality().equals(other.japan, japan)) &&
+            (identical(other.mexico, mexico) || const DeepCollectionEquality().equals(other.mexico, mexico)) &&
+            (identical(other.unitedArabEmirates, unitedArabEmirates) ||
+                const DeepCollectionEquality().equals(other.unitedArabEmirates, unitedArabEmirates)) &&
+            (identical(other.unitedKingdom, unitedKingdom) ||
+                const DeepCollectionEquality().equals(other.unitedKingdom, unitedKingdom)) &&
+            (identical(other.southAfrica, southAfrica) ||
+                const DeepCollectionEquality().equals(other.southAfrica, southAfrica)) &&
+            (identical(other.switzerland, switzerland) ||
+                const DeepCollectionEquality().equals(other.switzerland, switzerland)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(timeSpent) ^
+      const DeepCollectionEquality().hash(itemsBought) ^
+      const DeepCollectionEquality().hash(huntingSkill) ^
+      const DeepCollectionEquality().hash(attacksWon) ^
+      const DeepCollectionEquality().hash(defendsLost) ^
+      const DeepCollectionEquality().hash(argentina) ^
+      const DeepCollectionEquality().hash(canada) ^
+      const DeepCollectionEquality().hash(caymanIslands) ^
+      const DeepCollectionEquality().hash(china) ^
+      const DeepCollectionEquality().hash(hawaii) ^
+      const DeepCollectionEquality().hash(japan) ^
+      const DeepCollectionEquality().hash(mexico) ^
+      const DeepCollectionEquality().hash(unitedArabEmirates) ^
+      const DeepCollectionEquality().hash(unitedKingdom) ^
+      const DeepCollectionEquality().hash(southAfrica) ^
+      const DeepCollectionEquality().hash(switzerland) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsTravel$TravelExtension on PersonalStatsTravel$Travel {
+  PersonalStatsTravel$Travel copyWith(
+      {int? total,
+      int? timeSpent,
+      int? itemsBought,
+      double? huntingSkill,
+      int? attacksWon,
+      int? defendsLost,
+      int? argentina,
+      int? canada,
+      int? caymanIslands,
+      int? china,
+      int? hawaii,
+      int? japan,
+      int? mexico,
+      int? unitedArabEmirates,
+      int? unitedKingdom,
+      int? southAfrica,
+      int? switzerland}) {
+    return PersonalStatsTravel$Travel(
+        total: total ?? this.total,
+        timeSpent: timeSpent ?? this.timeSpent,
+        itemsBought: itemsBought ?? this.itemsBought,
+        huntingSkill: huntingSkill ?? this.huntingSkill,
+        attacksWon: attacksWon ?? this.attacksWon,
+        defendsLost: defendsLost ?? this.defendsLost,
+        argentina: argentina ?? this.argentina,
+        canada: canada ?? this.canada,
+        caymanIslands: caymanIslands ?? this.caymanIslands,
+        china: china ?? this.china,
+        hawaii: hawaii ?? this.hawaii,
+        japan: japan ?? this.japan,
+        mexico: mexico ?? this.mexico,
+        unitedArabEmirates: unitedArabEmirates ?? this.unitedArabEmirates,
+        unitedKingdom: unitedKingdom ?? this.unitedKingdom,
+        southAfrica: southAfrica ?? this.southAfrica,
+        switzerland: switzerland ?? this.switzerland);
+  }
+
+  PersonalStatsTravel$Travel copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? timeSpent,
+      Wrapped<int?>? itemsBought,
+      Wrapped<double?>? huntingSkill,
+      Wrapped<int?>? attacksWon,
+      Wrapped<int?>? defendsLost,
+      Wrapped<int?>? argentina,
+      Wrapped<int?>? canada,
+      Wrapped<int?>? caymanIslands,
+      Wrapped<int?>? china,
+      Wrapped<int?>? hawaii,
+      Wrapped<int?>? japan,
+      Wrapped<int?>? mexico,
+      Wrapped<int?>? unitedArabEmirates,
+      Wrapped<int?>? unitedKingdom,
+      Wrapped<int?>? southAfrica,
+      Wrapped<int?>? switzerland}) {
+    return PersonalStatsTravel$Travel(
+        total: (total != null ? total.value : this.total),
+        timeSpent: (timeSpent != null ? timeSpent.value : this.timeSpent),
+        itemsBought: (itemsBought != null ? itemsBought.value : this.itemsBought),
+        huntingSkill: (huntingSkill != null ? huntingSkill.value : this.huntingSkill),
+        attacksWon: (attacksWon != null ? attacksWon.value : this.attacksWon),
+        defendsLost: (defendsLost != null ? defendsLost.value : this.defendsLost),
+        argentina: (argentina != null ? argentina.value : this.argentina),
+        canada: (canada != null ? canada.value : this.canada),
+        caymanIslands: (caymanIslands != null ? caymanIslands.value : this.caymanIslands),
+        china: (china != null ? china.value : this.china),
+        hawaii: (hawaii != null ? hawaii.value : this.hawaii),
+        japan: (japan != null ? japan.value : this.japan),
+        mexico: (mexico != null ? mexico.value : this.mexico),
+        unitedArabEmirates: (unitedArabEmirates != null ? unitedArabEmirates.value : this.unitedArabEmirates),
+        unitedKingdom: (unitedKingdom != null ? unitedKingdom.value : this.unitedKingdom),
+        southAfrica: (southAfrica != null ? southAfrica.value : this.southAfrica),
+        switzerland: (switzerland != null ? switzerland.value : this.switzerland));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTravelPopular$Travel {
+  const PersonalStatsTravelPopular$Travel({
+    this.total,
+    this.timeSpent,
+  });
+
+  factory PersonalStatsTravelPopular$Travel.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTravelPopular$TravelFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTravelPopular$TravelToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTravelPopular$TravelToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'time_spent')
+  final int? timeSpent;
+  static const fromJsonFactory = _$PersonalStatsTravelPopular$TravelFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTravelPopular$Travel &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.timeSpent, timeSpent) ||
+                const DeepCollectionEquality().equals(other.timeSpent, timeSpent)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(timeSpent) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsTravelPopular$TravelExtension on PersonalStatsTravelPopular$Travel {
+  PersonalStatsTravelPopular$Travel copyWith({int? total, int? timeSpent}) {
+    return PersonalStatsTravelPopular$Travel(total: total ?? this.total, timeSpent: timeSpent ?? this.timeSpent);
+  }
+
+  PersonalStatsTravelPopular$Travel copyWithWrapped({Wrapped<int?>? total, Wrapped<int?>? timeSpent}) {
+    return PersonalStatsTravelPopular$Travel(
+        total: (total != null ? total.value : this.total),
+        timeSpent: (timeSpent != null ? timeSpent.value : this.timeSpent));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItems$Items {
+  const PersonalStatsItems$Items({
+    this.found,
+    this.trashed,
+    this.used,
+    this.virusesCoded,
+  });
+
+  factory PersonalStatsItems$Items.fromJson(Map<String, dynamic> json) => _$PersonalStatsItems$ItemsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItems$ItemsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItems$ItemsToJson(this);
+
+  @JsonKey(name: 'found')
+  final PersonalStatsItems$Items$Found? found;
+  @JsonKey(name: 'trashed')
+  final int? trashed;
+  @JsonKey(name: 'used')
+  final PersonalStatsItems$Items$Used? used;
+  @JsonKey(name: 'viruses_coded')
+  final int? virusesCoded;
+  static const fromJsonFactory = _$PersonalStatsItems$ItemsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItems$Items &&
+            (identical(other.found, found) || const DeepCollectionEquality().equals(other.found, found)) &&
+            (identical(other.trashed, trashed) || const DeepCollectionEquality().equals(other.trashed, trashed)) &&
+            (identical(other.used, used) || const DeepCollectionEquality().equals(other.used, used)) &&
+            (identical(other.virusesCoded, virusesCoded) ||
+                const DeepCollectionEquality().equals(other.virusesCoded, virusesCoded)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(found) ^
+      const DeepCollectionEquality().hash(trashed) ^
+      const DeepCollectionEquality().hash(used) ^
+      const DeepCollectionEquality().hash(virusesCoded) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsItems$ItemsExtension on PersonalStatsItems$Items {
+  PersonalStatsItems$Items copyWith(
+      {PersonalStatsItems$Items$Found? found, int? trashed, PersonalStatsItems$Items$Used? used, int? virusesCoded}) {
+    return PersonalStatsItems$Items(
+        found: found ?? this.found,
+        trashed: trashed ?? this.trashed,
+        used: used ?? this.used,
+        virusesCoded: virusesCoded ?? this.virusesCoded);
+  }
+
+  PersonalStatsItems$Items copyWithWrapped(
+      {Wrapped<PersonalStatsItems$Items$Found?>? found,
+      Wrapped<int?>? trashed,
+      Wrapped<PersonalStatsItems$Items$Used?>? used,
+      Wrapped<int?>? virusesCoded}) {
+    return PersonalStatsItems$Items(
+        found: (found != null ? found.value : this.found),
+        trashed: (trashed != null ? trashed.value : this.trashed),
+        used: (used != null ? used.value : this.used),
+        virusesCoded: (virusesCoded != null ? virusesCoded.value : this.virusesCoded));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItemsPopular$Items {
+  const PersonalStatsItemsPopular$Items({
+    this.found,
+    this.used,
+  });
+
+  factory PersonalStatsItemsPopular$Items.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsItemsPopular$ItemsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItemsPopular$ItemsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItemsPopular$ItemsToJson(this);
+
+  @JsonKey(name: 'found')
+  final PersonalStatsItemsPopular$Items$Found? found;
+  @JsonKey(name: 'used')
+  final PersonalStatsItemsPopular$Items$Used? used;
+  static const fromJsonFactory = _$PersonalStatsItemsPopular$ItemsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItemsPopular$Items &&
+            (identical(other.found, found) || const DeepCollectionEquality().equals(other.found, found)) &&
+            (identical(other.used, used) || const DeepCollectionEquality().equals(other.used, used)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(found) ^ const DeepCollectionEquality().hash(used) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsItemsPopular$ItemsExtension on PersonalStatsItemsPopular$Items {
+  PersonalStatsItemsPopular$Items copyWith(
+      {PersonalStatsItemsPopular$Items$Found? found, PersonalStatsItemsPopular$Items$Used? used}) {
+    return PersonalStatsItemsPopular$Items(found: found ?? this.found, used: used ?? this.used);
+  }
+
+  PersonalStatsItemsPopular$Items copyWithWrapped(
+      {Wrapped<PersonalStatsItemsPopular$Items$Found?>? found, Wrapped<PersonalStatsItemsPopular$Items$Used?>? used}) {
+    return PersonalStatsItemsPopular$Items(
+        found: (found != null ? found.value : this.found), used: (used != null ? used.value : this.used));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsInvestments$Investments {
+  const PersonalStatsInvestments$Investments({
+    this.bank,
+    this.stocks,
+  });
+
+  factory PersonalStatsInvestments$Investments.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsInvestments$InvestmentsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsInvestments$InvestmentsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsInvestments$InvestmentsToJson(this);
+
+  @JsonKey(name: 'bank')
+  final PersonalStatsInvestments$Investments$Bank? bank;
+  @JsonKey(name: 'stocks')
+  final PersonalStatsInvestments$Investments$Stocks? stocks;
+  static const fromJsonFactory = _$PersonalStatsInvestments$InvestmentsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsInvestments$Investments &&
+            (identical(other.bank, bank) || const DeepCollectionEquality().equals(other.bank, bank)) &&
+            (identical(other.stocks, stocks) || const DeepCollectionEquality().equals(other.stocks, stocks)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(bank) ^ const DeepCollectionEquality().hash(stocks) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsInvestments$InvestmentsExtension on PersonalStatsInvestments$Investments {
+  PersonalStatsInvestments$Investments copyWith(
+      {PersonalStatsInvestments$Investments$Bank? bank, PersonalStatsInvestments$Investments$Stocks? stocks}) {
+    return PersonalStatsInvestments$Investments(bank: bank ?? this.bank, stocks: stocks ?? this.stocks);
+  }
+
+  PersonalStatsInvestments$Investments copyWithWrapped(
+      {Wrapped<PersonalStatsInvestments$Investments$Bank?>? bank,
+      Wrapped<PersonalStatsInvestments$Investments$Stocks?>? stocks}) {
+    return PersonalStatsInvestments$Investments(
+        bank: (bank != null ? bank.value : this.bank), stocks: (stocks != null ? stocks.value : this.stocks));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsBounties$Bounties {
+  const PersonalStatsBounties$Bounties({
+    this.placed,
+    this.collected,
+    this.received,
+  });
+
+  factory PersonalStatsBounties$Bounties.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsBounties$BountiesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsBounties$BountiesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsBounties$BountiesToJson(this);
+
+  @JsonKey(name: 'placed')
+  final PersonalStatsBounties$Bounties$Placed? placed;
+  @JsonKey(name: 'collected')
+  final PersonalStatsBounties$Bounties$Collected? collected;
+  @JsonKey(name: 'received')
+  final PersonalStatsBounties$Bounties$Received? received;
+  static const fromJsonFactory = _$PersonalStatsBounties$BountiesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsBounties$Bounties &&
+            (identical(other.placed, placed) || const DeepCollectionEquality().equals(other.placed, placed)) &&
+            (identical(other.collected, collected) ||
+                const DeepCollectionEquality().equals(other.collected, collected)) &&
+            (identical(other.received, received) || const DeepCollectionEquality().equals(other.received, received)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(placed) ^
+      const DeepCollectionEquality().hash(collected) ^
+      const DeepCollectionEquality().hash(received) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsBounties$BountiesExtension on PersonalStatsBounties$Bounties {
+  PersonalStatsBounties$Bounties copyWith(
+      {PersonalStatsBounties$Bounties$Placed? placed,
+      PersonalStatsBounties$Bounties$Collected? collected,
+      PersonalStatsBounties$Bounties$Received? received}) {
+    return PersonalStatsBounties$Bounties(
+        placed: placed ?? this.placed, collected: collected ?? this.collected, received: received ?? this.received);
+  }
+
+  PersonalStatsBounties$Bounties copyWithWrapped(
+      {Wrapped<PersonalStatsBounties$Bounties$Placed?>? placed,
+      Wrapped<PersonalStatsBounties$Bounties$Collected?>? collected,
+      Wrapped<PersonalStatsBounties$Bounties$Received?>? received}) {
+    return PersonalStatsBounties$Bounties(
+        placed: (placed != null ? placed.value : this.placed),
+        collected: (collected != null ? collected.value : this.collected),
+        received: (received != null ? received.value : this.received));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCriminalOffensesPopular$CriminalOffenses {
+  const PersonalStatsCriminalOffensesPopular$CriminalOffenses({
+    this.total,
+    this.version,
+  });
+
+  factory PersonalStatsCriminalOffensesPopular$CriminalOffenses.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCriminalOffensesPopular$CriminalOffensesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCriminalOffensesPopular$CriminalOffensesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesPopular$CriminalOffensesToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'version')
+  final String? version;
+  static const fromJsonFactory = _$PersonalStatsCriminalOffensesPopular$CriminalOffensesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCriminalOffensesPopular$CriminalOffenses &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.version, version) || const DeepCollectionEquality().equals(other.version, version)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^ const DeepCollectionEquality().hash(version) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsCriminalOffensesPopular$CriminalOffensesExtension
+    on PersonalStatsCriminalOffensesPopular$CriminalOffenses {
+  PersonalStatsCriminalOffensesPopular$CriminalOffenses copyWith({int? total, String? version}) {
+    return PersonalStatsCriminalOffensesPopular$CriminalOffenses(
+        total: total ?? this.total, version: version ?? this.version);
+  }
+
+  PersonalStatsCriminalOffensesPopular$CriminalOffenses copyWithWrapped(
+      {Wrapped<int?>? total, Wrapped<String?>? version}) {
+    return PersonalStatsCriminalOffensesPopular$CriminalOffenses(
+        total: (total != null ? total.value : this.total), version: (version != null ? version.value : this.version));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCommunication$Communication {
+  const PersonalStatsCommunication$Communication({
+    this.mailsSent,
+    this.classifiedAds,
+    this.personals,
+  });
+
+  factory PersonalStatsCommunication$Communication.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCommunication$CommunicationFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCommunication$CommunicationToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCommunication$CommunicationToJson(this);
+
+  @JsonKey(name: 'mails_sent')
+  final PersonalStatsCommunication$Communication$MailsSent? mailsSent;
+  @JsonKey(name: 'classified_ads')
+  final int? classifiedAds;
+  @JsonKey(name: 'personals')
+  final int? personals;
+  static const fromJsonFactory = _$PersonalStatsCommunication$CommunicationFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCommunication$Communication &&
+            (identical(other.mailsSent, mailsSent) ||
+                const DeepCollectionEquality().equals(other.mailsSent, mailsSent)) &&
+            (identical(other.classifiedAds, classifiedAds) ||
+                const DeepCollectionEquality().equals(other.classifiedAds, classifiedAds)) &&
+            (identical(other.personals, personals) ||
+                const DeepCollectionEquality().equals(other.personals, personals)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(mailsSent) ^
+      const DeepCollectionEquality().hash(classifiedAds) ^
+      const DeepCollectionEquality().hash(personals) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsCommunication$CommunicationExtension on PersonalStatsCommunication$Communication {
+  PersonalStatsCommunication$Communication copyWith(
+      {PersonalStatsCommunication$Communication$MailsSent? mailsSent, int? classifiedAds, int? personals}) {
+    return PersonalStatsCommunication$Communication(
+        mailsSent: mailsSent ?? this.mailsSent,
+        classifiedAds: classifiedAds ?? this.classifiedAds,
+        personals: personals ?? this.personals);
+  }
+
+  PersonalStatsCommunication$Communication copyWithWrapped(
+      {Wrapped<PersonalStatsCommunication$Communication$MailsSent?>? mailsSent,
+      Wrapped<int?>? classifiedAds,
+      Wrapped<int?>? personals}) {
+    return PersonalStatsCommunication$Communication(
+        mailsSent: (mailsSent != null ? mailsSent.value : this.mailsSent),
+        classifiedAds: (classifiedAds != null ? classifiedAds.value : this.classifiedAds),
+        personals: (personals != null ? personals.value : this.personals));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsFinishingHits$FinishingHits {
+  const PersonalStatsFinishingHits$FinishingHits({
+    this.heavyArtillery,
+    this.machineGuns,
+    this.rifles,
+    this.subMachineGuns,
+    this.shotguns,
+    this.pistols,
+    this.temporary,
+    this.piercing,
+    this.slashing,
+    this.clubbing,
+    this.mechanical,
+    this.handToHand,
+  });
+
+  factory PersonalStatsFinishingHits$FinishingHits.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsFinishingHits$FinishingHitsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsFinishingHits$FinishingHitsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsFinishingHits$FinishingHitsToJson(this);
+
+  @JsonKey(name: 'heavy_artillery')
+  final int? heavyArtillery;
+  @JsonKey(name: 'machine_guns')
+  final int? machineGuns;
+  @JsonKey(name: 'rifles')
+  final int? rifles;
+  @JsonKey(name: 'sub_machine_guns')
+  final int? subMachineGuns;
+  @JsonKey(name: 'shotguns')
+  final int? shotguns;
+  @JsonKey(name: 'pistols')
+  final int? pistols;
+  @JsonKey(name: 'temporary')
+  final int? temporary;
+  @JsonKey(name: 'piercing')
+  final int? piercing;
+  @JsonKey(name: 'slashing')
+  final int? slashing;
+  @JsonKey(name: 'clubbing')
+  final int? clubbing;
+  @JsonKey(name: 'mechanical')
+  final int? mechanical;
+  @JsonKey(name: 'hand_to_hand')
+  final int? handToHand;
+  static const fromJsonFactory = _$PersonalStatsFinishingHits$FinishingHitsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsFinishingHits$FinishingHits &&
+            (identical(other.heavyArtillery, heavyArtillery) ||
+                const DeepCollectionEquality().equals(other.heavyArtillery, heavyArtillery)) &&
+            (identical(other.machineGuns, machineGuns) ||
+                const DeepCollectionEquality().equals(other.machineGuns, machineGuns)) &&
+            (identical(other.rifles, rifles) || const DeepCollectionEquality().equals(other.rifles, rifles)) &&
+            (identical(other.subMachineGuns, subMachineGuns) ||
+                const DeepCollectionEquality().equals(other.subMachineGuns, subMachineGuns)) &&
+            (identical(other.shotguns, shotguns) || const DeepCollectionEquality().equals(other.shotguns, shotguns)) &&
+            (identical(other.pistols, pistols) || const DeepCollectionEquality().equals(other.pistols, pistols)) &&
+            (identical(other.temporary, temporary) ||
+                const DeepCollectionEquality().equals(other.temporary, temporary)) &&
+            (identical(other.piercing, piercing) || const DeepCollectionEquality().equals(other.piercing, piercing)) &&
+            (identical(other.slashing, slashing) || const DeepCollectionEquality().equals(other.slashing, slashing)) &&
+            (identical(other.clubbing, clubbing) || const DeepCollectionEquality().equals(other.clubbing, clubbing)) &&
+            (identical(other.mechanical, mechanical) ||
+                const DeepCollectionEquality().equals(other.mechanical, mechanical)) &&
+            (identical(other.handToHand, handToHand) ||
+                const DeepCollectionEquality().equals(other.handToHand, handToHand)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(heavyArtillery) ^
+      const DeepCollectionEquality().hash(machineGuns) ^
+      const DeepCollectionEquality().hash(rifles) ^
+      const DeepCollectionEquality().hash(subMachineGuns) ^
+      const DeepCollectionEquality().hash(shotguns) ^
+      const DeepCollectionEquality().hash(pistols) ^
+      const DeepCollectionEquality().hash(temporary) ^
+      const DeepCollectionEquality().hash(piercing) ^
+      const DeepCollectionEquality().hash(slashing) ^
+      const DeepCollectionEquality().hash(clubbing) ^
+      const DeepCollectionEquality().hash(mechanical) ^
+      const DeepCollectionEquality().hash(handToHand) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsFinishingHits$FinishingHitsExtension on PersonalStatsFinishingHits$FinishingHits {
+  PersonalStatsFinishingHits$FinishingHits copyWith(
+      {int? heavyArtillery,
+      int? machineGuns,
+      int? rifles,
+      int? subMachineGuns,
+      int? shotguns,
+      int? pistols,
+      int? temporary,
+      int? piercing,
+      int? slashing,
+      int? clubbing,
+      int? mechanical,
+      int? handToHand}) {
+    return PersonalStatsFinishingHits$FinishingHits(
+        heavyArtillery: heavyArtillery ?? this.heavyArtillery,
+        machineGuns: machineGuns ?? this.machineGuns,
+        rifles: rifles ?? this.rifles,
+        subMachineGuns: subMachineGuns ?? this.subMachineGuns,
+        shotguns: shotguns ?? this.shotguns,
+        pistols: pistols ?? this.pistols,
+        temporary: temporary ?? this.temporary,
+        piercing: piercing ?? this.piercing,
+        slashing: slashing ?? this.slashing,
+        clubbing: clubbing ?? this.clubbing,
+        mechanical: mechanical ?? this.mechanical,
+        handToHand: handToHand ?? this.handToHand);
+  }
+
+  PersonalStatsFinishingHits$FinishingHits copyWithWrapped(
+      {Wrapped<int?>? heavyArtillery,
+      Wrapped<int?>? machineGuns,
+      Wrapped<int?>? rifles,
+      Wrapped<int?>? subMachineGuns,
+      Wrapped<int?>? shotguns,
+      Wrapped<int?>? pistols,
+      Wrapped<int?>? temporary,
+      Wrapped<int?>? piercing,
+      Wrapped<int?>? slashing,
+      Wrapped<int?>? clubbing,
+      Wrapped<int?>? mechanical,
+      Wrapped<int?>? handToHand}) {
+    return PersonalStatsFinishingHits$FinishingHits(
+        heavyArtillery: (heavyArtillery != null ? heavyArtillery.value : this.heavyArtillery),
+        machineGuns: (machineGuns != null ? machineGuns.value : this.machineGuns),
+        rifles: (rifles != null ? rifles.value : this.rifles),
+        subMachineGuns: (subMachineGuns != null ? subMachineGuns.value : this.subMachineGuns),
+        shotguns: (shotguns != null ? shotguns.value : this.shotguns),
+        pistols: (pistols != null ? pistols.value : this.pistols),
+        temporary: (temporary != null ? temporary.value : this.temporary),
+        piercing: (piercing != null ? piercing.value : this.piercing),
+        slashing: (slashing != null ? slashing.value : this.slashing),
+        clubbing: (clubbing != null ? clubbing.value : this.clubbing),
+        mechanical: (mechanical != null ? mechanical.value : this.mechanical),
+        handToHand: (handToHand != null ? handToHand.value : this.handToHand));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsHospital$Hospital {
+  const PersonalStatsHospital$Hospital({
+    this.timesHospitalized,
+    this.medicalItemsUsed,
+    this.bloodWithdrawn,
+    this.reviving,
+  });
+
+  factory PersonalStatsHospital$Hospital.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsHospital$HospitalFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsHospital$HospitalToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsHospital$HospitalToJson(this);
+
+  @JsonKey(name: 'times_hospitalized')
+  final int? timesHospitalized;
+  @JsonKey(name: 'medical_items_used')
+  final int? medicalItemsUsed;
+  @JsonKey(name: 'blood_withdrawn')
+  final int? bloodWithdrawn;
+  @JsonKey(name: 'reviving')
+  final PersonalStatsHospital$Hospital$Reviving? reviving;
+  static const fromJsonFactory = _$PersonalStatsHospital$HospitalFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsHospital$Hospital &&
+            (identical(other.timesHospitalized, timesHospitalized) ||
+                const DeepCollectionEquality().equals(other.timesHospitalized, timesHospitalized)) &&
+            (identical(other.medicalItemsUsed, medicalItemsUsed) ||
+                const DeepCollectionEquality().equals(other.medicalItemsUsed, medicalItemsUsed)) &&
+            (identical(other.bloodWithdrawn, bloodWithdrawn) ||
+                const DeepCollectionEquality().equals(other.bloodWithdrawn, bloodWithdrawn)) &&
+            (identical(other.reviving, reviving) || const DeepCollectionEquality().equals(other.reviving, reviving)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(timesHospitalized) ^
+      const DeepCollectionEquality().hash(medicalItemsUsed) ^
+      const DeepCollectionEquality().hash(bloodWithdrawn) ^
+      const DeepCollectionEquality().hash(reviving) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsHospital$HospitalExtension on PersonalStatsHospital$Hospital {
+  PersonalStatsHospital$Hospital copyWith(
+      {int? timesHospitalized,
+      int? medicalItemsUsed,
+      int? bloodWithdrawn,
+      PersonalStatsHospital$Hospital$Reviving? reviving}) {
+    return PersonalStatsHospital$Hospital(
+        timesHospitalized: timesHospitalized ?? this.timesHospitalized,
+        medicalItemsUsed: medicalItemsUsed ?? this.medicalItemsUsed,
+        bloodWithdrawn: bloodWithdrawn ?? this.bloodWithdrawn,
+        reviving: reviving ?? this.reviving);
+  }
+
+  PersonalStatsHospital$Hospital copyWithWrapped(
+      {Wrapped<int?>? timesHospitalized,
+      Wrapped<int?>? medicalItemsUsed,
+      Wrapped<int?>? bloodWithdrawn,
+      Wrapped<PersonalStatsHospital$Hospital$Reviving?>? reviving}) {
+    return PersonalStatsHospital$Hospital(
+        timesHospitalized: (timesHospitalized != null ? timesHospitalized.value : this.timesHospitalized),
+        medicalItemsUsed: (medicalItemsUsed != null ? medicalItemsUsed.value : this.medicalItemsUsed),
+        bloodWithdrawn: (bloodWithdrawn != null ? bloodWithdrawn.value : this.bloodWithdrawn),
+        reviving: (reviving != null ? reviving.value : this.reviving));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsHospitalPopular$Hospital {
+  const PersonalStatsHospitalPopular$Hospital({
+    this.medicalItemsUsed,
+    this.reviving,
+  });
+
+  factory PersonalStatsHospitalPopular$Hospital.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsHospitalPopular$HospitalFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsHospitalPopular$HospitalToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsHospitalPopular$HospitalToJson(this);
+
+  @JsonKey(name: 'medical_items_used')
+  final int? medicalItemsUsed;
+  @JsonKey(name: 'reviving')
+  final PersonalStatsHospitalPopular$Hospital$Reviving? reviving;
+  static const fromJsonFactory = _$PersonalStatsHospitalPopular$HospitalFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsHospitalPopular$Hospital &&
+            (identical(other.medicalItemsUsed, medicalItemsUsed) ||
+                const DeepCollectionEquality().equals(other.medicalItemsUsed, medicalItemsUsed)) &&
+            (identical(other.reviving, reviving) || const DeepCollectionEquality().equals(other.reviving, reviving)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(medicalItemsUsed) ^
+      const DeepCollectionEquality().hash(reviving) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsHospitalPopular$HospitalExtension on PersonalStatsHospitalPopular$Hospital {
+  PersonalStatsHospitalPopular$Hospital copyWith(
+      {int? medicalItemsUsed, PersonalStatsHospitalPopular$Hospital$Reviving? reviving}) {
+    return PersonalStatsHospitalPopular$Hospital(
+        medicalItemsUsed: medicalItemsUsed ?? this.medicalItemsUsed, reviving: reviving ?? this.reviving);
+  }
+
+  PersonalStatsHospitalPopular$Hospital copyWithWrapped(
+      {Wrapped<int?>? medicalItemsUsed, Wrapped<PersonalStatsHospitalPopular$Hospital$Reviving?>? reviving}) {
+    return PersonalStatsHospitalPopular$Hospital(
+        medicalItemsUsed: (medicalItemsUsed != null ? medicalItemsUsed.value : this.medicalItemsUsed),
+        reviving: (reviving != null ? reviving.value : this.reviving));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJail$Jail {
+  const PersonalStatsJail$Jail({
+    this.timesJailed,
+    this.busts,
+    this.bails,
+  });
+
+  factory PersonalStatsJail$Jail.fromJson(Map<String, dynamic> json) => _$PersonalStatsJail$JailFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJail$JailToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJail$JailToJson(this);
+
+  @JsonKey(name: 'times_jailed')
+  final int? timesJailed;
+  @JsonKey(name: 'busts')
+  final PersonalStatsJail$Jail$Busts? busts;
+  @JsonKey(name: 'bails')
+  final PersonalStatsJail$Jail$Bails? bails;
+  static const fromJsonFactory = _$PersonalStatsJail$JailFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJail$Jail &&
+            (identical(other.timesJailed, timesJailed) ||
+                const DeepCollectionEquality().equals(other.timesJailed, timesJailed)) &&
+            (identical(other.busts, busts) || const DeepCollectionEquality().equals(other.busts, busts)) &&
+            (identical(other.bails, bails) || const DeepCollectionEquality().equals(other.bails, bails)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(timesJailed) ^
+      const DeepCollectionEquality().hash(busts) ^
+      const DeepCollectionEquality().hash(bails) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsJail$JailExtension on PersonalStatsJail$Jail {
+  PersonalStatsJail$Jail copyWith(
+      {int? timesJailed, PersonalStatsJail$Jail$Busts? busts, PersonalStatsJail$Jail$Bails? bails}) {
+    return PersonalStatsJail$Jail(
+        timesJailed: timesJailed ?? this.timesJailed, busts: busts ?? this.busts, bails: bails ?? this.bails);
+  }
+
+  PersonalStatsJail$Jail copyWithWrapped(
+      {Wrapped<int?>? timesJailed,
+      Wrapped<PersonalStatsJail$Jail$Busts?>? busts,
+      Wrapped<PersonalStatsJail$Jail$Bails?>? bails}) {
+    return PersonalStatsJail$Jail(
+        timesJailed: (timesJailed != null ? timesJailed.value : this.timesJailed),
+        busts: (busts != null ? busts.value : this.busts),
+        bails: (bails != null ? bails.value : this.bails));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTrading$Trading {
+  const PersonalStatsTrading$Trading({
+    this.items,
+    this.trades,
+    this.points,
+    this.bazaar,
+  });
+
+  factory PersonalStatsTrading$Trading.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTrading$TradingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTrading$TradingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTrading$TradingToJson(this);
+
+  @JsonKey(name: 'items')
+  final PersonalStatsTrading$Trading$Items? items;
+  @JsonKey(name: 'trades')
+  final int? trades;
+  @JsonKey(name: 'points')
+  final PersonalStatsTrading$Trading$Points? points;
+  @JsonKey(name: 'bazaar')
+  final PersonalStatsTrading$Trading$Bazaar? bazaar;
+  static const fromJsonFactory = _$PersonalStatsTrading$TradingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTrading$Trading &&
+            (identical(other.items, items) || const DeepCollectionEquality().equals(other.items, items)) &&
+            (identical(other.trades, trades) || const DeepCollectionEquality().equals(other.trades, trades)) &&
+            (identical(other.points, points) || const DeepCollectionEquality().equals(other.points, points)) &&
+            (identical(other.bazaar, bazaar) || const DeepCollectionEquality().equals(other.bazaar, bazaar)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(items) ^
+      const DeepCollectionEquality().hash(trades) ^
+      const DeepCollectionEquality().hash(points) ^
+      const DeepCollectionEquality().hash(bazaar) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsTrading$TradingExtension on PersonalStatsTrading$Trading {
+  PersonalStatsTrading$Trading copyWith(
+      {PersonalStatsTrading$Trading$Items? items,
+      int? trades,
+      PersonalStatsTrading$Trading$Points? points,
+      PersonalStatsTrading$Trading$Bazaar? bazaar}) {
+    return PersonalStatsTrading$Trading(
+        items: items ?? this.items,
+        trades: trades ?? this.trades,
+        points: points ?? this.points,
+        bazaar: bazaar ?? this.bazaar);
+  }
+
+  PersonalStatsTrading$Trading copyWithWrapped(
+      {Wrapped<PersonalStatsTrading$Trading$Items?>? items,
+      Wrapped<int?>? trades,
+      Wrapped<PersonalStatsTrading$Trading$Points?>? points,
+      Wrapped<PersonalStatsTrading$Trading$Bazaar?>? bazaar}) {
+    return PersonalStatsTrading$Trading(
+        items: (items != null ? items.value : this.items),
+        trades: (trades != null ? trades.value : this.trades),
+        points: (points != null ? points.value : this.points),
+        bazaar: (bazaar != null ? bazaar.value : this.bazaar));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJobsPublic$Jobs {
+  const PersonalStatsJobsPublic$Jobs({
+    this.jobPointsUsed,
+    this.trainsReceived,
+  });
+
+  factory PersonalStatsJobsPublic$Jobs.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsJobsPublic$JobsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJobsPublic$JobsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJobsPublic$JobsToJson(this);
+
+  @JsonKey(name: 'job_points_used')
+  final int? jobPointsUsed;
+  @JsonKey(name: 'trains_received')
+  final int? trainsReceived;
+  static const fromJsonFactory = _$PersonalStatsJobsPublic$JobsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJobsPublic$Jobs &&
+            (identical(other.jobPointsUsed, jobPointsUsed) ||
+                const DeepCollectionEquality().equals(other.jobPointsUsed, jobPointsUsed)) &&
+            (identical(other.trainsReceived, trainsReceived) ||
+                const DeepCollectionEquality().equals(other.trainsReceived, trainsReceived)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(jobPointsUsed) ^
+      const DeepCollectionEquality().hash(trainsReceived) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsJobsPublic$JobsExtension on PersonalStatsJobsPublic$Jobs {
+  PersonalStatsJobsPublic$Jobs copyWith({int? jobPointsUsed, int? trainsReceived}) {
+    return PersonalStatsJobsPublic$Jobs(
+        jobPointsUsed: jobPointsUsed ?? this.jobPointsUsed, trainsReceived: trainsReceived ?? this.trainsReceived);
+  }
+
+  PersonalStatsJobsPublic$Jobs copyWithWrapped({Wrapped<int?>? jobPointsUsed, Wrapped<int?>? trainsReceived}) {
+    return PersonalStatsJobsPublic$Jobs(
+        jobPointsUsed: (jobPointsUsed != null ? jobPointsUsed.value : this.jobPointsUsed),
+        trainsReceived: (trainsReceived != null ? trainsReceived.value : this.trainsReceived));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJobsExtended$Jobs {
+  const PersonalStatsJobsExtended$Jobs({
+    this.jobPointsUsed,
+    this.trainsReceived,
+    this.stats,
+  });
+
+  factory PersonalStatsJobsExtended$Jobs.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsJobsExtended$JobsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJobsExtended$JobsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJobsExtended$JobsToJson(this);
+
+  @JsonKey(name: 'job_points_used')
+  final int? jobPointsUsed;
+  @JsonKey(name: 'trains_received')
+  final int? trainsReceived;
+  @JsonKey(name: 'stats')
+  final PersonalStatsJobsExtended$Jobs$Stats? stats;
+  static const fromJsonFactory = _$PersonalStatsJobsExtended$JobsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJobsExtended$Jobs &&
+            (identical(other.jobPointsUsed, jobPointsUsed) ||
+                const DeepCollectionEquality().equals(other.jobPointsUsed, jobPointsUsed)) &&
+            (identical(other.trainsReceived, trainsReceived) ||
+                const DeepCollectionEquality().equals(other.trainsReceived, trainsReceived)) &&
+            (identical(other.stats, stats) || const DeepCollectionEquality().equals(other.stats, stats)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(jobPointsUsed) ^
+      const DeepCollectionEquality().hash(trainsReceived) ^
+      const DeepCollectionEquality().hash(stats) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsJobsExtended$JobsExtension on PersonalStatsJobsExtended$Jobs {
+  PersonalStatsJobsExtended$Jobs copyWith(
+      {int? jobPointsUsed, int? trainsReceived, PersonalStatsJobsExtended$Jobs$Stats? stats}) {
+    return PersonalStatsJobsExtended$Jobs(
+        jobPointsUsed: jobPointsUsed ?? this.jobPointsUsed,
+        trainsReceived: trainsReceived ?? this.trainsReceived,
+        stats: stats ?? this.stats);
+  }
+
+  PersonalStatsJobsExtended$Jobs copyWithWrapped(
+      {Wrapped<int?>? jobPointsUsed,
+      Wrapped<int?>? trainsReceived,
+      Wrapped<PersonalStatsJobsExtended$Jobs$Stats?>? stats}) {
+    return PersonalStatsJobsExtended$Jobs(
+        jobPointsUsed: (jobPointsUsed != null ? jobPointsUsed.value : this.jobPointsUsed),
+        trainsReceived: (trainsReceived != null ? trainsReceived.value : this.trainsReceived),
+        stats: (stats != null ? stats.value : this.stats));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsBattleStats$BattleStats {
+  const PersonalStatsBattleStats$BattleStats({
+    this.strength,
+    this.defense,
+    this.speed,
+    this.dexterity,
+    this.total,
+  });
+
+  factory PersonalStatsBattleStats$BattleStats.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsBattleStats$BattleStatsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsBattleStats$BattleStatsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsBattleStats$BattleStatsToJson(this);
+
+  @JsonKey(name: 'strength')
+  final int? strength;
+  @JsonKey(name: 'defense')
+  final int? defense;
+  @JsonKey(name: 'speed')
+  final int? speed;
+  @JsonKey(name: 'dexterity')
+  final int? dexterity;
+  @JsonKey(name: 'total')
+  final int? total;
+  static const fromJsonFactory = _$PersonalStatsBattleStats$BattleStatsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsBattleStats$BattleStats &&
+            (identical(other.strength, strength) || const DeepCollectionEquality().equals(other.strength, strength)) &&
+            (identical(other.defense, defense) || const DeepCollectionEquality().equals(other.defense, defense)) &&
+            (identical(other.speed, speed) || const DeepCollectionEquality().equals(other.speed, speed)) &&
+            (identical(other.dexterity, dexterity) ||
+                const DeepCollectionEquality().equals(other.dexterity, dexterity)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(strength) ^
+      const DeepCollectionEquality().hash(defense) ^
+      const DeepCollectionEquality().hash(speed) ^
+      const DeepCollectionEquality().hash(dexterity) ^
+      const DeepCollectionEquality().hash(total) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsBattleStats$BattleStatsExtension on PersonalStatsBattleStats$BattleStats {
+  PersonalStatsBattleStats$BattleStats copyWith({int? strength, int? defense, int? speed, int? dexterity, int? total}) {
+    return PersonalStatsBattleStats$BattleStats(
+        strength: strength ?? this.strength,
+        defense: defense ?? this.defense,
+        speed: speed ?? this.speed,
+        dexterity: dexterity ?? this.dexterity,
+        total: total ?? this.total);
+  }
+
+  PersonalStatsBattleStats$BattleStats copyWithWrapped(
+      {Wrapped<int?>? strength,
+      Wrapped<int?>? defense,
+      Wrapped<int?>? speed,
+      Wrapped<int?>? dexterity,
+      Wrapped<int?>? total}) {
+    return PersonalStatsBattleStats$BattleStats(
+        strength: (strength != null ? strength.value : this.strength),
+        defense: (defense != null ? defense.value : this.defense),
+        speed: (speed != null ? speed.value : this.speed),
+        dexterity: (dexterity != null ? dexterity.value : this.dexterity),
+        total: (total != null ? total.value : this.total));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking {
+  const PersonalStatsAttackingPublic$Attacking({
+    this.attacks,
+    this.defends,
+    this.elo,
+    this.unarmoredWins,
+    this.highestLevelBeaten,
+    this.escapes,
+    this.killstreak,
+    this.hits,
+    this.damage,
+    this.networth,
+    this.ammunition,
+    this.faction,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$AttackingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$AttackingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$AttackingToJson(this);
+
+  @JsonKey(name: 'attacks')
+  final PersonalStatsAttackingPublic$Attacking$Attacks? attacks;
+  @JsonKey(name: 'defends')
+  final PersonalStatsAttackingPublic$Attacking$Defends? defends;
+  @JsonKey(name: 'elo')
+  final int? elo;
+  @JsonKey(name: 'unarmored_wins')
+  final int? unarmoredWins;
+  @JsonKey(name: 'highest_level_beaten')
+  final int? highestLevelBeaten;
+  @JsonKey(name: 'escapes')
+  final PersonalStatsAttackingPublic$Attacking$Escapes? escapes;
+  @JsonKey(name: 'killstreak')
+  final PersonalStatsAttackingPublic$Attacking$Killstreak? killstreak;
+  @JsonKey(name: 'hits')
+  final PersonalStatsAttackingPublic$Attacking$Hits? hits;
+  @JsonKey(name: 'damage')
+  final PersonalStatsAttackingPublic$Attacking$Damage? damage;
+  @JsonKey(name: 'networth')
+  final PersonalStatsAttackingPublic$Attacking$Networth? networth;
+  @JsonKey(name: 'ammunition')
+  final PersonalStatsAttackingPublic$Attacking$Ammunition? ammunition;
+  @JsonKey(name: 'faction')
+  final PersonalStatsAttackingPublic$Attacking$Faction? faction;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$AttackingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking &&
+            (identical(other.attacks, attacks) || const DeepCollectionEquality().equals(other.attacks, attacks)) &&
+            (identical(other.defends, defends) || const DeepCollectionEquality().equals(other.defends, defends)) &&
+            (identical(other.elo, elo) || const DeepCollectionEquality().equals(other.elo, elo)) &&
+            (identical(other.unarmoredWins, unarmoredWins) ||
+                const DeepCollectionEquality().equals(other.unarmoredWins, unarmoredWins)) &&
+            (identical(other.highestLevelBeaten, highestLevelBeaten) ||
+                const DeepCollectionEquality().equals(other.highestLevelBeaten, highestLevelBeaten)) &&
+            (identical(other.escapes, escapes) || const DeepCollectionEquality().equals(other.escapes, escapes)) &&
+            (identical(other.killstreak, killstreak) ||
+                const DeepCollectionEquality().equals(other.killstreak, killstreak)) &&
+            (identical(other.hits, hits) || const DeepCollectionEquality().equals(other.hits, hits)) &&
+            (identical(other.damage, damage) || const DeepCollectionEquality().equals(other.damage, damage)) &&
+            (identical(other.networth, networth) || const DeepCollectionEquality().equals(other.networth, networth)) &&
+            (identical(other.ammunition, ammunition) ||
+                const DeepCollectionEquality().equals(other.ammunition, ammunition)) &&
+            (identical(other.faction, faction) || const DeepCollectionEquality().equals(other.faction, faction)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(attacks) ^
+      const DeepCollectionEquality().hash(defends) ^
+      const DeepCollectionEquality().hash(elo) ^
+      const DeepCollectionEquality().hash(unarmoredWins) ^
+      const DeepCollectionEquality().hash(highestLevelBeaten) ^
+      const DeepCollectionEquality().hash(escapes) ^
+      const DeepCollectionEquality().hash(killstreak) ^
+      const DeepCollectionEquality().hash(hits) ^
+      const DeepCollectionEquality().hash(damage) ^
+      const DeepCollectionEquality().hash(networth) ^
+      const DeepCollectionEquality().hash(ammunition) ^
+      const DeepCollectionEquality().hash(faction) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$AttackingExtension on PersonalStatsAttackingPublic$Attacking {
+  PersonalStatsAttackingPublic$Attacking copyWith(
+      {PersonalStatsAttackingPublic$Attacking$Attacks? attacks,
+      PersonalStatsAttackingPublic$Attacking$Defends? defends,
+      int? elo,
+      int? unarmoredWins,
+      int? highestLevelBeaten,
+      PersonalStatsAttackingPublic$Attacking$Escapes? escapes,
+      PersonalStatsAttackingPublic$Attacking$Killstreak? killstreak,
+      PersonalStatsAttackingPublic$Attacking$Hits? hits,
+      PersonalStatsAttackingPublic$Attacking$Damage? damage,
+      PersonalStatsAttackingPublic$Attacking$Networth? networth,
+      PersonalStatsAttackingPublic$Attacking$Ammunition? ammunition,
+      PersonalStatsAttackingPublic$Attacking$Faction? faction}) {
+    return PersonalStatsAttackingPublic$Attacking(
+        attacks: attacks ?? this.attacks,
+        defends: defends ?? this.defends,
+        elo: elo ?? this.elo,
+        unarmoredWins: unarmoredWins ?? this.unarmoredWins,
+        highestLevelBeaten: highestLevelBeaten ?? this.highestLevelBeaten,
+        escapes: escapes ?? this.escapes,
+        killstreak: killstreak ?? this.killstreak,
+        hits: hits ?? this.hits,
+        damage: damage ?? this.damage,
+        networth: networth ?? this.networth,
+        ammunition: ammunition ?? this.ammunition,
+        faction: faction ?? this.faction);
+  }
+
+  PersonalStatsAttackingPublic$Attacking copyWithWrapped(
+      {Wrapped<PersonalStatsAttackingPublic$Attacking$Attacks?>? attacks,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Defends?>? defends,
+      Wrapped<int?>? elo,
+      Wrapped<int?>? unarmoredWins,
+      Wrapped<int?>? highestLevelBeaten,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Escapes?>? escapes,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Killstreak?>? killstreak,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Hits?>? hits,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Damage?>? damage,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Networth?>? networth,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Ammunition?>? ammunition,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Faction?>? faction}) {
+    return PersonalStatsAttackingPublic$Attacking(
+        attacks: (attacks != null ? attacks.value : this.attacks),
+        defends: (defends != null ? defends.value : this.defends),
+        elo: (elo != null ? elo.value : this.elo),
+        unarmoredWins: (unarmoredWins != null ? unarmoredWins.value : this.unarmoredWins),
+        highestLevelBeaten: (highestLevelBeaten != null ? highestLevelBeaten.value : this.highestLevelBeaten),
+        escapes: (escapes != null ? escapes.value : this.escapes),
+        killstreak: (killstreak != null ? killstreak.value : this.killstreak),
+        hits: (hits != null ? hits.value : this.hits),
+        damage: (damage != null ? damage.value : this.damage),
+        networth: (networth != null ? networth.value : this.networth),
+        ammunition: (ammunition != null ? ammunition.value : this.ammunition),
+        faction: (faction != null ? faction.value : this.faction));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking {
+  const PersonalStatsAttackingExtended$Attacking({
+    this.attacks,
+    this.defends,
+    this.elo,
+    this.unarmoredWins,
+    this.highestLevelBeaten,
+    this.escapes,
+    this.killstreak,
+    this.hits,
+    this.damage,
+    this.networth,
+    this.ammunition,
+    this.faction,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$AttackingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$AttackingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$AttackingToJson(this);
+
+  @JsonKey(name: 'attacks')
+  final PersonalStatsAttackingExtended$Attacking$Attacks? attacks;
+  @JsonKey(name: 'defends')
+  final PersonalStatsAttackingExtended$Attacking$Defends? defends;
+  @JsonKey(name: 'elo')
+  final int? elo;
+  @JsonKey(name: 'unarmored_wins')
+  final int? unarmoredWins;
+  @JsonKey(name: 'highest_level_beaten')
+  final int? highestLevelBeaten;
+  @JsonKey(name: 'escapes')
+  final PersonalStatsAttackingExtended$Attacking$Escapes? escapes;
+  @JsonKey(name: 'killstreak')
+  final PersonalStatsAttackingExtended$Attacking$Killstreak? killstreak;
+  @JsonKey(name: 'hits')
+  final PersonalStatsAttackingExtended$Attacking$Hits? hits;
+  @JsonKey(name: 'damage')
+  final PersonalStatsAttackingExtended$Attacking$Damage? damage;
+  @JsonKey(name: 'networth')
+  final PersonalStatsAttackingExtended$Attacking$Networth? networth;
+  @JsonKey(name: 'ammunition')
+  final PersonalStatsAttackingExtended$Attacking$Ammunition? ammunition;
+  @JsonKey(name: 'faction')
+  final PersonalStatsAttackingExtended$Attacking$Faction? faction;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$AttackingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking &&
+            (identical(other.attacks, attacks) || const DeepCollectionEquality().equals(other.attacks, attacks)) &&
+            (identical(other.defends, defends) || const DeepCollectionEquality().equals(other.defends, defends)) &&
+            (identical(other.elo, elo) || const DeepCollectionEquality().equals(other.elo, elo)) &&
+            (identical(other.unarmoredWins, unarmoredWins) ||
+                const DeepCollectionEquality().equals(other.unarmoredWins, unarmoredWins)) &&
+            (identical(other.highestLevelBeaten, highestLevelBeaten) ||
+                const DeepCollectionEquality().equals(other.highestLevelBeaten, highestLevelBeaten)) &&
+            (identical(other.escapes, escapes) || const DeepCollectionEquality().equals(other.escapes, escapes)) &&
+            (identical(other.killstreak, killstreak) ||
+                const DeepCollectionEquality().equals(other.killstreak, killstreak)) &&
+            (identical(other.hits, hits) || const DeepCollectionEquality().equals(other.hits, hits)) &&
+            (identical(other.damage, damage) || const DeepCollectionEquality().equals(other.damage, damage)) &&
+            (identical(other.networth, networth) || const DeepCollectionEquality().equals(other.networth, networth)) &&
+            (identical(other.ammunition, ammunition) ||
+                const DeepCollectionEquality().equals(other.ammunition, ammunition)) &&
+            (identical(other.faction, faction) || const DeepCollectionEquality().equals(other.faction, faction)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(attacks) ^
+      const DeepCollectionEquality().hash(defends) ^
+      const DeepCollectionEquality().hash(elo) ^
+      const DeepCollectionEquality().hash(unarmoredWins) ^
+      const DeepCollectionEquality().hash(highestLevelBeaten) ^
+      const DeepCollectionEquality().hash(escapes) ^
+      const DeepCollectionEquality().hash(killstreak) ^
+      const DeepCollectionEquality().hash(hits) ^
+      const DeepCollectionEquality().hash(damage) ^
+      const DeepCollectionEquality().hash(networth) ^
+      const DeepCollectionEquality().hash(ammunition) ^
+      const DeepCollectionEquality().hash(faction) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$AttackingExtension on PersonalStatsAttackingExtended$Attacking {
+  PersonalStatsAttackingExtended$Attacking copyWith(
+      {PersonalStatsAttackingExtended$Attacking$Attacks? attacks,
+      PersonalStatsAttackingExtended$Attacking$Defends? defends,
+      int? elo,
+      int? unarmoredWins,
+      int? highestLevelBeaten,
+      PersonalStatsAttackingExtended$Attacking$Escapes? escapes,
+      PersonalStatsAttackingExtended$Attacking$Killstreak? killstreak,
+      PersonalStatsAttackingExtended$Attacking$Hits? hits,
+      PersonalStatsAttackingExtended$Attacking$Damage? damage,
+      PersonalStatsAttackingExtended$Attacking$Networth? networth,
+      PersonalStatsAttackingExtended$Attacking$Ammunition? ammunition,
+      PersonalStatsAttackingExtended$Attacking$Faction? faction}) {
+    return PersonalStatsAttackingExtended$Attacking(
+        attacks: attacks ?? this.attacks,
+        defends: defends ?? this.defends,
+        elo: elo ?? this.elo,
+        unarmoredWins: unarmoredWins ?? this.unarmoredWins,
+        highestLevelBeaten: highestLevelBeaten ?? this.highestLevelBeaten,
+        escapes: escapes ?? this.escapes,
+        killstreak: killstreak ?? this.killstreak,
+        hits: hits ?? this.hits,
+        damage: damage ?? this.damage,
+        networth: networth ?? this.networth,
+        ammunition: ammunition ?? this.ammunition,
+        faction: faction ?? this.faction);
+  }
+
+  PersonalStatsAttackingExtended$Attacking copyWithWrapped(
+      {Wrapped<PersonalStatsAttackingExtended$Attacking$Attacks?>? attacks,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Defends?>? defends,
+      Wrapped<int?>? elo,
+      Wrapped<int?>? unarmoredWins,
+      Wrapped<int?>? highestLevelBeaten,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Escapes?>? escapes,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Killstreak?>? killstreak,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Hits?>? hits,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Damage?>? damage,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Networth?>? networth,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Ammunition?>? ammunition,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Faction?>? faction}) {
+    return PersonalStatsAttackingExtended$Attacking(
+        attacks: (attacks != null ? attacks.value : this.attacks),
+        defends: (defends != null ? defends.value : this.defends),
+        elo: (elo != null ? elo.value : this.elo),
+        unarmoredWins: (unarmoredWins != null ? unarmoredWins.value : this.unarmoredWins),
+        highestLevelBeaten: (highestLevelBeaten != null ? highestLevelBeaten.value : this.highestLevelBeaten),
+        escapes: (escapes != null ? escapes.value : this.escapes),
+        killstreak: (killstreak != null ? killstreak.value : this.killstreak),
+        hits: (hits != null ? hits.value : this.hits),
+        damage: (damage != null ? damage.value : this.damage),
+        networth: (networth != null ? networth.value : this.networth),
+        ammunition: (ammunition != null ? ammunition.value : this.ammunition),
+        faction: (faction != null ? faction.value : this.faction));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking {
+  const PersonalStatsAttackingPopular$Attacking({
+    this.attacks,
+    this.defends,
+    this.elo,
+    this.escapes,
+    this.killstreak,
+    this.hits,
+    this.damage,
+    this.networth,
+    this.ammunition,
+    this.faction,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$AttackingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$AttackingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$AttackingToJson(this);
+
+  @JsonKey(name: 'attacks')
+  final PersonalStatsAttackingPopular$Attacking$Attacks? attacks;
+  @JsonKey(name: 'defends')
+  final PersonalStatsAttackingPopular$Attacking$Defends? defends;
+  @JsonKey(name: 'elo')
+  final int? elo;
+  @JsonKey(name: 'escapes')
+  final PersonalStatsAttackingPopular$Attacking$Escapes? escapes;
+  @JsonKey(name: 'killstreak')
+  final PersonalStatsAttackingPopular$Attacking$Killstreak? killstreak;
+  @JsonKey(name: 'hits')
+  final PersonalStatsAttackingPopular$Attacking$Hits? hits;
+  @JsonKey(name: 'damage')
+  final PersonalStatsAttackingPopular$Attacking$Damage? damage;
+  @JsonKey(name: 'networth')
+  final PersonalStatsAttackingPopular$Attacking$Networth? networth;
+  @JsonKey(name: 'ammunition')
+  final PersonalStatsAttackingPopular$Attacking$Ammunition? ammunition;
+  @JsonKey(name: 'faction')
+  final PersonalStatsAttackingPopular$Attacking$Faction? faction;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$AttackingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking &&
+            (identical(other.attacks, attacks) || const DeepCollectionEquality().equals(other.attacks, attacks)) &&
+            (identical(other.defends, defends) || const DeepCollectionEquality().equals(other.defends, defends)) &&
+            (identical(other.elo, elo) || const DeepCollectionEquality().equals(other.elo, elo)) &&
+            (identical(other.escapes, escapes) || const DeepCollectionEquality().equals(other.escapes, escapes)) &&
+            (identical(other.killstreak, killstreak) ||
+                const DeepCollectionEquality().equals(other.killstreak, killstreak)) &&
+            (identical(other.hits, hits) || const DeepCollectionEquality().equals(other.hits, hits)) &&
+            (identical(other.damage, damage) || const DeepCollectionEquality().equals(other.damage, damage)) &&
+            (identical(other.networth, networth) || const DeepCollectionEquality().equals(other.networth, networth)) &&
+            (identical(other.ammunition, ammunition) ||
+                const DeepCollectionEquality().equals(other.ammunition, ammunition)) &&
+            (identical(other.faction, faction) || const DeepCollectionEquality().equals(other.faction, faction)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(attacks) ^
+      const DeepCollectionEquality().hash(defends) ^
+      const DeepCollectionEquality().hash(elo) ^
+      const DeepCollectionEquality().hash(escapes) ^
+      const DeepCollectionEquality().hash(killstreak) ^
+      const DeepCollectionEquality().hash(hits) ^
+      const DeepCollectionEquality().hash(damage) ^
+      const DeepCollectionEquality().hash(networth) ^
+      const DeepCollectionEquality().hash(ammunition) ^
+      const DeepCollectionEquality().hash(faction) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$AttackingExtension on PersonalStatsAttackingPopular$Attacking {
+  PersonalStatsAttackingPopular$Attacking copyWith(
+      {PersonalStatsAttackingPopular$Attacking$Attacks? attacks,
+      PersonalStatsAttackingPopular$Attacking$Defends? defends,
+      int? elo,
+      PersonalStatsAttackingPopular$Attacking$Escapes? escapes,
+      PersonalStatsAttackingPopular$Attacking$Killstreak? killstreak,
+      PersonalStatsAttackingPopular$Attacking$Hits? hits,
+      PersonalStatsAttackingPopular$Attacking$Damage? damage,
+      PersonalStatsAttackingPopular$Attacking$Networth? networth,
+      PersonalStatsAttackingPopular$Attacking$Ammunition? ammunition,
+      PersonalStatsAttackingPopular$Attacking$Faction? faction}) {
+    return PersonalStatsAttackingPopular$Attacking(
+        attacks: attacks ?? this.attacks,
+        defends: defends ?? this.defends,
+        elo: elo ?? this.elo,
+        escapes: escapes ?? this.escapes,
+        killstreak: killstreak ?? this.killstreak,
+        hits: hits ?? this.hits,
+        damage: damage ?? this.damage,
+        networth: networth ?? this.networth,
+        ammunition: ammunition ?? this.ammunition,
+        faction: faction ?? this.faction);
+  }
+
+  PersonalStatsAttackingPopular$Attacking copyWithWrapped(
+      {Wrapped<PersonalStatsAttackingPopular$Attacking$Attacks?>? attacks,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Defends?>? defends,
+      Wrapped<int?>? elo,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Escapes?>? escapes,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Killstreak?>? killstreak,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Hits?>? hits,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Damage?>? damage,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Networth?>? networth,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Ammunition?>? ammunition,
+      Wrapped<PersonalStatsAttackingPopular$Attacking$Faction?>? faction}) {
+    return PersonalStatsAttackingPopular$Attacking(
+        attacks: (attacks != null ? attacks.value : this.attacks),
+        defends: (defends != null ? defends.value : this.defends),
+        elo: (elo != null ? elo.value : this.elo),
+        escapes: (escapes != null ? escapes.value : this.escapes),
+        killstreak: (killstreak != null ? killstreak.value : this.killstreak),
+        hits: (hits != null ? hits.value : this.hits),
+        damage: (damage != null ? damage.value : this.damage),
+        networth: (networth != null ? networth.value : this.networth),
+        ammunition: (ammunition != null ? ammunition.value : this.ammunition),
+        faction: (faction != null ? faction.value : this.faction));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class UserCrimeDetailsBootlegging$OnlineStore {
   const UserCrimeDetailsBootlegging$OnlineStore({
     this.earnings,
@@ -12163,6 +17214,3070 @@ extension $FactionApplication$User$StatsExtension on FactionApplication$User$Sta
 }
 
 @JsonSerializable(explicitToJson: true)
+class PersonalStatsOther$Other$Refills {
+  const PersonalStatsOther$Other$Refills({
+    this.energy,
+    this.nerve,
+    this.token,
+  });
+
+  factory PersonalStatsOther$Other$Refills.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsOther$Other$RefillsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOther$Other$RefillsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOther$Other$RefillsToJson(this);
+
+  @JsonKey(name: 'energy')
+  final int? energy;
+  @JsonKey(name: 'nerve')
+  final int? nerve;
+  @JsonKey(name: 'token')
+  final int? token;
+  static const fromJsonFactory = _$PersonalStatsOther$Other$RefillsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOther$Other$Refills &&
+            (identical(other.energy, energy) || const DeepCollectionEquality().equals(other.energy, energy)) &&
+            (identical(other.nerve, nerve) || const DeepCollectionEquality().equals(other.nerve, nerve)) &&
+            (identical(other.token, token) || const DeepCollectionEquality().equals(other.token, token)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(energy) ^
+      const DeepCollectionEquality().hash(nerve) ^
+      const DeepCollectionEquality().hash(token) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsOther$Other$RefillsExtension on PersonalStatsOther$Other$Refills {
+  PersonalStatsOther$Other$Refills copyWith({int? energy, int? nerve, int? token}) {
+    return PersonalStatsOther$Other$Refills(
+        energy: energy ?? this.energy, nerve: nerve ?? this.nerve, token: token ?? this.token);
+  }
+
+  PersonalStatsOther$Other$Refills copyWithWrapped(
+      {Wrapped<int?>? energy, Wrapped<int?>? nerve, Wrapped<int?>? token}) {
+    return PersonalStatsOther$Other$Refills(
+        energy: (energy != null ? energy.value : this.energy),
+        nerve: (nerve != null ? nerve.value : this.nerve),
+        token: (token != null ? token.value : this.token));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsOtherPopular$Other$Refills {
+  const PersonalStatsOtherPopular$Other$Refills({
+    this.energy,
+    this.nerve,
+  });
+
+  factory PersonalStatsOtherPopular$Other$Refills.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsOtherPopular$Other$RefillsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOtherPopular$Other$RefillsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOtherPopular$Other$RefillsToJson(this);
+
+  @JsonKey(name: 'energy')
+  final int? energy;
+  @JsonKey(name: 'nerve')
+  final int? nerve;
+  static const fromJsonFactory = _$PersonalStatsOtherPopular$Other$RefillsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOtherPopular$Other$Refills &&
+            (identical(other.energy, energy) || const DeepCollectionEquality().equals(other.energy, energy)) &&
+            (identical(other.nerve, nerve) || const DeepCollectionEquality().equals(other.nerve, nerve)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(energy) ^ const DeepCollectionEquality().hash(nerve) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsOtherPopular$Other$RefillsExtension on PersonalStatsOtherPopular$Other$Refills {
+  PersonalStatsOtherPopular$Other$Refills copyWith({int? energy, int? nerve}) {
+    return PersonalStatsOtherPopular$Other$Refills(energy: energy ?? this.energy, nerve: nerve ?? this.nerve);
+  }
+
+  PersonalStatsOtherPopular$Other$Refills copyWithWrapped({Wrapped<int?>? energy, Wrapped<int?>? nerve}) {
+    return PersonalStatsOtherPopular$Other$Refills(
+        energy: (energy != null ? energy.value : this.energy), nerve: (nerve != null ? nerve.value : this.nerve));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsRacing$Racing$Races {
+  const PersonalStatsRacing$Racing$Races({
+    this.entered,
+    this.won,
+  });
+
+  factory PersonalStatsRacing$Racing$Races.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsRacing$Racing$RacesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsRacing$Racing$RacesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsRacing$Racing$RacesToJson(this);
+
+  @JsonKey(name: 'entered')
+  final int? entered;
+  @JsonKey(name: 'won')
+  final int? won;
+  static const fromJsonFactory = _$PersonalStatsRacing$Racing$RacesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsRacing$Racing$Races &&
+            (identical(other.entered, entered) || const DeepCollectionEquality().equals(other.entered, entered)) &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(entered) ^ const DeepCollectionEquality().hash(won) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsRacing$Racing$RacesExtension on PersonalStatsRacing$Racing$Races {
+  PersonalStatsRacing$Racing$Races copyWith({int? entered, int? won}) {
+    return PersonalStatsRacing$Racing$Races(entered: entered ?? this.entered, won: won ?? this.won);
+  }
+
+  PersonalStatsRacing$Racing$Races copyWithWrapped({Wrapped<int?>? entered, Wrapped<int?>? won}) {
+    return PersonalStatsRacing$Racing$Races(
+        entered: (entered != null ? entered.value : this.entered), won: (won != null ? won.value : this.won));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsMissions$Missions$Contracts {
+  const PersonalStatsMissions$Missions$Contracts({
+    this.total,
+    this.duke,
+  });
+
+  factory PersonalStatsMissions$Missions$Contracts.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsMissions$Missions$ContractsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsMissions$Missions$ContractsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsMissions$Missions$ContractsToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'duke')
+  final int? duke;
+  static const fromJsonFactory = _$PersonalStatsMissions$Missions$ContractsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsMissions$Missions$Contracts &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.duke, duke) || const DeepCollectionEquality().equals(other.duke, duke)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^ const DeepCollectionEquality().hash(duke) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsMissions$Missions$ContractsExtension on PersonalStatsMissions$Missions$Contracts {
+  PersonalStatsMissions$Missions$Contracts copyWith({int? total, int? duke}) {
+    return PersonalStatsMissions$Missions$Contracts(total: total ?? this.total, duke: duke ?? this.duke);
+  }
+
+  PersonalStatsMissions$Missions$Contracts copyWithWrapped({Wrapped<int?>? total, Wrapped<int?>? duke}) {
+    return PersonalStatsMissions$Missions$Contracts(
+        total: (total != null ? total.value : this.total), duke: (duke != null ? duke.value : this.duke));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsDrugs$Drugs$Rehabilitations {
+  const PersonalStatsDrugs$Drugs$Rehabilitations({
+    this.amount,
+    this.fees,
+  });
+
+  factory PersonalStatsDrugs$Drugs$Rehabilitations.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsDrugs$Drugs$RehabilitationsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsDrugs$Drugs$RehabilitationsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsDrugs$Drugs$RehabilitationsToJson(this);
+
+  @JsonKey(name: 'amount')
+  final int? amount;
+  @JsonKey(name: 'fees')
+  final int? fees;
+  static const fromJsonFactory = _$PersonalStatsDrugs$Drugs$RehabilitationsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsDrugs$Drugs$Rehabilitations &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
+            (identical(other.fees, fees) || const DeepCollectionEquality().equals(other.fees, fees)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(amount) ^ const DeepCollectionEquality().hash(fees) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsDrugs$Drugs$RehabilitationsExtension on PersonalStatsDrugs$Drugs$Rehabilitations {
+  PersonalStatsDrugs$Drugs$Rehabilitations copyWith({int? amount, int? fees}) {
+    return PersonalStatsDrugs$Drugs$Rehabilitations(amount: amount ?? this.amount, fees: fees ?? this.fees);
+  }
+
+  PersonalStatsDrugs$Drugs$Rehabilitations copyWithWrapped({Wrapped<int?>? amount, Wrapped<int?>? fees}) {
+    return PersonalStatsDrugs$Drugs$Rehabilitations(
+        amount: (amount != null ? amount.value : this.amount), fees: (fees != null ? fees.value : this.fees));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItems$Items$Found {
+  const PersonalStatsItems$Items$Found({
+    this.city,
+    this.trash,
+    this.easterEggs,
+  });
+
+  factory PersonalStatsItems$Items$Found.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsItems$Items$FoundFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItems$Items$FoundToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItems$Items$FoundToJson(this);
+
+  @JsonKey(name: 'city')
+  final int? city;
+  @JsonKey(name: 'trash')
+  final int? trash;
+  @JsonKey(name: 'easter_eggs')
+  final int? easterEggs;
+  static const fromJsonFactory = _$PersonalStatsItems$Items$FoundFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItems$Items$Found &&
+            (identical(other.city, city) || const DeepCollectionEquality().equals(other.city, city)) &&
+            (identical(other.trash, trash) || const DeepCollectionEquality().equals(other.trash, trash)) &&
+            (identical(other.easterEggs, easterEggs) ||
+                const DeepCollectionEquality().equals(other.easterEggs, easterEggs)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(city) ^
+      const DeepCollectionEquality().hash(trash) ^
+      const DeepCollectionEquality().hash(easterEggs) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsItems$Items$FoundExtension on PersonalStatsItems$Items$Found {
+  PersonalStatsItems$Items$Found copyWith({int? city, int? trash, int? easterEggs}) {
+    return PersonalStatsItems$Items$Found(
+        city: city ?? this.city, trash: trash ?? this.trash, easterEggs: easterEggs ?? this.easterEggs);
+  }
+
+  PersonalStatsItems$Items$Found copyWithWrapped(
+      {Wrapped<int?>? city, Wrapped<int?>? trash, Wrapped<int?>? easterEggs}) {
+    return PersonalStatsItems$Items$Found(
+        city: (city != null ? city.value : this.city),
+        trash: (trash != null ? trash.value : this.trash),
+        easterEggs: (easterEggs != null ? easterEggs.value : this.easterEggs));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItems$Items$Used {
+  const PersonalStatsItems$Items$Used({
+    this.books,
+    this.boosters,
+    this.consumables,
+    this.candy,
+    this.alcohol,
+    this.energy,
+    this.statEnhancers,
+    this.easterEggs,
+  });
+
+  factory PersonalStatsItems$Items$Used.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsItems$Items$UsedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItems$Items$UsedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItems$Items$UsedToJson(this);
+
+  @JsonKey(name: 'books')
+  final int? books;
+  @JsonKey(name: 'boosters')
+  final int? boosters;
+  @JsonKey(name: 'consumables')
+  final int? consumables;
+  @JsonKey(name: 'candy')
+  final int? candy;
+  @JsonKey(name: 'alcohol')
+  final int? alcohol;
+  @JsonKey(name: 'energy')
+  final int? energy;
+  @JsonKey(name: 'stat_enhancers')
+  final int? statEnhancers;
+  @JsonKey(name: 'easter_eggs')
+  final int? easterEggs;
+  static const fromJsonFactory = _$PersonalStatsItems$Items$UsedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItems$Items$Used &&
+            (identical(other.books, books) || const DeepCollectionEquality().equals(other.books, books)) &&
+            (identical(other.boosters, boosters) || const DeepCollectionEquality().equals(other.boosters, boosters)) &&
+            (identical(other.consumables, consumables) ||
+                const DeepCollectionEquality().equals(other.consumables, consumables)) &&
+            (identical(other.candy, candy) || const DeepCollectionEquality().equals(other.candy, candy)) &&
+            (identical(other.alcohol, alcohol) || const DeepCollectionEquality().equals(other.alcohol, alcohol)) &&
+            (identical(other.energy, energy) || const DeepCollectionEquality().equals(other.energy, energy)) &&
+            (identical(other.statEnhancers, statEnhancers) ||
+                const DeepCollectionEquality().equals(other.statEnhancers, statEnhancers)) &&
+            (identical(other.easterEggs, easterEggs) ||
+                const DeepCollectionEquality().equals(other.easterEggs, easterEggs)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(books) ^
+      const DeepCollectionEquality().hash(boosters) ^
+      const DeepCollectionEquality().hash(consumables) ^
+      const DeepCollectionEquality().hash(candy) ^
+      const DeepCollectionEquality().hash(alcohol) ^
+      const DeepCollectionEquality().hash(energy) ^
+      const DeepCollectionEquality().hash(statEnhancers) ^
+      const DeepCollectionEquality().hash(easterEggs) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsItems$Items$UsedExtension on PersonalStatsItems$Items$Used {
+  PersonalStatsItems$Items$Used copyWith(
+      {int? books,
+      int? boosters,
+      int? consumables,
+      int? candy,
+      int? alcohol,
+      int? energy,
+      int? statEnhancers,
+      int? easterEggs}) {
+    return PersonalStatsItems$Items$Used(
+        books: books ?? this.books,
+        boosters: boosters ?? this.boosters,
+        consumables: consumables ?? this.consumables,
+        candy: candy ?? this.candy,
+        alcohol: alcohol ?? this.alcohol,
+        energy: energy ?? this.energy,
+        statEnhancers: statEnhancers ?? this.statEnhancers,
+        easterEggs: easterEggs ?? this.easterEggs);
+  }
+
+  PersonalStatsItems$Items$Used copyWithWrapped(
+      {Wrapped<int?>? books,
+      Wrapped<int?>? boosters,
+      Wrapped<int?>? consumables,
+      Wrapped<int?>? candy,
+      Wrapped<int?>? alcohol,
+      Wrapped<int?>? energy,
+      Wrapped<int?>? statEnhancers,
+      Wrapped<int?>? easterEggs}) {
+    return PersonalStatsItems$Items$Used(
+        books: (books != null ? books.value : this.books),
+        boosters: (boosters != null ? boosters.value : this.boosters),
+        consumables: (consumables != null ? consumables.value : this.consumables),
+        candy: (candy != null ? candy.value : this.candy),
+        alcohol: (alcohol != null ? alcohol.value : this.alcohol),
+        energy: (energy != null ? energy.value : this.energy),
+        statEnhancers: (statEnhancers != null ? statEnhancers.value : this.statEnhancers),
+        easterEggs: (easterEggs != null ? easterEggs.value : this.easterEggs));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItemsPopular$Items$Found {
+  const PersonalStatsItemsPopular$Items$Found({
+    this.trash,
+  });
+
+  factory PersonalStatsItemsPopular$Items$Found.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsItemsPopular$Items$FoundFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItemsPopular$Items$FoundToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItemsPopular$Items$FoundToJson(this);
+
+  @JsonKey(name: 'trash')
+  final int? trash;
+  static const fromJsonFactory = _$PersonalStatsItemsPopular$Items$FoundFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItemsPopular$Items$Found &&
+            (identical(other.trash, trash) || const DeepCollectionEquality().equals(other.trash, trash)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(trash) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsItemsPopular$Items$FoundExtension on PersonalStatsItemsPopular$Items$Found {
+  PersonalStatsItemsPopular$Items$Found copyWith({int? trash}) {
+    return PersonalStatsItemsPopular$Items$Found(trash: trash ?? this.trash);
+  }
+
+  PersonalStatsItemsPopular$Items$Found copyWithWrapped({Wrapped<int?>? trash}) {
+    return PersonalStatsItemsPopular$Items$Found(trash: (trash != null ? trash.value : this.trash));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsItemsPopular$Items$Used {
+  const PersonalStatsItemsPopular$Items$Used({
+    this.books,
+    this.boosters,
+    this.consumables,
+    this.candy,
+    this.alcohol,
+    this.energy,
+    this.statEnhancers,
+    this.easterEggs,
+  });
+
+  factory PersonalStatsItemsPopular$Items$Used.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsItemsPopular$Items$UsedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsItemsPopular$Items$UsedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsItemsPopular$Items$UsedToJson(this);
+
+  @JsonKey(name: 'books')
+  final int? books;
+  @JsonKey(name: 'boosters')
+  final int? boosters;
+  @JsonKey(name: 'consumables')
+  final int? consumables;
+  @JsonKey(name: 'candy')
+  final int? candy;
+  @JsonKey(name: 'alcohol')
+  final int? alcohol;
+  @JsonKey(name: 'energy')
+  final int? energy;
+  @JsonKey(name: 'stat_enhancers')
+  final int? statEnhancers;
+  @JsonKey(name: 'easter_eggs')
+  final int? easterEggs;
+  static const fromJsonFactory = _$PersonalStatsItemsPopular$Items$UsedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsItemsPopular$Items$Used &&
+            (identical(other.books, books) || const DeepCollectionEquality().equals(other.books, books)) &&
+            (identical(other.boosters, boosters) || const DeepCollectionEquality().equals(other.boosters, boosters)) &&
+            (identical(other.consumables, consumables) ||
+                const DeepCollectionEquality().equals(other.consumables, consumables)) &&
+            (identical(other.candy, candy) || const DeepCollectionEquality().equals(other.candy, candy)) &&
+            (identical(other.alcohol, alcohol) || const DeepCollectionEquality().equals(other.alcohol, alcohol)) &&
+            (identical(other.energy, energy) || const DeepCollectionEquality().equals(other.energy, energy)) &&
+            (identical(other.statEnhancers, statEnhancers) ||
+                const DeepCollectionEquality().equals(other.statEnhancers, statEnhancers)) &&
+            (identical(other.easterEggs, easterEggs) ||
+                const DeepCollectionEquality().equals(other.easterEggs, easterEggs)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(books) ^
+      const DeepCollectionEquality().hash(boosters) ^
+      const DeepCollectionEquality().hash(consumables) ^
+      const DeepCollectionEquality().hash(candy) ^
+      const DeepCollectionEquality().hash(alcohol) ^
+      const DeepCollectionEquality().hash(energy) ^
+      const DeepCollectionEquality().hash(statEnhancers) ^
+      const DeepCollectionEquality().hash(easterEggs) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsItemsPopular$Items$UsedExtension on PersonalStatsItemsPopular$Items$Used {
+  PersonalStatsItemsPopular$Items$Used copyWith(
+      {int? books,
+      int? boosters,
+      int? consumables,
+      int? candy,
+      int? alcohol,
+      int? energy,
+      int? statEnhancers,
+      int? easterEggs}) {
+    return PersonalStatsItemsPopular$Items$Used(
+        books: books ?? this.books,
+        boosters: boosters ?? this.boosters,
+        consumables: consumables ?? this.consumables,
+        candy: candy ?? this.candy,
+        alcohol: alcohol ?? this.alcohol,
+        energy: energy ?? this.energy,
+        statEnhancers: statEnhancers ?? this.statEnhancers,
+        easterEggs: easterEggs ?? this.easterEggs);
+  }
+
+  PersonalStatsItemsPopular$Items$Used copyWithWrapped(
+      {Wrapped<int?>? books,
+      Wrapped<int?>? boosters,
+      Wrapped<int?>? consumables,
+      Wrapped<int?>? candy,
+      Wrapped<int?>? alcohol,
+      Wrapped<int?>? energy,
+      Wrapped<int?>? statEnhancers,
+      Wrapped<int?>? easterEggs}) {
+    return PersonalStatsItemsPopular$Items$Used(
+        books: (books != null ? books.value : this.books),
+        boosters: (boosters != null ? boosters.value : this.boosters),
+        consumables: (consumables != null ? consumables.value : this.consumables),
+        candy: (candy != null ? candy.value : this.candy),
+        alcohol: (alcohol != null ? alcohol.value : this.alcohol),
+        energy: (energy != null ? energy.value : this.energy),
+        statEnhancers: (statEnhancers != null ? statEnhancers.value : this.statEnhancers),
+        easterEggs: (easterEggs != null ? easterEggs.value : this.easterEggs));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsInvestments$Investments$Bank {
+  const PersonalStatsInvestments$Investments$Bank({
+    this.total,
+    this.profit,
+    this.current,
+    this.timeRemaining,
+  });
+
+  factory PersonalStatsInvestments$Investments$Bank.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsInvestments$Investments$BankFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsInvestments$Investments$BankToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsInvestments$Investments$BankToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'profit')
+  final int? profit;
+  @JsonKey(name: 'current')
+  final int? current;
+  @JsonKey(name: 'time_remaining')
+  final int? timeRemaining;
+  static const fromJsonFactory = _$PersonalStatsInvestments$Investments$BankFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsInvestments$Investments$Bank &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.profit, profit) || const DeepCollectionEquality().equals(other.profit, profit)) &&
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)) &&
+            (identical(other.timeRemaining, timeRemaining) ||
+                const DeepCollectionEquality().equals(other.timeRemaining, timeRemaining)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(profit) ^
+      const DeepCollectionEquality().hash(current) ^
+      const DeepCollectionEquality().hash(timeRemaining) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsInvestments$Investments$BankExtension on PersonalStatsInvestments$Investments$Bank {
+  PersonalStatsInvestments$Investments$Bank copyWith({int? total, int? profit, int? current, int? timeRemaining}) {
+    return PersonalStatsInvestments$Investments$Bank(
+        total: total ?? this.total,
+        profit: profit ?? this.profit,
+        current: current ?? this.current,
+        timeRemaining: timeRemaining ?? this.timeRemaining);
+  }
+
+  PersonalStatsInvestments$Investments$Bank copyWithWrapped(
+      {Wrapped<int?>? total, Wrapped<int?>? profit, Wrapped<int?>? current, Wrapped<int?>? timeRemaining}) {
+    return PersonalStatsInvestments$Investments$Bank(
+        total: (total != null ? total.value : this.total),
+        profit: (profit != null ? profit.value : this.profit),
+        current: (current != null ? current.value : this.current),
+        timeRemaining: (timeRemaining != null ? timeRemaining.value : this.timeRemaining));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsInvestments$Investments$Stocks {
+  const PersonalStatsInvestments$Investments$Stocks({
+    this.profits,
+    this.losses,
+    this.fees,
+    this.netProfits,
+    this.payouts,
+  });
+
+  factory PersonalStatsInvestments$Investments$Stocks.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsInvestments$Investments$StocksFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsInvestments$Investments$StocksToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsInvestments$Investments$StocksToJson(this);
+
+  @JsonKey(name: 'profits')
+  final int? profits;
+  @JsonKey(name: 'losses')
+  final int? losses;
+  @JsonKey(name: 'fees')
+  final int? fees;
+  @JsonKey(name: 'net_profits')
+  final int? netProfits;
+  @JsonKey(name: 'payouts')
+  final int? payouts;
+  static const fromJsonFactory = _$PersonalStatsInvestments$Investments$StocksFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsInvestments$Investments$Stocks &&
+            (identical(other.profits, profits) || const DeepCollectionEquality().equals(other.profits, profits)) &&
+            (identical(other.losses, losses) || const DeepCollectionEquality().equals(other.losses, losses)) &&
+            (identical(other.fees, fees) || const DeepCollectionEquality().equals(other.fees, fees)) &&
+            (identical(other.netProfits, netProfits) ||
+                const DeepCollectionEquality().equals(other.netProfits, netProfits)) &&
+            (identical(other.payouts, payouts) || const DeepCollectionEquality().equals(other.payouts, payouts)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(profits) ^
+      const DeepCollectionEquality().hash(losses) ^
+      const DeepCollectionEquality().hash(fees) ^
+      const DeepCollectionEquality().hash(netProfits) ^
+      const DeepCollectionEquality().hash(payouts) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsInvestments$Investments$StocksExtension on PersonalStatsInvestments$Investments$Stocks {
+  PersonalStatsInvestments$Investments$Stocks copyWith(
+      {int? profits, int? losses, int? fees, int? netProfits, int? payouts}) {
+    return PersonalStatsInvestments$Investments$Stocks(
+        profits: profits ?? this.profits,
+        losses: losses ?? this.losses,
+        fees: fees ?? this.fees,
+        netProfits: netProfits ?? this.netProfits,
+        payouts: payouts ?? this.payouts);
+  }
+
+  PersonalStatsInvestments$Investments$Stocks copyWithWrapped(
+      {Wrapped<int?>? profits,
+      Wrapped<int?>? losses,
+      Wrapped<int?>? fees,
+      Wrapped<int?>? netProfits,
+      Wrapped<int?>? payouts}) {
+    return PersonalStatsInvestments$Investments$Stocks(
+        profits: (profits != null ? profits.value : this.profits),
+        losses: (losses != null ? losses.value : this.losses),
+        fees: (fees != null ? fees.value : this.fees),
+        netProfits: (netProfits != null ? netProfits.value : this.netProfits),
+        payouts: (payouts != null ? payouts.value : this.payouts));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsBounties$Bounties$Placed {
+  const PersonalStatsBounties$Bounties$Placed({
+    this.amount,
+    this.$value,
+  });
+
+  factory PersonalStatsBounties$Bounties$Placed.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsBounties$Bounties$PlacedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsBounties$Bounties$PlacedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsBounties$Bounties$PlacedToJson(this);
+
+  @JsonKey(name: 'amount')
+  final int? amount;
+  @JsonKey(name: 'value')
+  final int? $value;
+  static const fromJsonFactory = _$PersonalStatsBounties$Bounties$PlacedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsBounties$Bounties$Placed &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
+            (identical(other.$value, $value) || const DeepCollectionEquality().equals(other.$value, $value)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(amount) ^ const DeepCollectionEquality().hash($value) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsBounties$Bounties$PlacedExtension on PersonalStatsBounties$Bounties$Placed {
+  PersonalStatsBounties$Bounties$Placed copyWith({int? amount, int? $value}) {
+    return PersonalStatsBounties$Bounties$Placed(amount: amount ?? this.amount, $value: $value ?? this.$value);
+  }
+
+  PersonalStatsBounties$Bounties$Placed copyWithWrapped({Wrapped<int?>? amount, Wrapped<int?>? $value}) {
+    return PersonalStatsBounties$Bounties$Placed(
+        amount: (amount != null ? amount.value : this.amount), $value: ($value != null ? $value.value : this.$value));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsBounties$Bounties$Collected {
+  const PersonalStatsBounties$Bounties$Collected({
+    this.amount,
+    this.$value,
+  });
+
+  factory PersonalStatsBounties$Bounties$Collected.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsBounties$Bounties$CollectedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsBounties$Bounties$CollectedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsBounties$Bounties$CollectedToJson(this);
+
+  @JsonKey(name: 'amount')
+  final int? amount;
+  @JsonKey(name: 'value')
+  final int? $value;
+  static const fromJsonFactory = _$PersonalStatsBounties$Bounties$CollectedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsBounties$Bounties$Collected &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
+            (identical(other.$value, $value) || const DeepCollectionEquality().equals(other.$value, $value)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(amount) ^ const DeepCollectionEquality().hash($value) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsBounties$Bounties$CollectedExtension on PersonalStatsBounties$Bounties$Collected {
+  PersonalStatsBounties$Bounties$Collected copyWith({int? amount, int? $value}) {
+    return PersonalStatsBounties$Bounties$Collected(amount: amount ?? this.amount, $value: $value ?? this.$value);
+  }
+
+  PersonalStatsBounties$Bounties$Collected copyWithWrapped({Wrapped<int?>? amount, Wrapped<int?>? $value}) {
+    return PersonalStatsBounties$Bounties$Collected(
+        amount: (amount != null ? amount.value : this.amount), $value: ($value != null ? $value.value : this.$value));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsBounties$Bounties$Received {
+  const PersonalStatsBounties$Bounties$Received({
+    this.amount,
+    this.$value,
+  });
+
+  factory PersonalStatsBounties$Bounties$Received.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsBounties$Bounties$ReceivedFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsBounties$Bounties$ReceivedToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsBounties$Bounties$ReceivedToJson(this);
+
+  @JsonKey(name: 'amount')
+  final int? amount;
+  @JsonKey(name: 'value')
+  final int? $value;
+  static const fromJsonFactory = _$PersonalStatsBounties$Bounties$ReceivedFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsBounties$Bounties$Received &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
+            (identical(other.$value, $value) || const DeepCollectionEquality().equals(other.$value, $value)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(amount) ^ const DeepCollectionEquality().hash($value) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsBounties$Bounties$ReceivedExtension on PersonalStatsBounties$Bounties$Received {
+  PersonalStatsBounties$Bounties$Received copyWith({int? amount, int? $value}) {
+    return PersonalStatsBounties$Bounties$Received(amount: amount ?? this.amount, $value: $value ?? this.$value);
+  }
+
+  PersonalStatsBounties$Bounties$Received copyWithWrapped({Wrapped<int?>? amount, Wrapped<int?>? $value}) {
+    return PersonalStatsBounties$Bounties$Received(
+        amount: (amount != null ? amount.value : this.amount), $value: ($value != null ? $value.value : this.$value));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCommunication$Communication$MailsSent {
+  const PersonalStatsCommunication$Communication$MailsSent({
+    this.total,
+    this.friends,
+    this.faction,
+    this.colleagues,
+    this.spouse,
+  });
+
+  factory PersonalStatsCommunication$Communication$MailsSent.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCommunication$Communication$MailsSentFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCommunication$Communication$MailsSentToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCommunication$Communication$MailsSentToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'friends')
+  final int? friends;
+  @JsonKey(name: 'faction')
+  final int? faction;
+  @JsonKey(name: 'colleagues')
+  final int? colleagues;
+  @JsonKey(name: 'spouse')
+  final int? spouse;
+  static const fromJsonFactory = _$PersonalStatsCommunication$Communication$MailsSentFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCommunication$Communication$MailsSent &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.friends, friends) || const DeepCollectionEquality().equals(other.friends, friends)) &&
+            (identical(other.faction, faction) || const DeepCollectionEquality().equals(other.faction, faction)) &&
+            (identical(other.colleagues, colleagues) ||
+                const DeepCollectionEquality().equals(other.colleagues, colleagues)) &&
+            (identical(other.spouse, spouse) || const DeepCollectionEquality().equals(other.spouse, spouse)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(friends) ^
+      const DeepCollectionEquality().hash(faction) ^
+      const DeepCollectionEquality().hash(colleagues) ^
+      const DeepCollectionEquality().hash(spouse) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsCommunication$Communication$MailsSentExtension
+    on PersonalStatsCommunication$Communication$MailsSent {
+  PersonalStatsCommunication$Communication$MailsSent copyWith(
+      {int? total, int? friends, int? faction, int? colleagues, int? spouse}) {
+    return PersonalStatsCommunication$Communication$MailsSent(
+        total: total ?? this.total,
+        friends: friends ?? this.friends,
+        faction: faction ?? this.faction,
+        colleagues: colleagues ?? this.colleagues,
+        spouse: spouse ?? this.spouse);
+  }
+
+  PersonalStatsCommunication$Communication$MailsSent copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? friends,
+      Wrapped<int?>? faction,
+      Wrapped<int?>? colleagues,
+      Wrapped<int?>? spouse}) {
+    return PersonalStatsCommunication$Communication$MailsSent(
+        total: (total != null ? total.value : this.total),
+        friends: (friends != null ? friends.value : this.friends),
+        faction: (faction != null ? faction.value : this.faction),
+        colleagues: (colleagues != null ? colleagues.value : this.colleagues),
+        spouse: (spouse != null ? spouse.value : this.spouse));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsHospital$Hospital$Reviving {
+  const PersonalStatsHospital$Hospital$Reviving({
+    this.skill,
+    this.revives,
+    this.revivesReceived,
+  });
+
+  factory PersonalStatsHospital$Hospital$Reviving.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsHospital$Hospital$RevivingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsHospital$Hospital$RevivingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsHospital$Hospital$RevivingToJson(this);
+
+  @JsonKey(name: 'skill')
+  final int? skill;
+  @JsonKey(name: 'revives')
+  final int? revives;
+  @JsonKey(name: 'revives_received')
+  final int? revivesReceived;
+  static const fromJsonFactory = _$PersonalStatsHospital$Hospital$RevivingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsHospital$Hospital$Reviving &&
+            (identical(other.skill, skill) || const DeepCollectionEquality().equals(other.skill, skill)) &&
+            (identical(other.revives, revives) || const DeepCollectionEquality().equals(other.revives, revives)) &&
+            (identical(other.revivesReceived, revivesReceived) ||
+                const DeepCollectionEquality().equals(other.revivesReceived, revivesReceived)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(skill) ^
+      const DeepCollectionEquality().hash(revives) ^
+      const DeepCollectionEquality().hash(revivesReceived) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsHospital$Hospital$RevivingExtension on PersonalStatsHospital$Hospital$Reviving {
+  PersonalStatsHospital$Hospital$Reviving copyWith({int? skill, int? revives, int? revivesReceived}) {
+    return PersonalStatsHospital$Hospital$Reviving(
+        skill: skill ?? this.skill,
+        revives: revives ?? this.revives,
+        revivesReceived: revivesReceived ?? this.revivesReceived);
+  }
+
+  PersonalStatsHospital$Hospital$Reviving copyWithWrapped(
+      {Wrapped<int?>? skill, Wrapped<int?>? revives, Wrapped<int?>? revivesReceived}) {
+    return PersonalStatsHospital$Hospital$Reviving(
+        skill: (skill != null ? skill.value : this.skill),
+        revives: (revives != null ? revives.value : this.revives),
+        revivesReceived: (revivesReceived != null ? revivesReceived.value : this.revivesReceived));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsHospitalPopular$Hospital$Reviving {
+  const PersonalStatsHospitalPopular$Hospital$Reviving({
+    this.skill,
+    this.revives,
+  });
+
+  factory PersonalStatsHospitalPopular$Hospital$Reviving.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsHospitalPopular$Hospital$RevivingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsHospitalPopular$Hospital$RevivingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsHospitalPopular$Hospital$RevivingToJson(this);
+
+  @JsonKey(name: 'skill')
+  final int? skill;
+  @JsonKey(name: 'revives')
+  final int? revives;
+  static const fromJsonFactory = _$PersonalStatsHospitalPopular$Hospital$RevivingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsHospitalPopular$Hospital$Reviving &&
+            (identical(other.skill, skill) || const DeepCollectionEquality().equals(other.skill, skill)) &&
+            (identical(other.revives, revives) || const DeepCollectionEquality().equals(other.revives, revives)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(skill) ^ const DeepCollectionEquality().hash(revives) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsHospitalPopular$Hospital$RevivingExtension on PersonalStatsHospitalPopular$Hospital$Reviving {
+  PersonalStatsHospitalPopular$Hospital$Reviving copyWith({int? skill, int? revives}) {
+    return PersonalStatsHospitalPopular$Hospital$Reviving(skill: skill ?? this.skill, revives: revives ?? this.revives);
+  }
+
+  PersonalStatsHospitalPopular$Hospital$Reviving copyWithWrapped({Wrapped<int?>? skill, Wrapped<int?>? revives}) {
+    return PersonalStatsHospitalPopular$Hospital$Reviving(
+        skill: (skill != null ? skill.value : this.skill), revives: (revives != null ? revives.value : this.revives));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJail$Jail$Busts {
+  const PersonalStatsJail$Jail$Busts({
+    this.success,
+    this.fails,
+  });
+
+  factory PersonalStatsJail$Jail$Busts.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsJail$Jail$BustsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJail$Jail$BustsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJail$Jail$BustsToJson(this);
+
+  @JsonKey(name: 'success')
+  final int? success;
+  @JsonKey(name: 'fails')
+  final int? fails;
+  static const fromJsonFactory = _$PersonalStatsJail$Jail$BustsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJail$Jail$Busts &&
+            (identical(other.success, success) || const DeepCollectionEquality().equals(other.success, success)) &&
+            (identical(other.fails, fails) || const DeepCollectionEquality().equals(other.fails, fails)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(success) ^ const DeepCollectionEquality().hash(fails) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsJail$Jail$BustsExtension on PersonalStatsJail$Jail$Busts {
+  PersonalStatsJail$Jail$Busts copyWith({int? success, int? fails}) {
+    return PersonalStatsJail$Jail$Busts(success: success ?? this.success, fails: fails ?? this.fails);
+  }
+
+  PersonalStatsJail$Jail$Busts copyWithWrapped({Wrapped<int?>? success, Wrapped<int?>? fails}) {
+    return PersonalStatsJail$Jail$Busts(
+        success: (success != null ? success.value : this.success), fails: (fails != null ? fails.value : this.fails));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJail$Jail$Bails {
+  const PersonalStatsJail$Jail$Bails({
+    this.amount,
+    this.fees,
+  });
+
+  factory PersonalStatsJail$Jail$Bails.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsJail$Jail$BailsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJail$Jail$BailsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJail$Jail$BailsToJson(this);
+
+  @JsonKey(name: 'amount')
+  final int? amount;
+  @JsonKey(name: 'fees')
+  final int? fees;
+  static const fromJsonFactory = _$PersonalStatsJail$Jail$BailsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJail$Jail$Bails &&
+            (identical(other.amount, amount) || const DeepCollectionEquality().equals(other.amount, amount)) &&
+            (identical(other.fees, fees) || const DeepCollectionEquality().equals(other.fees, fees)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(amount) ^ const DeepCollectionEquality().hash(fees) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsJail$Jail$BailsExtension on PersonalStatsJail$Jail$Bails {
+  PersonalStatsJail$Jail$Bails copyWith({int? amount, int? fees}) {
+    return PersonalStatsJail$Jail$Bails(amount: amount ?? this.amount, fees: fees ?? this.fees);
+  }
+
+  PersonalStatsJail$Jail$Bails copyWithWrapped({Wrapped<int?>? amount, Wrapped<int?>? fees}) {
+    return PersonalStatsJail$Jail$Bails(
+        amount: (amount != null ? amount.value : this.amount), fees: (fees != null ? fees.value : this.fees));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTrading$Trading$Items {
+  const PersonalStatsTrading$Trading$Items({
+    this.bought,
+    this.auctions,
+    this.sent,
+  });
+
+  factory PersonalStatsTrading$Trading$Items.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTrading$Trading$ItemsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTrading$Trading$ItemsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTrading$Trading$ItemsToJson(this);
+
+  @JsonKey(name: 'bought')
+  final PersonalStatsTrading$Trading$Items$Bought? bought;
+  @JsonKey(name: 'auctions')
+  final PersonalStatsTrading$Trading$Items$Auctions? auctions;
+  @JsonKey(name: 'sent')
+  final int? sent;
+  static const fromJsonFactory = _$PersonalStatsTrading$Trading$ItemsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTrading$Trading$Items &&
+            (identical(other.bought, bought) || const DeepCollectionEquality().equals(other.bought, bought)) &&
+            (identical(other.auctions, auctions) || const DeepCollectionEquality().equals(other.auctions, auctions)) &&
+            (identical(other.sent, sent) || const DeepCollectionEquality().equals(other.sent, sent)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(bought) ^
+      const DeepCollectionEquality().hash(auctions) ^
+      const DeepCollectionEquality().hash(sent) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsTrading$Trading$ItemsExtension on PersonalStatsTrading$Trading$Items {
+  PersonalStatsTrading$Trading$Items copyWith(
+      {PersonalStatsTrading$Trading$Items$Bought? bought,
+      PersonalStatsTrading$Trading$Items$Auctions? auctions,
+      int? sent}) {
+    return PersonalStatsTrading$Trading$Items(
+        bought: bought ?? this.bought, auctions: auctions ?? this.auctions, sent: sent ?? this.sent);
+  }
+
+  PersonalStatsTrading$Trading$Items copyWithWrapped(
+      {Wrapped<PersonalStatsTrading$Trading$Items$Bought?>? bought,
+      Wrapped<PersonalStatsTrading$Trading$Items$Auctions?>? auctions,
+      Wrapped<int?>? sent}) {
+    return PersonalStatsTrading$Trading$Items(
+        bought: (bought != null ? bought.value : this.bought),
+        auctions: (auctions != null ? auctions.value : this.auctions),
+        sent: (sent != null ? sent.value : this.sent));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTrading$Trading$Points {
+  const PersonalStatsTrading$Trading$Points({
+    this.bought,
+    this.sold,
+  });
+
+  factory PersonalStatsTrading$Trading$Points.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTrading$Trading$PointsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTrading$Trading$PointsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTrading$Trading$PointsToJson(this);
+
+  @JsonKey(name: 'bought')
+  final int? bought;
+  @JsonKey(name: 'sold')
+  final int? sold;
+  static const fromJsonFactory = _$PersonalStatsTrading$Trading$PointsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTrading$Trading$Points &&
+            (identical(other.bought, bought) || const DeepCollectionEquality().equals(other.bought, bought)) &&
+            (identical(other.sold, sold) || const DeepCollectionEquality().equals(other.sold, sold)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(bought) ^ const DeepCollectionEquality().hash(sold) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsTrading$Trading$PointsExtension on PersonalStatsTrading$Trading$Points {
+  PersonalStatsTrading$Trading$Points copyWith({int? bought, int? sold}) {
+    return PersonalStatsTrading$Trading$Points(bought: bought ?? this.bought, sold: sold ?? this.sold);
+  }
+
+  PersonalStatsTrading$Trading$Points copyWithWrapped({Wrapped<int?>? bought, Wrapped<int?>? sold}) {
+    return PersonalStatsTrading$Trading$Points(
+        bought: (bought != null ? bought.value : this.bought), sold: (sold != null ? sold.value : this.sold));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTrading$Trading$Bazaar {
+  const PersonalStatsTrading$Trading$Bazaar({
+    this.customers,
+    this.sales,
+    this.profit,
+  });
+
+  factory PersonalStatsTrading$Trading$Bazaar.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTrading$Trading$BazaarFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTrading$Trading$BazaarToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTrading$Trading$BazaarToJson(this);
+
+  @JsonKey(name: 'customers')
+  final int? customers;
+  @JsonKey(name: 'sales')
+  final int? sales;
+  @JsonKey(name: 'profit')
+  final int? profit;
+  static const fromJsonFactory = _$PersonalStatsTrading$Trading$BazaarFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTrading$Trading$Bazaar &&
+            (identical(other.customers, customers) ||
+                const DeepCollectionEquality().equals(other.customers, customers)) &&
+            (identical(other.sales, sales) || const DeepCollectionEquality().equals(other.sales, sales)) &&
+            (identical(other.profit, profit) || const DeepCollectionEquality().equals(other.profit, profit)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(customers) ^
+      const DeepCollectionEquality().hash(sales) ^
+      const DeepCollectionEquality().hash(profit) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsTrading$Trading$BazaarExtension on PersonalStatsTrading$Trading$Bazaar {
+  PersonalStatsTrading$Trading$Bazaar copyWith({int? customers, int? sales, int? profit}) {
+    return PersonalStatsTrading$Trading$Bazaar(
+        customers: customers ?? this.customers, sales: sales ?? this.sales, profit: profit ?? this.profit);
+  }
+
+  PersonalStatsTrading$Trading$Bazaar copyWithWrapped(
+      {Wrapped<int?>? customers, Wrapped<int?>? sales, Wrapped<int?>? profit}) {
+    return PersonalStatsTrading$Trading$Bazaar(
+        customers: (customers != null ? customers.value : this.customers),
+        sales: (sales != null ? sales.value : this.sales),
+        profit: (profit != null ? profit.value : this.profit));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsJobsExtended$Jobs$Stats {
+  const PersonalStatsJobsExtended$Jobs$Stats({
+    this.manual,
+    this.intelligence,
+    this.endurance,
+    this.total,
+  });
+
+  factory PersonalStatsJobsExtended$Jobs$Stats.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsJobsExtended$Jobs$StatsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsJobsExtended$Jobs$StatsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsJobsExtended$Jobs$StatsToJson(this);
+
+  @JsonKey(name: 'manual')
+  final int? manual;
+  @JsonKey(name: 'intelligence')
+  final int? intelligence;
+  @JsonKey(name: 'endurance')
+  final int? endurance;
+  @JsonKey(name: 'total')
+  final int? total;
+  static const fromJsonFactory = _$PersonalStatsJobsExtended$Jobs$StatsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsJobsExtended$Jobs$Stats &&
+            (identical(other.manual, manual) || const DeepCollectionEquality().equals(other.manual, manual)) &&
+            (identical(other.intelligence, intelligence) ||
+                const DeepCollectionEquality().equals(other.intelligence, intelligence)) &&
+            (identical(other.endurance, endurance) ||
+                const DeepCollectionEquality().equals(other.endurance, endurance)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(manual) ^
+      const DeepCollectionEquality().hash(intelligence) ^
+      const DeepCollectionEquality().hash(endurance) ^
+      const DeepCollectionEquality().hash(total) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsJobsExtended$Jobs$StatsExtension on PersonalStatsJobsExtended$Jobs$Stats {
+  PersonalStatsJobsExtended$Jobs$Stats copyWith({int? manual, int? intelligence, int? endurance, int? total}) {
+    return PersonalStatsJobsExtended$Jobs$Stats(
+        manual: manual ?? this.manual,
+        intelligence: intelligence ?? this.intelligence,
+        endurance: endurance ?? this.endurance,
+        total: total ?? this.total);
+  }
+
+  PersonalStatsJobsExtended$Jobs$Stats copyWithWrapped(
+      {Wrapped<int?>? manual, Wrapped<int?>? intelligence, Wrapped<int?>? endurance, Wrapped<int?>? total}) {
+    return PersonalStatsJobsExtended$Jobs$Stats(
+        manual: (manual != null ? manual.value : this.manual),
+        intelligence: (intelligence != null ? intelligence.value : this.intelligence),
+        endurance: (endurance != null ? endurance.value : this.endurance),
+        total: (total != null ? total.value : this.total));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Attacks {
+  const PersonalStatsAttackingPublic$Attacking$Attacks({
+    this.won,
+    this.lost,
+    this.stalemate,
+    this.assist,
+    this.stealth,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Attacks.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$AttacksFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$AttacksToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$AttacksToJson(this);
+
+  @JsonKey(name: 'won')
+  final int? won;
+  @JsonKey(name: 'lost')
+  final int? lost;
+  @JsonKey(name: 'stalemate')
+  final int? stalemate;
+  @JsonKey(name: 'assist')
+  final int? assist;
+  @JsonKey(name: 'stealth')
+  final int? stealth;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$AttacksFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Attacks &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)) &&
+            (identical(other.stalemate, stalemate) ||
+                const DeepCollectionEquality().equals(other.stalemate, stalemate)) &&
+            (identical(other.assist, assist) || const DeepCollectionEquality().equals(other.assist, assist)) &&
+            (identical(other.stealth, stealth) || const DeepCollectionEquality().equals(other.stealth, stealth)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(won) ^
+      const DeepCollectionEquality().hash(lost) ^
+      const DeepCollectionEquality().hash(stalemate) ^
+      const DeepCollectionEquality().hash(assist) ^
+      const DeepCollectionEquality().hash(stealth) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$AttacksExtension on PersonalStatsAttackingPublic$Attacking$Attacks {
+  PersonalStatsAttackingPublic$Attacking$Attacks copyWith(
+      {int? won, int? lost, int? stalemate, int? assist, int? stealth}) {
+    return PersonalStatsAttackingPublic$Attacking$Attacks(
+        won: won ?? this.won,
+        lost: lost ?? this.lost,
+        stalemate: stalemate ?? this.stalemate,
+        assist: assist ?? this.assist,
+        stealth: stealth ?? this.stealth);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Attacks copyWithWrapped(
+      {Wrapped<int?>? won,
+      Wrapped<int?>? lost,
+      Wrapped<int?>? stalemate,
+      Wrapped<int?>? assist,
+      Wrapped<int?>? stealth}) {
+    return PersonalStatsAttackingPublic$Attacking$Attacks(
+        won: (won != null ? won.value : this.won),
+        lost: (lost != null ? lost.value : this.lost),
+        stalemate: (stalemate != null ? stalemate.value : this.stalemate),
+        assist: (assist != null ? assist.value : this.assist),
+        stealth: (stealth != null ? stealth.value : this.stealth));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Defends {
+  const PersonalStatsAttackingPublic$Attacking$Defends({
+    this.won,
+    this.lost,
+    this.stalemate,
+    this.total,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Defends.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$DefendsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$DefendsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$DefendsToJson(this);
+
+  @JsonKey(name: 'won')
+  final int? won;
+  @JsonKey(name: 'lost')
+  final int? lost;
+  @JsonKey(name: 'stalemate')
+  final int? stalemate;
+  @JsonKey(name: 'total')
+  final int? total;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$DefendsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Defends &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)) &&
+            (identical(other.stalemate, stalemate) ||
+                const DeepCollectionEquality().equals(other.stalemate, stalemate)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(won) ^
+      const DeepCollectionEquality().hash(lost) ^
+      const DeepCollectionEquality().hash(stalemate) ^
+      const DeepCollectionEquality().hash(total) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$DefendsExtension on PersonalStatsAttackingPublic$Attacking$Defends {
+  PersonalStatsAttackingPublic$Attacking$Defends copyWith({int? won, int? lost, int? stalemate, int? total}) {
+    return PersonalStatsAttackingPublic$Attacking$Defends(
+        won: won ?? this.won,
+        lost: lost ?? this.lost,
+        stalemate: stalemate ?? this.stalemate,
+        total: total ?? this.total);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Defends copyWithWrapped(
+      {Wrapped<int?>? won, Wrapped<int?>? lost, Wrapped<int?>? stalemate, Wrapped<int?>? total}) {
+    return PersonalStatsAttackingPublic$Attacking$Defends(
+        won: (won != null ? won.value : this.won),
+        lost: (lost != null ? lost.value : this.lost),
+        stalemate: (stalemate != null ? stalemate.value : this.stalemate),
+        total: (total != null ? total.value : this.total));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Escapes {
+  const PersonalStatsAttackingPublic$Attacking$Escapes({
+    this.player,
+    this.foes,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Escapes.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$EscapesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$EscapesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$EscapesToJson(this);
+
+  @JsonKey(name: 'player')
+  final int? player;
+  @JsonKey(name: 'foes')
+  final int? foes;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$EscapesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Escapes &&
+            (identical(other.player, player) || const DeepCollectionEquality().equals(other.player, player)) &&
+            (identical(other.foes, foes) || const DeepCollectionEquality().equals(other.foes, foes)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(player) ^ const DeepCollectionEquality().hash(foes) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$EscapesExtension on PersonalStatsAttackingPublic$Attacking$Escapes {
+  PersonalStatsAttackingPublic$Attacking$Escapes copyWith({int? player, int? foes}) {
+    return PersonalStatsAttackingPublic$Attacking$Escapes(player: player ?? this.player, foes: foes ?? this.foes);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Escapes copyWithWrapped({Wrapped<int?>? player, Wrapped<int?>? foes}) {
+    return PersonalStatsAttackingPublic$Attacking$Escapes(
+        player: (player != null ? player.value : this.player), foes: (foes != null ? foes.value : this.foes));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Killstreak {
+  const PersonalStatsAttackingPublic$Attacking$Killstreak({
+    this.best,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Killstreak.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$KillstreakFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$KillstreakToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$KillstreakToJson(this);
+
+  @JsonKey(name: 'best')
+  final int? best;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$KillstreakFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Killstreak &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(best) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$KillstreakExtension
+    on PersonalStatsAttackingPublic$Attacking$Killstreak {
+  PersonalStatsAttackingPublic$Attacking$Killstreak copyWith({int? best}) {
+    return PersonalStatsAttackingPublic$Attacking$Killstreak(best: best ?? this.best);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Killstreak copyWithWrapped({Wrapped<int?>? best}) {
+    return PersonalStatsAttackingPublic$Attacking$Killstreak(best: (best != null ? best.value : this.best));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Hits {
+  const PersonalStatsAttackingPublic$Attacking$Hits({
+    this.success,
+    this.miss,
+    this.critical,
+    this.oneHitKills,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Hits.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$HitsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$HitsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$HitsToJson(this);
+
+  @JsonKey(name: 'success')
+  final int? success;
+  @JsonKey(name: 'miss')
+  final int? miss;
+  @JsonKey(name: 'critical')
+  final int? critical;
+  @JsonKey(name: 'one_hit_kills')
+  final int? oneHitKills;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$HitsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Hits &&
+            (identical(other.success, success) || const DeepCollectionEquality().equals(other.success, success)) &&
+            (identical(other.miss, miss) || const DeepCollectionEquality().equals(other.miss, miss)) &&
+            (identical(other.critical, critical) || const DeepCollectionEquality().equals(other.critical, critical)) &&
+            (identical(other.oneHitKills, oneHitKills) ||
+                const DeepCollectionEquality().equals(other.oneHitKills, oneHitKills)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(success) ^
+      const DeepCollectionEquality().hash(miss) ^
+      const DeepCollectionEquality().hash(critical) ^
+      const DeepCollectionEquality().hash(oneHitKills) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$HitsExtension on PersonalStatsAttackingPublic$Attacking$Hits {
+  PersonalStatsAttackingPublic$Attacking$Hits copyWith({int? success, int? miss, int? critical, int? oneHitKills}) {
+    return PersonalStatsAttackingPublic$Attacking$Hits(
+        success: success ?? this.success,
+        miss: miss ?? this.miss,
+        critical: critical ?? this.critical,
+        oneHitKills: oneHitKills ?? this.oneHitKills);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Hits copyWithWrapped(
+      {Wrapped<int?>? success, Wrapped<int?>? miss, Wrapped<int?>? critical, Wrapped<int?>? oneHitKills}) {
+    return PersonalStatsAttackingPublic$Attacking$Hits(
+        success: (success != null ? success.value : this.success),
+        miss: (miss != null ? miss.value : this.miss),
+        critical: (critical != null ? critical.value : this.critical),
+        oneHitKills: (oneHitKills != null ? oneHitKills.value : this.oneHitKills));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Damage {
+  const PersonalStatsAttackingPublic$Attacking$Damage({
+    this.total,
+    this.best,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Damage.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$DamageFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$DamageToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$DamageToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'best')
+  final int? best;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$DamageFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Damage &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^ const DeepCollectionEquality().hash(best) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$DamageExtension on PersonalStatsAttackingPublic$Attacking$Damage {
+  PersonalStatsAttackingPublic$Attacking$Damage copyWith({int? total, int? best}) {
+    return PersonalStatsAttackingPublic$Attacking$Damage(total: total ?? this.total, best: best ?? this.best);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Damage copyWithWrapped({Wrapped<int?>? total, Wrapped<int?>? best}) {
+    return PersonalStatsAttackingPublic$Attacking$Damage(
+        total: (total != null ? total.value : this.total), best: (best != null ? best.value : this.best));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Networth {
+  const PersonalStatsAttackingPublic$Attacking$Networth({
+    this.moneyMugged,
+    this.largestMug,
+    this.itemsLooted,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Networth.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$NetworthFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$NetworthToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$NetworthToJson(this);
+
+  @JsonKey(name: 'money_mugged')
+  final int? moneyMugged;
+  @JsonKey(name: 'largest_mug')
+  final int? largestMug;
+  @JsonKey(name: 'items_looted')
+  final int? itemsLooted;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$NetworthFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Networth &&
+            (identical(other.moneyMugged, moneyMugged) ||
+                const DeepCollectionEquality().equals(other.moneyMugged, moneyMugged)) &&
+            (identical(other.largestMug, largestMug) ||
+                const DeepCollectionEquality().equals(other.largestMug, largestMug)) &&
+            (identical(other.itemsLooted, itemsLooted) ||
+                const DeepCollectionEquality().equals(other.itemsLooted, itemsLooted)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(moneyMugged) ^
+      const DeepCollectionEquality().hash(largestMug) ^
+      const DeepCollectionEquality().hash(itemsLooted) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$NetworthExtension on PersonalStatsAttackingPublic$Attacking$Networth {
+  PersonalStatsAttackingPublic$Attacking$Networth copyWith({int? moneyMugged, int? largestMug, int? itemsLooted}) {
+    return PersonalStatsAttackingPublic$Attacking$Networth(
+        moneyMugged: moneyMugged ?? this.moneyMugged,
+        largestMug: largestMug ?? this.largestMug,
+        itemsLooted: itemsLooted ?? this.itemsLooted);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Networth copyWithWrapped(
+      {Wrapped<int?>? moneyMugged, Wrapped<int?>? largestMug, Wrapped<int?>? itemsLooted}) {
+    return PersonalStatsAttackingPublic$Attacking$Networth(
+        moneyMugged: (moneyMugged != null ? moneyMugged.value : this.moneyMugged),
+        largestMug: (largestMug != null ? largestMug.value : this.largestMug),
+        itemsLooted: (itemsLooted != null ? itemsLooted.value : this.itemsLooted));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Ammunition {
+  const PersonalStatsAttackingPublic$Attacking$Ammunition({
+    this.total,
+    this.special,
+    this.hollowPoint,
+    this.tracer,
+    this.piercing,
+    this.incendiary,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Ammunition.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$AmmunitionFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$AmmunitionToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$AmmunitionToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'special')
+  final int? special;
+  @JsonKey(name: 'hollow_point')
+  final int? hollowPoint;
+  @JsonKey(name: 'tracer')
+  final int? tracer;
+  @JsonKey(name: 'piercing')
+  final int? piercing;
+  @JsonKey(name: 'incendiary')
+  final int? incendiary;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$AmmunitionFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Ammunition &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.special, special) || const DeepCollectionEquality().equals(other.special, special)) &&
+            (identical(other.hollowPoint, hollowPoint) ||
+                const DeepCollectionEquality().equals(other.hollowPoint, hollowPoint)) &&
+            (identical(other.tracer, tracer) || const DeepCollectionEquality().equals(other.tracer, tracer)) &&
+            (identical(other.piercing, piercing) || const DeepCollectionEquality().equals(other.piercing, piercing)) &&
+            (identical(other.incendiary, incendiary) ||
+                const DeepCollectionEquality().equals(other.incendiary, incendiary)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(special) ^
+      const DeepCollectionEquality().hash(hollowPoint) ^
+      const DeepCollectionEquality().hash(tracer) ^
+      const DeepCollectionEquality().hash(piercing) ^
+      const DeepCollectionEquality().hash(incendiary) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$AmmunitionExtension
+    on PersonalStatsAttackingPublic$Attacking$Ammunition {
+  PersonalStatsAttackingPublic$Attacking$Ammunition copyWith(
+      {int? total, int? special, int? hollowPoint, int? tracer, int? piercing, int? incendiary}) {
+    return PersonalStatsAttackingPublic$Attacking$Ammunition(
+        total: total ?? this.total,
+        special: special ?? this.special,
+        hollowPoint: hollowPoint ?? this.hollowPoint,
+        tracer: tracer ?? this.tracer,
+        piercing: piercing ?? this.piercing,
+        incendiary: incendiary ?? this.incendiary);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Ammunition copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? special,
+      Wrapped<int?>? hollowPoint,
+      Wrapped<int?>? tracer,
+      Wrapped<int?>? piercing,
+      Wrapped<int?>? incendiary}) {
+    return PersonalStatsAttackingPublic$Attacking$Ammunition(
+        total: (total != null ? total.value : this.total),
+        special: (special != null ? special.value : this.special),
+        hollowPoint: (hollowPoint != null ? hollowPoint.value : this.hollowPoint),
+        tracer: (tracer != null ? tracer.value : this.tracer),
+        piercing: (piercing != null ? piercing.value : this.piercing),
+        incendiary: (incendiary != null ? incendiary.value : this.incendiary));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Faction {
+  const PersonalStatsAttackingPublic$Attacking$Faction({
+    this.respect,
+    this.retaliations,
+    this.rankedWarHits,
+    this.raidHits,
+    this.territory,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Faction.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$FactionFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$FactionToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$FactionToJson(this);
+
+  @JsonKey(name: 'respect')
+  final int? respect;
+  @JsonKey(name: 'retaliations')
+  final int? retaliations;
+  @JsonKey(name: 'ranked_war_hits')
+  final int? rankedWarHits;
+  @JsonKey(name: 'raid_hits')
+  final int? raidHits;
+  @JsonKey(name: 'territory')
+  final PersonalStatsAttackingPublic$Attacking$Faction$Territory? territory;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$FactionFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Faction &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.retaliations, retaliations) ||
+                const DeepCollectionEquality().equals(other.retaliations, retaliations)) &&
+            (identical(other.rankedWarHits, rankedWarHits) ||
+                const DeepCollectionEquality().equals(other.rankedWarHits, rankedWarHits)) &&
+            (identical(other.raidHits, raidHits) || const DeepCollectionEquality().equals(other.raidHits, raidHits)) &&
+            (identical(other.territory, territory) ||
+                const DeepCollectionEquality().equals(other.territory, territory)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(respect) ^
+      const DeepCollectionEquality().hash(retaliations) ^
+      const DeepCollectionEquality().hash(rankedWarHits) ^
+      const DeepCollectionEquality().hash(raidHits) ^
+      const DeepCollectionEquality().hash(territory) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$FactionExtension on PersonalStatsAttackingPublic$Attacking$Faction {
+  PersonalStatsAttackingPublic$Attacking$Faction copyWith(
+      {int? respect,
+      int? retaliations,
+      int? rankedWarHits,
+      int? raidHits,
+      PersonalStatsAttackingPublic$Attacking$Faction$Territory? territory}) {
+    return PersonalStatsAttackingPublic$Attacking$Faction(
+        respect: respect ?? this.respect,
+        retaliations: retaliations ?? this.retaliations,
+        rankedWarHits: rankedWarHits ?? this.rankedWarHits,
+        raidHits: raidHits ?? this.raidHits,
+        territory: territory ?? this.territory);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Faction copyWithWrapped(
+      {Wrapped<int?>? respect,
+      Wrapped<int?>? retaliations,
+      Wrapped<int?>? rankedWarHits,
+      Wrapped<int?>? raidHits,
+      Wrapped<PersonalStatsAttackingPublic$Attacking$Faction$Territory?>? territory}) {
+    return PersonalStatsAttackingPublic$Attacking$Faction(
+        respect: (respect != null ? respect.value : this.respect),
+        retaliations: (retaliations != null ? retaliations.value : this.retaliations),
+        rankedWarHits: (rankedWarHits != null ? rankedWarHits.value : this.rankedWarHits),
+        raidHits: (raidHits != null ? raidHits.value : this.raidHits),
+        territory: (territory != null ? territory.value : this.territory));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Attacks {
+  const PersonalStatsAttackingExtended$Attacking$Attacks({
+    this.won,
+    this.lost,
+    this.stalemate,
+    this.assist,
+    this.stealth,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Attacks.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$AttacksFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$AttacksToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$AttacksToJson(this);
+
+  @JsonKey(name: 'won')
+  final int? won;
+  @JsonKey(name: 'lost')
+  final int? lost;
+  @JsonKey(name: 'stalemate')
+  final int? stalemate;
+  @JsonKey(name: 'assist')
+  final int? assist;
+  @JsonKey(name: 'stealth')
+  final int? stealth;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$AttacksFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Attacks &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)) &&
+            (identical(other.stalemate, stalemate) ||
+                const DeepCollectionEquality().equals(other.stalemate, stalemate)) &&
+            (identical(other.assist, assist) || const DeepCollectionEquality().equals(other.assist, assist)) &&
+            (identical(other.stealth, stealth) || const DeepCollectionEquality().equals(other.stealth, stealth)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(won) ^
+      const DeepCollectionEquality().hash(lost) ^
+      const DeepCollectionEquality().hash(stalemate) ^
+      const DeepCollectionEquality().hash(assist) ^
+      const DeepCollectionEquality().hash(stealth) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$AttacksExtension
+    on PersonalStatsAttackingExtended$Attacking$Attacks {
+  PersonalStatsAttackingExtended$Attacking$Attacks copyWith(
+      {int? won, int? lost, int? stalemate, int? assist, int? stealth}) {
+    return PersonalStatsAttackingExtended$Attacking$Attacks(
+        won: won ?? this.won,
+        lost: lost ?? this.lost,
+        stalemate: stalemate ?? this.stalemate,
+        assist: assist ?? this.assist,
+        stealth: stealth ?? this.stealth);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Attacks copyWithWrapped(
+      {Wrapped<int?>? won,
+      Wrapped<int?>? lost,
+      Wrapped<int?>? stalemate,
+      Wrapped<int?>? assist,
+      Wrapped<int?>? stealth}) {
+    return PersonalStatsAttackingExtended$Attacking$Attacks(
+        won: (won != null ? won.value : this.won),
+        lost: (lost != null ? lost.value : this.lost),
+        stalemate: (stalemate != null ? stalemate.value : this.stalemate),
+        assist: (assist != null ? assist.value : this.assist),
+        stealth: (stealth != null ? stealth.value : this.stealth));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Defends {
+  const PersonalStatsAttackingExtended$Attacking$Defends({
+    this.won,
+    this.lost,
+    this.stalemate,
+    this.total,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Defends.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$DefendsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$DefendsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$DefendsToJson(this);
+
+  @JsonKey(name: 'won')
+  final int? won;
+  @JsonKey(name: 'lost')
+  final int? lost;
+  @JsonKey(name: 'stalemate')
+  final int? stalemate;
+  @JsonKey(name: 'total')
+  final int? total;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$DefendsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Defends &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)) &&
+            (identical(other.stalemate, stalemate) ||
+                const DeepCollectionEquality().equals(other.stalemate, stalemate)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(won) ^
+      const DeepCollectionEquality().hash(lost) ^
+      const DeepCollectionEquality().hash(stalemate) ^
+      const DeepCollectionEquality().hash(total) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$DefendsExtension
+    on PersonalStatsAttackingExtended$Attacking$Defends {
+  PersonalStatsAttackingExtended$Attacking$Defends copyWith({int? won, int? lost, int? stalemate, int? total}) {
+    return PersonalStatsAttackingExtended$Attacking$Defends(
+        won: won ?? this.won,
+        lost: lost ?? this.lost,
+        stalemate: stalemate ?? this.stalemate,
+        total: total ?? this.total);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Defends copyWithWrapped(
+      {Wrapped<int?>? won, Wrapped<int?>? lost, Wrapped<int?>? stalemate, Wrapped<int?>? total}) {
+    return PersonalStatsAttackingExtended$Attacking$Defends(
+        won: (won != null ? won.value : this.won),
+        lost: (lost != null ? lost.value : this.lost),
+        stalemate: (stalemate != null ? stalemate.value : this.stalemate),
+        total: (total != null ? total.value : this.total));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Escapes {
+  const PersonalStatsAttackingExtended$Attacking$Escapes({
+    this.player,
+    this.foes,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Escapes.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$EscapesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$EscapesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$EscapesToJson(this);
+
+  @JsonKey(name: 'player')
+  final int? player;
+  @JsonKey(name: 'foes')
+  final int? foes;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$EscapesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Escapes &&
+            (identical(other.player, player) || const DeepCollectionEquality().equals(other.player, player)) &&
+            (identical(other.foes, foes) || const DeepCollectionEquality().equals(other.foes, foes)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(player) ^ const DeepCollectionEquality().hash(foes) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$EscapesExtension
+    on PersonalStatsAttackingExtended$Attacking$Escapes {
+  PersonalStatsAttackingExtended$Attacking$Escapes copyWith({int? player, int? foes}) {
+    return PersonalStatsAttackingExtended$Attacking$Escapes(player: player ?? this.player, foes: foes ?? this.foes);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Escapes copyWithWrapped({Wrapped<int?>? player, Wrapped<int?>? foes}) {
+    return PersonalStatsAttackingExtended$Attacking$Escapes(
+        player: (player != null ? player.value : this.player), foes: (foes != null ? foes.value : this.foes));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Killstreak {
+  const PersonalStatsAttackingExtended$Attacking$Killstreak({
+    this.best,
+    this.current,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Killstreak.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$KillstreakFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$KillstreakToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$KillstreakToJson(this);
+
+  @JsonKey(name: 'best')
+  final int? best;
+  @JsonKey(name: 'current')
+  final int? current;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$KillstreakFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Killstreak &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)) &&
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(best) ^ const DeepCollectionEquality().hash(current) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$KillstreakExtension
+    on PersonalStatsAttackingExtended$Attacking$Killstreak {
+  PersonalStatsAttackingExtended$Attacking$Killstreak copyWith({int? best, int? current}) {
+    return PersonalStatsAttackingExtended$Attacking$Killstreak(
+        best: best ?? this.best, current: current ?? this.current);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Killstreak copyWithWrapped({Wrapped<int?>? best, Wrapped<int?>? current}) {
+    return PersonalStatsAttackingExtended$Attacking$Killstreak(
+        best: (best != null ? best.value : this.best), current: (current != null ? current.value : this.current));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Hits {
+  const PersonalStatsAttackingExtended$Attacking$Hits({
+    this.success,
+    this.miss,
+    this.critical,
+    this.oneHitKills,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Hits.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$HitsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$HitsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$HitsToJson(this);
+
+  @JsonKey(name: 'success')
+  final int? success;
+  @JsonKey(name: 'miss')
+  final int? miss;
+  @JsonKey(name: 'critical')
+  final int? critical;
+  @JsonKey(name: 'one_hit_kills')
+  final int? oneHitKills;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$HitsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Hits &&
+            (identical(other.success, success) || const DeepCollectionEquality().equals(other.success, success)) &&
+            (identical(other.miss, miss) || const DeepCollectionEquality().equals(other.miss, miss)) &&
+            (identical(other.critical, critical) || const DeepCollectionEquality().equals(other.critical, critical)) &&
+            (identical(other.oneHitKills, oneHitKills) ||
+                const DeepCollectionEquality().equals(other.oneHitKills, oneHitKills)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(success) ^
+      const DeepCollectionEquality().hash(miss) ^
+      const DeepCollectionEquality().hash(critical) ^
+      const DeepCollectionEquality().hash(oneHitKills) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$HitsExtension on PersonalStatsAttackingExtended$Attacking$Hits {
+  PersonalStatsAttackingExtended$Attacking$Hits copyWith({int? success, int? miss, int? critical, int? oneHitKills}) {
+    return PersonalStatsAttackingExtended$Attacking$Hits(
+        success: success ?? this.success,
+        miss: miss ?? this.miss,
+        critical: critical ?? this.critical,
+        oneHitKills: oneHitKills ?? this.oneHitKills);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Hits copyWithWrapped(
+      {Wrapped<int?>? success, Wrapped<int?>? miss, Wrapped<int?>? critical, Wrapped<int?>? oneHitKills}) {
+    return PersonalStatsAttackingExtended$Attacking$Hits(
+        success: (success != null ? success.value : this.success),
+        miss: (miss != null ? miss.value : this.miss),
+        critical: (critical != null ? critical.value : this.critical),
+        oneHitKills: (oneHitKills != null ? oneHitKills.value : this.oneHitKills));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Damage {
+  const PersonalStatsAttackingExtended$Attacking$Damage({
+    this.total,
+    this.best,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Damage.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$DamageFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$DamageToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$DamageToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'best')
+  final int? best;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$DamageFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Damage &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^ const DeepCollectionEquality().hash(best) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$DamageExtension on PersonalStatsAttackingExtended$Attacking$Damage {
+  PersonalStatsAttackingExtended$Attacking$Damage copyWith({int? total, int? best}) {
+    return PersonalStatsAttackingExtended$Attacking$Damage(total: total ?? this.total, best: best ?? this.best);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Damage copyWithWrapped({Wrapped<int?>? total, Wrapped<int?>? best}) {
+    return PersonalStatsAttackingExtended$Attacking$Damage(
+        total: (total != null ? total.value : this.total), best: (best != null ? best.value : this.best));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Networth {
+  const PersonalStatsAttackingExtended$Attacking$Networth({
+    this.moneyMugged,
+    this.largestMug,
+    this.itemsLooted,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Networth.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$NetworthFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$NetworthToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$NetworthToJson(this);
+
+  @JsonKey(name: 'money_mugged')
+  final int? moneyMugged;
+  @JsonKey(name: 'largest_mug')
+  final int? largestMug;
+  @JsonKey(name: 'items_looted')
+  final int? itemsLooted;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$NetworthFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Networth &&
+            (identical(other.moneyMugged, moneyMugged) ||
+                const DeepCollectionEquality().equals(other.moneyMugged, moneyMugged)) &&
+            (identical(other.largestMug, largestMug) ||
+                const DeepCollectionEquality().equals(other.largestMug, largestMug)) &&
+            (identical(other.itemsLooted, itemsLooted) ||
+                const DeepCollectionEquality().equals(other.itemsLooted, itemsLooted)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(moneyMugged) ^
+      const DeepCollectionEquality().hash(largestMug) ^
+      const DeepCollectionEquality().hash(itemsLooted) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$NetworthExtension
+    on PersonalStatsAttackingExtended$Attacking$Networth {
+  PersonalStatsAttackingExtended$Attacking$Networth copyWith({int? moneyMugged, int? largestMug, int? itemsLooted}) {
+    return PersonalStatsAttackingExtended$Attacking$Networth(
+        moneyMugged: moneyMugged ?? this.moneyMugged,
+        largestMug: largestMug ?? this.largestMug,
+        itemsLooted: itemsLooted ?? this.itemsLooted);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Networth copyWithWrapped(
+      {Wrapped<int?>? moneyMugged, Wrapped<int?>? largestMug, Wrapped<int?>? itemsLooted}) {
+    return PersonalStatsAttackingExtended$Attacking$Networth(
+        moneyMugged: (moneyMugged != null ? moneyMugged.value : this.moneyMugged),
+        largestMug: (largestMug != null ? largestMug.value : this.largestMug),
+        itemsLooted: (itemsLooted != null ? itemsLooted.value : this.itemsLooted));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Ammunition {
+  const PersonalStatsAttackingExtended$Attacking$Ammunition({
+    this.total,
+    this.special,
+    this.hollowPoint,
+    this.tracer,
+    this.piercing,
+    this.incendiary,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Ammunition.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$AmmunitionFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$AmmunitionToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$AmmunitionToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'special')
+  final int? special;
+  @JsonKey(name: 'hollow_point')
+  final int? hollowPoint;
+  @JsonKey(name: 'tracer')
+  final int? tracer;
+  @JsonKey(name: 'piercing')
+  final int? piercing;
+  @JsonKey(name: 'incendiary')
+  final int? incendiary;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$AmmunitionFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Ammunition &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.special, special) || const DeepCollectionEquality().equals(other.special, special)) &&
+            (identical(other.hollowPoint, hollowPoint) ||
+                const DeepCollectionEquality().equals(other.hollowPoint, hollowPoint)) &&
+            (identical(other.tracer, tracer) || const DeepCollectionEquality().equals(other.tracer, tracer)) &&
+            (identical(other.piercing, piercing) || const DeepCollectionEquality().equals(other.piercing, piercing)) &&
+            (identical(other.incendiary, incendiary) ||
+                const DeepCollectionEquality().equals(other.incendiary, incendiary)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(special) ^
+      const DeepCollectionEquality().hash(hollowPoint) ^
+      const DeepCollectionEquality().hash(tracer) ^
+      const DeepCollectionEquality().hash(piercing) ^
+      const DeepCollectionEquality().hash(incendiary) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$AmmunitionExtension
+    on PersonalStatsAttackingExtended$Attacking$Ammunition {
+  PersonalStatsAttackingExtended$Attacking$Ammunition copyWith(
+      {int? total, int? special, int? hollowPoint, int? tracer, int? piercing, int? incendiary}) {
+    return PersonalStatsAttackingExtended$Attacking$Ammunition(
+        total: total ?? this.total,
+        special: special ?? this.special,
+        hollowPoint: hollowPoint ?? this.hollowPoint,
+        tracer: tracer ?? this.tracer,
+        piercing: piercing ?? this.piercing,
+        incendiary: incendiary ?? this.incendiary);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Ammunition copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? special,
+      Wrapped<int?>? hollowPoint,
+      Wrapped<int?>? tracer,
+      Wrapped<int?>? piercing,
+      Wrapped<int?>? incendiary}) {
+    return PersonalStatsAttackingExtended$Attacking$Ammunition(
+        total: (total != null ? total.value : this.total),
+        special: (special != null ? special.value : this.special),
+        hollowPoint: (hollowPoint != null ? hollowPoint.value : this.hollowPoint),
+        tracer: (tracer != null ? tracer.value : this.tracer),
+        piercing: (piercing != null ? piercing.value : this.piercing),
+        incendiary: (incendiary != null ? incendiary.value : this.incendiary));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Faction {
+  const PersonalStatsAttackingExtended$Attacking$Faction({
+    this.respect,
+    this.retaliations,
+    this.rankedWarHits,
+    this.raidHits,
+    this.territory,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Faction.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$FactionFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$FactionToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$FactionToJson(this);
+
+  @JsonKey(name: 'respect')
+  final int? respect;
+  @JsonKey(name: 'retaliations')
+  final int? retaliations;
+  @JsonKey(name: 'ranked_war_hits')
+  final int? rankedWarHits;
+  @JsonKey(name: 'raid_hits')
+  final int? raidHits;
+  @JsonKey(name: 'territory')
+  final PersonalStatsAttackingExtended$Attacking$Faction$Territory? territory;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$FactionFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Faction &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.retaliations, retaliations) ||
+                const DeepCollectionEquality().equals(other.retaliations, retaliations)) &&
+            (identical(other.rankedWarHits, rankedWarHits) ||
+                const DeepCollectionEquality().equals(other.rankedWarHits, rankedWarHits)) &&
+            (identical(other.raidHits, raidHits) || const DeepCollectionEquality().equals(other.raidHits, raidHits)) &&
+            (identical(other.territory, territory) ||
+                const DeepCollectionEquality().equals(other.territory, territory)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(respect) ^
+      const DeepCollectionEquality().hash(retaliations) ^
+      const DeepCollectionEquality().hash(rankedWarHits) ^
+      const DeepCollectionEquality().hash(raidHits) ^
+      const DeepCollectionEquality().hash(territory) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$FactionExtension
+    on PersonalStatsAttackingExtended$Attacking$Faction {
+  PersonalStatsAttackingExtended$Attacking$Faction copyWith(
+      {int? respect,
+      int? retaliations,
+      int? rankedWarHits,
+      int? raidHits,
+      PersonalStatsAttackingExtended$Attacking$Faction$Territory? territory}) {
+    return PersonalStatsAttackingExtended$Attacking$Faction(
+        respect: respect ?? this.respect,
+        retaliations: retaliations ?? this.retaliations,
+        rankedWarHits: rankedWarHits ?? this.rankedWarHits,
+        raidHits: raidHits ?? this.raidHits,
+        territory: territory ?? this.territory);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Faction copyWithWrapped(
+      {Wrapped<int?>? respect,
+      Wrapped<int?>? retaliations,
+      Wrapped<int?>? rankedWarHits,
+      Wrapped<int?>? raidHits,
+      Wrapped<PersonalStatsAttackingExtended$Attacking$Faction$Territory?>? territory}) {
+    return PersonalStatsAttackingExtended$Attacking$Faction(
+        respect: (respect != null ? respect.value : this.respect),
+        retaliations: (retaliations != null ? retaliations.value : this.retaliations),
+        rankedWarHits: (rankedWarHits != null ? rankedWarHits.value : this.rankedWarHits),
+        raidHits: (raidHits != null ? raidHits.value : this.raidHits),
+        territory: (territory != null ? territory.value : this.territory));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Attacks {
+  const PersonalStatsAttackingPopular$Attacking$Attacks({
+    this.won,
+    this.lost,
+    this.stalemate,
+    this.assist,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Attacks.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$AttacksFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$AttacksToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$AttacksToJson(this);
+
+  @JsonKey(name: 'won')
+  final int? won;
+  @JsonKey(name: 'lost')
+  final int? lost;
+  @JsonKey(name: 'stalemate')
+  final int? stalemate;
+  @JsonKey(name: 'assist')
+  final int? assist;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$AttacksFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Attacks &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)) &&
+            (identical(other.stalemate, stalemate) ||
+                const DeepCollectionEquality().equals(other.stalemate, stalemate)) &&
+            (identical(other.assist, assist) || const DeepCollectionEquality().equals(other.assist, assist)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(won) ^
+      const DeepCollectionEquality().hash(lost) ^
+      const DeepCollectionEquality().hash(stalemate) ^
+      const DeepCollectionEquality().hash(assist) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$AttacksExtension on PersonalStatsAttackingPopular$Attacking$Attacks {
+  PersonalStatsAttackingPopular$Attacking$Attacks copyWith({int? won, int? lost, int? stalemate, int? assist}) {
+    return PersonalStatsAttackingPopular$Attacking$Attacks(
+        won: won ?? this.won,
+        lost: lost ?? this.lost,
+        stalemate: stalemate ?? this.stalemate,
+        assist: assist ?? this.assist);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Attacks copyWithWrapped(
+      {Wrapped<int?>? won, Wrapped<int?>? lost, Wrapped<int?>? stalemate, Wrapped<int?>? assist}) {
+    return PersonalStatsAttackingPopular$Attacking$Attacks(
+        won: (won != null ? won.value : this.won),
+        lost: (lost != null ? lost.value : this.lost),
+        stalemate: (stalemate != null ? stalemate.value : this.stalemate),
+        assist: (assist != null ? assist.value : this.assist));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Defends {
+  const PersonalStatsAttackingPopular$Attacking$Defends({
+    this.won,
+    this.lost,
+    this.stalemate,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Defends.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$DefendsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$DefendsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$DefendsToJson(this);
+
+  @JsonKey(name: 'won')
+  final int? won;
+  @JsonKey(name: 'lost')
+  final int? lost;
+  @JsonKey(name: 'stalemate')
+  final int? stalemate;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$DefendsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Defends &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)) &&
+            (identical(other.lost, lost) || const DeepCollectionEquality().equals(other.lost, lost)) &&
+            (identical(other.stalemate, stalemate) ||
+                const DeepCollectionEquality().equals(other.stalemate, stalemate)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(won) ^
+      const DeepCollectionEquality().hash(lost) ^
+      const DeepCollectionEquality().hash(stalemate) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$DefendsExtension on PersonalStatsAttackingPopular$Attacking$Defends {
+  PersonalStatsAttackingPopular$Attacking$Defends copyWith({int? won, int? lost, int? stalemate}) {
+    return PersonalStatsAttackingPopular$Attacking$Defends(
+        won: won ?? this.won, lost: lost ?? this.lost, stalemate: stalemate ?? this.stalemate);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Defends copyWithWrapped(
+      {Wrapped<int?>? won, Wrapped<int?>? lost, Wrapped<int?>? stalemate}) {
+    return PersonalStatsAttackingPopular$Attacking$Defends(
+        won: (won != null ? won.value : this.won),
+        lost: (lost != null ? lost.value : this.lost),
+        stalemate: (stalemate != null ? stalemate.value : this.stalemate));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Escapes {
+  const PersonalStatsAttackingPopular$Attacking$Escapes({
+    this.player,
+    this.foes,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Escapes.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$EscapesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$EscapesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$EscapesToJson(this);
+
+  @JsonKey(name: 'player')
+  final int? player;
+  @JsonKey(name: 'foes')
+  final int? foes;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$EscapesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Escapes &&
+            (identical(other.player, player) || const DeepCollectionEquality().equals(other.player, player)) &&
+            (identical(other.foes, foes) || const DeepCollectionEquality().equals(other.foes, foes)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(player) ^ const DeepCollectionEquality().hash(foes) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$EscapesExtension on PersonalStatsAttackingPopular$Attacking$Escapes {
+  PersonalStatsAttackingPopular$Attacking$Escapes copyWith({int? player, int? foes}) {
+    return PersonalStatsAttackingPopular$Attacking$Escapes(player: player ?? this.player, foes: foes ?? this.foes);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Escapes copyWithWrapped({Wrapped<int?>? player, Wrapped<int?>? foes}) {
+    return PersonalStatsAttackingPopular$Attacking$Escapes(
+        player: (player != null ? player.value : this.player), foes: (foes != null ? foes.value : this.foes));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Killstreak {
+  const PersonalStatsAttackingPopular$Attacking$Killstreak({
+    this.best,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Killstreak.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$KillstreakFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$KillstreakToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$KillstreakToJson(this);
+
+  @JsonKey(name: 'best')
+  final int? best;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$KillstreakFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Killstreak &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(best) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$KillstreakExtension
+    on PersonalStatsAttackingPopular$Attacking$Killstreak {
+  PersonalStatsAttackingPopular$Attacking$Killstreak copyWith({int? best}) {
+    return PersonalStatsAttackingPopular$Attacking$Killstreak(best: best ?? this.best);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Killstreak copyWithWrapped({Wrapped<int?>? best}) {
+    return PersonalStatsAttackingPopular$Attacking$Killstreak(best: (best != null ? best.value : this.best));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Hits {
+  const PersonalStatsAttackingPopular$Attacking$Hits({
+    this.success,
+    this.miss,
+    this.critical,
+    this.oneHitKills,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Hits.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$HitsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$HitsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$HitsToJson(this);
+
+  @JsonKey(name: 'success')
+  final int? success;
+  @JsonKey(name: 'miss')
+  final int? miss;
+  @JsonKey(name: 'critical')
+  final int? critical;
+  @JsonKey(name: 'one_hit_kills')
+  final int? oneHitKills;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$HitsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Hits &&
+            (identical(other.success, success) || const DeepCollectionEquality().equals(other.success, success)) &&
+            (identical(other.miss, miss) || const DeepCollectionEquality().equals(other.miss, miss)) &&
+            (identical(other.critical, critical) || const DeepCollectionEquality().equals(other.critical, critical)) &&
+            (identical(other.oneHitKills, oneHitKills) ||
+                const DeepCollectionEquality().equals(other.oneHitKills, oneHitKills)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(success) ^
+      const DeepCollectionEquality().hash(miss) ^
+      const DeepCollectionEquality().hash(critical) ^
+      const DeepCollectionEquality().hash(oneHitKills) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$HitsExtension on PersonalStatsAttackingPopular$Attacking$Hits {
+  PersonalStatsAttackingPopular$Attacking$Hits copyWith({int? success, int? miss, int? critical, int? oneHitKills}) {
+    return PersonalStatsAttackingPopular$Attacking$Hits(
+        success: success ?? this.success,
+        miss: miss ?? this.miss,
+        critical: critical ?? this.critical,
+        oneHitKills: oneHitKills ?? this.oneHitKills);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Hits copyWithWrapped(
+      {Wrapped<int?>? success, Wrapped<int?>? miss, Wrapped<int?>? critical, Wrapped<int?>? oneHitKills}) {
+    return PersonalStatsAttackingPopular$Attacking$Hits(
+        success: (success != null ? success.value : this.success),
+        miss: (miss != null ? miss.value : this.miss),
+        critical: (critical != null ? critical.value : this.critical),
+        oneHitKills: (oneHitKills != null ? oneHitKills.value : this.oneHitKills));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Damage {
+  const PersonalStatsAttackingPopular$Attacking$Damage({
+    this.total,
+    this.best,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Damage.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$DamageFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$DamageToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$DamageToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'best')
+  final int? best;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$DamageFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Damage &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^ const DeepCollectionEquality().hash(best) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$DamageExtension on PersonalStatsAttackingPopular$Attacking$Damage {
+  PersonalStatsAttackingPopular$Attacking$Damage copyWith({int? total, int? best}) {
+    return PersonalStatsAttackingPopular$Attacking$Damage(total: total ?? this.total, best: best ?? this.best);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Damage copyWithWrapped({Wrapped<int?>? total, Wrapped<int?>? best}) {
+    return PersonalStatsAttackingPopular$Attacking$Damage(
+        total: (total != null ? total.value : this.total), best: (best != null ? best.value : this.best));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Networth {
+  const PersonalStatsAttackingPopular$Attacking$Networth({
+    this.moneyMugged,
+    this.largestMug,
+    this.itemsLooted,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Networth.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$NetworthFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$NetworthToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$NetworthToJson(this);
+
+  @JsonKey(name: 'money_mugged')
+  final int? moneyMugged;
+  @JsonKey(name: 'largest_mug')
+  final int? largestMug;
+  @JsonKey(name: 'items_looted')
+  final int? itemsLooted;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$NetworthFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Networth &&
+            (identical(other.moneyMugged, moneyMugged) ||
+                const DeepCollectionEquality().equals(other.moneyMugged, moneyMugged)) &&
+            (identical(other.largestMug, largestMug) ||
+                const DeepCollectionEquality().equals(other.largestMug, largestMug)) &&
+            (identical(other.itemsLooted, itemsLooted) ||
+                const DeepCollectionEquality().equals(other.itemsLooted, itemsLooted)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(moneyMugged) ^
+      const DeepCollectionEquality().hash(largestMug) ^
+      const DeepCollectionEquality().hash(itemsLooted) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$NetworthExtension
+    on PersonalStatsAttackingPopular$Attacking$Networth {
+  PersonalStatsAttackingPopular$Attacking$Networth copyWith({int? moneyMugged, int? largestMug, int? itemsLooted}) {
+    return PersonalStatsAttackingPopular$Attacking$Networth(
+        moneyMugged: moneyMugged ?? this.moneyMugged,
+        largestMug: largestMug ?? this.largestMug,
+        itemsLooted: itemsLooted ?? this.itemsLooted);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Networth copyWithWrapped(
+      {Wrapped<int?>? moneyMugged, Wrapped<int?>? largestMug, Wrapped<int?>? itemsLooted}) {
+    return PersonalStatsAttackingPopular$Attacking$Networth(
+        moneyMugged: (moneyMugged != null ? moneyMugged.value : this.moneyMugged),
+        largestMug: (largestMug != null ? largestMug.value : this.largestMug),
+        itemsLooted: (itemsLooted != null ? itemsLooted.value : this.itemsLooted));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Ammunition {
+  const PersonalStatsAttackingPopular$Attacking$Ammunition({
+    this.total,
+    this.special,
+    this.hollowPoint,
+    this.tracer,
+    this.piercing,
+    this.incendiary,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Ammunition.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$AmmunitionFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$AmmunitionToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$AmmunitionToJson(this);
+
+  @JsonKey(name: 'total')
+  final int? total;
+  @JsonKey(name: 'special')
+  final int? special;
+  @JsonKey(name: 'hollow_point')
+  final int? hollowPoint;
+  @JsonKey(name: 'tracer')
+  final int? tracer;
+  @JsonKey(name: 'piercing')
+  final int? piercing;
+  @JsonKey(name: 'incendiary')
+  final int? incendiary;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$AmmunitionFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Ammunition &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
+            (identical(other.special, special) || const DeepCollectionEquality().equals(other.special, special)) &&
+            (identical(other.hollowPoint, hollowPoint) ||
+                const DeepCollectionEquality().equals(other.hollowPoint, hollowPoint)) &&
+            (identical(other.tracer, tracer) || const DeepCollectionEquality().equals(other.tracer, tracer)) &&
+            (identical(other.piercing, piercing) || const DeepCollectionEquality().equals(other.piercing, piercing)) &&
+            (identical(other.incendiary, incendiary) ||
+                const DeepCollectionEquality().equals(other.incendiary, incendiary)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(total) ^
+      const DeepCollectionEquality().hash(special) ^
+      const DeepCollectionEquality().hash(hollowPoint) ^
+      const DeepCollectionEquality().hash(tracer) ^
+      const DeepCollectionEquality().hash(piercing) ^
+      const DeepCollectionEquality().hash(incendiary) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$AmmunitionExtension
+    on PersonalStatsAttackingPopular$Attacking$Ammunition {
+  PersonalStatsAttackingPopular$Attacking$Ammunition copyWith(
+      {int? total, int? special, int? hollowPoint, int? tracer, int? piercing, int? incendiary}) {
+    return PersonalStatsAttackingPopular$Attacking$Ammunition(
+        total: total ?? this.total,
+        special: special ?? this.special,
+        hollowPoint: hollowPoint ?? this.hollowPoint,
+        tracer: tracer ?? this.tracer,
+        piercing: piercing ?? this.piercing,
+        incendiary: incendiary ?? this.incendiary);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Ammunition copyWithWrapped(
+      {Wrapped<int?>? total,
+      Wrapped<int?>? special,
+      Wrapped<int?>? hollowPoint,
+      Wrapped<int?>? tracer,
+      Wrapped<int?>? piercing,
+      Wrapped<int?>? incendiary}) {
+    return PersonalStatsAttackingPopular$Attacking$Ammunition(
+        total: (total != null ? total.value : this.total),
+        special: (special != null ? special.value : this.special),
+        hollowPoint: (hollowPoint != null ? hollowPoint.value : this.hollowPoint),
+        tracer: (tracer != null ? tracer.value : this.tracer),
+        piercing: (piercing != null ? piercing.value : this.piercing),
+        incendiary: (incendiary != null ? incendiary.value : this.incendiary));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPopular$Attacking$Faction {
+  const PersonalStatsAttackingPopular$Attacking$Faction({
+    this.respect,
+    this.rankedWarHits,
+  });
+
+  factory PersonalStatsAttackingPopular$Attacking$Faction.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPopular$Attacking$FactionFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPopular$Attacking$FactionToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPopular$Attacking$FactionToJson(this);
+
+  @JsonKey(name: 'respect')
+  final int? respect;
+  @JsonKey(name: 'ranked_war_hits')
+  final int? rankedWarHits;
+  static const fromJsonFactory = _$PersonalStatsAttackingPopular$Attacking$FactionFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPopular$Attacking$Faction &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)) &&
+            (identical(other.rankedWarHits, rankedWarHits) ||
+                const DeepCollectionEquality().equals(other.rankedWarHits, rankedWarHits)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(respect) ^
+      const DeepCollectionEquality().hash(rankedWarHits) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPopular$Attacking$FactionExtension on PersonalStatsAttackingPopular$Attacking$Faction {
+  PersonalStatsAttackingPopular$Attacking$Faction copyWith({int? respect, int? rankedWarHits}) {
+    return PersonalStatsAttackingPopular$Attacking$Faction(
+        respect: respect ?? this.respect, rankedWarHits: rankedWarHits ?? this.rankedWarHits);
+  }
+
+  PersonalStatsAttackingPopular$Attacking$Faction copyWithWrapped(
+      {Wrapped<int?>? respect, Wrapped<int?>? rankedWarHits}) {
+    return PersonalStatsAttackingPopular$Attacking$Faction(
+        respect: (respect != null ? respect.value : this.respect),
+        rankedWarHits: (rankedWarHits != null ? rankedWarHits.value : this.rankedWarHits));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class UserCrimeDetailsCardSkimming$CardDetails$Areas$Item {
   const UserCrimeDetailsCardSkimming$CardDetails$Areas$Item({
     this.id,
@@ -12206,6 +20321,223 @@ extension $UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemExtension
   UserCrimeDetailsCardSkimming$CardDetails$Areas$Item copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? amount}) {
     return UserCrimeDetailsCardSkimming$CardDetails$Areas$Item(
         id: (id != null ? id.value : this.id), amount: (amount != null ? amount.value : this.amount));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTrading$Trading$Items$Bought {
+  const PersonalStatsTrading$Trading$Items$Bought({
+    this.market,
+    this.shops,
+  });
+
+  factory PersonalStatsTrading$Trading$Items$Bought.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTrading$Trading$Items$BoughtFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTrading$Trading$Items$BoughtToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTrading$Trading$Items$BoughtToJson(this);
+
+  @JsonKey(name: 'market')
+  final int? market;
+  @JsonKey(name: 'shops')
+  final int? shops;
+  static const fromJsonFactory = _$PersonalStatsTrading$Trading$Items$BoughtFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTrading$Trading$Items$Bought &&
+            (identical(other.market, market) || const DeepCollectionEquality().equals(other.market, market)) &&
+            (identical(other.shops, shops) || const DeepCollectionEquality().equals(other.shops, shops)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(market) ^ const DeepCollectionEquality().hash(shops) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsTrading$Trading$Items$BoughtExtension on PersonalStatsTrading$Trading$Items$Bought {
+  PersonalStatsTrading$Trading$Items$Bought copyWith({int? market, int? shops}) {
+    return PersonalStatsTrading$Trading$Items$Bought(market: market ?? this.market, shops: shops ?? this.shops);
+  }
+
+  PersonalStatsTrading$Trading$Items$Bought copyWithWrapped({Wrapped<int?>? market, Wrapped<int?>? shops}) {
+    return PersonalStatsTrading$Trading$Items$Bought(
+        market: (market != null ? market.value : this.market), shops: (shops != null ? shops.value : this.shops));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsTrading$Trading$Items$Auctions {
+  const PersonalStatsTrading$Trading$Items$Auctions({
+    this.won,
+    this.sold,
+  });
+
+  factory PersonalStatsTrading$Trading$Items$Auctions.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTrading$Trading$Items$AuctionsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTrading$Trading$Items$AuctionsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTrading$Trading$Items$AuctionsToJson(this);
+
+  @JsonKey(name: 'won')
+  final int? won;
+  @JsonKey(name: 'sold')
+  final int? sold;
+  static const fromJsonFactory = _$PersonalStatsTrading$Trading$Items$AuctionsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTrading$Trading$Items$Auctions &&
+            (identical(other.won, won) || const DeepCollectionEquality().equals(other.won, won)) &&
+            (identical(other.sold, sold) || const DeepCollectionEquality().equals(other.sold, sold)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(won) ^ const DeepCollectionEquality().hash(sold) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsTrading$Trading$Items$AuctionsExtension on PersonalStatsTrading$Trading$Items$Auctions {
+  PersonalStatsTrading$Trading$Items$Auctions copyWith({int? won, int? sold}) {
+    return PersonalStatsTrading$Trading$Items$Auctions(won: won ?? this.won, sold: sold ?? this.sold);
+  }
+
+  PersonalStatsTrading$Trading$Items$Auctions copyWithWrapped({Wrapped<int?>? won, Wrapped<int?>? sold}) {
+    return PersonalStatsTrading$Trading$Items$Auctions(
+        won: (won != null ? won.value : this.won), sold: (sold != null ? sold.value : this.sold));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingPublic$Attacking$Faction$Territory {
+  const PersonalStatsAttackingPublic$Attacking$Faction$Territory({
+    this.wallJoins,
+    this.wallClears,
+    this.wallTime,
+  });
+
+  factory PersonalStatsAttackingPublic$Attacking$Faction$Territory.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingPublic$Attacking$Faction$TerritoryFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingPublic$Attacking$Faction$TerritoryToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingPublic$Attacking$Faction$TerritoryToJson(this);
+
+  @JsonKey(name: 'wall_joins')
+  final int? wallJoins;
+  @JsonKey(name: 'wall_clears')
+  final int? wallClears;
+  @JsonKey(name: 'wall_time')
+  final int? wallTime;
+  static const fromJsonFactory = _$PersonalStatsAttackingPublic$Attacking$Faction$TerritoryFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingPublic$Attacking$Faction$Territory &&
+            (identical(other.wallJoins, wallJoins) ||
+                const DeepCollectionEquality().equals(other.wallJoins, wallJoins)) &&
+            (identical(other.wallClears, wallClears) ||
+                const DeepCollectionEquality().equals(other.wallClears, wallClears)) &&
+            (identical(other.wallTime, wallTime) || const DeepCollectionEquality().equals(other.wallTime, wallTime)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(wallJoins) ^
+      const DeepCollectionEquality().hash(wallClears) ^
+      const DeepCollectionEquality().hash(wallTime) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingPublic$Attacking$Faction$TerritoryExtension
+    on PersonalStatsAttackingPublic$Attacking$Faction$Territory {
+  PersonalStatsAttackingPublic$Attacking$Faction$Territory copyWith({int? wallJoins, int? wallClears, int? wallTime}) {
+    return PersonalStatsAttackingPublic$Attacking$Faction$Territory(
+        wallJoins: wallJoins ?? this.wallJoins,
+        wallClears: wallClears ?? this.wallClears,
+        wallTime: wallTime ?? this.wallTime);
+  }
+
+  PersonalStatsAttackingPublic$Attacking$Faction$Territory copyWithWrapped(
+      {Wrapped<int?>? wallJoins, Wrapped<int?>? wallClears, Wrapped<int?>? wallTime}) {
+    return PersonalStatsAttackingPublic$Attacking$Faction$Territory(
+        wallJoins: (wallJoins != null ? wallJoins.value : this.wallJoins),
+        wallClears: (wallClears != null ? wallClears.value : this.wallClears),
+        wallTime: (wallTime != null ? wallTime.value : this.wallTime));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsAttackingExtended$Attacking$Faction$Territory {
+  const PersonalStatsAttackingExtended$Attacking$Faction$Territory({
+    this.wallJoins,
+    this.wallClears,
+    this.wallTime,
+  });
+
+  factory PersonalStatsAttackingExtended$Attacking$Faction$Territory.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsAttackingExtended$Attacking$Faction$TerritoryFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsAttackingExtended$Attacking$Faction$TerritoryToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsAttackingExtended$Attacking$Faction$TerritoryToJson(this);
+
+  @JsonKey(name: 'wall_joins')
+  final int? wallJoins;
+  @JsonKey(name: 'wall_clears')
+  final int? wallClears;
+  @JsonKey(name: 'wall_time')
+  final int? wallTime;
+  static const fromJsonFactory = _$PersonalStatsAttackingExtended$Attacking$Faction$TerritoryFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsAttackingExtended$Attacking$Faction$Territory &&
+            (identical(other.wallJoins, wallJoins) ||
+                const DeepCollectionEquality().equals(other.wallJoins, wallJoins)) &&
+            (identical(other.wallClears, wallClears) ||
+                const DeepCollectionEquality().equals(other.wallClears, wallClears)) &&
+            (identical(other.wallTime, wallTime) || const DeepCollectionEquality().equals(other.wallTime, wallTime)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(wallJoins) ^
+      const DeepCollectionEquality().hash(wallClears) ^
+      const DeepCollectionEquality().hash(wallTime) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsAttackingExtended$Attacking$Faction$TerritoryExtension
+    on PersonalStatsAttackingExtended$Attacking$Faction$Territory {
+  PersonalStatsAttackingExtended$Attacking$Faction$Territory copyWith(
+      {int? wallJoins, int? wallClears, int? wallTime}) {
+    return PersonalStatsAttackingExtended$Attacking$Faction$Territory(
+        wallJoins: wallJoins ?? this.wallJoins,
+        wallClears: wallClears ?? this.wallClears,
+        wallTime: wallTime ?? this.wallTime);
+  }
+
+  PersonalStatsAttackingExtended$Attacking$Faction$Territory copyWithWrapped(
+      {Wrapped<int?>? wallJoins, Wrapped<int?>? wallClears, Wrapped<int?>? wallTime}) {
+    return PersonalStatsAttackingExtended$Attacking$Faction$Territory(
+        wallJoins: (wallJoins != null ? wallJoins.value : this.wallJoins),
+        wallClears: (wallClears != null ? wallClears.value : this.wallClears),
+        wallTime: (wallTime != null ? wallTime.value : this.wallTime));
   }
 }
 
@@ -13817,6 +22149,129 @@ List<enums.TornSelectionName>? tornSelectionNameNullableListFromJson(
   return tornSelectionName.map((e) => tornSelectionNameFromJson(e.toString())).toList();
 }
 
+String? personalStatsCategoryEnumNullableToJson(enums.PersonalStatsCategoryEnum? personalStatsCategoryEnum) {
+  return personalStatsCategoryEnum?.value;
+}
+
+String? personalStatsCategoryEnumToJson(enums.PersonalStatsCategoryEnum personalStatsCategoryEnum) {
+  return personalStatsCategoryEnum.value;
+}
+
+enums.PersonalStatsCategoryEnum personalStatsCategoryEnumFromJson(
+  Object? personalStatsCategoryEnum, [
+  enums.PersonalStatsCategoryEnum? defaultValue,
+]) {
+  return enums.PersonalStatsCategoryEnum.values.firstWhereOrNull((e) => e.value == personalStatsCategoryEnum) ??
+      defaultValue ??
+      enums.PersonalStatsCategoryEnum.swaggerGeneratedUnknown;
+}
+
+enums.PersonalStatsCategoryEnum? personalStatsCategoryEnumNullableFromJson(
+  Object? personalStatsCategoryEnum, [
+  enums.PersonalStatsCategoryEnum? defaultValue,
+]) {
+  if (personalStatsCategoryEnum == null) {
+    return null;
+  }
+  return enums.PersonalStatsCategoryEnum.values.firstWhereOrNull((e) => e.value == personalStatsCategoryEnum) ??
+      defaultValue;
+}
+
+String personalStatsCategoryEnumExplodedListToJson(List<enums.PersonalStatsCategoryEnum>? personalStatsCategoryEnum) {
+  return personalStatsCategoryEnum?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> personalStatsCategoryEnumListToJson(List<enums.PersonalStatsCategoryEnum>? personalStatsCategoryEnum) {
+  if (personalStatsCategoryEnum == null) {
+    return [];
+  }
+
+  return personalStatsCategoryEnum.map((e) => e.value!).toList();
+}
+
+List<enums.PersonalStatsCategoryEnum> personalStatsCategoryEnumListFromJson(
+  List? personalStatsCategoryEnum, [
+  List<enums.PersonalStatsCategoryEnum>? defaultValue,
+]) {
+  if (personalStatsCategoryEnum == null) {
+    return defaultValue ?? [];
+  }
+
+  return personalStatsCategoryEnum.map((e) => personalStatsCategoryEnumFromJson(e.toString())).toList();
+}
+
+List<enums.PersonalStatsCategoryEnum>? personalStatsCategoryEnumNullableListFromJson(
+  List? personalStatsCategoryEnum, [
+  List<enums.PersonalStatsCategoryEnum>? defaultValue,
+]) {
+  if (personalStatsCategoryEnum == null) {
+    return defaultValue;
+  }
+
+  return personalStatsCategoryEnum.map((e) => personalStatsCategoryEnumFromJson(e.toString())).toList();
+}
+
+String? personalStatsStatNameNullableToJson(enums.PersonalStatsStatName? personalStatsStatName) {
+  return personalStatsStatName?.value;
+}
+
+String? personalStatsStatNameToJson(enums.PersonalStatsStatName personalStatsStatName) {
+  return personalStatsStatName.value;
+}
+
+enums.PersonalStatsStatName personalStatsStatNameFromJson(
+  Object? personalStatsStatName, [
+  enums.PersonalStatsStatName? defaultValue,
+]) {
+  return enums.PersonalStatsStatName.values.firstWhereOrNull((e) => e.value == personalStatsStatName) ??
+      defaultValue ??
+      enums.PersonalStatsStatName.swaggerGeneratedUnknown;
+}
+
+enums.PersonalStatsStatName? personalStatsStatNameNullableFromJson(
+  Object? personalStatsStatName, [
+  enums.PersonalStatsStatName? defaultValue,
+]) {
+  if (personalStatsStatName == null) {
+    return null;
+  }
+  return enums.PersonalStatsStatName.values.firstWhereOrNull((e) => e.value == personalStatsStatName) ?? defaultValue;
+}
+
+String personalStatsStatNameExplodedListToJson(List<enums.PersonalStatsStatName>? personalStatsStatName) {
+  return personalStatsStatName?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> personalStatsStatNameListToJson(List<enums.PersonalStatsStatName>? personalStatsStatName) {
+  if (personalStatsStatName == null) {
+    return [];
+  }
+
+  return personalStatsStatName.map((e) => e.value!).toList();
+}
+
+List<enums.PersonalStatsStatName> personalStatsStatNameListFromJson(
+  List? personalStatsStatName, [
+  List<enums.PersonalStatsStatName>? defaultValue,
+]) {
+  if (personalStatsStatName == null) {
+    return defaultValue ?? [];
+  }
+
+  return personalStatsStatName.map((e) => personalStatsStatNameFromJson(e.toString())).toList();
+}
+
+List<enums.PersonalStatsStatName>? personalStatsStatNameNullableListFromJson(
+  List? personalStatsStatName, [
+  List<enums.PersonalStatsStatName>? defaultValue,
+]) {
+  if (personalStatsStatName == null) {
+    return defaultValue;
+  }
+
+  return personalStatsStatName.map((e) => personalStatsStatNameFromJson(e.toString())).toList();
+}
+
 String? userItemMarkeListingItemDetailsRarityNullableToJson(
     enums.UserItemMarkeListingItemDetailsRarity? userItemMarkeListingItemDetailsRarity) {
   return userItemMarkeListingItemDetailsRarity?.value;
@@ -14381,68 +22836,6 @@ List<enums.ForumThreadsGetSort>? forumThreadsGetSortNullableListFromJson(
   }
 
   return forumThreadsGetSort.map((e) => forumThreadsGetSortFromJson(e.toString())).toList();
-}
-
-String? forumThreadIdPostsGetCatNullableToJson(enums.ForumThreadIdPostsGetCat? forumThreadIdPostsGetCat) {
-  return forumThreadIdPostsGetCat?.value;
-}
-
-String? forumThreadIdPostsGetCatToJson(enums.ForumThreadIdPostsGetCat forumThreadIdPostsGetCat) {
-  return forumThreadIdPostsGetCat.value;
-}
-
-enums.ForumThreadIdPostsGetCat forumThreadIdPostsGetCatFromJson(
-  Object? forumThreadIdPostsGetCat, [
-  enums.ForumThreadIdPostsGetCat? defaultValue,
-]) {
-  return enums.ForumThreadIdPostsGetCat.values.firstWhereOrNull((e) => e.value == forumThreadIdPostsGetCat) ??
-      defaultValue ??
-      enums.ForumThreadIdPostsGetCat.swaggerGeneratedUnknown;
-}
-
-enums.ForumThreadIdPostsGetCat? forumThreadIdPostsGetCatNullableFromJson(
-  Object? forumThreadIdPostsGetCat, [
-  enums.ForumThreadIdPostsGetCat? defaultValue,
-]) {
-  if (forumThreadIdPostsGetCat == null) {
-    return null;
-  }
-  return enums.ForumThreadIdPostsGetCat.values.firstWhereOrNull((e) => e.value == forumThreadIdPostsGetCat) ??
-      defaultValue;
-}
-
-String forumThreadIdPostsGetCatExplodedListToJson(List<enums.ForumThreadIdPostsGetCat>? forumThreadIdPostsGetCat) {
-  return forumThreadIdPostsGetCat?.map((e) => e.value!).join(',') ?? '';
-}
-
-List<String> forumThreadIdPostsGetCatListToJson(List<enums.ForumThreadIdPostsGetCat>? forumThreadIdPostsGetCat) {
-  if (forumThreadIdPostsGetCat == null) {
-    return [];
-  }
-
-  return forumThreadIdPostsGetCat.map((e) => e.value!).toList();
-}
-
-List<enums.ForumThreadIdPostsGetCat> forumThreadIdPostsGetCatListFromJson(
-  List? forumThreadIdPostsGetCat, [
-  List<enums.ForumThreadIdPostsGetCat>? defaultValue,
-]) {
-  if (forumThreadIdPostsGetCat == null) {
-    return defaultValue ?? [];
-  }
-
-  return forumThreadIdPostsGetCat.map((e) => forumThreadIdPostsGetCatFromJson(e.toString())).toList();
-}
-
-List<enums.ForumThreadIdPostsGetCat>? forumThreadIdPostsGetCatNullableListFromJson(
-  List? forumThreadIdPostsGetCat, [
-  List<enums.ForumThreadIdPostsGetCat>? defaultValue,
-]) {
-  if (forumThreadIdPostsGetCat == null) {
-    return defaultValue;
-  }
-
-  return forumThreadIdPostsGetCat.map((e) => forumThreadIdPostsGetCatFromJson(e.toString())).toList();
 }
 
 String? forumGetSortNullableToJson(enums.ForumGetSort? forumGetSort) {
@@ -15054,67 +23447,6 @@ List<enums.UserIdForumpostsGetSort>? userIdForumpostsGetSortNullableListFromJson
   }
 
   return userIdForumpostsGetSort.map((e) => userIdForumpostsGetSortFromJson(e.toString())).toList();
-}
-
-String? userForumpostsGetCatNullableToJson(enums.UserForumpostsGetCat? userForumpostsGetCat) {
-  return userForumpostsGetCat?.value;
-}
-
-String? userForumpostsGetCatToJson(enums.UserForumpostsGetCat userForumpostsGetCat) {
-  return userForumpostsGetCat.value;
-}
-
-enums.UserForumpostsGetCat userForumpostsGetCatFromJson(
-  Object? userForumpostsGetCat, [
-  enums.UserForumpostsGetCat? defaultValue,
-]) {
-  return enums.UserForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userForumpostsGetCat) ??
-      defaultValue ??
-      enums.UserForumpostsGetCat.swaggerGeneratedUnknown;
-}
-
-enums.UserForumpostsGetCat? userForumpostsGetCatNullableFromJson(
-  Object? userForumpostsGetCat, [
-  enums.UserForumpostsGetCat? defaultValue,
-]) {
-  if (userForumpostsGetCat == null) {
-    return null;
-  }
-  return enums.UserForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userForumpostsGetCat) ?? defaultValue;
-}
-
-String userForumpostsGetCatExplodedListToJson(List<enums.UserForumpostsGetCat>? userForumpostsGetCat) {
-  return userForumpostsGetCat?.map((e) => e.value!).join(',') ?? '';
-}
-
-List<String> userForumpostsGetCatListToJson(List<enums.UserForumpostsGetCat>? userForumpostsGetCat) {
-  if (userForumpostsGetCat == null) {
-    return [];
-  }
-
-  return userForumpostsGetCat.map((e) => e.value!).toList();
-}
-
-List<enums.UserForumpostsGetCat> userForumpostsGetCatListFromJson(
-  List? userForumpostsGetCat, [
-  List<enums.UserForumpostsGetCat>? defaultValue,
-]) {
-  if (userForumpostsGetCat == null) {
-    return defaultValue ?? [];
-  }
-
-  return userForumpostsGetCat.map((e) => userForumpostsGetCatFromJson(e.toString())).toList();
-}
-
-List<enums.UserForumpostsGetCat>? userForumpostsGetCatNullableListFromJson(
-  List? userForumpostsGetCat, [
-  List<enums.UserForumpostsGetCat>? defaultValue,
-]) {
-  if (userForumpostsGetCat == null) {
-    return defaultValue;
-  }
-
-  return userForumpostsGetCat.map((e) => userForumpostsGetCatFromJson(e.toString())).toList();
 }
 
 String? userForumpostsGetSortNullableToJson(enums.UserForumpostsGetSort? userForumpostsGetSort) {
