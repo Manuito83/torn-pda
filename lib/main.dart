@@ -682,14 +682,21 @@ Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
   }
 }
 
-logToUser(String? message, {int duration = 3, Color? color, Color? borderColor}) {
+logToUser(
+  String? message, {
+  int duration = 3,
+  Color? textColor,
+  Color? backgroundcolor,
+  Color? borderColor,
+}) {
   log(message.toString());
   if (message == null) return;
-  color ??= Colors.red.shade600;
+  backgroundcolor ??= Colors.red.shade600;
   borderColor ??= Colors.red.shade800;
+  textColor ??= Colors.white;
   if (logAndShowToUser) {
     toastification.showCustom(
-      autoCloseDuration: const Duration(seconds: 3),
+      autoCloseDuration: Duration(seconds: duration),
       alignment: Alignment.bottomCenter,
       builder: (BuildContext context, ToastificationItem holder) {
         return Center(
@@ -698,15 +705,15 @@ logToUser(String? message, {int duration = 3, Color? color, Color? borderColor})
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
-                  color: color,
+                  color: backgroundcolor,
                   border: Border.all(color: borderColor!, width: 2),
                 ),
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.all(2),
                 child: Column(
                   children: [
-                    Text("Debug Message\n", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    Text(message.toString(), maxLines: 10, style: TextStyle(color: Colors.white)),
+                    Text("Debug Message\n", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+                    Text(message.toString(), maxLines: 10, style: TextStyle(color: textColor)),
                   ],
                 ),
               )),

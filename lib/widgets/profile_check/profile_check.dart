@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/other_profile_model.dart';
@@ -210,6 +211,13 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     for (final friend in friendsProv.allFriends) {
       if (friend.playerId == widget.profileId) _isFriend = true;
     }
+
+    logToUser(
+      "Profile Check: API received",
+      backgroundcolor: Colors.blue,
+      borderColor: Colors.white,
+      duration: 8,
+    );
 
     if (otherProfile is OtherProfileModel) {
       _playerName = otherProfile.name;
@@ -527,6 +535,13 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       _infoToShow = true;
       _expandableController.expanded = true;
+
+      logToUser(
+        "Profile Check: expanded!",
+        backgroundcolor: Colors.blue,
+        borderColor: Colors.white,
+        duration: 8,
+      );
     } else {
       _errorDetailsWidget = Container(
         child: const Padding(

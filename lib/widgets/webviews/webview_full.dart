@@ -1422,11 +1422,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             try {
               _currentUrl = uri.toString();
 
-              final html = await webViewController!.getHtml();
-
               hideChatOnLoad();
 
+              final html = await webViewController!.getHtml();
               final document = parse(html);
+
+              // Checks URL for [_assessGeneral]
+              logToUser(
+                "URL on Load Start: $_currentUrl",
+                backgroundcolor: Colors.blue,
+                borderColor: Colors.white,
+                duration: 8,
+              );
+
               _assessGeneral(document);
 
               assessGymAndHuntingEnergyWarning(uri.toString());
@@ -1559,6 +1567,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
               }
 
               _assessTravel(document);
+
+              // Checks URL for [_assessGeneral]
+              logToUser(
+                "URL on Load Stop: $_currentUrl",
+                backgroundcolor: Colors.blue,
+                borderColor: Colors.white,
+                duration: 8,
+              );
+
               _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
@@ -4018,8 +4035,23 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
           !_currentUrl.contains('torn.com/profiles.php?NID=')) {
         _profileTriggered = false;
         _profileAttackWidget = const SizedBox.shrink();
+
+        logToUser(
+          "Profile section discarded: $_currentUrl",
+          backgroundcolor: Colors.blue,
+          borderColor: Colors.white,
+          duration: 8,
+        );
+
         return;
       }
+
+      logToUser(
+        "Profile section triggered: $_currentUrl",
+        backgroundcolor: Colors.blue,
+        borderColor: Colors.white,
+        duration: 8,
+      );
 
       int userId = 0;
 
@@ -4036,6 +4068,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
             final matches = regId.allMatches(_currentUrl);
 
             userId = int.parse(matches.elementAt(0).group(1)!);
+
+            logToUser(
+              "Profile section found XID:$userId",
+              backgroundcolor: Colors.blue,
+              borderColor: Colors.white,
+              duration: 8,
+            );
+
             setState(() {
               _profileAttackWidget = ProfileAttackCheckWidget(
                 key: UniqueKey(),

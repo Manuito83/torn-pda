@@ -929,7 +929,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         logToUser(
           apiReturn.providersMessage,
           duration: 4,
-          color: Colors.blue.shade600,
+          backgroundcolor: Colors.blue.shade600,
           borderColor: Colors.blue.shade800,
         );
       }

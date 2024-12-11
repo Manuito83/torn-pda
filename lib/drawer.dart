@@ -672,7 +672,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           logToUser(
             "Deep link browser opens\n\n$url",
             duration: 3,
-            color: Colors.blue.shade600,
+            backgroundcolor: Colors.blue.shade600,
             borderColor: Colors.blue.shade800,
           );
 
