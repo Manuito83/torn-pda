@@ -57,7 +57,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.6.3'
         ..date = '20 DEC 2024'
         ..features = [
-          " ",
+          "Fixed chat notifications in split screen",
         ],
     );
 

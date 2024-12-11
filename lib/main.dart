@@ -553,6 +553,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (!splitNowActive && splitUserEnabled && screenIsWide) {
         _webViewProvider.webViewSplitActive = true;
         _webViewProvider.browserForegroundWithSplitTransition();
+
+        // Chat notifications should be omitted when switching into splitview
+        //   (note: the case where we are no longer in splitiew is handled below,
+        //    by notifying the webviewProvider with true/false which in turns
+        //    will update the Sendbird Controller with the right value)
+        SendbirdController sb = Get.find<SendbirdController>();
+        sb.webviewInForeground = true;
       } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
         _webViewProvider.webViewSplitActive = false;
         if (_webViewProvider.splitScreenRevertsToApp) {
