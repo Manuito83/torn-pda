@@ -51,11 +51,21 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.2 - Build 467 - 87/11/2024
+    // v3.6.3 - Build 468 - 11/12/2024
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.6.3'
+        ..date = '20 DEC 2024'
+        ..features = [
+          " ",
+        ],
+    );
+
+    // v3.6.2 - Build 467 - 07/11/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.2'
-        ..date = '9 DEC 2024'
+        ..date = '09 DEC 2024'
         ..infoString = 'Hotfix: resolved an issue affecting the reordering of tabs'
         ..features = [
           "Added channel info to chat notifications",
