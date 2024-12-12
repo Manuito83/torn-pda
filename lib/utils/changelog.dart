@@ -51,12 +51,13 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.3 - Build 468 - 11/12/2024
+    // v3.6.3 - Build 470 - 12/12/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.3'
-        ..date = '20 DEC 2024'
+        ..date = '25 DEC 2024'
         ..features = [
+          "Fixed player profile widget",
           "Fixed chat notifications in split screen",
         ],
     );
