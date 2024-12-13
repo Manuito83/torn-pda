@@ -1,13 +1,16 @@
 // Dart imports:
 import 'dart:developer';
+import 'dart:io';
 
 // Package imports:
 import 'package:expandable/expandable.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/other_profile_model.dart';
@@ -195,355 +198,380 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   }
 
   Future<void> _fetchAndAssess() async {
-    final dynamic otherProfile = await ApiCallsV2.getOtherUserProfile_v2(
-      payload: {
-        "id": widget.profileId.toString(),
-      },
-    );
+    try {
+      final dynamic otherProfile = await ApiCallsV2.getOtherUserProfile_v2(
+        payload: {
+          "id": widget.profileId.toString(),
+        },
+      );
 
-    // FRIEND CHECK
-    if (!mounted) return; // We could be unmounted when rapidly skipping the first target
-    final friendsProv = context.read<FriendsProvider>();
-    if (!friendsProv.initialized) {
-      await friendsProv.initFriends();
-    }
-    for (final friend in friendsProv.allFriends) {
-      if (friend.playerId == widget.profileId) _isFriend = true;
-    }
-
-    if (otherProfile is OtherProfileModel) {
-      _playerName = otherProfile.name;
-      _factionName = otherProfile.faction!.factionName;
-      _factionId = otherProfile.faction!.factionId;
-
-      // Estimated stats is not awaited, since it can take a few seconds
-      // to contact YATA / TS and decide what we show
-      estimatedStatsCalculator(otherProfile).then((value) {
-        setState(() {});
-      });
-
-      if (otherProfile.playerId == 2225097) {
-        _isTornPda = true;
+      // FRIEND CHECK
+      if (!mounted) return; // We could be unmounted when rapidly skipping the first target
+      final friendsProv = context.read<FriendsProvider>();
+      if (!friendsProv.initialized) {
+        await friendsProv.initFriends();
+      }
+      for (final friend in friendsProv.allFriends) {
+        if (friend.playerId == widget.profileId) _isFriend = true;
       }
 
-      if (otherProfile.married!.spouseId == _userDetails.basic!.playerId) {
-        _isPartner = true;
-      }
-
-      if (otherProfile.playerId == _userDetails.basic!.playerId) {
-        _isOwnPlayer = true;
-      }
-
-      if (_userDetails.basic!.faction!.factionId != 0 &&
-          otherProfile.faction!.factionId == _userDetails.basic!.faction!.factionId) {
-        _isOwnFaction = true;
-      }
-
-      final settingsProvider = context.read<SettingsProvider>();
-      for (final fact in settingsProvider.friendlyFactions) {
-        if (otherProfile.faction!.factionId == fact.id) {
-          _isFriendlyFaction = true;
-          break;
-        }
-      }
-
-      if (!_isOwnPlayer &&
-          otherProfile.job!.companyId != 0 &&
-          otherProfile.job!.companyId == _userDetails.basic!.job!.companyId) {
-        _isWorkColleague = true;
-      }
-
-      _networthWidgetEnabled = _settingsProvider.extraPlayerNetworth;
-
-      if (_isTornPda) {
-        _tornPdaWidget = Container(
-          color: Colors.grey[900],
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
-            child: Row(
-              children: [
-                Image.asset(
-                  'images/icons/torn_pda.png',
-                  width: 16,
-                  height: 16,
-                  //color: Colors.brown[400],
-                ),
-                const SizedBox(width: 10),
-                const Flexible(
-                  child: Text(
-                    "Hi! Thank you for using Torn PDA!",
-                    style: TextStyle(
-                      color: Colors.pink,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+      if (otherProfile is OtherProfileModel) {
+        logToUser(
+          "Profile Check API received for: ${otherProfile.name}",
+          backgroundcolor: Colors.blue,
+          borderColor: Colors.white,
+          duration: 8,
         );
-      }
 
-      if (_isFriend) {
-        Color friendTextColor = Colors.green;
-        String friendText = "This is a friend of yours!";
-        if (widget.profileCheckType == ProfileCheckType.attack) {
-          friendTextColor = Colors.black;
-          friendText = "CAUTION: this is a friend of yours!";
-          _backgroundColor = Colors.red;
-        }
-        _friendsWidget = Row(
-          children: [
-            Icon(
-              Icons.people,
-              color: friendTextColor,
-              size: 15,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                friendText,
-                style: TextStyle(
-                  color: friendTextColor,
-                  fontSize: 12,
-                  fontWeight: friendText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-          ],
-        );
-      }
+        _playerName = otherProfile.name;
+        _factionName = otherProfile.faction!.factionName;
+        _factionId = otherProfile.faction!.factionId;
 
-      if (_isOwnPlayer) {
-        _playerOrFactionWidget = Row(
-          children: [
-            Icon(
-              MdiIcons.heart,
-              color: Colors.green,
-              size: 16,
-            ),
-            SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                "This is you, you're beautiful!",
-                style: TextStyle(
-                  color: Colors.green,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        );
-      } else if (_isOwnFaction) {
-        String factionText = "This is a fellow faction member "
-            "(${otherProfile.faction!.position})!";
-        Color factionColor = Colors.green;
-        if (widget.profileCheckType == ProfileCheckType.attack) {
-          factionColor = Colors.black;
-          factionText = "CAUTION: this is a fellow faction member!";
-          _backgroundColor = Colors.red;
-        }
-        _playerOrFactionWidget = Row(
-          children: [
-            Image.asset(
-              'images/icons/faction.png',
-              width: 15,
-              height: 12,
-              color: factionColor,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                factionText,
-                style: TextStyle(
-                  color: factionColor,
-                  fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        );
-      } else if (_isFriendlyFaction) {
-        String factionText = "This is an allied faction member "
-            "(${otherProfile.faction!.factionName})!";
-        Color factionColor = Colors.green;
-        if (widget.profileCheckType == ProfileCheckType.attack) {
-          factionColor = Colors.black;
-          factionText = "CAUTION: this is an allied faction member!";
-          _backgroundColor = Colors.red;
+        // Estimated stats is not awaited, since it can take a few seconds
+        // to contact YATA / TS and decide what we show
+        estimatedStatsCalculator(otherProfile).then((value) {
+          setState(() {});
+        });
+
+        if (otherProfile.playerId == 2225097) {
+          _isTornPda = true;
         }
 
-        _friendlyFactionWidget = Row(
-          children: [
-            Image.asset(
-              'images/icons/faction.png',
-              width: 15,
-              height: 12,
-              color: factionColor,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                factionText,
-                style: TextStyle(
-                  color: factionColor,
-                  fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        );
-      }
-
-      if (_isPartner) {
-        String partnerText = "This is your lovely "
-            "${otherProfile.gender == "Male" ? "husband" : otherProfile.gender == "Female" ? "wife" : "partner"}!";
-        Color partnerColor = Colors.green;
-        if (widget.profileCheckType == ProfileCheckType.attack) {
-          partnerColor = Colors.black;
-          partnerText = "CAUTION: this is your "
-              "${otherProfile.gender == "Male" ? "husband" : otherProfile.gender == "Female" ? "wife" : "partner"}! "
-              "Are you really that mad"
-              "${otherProfile.gender == "Male" ? " at him" : otherProfile.gender == "Female" ? " at her" : ""}?";
-          _backgroundColor = Colors.red;
+        if (otherProfile.married!.spouseId == _userDetails.basic!.playerId) {
+          _isPartner = true;
         }
 
-        _partnerWidget = Row(
-          children: [
-            Icon(
-              MdiIcons.heart,
-              color: partnerColor,
-              size: 16,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                partnerText,
-                style: TextStyle(
-                  color: partnerColor,
-                  fontWeight: partnerText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        );
-      }
-
-      if (_isWorkColleague) {
-        Color? colleagueTextColor = Colors.brown[300];
-        String colleagueText = "This is a work colleague!";
-        if (widget.profileCheckType == ProfileCheckType.attack) {
-          colleagueTextColor = Colors.black;
-          colleagueText = "CAUTION: this is a work colleague!";
-          _backgroundColor = Colors.red;
+        if (otherProfile.playerId == _userDetails.basic!.playerId) {
+          _isOwnPlayer = true;
         }
-        _workColleagueWidget = Row(
-          children: [
-            Icon(
-              Icons.work,
-              color: colleagueTextColor,
-              size: 15,
-            ),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                colleagueText,
-                style: TextStyle(
-                  color: colleagueTextColor,
-                  fontSize: 12,
-                  fontWeight: colleagueText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-          ],
-        );
-      }
 
-      if (_networthWidgetEnabled) {
-        int bazaar = 0;
-        if (otherProfile.bazaar!.isNotEmpty) {
-          for (final b in otherProfile.bazaar!) {
-            if (b.marketPrice is double) {
-              b.marketPrice = b.marketPrice.round();
-            }
+        if (_userDetails.basic!.faction!.factionId != 0 &&
+            otherProfile.faction!.factionId == _userDetails.basic!.faction!.factionId) {
+          _isOwnFaction = true;
+        }
 
-            var itemCost = b.marketPrice * b.quantity;
-            bazaar += itemCost as int;
+        final settingsProvider = context.read<SettingsProvider>();
+        for (final fact in settingsProvider.friendlyFactions) {
+          if (otherProfile.faction!.factionId == fact.id) {
+            _isFriendlyFaction = true;
+            break;
           }
         }
 
-        _networthWidget = Container(
-          color: Colors.grey[900],
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
-            child: Row(
-              children: [
-                Icon(
-                  MdiIcons.cash100,
-                  color: Colors.green,
-                  size: 17,
-                ),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    formatBigNumbers(otherProfile.personalstats!.networth!.total!),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
+        if (!_isOwnPlayer &&
+            otherProfile.job!.companyId != 0 &&
+            otherProfile.job!.companyId == _userDetails.basic!.job!.companyId) {
+          _isWorkColleague = true;
+        }
+
+        _networthWidgetEnabled = _settingsProvider.extraPlayerNetworth;
+
+        if (_isTornPda) {
+          _tornPdaWidget = Container(
+            color: Colors.grey[900],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
+              child: Row(
+                children: [
+                  Image.asset(
+                    'images/icons/torn_pda.png',
+                    width: 16,
+                    height: 16,
+                    //color: Colors.brown[400],
+                  ),
+                  const SizedBox(width: 10),
+                  const Flexible(
+                    child: Text(
+                      "Hi! Thank you for using Torn PDA!",
+                      style: TextStyle(
+                        color: Colors.pink,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (_isFriend) {
+          Color friendTextColor = Colors.green;
+          String friendText = "This is a friend of yours!";
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            friendTextColor = Colors.black;
+            friendText = "CAUTION: this is a friend of yours!";
+            _backgroundColor = Colors.red;
+          }
+          _friendsWidget = Row(
+            children: [
+              Icon(
+                Icons.people,
+                color: friendTextColor,
+                size: 15,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  friendText,
+                  style: TextStyle(
+                    color: friendTextColor,
+                    fontSize: 12,
+                    fontWeight: friendText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
+                  ),
                 ),
-                if (bazaar > 0)
+              ),
+            ],
+          );
+        }
+
+        if (_isOwnPlayer) {
+          _playerOrFactionWidget = Row(
+            children: [
+              Icon(
+                MdiIcons.heart,
+                color: Colors.green,
+                size: 16,
+              ),
+              SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  "This is you, you're beautiful!",
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        } else if (_isOwnFaction) {
+          String factionText = "This is a fellow faction member "
+              "(${otherProfile.faction!.position})!";
+          Color factionColor = Colors.green;
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            factionColor = Colors.black;
+            factionText = "CAUTION: this is a fellow faction member!";
+            _backgroundColor = Colors.red;
+          }
+          _playerOrFactionWidget = Row(
+            children: [
+              Image.asset(
+                'images/icons/faction.png',
+                width: 15,
+                height: 12,
+                color: factionColor,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  factionText,
+                  style: TextStyle(
+                    color: factionColor,
+                    fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        } else if (_isFriendlyFaction) {
+          String factionText = "This is an allied faction member "
+              "(${otherProfile.faction!.factionName})!";
+          Color factionColor = Colors.green;
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            factionColor = Colors.black;
+            factionText = "CAUTION: this is an allied faction member!";
+            _backgroundColor = Colors.red;
+          }
+
+          _friendlyFactionWidget = Row(
+            children: [
+              Image.asset(
+                'images/icons/faction.png',
+                width: 15,
+                height: 12,
+                color: factionColor,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  factionText,
+                  style: TextStyle(
+                    color: factionColor,
+                    fontWeight: factionText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        if (_isPartner) {
+          String partnerText = "This is your lovely "
+              "${otherProfile.gender == "Male" ? "husband" : otherProfile.gender == "Female" ? "wife" : "partner"}!";
+          Color partnerColor = Colors.green;
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            partnerColor = Colors.black;
+            partnerText = "CAUTION: this is your "
+                "${otherProfile.gender == "Male" ? "husband" : otherProfile.gender == "Female" ? "wife" : "partner"}! "
+                "Are you really that mad"
+                "${otherProfile.gender == "Male" ? " at him" : otherProfile.gender == "Female" ? " at her" : ""}?";
+            _backgroundColor = Colors.red;
+          }
+
+          _partnerWidget = Row(
+            children: [
+              Icon(
+                MdiIcons.heart,
+                color: partnerColor,
+                size: 16,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  partnerText,
+                  style: TextStyle(
+                    color: partnerColor,
+                    fontWeight: partnerText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        if (_isWorkColleague) {
+          Color? colleagueTextColor = Colors.brown[300];
+          String colleagueText = "This is a work colleague!";
+          if (widget.profileCheckType == ProfileCheckType.attack) {
+            colleagueTextColor = Colors.black;
+            colleagueText = "CAUTION: this is a work colleague!";
+            _backgroundColor = Colors.red;
+          }
+          _workColleagueWidget = Row(
+            children: [
+              Icon(
+                Icons.work,
+                color: colleagueTextColor,
+                size: 15,
+              ),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  colleagueText,
+                  style: TextStyle(
+                    color: colleagueTextColor,
+                    fontSize: 12,
+                    fontWeight: colleagueText.contains("CAUTION") ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ),
+            ],
+          );
+        }
+
+        if (_networthWidgetEnabled) {
+          int bazaar = 0;
+          if (otherProfile.bazaar!.isNotEmpty) {
+            for (final b in otherProfile.bazaar!) {
+              if (b["market_price"] is double) {
+                b["market_price"] = b["market_price"].round();
+              }
+
+              var itemCost = b["market_price"] * b["quantity"];
+              bazaar += itemCost as int;
+            }
+          }
+
+          _networthWidget = Container(
+            color: Colors.grey[900],
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
+              child: Row(
+                children: [
+                  Icon(
+                    MdiIcons.cash100,
+                    color: Colors.green,
+                    size: 17,
+                  ),
+                  const SizedBox(width: 10),
                   Flexible(
-                    child: Row(
-                      children: [
-                        const SizedBox(width: 30),
-                        Image.asset(
-                          "images/icons/inventory/bazaar.png",
-                          color: Colors.green,
-                          width: 14,
-                        ),
-                        const SizedBox(width: 10),
-                        Flexible(
-                          child: Text(
-                            formatBigNumbers(bazaar),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
+                    child: Text(
+                      formatBigNumbers(otherProfile.personalstats!.networth!.total!),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ),
+                  if (bazaar > 0)
+                    Flexible(
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 30),
+                          Image.asset(
+                            "images/icons/inventory/bazaar.png",
+                            color: Colors.green,
+                            width: 14,
+                          ),
+                          const SizedBox(width: 10),
+                          Flexible(
+                            child: Text(
+                              formatBigNumbers(bazaar),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-              ],
+                ],
+              ),
+            ),
+          );
+        }
+
+        _infoToShow = true;
+        _expandableController.expanded = true;
+
+        logToUser(
+          "Profile Check: expanded!",
+          backgroundcolor: Colors.blue,
+          borderColor: Colors.white,
+          duration: 8,
+        );
+      } else {
+        _errorDetailsWidget = Container(
+          child: const Padding(
+            padding: EdgeInsets.fromLTRB(15, 5, 15, 5),
+            child: Text(
+              "Error contacting API (no details available)",
+              style: TextStyle(
+                color: Colors.white,
+                fontStyle: FontStyle.italic,
+                fontSize: 11,
+              ),
             ),
           ),
         );
+
+        _errorToShow = true;
+        _expandableController.expanded = true;
       }
-
-      _infoToShow = true;
-      _expandableController.expanded = true;
-    } else {
-      _errorDetailsWidget = Container(
-        child: const Padding(
-          padding: EdgeInsets.fromLTRB(15, 5, 15, 5),
-          child: Text(
-            "Error contacting API (no details available)",
-            style: TextStyle(
-              color: Colors.white,
-              fontStyle: FontStyle.italic,
-              fontSize: 11,
-            ),
-          ),
-        ),
+    } catch (e, trace) {
+      logToUser(
+        "Profile Check Error: $e, $trace",
+        backgroundcolor: Colors.blue,
+        borderColor: Colors.white,
+        duration: 8,
       );
-
-      _errorToShow = true;
-      _expandableController.expanded = true;
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Profile Check");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
     }
   }
 

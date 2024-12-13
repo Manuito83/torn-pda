@@ -178,7 +178,7 @@ class SendbirdController extends GetxController {
       );
 
       if (regStatus == PushTokenRegistrationStatus.success) {
-        logToUser("Successfully registered user FCM token with Sendbird!");
+        log("Successfully registered user FCM token with Sendbird!");
 
         // Ensure it's not just mentions
         await SendbirdChat.setPushTriggerOption(PushTriggerOption.all);

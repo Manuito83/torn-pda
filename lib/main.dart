@@ -68,9 +68,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.6.2';
-const String androidCompilation = '467';
-const String iosCompilation = '467';
+const String appVersion = '3.6.3';
+const String androidCompilation = '470';
+const String iosCompilation = '470';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -553,6 +553,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (!splitNowActive && splitUserEnabled && screenIsWide) {
         _webViewProvider.webViewSplitActive = true;
         _webViewProvider.browserForegroundWithSplitTransition();
+
+        // Chat notifications should be omitted when switching into splitview
+        //   (note: the case where we are no longer in splitiew is handled below,
+        //    by notifying the webviewProvider with true/false which in turns
+        //    will update the Sendbird Controller with the right value)
+        SendbirdController sb = Get.find<SendbirdController>();
+        sb.webviewInForeground = true;
       } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
         _webViewProvider.webViewSplitActive = false;
         if (_webViewProvider.splitScreenRevertsToApp) {
@@ -682,14 +689,21 @@ Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
   }
 }
 
-logToUser(String? message, {int duration = 3, Color? color, Color? borderColor}) {
+logToUser(
+  String? message, {
+  int duration = 3,
+  Color? textColor,
+  Color? backgroundcolor,
+  Color? borderColor,
+}) {
   log(message.toString());
   if (message == null) return;
-  color ??= Colors.red.shade600;
+  backgroundcolor ??= Colors.red.shade600;
   borderColor ??= Colors.red.shade800;
+  textColor ??= Colors.white;
   if (logAndShowToUser) {
     toastification.showCustom(
-      autoCloseDuration: const Duration(seconds: 3),
+      autoCloseDuration: Duration(seconds: duration),
       alignment: Alignment.bottomCenter,
       builder: (BuildContext context, ToastificationItem holder) {
         return Center(
@@ -698,15 +712,15 @@ logToUser(String? message, {int duration = 3, Color? color, Color? borderColor})
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
-                  color: color,
+                  color: backgroundcolor,
                   border: Border.all(color: borderColor!, width: 2),
                 ),
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.all(2),
                 child: Column(
                   children: [
-                    Text("Debug Message\n", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    Text(message.toString(), maxLines: 10, style: TextStyle(color: Colors.white)),
+                    Text("Debug Message\n", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+                    Text(message.toString(), maxLines: 10, style: TextStyle(color: textColor)),
                   ],
                 ),
               )),

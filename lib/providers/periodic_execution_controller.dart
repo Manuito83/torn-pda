@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:get/get.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -17,21 +19,25 @@ class PeriodicExecutionController extends GetxController {
     bool executeImmediately = false,
     bool overwrite = false,
   }) async {
-    // If overwrite is enabled, remove the existing task
-    if (_tasks.containsKey(taskName) && overwrite) {
-      await cancelTask(taskName); // Remove the existing task
-    }
+    try {
+// If overwrite is enabled, remove the existing task
+      if (_tasks.containsKey(taskName) && overwrite) {
+        await cancelTask(taskName); // Remove the existing task
+      }
 
-    // Ensure the taskName is unique
-    if (_tasks.containsKey(taskName)) {
-      throw Exception('Task with name "$taskName" already exists');
-    }
+      // Ensure the taskName is unique
+      if (_tasks.containsKey(taskName)) {
+        throw Exception('Task with name "$taskName" already exists');
+      }
 
-    _tasks[taskName] = _TaskDetails(task, intervalInHours);
+      _tasks[taskName] = _TaskDetails(task, intervalInHours);
 
-    if (executeImmediately) {
-      await task();
-      await _updateLastExecutionTime(taskName);
+      if (executeImmediately) {
+        await task();
+        await _updateLastExecutionTime(taskName);
+      }
+    } catch (e) {
+      log("$e", name: "Periodic Execution Controller");
     }
   }
 
@@ -57,13 +63,17 @@ class PeriodicExecutionController extends GetxController {
 
   /// Cancels a task by its name and removes its execution state
   Future<void> cancelTask(String taskName) async {
-    if (!_tasks.containsKey(taskName)) {
-      throw Exception('Task "$taskName" is not registered');
+    try {
+      if (!_tasks.containsKey(taskName)) {
+        throw Exception('Task "$taskName" is not registered');
+      }
+
+      _tasks.remove(taskName);
+
+      await Prefs().removeLastExecutionTime(taskName);
+    } catch (e) {
+      log("$e", name: "Periodic Execution Controller");
     }
-
-    _tasks.remove(taskName);
-
-    await Prefs().removeLastExecutionTime(taskName);
   }
 
   /// Updates the last execution time for a given task
