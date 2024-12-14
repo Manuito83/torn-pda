@@ -51,11 +51,12 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.3 - Build 470 - 12/12/2024
+    // v3.6.4 - Build 471 - 14/12/2024
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.6.3'
-        ..date = '25 DEC 2024'
+        ..version = 'Torn PDA v3.6.4'
+        ..date = '15 DEC 2024'
+        ..infoString = 'Hotfix: resolved incorrect estimated stats calculation in the War section'
         ..features = [
           "Fixed player profile widget",
           "Fixed chat notifications in split screen",
