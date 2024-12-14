@@ -1069,7 +1069,7 @@ class SettingsPageState extends State<SettingsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so"
+                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so "
                   "that you can later restore them if needed or share them across different devices",
                   style: TextStyle(
                     color: Colors.grey[600],
