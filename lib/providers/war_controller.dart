@@ -283,7 +283,7 @@ class WarController extends GetxController {
         _assignSpiedStats(member);
 
         member.statsEstimated = StatsCalculator.calculateStats(
-          criminalRecordTotal: updatedTarget.personalstats!.networth!.total,
+          criminalRecordTotal: updatedTarget.personalstats?.criminalOffenses?.total,
           level: updatedTarget.level,
           networth: updatedTarget.personalstats!.networth!.total,
           rank: updatedTarget.rank,
