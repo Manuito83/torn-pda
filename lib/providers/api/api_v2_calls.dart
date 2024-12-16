@@ -29,6 +29,20 @@ class ApiCallsV2 {
     return apiResponse;
   }
 
+  static Future<dynamic> getUserMarketItemsApi_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<UserItemMarketResponse>(
+      apiSelection_v2: ApiSelection_v2.marketItem,
+      payload_v2: {},
+      apiCall: (client, apiKey) {
+        return client.userItemmarketGet(
+          key: apiKey,
+        );
+      },
+    );
+    return apiResponse;
+  }
+
   static Future<dynamic> getOtherUserProfile_v2({required Map<String, dynamic> payload}) async {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(

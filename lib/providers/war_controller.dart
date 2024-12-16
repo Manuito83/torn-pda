@@ -1330,9 +1330,6 @@ class WarController extends GetxController {
         return getTripTime(a).compareTo(getTripTime(b));
       case WarSortType.travelDistanceDesc:
         return getTripTime(b).compareTo(getTripTime(a));
-
-      default:
-        return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
     }
   }
 

@@ -8,7 +8,6 @@ import 'package:animations/animations.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -22,6 +21,7 @@ import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 

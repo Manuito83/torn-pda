@@ -25,6 +25,7 @@ import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
@@ -40,6 +41,7 @@ import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -60,6 +62,7 @@ import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
 import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
+import 'package:torn_pda/widgets/profile/market_status.dart';
 import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
@@ -231,6 +234,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _miscTickLastTime = DateTime.now();
   OwnProfileMisc? _miscModel;
   TornEducationModel? _tornEducationModel;
+  UserItemMarketResponse? _marketItems;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
@@ -1196,47 +1200,53 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     child: Column(
                       children: <Widget>[
                         if (!repatriated)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 60,
-                                    child: Text('Status: '),
-                                  ),
-                                  Text(_user!.status!.state!),
-                                  stateBall(),
-                                ],
-                              ),
-                              if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
-                                _notificationIcon(ProfileNotification.hospital),
-                              if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
-                                _notificationIcon(ProfileNotification.jail),
-                            ],
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 60,
+                                      child: Text('Status: '),
+                                    ),
+                                    Text(_user!.status!.state!),
+                                    stateBall(),
+                                  ],
+                                ),
+                                if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
+                                  _notificationIcon(ProfileNotification.hospital),
+                                if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
+                                  _notificationIcon(ProfileNotification.jail),
+                              ],
+                            ),
                           )
                         else
                           // Traveling while in hospital (repatriation)
                           Column(
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Row(
-                                    children: [
-                                      const SizedBox(
-                                        width: 60,
-                                        child: Text('Status: '),
-                                      ),
-                                      Text(_user!.status!.state!),
-                                      stateBall(),
-                                    ],
-                                  ),
-                                  if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
-                                    _notificationIcon(ProfileNotification.hospital),
-                                  if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
-                                    _notificationIcon(ProfileNotification.jail),
-                                ],
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 60,
+                                          child: Text('Status: '),
+                                        ),
+                                        Text(_user!.status!.state!),
+                                        stateBall(),
+                                      ],
+                                    ),
+                                    if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
+                                      _notificationIcon(ProfileNotification.hospital),
+                                    if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
+                                      _notificationIcon(ProfileNotification.jail),
+                                  ],
+                                ),
                               ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1259,6 +1269,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           bazaarModel: _miscModel?.bazaar,
                           launchBrowser: _launchBrowser,
                         ),
+                        if (_marketItems?.itemmarket != null && _marketItems!.itemmarket!.isNotEmpty)
+                          MarketStatusCard(
+                            marketModel: _marketItems!,
+                            launchBrowser: _launchBrowser,
+                          ),
                         if (!_dedicatedTravelCard) _travelWidget(),
                         descriptionWidget(),
                         if (_user!.status!.state == 'Hospital' && _w.nukeReviveActive)
@@ -5000,6 +5015,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       _tornEducationModel ??= await ApiCallsV1.getEducation();
 
+      await _getUserMarketItems();
+
       // The ones that are inside this condition, show in the MISC card (which
       // is disabled if the MISC API call is not successful
       if (miscApiResponse is OwnProfileMisc && _tornEducationModel is TornEducationModel) {
@@ -5026,6 +5043,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     } catch (e) {
       // If something fails, we simple don't show the MISC section
+    }
+  }
+
+  Future<dynamic> _getUserMarketItems() async {
+    try {
+      _marketItems = await ApiCallsV2.getUserMarketItemsApi_v2();
+    } catch (e, t) {
+      log("Issue getting market items: $e, $t");
     }
   }
 

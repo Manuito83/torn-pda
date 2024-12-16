@@ -10,7 +10,6 @@ import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:dio/dio.dart';
 //import 'package:bubble_showcase/bubble_showcase.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
@@ -70,6 +69,7 @@ import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
 import 'package:torn_pda/widgets/crimes/crimes_widget.dart';
 import 'package:torn_pda/widgets/crimes/faction_crimes_widget.dart';
+import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/gym/steadfast_widget.dart';
 import 'package:torn_pda/widgets/jail/jail_widget.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
