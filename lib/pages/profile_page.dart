@@ -234,7 +234,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _miscTickLastTime = DateTime.now();
   OwnProfileMisc? _miscModel;
   TornEducationModel? _tornEducationModel;
-  UserItemMarketResponse? _marketItems;
+  UserItemMarketResponse? _marketItemsV2;
 
   var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
@@ -1269,9 +1269,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           bazaarModel: _miscModel?.bazaar,
                           launchBrowser: _launchBrowser,
                         ),
-                        if (_marketItems?.itemmarket != null && _marketItems!.itemmarket!.isNotEmpty)
+                        if (_marketItemsV2?.itemmarket != null && _marketItemsV2!.itemmarket!.isNotEmpty)
                           MarketStatusCard(
-                            marketModel: _marketItems!,
+                            marketModel: _marketItemsV2!,
                             launchBrowser: _launchBrowser,
                           ),
                         if (!_dedicatedTravelCard) _travelWidget(),
@@ -4315,7 +4315,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //_miscModel.educationTimeleft = 6000;
     // DEBUG ******************************
 
-    if (_miscModel == null || _tornEducationModel == null) {
+    if (_miscModel == null) {
       return const SizedBox.shrink();
     }
 
@@ -4579,83 +4579,85 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // EDUCATION
     Widget educationWidget = const SizedBox.shrink();
-    if (_miscModel!.educationTimeleft! > 0) {
-      showMisc = true;
-      educationActive = true;
-      final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.educationTimeleft!));
-      final timeDifference = timeExpiry.difference(DateTime.now());
-      Color? expiryColor = Colors.orange[800];
-      String expiryString;
-      if (timeDifference.inHours < 1) {
-        expiryString = 'less than an hour';
-      } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-        expiryString = 'about an hour';
-      } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-        expiryString = '${timeDifference.inHours} hours';
-      } else if (timeDifference.inDays == 1) {
-        expiryString = '1 day';
-        expiryColor = _themeProvider!.mainText;
-      } else {
-        expiryString = '${timeDifference.inDays} days';
-        expiryColor = _themeProvider!.mainText;
-      }
-
-      String? courseName;
-      _tornEducationModel!.education.forEach((key, value) {
-        if (key == _miscModel!.educationCurrent.toString()) {
-          courseName = value.name;
-        }
-      });
-
-      educationWidget = Row(
-        children: <Widget>[
-          Icon(MdiIcons.schoolOutline),
-          const SizedBox(width: 10),
-          Flexible(
-            child: RichText(
-              text: TextSpan(
-                text: "Your course: ",
-                style: DefaultTextStyle.of(context).style,
-                children: <TextSpan>[
-                  TextSpan(
-                    text: "$courseName",
-                    /*
-                    style: TextStyle(
-                      color: Colors.green,
-                    ),
-                    */
-                  ),
-                  const TextSpan(text: ", will end in "),
-                  TextSpan(
-                    text: expiryString,
-                    style: TextStyle(color: expiryColor),
-                  ),
-                ],
-              ),
-            ),
-          )
-        ],
-      );
-    }
-    // There is no education on going... why? All done, or forgotten?
-    else {
-      // If the number of courses studied and available are not the same, we have forgotten
-      // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
-      if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education.length - 1) {
+    if (_tornEducationModel is TornEducationModel) {
+      if (_miscModel!.educationTimeleft! > 0) {
         showMisc = true;
         educationActive = true;
+        final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.educationTimeleft!));
+        final timeDifference = timeExpiry.difference(DateTime.now());
+        Color? expiryColor = Colors.orange[800];
+        String expiryString;
+        if (timeDifference.inHours < 1) {
+          expiryString = 'less than an hour';
+        } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+          expiryString = 'about an hour';
+        } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+          expiryString = '${timeDifference.inHours} hours';
+        } else if (timeDifference.inDays == 1) {
+          expiryString = '1 day';
+          expiryColor = _themeProvider!.mainText;
+        } else {
+          expiryString = '${timeDifference.inDays} days';
+          expiryColor = _themeProvider!.mainText;
+        }
+
+        String? courseName;
+        _tornEducationModel!.education.forEach((key, value) {
+          if (key == _miscModel!.educationCurrent.toString()) {
+            courseName = value.name;
+          }
+        });
+
         educationWidget = Row(
           children: <Widget>[
             Icon(MdiIcons.schoolOutline),
             const SizedBox(width: 10),
             Flexible(
-              child: Text(
-                "You are not enrolled in any education course!",
-                style: TextStyle(color: Colors.red[500]),
+              child: RichText(
+                text: TextSpan(
+                  text: "Your course: ",
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: "$courseName",
+                      /*
+                    style: TextStyle(
+                      color: Colors.green,
+                    ),
+                    */
+                    ),
+                    const TextSpan(text: ", will end in "),
+                    TextSpan(
+                      text: expiryString,
+                      style: TextStyle(color: expiryColor),
+                    ),
+                  ],
+                ),
               ),
             )
           ],
         );
+      }
+      // There is no education on going... why? All done, or forgotten?
+      else {
+        // If the number of courses studied and available are not the same, we have forgotten
+        // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
+        if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education.length - 1) {
+          showMisc = true;
+          educationActive = true;
+          educationWidget = Row(
+            children: <Widget>[
+              Icon(MdiIcons.schoolOutline),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  "You are not enrolled in any education course!",
+                  style: TextStyle(color: Colors.red[500]),
+                ),
+              )
+            ],
+          );
+        }
       }
     }
 
@@ -5011,36 +5013,46 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_user == null) return;
 
     try {
-      final miscApiResponse = await ApiCallsV1.getOwnProfileMisc();
+      dynamic miscApiResponse;
 
+      // 1.- Try first with API V2
+      miscApiResponse = await ApiCallsV2.getUserProfileMisc_v2();
+
+      // 2.- Try to fall back to API V1
+      if (miscApiResponse is! OwnProfileMisc) {
+        miscApiResponse = await ApiCallsV1.getOwnProfileMisc();
+      }
+
+      if (miscApiResponse is! OwnProfileMisc) {
+        return;
+      }
+
+      // Get Education
       _tornEducationModel ??= await ApiCallsV1.getEducation();
 
-      await _getUserMarketItems();
+      // Get Market Items V2
+      _marketItemsV2 ??= await _getUserMarketItems();
 
-      // The ones that are inside this condition, show in the MISC card (which
-      // is disabled if the MISC API call is not successful
-      if (miscApiResponse is OwnProfileMisc && _tornEducationModel is TornEducationModel) {
-        // Get this async
-        if (_settingsProvider!.oCrimesEnabled) {
-          _getFactionCrimes();
-        }
-
-        // Assess properties async, but wait some more time
-        if (miscApiResponse.properties != null) {
-          if (_rentedPropertiesTick == 0) {
-            _checkProperties(miscApiResponse);
-          } else if (_rentedPropertiesTick > 30) {
-            _checkProperties(miscApiResponse);
-            _rentedPropertiesTick = 0;
-          }
-          _rentedPropertiesTick++;
-        }
-
-        setState(() {
-          _miscModel = miscApiResponse;
-          _miscApiFetchedOnce = true;
-        });
+      // Get this async
+      if (_settingsProvider!.oCrimesEnabled) {
+        _getFactionCrimes();
       }
+
+      // Assess properties async, but wait some more time
+      if (miscApiResponse.properties != null) {
+        if (_rentedPropertiesTick == 0) {
+          _checkProperties(miscApiResponse);
+        } else if (_rentedPropertiesTick > 30) {
+          _checkProperties(miscApiResponse);
+          _rentedPropertiesTick = 0;
+        }
+        _rentedPropertiesTick++;
+      }
+
+      setState(() {
+        _miscModel = miscApiResponse;
+        _miscApiFetchedOnce = true;
+      });
     } catch (e) {
       // If something fails, we simple don't show the MISC section
     }
@@ -5048,7 +5060,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<dynamic> _getUserMarketItems() async {
     try {
-      _marketItems = await ApiCallsV2.getUserMarketItemsApi_v2();
+      return await ApiCallsV2.getUserMarketItemsApi_v2();
     } catch (e, t) {
       log("Issue getting market items: $e, $t");
     }

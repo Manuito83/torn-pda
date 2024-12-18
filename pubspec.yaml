@@ -90,7 +90,7 @@ dependencies:
   rxdart: 0.28.0
   sendbird_chat_sdk: 4.2.26
   share_plus: 10.1.2
-  shared_preferences: 2.3.2
+  shared_preferences: 2.3.3
   showcaseview: 3.0.0
   sliding_up_panel: 2.0.0+1
   timeline_tile: 2.0.0

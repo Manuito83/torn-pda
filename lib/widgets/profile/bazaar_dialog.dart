@@ -49,7 +49,7 @@ class BazaarDialog extends StatelessWidget {
                 children: [
                   Icon(MdiIcons.storefrontOutline, size: 22),
                   const SizedBox(width: 6),
-                  const Text("Bazaar open"),
+                  const Text("BAZAAR (OPEN)"),
                   const SizedBox(width: 6),
                   GestureDetector(
                     child: Icon(MdiIcons.openInApp, size: 18),
@@ -118,7 +118,7 @@ class BazaarDialog extends StatelessWidget {
     final costCurrency = NumberFormat("#,##0", "en_US");
 
     for (final element in bazaarModel!) {
-      final marketDiff = element.marketPrice - element.price;
+      final marketDiff = element.marketPrice! - element.price!;
       Color? marketColor = Colors.green;
       var marketString = "";
       if (marketDiff.isNegative) {
@@ -159,7 +159,7 @@ class BazaarDialog extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         "@ \$${costCurrency.format(element.price)}"
-                        "${element.quantity! > 1 ? " ea. (\$${costCurrency.format(element.price * element.quantity)})" : ""}",
+                        "${element.quantity! > 1 ? " ea. (\$${costCurrency.format(element.price! * element.quantity!)})" : ""}",
                         style: const TextStyle(
                           fontSize: 13,
                         ),
