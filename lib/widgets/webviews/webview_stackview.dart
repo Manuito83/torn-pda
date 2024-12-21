@@ -73,7 +73,6 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
   //bool _useTabs = false;
 
   Future? providerInitialised;
-  bool _viewInitialised = false;
   bool secondaryInitialised = false;
 
   // Showcases
@@ -113,6 +112,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
     super.build(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _settingsProvider = Provider.of<SettingsProvider>(context);
 
     if (_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2) {
       return Container(
@@ -172,9 +172,6 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
 
     return MediaQuery.removePadding(
       context: context,
-      // Dialog always needs this in iOS to allow interaction with top row
-      // Also, iOS needs extra padding removal according to:
-      // https://github.com/flutter/flutter/issues/51345
       removeTop:
           dialog || (_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
       child: Container(
@@ -197,116 +194,131 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
               if (_webViewProvider.browserShowInForeground) {
                 _launchShowCases(_);
               }
-              return Scaffold(
-                // Dialog displaces the webview up by default
-                resizeToAvoidBottomInset:
-                    !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
-                backgroundColor: _themeProvider.statusBar,
-                // Offer a way to return while the FutureBuilder loads
-                appBar: _viewInitialised ? null : buildCustomAppBar(),
-                body: FutureBuilder(
-                  future: providerInitialised,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    try {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        _viewInitialised = true;
-
-                        // Collect all the WebViews from the provider
-                        final allWebViews = <Widget>[];
-                        for (final tab in _webViewProvider.tabList) {
-                          if (tab.webView == null) {
-                            allWebViews.add(const SizedBox.shrink());
-                          } else {
-                            allWebViews.add(tab.webView!);
-                          }
-                        }
-
-                        // If no WebViews exist, close with an error
-                        if (allWebViews.isEmpty) _closeWithError();
-
-                        // Initialize secondary logic if needed
-                        if (!secondaryInitialised) {
-                          _initialiseSecondary();
-                          secondaryInitialised = true;
-                        }
-
-                        // Return the entire UI in a Stack
-                        return Stack(
-                          alignment: Alignment.bottomCenter,
-                          children: [
-                            // --- MAIN WEBVIEW AREA ---
-                            if (_settingsProvider.useTabsFullBrowser)
-                              // If tabs are enabled, display an AnimatedIndexedStack for each tab
-                              AnimatedIndexedStack(
-                                index: _webViewProvider.currentTab,
-                                duration: 100,
-                                errorCallback: _closeWithError,
-                                children: allWebViews,
-                              )
-                            else
-                              // If tabs are disabled, just show the first one
-                              AnimatedIndexedStack(
-                                index: 0,
-                                duration: 100,
-                                errorCallback: _closeWithError,
-                                children: [
-                                  allWebViews[0],
-                                ],
+              return FutureBuilder(
+                future: providerInitialised,
+                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                  return Scaffold(
+                    resizeToAvoidBottomInset:
+                        !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+                    backgroundColor: _themeProvider.statusBar,
+                    appBar: snapshot.connectionState != ConnectionState.done ? buildCustomAppBar() : null,
+                    body: snapshot.connectionState == ConnectionState.done
+                        ? Stack(
+                            children: [
+                              buildMainContent(),
+                              shouldShowFab ? WebviewFab() : SizedBox.shrink(),
+                            ],
+                          )
+                        : Container(
+                            color: Colors.blueGrey[800],
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
                               ),
-
-                            // --- BOTTOM NAVIGATION / TABS BAR ---
-                            Padding(
-                              padding: EdgeInsets.only(
-                                bottom: _webViewProvider.bottomBarStyleEnabled &&
-                                        _webViewProvider.currentUiMode == UiMode.window
-                                    ? _webViewProvider.browserBottomBarStylePlaceTabsAtBottom
-                                        ? 0
-                                        : 38
-                                    : 0,
-                              ),
-                              child: _settingsProvider.useTabsFullBrowser
-                                  ? (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window
-                                      ? Divider(
-                                          color: Color(_settingsProvider.tabsHideBarColor),
-                                          thickness: 4,
-                                          height: 4,
-                                        )
-                                      : _bottomNavBar(_))
-                                  : const SizedBox.shrink(),
                             ),
-
-                            // --- FLOATING ACTION BUTTON ---
-                            if (shouldShowFab) WebviewFab(),
-                          ],
-                        );
-                      } else {
-                        // If the future is not yet completed, show a progress indicator
-                        return const Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
                           ),
-                        );
-                      }
-                    } catch (e, stackTrace) {
-                      // Log errors to Crashlytics if needed
-                      if (!Platform.isWindows) {
-                        FirebaseCrashlytics.instance.log("PDA Crash at StackView load: $e");
-                        FirebaseCrashlytics.instance.recordError(e, stackTrace);
-                      }
-                      // Additional logging or user notification
-                      logToUser("PDA Crash at StackView load: $e");
-                    }
-
-                    // If something went wrong but we don't want to show an error screen, return an empty widget
-                    return const SizedBox.shrink();
-                  },
-                ),
+                  );
+                },
               );
             },
           ),
         ),
       ),
     );
+  }
+
+  Widget buildMainContent() {
+    try {
+      // Collect all the WebViews from the provider
+      final allWebViews = <Widget>[];
+      for (final tab in _webViewProvider.tabList) {
+        if (tab.webView == null) {
+          allWebViews.add(const SizedBox.shrink());
+        } else {
+          allWebViews.add(tab.webView!);
+        }
+      }
+
+      // If no WebViews exist, close with an error
+      if (allWebViews.isEmpty) _closeWithError();
+
+      // Initialize secondary logic if needed
+      if (!secondaryInitialised) {
+        _initialiseSecondary();
+        secondaryInitialised = true;
+      }
+
+      // Return the entire UI in a Stack
+      return Stack(
+        alignment: Alignment.bottomCenter,
+        children: [
+          // --- MAIN WEBVIEW AREA ---
+          if (_settingsProvider.useTabsFullBrowser)
+            // If tabs are enabled, display an AnimatedIndexedStack for each tab
+            AnimatedIndexedStack(
+              index: _webViewProvider.currentTab,
+              duration: 100,
+              errorCallback: _closeWithError,
+              children: allWebViews,
+            )
+          else
+            // If tabs are disabled, just show the first one
+            AnimatedIndexedStack(
+              index: 0,
+              duration: 100,
+              errorCallback: _closeWithError,
+              children: [
+                allWebViews[0],
+              ],
+            ),
+
+          // --- BOTTOM NAVIGATION / TABS BAR ---
+          Padding(
+            padding: EdgeInsets.only(
+              bottom: _webViewProvider.bottomBarStyleEnabled && _webViewProvider.currentUiMode == UiMode.window
+                  ? _webViewProvider.browserBottomBarStylePlaceTabsAtBottom
+                      ? 0
+                      : 38
+                  : 0,
+            ),
+            child: _settingsProvider.useTabsFullBrowser
+                ? (_webViewProvider.hideTabs && _webViewProvider.currentUiMode == UiMode.window
+                    ? Divider(
+                        color: Color(_settingsProvider.tabsHideBarColor),
+                        thickness: 4,
+                        height: 4,
+                      )
+                    : _bottomNavBar(context))
+                : const SizedBox.shrink(),
+          ),
+        ],
+      );
+    } catch (e, stackTrace) {
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA Crash at StackView load: $e");
+        FirebaseCrashlytics.instance.recordError(e, stackTrace);
+      }
+      logToUser("PDA Crash at StackView load: $e");
+      return Scaffold(
+        appBar: buildCustomAppBar(),
+        body: Container(
+          color: Colors.blueGrey[800],
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(50),
+              child: Text(
+                "There was an error loading the content: $e"
+                "\n\nPlease reset your browser cache in Settings / Advanced Browser Settings and try again"
+                "\n\nIf it reoccurs, you might have to force close the app and relaunch",
+                style: TextStyle(
+                  color: Colors.amber,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
 
   bool assessSafeAreaSide(bool dialog, String safeSide) {

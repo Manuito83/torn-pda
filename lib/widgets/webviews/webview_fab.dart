@@ -144,6 +144,13 @@ class _ExpandableFabState extends State<ExpandableFab>
       parent: _controller,
     );
 
+    // We add a listener to force rebuild (on Android the FAB is not expanding)
+    _controller.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+
     // Attempt to restore FAB position from saved state
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
