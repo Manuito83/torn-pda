@@ -12,9 +12,12 @@ import 'package:dio/dio.dart';
 //import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:html/dom.dart' as dom;
@@ -159,7 +162,7 @@ class WebViewFull extends StatefulWidget {
   WebViewFullState createState() => WebViewFullState();
 }
 
-class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
+class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
   // DEBUG SCRIPT INJECTION (logs)
   final bool _debugScriptsInjection = false;
 
@@ -346,6 +349,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   final _scrollControllerBugsReport = ScrollController();
 
   @override
+  bool get wantKeepAlive => true;
+
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
@@ -460,12 +466,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   @override
   void dispose() {
     try {
+      super.dispose();
+      WidgetsBinding.instance.removeObserver(this);
       webViewController?.dispose();
       _findController.dispose();
       _chainWidgetController.dispose();
       _scrollControllerBugsReport.dispose();
-      WidgetsBinding.instance.removeObserver(this);
-      super.dispose();
     } catch (e) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
       if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
@@ -488,6 +494,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _terminalProvider = Provider.of<TerminalProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
@@ -2148,7 +2155,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future removeAllUserScripts() async {
-    await webViewController!.removeAllUserScripts();
+    try {
+      await webViewController?.removeAllUserScripts();
+    } catch (e) {
+      log("Webview controller is null at userscripts removal");
+    }
   }
 
   Future assessErrorCases({dom.Document? document}) async {
@@ -4997,6 +5008,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
   }
 
   Future _loadUrl(String? inputUrl) async {
+    if (webViewController == null) {
+      return;
+    }
+
     // If the input URL is invalid, we will see if there was one saved as _currentUrl
     // http and https are valid because we'll change them later
     if (inputUrl == null || inputUrl.isEmpty) {
@@ -5017,7 +5032,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver {
         apiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
-      await webViewController!.addUserScripts(userScripts: scriptsToAdd);
+      await webViewController?.addUserScripts(userScripts: scriptsToAdd);
 
       // DEBUG
       if (_debugScriptsInjection) {
