@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.5 - Build 473 - 21/12/2024
+    // v3.6.5 - Build 474 - 21/12/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.5'
@@ -70,6 +70,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "prevent involuntarily activating voice commands or assistants when double- "
                 "or triple-tapping the bottom edge in some devices.",
           ),
+          "Trades: added button to copy Torn Exchange receipt URL",
           "Fixed an issue preventing some web interactions in certain devices",
         ],
     );
