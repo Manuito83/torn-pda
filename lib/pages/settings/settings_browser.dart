@@ -124,6 +124,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
+                          _fab(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
                           _downloads(),
                           const SizedBox(height: 15),
                           const Divider(),
@@ -2205,6 +2209,114 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     );
   }
 
+  Column _fab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'FLOATING ACTION BUTON',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: const Text("Enabled")),
+              Switch(
+                value: _webViewProvider.fabEnabled,
+                onChanged: (value) {
+                  _webViewProvider.fabEnabled = value;
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+          child: Text(
+            "Shows a Floating Action Button while using the browser, which adds several "
+            "action buttons and gestures to enhance navigation. NOTE: it is highly recommended "
+            "that you read about how to use this button in the Tips section!",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Expand direction")),
+                    _fabDirectionDropdown(),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  "Dictates where to expand the option buttons when the Floating Action Button is tapped",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Only in fullscreen")),
+                    Switch(
+                      value: _webViewProvider.fabOnlyFullScreen,
+                      onChanged: (value) {
+                        _webViewProvider.fabOnlyFullScreen = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  "Only show the Floating Action Button when in full screen mode",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
   Column _fullScreen() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -3030,6 +3142,58 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 2;
         }
+      },
+    );
+  }
+
+  Widget _fabDirectionDropdown() {
+    return DropdownButton<String>(
+      value: _webViewProvider.fabDirection,
+      items: const [
+        DropdownMenuItem(
+          value: "center",
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Top",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "left",
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Left",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "right",
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Right",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _webViewProvider.fabDirection = value!;
+        });
       },
     );
   }

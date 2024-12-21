@@ -51,13 +51,26 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.5 - Build 472 - 16/12/2024
+    // v3.6.5 - Build 473 - 21/12/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.5'
-        ..date = '25 DEC 2024'
+        ..date = '26 DEC 2024'
         ..features = [
           "Profile: added user's market items details",
+          ComplexFeature(
+            "Browser: added Floating Action Button (see Tips!)",
+            explanation: "Disabled by default: you can enable it in Settings / Advanced Browser Settings"
+                "\n\nIt is HIGHLY recommended that you visit the Tips section to understand "
+                "how to properly use this feature to its full potential"
+                "\n\nThe Floating Action Button is a feature that allows you to perform "
+                "indirect actions on your tabs as well as some direct navigation actions. "
+                "It has several functions that are important to know to get the most out of it.\n\n"
+                "This can have many uses and help in a multitude of situations. It can also "
+                "prevent involuntarily activating voice commands or assistants when double- "
+                "or triple-tapping the bottom edge in some devices.",
+          ),
+          "Fixed an issue preventing some web interactions in certain devices",
         ],
     );
 

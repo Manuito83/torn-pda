@@ -24,6 +24,7 @@ enum TipClass {
   general,
   browserGeneral,
   browserTabs,
+  browserFAB,
   appwidget,
   travel,
   profile,
@@ -108,6 +109,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
   var _generalTipList = <TipTextBuilder>[];
   var _browserGeneralTipList = <TipTextBuilder>[];
   var _browserTabsTipList = <TipTextBuilder>[];
+  var _browserFABTipList = <TipTextBuilder>[];
   var _appwidgetTipsList = <TipTextBuilder>[];
   var _travelTipsList = <TipTextBuilder>[];
   var _profileTipsList = <TipTextBuilder>[];
@@ -138,6 +140,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     _generalTipList = buildGeneralTips();
     _browserGeneralTipList = buildBrowserGeneralTips();
     _browserTabsTipList = buildBrowserTabsTips();
+    _browserFABTipList = buildBrowserFABTips();
     _appwidgetTipsList = buildAppwidgetSectionTips();
     _travelTipsList = buildTravelSectionTips();
     _profileTipsList = buildProfileSectionTips();
@@ -217,6 +220,10 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                 const Text("BROWSER - TABS"),
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.browserTabs),
+                const SizedBox(height: 25),
+                const Text("BROWSER - FLOATING ACTION BUTTON"),
+                const SizedBox(height: 10),
+                tipsPanels(TipClass.browserFAB),
                 const SizedBox(height: 25),
                 if (Platform.isAndroid)
                   Column(
@@ -309,6 +316,8 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         listToShow = _browserGeneralTipList;
       case TipClass.browserTabs:
         listToShow = _browserTabsTipList;
+      case TipClass.browserFAB:
+        listToShow = _browserFABTipList;
       case TipClass.appwidget:
         listToShow = _appwidgetTipsList;
       case TipClass.travel:
@@ -797,6 +806,44 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
       ),
     );
     return tips;
+  }
+
+  List<ExpandableTip> buildBrowserFABTips() {
+    return [
+      ExpandableTip(
+        headerValue: "What's the Floating Action Button",
+        expandedValue: "The Floating Action Button is a feature that allows you to perform "
+            "indirect actions on your tabs as well as some direct navigation actions. "
+            "It has several functions that are important to know to get the most out of it.\n\n"
+            "This can have many uses and help in a multitude of situations. It can also "
+            "prevent involuntarily activating voice commands or assistants when double- "
+            "or triple-tapping the bottom edge in some devices.",
+      ),
+      ExpandableTip(
+        headerValue: "How do I enable it?",
+        expandedValue: "You can enable the Floating Action Button in Settings, under Advanced Browser "
+            "Settings, by finding the Floating Action Button section.\n\nHere, you can also "
+            "configure other options, such as the direction in which it expands or whether "
+            "you want to use it only in Full Screen Mode.",
+      ),
+      ExpandableTip(
+        headerValue: "What functions does it have?",
+        expandedValue: "A single tap on the Floating Action Button expands it, revealing several "
+            "buttons that allow you to navigate to TORN's homepage, move forward or "
+            "backward in your browsing history, or reload the current page.\n\nA double "
+            "tap performs the same action as double-tapping a browser tab, expanding "
+            "the options of the active tab.\n\nA triple tap closes the current tab, just "
+            "like triple-tapping the tab itself.\n\nAdditionally, a long press temporarily "
+            "hides the button.",
+      ),
+      ExpandableTip(
+        headerValue: "How do I hide/show the Floating Action Button at will?",
+        expandedValue: "You can temporarily hide it by either long pressing the button or using the "
+            "three-dotted in the tab bar. The vertical menu that appears includes a "
+            "button with the same image as the Floating Action Button (a tap), "
+            "allowing you to toggle it on or off.",
+      ),
+    ];
   }
 
   List<ComplexExpandableTip> buildAppwidgetSectionTips() {

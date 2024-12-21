@@ -96,6 +96,12 @@ class Prefs {
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
+  // Webview FAB
+  final String _kWebviewFabEnabled = "pda_webviewFabEnabled";
+  final String _kWebviewFabShownNow = "pda_webviewFabShownNow";
+  final String _kWebviewFabDirection = "pda_webviewFabDirection";
+  final String _kWebviewFabPositionXY = "pda_webviewFabPositionXY";
+  final String _kWebviewFabOnlyFullScreen = "pda_webviewFabOnlyFullScreen";
 
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
@@ -1134,6 +1140,77 @@ class Prefs {
   Future<bool> setAndroidBrowserTextScale(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kAndroidBrowserTextScale, value);
+  }
+
+  // Settings - Browser FAB
+
+  Future<bool> getWebviewFabEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWebviewFabEnabled) ?? false;
+  }
+
+  Future<bool> setWebviewFabEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWebviewFabEnabled, value);
+  }
+
+  // --
+
+  Future<bool> getWebviewFabShownNow() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWebviewFabShownNow) ?? true;
+  }
+
+  Future<bool> setWebviewFabShownNow(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWebviewFabShownNow, value);
+  }
+
+  // --
+
+  Future<String> getWebviewFabDirection() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kWebviewFabDirection) ?? "center";
+  }
+
+  Future<bool> setWebviewFabDirection(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kWebviewFabDirection, value);
+  }
+
+  // --
+
+  Future<bool> setWebviewFabPositionXY(List<int> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Convert list to JSON string for storage
+    return prefs.setString(_kWebviewFabPositionXY, jsonEncode(value));
+  }
+
+  // Retrieve FAB position and decode JSON string to List<int>
+  Future<List<int>> getWebviewFabPositionXY() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final jsonString = prefs.getString(_kWebviewFabPositionXY);
+    if (jsonString != null) {
+      try {
+        // Decode JSON string back to List<int>
+        return List<int>.from(jsonDecode(jsonString));
+      } catch (e) {
+        return [100, 100];
+      }
+    }
+    return [100, 100]; // Default
+  }
+
+  // --
+
+  Future<bool> getWebviewFabOnlyFullScreen() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kWebviewFabOnlyFullScreen) ?? false;
+  }
+
+  Future<bool> setWebviewFabOnlyFullScreen(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kWebviewFabOnlyFullScreen, value);
   }
 
   // Settings - Browser Gestures
