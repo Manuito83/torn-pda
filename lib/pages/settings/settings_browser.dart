@@ -2232,6 +2232,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 value: _webViewProvider.fabEnabled,
                 onChanged: (value) {
                   _webViewProvider.fabEnabled = value;
+                  // Reset coordinates in case something's gone wrong
+                  // with height and width calculations
+                  if (value) {
+                    _webViewProvider.fabSavedPositionXY = [100, 100];
+                  }
                 },
                 activeTrackColor: Colors.lightGreenAccent,
                 activeColor: Colors.green,

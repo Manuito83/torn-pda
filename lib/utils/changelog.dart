@@ -51,11 +51,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.5 - Build 474 - 21/12/2024
+    // v3.6.5 - Build 475 - 22/12/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.5'
-        ..date = '26 DEC 2024'
+        ..date = '28 DEC 2024'
         ..features = [
           "Profile: added user's market items details",
           ComplexFeature(

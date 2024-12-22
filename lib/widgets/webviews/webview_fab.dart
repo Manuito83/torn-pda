@@ -122,6 +122,8 @@ class _ExpandableFabState extends State<ExpandableFab>
   Offset _dragStartPos = Offset.zero;
   Offset _initialFabPos = Offset.zero;
 
+  bool _isAppBackgrounded = false;
+
   MultiTapDetector multiTapDetector = MultiTapDetector();
 
   @override
@@ -180,10 +182,23 @@ class _ExpandableFabState extends State<ExpandableFab>
     super.didChangeMetrics();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      // In certain devices (e.g.: iPad in landscape), when the app goes to the background
+      // the screen width changes to half just before backgrounding, which positions the
+      // FAB incorrectly a the center. We avoid this with this check.
+      if (_isAppBackgrounded) return;
       setState(() {
         _repositionFABafterRotation();
       });
     });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) {
+      _isAppBackgrounded = true;
+    } else {
+      _isAppBackgrounded = false;
+    }
   }
 
   @override
@@ -453,7 +468,7 @@ class _ExpandableFabState extends State<ExpandableFab>
     }
 
     minY = 0;
-    maxY = screenHeight - _fabSize;
+    maxY = screenHeight - _fabSize * 2;
 
     return {'minX': minX, 'maxX': maxX, 'minY': minY, 'maxY': maxY};
   }
@@ -487,6 +502,8 @@ class _ExpandableFabState extends State<ExpandableFab>
       newY = maxY;
       needsUpdate = true;
     }
+
+    print("current Y: $newX, max Y: $maxX");
 
     if (needsUpdate) {
       setState(() {
