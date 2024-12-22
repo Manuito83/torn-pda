@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.5 - Build 475 - 22/12/2024
+    // v3.6.5 - Build 476 - 22/12/2024
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.5'
