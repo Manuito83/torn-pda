@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -1371,6 +1372,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final double percentage = _getTravelPercentage(totalTravelTimeSeconds);
       final String ballAssetLocation = _flagBallAsset();
 
+      bool isChristmasPeriod() {
+        final now = DateTime.now();
+        final christmasStart = DateTime(now.year, 12, 19);
+        final christmasEnd = DateTime(now.year, 12, 31, 23, 59, 59);
+        return now.isAfter(christmasStart) && now.isBefore(christmasEnd);
+      }
+
       return Padding(
         padding: const EdgeInsets.only(top: 10),
         child: Column(
@@ -1404,8 +1412,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             // Make icon transparent when about to pass over text
                             opacity: percentage < 0.2 || percentage > 0.7 ? 1 : 0.3,
                             child: _user!.travel!.destination == "Torn"
-                                ? Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
-                                : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
+                                ? isChristmasPeriod()
+                                    ? Transform(
+                                        alignment: Alignment.center,
+                                        transform: Matrix4.identity()..scale(-1.0, 1.0),
+                                        child: Icon(FontAwesomeIcons.sleigh, color: Colors.blue[900], size: 22),
+                                      )
+                                    : Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
+                                : isChristmasPeriod()
+                                    ? Icon(FontAwesomeIcons.sleigh, color: Colors.blue[900], size: 22)
+                                    : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
                           ),
                         ),
                         animateFromLastPercent: true,
@@ -1414,7 +1430,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         lineHeight: 18,
                         progressColor: Colors.blue[200],
                         backgroundColor: Colors.grey,
-                        percent: percentage,
+                        percent: 0.8,
                       ),
                     ),
                     if (ballAssetLocation.isNotEmpty)
