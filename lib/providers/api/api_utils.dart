@@ -34,6 +34,8 @@ enum ApiSelection_v1 {
 
 enum ApiSelection_v2 {
   marketItem,
+  userMarketItems,
+  userProfileMisc,
   otherUserProfile,
 }
 

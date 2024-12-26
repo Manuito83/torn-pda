@@ -34,8 +34,6 @@ extension TabsWipeTimeRangeExtension on TabsWipeTimeRange {
         return '15 days';
       case TabsWipeTimeRange.oneMonth:
         return '1 month';
-      default:
-        return '';
     }
   }
 
@@ -57,8 +55,6 @@ extension TabsWipeTimeRangeExtension on TabsWipeTimeRange {
         return Duration(days: 15);
       case TabsWipeTimeRange.oneMonth:
         return Duration(days: 30);
-      default:
-        return Duration.zero;
     }
   }
 }

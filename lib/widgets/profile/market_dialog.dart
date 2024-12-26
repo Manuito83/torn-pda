@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:intl/intl.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
-import 'package:torn_pda/models/profile/own_profile_misc.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 
 // Project imports:
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 
-class BazaarDialog extends StatelessWidget {
-  final List<Bazaar>? bazaarModel;
+class MarketDialog extends StatelessWidget {
+  final List<UserItemMarketListing> market;
   final Function openTapCallback;
   final Function openLongPressCallback;
   final int items;
@@ -20,8 +20,8 @@ class BazaarDialog extends StatelessWidget {
   final double vPad = 20;
   final double frame = 10;
 
-  const BazaarDialog({
-    required this.bazaarModel,
+  const MarketDialog({
+    required this.market,
     required this.openTapCallback,
     required this.openLongPressCallback,
     required this.items,
@@ -47,9 +47,9 @@ class BazaarDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(MdiIcons.storefrontOutline, size: 22),
+                  Icon(MdiIcons.basketOutline, size: 22),
                   const SizedBox(width: 6),
-                  const Text("BAZAAR (OPEN)"),
+                  Text("MARKET"),
                   const SizedBox(width: 6),
                   GestureDetector(
                     child: Icon(MdiIcons.openInApp, size: 18),
@@ -73,7 +73,7 @@ class BazaarDialog extends StatelessWidget {
                   style: const TextStyle(fontSize: 13),
                 ),
                 Text(
-                  bazaarModel!.length == 1 ? "" : " (${bazaarModel!.length} stacks)",
+                  market.length == 1 ? "" : " (${market.length} stacks)",
                   style: const TextStyle(fontSize: 13),
                 ),
               ],
@@ -117,8 +117,8 @@ class BazaarDialog extends StatelessWidget {
     // Currency configuration
     final costCurrency = NumberFormat("#,##0", "en_US");
 
-    for (final element in bazaarModel!) {
-      final marketDiff = element.marketPrice! - element.price!;
+    for (final element in market) {
+      final marketDiff = element.averagePrice! - element.price!;
       Color? marketColor = Colors.green;
       var marketString = "";
       if (marketDiff.isNegative) {
@@ -144,7 +144,7 @@ class BazaarDialog extends StatelessWidget {
                       },
                     ),
                     Text(
-                      "${element.name} x${element.quantity}",
+                      "${element.item!.name!} x${element.amount!}",
                       style: const TextStyle(
                         fontSize: 13,
                       ),
@@ -159,7 +159,7 @@ class BazaarDialog extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         "@ \$${costCurrency.format(element.price)}"
-                        "${element.quantity! > 1 ? " ea. (\$${costCurrency.format(element.price! * element.quantity!)})" : ""}",
+                        "${element.amount! > 1 ? " ea. (\$${costCurrency.format(element.price! * element.amount!)})" : ""}",
                         style: const TextStyle(
                           fontSize: 13,
                         ),

@@ -337,6 +337,9 @@ class WebViewProvider extends ChangeNotifier {
 
   int _currentTab = 0;
   int get currentTab => _currentTab;
+  set currentTab(int value) {
+    _currentTab = value;
+  }
 
   bool _secondaryInitialised = false;
 
@@ -399,6 +402,46 @@ class WebViewProvider extends ChangeNotifier {
   set automaticChangeToNewTabFromURL(bool value) {
     _automaticChangeToNewTabFromURL = value;
     Prefs().setAutomaticChangeToNewTabFromURL(_automaticChangeToNewTabFromURL);
+    notifyListeners();
+  }
+
+  var _fabEnabled = true;
+  get fabEnabled => _fabEnabled;
+  set fabEnabled(value) {
+    _fabEnabled = value;
+    Prefs().setWebviewFabEnabled(_fabEnabled);
+    notifyListeners();
+  }
+
+  var _fabShownNow = true;
+  get fabShownNow => _fabShownNow;
+  set fabShownNow(value) {
+    _fabShownNow = value;
+    Prefs().setWebviewFabShownNow(_fabShownNow);
+    notifyListeners();
+  }
+
+  var _fabDirection = "center";
+  get fabDirection => _fabDirection;
+  set fabDirection(value) {
+    _fabDirection = value;
+    Prefs().setWebviewFabDirection(_fabDirection);
+    notifyListeners();
+  }
+
+  var _fabSavedPositionXY = [100, 100];
+  get fabSavedPositionXY => _fabSavedPositionXY;
+  set fabSavedPositionXY(value) {
+    _fabSavedPositionXY = value;
+    Prefs().setWebviewFabPositionXY(_fabSavedPositionXY);
+    notifyListeners();
+  }
+
+  var _fabOnlyFullScreen = false;
+  get fabOnlyFullScreen => _fabOnlyFullScreen;
+  set fabOnlyFullScreen(value) {
+    _fabOnlyFullScreen = value;
+    Prefs().setWebviewFabOnlyFullScreen(_fabOnlyFullScreen);
     notifyListeners();
   }
 
@@ -1212,6 +1255,8 @@ class WebViewProvider extends ChangeNotifier {
   assessLoginErrorsFromPdaIcon() async {
     TabDetails tab;
 
+    if (_currentTab < 0) _currentTab = 0;
+
     // This might be executed before the browser is ready, so wait for it
     if (_tabList.isEmpty) {
       final start = DateTime.now();
@@ -1536,71 +1581,76 @@ class WebViewProvider extends ChangeNotifier {
       return inputUrl;
     }
 
-    final String originalInitUrl = inputUrl!;
-    String authUrlToLoad;
-    if (!originalInitUrl.contains("torn.com")) return inputUrl;
-    // Auth redirects to attack pages might fail
-    if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
+    try {
+      final String originalInitUrl = inputUrl!;
+      String authUrlToLoad;
+      if (!originalInitUrl.contains("torn.com")) return inputUrl;
+      // Auth redirects to attack pages might fail
+      if (originalInitUrl.contains("loader.php?sid=attack&user")) return inputUrl;
 
-    final int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inHours;
-    if (elapsedSinceLastAuth > 6) {
-      log("Entering auth process!");
+      final int elapsedSinceLastAuth = DateTime.now().difference(nativeAuth.lastAuthRedirect).inHours;
+      if (elapsedSinceLastAuth > 6) {
+        log("Entering auth process!");
 
-      bool error = false;
+        bool error = false;
 
-      // Tentative immediate change, so that other opening tabs don't auth as well
-      nativeAuth.lastAuthRedirect = DateTime.now();
-      log("Getting auth URL!");
-      try {
-        final TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
-          context: context,
-          loginData: GetInitDataModel(
-            playerId: userProvider.basic!.playerId,
-            sToken: nativeUser.playerSToken,
-          ),
-        );
+        // Tentative immediate change, so that other opening tabs don't auth as well
+        nativeAuth.lastAuthRedirect = DateTime.now();
+        log("Getting auth URL!");
+        try {
+          final TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
+            context: context,
+            loginData: GetInitDataModel(
+              playerId: userProvider.basic!.playerId,
+              sToken: nativeUser.playerSToken,
+            ),
+          );
 
-        if (loginResponse.success) {
-          // Join the standard Auth URL and the original URL requested as part of the redirect parameter
-          authUrlToLoad = loginResponse.authUrl + originalInitUrl;
-          log("Auth URL: $authUrlToLoad");
-        } else {
+          if (loginResponse.success) {
+            // Join the standard Auth URL and the original URL requested as part of the redirect parameter
+            authUrlToLoad = loginResponse.authUrl + originalInitUrl;
+            log("Auth URL: $authUrlToLoad");
+          } else {
+            error = true;
+            log("Auth URL failed: ${loginResponse.message}");
+          }
+        } catch (e) {
           error = true;
-          log("Auth URL failed: ${loginResponse.message}");
-        }
-      } catch (e) {
-        error = true;
-        log("Auth URL catch: $e");
-      }
-
-      if (error) {
-        // Reset time with some delay, so that rapidly opening tabs don't cause
-        Future.delayed(const Duration(seconds: 2)).then((_) {
-          nativeAuth.lastAuthRedirect = DateTime.fromMicrosecondsSinceEpoch(elapsedSinceLastAuth);
-        });
-
-        String errorMessage = "Authentication error, please check your username and password in Settings!";
-        if (nativeAuth.authErrorsInSession >= 3) {
-          nativeAuth.authErrorsInSession = 0;
-          errorMessage = "Too many authentication errors, your username and password have been erased in "
-              "Torn PDA settings as a precaution!";
-          nativeUser.eraseUserPreferences();
-        } else {
-          nativeAuth.authErrorsInSession++;
+          log("Auth URL catch: $e");
         }
 
-        BotToast.showText(
-          text: errorMessage,
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
-        );
+        if (error) {
+          // Reset time with some delay, so that rapidly opening tabs don't cause
+          Future.delayed(const Duration(seconds: 2)).then((_) {
+            nativeAuth.lastAuthRedirect = DateTime.fromMicrosecondsSinceEpoch(elapsedSinceLastAuth);
+          });
+
+          String errorMessage = "Authentication error, please check your username and password in Settings!";
+          if (nativeAuth.authErrorsInSession >= 3) {
+            nativeAuth.authErrorsInSession = 0;
+            errorMessage = "Too many authentication errors, your username and password have been erased in "
+                "Torn PDA settings as a precaution!";
+            nativeUser.eraseUserPreferences();
+          } else {
+            nativeAuth.authErrorsInSession++;
+          }
+
+          BotToast.showText(
+            text: errorMessage,
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
       }
+    } catch (e) {
+      //
     }
+
     return inputUrl;
   }
 
@@ -1713,6 +1763,12 @@ class WebViewProvider extends ChangeNotifier {
 
     _onlyLoadTabsWhenUsed = await Prefs().getOnlyLoadTabsWhenUsed();
     _automaticChangeToNewTabFromURL = await Prefs().getAutomaticChangeToNewTabFromURL();
+
+    _fabEnabled = await Prefs().getWebviewFabEnabled();
+    _fabShownNow = await Prefs().getWebviewFabShownNow();
+    _fabDirection = await Prefs().getWebviewFabDirection();
+    _fabSavedPositionXY = await Prefs().getWebviewFabPositionXY();
+    _fabOnlyFullScreen = await Prefs().getWebviewFabOnlyFullScreen();
 
     String splitType = await Prefs().getSplitScreenWebview();
     switch (splitType) {

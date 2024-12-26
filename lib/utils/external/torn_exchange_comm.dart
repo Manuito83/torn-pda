@@ -89,6 +89,14 @@ class TornExchangeComm {
       receiptInModel.serverError = true;
     }
 
+    if (receiptInModel.tradeMessage.isNotEmpty) {
+      receiptInModel.tradeMessage = receiptInModel.tradeMessage
+          .replaceAll('&amp;', '&')
+          .replaceAll('&#x27;', '\'')
+          .replaceAll('&quot;', '"')
+          .replaceAll('&lt;', '<')
+          .replaceAll('&gt;', '>');
+    }
     return receiptInModel;
   }
 }
