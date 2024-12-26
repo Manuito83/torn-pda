@@ -51,11 +51,12 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.5 - Build 476 - 22/12/2024
+    // v3.6.6 - Build 477 - 26/12/2024
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.6.5'
+        ..version = 'Torn PDA v3.6.6'
         ..date = '28 DEC 2024'
+        ..infoString = 'Hotfix to properly position the travel bar plane icon'
         ..features = [
           "Profile: added user's market items details",
           ComplexFeature(
