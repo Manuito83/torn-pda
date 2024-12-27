@@ -362,7 +362,9 @@ class Jobpoints {
 
   factory Jobpoints.fromJson(Map<String, dynamic> json) => Jobpoints(
         jobs: json["jobs"] == null ? null : Jobs.fromJson(json["jobs"]),
-        companies: Map.from(json["companies"]!).map((k, v) => MapEntry<String, Company>(k, Company.fromJson(v))),
+        companies: json["companies"] == null
+            ? null
+            : Map.from(json["companies"]!).map((k, v) => MapEntry<String, Company>(k, Company.fromJson(v))),
       );
 
   Map<String, dynamic> toJson() => {

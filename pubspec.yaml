@@ -80,7 +80,7 @@ dependencies:
   intl: 0.20.1
   material_design_icons_flutter: 7.0.7296 ## Breaking changes in minor versions
   path_provider: 2.1.5
-  percent_indicator: 4.2.4
+  percent_indicator: 4.2.3
   provider: 6.1.2
   pull_to_refresh: 2.0.0
   quick_actions: 1.1.0

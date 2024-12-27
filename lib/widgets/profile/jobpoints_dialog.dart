@@ -175,37 +175,37 @@ class JobPointsDialogState extends State<JobPointsDialog> {
     return Column(
       children: [
         Text(
-          'Army: ${widget.jobpoints!.jobs!.army}',
+          'Army: ${widget.jobpoints!.jobs!.army ?? '0'}',
           style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Casino: ${widget.jobpoints!.jobs!.casino}',
+          'Casino: ${widget.jobpoints!.jobs!.casino ?? '0'}',
           style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Education: ${widget.jobpoints!.jobs!.education}',
+          'Education: ${widget.jobpoints!.jobs!.education ?? '0'}',
           style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Grocer: ${widget.jobpoints!.jobs!.grocer}',
+          'Grocer: ${widget.jobpoints!.jobs!.grocer ?? '0'}',
           style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Law: ${widget.jobpoints!.jobs!.law}',
+          'Law: ${widget.jobpoints!.jobs!.law ?? '0'}',
           style: const TextStyle(
             fontSize: 12,
           ),
         ),
         Text(
-          'Medical: ${widget.jobpoints!.jobs!.medical}',
+          'Medical: ${widget.jobpoints!.jobs!.medical ?? '0'}',
           style: const TextStyle(
             fontSize: 12,
           ),

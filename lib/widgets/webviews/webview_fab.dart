@@ -503,8 +503,6 @@ class _ExpandableFabState extends State<ExpandableFab>
       needsUpdate = true;
     }
 
-    print("current Y: $newX, max Y: $maxX");
-
     if (needsUpdate) {
       setState(() {
         _fabPosition = Offset(newX, newY);
