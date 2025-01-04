@@ -51,11 +51,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.6 - Build 479 - 27/12/2024
+    // v3.6.7 - Build 480 - 28/12/2024
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.6.6'
-        ..date = '28 DEC 2024'
+        ..version = 'Torn PDA v3.6.7'
+        ..date = '30 DEC 2024'
         ..infoString = "Hotfix: resolved issues with the travel widget and graphic "
             "display problems on certain devices"
         ..features = [

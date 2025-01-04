@@ -1430,7 +1430,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         lineHeight: 18,
                         progressColor: Colors.blue[200],
                         backgroundColor: Colors.grey,
-                        percent: 0.8,
+                        percent: percentage,
                       ),
                     ),
                     if (ballAssetLocation.isNotEmpty)
