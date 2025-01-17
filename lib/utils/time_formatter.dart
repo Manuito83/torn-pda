@@ -56,24 +56,24 @@ class TimeFormatter {
         break;
     }
 
-    // Calculate the full difference
-    Duration difference = timeZonedTime.difference(now);
-    int differenceInDays = difference.inDays;
+    // Create dates without time in the same time zone to ensure accurate day difference
+    DateTime nowDate;
+    DateTime timeZonedDate;
 
-    // Adjust the difference in days to account for partial days
-    if (difference.isNegative) {
-      // If the event is in the past, retain the negative difference
-      differenceInDays = difference.inDays;
+    if (timeZoneSetting == TimeZoneSetting.tornTime) {
+      // Create dates in UTC
+      nowDate = DateTime.utc(now.year, now.month, now.day);
+      timeZonedDate = DateTime.utc(timeZonedTime.year, timeZonedTime.month, timeZonedTime.day);
     } else {
-      // If the event is in the future, check for additional hours or minutes
-      differenceInDays = difference.inDays;
-      if (difference.inHours.remainder(24) > 0 || difference.inMinutes.remainder(60) > 0) {
-        // Increment days if there's any remaining hours or minutes beyond full days
-        differenceInDays += 1;
-      }
+      // Create dates in local time
+      nowDate = DateTime(now.year, now.month, now.day);
+      timeZonedDate = DateTime(timeZonedTime.year, timeZonedTime.month, timeZonedTime.day);
     }
 
-    // Format the hour based on the specified time format settings
+    // Calculate the difference in days based on the dates
+    int differenceInDays = timeZonedDate.difference(nowDate).inDays;
+
+    // Format the hour according to the specified time format settings
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
         final formatter = DateFormat('HH:mm');
