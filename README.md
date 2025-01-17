@@ -84,6 +84,7 @@ We welcome contributions at different levels!
 
 - [**Manuito**](https://www.torn.com/profiles.php?XID=2225097): Lead developer and founder of Torn PDA
 - [**Kwack**](https://www.torn.com/profiles.php?XID=2190604): Developer, key contributor to app functionalities
+- [**Mavri**](https://www.torn.com/profiles.php?XID=2402357): TSC and Torn PDA Developer
 
 ### Contributors
 
@@ -92,7 +93,6 @@ We welcome contributions at different levels!
 - **Kivou**: Resources and support from YATA
 - **Lazerpent**: Loot Rangers
 - **IceBlueFire**: Contributions through Torn Stats
-- **Mavri**: Torn Spies Central
 - **Knoxby**: Developer of the JavaScript API for cross-origin HTTP requests used in userscripts
 
 ### Partners
@@ -102,6 +102,7 @@ Thank you to our partners who have chosen Torn PDA as their mobile interface:
 - **YATA**
 - **Arson Warehouse**
 - **Torn Exchange**
+- **Torn Spies Central**
 - **Prometheus**
 - **Loot Rangers**
 - **Reviving Providers**: Nuke, UHC, HeLa, WTF, Midnight X, and others
