@@ -5044,10 +5044,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       // Get Education
-      _tornEducationModel ??= await ApiCallsV1.getEducation();
+      var education = await ApiCallsV1.getEducation();
+      if (education != null) {
+        _tornEducationModel = education;
+      }
 
       // Get Market Items V2
-      _marketItemsV2 ??= await _getUserMarketItems();
+      var marketItems = await _getUserMarketItems();
+      if (marketItems != null) {
+        _marketItemsV2 = marketItems;
+      }
 
       // Get this async
       if (_settingsProvider!.oCrimesEnabled) {
