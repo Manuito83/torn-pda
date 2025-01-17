@@ -444,7 +444,13 @@ class ApiCallerController extends GetxController {
     final UserController user = Get.find<UserController>();
     final String apiKey = user.apiKey!;
 
-    final TornV2 client = TornV2.create(baseUrl: Uri.parse('https://api.torn.com:443/v2'));
+    final TornV2 client = TornV2.create(
+      baseUrl: Uri.parse('https://api.torn.com:443/v2'),
+      interceptors: [
+        chopper.HeadersInterceptor({"Authorization": "ApiKey $apiKey"}),
+      ],
+    );
+
     int? statusCode;
 
     try {

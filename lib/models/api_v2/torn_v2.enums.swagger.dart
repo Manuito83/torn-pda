@@ -629,9 +629,7 @@ enum RaceCarUpgradeSubCategory {
   @JsonValue('Camshaft')
   camshaft('Camshaft'),
   @JsonValue('Pads')
-  pads('Pads'),
-  @JsonValue('Fluid')
-  $fluid('Fluid');
+  pads('Pads');
 
   final String? value;
 
@@ -696,56 +694,80 @@ enum ReviveSetting {
   const ReviveSetting(this.value);
 }
 
+enum FactionCrimeStatusEnum {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('Recruiting')
+  recruiting('Recruiting'),
+  @JsonValue('Planning')
+  planning('Planning'),
+  @JsonValue('Successful')
+  successful('Successful'),
+  @JsonValue('Failure')
+  failure('Failure'),
+  @JsonValue('Expired')
+  expired('Expired');
+
+  final String? value;
+
+  const FactionCrimeStatusEnum(this.value);
+}
+
 enum FactionSelectionName {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
   @JsonValue('applications')
   applications('applications'),
-  @JsonValue('armor')
-  armor('armor'),
   @JsonValue('attacks')
   attacks('attacks'),
   @JsonValue('attacksfull')
   attacksfull('attacksfull'),
   @JsonValue('basic')
   basic('basic'),
-  @JsonValue('boosters')
-  boosters('boosters'),
-  @JsonValue('caches')
-  caches('caches'),
-  @JsonValue('cesium')
-  cesium('cesium'),
   @JsonValue('chain')
   chain('chain'),
   @JsonValue('chainreport')
   chainreport('chainreport'),
   @JsonValue('chains')
   chains('chains'),
+  @JsonValue('crimes')
+  crimes('crimes'),
+  @JsonValue('hof')
+  hof('hof'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('members')
+  members('members'),
+  @JsonValue('news')
+  news('news'),
+  @JsonValue('territory')
+  territory('territory'),
+  @JsonValue('timestamp')
+  timestamp('timestamp'),
+  @JsonValue('wars')
+  wars('wars'),
+  @JsonValue('armor')
+  armor('armor'),
+  @JsonValue('boosters')
+  boosters('boosters'),
+  @JsonValue('caches')
+  caches('caches'),
+  @JsonValue('cesium')
+  cesium('cesium'),
   @JsonValue('contributors')
   contributors('contributors'),
   @JsonValue('crimeexp')
   crimeexp('crimeexp'),
-  @JsonValue('crimenews')
-  crimenews('crimenews'),
-  @JsonValue('crimes')
-  crimes('crimes'),
   @JsonValue('currency')
   currency('currency'),
   @JsonValue('donations')
   donations('donations'),
   @JsonValue('drugs')
   drugs('drugs'),
-  @JsonValue('hof')
-  hof('hof'),
-  @JsonValue('lookup')
-  lookup('lookup'),
   @JsonValue('medical')
   medical('medical'),
-  @JsonValue('members')
-  members('members'),
-  @JsonValue('news')
-  news('news'),
   @JsonValue('positions')
   positions('positions'),
   @JsonValue('rankedwars')
@@ -760,16 +782,8 @@ enum FactionSelectionName {
   stats('stats'),
   @JsonValue('temporary')
   temporary('temporary'),
-  @JsonValue('territory')
-  territory('territory'),
-  @JsonValue('territorynews')
-  territorynews('territorynews'),
-  @JsonValue('timestamp')
-  timestamp('timestamp'),
   @JsonValue('upgrades')
   upgrades('upgrades'),
-  @JsonValue('wars')
-  wars('wars'),
   @JsonValue('weapons')
   weapons('weapons');
 
@@ -824,10 +838,10 @@ enum MarketSelectionName {
   itemmarket('itemmarket'),
   @JsonValue('lookup')
   lookup('lookup'),
-  @JsonValue('pointsmarket')
-  pointsmarket('pointsmarket'),
   @JsonValue('timestamp')
-  timestamp('timestamp');
+  timestamp('timestamp'),
+  @JsonValue('pointsmarket')
+  pointsmarket('pointsmarket');
 
   final String? value;
 
@@ -864,34 +878,44 @@ enum TornSelectionName {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
-  @JsonValue('bank')
-  bank('bank'),
+  @JsonValue('bounties')
+  bounties('bounties'),
   @JsonValue('calendar')
   calendar('calendar'),
+  @JsonValue('crimes')
+  crimes('crimes'),
+  @JsonValue('factionHof')
+  factionhof('factionHof'),
+  @JsonValue('hof')
+  hof('hof'),
+  @JsonValue('logcategories')
+  logcategories('logcategories'),
+  @JsonValue('logtypes')
+  logtypes('logtypes'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('subcrimes')
+  subcrimes('subcrimes'),
+  @JsonValue('timestamp')
+  timestamp('timestamp'),
+  @JsonValue('bank')
+  bank('bank'),
   @JsonValue('cards')
   cards('cards'),
-  @JsonValue('chainreport')
-  chainreport('chainreport'),
   @JsonValue('cityshops')
   cityshops('cityshops'),
   @JsonValue('companies')
   companies('companies'),
   @JsonValue('competition')
   competition('competition'),
-  @JsonValue('crimes')
-  crimes('crimes'),
   @JsonValue('dirtybombs')
   dirtybombs('dirtybombs'),
   @JsonValue('education')
   education('education'),
-  @JsonValue('factionHof')
-  factionhof('factionHof'),
   @JsonValue('factiontree')
   factiontree('factiontree'),
   @JsonValue('gyms')
   gyms('gyms'),
-  @JsonValue('hof')
-  hof('hof'),
   @JsonValue('honors')
   honors('honors'),
   @JsonValue('itemdetails')
@@ -900,12 +924,6 @@ enum TornSelectionName {
   items('items'),
   @JsonValue('itemstats')
   itemstats('itemstats'),
-  @JsonValue('logcategories')
-  logcategories('logcategories'),
-  @JsonValue('logtypes')
-  logtypes('logtypes'),
-  @JsonValue('lookup')
-  lookup('lookup'),
   @JsonValue('medals')
   medals('medals'),
   @JsonValue('organisedcrimes')
@@ -936,8 +954,6 @@ enum TornSelectionName {
   stats('stats'),
   @JsonValue('stocks')
   stocks('stocks'),
-  @JsonValue('subcrimes')
-  subcrimes('subcrimes'),
   @JsonValue('territory')
   territory('territory'),
   @JsonValue('territorynames')
@@ -945,9 +961,7 @@ enum TornSelectionName {
   @JsonValue('territorywarreport')
   territorywarreport('territorywarreport'),
   @JsonValue('territorywars')
-  territorywars('territorywars'),
-  @JsonValue('timestamp')
-  timestamp('timestamp');
+  territorywars('territorywars');
 
   final String? value;
 
@@ -978,8 +992,8 @@ enum PersonalStatsCategoryEnum {
   finishingHits('finishing_hits'),
   @JsonValue('communication')
   communication('communication'),
-  @JsonValue('criminal_offenses')
-  criminalOffenses('criminal_offenses'),
+  @JsonValue('crimes')
+  crimes('crimes'),
   @JsonValue('bounties')
   bounties('bounties'),
   @JsonValue('investments')
@@ -1178,8 +1192,8 @@ enum PersonalStatsStatName {
   drugdealscrime('drugdealscrime'),
   @JsonValue('computercrime')
   computercrime('computercrime'),
-  @JsonValue('arsoncrime')
-  arsoncrime('arsoncrime'),
+  @JsonValue('fraudold')
+  fraudold('fraudold'),
   @JsonValue('murdercrime')
   murdercrime('murdercrime'),
   @JsonValue('othercrime')
@@ -1230,8 +1244,6 @@ enum PersonalStatsStatName {
   timespenttraveling('timespenttraveling'),
   @JsonValue('itemsboughtabroad')
   itemsboughtabroad('itemsboughtabroad'),
-  @JsonValue('hunting')
-  hunting('hunting'),
   @JsonValue('attackswonabroad')
   attackswonabroad('attackswonabroad'),
   @JsonValue('defendslostabroad')
@@ -1322,8 +1334,6 @@ enum PersonalStatsStatName {
   meritsbought('meritsbought'),
   @JsonValue('daysbeendonator')
   daysbeendonator('daysbeendonator'),
-  @JsonValue('daysbeendonator')
-  $daysbeendonator('daysbeendonator'),
   @JsonValue('criminaloffenses')
   criminaloffenses('criminaloffenses'),
   @JsonValue('vandalism')
@@ -1417,7 +1427,33 @@ enum PersonalStatsStatName {
   @JsonValue('networthloan')
   networthloan('networthloan'),
   @JsonValue('networthunpaidfees')
-  networthunpaidfees('networthunpaidfees');
+  networthunpaidfees('networthunpaidfees'),
+  @JsonValue('huntingskill')
+  huntingskill('huntingskill'),
+  @JsonValue('searchforcashskill')
+  searchforcashskill('searchforcashskill'),
+  @JsonValue('bootleggingskill')
+  bootleggingskill('bootleggingskill'),
+  @JsonValue('graffitiskill')
+  graffitiskill('graffitiskill'),
+  @JsonValue('shopliftingskill')
+  shopliftingskill('shopliftingskill'),
+  @JsonValue('pickpocketingskill')
+  pickpocketingskill('pickpocketingskill'),
+  @JsonValue('cardskimmingskill')
+  cardskimmingskill('cardskimmingskill'),
+  @JsonValue('burglaryskill')
+  burglaryskill('burglaryskill'),
+  @JsonValue('hustlingskill')
+  hustlingskill('hustlingskill'),
+  @JsonValue('disposalskill')
+  disposalskill('disposalskill'),
+  @JsonValue('crackingskill')
+  crackingskill('crackingskill'),
+  @JsonValue('forgeryskill')
+  forgeryskill('forgeryskill'),
+  @JsonValue('scammingskill')
+  scammingskill('scammingskill');
 
   final String? value;
 
@@ -1444,6 +1480,42 @@ enum UserSelectionName {
   @JsonValue(null)
   swaggerGeneratedUnknown(null),
 
+  @JsonValue('bounties')
+  bounties('bounties'),
+  @JsonValue('calendar')
+  calendar('calendar'),
+  @JsonValue('crimes')
+  crimes('crimes'),
+  @JsonValue('enlistedcars')
+  enlistedcars('enlistedcars'),
+  @JsonValue('factionbalance')
+  factionbalance('factionbalance'),
+  @JsonValue('forumfeed')
+  forumfeed('forumfeed'),
+  @JsonValue('forumfriends')
+  forumfriends('forumfriends'),
+  @JsonValue('forumposts')
+  forumposts('forumposts'),
+  @JsonValue('forumsubscribedthreads')
+  forumsubscribedthreads('forumsubscribedthreads'),
+  @JsonValue('forumthreads')
+  forumthreads('forumthreads'),
+  @JsonValue('hof')
+  hof('hof'),
+  @JsonValue('itemmarket')
+  itemmarket('itemmarket'),
+  @JsonValue('jobranks')
+  jobranks('jobranks'),
+  @JsonValue('lookup')
+  lookup('lookup'),
+  @JsonValue('organizedcrime')
+  organizedcrime('organizedcrime'),
+  @JsonValue('personalstats')
+  personalstats('personalstats'),
+  @JsonValue('races')
+  races('races'),
+  @JsonValue('timestamp')
+  timestamp('timestamp'),
   @JsonValue('ammo')
   ammo('ammo'),
   @JsonValue('attacks')
@@ -1458,12 +1530,8 @@ enum UserSelectionName {
   battlestats('battlestats'),
   @JsonValue('bazaar')
   bazaar('bazaar'),
-  @JsonValue('calendar')
-  calendar('calendar'),
   @JsonValue('cooldowns')
   cooldowns('cooldowns'),
-  @JsonValue('crimes')
-  crimes('crimes'),
   @JsonValue('criminalrecord')
   criminalrecord('criminalrecord'),
   @JsonValue('discord')
@@ -1472,40 +1540,22 @@ enum UserSelectionName {
   display('display'),
   @JsonValue('education')
   education('education'),
-  @JsonValue('enlistedcars')
-  enlistedcars('enlistedcars'),
   @JsonValue('equipment')
   equipment('equipment'),
   @JsonValue('events')
   events('events'),
-  @JsonValue('forumfeed')
-  forumfeed('forumfeed'),
-  @JsonValue('forumfriends')
-  forumfriends('forumfriends'),
-  @JsonValue('forumposts')
-  forumposts('forumposts'),
-  @JsonValue('forumsubscribedthreads')
-  forumsubscribedthreads('forumsubscribedthreads'),
-  @JsonValue('forumthreads')
-  forumthreads('forumthreads'),
   @JsonValue('gym')
   gym('gym'),
-  @JsonValue('hof')
-  hof('hof'),
   @JsonValue('honors')
   honors('honors'),
   @JsonValue('icons')
   icons('icons'),
   @JsonValue('inventory')
   inventory('inventory'),
-  @JsonValue('itemmarket')
-  itemmarket('itemmarket'),
   @JsonValue('jobpoints')
   jobpoints('jobpoints'),
   @JsonValue('log')
   log('log'),
-  @JsonValue('lookup')
-  lookup('lookup'),
   @JsonValue('medals')
   medals('medals'),
   @JsonValue('merits')
@@ -1526,16 +1576,10 @@ enum UserSelectionName {
   notifications('notifications'),
   @JsonValue('perks')
   perks('perks'),
-  @JsonValue('personalstats')
-  personalstats('personalstats'),
   @JsonValue('profile')
   profile('profile'),
   @JsonValue('properties')
   properties('properties'),
-  @JsonValue('publicStatus')
-  publicstatus('publicStatus'),
-  @JsonValue('races')
-  races('races'),
   @JsonValue('refills')
   refills('refills'),
   @JsonValue('reports')
@@ -1548,8 +1592,6 @@ enum UserSelectionName {
   skills('skills'),
   @JsonValue('stocks')
   stocks('stocks'),
-  @JsonValue('timestamp')
-  timestamp('timestamp'),
   @JsonValue('travel')
   travel('travel'),
   @JsonValue('weaponexp')
@@ -1616,6 +1658,46 @@ enum ApiStripTags {
   final String? value;
 
   const ApiStripTags(this.value);
+}
+
+enum FactionCrimesGetCat {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('all')
+  all('all'),
+  @JsonValue('recruiting')
+  recruiting('recruiting'),
+  @JsonValue('planning')
+  planning('planning'),
+  @JsonValue('failure')
+  failure('failure'),
+  @JsonValue('successful')
+  successful('successful'),
+  @JsonValue('expired')
+  expired('expired'),
+  @JsonValue('available')
+  available('available'),
+  @JsonValue('completed')
+  completed('completed');
+
+  final String? value;
+
+  const FactionCrimesGetCat(this.value);
+}
+
+enum FactionCrimesGetSort {
+  @JsonValue(null)
+  swaggerGeneratedUnknown(null),
+
+  @JsonValue('DESC')
+  desc('DESC'),
+  @JsonValue('ASC')
+  asc('ASC');
+
+  final String? value;
+
+  const FactionCrimesGetSort(this.value);
 }
 
 enum FactionGetSort {
@@ -1770,20 +1852,6 @@ enum UserRacesGetCat {
   final String? value;
 
   const UserRacesGetCat(this.value);
-}
-
-enum UserIdForumpostsGetCat {
-  @JsonValue(null)
-  swaggerGeneratedUnknown(null),
-
-  @JsonValue('raw')
-  raw('raw'),
-  @JsonValue('plain')
-  plain('plain');
-
-  final String? value;
-
-  const UserIdForumpostsGetCat(this.value);
 }
 
 enum UserIdForumpostsGetSort {

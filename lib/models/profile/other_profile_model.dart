@@ -28,8 +28,8 @@ class OtherProfileModel {
   int? propertyId;
   int? revivable;
   String? profileImage;
-  List<dynamic>? bazaar;
   Personalstats? personalstats;
+  List<BazaarElement>? bazaar;
   Life? life;
   Status? status;
   Job? job;
@@ -60,8 +60,8 @@ class OtherProfileModel {
     this.propertyId,
     this.revivable,
     this.profileImage,
-    this.bazaar,
     this.personalstats,
+    this.bazaar,
     this.life,
     this.status,
     this.job,
@@ -93,8 +93,10 @@ class OtherProfileModel {
         propertyId: json["property_id"],
         revivable: json["revivable"],
         profileImage: json["profile_image"],
-        bazaar: json["bazaar"] == null ? [] : List<dynamic>.from(json["bazaar"]!.map((x) => x)),
         personalstats: json["personalstats"] == null ? null : Personalstats.fromJson(json["personalstats"]),
+        bazaar: json["bazaar"] == null
+            ? []
+            : List<BazaarElement>.from(json["bazaar"]!.map((x) => BazaarElement.fromJson(x))),
         life: json["life"] == null ? null : Life.fromJson(json["life"]),
         status: json["status"] == null ? null : Status.fromJson(json["status"]),
         job: json["job"] == null ? null : Job.fromJson(json["job"]),
@@ -126,8 +128,8 @@ class OtherProfileModel {
         "property_id": propertyId,
         "revivable": revivable,
         "profile_image": profileImage,
-        "bazaar": bazaar == null ? [] : List<dynamic>.from(bazaar!.map((x) => x)),
         "personalstats": personalstats?.toJson(),
+        "bazaar": bazaar == null ? [] : List<dynamic>.from(bazaar!.map((x) => x.toJson())),
         "life": life?.toJson(),
         "status": status?.toJson(),
         "job": job?.toJson(),
@@ -143,16 +145,54 @@ class OtherProfileModel {
 class Basicicons {
   String? icon13;
 
-  Basicicons({
-    this.icon13,
-  });
+  Basicicons({this.icon13});
 
   factory Basicicons.fromJson(Map<String, dynamic> json) => Basicicons(
         icon13: json["icon13"],
       );
 
   Map<String, dynamic> toJson() => {
-        "icon6": icon13,
+        "icon13": icon13,
+      };
+}
+
+class BazaarElement {
+  int? id;
+  String? name;
+  String? type;
+  int? quantity;
+  int? price;
+  int? marketPrice;
+  int? uid;
+
+  BazaarElement({
+    this.id,
+    this.name,
+    this.type,
+    this.quantity,
+    this.price,
+    this.marketPrice,
+    this.uid,
+  });
+
+  factory BazaarElement.fromJson(Map<String, dynamic> json) => BazaarElement(
+        id: json["ID"],
+        name: json["name"],
+        type: json["type"],
+        quantity: json["quantity"],
+        price: json["price"],
+        marketPrice: json["market_price"],
+        uid: json["UID"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "ID": id,
+        "name": name,
+        "type": type,
+        "quantity": quantity,
+        "price": price,
+        "market_price": marketPrice,
+        "UID": uid,
       };
 }
 
@@ -330,76 +370,83 @@ class Married {
 
 class Personalstats {
   Attacking? attacking;
+  BattleStats? battleStats;
   Jobs? jobs;
   Trading? trading;
   Jail? jail;
-  //Hospital? hospital; // Avoid type issues (int/double)
+  Hospital? hospital;
   FinishingHits? finishingHits;
   Communication? communication;
-  CriminalOffenses? criminalOffenses;
+  Crimes? crimes;
   Bounties? bounties;
+  Investments? investments;
   PersonalstatsItems? items;
-  //Travel? travel; // Avoid type issues (int/double)
+  Travel? travel;
   Drugs? drugs;
   Missions? missions;
-  //Racing? racing; // Avoid type issues (int/double)
+  Racing? racing;
   PersonalstatsNetworth? networth;
   Other? other;
 
   Personalstats({
     this.attacking,
+    this.battleStats,
     this.jobs,
     this.trading,
     this.jail,
-    //this.hospital,
+    this.hospital,
     this.finishingHits,
     this.communication,
-    this.criminalOffenses,
+    this.crimes,
     this.bounties,
+    this.investments,
     this.items,
-    //this.travel,
+    this.travel,
     this.drugs,
     this.missions,
-    //this.racing,
+    this.racing,
     this.networth,
     this.other,
   });
 
   factory Personalstats.fromJson(Map<String, dynamic> json) => Personalstats(
         attacking: json["attacking"] == null ? null : Attacking.fromJson(json["attacking"]),
+        battleStats: json["battle_stats"] == null ? null : BattleStats.fromJson(json["battle_stats"]),
         jobs: json["jobs"] == null ? null : Jobs.fromJson(json["jobs"]),
         trading: json["trading"] == null ? null : Trading.fromJson(json["trading"]),
         jail: json["jail"] == null ? null : Jail.fromJson(json["jail"]),
-        //hospital: json["hospital"] == null ? null : Hospital.fromJson(json["hospital"]),
+        hospital: json["hospital"] == null ? null : Hospital.fromJson(json["hospital"]),
         finishingHits: json["finishing_hits"] == null ? null : FinishingHits.fromJson(json["finishing_hits"]),
         communication: json["communication"] == null ? null : Communication.fromJson(json["communication"]),
-        criminalOffenses:
-            json["criminal_offenses"] == null ? null : CriminalOffenses.fromJson(json["criminal_offenses"]),
+        crimes: json["crimes"] == null ? null : Crimes.fromJson(json["crimes"]),
         bounties: json["bounties"] == null ? null : Bounties.fromJson(json["bounties"]),
+        investments: json["investments"] == null ? null : Investments.fromJson(json["investments"]),
         items: json["items"] == null ? null : PersonalstatsItems.fromJson(json["items"]),
-        //travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
+        travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
         drugs: json["drugs"] == null ? null : Drugs.fromJson(json["drugs"]),
         missions: json["missions"] == null ? null : Missions.fromJson(json["missions"]),
-        //racing: json["racing"] == null ? null : Racing.fromJson(json["racing"]),
+        racing: json["racing"] == null ? null : Racing.fromJson(json["racing"]),
         networth: json["networth"] == null ? null : PersonalstatsNetworth.fromJson(json["networth"]),
         other: json["other"] == null ? null : Other.fromJson(json["other"]),
       );
 
   Map<String, dynamic> toJson() => {
         "attacking": attacking?.toJson(),
+        "battle_stats": battleStats?.toJson(),
         "jobs": jobs?.toJson(),
         "trading": trading?.toJson(),
         "jail": jail?.toJson(),
-        //"hospital": hospital?.toJson(),
+        "hospital": hospital?.toJson(),
         "finishing_hits": finishingHits?.toJson(),
         "communication": communication?.toJson(),
-        "criminal_offenses": criminalOffenses?.toJson(),
+        "crimes": crimes?.toJson(),
         "bounties": bounties?.toJson(),
+        "investments": investments?.toJson(),
         "items": items?.toJson(),
-        //"travel": travel?.toJson(),
+        "travel": travel?.toJson(),
         "drugs": drugs?.toJson(),
         "missions": missions?.toJson(),
-        //"racing": racing?.toJson(),
+        "racing": racing?.toJson(),
         "networth": networth?.toJson(),
         "other": other?.toJson(),
       };
@@ -412,7 +459,7 @@ class Attacking {
   int? unarmoredWins;
   int? highestLevelBeaten;
   Escapes? escapes;
-  Killstreak? killstreak;
+  Streak? killstreak;
   Hits? hits;
   Damage? damage;
   AttackingNetworth? networth;
@@ -441,7 +488,7 @@ class Attacking {
         unarmoredWins: json["unarmored_wins"],
         highestLevelBeaten: json["highest_level_beaten"],
         escapes: json["escapes"] == null ? null : Escapes.fromJson(json["escapes"]),
-        killstreak: json["killstreak"] == null ? null : Killstreak.fromJson(json["killstreak"]),
+        killstreak: json["killstreak"] == null ? null : Streak.fromJson(json["killstreak"]),
         hits: json["hits"] == null ? null : Hits.fromJson(json["hits"]),
         damage: json["damage"] == null ? null : Damage.fromJson(json["damage"]),
         networth: json["networth"] == null ? null : AttackingNetworth.fromJson(json["networth"]),
@@ -685,19 +732,23 @@ class Hits {
       };
 }
 
-class Killstreak {
+class Streak {
   int? best;
+  int? current;
 
-  Killstreak({
+  Streak({
     this.best,
+    this.current,
   });
 
-  factory Killstreak.fromJson(Map<String, dynamic> json) => Killstreak(
+  factory Streak.fromJson(Map<String, dynamic> json) => Streak(
         best: json["best"],
+        current: json["current"],
       );
 
   Map<String, dynamic> toJson() => {
         "best": best,
+        "current": current,
       };
 }
 
@@ -722,6 +773,38 @@ class AttackingNetworth {
         "money_mugged": moneyMugged,
         "largest_mug": largestMug,
         "items_looted": itemsLooted,
+      };
+}
+
+class BattleStats {
+  int? strength;
+  int? defense;
+  int? speed;
+  int? dexterity;
+  int? total;
+
+  BattleStats({
+    this.strength,
+    this.defense,
+    this.speed,
+    this.dexterity,
+    this.total,
+  });
+
+  factory BattleStats.fromJson(Map<String, dynamic> json) => BattleStats(
+        strength: json["strength"],
+        defense: json["defense"],
+        speed: json["speed"],
+        dexterity: json["dexterity"],
+        total: json["total"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "strength": strength,
+        "defense": defense,
+        "speed": speed,
+        "dexterity": dexterity,
+        "total": total,
       };
 }
 
@@ -825,9 +908,33 @@ class MailsSent {
       };
 }
 
-class CriminalOffenses {
-  int? total;
+class Crimes {
+  Offenses? offenses;
+  Skills? skills;
+  String? version;
+
+  Crimes({
+    this.offenses,
+    this.skills,
+    this.version,
+  });
+
+  factory Crimes.fromJson(Map<String, dynamic> json) => Crimes(
+        offenses: json["offenses"] == null ? null : Offenses.fromJson(json["offenses"]),
+        skills: json["skills"] == null ? null : Skills.fromJson(json["skills"]),
+        version: json["version"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "offenses": offenses?.toJson(),
+        "skills": skills?.toJson(),
+        "version": version,
+      };
+}
+
+class Offenses {
   int? vandalism;
+  int? fraud;
   int? theft;
   int? counterfeiting;
   int? illicitServices;
@@ -835,11 +942,11 @@ class CriminalOffenses {
   int? extortion;
   int? illegalProduction;
   int? organizedCrimes;
-  String? version;
+  int? total;
 
-  CriminalOffenses({
-    this.total,
+  Offenses({
     this.vandalism,
+    this.fraud,
     this.theft,
     this.counterfeiting,
     this.illicitServices,
@@ -847,12 +954,12 @@ class CriminalOffenses {
     this.extortion,
     this.illegalProduction,
     this.organizedCrimes,
-    this.version,
+    this.total,
   });
 
-  factory CriminalOffenses.fromJson(Map<String, dynamic> json) => CriminalOffenses(
-        total: json["total"],
+  factory Offenses.fromJson(Map<String, dynamic> json) => Offenses(
         vandalism: json["vandalism"],
+        fraud: json["fraud"],
         theft: json["theft"],
         counterfeiting: json["counterfeiting"],
         illicitServices: json["illicit_services"],
@@ -860,12 +967,12 @@ class CriminalOffenses {
         extortion: json["extortion"],
         illegalProduction: json["illegal_production"],
         organizedCrimes: json["organized_crimes"],
-        version: json["version"],
+        total: json["total"],
       );
 
   Map<String, dynamic> toJson() => {
-        "total": total,
         "vandalism": vandalism,
+        "fraud": fraud,
         "theft": theft,
         "counterfeiting": counterfeiting,
         "illicit_services": illicitServices,
@@ -873,7 +980,67 @@ class CriminalOffenses {
         "extortion": extortion,
         "illegal_production": illegalProduction,
         "organized_crimes": organizedCrimes,
-        "version": version,
+        "total": total,
+      };
+}
+
+class Skills {
+  int? searchForCash;
+  int? bootlegging;
+  int? graffiti;
+  int? shoplifting;
+  int? pickpocketing;
+  int? cardSkimming;
+  int? burglary;
+  int? hustling;
+  int? disposal;
+  int? cracking;
+  int? forgery;
+  int? scamming;
+
+  Skills({
+    this.searchForCash,
+    this.bootlegging,
+    this.graffiti,
+    this.shoplifting,
+    this.pickpocketing,
+    this.cardSkimming,
+    this.burglary,
+    this.hustling,
+    this.disposal,
+    this.cracking,
+    this.forgery,
+    this.scamming,
+  });
+
+  factory Skills.fromJson(Map<String, dynamic> json) => Skills(
+        searchForCash: json["search_for_cash"],
+        bootlegging: json["bootlegging"],
+        graffiti: json["graffiti"],
+        shoplifting: json["shoplifting"],
+        pickpocketing: json["pickpocketing"],
+        cardSkimming: json["card_skimming"],
+        burglary: json["burglary"],
+        hustling: json["hustling"],
+        disposal: json["disposal"],
+        cracking: json["cracking"],
+        forgery: json["forgery"],
+        scamming: json["scamming"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "search_for_cash": searchForCash,
+        "bootlegging": bootlegging,
+        "graffiti": graffiti,
+        "shoplifting": shoplifting,
+        "pickpocketing": pickpocketing,
+        "card_skimming": cardSkimming,
+        "burglary": burglary,
+        "hustling": hustling,
+        "disposal": disposal,
+        "cracking": cracking,
+        "forgery": forgery,
+        "scamming": scamming,
       };
 }
 
@@ -1073,6 +1240,86 @@ class Reviving {
       };
 }
 
+class Investments {
+  Bank? bank;
+  Stocks? stocks;
+
+  Investments({
+    this.bank,
+    this.stocks,
+  });
+
+  factory Investments.fromJson(Map<String, dynamic> json) => Investments(
+        bank: json["bank"] == null ? null : Bank.fromJson(json["bank"]),
+        stocks: json["stocks"] == null ? null : Stocks.fromJson(json["stocks"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "bank": bank?.toJson(),
+        "stocks": stocks?.toJson(),
+      };
+}
+
+class Bank {
+  int? total;
+  int? profit;
+  int? current;
+  int? timeRemaining;
+
+  Bank({
+    this.total,
+    this.profit,
+    this.current,
+    this.timeRemaining,
+  });
+
+  factory Bank.fromJson(Map<String, dynamic> json) => Bank(
+        total: json["total"],
+        profit: json["profit"],
+        current: json["current"],
+        timeRemaining: json["time_remaining"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "total": total,
+        "profit": profit,
+        "current": current,
+        "time_remaining": timeRemaining,
+      };
+}
+
+class Stocks {
+  int? profits;
+  int? losses;
+  int? fees;
+  int? netProfits;
+  int? payouts;
+
+  Stocks({
+    this.profits,
+    this.losses,
+    this.fees,
+    this.netProfits,
+    this.payouts,
+  });
+
+  factory Stocks.fromJson(Map<String, dynamic> json) => Stocks(
+        profits: json["profits"],
+        losses: json["losses"],
+        fees: json["fees"],
+        netProfits: json["net_profits"],
+        payouts: json["payouts"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "profits": profits,
+        "losses": losses,
+        "fees": fees,
+        "net_profits": netProfits,
+        "payouts": payouts,
+      };
+}
+
 class PersonalstatsItems {
   Found? found;
   int? trashed;
@@ -1103,24 +1350,24 @@ class PersonalstatsItems {
 
 class Found {
   int? city;
-  int? trash;
+  int? dump;
   int? easterEggs;
 
   Found({
     this.city,
-    this.trash,
+    this.dump,
     this.easterEggs,
   });
 
   factory Found.fromJson(Map<String, dynamic> json) => Found(
         city: json["city"],
-        trash: json["trash"],
+        dump: json["dump"],
         easterEggs: json["easter_eggs"],
       );
 
   Map<String, dynamic> toJson() => {
         "city": city,
-        "trash": trash,
+        "dump": dump,
         "easter_eggs": easterEggs,
       };
 }
@@ -1132,6 +1379,7 @@ class Used {
   int? candy;
   int? alcohol;
   int? energy;
+  int? energyDrinks;
   int? statEnhancers;
   int? easterEggs;
 
@@ -1142,6 +1390,7 @@ class Used {
     this.candy,
     this.alcohol,
     this.energy,
+    this.energyDrinks,
     this.statEnhancers,
     this.easterEggs,
   });
@@ -1153,6 +1402,7 @@ class Used {
         candy: json["candy"],
         alcohol: json["alcohol"],
         energy: json["energy"],
+        energyDrinks: json["energy_drinks"],
         statEnhancers: json["stat_enhancers"],
         easterEggs: json["easter_eggs"],
       );
@@ -1164,6 +1414,7 @@ class Used {
         "candy": candy,
         "alcohol": alcohol,
         "energy": energy,
+        "energy_drinks": energyDrinks,
         "stat_enhancers": statEnhancers,
         "easter_eggs": easterEggs,
       };
@@ -1216,20 +1467,52 @@ class Busts {
 class Jobs {
   int? jobPointsUsed;
   int? trainsReceived;
+  Stats? stats;
 
   Jobs({
     this.jobPointsUsed,
     this.trainsReceived,
+    this.stats,
   });
 
   factory Jobs.fromJson(Map<String, dynamic> json) => Jobs(
         jobPointsUsed: json["job_points_used"],
         trainsReceived: json["trains_received"],
+        stats: json["stats"] == null ? null : Stats.fromJson(json["stats"]),
       );
 
   Map<String, dynamic> toJson() => {
         "job_points_used": jobPointsUsed,
         "trains_received": trainsReceived,
+        "stats": stats?.toJson(),
+      };
+}
+
+class Stats {
+  int? manual;
+  int? intelligence;
+  int? endurance;
+  int? total;
+
+  Stats({
+    this.manual,
+    this.intelligence,
+    this.endurance,
+    this.total,
+  });
+
+  factory Stats.fromJson(Map<String, dynamic> json) => Stats(
+        manual: json["manual"],
+        intelligence: json["intelligence"],
+        endurance: json["endurance"],
+        total: json["total"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "manual": manual,
+        "intelligence": intelligence,
+        "endurance": endurance,
+        "total": total,
       };
 }
 
@@ -1279,24 +1562,98 @@ class Contracts {
 
 class PersonalstatsNetworth {
   int? total;
+  int? wallet;
+  int? vaults;
+  int? bank;
+  int? overseasBank;
+  int? points;
+  int? inventory;
+  int? displayCase;
+  int? bazaar;
+  int? itemMarket;
+  int? property;
+  int? stockMarket;
+  int? auctionHouse;
+  int? bookie;
+  int? company;
+  int? enlistedCars;
+  int? piggyBank;
+  int? pending;
+  int? loans;
+  int? unpaidFees;
 
   PersonalstatsNetworth({
     this.total,
+    this.wallet,
+    this.vaults,
+    this.bank,
+    this.overseasBank,
+    this.points,
+    this.inventory,
+    this.displayCase,
+    this.bazaar,
+    this.itemMarket,
+    this.property,
+    this.stockMarket,
+    this.auctionHouse,
+    this.bookie,
+    this.company,
+    this.enlistedCars,
+    this.piggyBank,
+    this.pending,
+    this.loans,
+    this.unpaidFees,
   });
 
   factory PersonalstatsNetworth.fromJson(Map<String, dynamic> json) => PersonalstatsNetworth(
         total: json["total"],
+        wallet: json["wallet"],
+        vaults: json["vaults"],
+        bank: json["bank"],
+        overseasBank: json["overseas_bank"],
+        points: json["points"],
+        inventory: json["inventory"],
+        displayCase: json["display_case"],
+        bazaar: json["bazaar"],
+        itemMarket: json["item_market"],
+        property: json["property"],
+        stockMarket: json["stock_market"],
+        auctionHouse: json["auction_house"],
+        bookie: json["bookie"],
+        company: json["company"],
+        enlistedCars: json["enlisted_cars"],
+        piggyBank: json["piggy_bank"],
+        pending: json["pending"],
+        loans: json["loans"],
+        unpaidFees: json["unpaid_fees"],
       );
 
   Map<String, dynamic> toJson() => {
         "total": total,
+        "wallet": wallet,
+        "vaults": vaults,
+        "bank": bank,
+        "overseas_bank": overseasBank,
+        "points": points,
+        "inventory": inventory,
+        "display_case": displayCase,
+        "bazaar": bazaar,
+        "item_market": itemMarket,
+        "property": property,
+        "stock_market": stockMarket,
+        "auction_house": auctionHouse,
+        "bookie": bookie,
+        "company": company,
+        "enlisted_cars": enlistedCars,
+        "piggy_bank": piggyBank,
+        "pending": pending,
+        "loans": loans,
+        "unpaid_fees": unpaidFees,
       };
 }
 
 class Other {
-  int? timePlayed;
-  int? currentStreak;
-  int? bestStreak;
+  Activity? activity;
   int? awards;
   int? meritsBought;
   Refills? refills;
@@ -1304,9 +1661,7 @@ class Other {
   int? rankedWarWins;
 
   Other({
-    this.timePlayed,
-    this.currentStreak,
-    this.bestStreak,
+    this.activity,
     this.awards,
     this.meritsBought,
     this.refills,
@@ -1315,9 +1670,7 @@ class Other {
   });
 
   factory Other.fromJson(Map<String, dynamic> json) => Other(
-        timePlayed: json["time_played"],
-        currentStreak: json["current_streak"],
-        bestStreak: json["best_streak"],
+        activity: json["activity"] == null ? null : Activity.fromJson(json["activity"]),
         awards: json["awards"],
         meritsBought: json["merits_bought"],
         refills: json["refills"] == null ? null : Refills.fromJson(json["refills"]),
@@ -1326,14 +1679,32 @@ class Other {
       );
 
   Map<String, dynamic> toJson() => {
-        "time_played": timePlayed,
-        "current_streak": currentStreak,
-        "best_streak": bestStreak,
+        "activity": activity?.toJson(),
         "awards": awards,
         "merits_bought": meritsBought,
         "refills": refills?.toJson(),
         "donator_days": donatorDays,
         "ranked_war_wins": rankedWarWins,
+      };
+}
+
+class Activity {
+  int? time;
+  Streak? streak;
+
+  Activity({
+    this.time,
+    this.streak,
+  });
+
+  factory Activity.fromJson(Map<String, dynamic> json) => Activity(
+        time: json["time"],
+        streak: json["streak"] == null ? null : Streak.fromJson(json["streak"]),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "time": time,
+        "streak": streak?.toJson(),
       };
 }
 
@@ -1409,7 +1780,7 @@ class Trading {
   TradingItems? items;
   int? trades;
   Points? points;
-  Bazaar? bazaar;
+  TradingBazaar? bazaar;
 
   Trading({
     this.items,
@@ -1422,7 +1793,7 @@ class Trading {
         items: json["items"] == null ? null : TradingItems.fromJson(json["items"]),
         trades: json["trades"],
         points: json["points"] == null ? null : Points.fromJson(json["points"]),
-        bazaar: json["bazaar"] == null ? null : Bazaar.fromJson(json["bazaar"]),
+        bazaar: json["bazaar"] == null ? null : TradingBazaar.fromJson(json["bazaar"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -1433,18 +1804,18 @@ class Trading {
       };
 }
 
-class Bazaar {
+class TradingBazaar {
   int? customers;
   int? sales;
   int? profit;
 
-  Bazaar({
+  TradingBazaar({
     this.customers,
     this.sales,
     this.profit,
   });
 
-  factory Bazaar.fromJson(Map<String, dynamic> json) => Bazaar(
+  factory TradingBazaar.fromJson(Map<String, dynamic> json) => TradingBazaar(
         customers: json["customers"],
         sales: json["sales"],
         profit: json["profit"],
@@ -1545,7 +1916,7 @@ class Travel {
   int? total;
   int? timeSpent;
   int? itemsBought;
-  double? huntingSkill;
+  Hunting? hunting;
   int? attacksWon;
   int? defendsLost;
   int? argentina;
@@ -1564,7 +1935,7 @@ class Travel {
     this.total,
     this.timeSpent,
     this.itemsBought,
-    this.huntingSkill,
+    this.hunting,
     this.attacksWon,
     this.defendsLost,
     this.argentina,
@@ -1584,7 +1955,7 @@ class Travel {
         total: json["total"],
         timeSpent: json["time_spent"],
         itemsBought: json["items_bought"],
-        huntingSkill: json["hunting_skill"].toDouble(),
+        hunting: json["hunting"] == null ? null : Hunting.fromJson(json["hunting"]),
         attacksWon: json["attacks_won"],
         defendsLost: json["defends_lost"],
         argentina: json["argentina"],
@@ -1604,7 +1975,7 @@ class Travel {
         "total": total,
         "time_spent": timeSpent,
         "items_bought": itemsBought,
-        "hunting_skill": huntingSkill,
+        "hunting": hunting?.toJson(),
         "attacks_won": attacksWon,
         "defends_lost": defendsLost,
         "argentina": argentina,
@@ -1618,6 +1989,22 @@ class Travel {
         "united_kingdom": unitedKingdom,
         "south_africa": southAfrica,
         "switzerland": switzerland,
+      };
+}
+
+class Hunting {
+  int? skill;
+
+  Hunting({
+    this.skill,
+  });
+
+  factory Hunting.fromJson(Map<String, dynamic> json) => Hunting(
+        skill: json["skill"],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "skill": skill,
       };
 }
 

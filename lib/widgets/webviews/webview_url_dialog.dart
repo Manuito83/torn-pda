@@ -188,7 +188,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     "updated ${readTimestamp(spy.update!)}";
                               }
                               String estimatedStats = StatsCalculator.calculateStats(
-                                criminalRecordTotal: t.personalstats?.criminalOffenses?.total,
+                                criminalRecordTotal: t.personalstats?.crimes?.offenses?.total,
                                 level: t.level,
                                 networth: t.personalstats!.networth!.total,
                                 rank: t.rank,

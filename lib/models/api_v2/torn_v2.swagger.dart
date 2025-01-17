@@ -47,155 +47,112 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get a faction's hall of fame rankings.
-  ///@param key API key (Public)
   ///@param id Faction id
-  Future<chopper.Response<FactionHofResponse>> factionIdHofGet({
-    required String? key,
-    required int? id,
-  }) {
+  Future<chopper.Response<FactionHofResponse>> factionIdHofGet({required int? id}) {
     generatedMapping.putIfAbsent(FactionHofResponse, () => FactionHofResponse.fromJsonFactory);
 
-    return _factionIdHofGet(key: key, id: id);
+    return _factionIdHofGet(id: id);
   }
 
   ///Get a faction's hall of fame rankings.
-  ///@param key API key (Public)
   ///@param id Faction id
   @Get(path: '/faction/{id}/hof')
-  Future<chopper.Response<FactionHofResponse>> _factionIdHofGet({
-    @Query('key') required String? key,
-    @Path('id') required int? id,
-  });
+  Future<chopper.Response<FactionHofResponse>> _factionIdHofGet({@Path('id') required int? id});
 
   ///Get your faction's hall of fame rankings.
-  ///@param key API key (Public)
-  Future<chopper.Response<FactionHofResponse>> factionHofGet({required String? key}) {
+  Future<chopper.Response<FactionHofResponse>> factionHofGet() {
     generatedMapping.putIfAbsent(FactionHofResponse, () => FactionHofResponse.fromJsonFactory);
 
-    return _factionHofGet(key: key);
+    return _factionHofGet();
   }
 
   ///Get your faction's hall of fame rankings.
-  ///@param key API key (Public)
   @Get(path: '/faction/hof')
-  Future<chopper.Response<FactionHofResponse>> _factionHofGet({@Query('key') required String? key});
+  Future<chopper.Response<FactionHofResponse>> _factionHofGet();
 
   ///Get a list of a faction's members
-  ///@param key API key (Public)
   ///@param id Faction id
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   Future<chopper.Response<FactionMembersResponse>> factionIdMembersGet({
-    required String? key,
     required int? id,
     enums.ApiStripTagsTrue? striptags,
   }) {
     generatedMapping.putIfAbsent(FactionMembersResponse, () => FactionMembersResponse.fromJsonFactory);
 
-    return _factionIdMembersGet(key: key, id: id, striptags: striptags?.value?.toString());
+    return _factionIdMembersGet(id: id, striptags: striptags?.value?.toString());
   }
 
   ///Get a list of a faction's members
-  ///@param key API key (Public)
   ///@param id Faction id
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   @Get(path: '/faction/{id}/members')
   Future<chopper.Response<FactionMembersResponse>> _factionIdMembersGet({
-    @Query('key') required String? key,
     @Path('id') required int? id,
     @Query('striptags') String? striptags,
   });
 
   ///Get a list of your faction's members
-  ///@param key API key (Public)
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
-  Future<chopper.Response<FactionMembersResponse>> factionMembersGet({
-    required String? key,
-    enums.ApiStripTagsTrue? striptags,
-  }) {
+  Future<chopper.Response<FactionMembersResponse>> factionMembersGet({enums.ApiStripTagsTrue? striptags}) {
     generatedMapping.putIfAbsent(FactionMembersResponse, () => FactionMembersResponse.fromJsonFactory);
 
-    return _factionMembersGet(key: key, striptags: striptags?.value?.toString());
+    return _factionMembersGet(striptags: striptags?.value?.toString());
   }
 
   ///Get a list of your faction's members
-  ///@param key API key (Public)
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   @Get(path: '/faction/members')
-  Future<chopper.Response<FactionMembersResponse>> _factionMembersGet({
-    @Query('key') required String? key,
-    @Query('striptags') String? striptags,
-  });
+  Future<chopper.Response<FactionMembersResponse>> _factionMembersGet({@Query('striptags') String? striptags});
 
   ///Get a faction's basic details
-  ///@param key API key (Public)
   ///@param id Faction id
-  Future<chopper.Response<FactionBasicResponse>> factionIdBasicGet({
-    required String? key,
-    required int? id,
-  }) {
+  Future<chopper.Response<FactionBasicResponse>> factionIdBasicGet({required int? id}) {
     generatedMapping.putIfAbsent(FactionBasicResponse, () => FactionBasicResponse.fromJsonFactory);
 
-    return _factionIdBasicGet(key: key, id: id);
+    return _factionIdBasicGet(id: id);
   }
 
   ///Get a faction's basic details
-  ///@param key API key (Public)
   ///@param id Faction id
   @Get(path: '/faction/{id}/basic')
-  Future<chopper.Response<FactionBasicResponse>> _factionIdBasicGet({
-    @Query('key') required String? key,
-    @Path('id') required int? id,
-  });
+  Future<chopper.Response<FactionBasicResponse>> _factionIdBasicGet({@Path('id') required int? id});
 
   ///Get your faction's basic details
-  ///@param key API key (Public)
-  Future<chopper.Response<FactionBasicResponse>> factionBasicGet({required String? key}) {
+  Future<chopper.Response<FactionBasicResponse>> factionBasicGet() {
     generatedMapping.putIfAbsent(FactionBasicResponse, () => FactionBasicResponse.fromJsonFactory);
 
-    return _factionBasicGet(key: key);
+    return _factionBasicGet();
   }
 
   ///Get your faction's basic details
-  ///@param key API key (Public)
   @Get(path: '/faction/basic')
-  Future<chopper.Response<FactionBasicResponse>> _factionBasicGet({@Query('key') required String? key});
+  Future<chopper.Response<FactionBasicResponse>> _factionBasicGet();
 
   ///Get a faction's wars & pacts details
-  ///@param key API key (Public)
   ///@param id Faction id
-  Future<chopper.Response<FactionWarsResponse>> factionIdWarsGet({
-    required String? key,
-    required int? id,
-  }) {
+  Future<chopper.Response<FactionWarsResponse>> factionIdWarsGet({required int? id}) {
     generatedMapping.putIfAbsent(FactionWarsResponse, () => FactionWarsResponse.fromJsonFactory);
 
-    return _factionIdWarsGet(key: key, id: id);
+    return _factionIdWarsGet(id: id);
   }
 
   ///Get a faction's wars & pacts details
-  ///@param key API key (Public)
   ///@param id Faction id
   @Get(path: '/faction/{id}/wars')
-  Future<chopper.Response<FactionWarsResponse>> _factionIdWarsGet({
-    @Query('key') required String? key,
-    @Path('id') required int? id,
-  });
+  Future<chopper.Response<FactionWarsResponse>> _factionIdWarsGet({@Path('id') required int? id});
 
   ///Get your faction's wars & pacts details
-  ///@param key API key (Public)
-  Future<chopper.Response<FactionWarsResponse>> factionWarsGet({required String? key}) {
+  Future<chopper.Response<FactionWarsResponse>> factionWarsGet() {
     generatedMapping.putIfAbsent(FactionWarsResponse, () => FactionWarsResponse.fromJsonFactory);
 
-    return _factionWarsGet(key: key);
+    return _factionWarsGet();
   }
 
   ///Get your faction's wars & pacts details
-  ///@param key API key (Public)
   @Get(path: '/faction/wars')
-  Future<chopper.Response<FactionWarsResponse>> _factionWarsGet({@Query('key') required String? key});
+  Future<chopper.Response<FactionWarsResponse>> _factionWarsGet();
 
   ///Get your faction's news details
-  ///@param key API key (Minimal)
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
@@ -203,7 +160,6 @@ abstract class TornV2 extends ChopperService {
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   ///@param cat News category type
   Future<chopper.Response<FactionNewsResponse>> factionNewsGet({
-    required String? key,
     enums.ApiStripTagsFalse? striptags,
     int? limit,
     enums.ApiSort? sort,
@@ -214,7 +170,6 @@ abstract class TornV2 extends ChopperService {
     generatedMapping.putIfAbsent(FactionNewsResponse, () => FactionNewsResponse.fromJsonFactory);
 
     return _factionNewsGet(
-        key: key,
         striptags: striptags?.value?.toString(),
         limit: limit,
         sort: sort?.value?.toString(),
@@ -224,7 +179,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your faction's news details
-  ///@param key API key (Minimal)
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
@@ -233,7 +187,6 @@ abstract class TornV2 extends ChopperService {
   ///@param cat News category type
   @Get(path: '/faction/news')
   Future<chopper.Response<FactionNewsResponse>> _factionNewsGet({
-    @Query('key') required String? key,
     @Query('striptags') String? striptags,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -243,13 +196,11 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get your faction's detailed attacks
-  ///@param key API key (Limited)
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   Future<chopper.Response<FactionAttacksResponse>> factionAttacksGet({
-    required String? key,
     int? limit,
     enums.ApiSort? sort,
     int? to,
@@ -257,18 +208,16 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(FactionAttacksResponse, () => FactionAttacksResponse.fromJsonFactory);
 
-    return _factionAttacksGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+    return _factionAttacksGet(limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get your faction's detailed attacks
-  ///@param key API key (Limited)
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   @Get(path: '/faction/attacks')
   Future<chopper.Response<FactionAttacksResponse>> _factionAttacksGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -276,13 +225,11 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get your faction's attacks
-  ///@param key API key (Limited)
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   Future<chopper.Response<FactionAttacksFullResponse>> factionAttacksfullGet({
-    required String? key,
     int? limit,
     enums.ApiSort? sort,
     int? to,
@@ -290,18 +237,16 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(FactionAttacksFullResponse, () => FactionAttacksFullResponse.fromJsonFactory);
 
-    return _factionAttacksfullGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+    return _factionAttacksfullGet(limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get your faction's attacks
-  ///@param key API key (Limited)
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   @Get(path: '/faction/attacksfull')
   Future<chopper.Response<FactionAttacksFullResponse>> _factionAttacksfullGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -309,61 +254,47 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get your faction's applications
-  ///@param key API key (Minimal)
-  Future<chopper.Response<FactionApplicationsResponse>> factionApplicationsGet({required String? key}) {
+  Future<chopper.Response<FactionApplicationsResponse>> factionApplicationsGet() {
     generatedMapping.putIfAbsent(FactionApplicationsResponse, () => FactionApplicationsResponse.fromJsonFactory);
 
-    return _factionApplicationsGet(key: key);
+    return _factionApplicationsGet();
   }
 
   ///Get your faction's applications
-  ///@param key API key (Minimal)
   @Get(path: '/faction/applications')
-  Future<chopper.Response<FactionApplicationsResponse>> _factionApplicationsGet({@Query('key') required String? key});
+  Future<chopper.Response<FactionApplicationsResponse>> _factionApplicationsGet();
 
   ///Get a faction's current chain
-  ///@param key API key (Public)
   ///@param id Faction id
-  Future<chopper.Response<FactionOngoingChainResponse>> factionIdChainGet({
-    required String? key,
-    required int? id,
-  }) {
+  Future<chopper.Response<FactionOngoingChainResponse>> factionIdChainGet({required int? id}) {
     generatedMapping.putIfAbsent(FactionOngoingChainResponse, () => FactionOngoingChainResponse.fromJsonFactory);
 
-    return _factionIdChainGet(key: key, id: id);
+    return _factionIdChainGet(id: id);
   }
 
   ///Get a faction's current chain
-  ///@param key API key (Public)
   ///@param id Faction id
   @Get(path: '/faction/{id}/chain')
-  Future<chopper.Response<FactionOngoingChainResponse>> _factionIdChainGet({
-    @Query('key') required String? key,
-    @Path('id') required int? id,
-  });
+  Future<chopper.Response<FactionOngoingChainResponse>> _factionIdChainGet({@Path('id') required int? id});
 
   ///Get your faction's current chain
-  ///@param key API key (Public)
-  Future<chopper.Response<FactionOngoingChainResponse>> factionChainGet({required String? key}) {
+  Future<chopper.Response<FactionOngoingChainResponse>> factionChainGet() {
     generatedMapping.putIfAbsent(FactionOngoingChainResponse, () => FactionOngoingChainResponse.fromJsonFactory);
 
-    return _factionChainGet(key: key);
+    return _factionChainGet();
   }
 
   ///Get your faction's current chain
-  ///@param key API key (Public)
   @Get(path: '/faction/chain')
-  Future<chopper.Response<FactionOngoingChainResponse>> _factionChainGet({@Query('key') required String? key});
+  Future<chopper.Response<FactionOngoingChainResponse>> _factionChainGet();
 
   ///Get a list of a faction's completed chains
-  ///@param key API key (Public)
   ///@param id Faction id
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   Future<chopper.Response<FactionChainsResponse>> factionIdChainsGet({
-    required String? key,
     required int? id,
     int? limit,
     enums.ApiSort? sort,
@@ -372,11 +303,10 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(FactionChainsResponse, () => FactionChainsResponse.fromJsonFactory);
 
-    return _factionIdChainsGet(key: key, id: id, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+    return _factionIdChainsGet(id: id, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get a list of a faction's completed chains
-  ///@param key API key (Public)
   ///@param id Faction id
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
@@ -384,7 +314,6 @@ abstract class TornV2 extends ChopperService {
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   @Get(path: '/faction/{id}/chains')
   Future<chopper.Response<FactionChainsResponse>> _factionIdChainsGet({
-    @Query('key') required String? key,
     @Path('id') required int? id,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -393,13 +322,11 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get a list of your faction's completed chains
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   Future<chopper.Response<FactionChainsResponse>> factionChainsGet({
-    required String? key,
     int? limit,
     enums.ApiSort? sort,
     int? to,
@@ -407,18 +334,16 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(FactionChainsResponse, () => FactionChainsResponse.fromJsonFactory);
 
-    return _factionChainsGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+    return _factionChainsGet(limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get a list of your faction's completed chains
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   @Get(path: '/faction/chains')
   Future<chopper.Response<FactionChainsResponse>> _factionChainsGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -426,67 +351,87 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get a chain report
-  ///@param key API key (Public)
   ///@param chainId Chain id
-  Future<chopper.Response<FactionChainReportResponse>> factionChainIdChainreportGet({
-    required String? key,
-    required int? chainId,
-  }) {
+  Future<chopper.Response<FactionChainReportResponse>> factionChainIdChainreportGet({required int? chainId}) {
     generatedMapping.putIfAbsent(FactionChainReportResponse, () => FactionChainReportResponse.fromJsonFactory);
 
-    return _factionChainIdChainreportGet(key: key, chainId: chainId);
+    return _factionChainIdChainreportGet(chainId: chainId);
   }
 
   ///Get a chain report
-  ///@param key API key (Public)
   ///@param chainId Chain id
   @Get(path: '/faction/{chainId}/chainreport')
-  Future<chopper.Response<FactionChainReportResponse>> _factionChainIdChainreportGet({
-    @Query('key') required String? key,
-    @Path('chainId') required int? chainId,
-  });
+  Future<chopper.Response<FactionChainReportResponse>> _factionChainIdChainreportGet(
+      {@Path('chainId') required int? chainId});
 
   ///Get your faction's latest chain report
-  ///@param key API key (Public)
-  Future<chopper.Response<FactionChainReportResponse>> factionChainreportGet({required String? key}) {
+  Future<chopper.Response<FactionChainReportResponse>> factionChainreportGet() {
     generatedMapping.putIfAbsent(FactionChainReportResponse, () => FactionChainReportResponse.fromJsonFactory);
 
-    return _factionChainreportGet(key: key);
+    return _factionChainreportGet();
   }
 
   ///Get your faction's latest chain report
-  ///@param key API key (Public)
   @Get(path: '/faction/chainreport')
-  Future<chopper.Response<FactionChainReportResponse>> _factionChainreportGet({@Query('key') required String? key});
+  Future<chopper.Response<FactionChainReportResponse>> _factionChainreportGet();
 
-  ///Get all available faction selections
-  ///@param key API key (Public)
-  Future<chopper.Response<FactionLookupResponse>> factionLookupGet({required String? key}) {
+  ///Get your faction's organized crimes
+  ///@param cat Category of organized crimes returned. Category 'available' includes both 'recruiting' & 'planning', and category 'completed' includes both 'successful' & 'failure'<br>Default category is 'all'
+  ///@param offset
+  ///@param from Returns crimes created after this timestamp
+  ///@param to Returns crimes created before this timestamp
+  ///@param sort Direction to sort rows in
+  Future<chopper.Response<FactionCrimesResponse>> factionCrimesGet({
+    enums.FactionCrimesGetCat? cat,
+    int? offset,
+    int? from,
+    int? to,
+    enums.FactionCrimesGetSort? sort,
+  }) {
+    generatedMapping.putIfAbsent(FactionCrimesResponse, () => FactionCrimesResponse.fromJsonFactory);
+
+    return _factionCrimesGet(
+        cat: cat?.value?.toString(), offset: offset, from: from, to: to, sort: sort?.value?.toString());
+  }
+
+  ///Get your faction's organized crimes
+  ///@param cat Category of organized crimes returned. Category 'available' includes both 'recruiting' & 'planning', and category 'completed' includes both 'successful' & 'failure'<br>Default category is 'all'
+  ///@param offset
+  ///@param from Returns crimes created after this timestamp
+  ///@param to Returns crimes created before this timestamp
+  ///@param sort Direction to sort rows in
+  @Get(path: '/faction/crimes')
+  Future<chopper.Response<FactionCrimesResponse>> _factionCrimesGet({
+    @Query('cat') String? cat,
+    @Query('offset') int? offset,
+    @Query('from') int? from,
+    @Query('to') int? to,
+    @Query('sort') String? sort,
+  });
+
+  ///
+  Future<chopper.Response<FactionLookupResponse>> factionLookupGet() {
     generatedMapping.putIfAbsent(FactionLookupResponse, () => FactionLookupResponse.fromJsonFactory);
 
-    return _factionLookupGet(key: key);
+    return _factionLookupGet();
   }
 
-  ///Get all available faction selections
-  ///@param key API key (Public)
+  ///
   @Get(path: '/faction/lookup')
-  Future<chopper.Response<FactionLookupResponse>> _factionLookupGet({@Query('key') required String? key});
+  Future<chopper.Response<FactionLookupResponse>> _factionLookupGet();
 
   ///Get current server time
-  ///@param key API key (Public)
-  Future<chopper.Response<TimestampResponse>> factionTimestampGet({required String? key}) {
+  Future<chopper.Response<TimestampResponse>> factionTimestampGet() {
     generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
 
-    return _factionTimestampGet(key: key);
+    return _factionTimestampGet();
   }
 
   ///Get current server time
-  ///@param key API key (Public)
   @Get(path: '/faction/timestamp')
-  Future<chopper.Response<TimestampResponse>> _factionTimestampGet({@Query('key') required String? key});
+  Future<chopper.Response<TimestampResponse>> _factionTimestampGet();
 
   ///Get any Faction selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param limit
@@ -497,7 +442,6 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Direction to sort rows in
   ///@param offset
   Future<chopper.Response> factionGet({
-    required String? key,
     List<enums.FactionSelectionName>? selections,
     String? id,
     int? limit,
@@ -509,7 +453,6 @@ abstract class TornV2 extends ChopperService {
     int? offset,
   }) {
     return _factionGet(
-        key: key,
         selections: factionSelectionNameListToJson(selections),
         id: id,
         limit: limit,
@@ -522,7 +465,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get any Faction selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param limit
@@ -534,7 +476,6 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   @Get(path: '/faction')
   Future<chopper.Response> _factionGet({
-    @Query('key') required String? key,
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
     @Query('limit') int? limit,
@@ -547,41 +488,36 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get publicly available forum categories
-  ///@param key API key (Public)
-  Future<chopper.Response<ForumCategoriesResponse>> forumCategoriesGet({required String? key}) {
+  Future<chopper.Response<ForumCategoriesResponse>> forumCategoriesGet() {
     generatedMapping.putIfAbsent(ForumCategoriesResponse, () => ForumCategoriesResponse.fromJsonFactory);
 
-    return _forumCategoriesGet(key: key);
+    return _forumCategoriesGet();
   }
 
   ///Get publicly available forum categories
-  ///@param key API key (Public)
   @Get(path: '/forum/categories')
-  Future<chopper.Response<ForumCategoriesResponse>> _forumCategoriesGet({@Query('key') required String? key});
+  Future<chopper.Response<ForumCategoriesResponse>> _forumCategoriesGet();
 
   ///Get threads for specific public forum category or categories
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
   ///@param categoryIds Category id or a list of category ids (comma separated)
   Future<chopper.Response<ForumThreadsResponse>> forumCategoryIdsThreadsGet({
-    required String? key,
     int? limit,
     enums.ForumCategoryIdsThreadsGetSort? sort,
     int? to,
     int? from,
-    required List<int>? categoryIds,
+    required String? categoryIds,
   }) {
     generatedMapping.putIfAbsent(ForumThreadsResponse, () => ForumThreadsResponse.fromJsonFactory);
 
     return _forumCategoryIdsThreadsGet(
-        key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from, categoryIds: categoryIds);
+        limit: limit, sort: sort?.value?.toString(), to: to, from: from, categoryIds: categoryIds);
   }
 
   ///Get threads for specific public forum category or categories
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
@@ -589,22 +525,19 @@ abstract class TornV2 extends ChopperService {
   ///@param categoryIds Category id or a list of category ids (comma separated)
   @Get(path: '/forum/{categoryIds}/threads')
   Future<chopper.Response<ForumThreadsResponse>> _forumCategoryIdsThreadsGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
     @Query('from') int? from,
-    @Path('categoryIds') required List<int>? categoryIds,
+    @Path('categoryIds') required String? categoryIds,
   });
 
   ///Get threads across all forum categories
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
   Future<chopper.Response<ForumThreadsResponse>> forumThreadsGet({
-    required String? key,
     int? limit,
     enums.ForumThreadsGetSort? sort,
     int? to,
@@ -612,18 +545,16 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(ForumThreadsResponse, () => ForumThreadsResponse.fromJsonFactory);
 
-    return _forumThreadsGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+    return _forumThreadsGet(limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get threads across all forum categories
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
   @Get(path: '/forum/threads')
   Future<chopper.Response<ForumThreadsResponse>> _forumThreadsGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -631,84 +562,66 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get specific thread details
-  ///@param key API key (Public)
   ///@param threadId Thread id
-  Future<chopper.Response<ForumThreadResponse>> forumThreadIdThreadGet({
-    required String? key,
-    required int? threadId,
-  }) {
+  Future<chopper.Response<ForumThreadResponse>> forumThreadIdThreadGet({required int? threadId}) {
     generatedMapping.putIfAbsent(ForumThreadResponse, () => ForumThreadResponse.fromJsonFactory);
 
-    return _forumThreadIdThreadGet(key: key, threadId: threadId);
+    return _forumThreadIdThreadGet(threadId: threadId);
   }
 
   ///Get specific thread details
-  ///@param key API key (Public)
   ///@param threadId Thread id
   @Get(path: '/forum/{threadId}/thread')
-  Future<chopper.Response<ForumThreadResponse>> _forumThreadIdThreadGet({
-    @Query('key') required String? key,
-    @Path('threadId') required int? threadId,
-  });
+  Future<chopper.Response<ForumThreadResponse>> _forumThreadIdThreadGet({@Path('threadId') required int? threadId});
 
   ///Get specific forum thread posts
-  ///@param key API key (Public)
   ///@param offset
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param threadId Thread id
   Future<chopper.Response<ForumPostsResponse>> forumThreadIdPostsGet({
-    required String? key,
     int? offset,
     enums.ApiStripTagsTrue? striptags,
     required int? threadId,
   }) {
     generatedMapping.putIfAbsent(ForumPostsResponse, () => ForumPostsResponse.fromJsonFactory);
 
-    return _forumThreadIdPostsGet(
-        key: key, offset: offset, striptags: striptags?.value?.toString(), threadId: threadId);
+    return _forumThreadIdPostsGet(offset: offset, striptags: striptags?.value?.toString(), threadId: threadId);
   }
 
   ///Get specific forum thread posts
-  ///@param key API key (Public)
   ///@param offset
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param threadId Thread id
   @Get(path: '/forum/{threadId}/posts')
   Future<chopper.Response<ForumPostsResponse>> _forumThreadIdPostsGet({
-    @Query('key') required String? key,
     @Query('offset') int? offset,
     @Query('striptags') String? striptags,
     @Path('threadId') required int? threadId,
   });
 
   ///Get all available forum selections
-  ///@param key API key (Public)
-  Future<chopper.Response<ForumLookupResponse>> forumLookupGet({required String? key}) {
+  Future<chopper.Response<ForumLookupResponse>> forumLookupGet() {
     generatedMapping.putIfAbsent(ForumLookupResponse, () => ForumLookupResponse.fromJsonFactory);
 
-    return _forumLookupGet(key: key);
+    return _forumLookupGet();
   }
 
   ///Get all available forum selections
-  ///@param key API key (Public)
   @Get(path: '/forum/lookup')
-  Future<chopper.Response<ForumLookupResponse>> _forumLookupGet({@Query('key') required String? key});
+  Future<chopper.Response<ForumLookupResponse>> _forumLookupGet();
 
   ///Get current server time
-  ///@param key API key (Public)
-  Future<chopper.Response<TimestampResponse>> forumTimestampGet({required String? key}) {
+  Future<chopper.Response<TimestampResponse>> forumTimestampGet() {
     generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
 
-    return _forumTimestampGet(key: key);
+    return _forumTimestampGet();
   }
 
   ///Get current server time
-  ///@param key API key (Public)
   @Get(path: '/forum/timestamp')
-  Future<chopper.Response<TimestampResponse>> _forumTimestampGet({@Query('key') required String? key});
+  Future<chopper.Response<TimestampResponse>> _forumTimestampGet();
 
   ///Get any Forum selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
@@ -719,7 +632,6 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Direction to sort rows in
   ///@param offset
   Future<chopper.Response> forumGet({
-    required String? key,
     List<enums.ForumSelectionName>? selections,
     String? id,
     enums.ApiStripTags? striptags,
@@ -731,7 +643,6 @@ abstract class TornV2 extends ChopperService {
     int? offset,
   }) {
     return _forumGet(
-        key: key,
         selections: forumSelectionNameListToJson(selections),
         id: id,
         striptags: striptags?.value?.toString(),
@@ -744,7 +655,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get any Forum selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
@@ -756,7 +666,6 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   @Get(path: '/forum')
   Future<chopper.Response> _forumGet({
-    @Query('key') required String? key,
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
     @Query('striptags') String? striptags,
@@ -769,62 +678,53 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get item market listings
-  ///@param key API key (Public)
   ///@param id Item id
   ///@param bonus Used to filter weapons with a specific bonus.
   ///@param offset
   Future<chopper.Response<MarketItemMarketResponse>> marketIdItemmarketGet({
-    required String? key,
     required int? id,
     enums.WeaponBonusEnum? bonus,
     int? offset,
   }) {
     generatedMapping.putIfAbsent(MarketItemMarketResponse, () => MarketItemMarketResponse.fromJsonFactory);
 
-    return _marketIdItemmarketGet(key: key, id: id, bonus: bonus?.value?.toString(), offset: offset);
+    return _marketIdItemmarketGet(id: id, bonus: bonus?.value?.toString(), offset: offset);
   }
 
   ///Get item market listings
-  ///@param key API key (Public)
   ///@param id Item id
   ///@param bonus Used to filter weapons with a specific bonus.
   ///@param offset
   @Get(path: '/market/{id}/itemmarket')
   Future<chopper.Response<MarketItemMarketResponse>> _marketIdItemmarketGet({
-    @Query('key') required String? key,
     @Path('id') required int? id,
     @Query('bonus') String? bonus,
     @Query('offset') int? offset,
   });
 
   ///Get all available market selections
-  ///@param key API key (Public)
-  Future<chopper.Response<MarketLookupResponse>> marketLookupGet({required String? key}) {
+  Future<chopper.Response<MarketLookupResponse>> marketLookupGet() {
     generatedMapping.putIfAbsent(MarketLookupResponse, () => MarketLookupResponse.fromJsonFactory);
 
-    return _marketLookupGet(key: key);
+    return _marketLookupGet();
   }
 
   ///Get all available market selections
-  ///@param key API key (Public)
   @Get(path: '/market/lookup')
-  Future<chopper.Response<MarketLookupResponse>> _marketLookupGet({@Query('key') required String? key});
+  Future<chopper.Response<MarketLookupResponse>> _marketLookupGet();
 
   ///Get current server time
-  ///@param key API key (Public)
-  Future<chopper.Response<TimestampResponse>> marketTimestampGet({required String? key}) {
+  Future<chopper.Response<TimestampResponse>> marketTimestampGet() {
     generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
 
-    return _marketTimestampGet(key: key);
+    return _marketTimestampGet();
   }
 
   ///Get current server time
-  ///@param key API key (Public)
   @Get(path: '/market/timestamp')
-  Future<chopper.Response<TimestampResponse>> _marketTimestampGet({@Query('key') required String? key});
+  Future<chopper.Response<TimestampResponse>> _marketTimestampGet();
 
   ///Get any Market selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param bonus Used to filter weapons with a specific bonus
@@ -832,7 +732,6 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Direction to sort rows in
   ///@param offset
   Future<chopper.Response> marketGet({
-    required String? key,
     List<enums.MarketSelectionName>? selections,
     String? id,
     enums.WeaponBonusEnum? bonus,
@@ -841,7 +740,6 @@ abstract class TornV2 extends ChopperService {
     int? offset,
   }) {
     return _marketGet(
-        key: key,
         selections: marketSelectionNameListToJson(selections),
         id: id,
         bonus: bonus?.value?.toString(),
@@ -851,7 +749,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get any Market selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param bonus Used to filter weapons with a specific bonus
@@ -860,7 +757,6 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   @Get(path: '/market')
   Future<chopper.Response> _marketGet({
-    @Query('key') required String? key,
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
     @Query('bonus') String? bonus,
@@ -870,14 +766,12 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get races
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by schedule.start field
   ///@param to Timestamp until when started races are returned (schedule.start)
   ///@param from Timestamp after when started races are returned (scheduled.start)
   ///@param cat Category of races returned
   Future<chopper.Response<RacingRacesResponse>> racingRacesGet({
-    required String? key,
     int? limit,
     enums.RacingRacesGetSort? sort,
     int? to,
@@ -887,11 +781,10 @@ abstract class TornV2 extends ChopperService {
     generatedMapping.putIfAbsent(RacingRacesResponse, () => RacingRacesResponse.fromJsonFactory);
 
     return _racingRacesGet(
-        key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from, cat: cat?.value?.toString());
+        limit: limit, sort: sort?.value?.toString(), to: to, from: from, cat: cat?.value?.toString());
   }
 
   ///Get races
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by schedule.start field
   ///@param to Timestamp until when started races are returned (schedule.start)
@@ -899,7 +792,6 @@ abstract class TornV2 extends ChopperService {
   ///@param cat Category of races returned
   @Get(path: '/racing/races')
   Future<chopper.Response<RacingRacesResponse>> _racingRacesGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -908,118 +800,95 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get track records
-  ///@param key API key (Public)
   ///@param trackId Track id
   ///@param cat Car class
   Future<chopper.Response<RacingTrackRecordsResponse>> racingTrackIdRecordsGet({
-    required String? key,
     required int? trackId,
     required enums.RaceClassEnum? cat,
   }) {
     generatedMapping.putIfAbsent(RacingTrackRecordsResponse, () => RacingTrackRecordsResponse.fromJsonFactory);
 
-    return _racingTrackIdRecordsGet(key: key, trackId: trackId, cat: cat?.value?.toString());
+    return _racingTrackIdRecordsGet(trackId: trackId, cat: cat?.value?.toString());
   }
 
   ///Get track records
-  ///@param key API key (Public)
   ///@param trackId Track id
   ///@param cat Car class
   @Get(path: '/racing/{trackId}/records')
   Future<chopper.Response<RacingTrackRecordsResponse>> _racingTrackIdRecordsGet({
-    @Query('key') required String? key,
     @Path('trackId') required int? trackId,
     @Query('cat') required String? cat,
   });
 
   ///Get specific race details
-  ///@param key API key (Public)
-  ///@param id Race id
-  Future<chopper.Response<RacingRaceDetailsResponse>> racingRaceIdRaceGet({
-    required String? key,
-    required int? id,
-  }) {
+  ///@param raceId Race id
+  Future<chopper.Response<RacingRaceDetailsResponse>> racingRaceIdRaceGet({required int? raceId}) {
     generatedMapping.putIfAbsent(RacingRaceDetailsResponse, () => RacingRaceDetailsResponse.fromJsonFactory);
 
-    return _racingRaceIdRaceGet(key: key, id: id);
+    return _racingRaceIdRaceGet(raceId: raceId);
   }
 
   ///Get specific race details
-  ///@param key API key (Public)
-  ///@param id Race id
+  ///@param raceId Race id
   @Get(path: '/racing/{raceId}/race')
-  Future<chopper.Response<RacingRaceDetailsResponse>> _racingRaceIdRaceGet({
-    @Query('key') required String? key,
-    @Path('id') required int? id,
-  });
+  Future<chopper.Response<RacingRaceDetailsResponse>> _racingRaceIdRaceGet({@Path('raceId') required int? raceId});
 
   ///Get cars and their racing stats
-  ///@param key API key (Public)
-  Future<chopper.Response<RacingCarsResponse>> racingCarsGet({required String? key}) {
+  Future<chopper.Response<RacingCarsResponse>> racingCarsGet() {
     generatedMapping.putIfAbsent(RacingCarsResponse, () => RacingCarsResponse.fromJsonFactory);
 
-    return _racingCarsGet(key: key);
+    return _racingCarsGet();
   }
 
   ///Get cars and their racing stats
-  ///@param key API key (Public)
   @Get(path: '/racing/cars')
-  Future<chopper.Response<RacingCarsResponse>> _racingCarsGet({@Query('key') required String? key});
+  Future<chopper.Response<RacingCarsResponse>> _racingCarsGet();
 
   ///Get race tracks and descriptions
-  ///@param key API key (Public)
-  Future<chopper.Response<RacingTracksResponse>> racingTracksGet({required String? key}) {
+  Future<chopper.Response<RacingTracksResponse>> racingTracksGet() {
     generatedMapping.putIfAbsent(RacingTracksResponse, () => RacingTracksResponse.fromJsonFactory);
 
-    return _racingTracksGet(key: key);
+    return _racingTracksGet();
   }
 
   ///Get race tracks and descriptions
-  ///@param key API key (Public)
   @Get(path: '/racing/tracks')
-  Future<chopper.Response<RacingTracksResponse>> _racingTracksGet({@Query('key') required String? key});
+  Future<chopper.Response<RacingTracksResponse>> _racingTracksGet();
 
   ///Get all possible car upgrades
-  ///@param key API key (Public)
-  Future<chopper.Response<RacingCarUpgradesResponse>> racingCarupgradesGet({required String? key}) {
+  Future<chopper.Response<RacingCarUpgradesResponse>> racingCarupgradesGet() {
     generatedMapping.putIfAbsent(RacingCarUpgradesResponse, () => RacingCarUpgradesResponse.fromJsonFactory);
 
-    return _racingCarupgradesGet(key: key);
+    return _racingCarupgradesGet();
   }
 
   ///Get all possible car upgrades
-  ///@param key API key (Public)
   @Get(path: '/racing/carupgrades')
-  Future<chopper.Response<RacingCarUpgradesResponse>> _racingCarupgradesGet({@Query('key') required String? key});
+  Future<chopper.Response<RacingCarUpgradesResponse>> _racingCarupgradesGet();
 
   ///Get all available racing selections
-  ///@param key API key (Public)
-  Future<chopper.Response<RacingLookupResponse>> racingLookupGet({required String? key}) {
+  Future<chopper.Response<RacingLookupResponse>> racingLookupGet() {
     generatedMapping.putIfAbsent(RacingLookupResponse, () => RacingLookupResponse.fromJsonFactory);
 
-    return _racingLookupGet(key: key);
+    return _racingLookupGet();
   }
 
   ///Get all available racing selections
-  ///@param key API key (Public)
   @Get(path: '/racing/lookup')
-  Future<chopper.Response<RacingLookupResponse>> _racingLookupGet({@Query('key') required String? key});
+  Future<chopper.Response<RacingLookupResponse>> _racingLookupGet();
 
   ///Get current server time
-  ///@param key API key (Public)
-  Future<chopper.Response<TimestampResponse>> racingTimestampGet({required String? key}) {
+  Future<chopper.Response<TimestampResponse>> racingTimestampGet() {
     generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
 
-    return _racingTimestampGet(key: key);
+    return _racingTimestampGet();
   }
 
   ///Get current server time
-  ///@param key API key (Public)
   @Get(path: '/racing/timestamp')
-  Future<chopper.Response<TimestampResponse>> _racingTimestampGet({@Query('key') required String? key});
+  Future<chopper.Response<TimestampResponse>> _racingTimestampGet();
 
   ///Get any Racing selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param limit
@@ -1029,7 +898,6 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Direction to sort rows in
   ///@param offset
   Future<chopper.Response> racingGet({
-    required String? key,
     List<enums.RacingSelectionName>? selections,
     String? id,
     int? limit,
@@ -1040,7 +908,6 @@ abstract class TornV2 extends ChopperService {
     int? offset,
   }) {
     return _racingGet(
-        key: key,
         selections: racingSelectionNameListToJson(selections),
         id: id,
         limit: limit,
@@ -1052,7 +919,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get any Racing selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param limit
@@ -1063,7 +929,6 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   @Get(path: '/racing')
   Future<chopper.Response> _racingGet({
-    @Query('key') required String? key,
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
     @Query('limit') int? limit,
@@ -1075,210 +940,170 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get Subcrimes information
-  ///@param key API key (Public)
   ///@param crimeId Crime id
-  Future<chopper.Response<TornSubcrimesResponse>> tornCrimeIdSubcrimesGet({
-    required String? key,
-    required String? crimeId,
-  }) {
+  Future<chopper.Response<TornSubcrimesResponse>> tornCrimeIdSubcrimesGet({required String? crimeId}) {
     generatedMapping.putIfAbsent(TornSubcrimesResponse, () => TornSubcrimesResponse.fromJsonFactory);
 
-    return _tornCrimeIdSubcrimesGet(key: key, crimeId: crimeId);
+    return _tornCrimeIdSubcrimesGet(crimeId: crimeId);
   }
 
   ///Get Subcrimes information
-  ///@param key API key (Public)
   ///@param crimeId Crime id
   @Get(path: '/torn/{crimeId}/subcrimes')
-  Future<chopper.Response<TornSubcrimesResponse>> _tornCrimeIdSubcrimesGet({
-    @Query('key') required String? key,
-    @Path('crimeId') required String? crimeId,
-  });
+  Future<chopper.Response<TornSubcrimesResponse>> _tornCrimeIdSubcrimesGet({@Path('crimeId') required String? crimeId});
 
   ///Get crimes information
-  ///@param key API key (Public)
-  Future<chopper.Response<TornCrimesResponse>> tornCrimesGet({required String? key}) {
+  Future<chopper.Response<TornCrimesResponse>> tornCrimesGet() {
     generatedMapping.putIfAbsent(TornCrimesResponse, () => TornCrimesResponse.fromJsonFactory);
 
-    return _tornCrimesGet(key: key);
+    return _tornCrimesGet();
   }
 
   ///Get crimes information
-  ///@param key API key (Public)
   @Get(path: '/torn/crimes')
-  Future<chopper.Response<TornCrimesResponse>> _tornCrimesGet({@Query('key') required String? key});
+  Future<chopper.Response<TornCrimesResponse>> _tornCrimesGet();
 
   ///Get calendar information
-  ///@param key API key (Public)
-  Future<chopper.Response<TornCalendarResponse>> tornCalendarGet({required String? key}) {
+  Future<chopper.Response<TornCalendarResponse>> tornCalendarGet() {
     generatedMapping.putIfAbsent(TornCalendarResponse, () => TornCalendarResponse.fromJsonFactory);
 
-    return _tornCalendarGet(key: key);
+    return _tornCalendarGet();
   }
 
   ///Get calendar information
-  ///@param key API key (Public)
   @Get(path: '/torn/calendar')
-  Future<chopper.Response<TornCalendarResponse>> _tornCalendarGet({@Query('key') required String? key});
+  Future<chopper.Response<TornCalendarResponse>> _tornCalendarGet();
 
   ///Get player hall of fame positions for a specific category
-  ///@param key API key (Public)
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
   Future<chopper.Response<TornHofResponse>> tornHofGet({
-    required String? key,
     int? limit,
     int? offset,
     required enums.TornHofCategory? cat,
   }) {
     generatedMapping.putIfAbsent(TornHofResponse, () => TornHofResponse.fromJsonFactory);
 
-    return _tornHofGet(key: key, limit: limit, offset: offset, cat: cat?.value?.toString());
+    return _tornHofGet(limit: limit, offset: offset, cat: cat?.value?.toString());
   }
 
   ///Get player hall of fame positions for a specific category
-  ///@param key API key (Public)
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
   @Get(path: '/torn/hof')
   Future<chopper.Response<TornHofResponse>> _tornHofGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('offset') int? offset,
     @Query('cat') required String? cat,
   });
 
   ///Get faction hall of fame positions for a specific category
-  ///@param key API key (Public)
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
   Future<chopper.Response<TornFactionHofResponse>> tornFactionhofGet({
-    required String? key,
     int? limit,
     int? offset,
     required enums.TornFactionHofCategory? cat,
   }) {
     generatedMapping.putIfAbsent(TornFactionHofResponse, () => TornFactionHofResponse.fromJsonFactory);
 
-    return _tornFactionhofGet(key: key, limit: limit, offset: offset, cat: cat?.value?.toString());
+    return _tornFactionhofGet(limit: limit, offset: offset, cat: cat?.value?.toString());
   }
 
   ///Get faction hall of fame positions for a specific category
-  ///@param key API key (Public)
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
   @Get(path: '/torn/factionhof')
   Future<chopper.Response<TornFactionHofResponse>> _tornFactionhofGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('offset') int? offset,
     @Query('cat') required String? cat,
   });
 
   ///Get available log ids for a specific log category
-  ///@param key API key (Public)
   ///@param logCategoryId Log category id
-  Future<chopper.Response<TornLogTypesResponse>> tornLogCategoryIdLogtypesGet({
-    required String? key,
-    required int? logCategoryId,
-  }) {
+  Future<chopper.Response<TornLogTypesResponse>> tornLogCategoryIdLogtypesGet({required int? logCategoryId}) {
     generatedMapping.putIfAbsent(TornLogTypesResponse, () => TornLogTypesResponse.fromJsonFactory);
 
-    return _tornLogCategoryIdLogtypesGet(key: key, logCategoryId: logCategoryId);
+    return _tornLogCategoryIdLogtypesGet(logCategoryId: logCategoryId);
   }
 
   ///Get available log ids for a specific log category
-  ///@param key API key (Public)
   ///@param logCategoryId Log category id
   @Get(path: '/torn/{logCategoryId}/logtypes')
-  Future<chopper.Response<TornLogTypesResponse>> _tornLogCategoryIdLogtypesGet({
-    @Query('key') required String? key,
-    @Path('logCategoryId') required int? logCategoryId,
-  });
+  Future<chopper.Response<TornLogTypesResponse>> _tornLogCategoryIdLogtypesGet(
+      {@Path('logCategoryId') required int? logCategoryId});
 
   ///Get all available log ids
-  ///@param key API key (Public)
-  Future<chopper.Response<TornLogTypesResponse>> tornLogtypesGet({required String? key}) {
+  Future<chopper.Response<TornLogTypesResponse>> tornLogtypesGet() {
     generatedMapping.putIfAbsent(TornLogTypesResponse, () => TornLogTypesResponse.fromJsonFactory);
 
-    return _tornLogtypesGet(key: key);
+    return _tornLogtypesGet();
   }
 
   ///Get all available log ids
-  ///@param key API key (Public)
   @Get(path: '/torn/logtypes')
-  Future<chopper.Response<TornLogTypesResponse>> _tornLogtypesGet({@Query('key') required String? key});
+  Future<chopper.Response<TornLogTypesResponse>> _tornLogtypesGet();
 
   ///Get available log categories
-  ///@param key API key (Public)
-  Future<chopper.Response<TornLogCategoriesResponse>> tornLogcategoriesGet({required String? key}) {
+  Future<chopper.Response<TornLogCategoriesResponse>> tornLogcategoriesGet() {
     generatedMapping.putIfAbsent(TornLogCategoriesResponse, () => TornLogCategoriesResponse.fromJsonFactory);
 
-    return _tornLogcategoriesGet(key: key);
+    return _tornLogcategoriesGet();
   }
 
   ///Get available log categories
-  ///@param key API key (Public)
   @Get(path: '/torn/logcategories')
-  Future<chopper.Response<TornLogCategoriesResponse>> _tornLogcategoriesGet({@Query('key') required String? key});
+  Future<chopper.Response<TornLogCategoriesResponse>> _tornLogcategoriesGet();
 
   ///Get bounties
-  ///@param key API key (Public)
   ///@param limit
   ///@param offset
   Future<chopper.Response<TornBountiesResponse>> tornBountiesGet({
-    required String? key,
     int? limit,
     int? offset,
   }) {
     generatedMapping.putIfAbsent(TornBountiesResponse, () => TornBountiesResponse.fromJsonFactory);
 
-    return _tornBountiesGet(key: key, limit: limit, offset: offset);
+    return _tornBountiesGet(limit: limit, offset: offset);
   }
 
   ///Get bounties
-  ///@param key API key (Public)
   ///@param limit
   ///@param offset
   @Get(path: '/torn/bounties')
   Future<chopper.Response<TornBountiesResponse>> _tornBountiesGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('offset') int? offset,
   });
 
   ///Get all available torn selections
-  ///@param key API key (Public)
-  Future<chopper.Response<TornLookupResponse>> tornLookupGet({required String? key}) {
+  Future<chopper.Response<TornLookupResponse>> tornLookupGet() {
     generatedMapping.putIfAbsent(TornLookupResponse, () => TornLookupResponse.fromJsonFactory);
 
-    return _tornLookupGet(key: key);
+    return _tornLookupGet();
   }
 
   ///Get all available torn selections
-  ///@param key API key (Public)
   @Get(path: '/torn/lookup')
-  Future<chopper.Response<TornLookupResponse>> _tornLookupGet({@Query('key') required String? key});
+  Future<chopper.Response<TornLookupResponse>> _tornLookupGet();
 
   ///Get current server time
-  ///@param key API key (Public)
-  Future<chopper.Response<TimestampResponse>> tornTimestampGet({required String? key}) {
+  Future<chopper.Response<TimestampResponse>> tornTimestampGet() {
     generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
 
-    return _tornTimestampGet(key: key);
+    return _tornTimestampGet();
   }
 
   ///Get current server time
-  ///@param key API key (Public)
   @Get(path: '/torn/timestamp')
-  Future<chopper.Response<TimestampResponse>> _tornTimestampGet({@Query('key') required String? key});
+  Future<chopper.Response<TimestampResponse>> _tornTimestampGet();
 
   ///Get any Torn selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
@@ -1289,7 +1114,6 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Direction to sort rows in
   ///@param offset
   Future<chopper.Response> tornGet({
-    required String? key,
     List<enums.TornSelectionName>? selections,
     String? id,
     enums.ApiStripTags? striptags,
@@ -1301,7 +1125,6 @@ abstract class TornV2 extends ChopperService {
     int? offset,
   }) {
     return _tornGet(
-        key: key,
         selections: tornSelectionNameListToJson(selections),
         id: id,
         striptags: striptags?.value?.toString(),
@@ -1314,7 +1137,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get any Torn selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
@@ -1326,7 +1148,6 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   @Get(path: '/torn')
   Future<chopper.Response> _tornGet({
-    @Query('key') required String? key,
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
     @Query('striptags') String? striptags,
@@ -1339,13 +1160,11 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get a player's personal stats
-  ///@param key API key (Public)
   ///@param id User id
   ///@param cat
   ///@param stat Stat names (10 maximum). Used to fetch historical stat values
   ///@param timestamp Returns stats until this timestamp (converted to nearest date).
   Future<chopper.Response<UserPersonalStatsResponse>> userIdPersonalstatsGet({
-    required String? key,
     required int? id,
     enums.PersonalStatsCategoryEnum? cat,
     List<enums.PersonalStatsStatName>? stat,
@@ -1354,22 +1173,16 @@ abstract class TornV2 extends ChopperService {
     generatedMapping.putIfAbsent(UserPersonalStatsResponse, () => UserPersonalStatsResponse.fromJsonFactory);
 
     return _userIdPersonalstatsGet(
-        key: key,
-        id: id,
-        cat: cat?.value?.toString(),
-        stat: personalStatsStatNameListToJson(stat),
-        timestamp: timestamp);
+        id: id, cat: cat?.value?.toString(), stat: personalStatsStatNameListToJson(stat), timestamp: timestamp);
   }
 
   ///Get a player's personal stats
-  ///@param key API key (Public)
   ///@param id User id
   ///@param cat
   ///@param stat Stat names (10 maximum). Used to fetch historical stat values
   ///@param timestamp Returns stats until this timestamp (converted to nearest date).
   @Get(path: '/user/{id}/personalstats')
   Future<chopper.Response<UserPersonalStatsResponse>> _userIdPersonalstatsGet({
-    @Query('key') required String? key,
     @Path('id') required int? id,
     @Query('cat') String? cat,
     @Query('stat') List<Object?>? stat,
@@ -1377,12 +1190,10 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get your personal stats
-  ///@param key API key (Public)
   ///@param cat Stats category. Required unless requesting specific stats via 'stat' query parameter
   ///@param stat Stat names (10 maximum). Used to fetch historical stat values
   ///@param timestamp Returns stats until this timestamp (converted to nearest date).
   Future<chopper.Response<UserPersonalStatsResponse>> userPersonalstatsGet({
-    required String? key,
     enums.PersonalStatsCategoryEnum? cat,
     List<enums.PersonalStatsStatName>? stat,
     int? timestamp,
@@ -1390,52 +1201,40 @@ abstract class TornV2 extends ChopperService {
     generatedMapping.putIfAbsent(UserPersonalStatsResponse, () => UserPersonalStatsResponse.fromJsonFactory);
 
     return _userPersonalstatsGet(
-        key: key, cat: cat?.value?.toString(), stat: personalStatsStatNameListToJson(stat), timestamp: timestamp);
+        cat: cat?.value?.toString(), stat: personalStatsStatNameListToJson(stat), timestamp: timestamp);
   }
 
   ///Get your personal stats
-  ///@param key API key (Public)
   ///@param cat Stats category. Required unless requesting specific stats via 'stat' query parameter
   ///@param stat Stat names (10 maximum). Used to fetch historical stat values
   ///@param timestamp Returns stats until this timestamp (converted to nearest date).
   @Get(path: '/user/personalstats')
   Future<chopper.Response<UserPersonalStatsResponse>> _userPersonalstatsGet({
-    @Query('key') required String? key,
     @Query('cat') String? cat,
     @Query('stat') List<Object?>? stat,
     @Query('timestamp') int? timestamp,
   });
 
   ///Get your crime statistics
-  ///@param key API key (Minimal)
   ///@param crimeId Crime id
-  Future<chopper.Response<UserCrimesResponse>> userCrimeIdCrimesGet({
-    required String? key,
-    required String? crimeId,
-  }) {
+  Future<chopper.Response<UserCrimesResponse>> userCrimeIdCrimesGet({required String? crimeId}) {
     generatedMapping.putIfAbsent(UserCrimesResponse, () => UserCrimesResponse.fromJsonFactory);
 
-    return _userCrimeIdCrimesGet(key: key, crimeId: crimeId);
+    return _userCrimeIdCrimesGet(crimeId: crimeId);
   }
 
   ///Get your crime statistics
-  ///@param key API key (Minimal)
   ///@param crimeId Crime id
   @Get(path: '/user/{crimeId}/crimes')
-  Future<chopper.Response<UserCrimesResponse>> _userCrimeIdCrimesGet({
-    @Query('key') required String? key,
-    @Path('crimeId') required String? crimeId,
-  });
+  Future<chopper.Response<UserCrimesResponse>> _userCrimeIdCrimesGet({@Path('crimeId') required String? crimeId});
 
   ///Get user races
-  ///@param key API key (Minimal)
   ///@param limit
   ///@param sort Sorted by schedule.start field
   ///@param to Timestamp until when started races are returned (schedule.start)
   ///@param from Timestamp after when started races are returned (scheduled.start)
   ///@param cat Category of races returned
   Future<chopper.Response<UserRacesResponse>> userRacesGet({
-    required String? key,
     int? limit,
     enums.UserRacesGetSort? sort,
     int? to,
@@ -1444,12 +1243,10 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(UserRacesResponse, () => UserRacesResponse.fromJsonFactory);
 
-    return _userRacesGet(
-        key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from, cat: cat?.value?.toString());
+    return _userRacesGet(limit: limit, sort: sort?.value?.toString(), to: to, from: from, cat: cat?.value?.toString());
   }
 
   ///Get user races
-  ///@param key API key (Minimal)
   ///@param limit
   ///@param sort Sorted by schedule.start field
   ///@param to Timestamp until when started races are returned (schedule.start)
@@ -1457,7 +1254,6 @@ abstract class TornV2 extends ChopperService {
   ///@param cat Category of races returned
   @Get(path: '/user/races')
   Future<chopper.Response<UserRacesResponse>> _userRacesGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -1466,21 +1262,17 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get user enlisted cars
-  ///@param key API key (Minimal)
-  Future<chopper.Response<UserEnlistedCarsResponse>> userEnlistedcarsGet({required String? key}) {
+  Future<chopper.Response<UserEnlistedCarsResponse>> userEnlistedcarsGet() {
     generatedMapping.putIfAbsent(UserEnlistedCarsResponse, () => UserEnlistedCarsResponse.fromJsonFactory);
 
-    return _userEnlistedcarsGet(key: key);
+    return _userEnlistedcarsGet();
   }
 
   ///Get user enlisted cars
-  ///@param key API key (Minimal)
   @Get(path: '/user/enlistedcars')
-  Future<chopper.Response<UserEnlistedCarsResponse>> _userEnlistedcarsGet({@Query('key') required String? key});
+  Future<chopper.Response<UserEnlistedCarsResponse>> _userEnlistedcarsGet();
 
   ///Get posts for a specific player
-  ///@param key API key (Public)
-  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param id User id
   ///@param limit
@@ -1488,8 +1280,6 @@ abstract class TornV2 extends ChopperService {
   ///@param to Returns posts created before this timestamp
   ///@param from Returns posts created after this timestamp
   Future<chopper.Response<UserForumPostsResponse>> userIdForumpostsGet({
-    required String? key,
-    enums.UserIdForumpostsGetCat? cat,
     enums.ApiStripTagsTrue? striptags,
     required int? id,
     int? limit,
@@ -1500,8 +1290,6 @@ abstract class TornV2 extends ChopperService {
     generatedMapping.putIfAbsent(UserForumPostsResponse, () => UserForumPostsResponse.fromJsonFactory);
 
     return _userIdForumpostsGet(
-        key: key,
-        cat: cat?.value?.toString(),
         striptags: striptags?.value?.toString(),
         id: id,
         limit: limit,
@@ -1511,8 +1299,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get posts for a specific player
-  ///@param key API key (Public)
-  ///@param cat This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param id User id
   ///@param limit
@@ -1521,8 +1307,6 @@ abstract class TornV2 extends ChopperService {
   ///@param from Returns posts created after this timestamp
   @Get(path: '/user/{id}/forumposts')
   Future<chopper.Response<UserForumPostsResponse>> _userIdForumpostsGet({
-    @Query('key') required String? key,
-    @Query('cat') String? cat,
     @Query('striptags') String? striptags,
     @Path('id') required int? id,
     @Query('limit') int? limit,
@@ -1532,14 +1316,12 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get your posts
-  ///@param key API key (Public)
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by post created timestamp
   ///@param to Returns posts created before this timestamp
   ///@param from Returns posts created after this timestamp
   Future<chopper.Response<UserForumPostsResponse>> userForumpostsGet({
-    required String? key,
     enums.ApiStripTagsTrue? striptags,
     int? limit,
     enums.UserForumpostsGetSort? sort,
@@ -1549,16 +1331,10 @@ abstract class TornV2 extends ChopperService {
     generatedMapping.putIfAbsent(UserForumPostsResponse, () => UserForumPostsResponse.fromJsonFactory);
 
     return _userForumpostsGet(
-        key: key,
-        striptags: striptags?.value?.toString(),
-        limit: limit,
-        sort: sort?.value?.toString(),
-        to: to,
-        from: from);
+        striptags: striptags?.value?.toString(), limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get your posts
-  ///@param key API key (Public)
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param limit
   ///@param sort Sorted by post created timestamp
@@ -1566,7 +1342,6 @@ abstract class TornV2 extends ChopperService {
   ///@param from Returns posts created after this timestamp
   @Get(path: '/user/forumposts')
   Future<chopper.Response<UserForumPostsResponse>> _userForumpostsGet({
-    @Query('key') required String? key,
     @Query('striptags') String? striptags,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -1575,14 +1350,12 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get threads for a specific player
-  ///@param key API key (Public)
   ///@param id User id
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
   Future<chopper.Response<UserForumThreadsResponse>> userIdForumthreadsGet({
-    required String? key,
     required int? id,
     int? limit,
     enums.UserIdForumthreadsGetSort? sort,
@@ -1591,11 +1364,10 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(UserForumThreadsResponse, () => UserForumThreadsResponse.fromJsonFactory);
 
-    return _userIdForumthreadsGet(key: key, id: id, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+    return _userIdForumthreadsGet(id: id, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get threads for a specific player
-  ///@param key API key (Public)
   ///@param id User id
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
@@ -1603,7 +1375,6 @@ abstract class TornV2 extends ChopperService {
   ///@param from Returns threads created after this timestamp
   @Get(path: '/user/{id}/forumthreads')
   Future<chopper.Response<UserForumThreadsResponse>> _userIdForumthreadsGet({
-    @Query('key') required String? key,
     @Path('id') required int? id,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -1612,13 +1383,11 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get your threads
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
   Future<chopper.Response<UserForumThreadsResponse>> userForumthreadsGet({
-    required String? key,
     int? limit,
     enums.UserForumthreadsGetSort? sort,
     int? to,
@@ -1626,18 +1395,16 @@ abstract class TornV2 extends ChopperService {
   }) {
     generatedMapping.putIfAbsent(UserForumThreadsResponse, () => UserForumThreadsResponse.fromJsonFactory);
 
-    return _userForumthreadsGet(key: key, limit: limit, sort: sort?.value?.toString(), to: to, from: from);
+    return _userForumthreadsGet(limit: limit, sort: sort?.value?.toString(), to: to, from: from);
   }
 
   ///Get your threads
-  ///@param key API key (Public)
   ///@param limit
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
   @Get(path: '/user/forumthreads')
   Future<chopper.Response<UserForumThreadsResponse>> _userForumthreadsGet({
-    @Query('key') required String? key,
     @Query('limit') int? limit,
     @Query('sort') String? sort,
     @Query('to') int? to,
@@ -1645,189 +1412,167 @@ abstract class TornV2 extends ChopperService {
   });
 
   ///Get updates on threads you subscribed to
-  ///@param key API key (Minimal)
-  Future<chopper.Response<UserForumSubscribedThreadsResponse>> userForumsubscribedthreadsGet({required String? key}) {
+  Future<chopper.Response<UserForumSubscribedThreadsResponse>> userForumsubscribedthreadsGet() {
     generatedMapping.putIfAbsent(
         UserForumSubscribedThreadsResponse, () => UserForumSubscribedThreadsResponse.fromJsonFactory);
 
-    return _userForumsubscribedthreadsGet(key: key);
+    return _userForumsubscribedthreadsGet();
   }
 
   ///Get updates on threads you subscribed to
-  ///@param key API key (Minimal)
   @Get(path: '/user/forumsubscribedthreads')
-  Future<chopper.Response<UserForumSubscribedThreadsResponse>> _userForumsubscribedthreadsGet(
-      {@Query('key') required String? key});
+  Future<chopper.Response<UserForumSubscribedThreadsResponse>> _userForumsubscribedthreadsGet();
 
   ///Get updates on your threads and posts
-  ///@param key API key (Minimal)
-  Future<chopper.Response<UserForumFeedResponse>> userForumfeedGet({required String? key}) {
+  Future<chopper.Response<UserForumFeedResponse>> userForumfeedGet() {
     generatedMapping.putIfAbsent(UserForumFeedResponse, () => UserForumFeedResponse.fromJsonFactory);
 
-    return _userForumfeedGet(key: key);
+    return _userForumfeedGet();
   }
 
   ///Get updates on your threads and posts
-  ///@param key API key (Minimal)
   @Get(path: '/user/forumfeed')
-  Future<chopper.Response<UserForumFeedResponse>> _userForumfeedGet({@Query('key') required String? key});
+  Future<chopper.Response<UserForumFeedResponse>> _userForumfeedGet();
 
   ///Get updates on your friends' activity
-  ///@param key API key (Minimal)
-  Future<chopper.Response<UserForumFriendsResponse>> userForumfriendsGet({required String? key}) {
+  Future<chopper.Response<UserForumFriendsResponse>> userForumfriendsGet() {
     generatedMapping.putIfAbsent(UserForumFriendsResponse, () => UserForumFriendsResponse.fromJsonFactory);
 
-    return _userForumfriendsGet(key: key);
+    return _userForumfriendsGet();
   }
 
   ///Get updates on your friends' activity
-  ///@param key API key (Minimal)
   @Get(path: '/user/forumfriends')
-  Future<chopper.Response<UserForumFriendsResponse>> _userForumfriendsGet({@Query('key') required String? key});
+  Future<chopper.Response<UserForumFriendsResponse>> _userForumfriendsGet();
 
   ///Get hall of fame rankings for a specific player
-  ///@param key API key (Public)
   ///@param id User id
-  Future<chopper.Response<UserHofResponse>> userIdHofGet({
-    required String? key,
-    required int? id,
-  }) {
+  Future<chopper.Response<UserHofResponse>> userIdHofGet({required int? id}) {
     generatedMapping.putIfAbsent(UserHofResponse, () => UserHofResponse.fromJsonFactory);
 
-    return _userIdHofGet(key: key, id: id);
+    return _userIdHofGet(id: id);
   }
 
   ///Get hall of fame rankings for a specific player
-  ///@param key API key (Public)
   ///@param id User id
   @Get(path: '/user/{id}/hof')
-  Future<chopper.Response<UserHofResponse>> _userIdHofGet({
-    @Query('key') required String? key,
-    @Path('id') required int? id,
-  });
+  Future<chopper.Response<UserHofResponse>> _userIdHofGet({@Path('id') required int? id});
 
   ///Get your hall of fame rankings
-  ///@param key API key (Public)
-  Future<chopper.Response<UserHofResponse>> userHofGet({required String? key}) {
+  Future<chopper.Response<UserHofResponse>> userHofGet() {
     generatedMapping.putIfAbsent(UserHofResponse, () => UserHofResponse.fromJsonFactory);
 
-    return _userHofGet(key: key);
+    return _userHofGet();
   }
 
   ///Get your hall of fame rankings
-  ///@param key API key (Public)
   @Get(path: '/user/hof')
-  Future<chopper.Response<UserHofResponse>> _userHofGet({@Query('key') required String? key});
+  Future<chopper.Response<UserHofResponse>> _userHofGet();
 
   ///Get your competition's event start time
-  ///@param key API key (Minimal)
-  Future<chopper.Response<UserCalendarResponse>> userCalendarGet({required String? key}) {
+  Future<chopper.Response<UserCalendarResponse>> userCalendarGet() {
     generatedMapping.putIfAbsent(UserCalendarResponse, () => UserCalendarResponse.fromJsonFactory);
 
-    return _userCalendarGet(key: key);
+    return _userCalendarGet();
   }
 
   ///Get your competition's event start time
-  ///@param key API key (Minimal)
   @Get(path: '/user/calendar')
-  Future<chopper.Response<UserCalendarResponse>> _userCalendarGet({@Query('key') required String? key});
+  Future<chopper.Response<UserCalendarResponse>> _userCalendarGet();
 
   ///Get bounties placed on a specific user
-  ///@param key API key (Public)
   ///@param id User id
-  Future<chopper.Response<UserBountiesResponse>> userIdBountiesGet({
-    required String? key,
-    required int? id,
-  }) {
+  Future<chopper.Response<UserBountiesResponse>> userIdBountiesGet({required int? id}) {
     generatedMapping.putIfAbsent(UserBountiesResponse, () => UserBountiesResponse.fromJsonFactory);
 
-    return _userIdBountiesGet(key: key, id: id);
+    return _userIdBountiesGet(id: id);
   }
 
   ///Get bounties placed on a specific user
-  ///@param key API key (Public)
   ///@param id User id
   @Get(path: '/user/{id}/bounties')
-  Future<chopper.Response<UserBountiesResponse>> _userIdBountiesGet({
-    @Query('key') required String? key,
-    @Path('id') required int? id,
-  });
+  Future<chopper.Response<UserBountiesResponse>> _userIdBountiesGet({@Path('id') required int? id});
 
   ///Get bounties placed on you
-  ///@param key API key (Public)
-  Future<chopper.Response<UserBountiesResponse>> userBountiesGet({required String? key}) {
+  Future<chopper.Response<UserBountiesResponse>> userBountiesGet() {
     generatedMapping.putIfAbsent(UserBountiesResponse, () => UserBountiesResponse.fromJsonFactory);
 
-    return _userBountiesGet(key: key);
+    return _userBountiesGet();
   }
 
   ///Get bounties placed on you
-  ///@param key API key (Public)
   @Get(path: '/user/bounties')
-  Future<chopper.Response<UserBountiesResponse>> _userBountiesGet({@Query('key') required String? key});
+  Future<chopper.Response<UserBountiesResponse>> _userBountiesGet();
 
   ///Get your starter job positions
-  ///@param key API key (Minimal)
-  Future<chopper.Response<UserJobRanksResponse>> userJobranksGet({required String? key}) {
+  Future<chopper.Response<UserJobRanksResponse>> userJobranksGet() {
     generatedMapping.putIfAbsent(UserJobRanksResponse, () => UserJobRanksResponse.fromJsonFactory);
 
-    return _userJobranksGet(key: key);
+    return _userJobranksGet();
   }
 
   ///Get your starter job positions
-  ///@param key API key (Minimal)
   @Get(path: '/user/jobranks')
-  Future<chopper.Response<UserJobRanksResponse>> _userJobranksGet({@Query('key') required String? key});
+  Future<chopper.Response<UserJobRanksResponse>> _userJobranksGet();
 
   ///Get your item market listings for a specific item
-  ///@param key API key (Limited)
   ///@param offset
-  Future<chopper.Response<UserItemMarketResponse>> userItemmarketGet({
-    required String? key,
-    int? offset,
-  }) {
+  Future<chopper.Response<UserItemMarketResponse>> userItemmarketGet({int? offset}) {
     generatedMapping.putIfAbsent(UserItemMarketResponse, () => UserItemMarketResponse.fromJsonFactory);
 
-    return _userItemmarketGet(key: key, offset: offset);
+    return _userItemmarketGet(offset: offset);
   }
 
   ///Get your item market listings for a specific item
-  ///@param key API key (Limited)
   ///@param offset
   @Get(path: '/user/itemmarket')
-  Future<chopper.Response<UserItemMarketResponse>> _userItemmarketGet({
-    @Query('key') required String? key,
-    @Query('offset') int? offset,
-  });
+  Future<chopper.Response<UserItemMarketResponse>> _userItemmarketGet({@Query('offset') int? offset});
+
+  ///Get your current faction balance
+  Future<chopper.Response<UserFactionBalanceResponse>> userFactionbalanceGet() {
+    generatedMapping.putIfAbsent(UserFactionBalanceResponse, () => UserFactionBalanceResponse.fromJsonFactory);
+
+    return _userFactionbalanceGet();
+  }
+
+  ///Get your current faction balance
+  @Get(path: '/user/factionbalance')
+  Future<chopper.Response<UserFactionBalanceResponse>> _userFactionbalanceGet();
+
+  ///Get your current ongoing organized crime
+  Future<chopper.Response<UserOrganizedCrimeResponse>> userOrganizedcrimeGet() {
+    generatedMapping.putIfAbsent(UserOrganizedCrimeResponse, () => UserOrganizedCrimeResponse.fromJsonFactory);
+
+    return _userOrganizedcrimeGet();
+  }
+
+  ///Get your current ongoing organized crime
+  @Get(path: '/user/organizedcrime')
+  Future<chopper.Response<UserOrganizedCrimeResponse>> _userOrganizedcrimeGet();
 
   ///Get all available user selections
-  ///@param key API key (Public)
-  Future<chopper.Response<UserLookupResponse>> userLookupGet({required String? key}) {
+  Future<chopper.Response<UserLookupResponse>> userLookupGet() {
     generatedMapping.putIfAbsent(UserLookupResponse, () => UserLookupResponse.fromJsonFactory);
 
-    return _userLookupGet(key: key);
+    return _userLookupGet();
   }
 
   ///Get all available user selections
-  ///@param key API key (Public)
   @Get(path: '/user/lookup')
-  Future<chopper.Response<UserLookupResponse>> _userLookupGet({@Query('key') required String? key});
+  Future<chopper.Response<UserLookupResponse>> _userLookupGet();
 
   ///Get current server time
-  ///@param key API key (Public)
-  Future<chopper.Response<TimestampResponse>> userTimestampGet({required String? key}) {
+  Future<chopper.Response<TimestampResponse>> userTimestampGet() {
     generatedMapping.putIfAbsent(TimestampResponse, () => TimestampResponse.fromJsonFactory);
 
-    return _userTimestampGet(key: key);
+    return _userTimestampGet();
   }
 
   ///Get current server time
-  ///@param key API key (Public)
   @Get(path: '/user/timestamp')
-  Future<chopper.Response<TimestampResponse>> _userTimestampGet({@Query('key') required String? key});
+  Future<chopper.Response<TimestampResponse>> _userTimestampGet();
 
   ///Get any User selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param limit
@@ -1839,7 +1584,6 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Direction to sort rows in
   ///@param offset
   Future<chopper.Response> userGet({
-    required String? key,
     String? selections,
     String? id,
     int? limit,
@@ -1852,7 +1596,6 @@ abstract class TornV2 extends ChopperService {
     int? offset,
   }) {
     return _userGet(
-        key: key,
         selections: selections,
         id: id,
         limit: limit,
@@ -1866,7 +1609,6 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get any User selection
-  ///@param key API key (Public)
   ///@param selections Selection names
   ///@param id selection id
   ///@param limit
@@ -1879,7 +1621,6 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   @Get(path: '/user')
   Future<chopper.Response> _userGet({
-    @Query('key') required String? key,
     @Query('selections') String? selections,
     @Query('id') String? id,
     @Query('limit') int? limit,
@@ -2180,6 +1921,7 @@ class Attack {
     this.respectGain,
     this.respectLoss,
     this.chain,
+    this.isInterrupted,
     this.isStealthed,
     this.isRaid,
     this.isRankedWar,
@@ -2215,6 +1957,8 @@ class Attack {
   final double? respectLoss;
   @JsonKey(name: 'chain')
   final int? chain;
+  @JsonKey(name: 'is_interrupted')
+  final bool? isInterrupted;
   @JsonKey(name: 'is_stealthed')
   final bool? isStealthed;
   @JsonKey(name: 'is_raid')
@@ -2241,6 +1985,8 @@ class Attack {
             (identical(other.respectLoss, respectLoss) ||
                 const DeepCollectionEquality().equals(other.respectLoss, respectLoss)) &&
             (identical(other.chain, chain) || const DeepCollectionEquality().equals(other.chain, chain)) &&
+            (identical(other.isInterrupted, isInterrupted) ||
+                const DeepCollectionEquality().equals(other.isInterrupted, isInterrupted)) &&
             (identical(other.isStealthed, isStealthed) ||
                 const DeepCollectionEquality().equals(other.isStealthed, isStealthed)) &&
             (identical(other.isRaid, isRaid) || const DeepCollectionEquality().equals(other.isRaid, isRaid)) &&
@@ -2265,6 +2011,7 @@ class Attack {
       const DeepCollectionEquality().hash(respectGain) ^
       const DeepCollectionEquality().hash(respectLoss) ^
       const DeepCollectionEquality().hash(chain) ^
+      const DeepCollectionEquality().hash(isInterrupted) ^
       const DeepCollectionEquality().hash(isStealthed) ^
       const DeepCollectionEquality().hash(isRaid) ^
       const DeepCollectionEquality().hash(isRankedWar) ^
@@ -2284,6 +2031,7 @@ extension $AttackExtension on Attack {
       double? respectGain,
       double? respectLoss,
       int? chain,
+      bool? isInterrupted,
       bool? isStealthed,
       bool? isRaid,
       bool? isRankedWar,
@@ -2299,6 +2047,7 @@ extension $AttackExtension on Attack {
         respectGain: respectGain ?? this.respectGain,
         respectLoss: respectLoss ?? this.respectLoss,
         chain: chain ?? this.chain,
+        isInterrupted: isInterrupted ?? this.isInterrupted,
         isStealthed: isStealthed ?? this.isStealthed,
         isRaid: isRaid ?? this.isRaid,
         isRankedWar: isRankedWar ?? this.isRankedWar,
@@ -2316,6 +2065,7 @@ extension $AttackExtension on Attack {
       Wrapped<double?>? respectGain,
       Wrapped<double?>? respectLoss,
       Wrapped<int?>? chain,
+      Wrapped<bool?>? isInterrupted,
       Wrapped<bool?>? isStealthed,
       Wrapped<bool?>? isRaid,
       Wrapped<bool?>? isRankedWar,
@@ -2331,6 +2081,7 @@ extension $AttackExtension on Attack {
         respectGain: (respectGain != null ? respectGain.value : this.respectGain),
         respectLoss: (respectLoss != null ? respectLoss.value : this.respectLoss),
         chain: (chain != null ? chain.value : this.chain),
+        isInterrupted: (isInterrupted != null ? isInterrupted.value : this.isInterrupted),
         isStealthed: (isStealthed != null ? isStealthed.value : this.isStealthed),
         isRaid: (isRaid != null ? isRaid.value : this.isRaid),
         isRankedWar: (isRankedWar != null ? isRankedWar.value : this.isRankedWar),
@@ -2604,6 +2355,9 @@ class FactionMember {
     this.level,
     this.daysInFaction,
     this.isRevivable,
+    this.isOnWall,
+    this.isInOc,
+    this.hasEarlyDischarge,
     this.lastAction,
     this.status,
     this.life,
@@ -2622,11 +2376,17 @@ class FactionMember {
   @JsonKey(name: 'position')
   final String? position;
   @JsonKey(name: 'level')
-  final double? level;
+  final int? level;
   @JsonKey(name: 'days_in_faction')
-  final double? daysInFaction;
+  final int? daysInFaction;
   @JsonKey(name: 'is_revivable')
   final bool? isRevivable;
+  @JsonKey(name: 'is_on_wall')
+  final bool? isOnWall;
+  @JsonKey(name: 'is_in_oc')
+  final bool? isInOc;
+  @JsonKey(name: 'has_early_discharge')
+  final bool? hasEarlyDischarge;
   @JsonKey(name: 'last_action')
   final UserLastAction? lastAction;
   @JsonKey(name: 'status')
@@ -2653,6 +2413,10 @@ class FactionMember {
                 const DeepCollectionEquality().equals(other.daysInFaction, daysInFaction)) &&
             (identical(other.isRevivable, isRevivable) ||
                 const DeepCollectionEquality().equals(other.isRevivable, isRevivable)) &&
+            (identical(other.isOnWall, isOnWall) || const DeepCollectionEquality().equals(other.isOnWall, isOnWall)) &&
+            (identical(other.isInOc, isInOc) || const DeepCollectionEquality().equals(other.isInOc, isInOc)) &&
+            (identical(other.hasEarlyDischarge, hasEarlyDischarge) ||
+                const DeepCollectionEquality().equals(other.hasEarlyDischarge, hasEarlyDischarge)) &&
             (identical(other.lastAction, lastAction) ||
                 const DeepCollectionEquality().equals(other.lastAction, lastAction)) &&
             (identical(other.status, status) || const DeepCollectionEquality().equals(other.status, status)) &&
@@ -2672,6 +2436,9 @@ class FactionMember {
       const DeepCollectionEquality().hash(level) ^
       const DeepCollectionEquality().hash(daysInFaction) ^
       const DeepCollectionEquality().hash(isRevivable) ^
+      const DeepCollectionEquality().hash(isOnWall) ^
+      const DeepCollectionEquality().hash(isInOc) ^
+      const DeepCollectionEquality().hash(hasEarlyDischarge) ^
       const DeepCollectionEquality().hash(lastAction) ^
       const DeepCollectionEquality().hash(status) ^
       const DeepCollectionEquality().hash(life) ^
@@ -2684,9 +2451,12 @@ extension $FactionMemberExtension on FactionMember {
       {int? id,
       String? name,
       String? position,
-      double? level,
-      double? daysInFaction,
+      int? level,
+      int? daysInFaction,
       bool? isRevivable,
+      bool? isOnWall,
+      bool? isInOc,
+      bool? hasEarlyDischarge,
       UserLastAction? lastAction,
       UserStatus? status,
       UserLife? life,
@@ -2698,6 +2468,9 @@ extension $FactionMemberExtension on FactionMember {
         level: level ?? this.level,
         daysInFaction: daysInFaction ?? this.daysInFaction,
         isRevivable: isRevivable ?? this.isRevivable,
+        isOnWall: isOnWall ?? this.isOnWall,
+        isInOc: isInOc ?? this.isInOc,
+        hasEarlyDischarge: hasEarlyDischarge ?? this.hasEarlyDischarge,
         lastAction: lastAction ?? this.lastAction,
         status: status ?? this.status,
         life: life ?? this.life,
@@ -2708,9 +2481,12 @@ extension $FactionMemberExtension on FactionMember {
       {Wrapped<int?>? id,
       Wrapped<String?>? name,
       Wrapped<String?>? position,
-      Wrapped<double?>? level,
-      Wrapped<double?>? daysInFaction,
+      Wrapped<int?>? level,
+      Wrapped<int?>? daysInFaction,
       Wrapped<bool?>? isRevivable,
+      Wrapped<bool?>? isOnWall,
+      Wrapped<bool?>? isInOc,
+      Wrapped<bool?>? hasEarlyDischarge,
       Wrapped<UserLastAction?>? lastAction,
       Wrapped<UserStatus?>? status,
       Wrapped<UserLife?>? life,
@@ -2722,6 +2498,9 @@ extension $FactionMemberExtension on FactionMember {
         level: (level != null ? level.value : this.level),
         daysInFaction: (daysInFaction != null ? daysInFaction.value : this.daysInFaction),
         isRevivable: (isRevivable != null ? isRevivable.value : this.isRevivable),
+        isOnWall: (isOnWall != null ? isOnWall.value : this.isOnWall),
+        isInOc: (isInOc != null ? isInOc.value : this.isInOc),
+        hasEarlyDischarge: (hasEarlyDischarge != null ? hasEarlyDischarge.value : this.hasEarlyDischarge),
         lastAction: (lastAction != null ? lastAction.value : this.lastAction),
         status: (status != null ? status.value : this.status),
         life: (life != null ? life.value : this.life),
@@ -2745,7 +2524,7 @@ class UserLastAction {
   @JsonKey(name: 'status')
   final String? status;
   @JsonKey(name: 'timestamp')
-  final double? timestamp;
+  final int? timestamp;
   @JsonKey(name: 'relative')
   final String? relative;
   static const fromJsonFactory = _$UserLastActionFromJson;
@@ -2772,12 +2551,12 @@ class UserLastAction {
 }
 
 extension $UserLastActionExtension on UserLastAction {
-  UserLastAction copyWith({String? status, double? timestamp, String? relative}) {
+  UserLastAction copyWith({String? status, int? timestamp, String? relative}) {
     return UserLastAction(
         status: status ?? this.status, timestamp: timestamp ?? this.timestamp, relative: relative ?? this.relative);
   }
 
-  UserLastAction copyWithWrapped({Wrapped<String?>? status, Wrapped<double?>? timestamp, Wrapped<String?>? relative}) {
+  UserLastAction copyWithWrapped({Wrapped<String?>? status, Wrapped<int?>? timestamp, Wrapped<String?>? relative}) {
     return UserLastAction(
         status: (status != null ? status.value : this.status),
         timestamp: (timestamp != null ? timestamp.value : this.timestamp),
@@ -2798,9 +2577,9 @@ class UserLife {
   Map<String, dynamic> toJson() => _$UserLifeToJson(this);
 
   @JsonKey(name: 'current')
-  final double? current;
+  final int? current;
   @JsonKey(name: 'maximum')
-  final double? maximum;
+  final int? maximum;
   static const fromJsonFactory = _$UserLifeFromJson;
 
   @override
@@ -2822,11 +2601,11 @@ class UserLife {
 }
 
 extension $UserLifeExtension on UserLife {
-  UserLife copyWith({double? current, double? maximum}) {
+  UserLife copyWith({int? current, int? maximum}) {
     return UserLife(current: current ?? this.current, maximum: maximum ?? this.maximum);
   }
 
-  UserLife copyWithWrapped({Wrapped<double?>? current, Wrapped<double?>? maximum}) {
+  UserLife copyWithWrapped({Wrapped<int?>? current, Wrapped<int?>? maximum}) {
     return UserLife(
         current: (current != null ? current.value : this.current),
         maximum: (maximum != null ? maximum.value : this.maximum));
@@ -2854,7 +2633,7 @@ class UserStatus {
   @JsonKey(name: 'state')
   final String? state;
   @JsonKey(name: 'until')
-  final String? until;
+  final int? until;
   static const fromJsonFactory = _$UserStatusFromJson;
 
   @override
@@ -2881,7 +2660,7 @@ class UserStatus {
 }
 
 extension $UserStatusExtension on UserStatus {
-  UserStatus copyWith({String? description, String? details, String? state, String? until}) {
+  UserStatus copyWith({String? description, String? details, String? state, int? until}) {
     return UserStatus(
         description: description ?? this.description,
         details: details ?? this.details,
@@ -2890,7 +2669,7 @@ extension $UserStatusExtension on UserStatus {
   }
 
   UserStatus copyWithWrapped(
-      {Wrapped<String?>? description, Wrapped<String?>? details, Wrapped<String?>? state, Wrapped<String?>? until}) {
+      {Wrapped<String?>? description, Wrapped<String?>? details, Wrapped<String?>? state, Wrapped<int?>? until}) {
     return UserStatus(
         description: (description != null ? description.value : this.description),
         details: (details != null ? details.value : this.details),
@@ -5092,6 +4871,444 @@ extension $FactionChainReportAttackerAttacksExtension on FactionChainReportAttac
         losses: (losses != null ? losses.value : this.losses),
         war: (war != null ? war.value : this.war),
         bonuses: (bonuses != null ? bonuses.value : this.bonuses));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionCrimeUser {
+  const FactionCrimeUser({
+    this.id,
+    this.joinedAt,
+    this.progress,
+  });
+
+  factory FactionCrimeUser.fromJson(Map<String, dynamic> json) => _$FactionCrimeUserFromJson(json);
+
+  static const toJsonFactory = _$FactionCrimeUserToJson;
+  Map<String, dynamic> toJson() => _$FactionCrimeUserToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'joined_at')
+  final int? joinedAt;
+  @JsonKey(name: 'progress')
+  final double? progress;
+  static const fromJsonFactory = _$FactionCrimeUserFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionCrimeUser &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.joinedAt, joinedAt) || const DeepCollectionEquality().equals(other.joinedAt, joinedAt)) &&
+            (identical(other.progress, progress) || const DeepCollectionEquality().equals(other.progress, progress)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(joinedAt) ^
+      const DeepCollectionEquality().hash(progress) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionCrimeUserExtension on FactionCrimeUser {
+  FactionCrimeUser copyWith({int? id, int? joinedAt, double? progress}) {
+    return FactionCrimeUser(
+        id: id ?? this.id, joinedAt: joinedAt ?? this.joinedAt, progress: progress ?? this.progress);
+  }
+
+  FactionCrimeUser copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? joinedAt, Wrapped<double?>? progress}) {
+    return FactionCrimeUser(
+        id: (id != null ? id.value : this.id),
+        joinedAt: (joinedAt != null ? joinedAt.value : this.joinedAt),
+        progress: (progress != null ? progress.value : this.progress));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionCrimeRewardItem {
+  const FactionCrimeRewardItem({
+    this.id,
+    this.quantity,
+  });
+
+  factory FactionCrimeRewardItem.fromJson(Map<String, dynamic> json) => _$FactionCrimeRewardItemFromJson(json);
+
+  static const toJsonFactory = _$FactionCrimeRewardItemToJson;
+  Map<String, dynamic> toJson() => _$FactionCrimeRewardItemToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'quantity')
+  final int? quantity;
+  static const fromJsonFactory = _$FactionCrimeRewardItemFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionCrimeRewardItem &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.quantity, quantity) || const DeepCollectionEquality().equals(other.quantity, quantity)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^ const DeepCollectionEquality().hash(quantity) ^ runtimeType.hashCode;
+}
+
+extension $FactionCrimeRewardItemExtension on FactionCrimeRewardItem {
+  FactionCrimeRewardItem copyWith({int? id, int? quantity}) {
+    return FactionCrimeRewardItem(id: id ?? this.id, quantity: quantity ?? this.quantity);
+  }
+
+  FactionCrimeRewardItem copyWithWrapped({Wrapped<int?>? id, Wrapped<int?>? quantity}) {
+    return FactionCrimeRewardItem(
+        id: (id != null ? id.value : this.id), quantity: (quantity != null ? quantity.value : this.quantity));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionCrimeReward {
+  const FactionCrimeReward({
+    this.money,
+    this.items,
+    this.respect,
+  });
+
+  factory FactionCrimeReward.fromJson(Map<String, dynamic> json) => _$FactionCrimeRewardFromJson(json);
+
+  static const toJsonFactory = _$FactionCrimeRewardToJson;
+  Map<String, dynamic> toJson() => _$FactionCrimeRewardToJson(this);
+
+  @JsonKey(name: 'money')
+  final int? money;
+  @JsonKey(name: 'items', defaultValue: <FactionCrimeRewardItem>[])
+  final List<FactionCrimeRewardItem>? items;
+  @JsonKey(name: 'respect')
+  final int? respect;
+  static const fromJsonFactory = _$FactionCrimeRewardFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionCrimeReward &&
+            (identical(other.money, money) || const DeepCollectionEquality().equals(other.money, money)) &&
+            (identical(other.items, items) || const DeepCollectionEquality().equals(other.items, items)) &&
+            (identical(other.respect, respect) || const DeepCollectionEquality().equals(other.respect, respect)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(money) ^
+      const DeepCollectionEquality().hash(items) ^
+      const DeepCollectionEquality().hash(respect) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionCrimeRewardExtension on FactionCrimeReward {
+  FactionCrimeReward copyWith({int? money, List<FactionCrimeRewardItem>? items, int? respect}) {
+    return FactionCrimeReward(money: money ?? this.money, items: items ?? this.items, respect: respect ?? this.respect);
+  }
+
+  FactionCrimeReward copyWithWrapped(
+      {Wrapped<int?>? money, Wrapped<List<FactionCrimeRewardItem>?>? items, Wrapped<int?>? respect}) {
+    return FactionCrimeReward(
+        money: (money != null ? money.value : this.money),
+        items: (items != null ? items.value : this.items),
+        respect: (respect != null ? respect.value : this.respect));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionCrimeSlot {
+  const FactionCrimeSlot({
+    this.position,
+    this.itemRequirement,
+    this.userId,
+    this.user,
+    this.successChance,
+  });
+
+  factory FactionCrimeSlot.fromJson(Map<String, dynamic> json) => _$FactionCrimeSlotFromJson(json);
+
+  static const toJsonFactory = _$FactionCrimeSlotToJson;
+  Map<String, dynamic> toJson() => _$FactionCrimeSlotToJson(this);
+
+  @JsonKey(name: 'position')
+  final String? position;
+  @JsonKey(name: 'item_requirement')
+  final Object? itemRequirement;
+  @JsonKey(name: 'user_id')
+  final int? userId;
+  @JsonKey(name: 'user')
+  final Object? user;
+  @JsonKey(name: 'success_chance')
+  final int? successChance;
+  static const fromJsonFactory = _$FactionCrimeSlotFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionCrimeSlot &&
+            (identical(other.position, position) || const DeepCollectionEquality().equals(other.position, position)) &&
+            (identical(other.itemRequirement, itemRequirement) ||
+                const DeepCollectionEquality().equals(other.itemRequirement, itemRequirement)) &&
+            (identical(other.userId, userId) || const DeepCollectionEquality().equals(other.userId, userId)) &&
+            (identical(other.user, user) || const DeepCollectionEquality().equals(other.user, user)) &&
+            (identical(other.successChance, successChance) ||
+                const DeepCollectionEquality().equals(other.successChance, successChance)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(position) ^
+      const DeepCollectionEquality().hash(itemRequirement) ^
+      const DeepCollectionEquality().hash(userId) ^
+      const DeepCollectionEquality().hash(user) ^
+      const DeepCollectionEquality().hash(successChance) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionCrimeSlotExtension on FactionCrimeSlot {
+  FactionCrimeSlot copyWith(
+      {String? position, Object? itemRequirement, int? userId, Object? user, int? successChance}) {
+    return FactionCrimeSlot(
+        position: position ?? this.position,
+        itemRequirement: itemRequirement ?? this.itemRequirement,
+        userId: userId ?? this.userId,
+        user: user ?? this.user,
+        successChance: successChance ?? this.successChance);
+  }
+
+  FactionCrimeSlot copyWithWrapped(
+      {Wrapped<String?>? position,
+      Wrapped<Object?>? itemRequirement,
+      Wrapped<int?>? userId,
+      Wrapped<Object?>? user,
+      Wrapped<int?>? successChance}) {
+    return FactionCrimeSlot(
+        position: (position != null ? position.value : this.position),
+        itemRequirement: (itemRequirement != null ? itemRequirement.value : this.itemRequirement),
+        userId: (userId != null ? userId.value : this.userId),
+        user: (user != null ? user.value : this.user),
+        successChance: (successChance != null ? successChance.value : this.successChance));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionCrime {
+  const FactionCrime({
+    this.id,
+    this.name,
+    this.difficulty,
+    this.status,
+    this.createdAt,
+    this.initiatedAt,
+    this.planningAt,
+    this.readyAt,
+    this.expiredAt,
+    this.executedAt,
+    this.slots,
+    this.rewards,
+  });
+
+  factory FactionCrime.fromJson(Map<String, dynamic> json) => _$FactionCrimeFromJson(json);
+
+  static const toJsonFactory = _$FactionCrimeToJson;
+  Map<String, dynamic> toJson() => _$FactionCrimeToJson(this);
+
+  @JsonKey(name: 'id')
+  final int? id;
+  @JsonKey(name: 'name')
+  final String? name;
+  @JsonKey(name: 'difficulty')
+  final int? difficulty;
+  @JsonKey(
+    name: 'status',
+    toJson: factionCrimeStatusEnumNullableToJson,
+    fromJson: factionCrimeStatusEnumNullableFromJson,
+  )
+  final enums.FactionCrimeStatusEnum? status;
+  @JsonKey(name: 'created_at')
+  final int? createdAt;
+  @JsonKey(name: 'initiated_at')
+  @deprecated
+  final int? initiatedAt;
+  @JsonKey(name: 'planning_at')
+  final int? planningAt;
+  @JsonKey(name: 'ready_at')
+  final int? readyAt;
+  @JsonKey(name: 'expired_at')
+  final int? expiredAt;
+  @JsonKey(name: 'executed_at')
+  final int? executedAt;
+  @JsonKey(name: 'slots', defaultValue: <FactionCrimeSlot>[])
+  final List<FactionCrimeSlot>? slots;
+  @JsonKey(name: 'rewards')
+  final Object? rewards;
+  static const fromJsonFactory = _$FactionCrimeFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionCrime &&
+            (identical(other.id, id) || const DeepCollectionEquality().equals(other.id, id)) &&
+            (identical(other.name, name) || const DeepCollectionEquality().equals(other.name, name)) &&
+            (identical(other.difficulty, difficulty) ||
+                const DeepCollectionEquality().equals(other.difficulty, difficulty)) &&
+            (identical(other.status, status) || const DeepCollectionEquality().equals(other.status, status)) &&
+            (identical(other.createdAt, createdAt) ||
+                const DeepCollectionEquality().equals(other.createdAt, createdAt)) &&
+            (identical(other.initiatedAt, initiatedAt) ||
+                const DeepCollectionEquality().equals(other.initiatedAt, initiatedAt)) &&
+            (identical(other.planningAt, planningAt) ||
+                const DeepCollectionEquality().equals(other.planningAt, planningAt)) &&
+            (identical(other.readyAt, readyAt) || const DeepCollectionEquality().equals(other.readyAt, readyAt)) &&
+            (identical(other.expiredAt, expiredAt) ||
+                const DeepCollectionEquality().equals(other.expiredAt, expiredAt)) &&
+            (identical(other.executedAt, executedAt) ||
+                const DeepCollectionEquality().equals(other.executedAt, executedAt)) &&
+            (identical(other.slots, slots) || const DeepCollectionEquality().equals(other.slots, slots)) &&
+            (identical(other.rewards, rewards) || const DeepCollectionEquality().equals(other.rewards, rewards)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(id) ^
+      const DeepCollectionEquality().hash(name) ^
+      const DeepCollectionEquality().hash(difficulty) ^
+      const DeepCollectionEquality().hash(status) ^
+      const DeepCollectionEquality().hash(createdAt) ^
+      const DeepCollectionEquality().hash(initiatedAt) ^
+      const DeepCollectionEquality().hash(planningAt) ^
+      const DeepCollectionEquality().hash(readyAt) ^
+      const DeepCollectionEquality().hash(expiredAt) ^
+      const DeepCollectionEquality().hash(executedAt) ^
+      const DeepCollectionEquality().hash(slots) ^
+      const DeepCollectionEquality().hash(rewards) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionCrimeExtension on FactionCrime {
+  FactionCrime copyWith(
+      {int? id,
+      String? name,
+      int? difficulty,
+      enums.FactionCrimeStatusEnum? status,
+      int? createdAt,
+      int? initiatedAt,
+      int? planningAt,
+      int? readyAt,
+      int? expiredAt,
+      int? executedAt,
+      List<FactionCrimeSlot>? slots,
+      Object? rewards}) {
+    return FactionCrime(
+        id: id ?? this.id,
+        name: name ?? this.name,
+        difficulty: difficulty ?? this.difficulty,
+        status: status ?? this.status,
+        createdAt: createdAt ?? this.createdAt,
+        initiatedAt: initiatedAt ?? this.initiatedAt,
+        planningAt: planningAt ?? this.planningAt,
+        readyAt: readyAt ?? this.readyAt,
+        expiredAt: expiredAt ?? this.expiredAt,
+        executedAt: executedAt ?? this.executedAt,
+        slots: slots ?? this.slots,
+        rewards: rewards ?? this.rewards);
+  }
+
+  FactionCrime copyWithWrapped(
+      {Wrapped<int?>? id,
+      Wrapped<String?>? name,
+      Wrapped<int?>? difficulty,
+      Wrapped<enums.FactionCrimeStatusEnum?>? status,
+      Wrapped<int?>? createdAt,
+      Wrapped<int?>? initiatedAt,
+      Wrapped<int?>? planningAt,
+      Wrapped<int?>? readyAt,
+      Wrapped<int?>? expiredAt,
+      Wrapped<int?>? executedAt,
+      Wrapped<List<FactionCrimeSlot>?>? slots,
+      Wrapped<Object?>? rewards}) {
+    return FactionCrime(
+        id: (id != null ? id.value : this.id),
+        name: (name != null ? name.value : this.name),
+        difficulty: (difficulty != null ? difficulty.value : this.difficulty),
+        status: (status != null ? status.value : this.status),
+        createdAt: (createdAt != null ? createdAt.value : this.createdAt),
+        initiatedAt: (initiatedAt != null ? initiatedAt.value : this.initiatedAt),
+        planningAt: (planningAt != null ? planningAt.value : this.planningAt),
+        readyAt: (readyAt != null ? readyAt.value : this.readyAt),
+        expiredAt: (expiredAt != null ? expiredAt.value : this.expiredAt),
+        executedAt: (executedAt != null ? executedAt.value : this.executedAt),
+        slots: (slots != null ? slots.value : this.slots),
+        rewards: (rewards != null ? rewards.value : this.rewards));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class FactionCrimesResponse {
+  const FactionCrimesResponse({
+    this.crimes,
+    this.metadata,
+  });
+
+  factory FactionCrimesResponse.fromJson(Map<String, dynamic> json) => _$FactionCrimesResponseFromJson(json);
+
+  static const toJsonFactory = _$FactionCrimesResponseToJson;
+  Map<String, dynamic> toJson() => _$FactionCrimesResponseToJson(this);
+
+  @JsonKey(name: 'crimes', defaultValue: <FactionCrime>[])
+  final List<FactionCrime>? crimes;
+  @JsonKey(name: '_metadata')
+  final RequestMetadataWithLinks? metadata;
+  static const fromJsonFactory = _$FactionCrimesResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is FactionCrimesResponse &&
+            (identical(other.crimes, crimes) || const DeepCollectionEquality().equals(other.crimes, crimes)) &&
+            (identical(other.metadata, metadata) || const DeepCollectionEquality().equals(other.metadata, metadata)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(crimes) ^
+      const DeepCollectionEquality().hash(metadata) ^
+      runtimeType.hashCode;
+}
+
+extension $FactionCrimesResponseExtension on FactionCrimesResponse {
+  FactionCrimesResponse copyWith({List<FactionCrime>? crimes, RequestMetadataWithLinks? metadata}) {
+    return FactionCrimesResponse(crimes: crimes ?? this.crimes, metadata: metadata ?? this.metadata);
+  }
+
+  FactionCrimesResponse copyWithWrapped(
+      {Wrapped<List<FactionCrime>?>? crimes, Wrapped<RequestMetadataWithLinks?>? metadata}) {
+    return FactionCrimesResponse(
+        crimes: (crimes != null ? crimes.value : this.crimes),
+        metadata: (metadata != null ? metadata.value : this.metadata));
   }
 }
 
@@ -7700,7 +7917,7 @@ class RacerDetails {
   @JsonKey(name: 'race_time')
   final double? raceTime;
   @JsonKey(name: 'time_ended')
-  final double? timeEnded;
+  final int? timeEnded;
   static const fromJsonFactory = _$RacerDetailsFromJson;
 
   @override
@@ -7753,7 +7970,7 @@ extension $RacerDetailsExtension on RacerDetails {
       bool? hasCrashed,
       double? bestLapTime,
       double? raceTime,
-      double? timeEnded}) {
+      int? timeEnded}) {
     return RacerDetails(
         driverId: driverId ?? this.driverId,
         position: position ?? this.position,
@@ -7777,7 +7994,7 @@ extension $RacerDetailsExtension on RacerDetails {
       Wrapped<bool?>? hasCrashed,
       Wrapped<double?>? bestLapTime,
       Wrapped<double?>? raceTime,
-      Wrapped<double?>? timeEnded}) {
+      Wrapped<int?>? timeEnded}) {
     return RacerDetails(
         driverId: (driverId != null ? driverId.value : this.driverId),
         position: (position != null ? position.value : this.position),
@@ -9620,68 +9837,32 @@ extension $PersonalStatsBountiesExtension on PersonalStatsBounties {
 }
 
 @JsonSerializable(explicitToJson: true)
-class PersonalStatsCriminalOffensesV2 {
-  const PersonalStatsCriminalOffensesV2({
-    this.total,
-    this.vandalism,
-    this.theft,
-    this.counterfeiting,
-    this.illicitServices,
-    this.cybercrime,
-    this.extortion,
-    this.illegalProduction,
-    this.organizedCrimes,
+class PersonalStatsCrimesV2 {
+  const PersonalStatsCrimesV2({
+    this.offenses,
+    this.skills,
     this.version,
   });
 
-  factory PersonalStatsCriminalOffensesV2.fromJson(Map<String, dynamic> json) =>
-      _$PersonalStatsCriminalOffensesV2FromJson(json);
+  factory PersonalStatsCrimesV2.fromJson(Map<String, dynamic> json) => _$PersonalStatsCrimesV2FromJson(json);
 
-  static const toJsonFactory = _$PersonalStatsCriminalOffensesV2ToJson;
-  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesV2ToJson(this);
+  static const toJsonFactory = _$PersonalStatsCrimesV2ToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCrimesV2ToJson(this);
 
-  @JsonKey(name: 'total')
-  final int? total;
-  @JsonKey(name: 'vandalism')
-  final int? vandalism;
-  @JsonKey(name: 'theft')
-  final int? theft;
-  @JsonKey(name: 'counterfeiting')
-  final int? counterfeiting;
-  @JsonKey(name: 'illicit_services')
-  final int? illicitServices;
-  @JsonKey(name: 'cybercrime')
-  final int? cybercrime;
-  @JsonKey(name: 'extortion')
-  final int? extortion;
-  @JsonKey(name: 'illegal_production')
-  final int? illegalProduction;
-  @JsonKey(name: 'organized_crimes')
-  final int? organizedCrimes;
+  @JsonKey(name: 'offenses')
+  final PersonalStatsCrimesV2$Offenses? offenses;
+  @JsonKey(name: 'skills')
+  final PersonalStatsCrimesV2$Skills? skills;
   @JsonKey(name: 'version')
   final String? version;
-  static const fromJsonFactory = _$PersonalStatsCriminalOffensesV2FromJson;
+  static const fromJsonFactory = _$PersonalStatsCrimesV2FromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is PersonalStatsCriminalOffensesV2 &&
-            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
-            (identical(other.vandalism, vandalism) ||
-                const DeepCollectionEquality().equals(other.vandalism, vandalism)) &&
-            (identical(other.theft, theft) || const DeepCollectionEquality().equals(other.theft, theft)) &&
-            (identical(other.counterfeiting, counterfeiting) ||
-                const DeepCollectionEquality().equals(other.counterfeiting, counterfeiting)) &&
-            (identical(other.illicitServices, illicitServices) ||
-                const DeepCollectionEquality().equals(other.illicitServices, illicitServices)) &&
-            (identical(other.cybercrime, cybercrime) ||
-                const DeepCollectionEquality().equals(other.cybercrime, cybercrime)) &&
-            (identical(other.extortion, extortion) ||
-                const DeepCollectionEquality().equals(other.extortion, extortion)) &&
-            (identical(other.illegalProduction, illegalProduction) ||
-                const DeepCollectionEquality().equals(other.illegalProduction, illegalProduction)) &&
-            (identical(other.organizedCrimes, organizedCrimes) ||
-                const DeepCollectionEquality().equals(other.organizedCrimes, organizedCrimes)) &&
+        (other is PersonalStatsCrimesV2 &&
+            (identical(other.offenses, offenses) || const DeepCollectionEquality().equals(other.offenses, offenses)) &&
+            (identical(other.skills, skills) || const DeepCollectionEquality().equals(other.skills, skills)) &&
             (identical(other.version, version) || const DeepCollectionEquality().equals(other.version, version)));
   }
 
@@ -9690,72 +9871,33 @@ class PersonalStatsCriminalOffensesV2 {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(total) ^
-      const DeepCollectionEquality().hash(vandalism) ^
-      const DeepCollectionEquality().hash(theft) ^
-      const DeepCollectionEquality().hash(counterfeiting) ^
-      const DeepCollectionEquality().hash(illicitServices) ^
-      const DeepCollectionEquality().hash(cybercrime) ^
-      const DeepCollectionEquality().hash(extortion) ^
-      const DeepCollectionEquality().hash(illegalProduction) ^
-      const DeepCollectionEquality().hash(organizedCrimes) ^
+      const DeepCollectionEquality().hash(offenses) ^
+      const DeepCollectionEquality().hash(skills) ^
       const DeepCollectionEquality().hash(version) ^
       runtimeType.hashCode;
 }
 
-extension $PersonalStatsCriminalOffensesV2Extension on PersonalStatsCriminalOffensesV2 {
-  PersonalStatsCriminalOffensesV2 copyWith(
-      {int? total,
-      int? vandalism,
-      int? theft,
-      int? counterfeiting,
-      int? illicitServices,
-      int? cybercrime,
-      int? extortion,
-      int? illegalProduction,
-      int? organizedCrimes,
-      String? version}) {
-    return PersonalStatsCriminalOffensesV2(
-        total: total ?? this.total,
-        vandalism: vandalism ?? this.vandalism,
-        theft: theft ?? this.theft,
-        counterfeiting: counterfeiting ?? this.counterfeiting,
-        illicitServices: illicitServices ?? this.illicitServices,
-        cybercrime: cybercrime ?? this.cybercrime,
-        extortion: extortion ?? this.extortion,
-        illegalProduction: illegalProduction ?? this.illegalProduction,
-        organizedCrimes: organizedCrimes ?? this.organizedCrimes,
-        version: version ?? this.version);
+extension $PersonalStatsCrimesV2Extension on PersonalStatsCrimesV2 {
+  PersonalStatsCrimesV2 copyWith(
+      {PersonalStatsCrimesV2$Offenses? offenses, PersonalStatsCrimesV2$Skills? skills, String? version}) {
+    return PersonalStatsCrimesV2(
+        offenses: offenses ?? this.offenses, skills: skills ?? this.skills, version: version ?? this.version);
   }
 
-  PersonalStatsCriminalOffensesV2 copyWithWrapped(
-      {Wrapped<int?>? total,
-      Wrapped<int?>? vandalism,
-      Wrapped<int?>? theft,
-      Wrapped<int?>? counterfeiting,
-      Wrapped<int?>? illicitServices,
-      Wrapped<int?>? cybercrime,
-      Wrapped<int?>? extortion,
-      Wrapped<int?>? illegalProduction,
-      Wrapped<int?>? organizedCrimes,
+  PersonalStatsCrimesV2 copyWithWrapped(
+      {Wrapped<PersonalStatsCrimesV2$Offenses?>? offenses,
+      Wrapped<PersonalStatsCrimesV2$Skills?>? skills,
       Wrapped<String?>? version}) {
-    return PersonalStatsCriminalOffensesV2(
-        total: (total != null ? total.value : this.total),
-        vandalism: (vandalism != null ? vandalism.value : this.vandalism),
-        theft: (theft != null ? theft.value : this.theft),
-        counterfeiting: (counterfeiting != null ? counterfeiting.value : this.counterfeiting),
-        illicitServices: (illicitServices != null ? illicitServices.value : this.illicitServices),
-        cybercrime: (cybercrime != null ? cybercrime.value : this.cybercrime),
-        extortion: (extortion != null ? extortion.value : this.extortion),
-        illegalProduction: (illegalProduction != null ? illegalProduction.value : this.illegalProduction),
-        organizedCrimes: (organizedCrimes != null ? organizedCrimes.value : this.organizedCrimes),
+    return PersonalStatsCrimesV2(
+        offenses: (offenses != null ? offenses.value : this.offenses),
+        skills: (skills != null ? skills.value : this.skills),
         version: (version != null ? version.value : this.version));
   }
 }
 
 @JsonSerializable(explicitToJson: true)
-class PersonalStatsCriminalOffensesV1 {
-  const PersonalStatsCriminalOffensesV1({
+class PersonalStatsCrimesV1 {
+  const PersonalStatsCrimesV1({
     this.total,
     this.sellIllegalGoods,
     this.theft,
@@ -9769,11 +9911,10 @@ class PersonalStatsCriminalOffensesV1 {
     this.version,
   });
 
-  factory PersonalStatsCriminalOffensesV1.fromJson(Map<String, dynamic> json) =>
-      _$PersonalStatsCriminalOffensesV1FromJson(json);
+  factory PersonalStatsCrimesV1.fromJson(Map<String, dynamic> json) => _$PersonalStatsCrimesV1FromJson(json);
 
-  static const toJsonFactory = _$PersonalStatsCriminalOffensesV1ToJson;
-  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesV1ToJson(this);
+  static const toJsonFactory = _$PersonalStatsCrimesV1ToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCrimesV1ToJson(this);
 
   @JsonKey(name: 'total')
   final int? total;
@@ -9797,12 +9938,12 @@ class PersonalStatsCriminalOffensesV1 {
   final int? organizedCrimes;
   @JsonKey(name: 'version')
   final String? version;
-  static const fromJsonFactory = _$PersonalStatsCriminalOffensesV1FromJson;
+  static const fromJsonFactory = _$PersonalStatsCrimesV1FromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is PersonalStatsCriminalOffensesV1 &&
+        (other is PersonalStatsCrimesV1 &&
             (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
             (identical(other.sellIllegalGoods, sellIllegalGoods) ||
                 const DeepCollectionEquality().equals(other.sellIllegalGoods, sellIllegalGoods)) &&
@@ -9839,8 +9980,8 @@ class PersonalStatsCriminalOffensesV1 {
       runtimeType.hashCode;
 }
 
-extension $PersonalStatsCriminalOffensesV1Extension on PersonalStatsCriminalOffensesV1 {
-  PersonalStatsCriminalOffensesV1 copyWith(
+extension $PersonalStatsCrimesV1Extension on PersonalStatsCrimesV1 {
+  PersonalStatsCrimesV1 copyWith(
       {int? total,
       int? sellIllegalGoods,
       int? theft,
@@ -9852,7 +9993,7 @@ extension $PersonalStatsCriminalOffensesV1Extension on PersonalStatsCriminalOffe
       int? other,
       int? organizedCrimes,
       String? version}) {
-    return PersonalStatsCriminalOffensesV1(
+    return PersonalStatsCrimesV1(
         total: total ?? this.total,
         sellIllegalGoods: sellIllegalGoods ?? this.sellIllegalGoods,
         theft: theft ?? this.theft,
@@ -9866,7 +10007,7 @@ extension $PersonalStatsCriminalOffensesV1Extension on PersonalStatsCriminalOffe
         version: version ?? this.version);
   }
 
-  PersonalStatsCriminalOffensesV1 copyWithWrapped(
+  PersonalStatsCrimesV1 copyWithWrapped(
       {Wrapped<int?>? total,
       Wrapped<int?>? sellIllegalGoods,
       Wrapped<int?>? theft,
@@ -9878,7 +10019,7 @@ extension $PersonalStatsCriminalOffensesV1Extension on PersonalStatsCriminalOffe
       Wrapped<int?>? other,
       Wrapped<int?>? organizedCrimes,
       Wrapped<String?>? version}) {
-    return PersonalStatsCriminalOffensesV1(
+    return PersonalStatsCrimesV1(
         total: (total != null ? total.value : this.total),
         sellIllegalGoods: (sellIllegalGoods != null ? sellIllegalGoods.value : this.sellIllegalGoods),
         theft: (theft != null ? theft.value : this.theft),
@@ -9894,46 +10035,41 @@ extension $PersonalStatsCriminalOffensesV1Extension on PersonalStatsCriminalOffe
 }
 
 @JsonSerializable(explicitToJson: true)
-class PersonalStatsCriminalOffensesPopular {
-  const PersonalStatsCriminalOffensesPopular({
-    this.criminalOffenses,
+class PersonalStatsCrimesPopular {
+  const PersonalStatsCrimesPopular({
+    this.crimes,
   });
 
-  factory PersonalStatsCriminalOffensesPopular.fromJson(Map<String, dynamic> json) =>
-      _$PersonalStatsCriminalOffensesPopularFromJson(json);
+  factory PersonalStatsCrimesPopular.fromJson(Map<String, dynamic> json) => _$PersonalStatsCrimesPopularFromJson(json);
 
-  static const toJsonFactory = _$PersonalStatsCriminalOffensesPopularToJson;
-  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesPopularToJson(this);
+  static const toJsonFactory = _$PersonalStatsCrimesPopularToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCrimesPopularToJson(this);
 
-  @JsonKey(name: 'criminal_offenses')
-  final PersonalStatsCriminalOffensesPopular$CriminalOffenses? criminalOffenses;
-  static const fromJsonFactory = _$PersonalStatsCriminalOffensesPopularFromJson;
+  @JsonKey(name: 'crimes')
+  final PersonalStatsCrimesPopular$Crimes? crimes;
+  static const fromJsonFactory = _$PersonalStatsCrimesPopularFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is PersonalStatsCriminalOffensesPopular &&
-            (identical(other.criminalOffenses, criminalOffenses) ||
-                const DeepCollectionEquality().equals(other.criminalOffenses, criminalOffenses)));
+        (other is PersonalStatsCrimesPopular &&
+            (identical(other.crimes, crimes) || const DeepCollectionEquality().equals(other.crimes, crimes)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode => const DeepCollectionEquality().hash(criminalOffenses) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(crimes) ^ runtimeType.hashCode;
 }
 
-extension $PersonalStatsCriminalOffensesPopularExtension on PersonalStatsCriminalOffensesPopular {
-  PersonalStatsCriminalOffensesPopular copyWith(
-      {PersonalStatsCriminalOffensesPopular$CriminalOffenses? criminalOffenses}) {
-    return PersonalStatsCriminalOffensesPopular(criminalOffenses: criminalOffenses ?? this.criminalOffenses);
+extension $PersonalStatsCrimesPopularExtension on PersonalStatsCrimesPopular {
+  PersonalStatsCrimesPopular copyWith({PersonalStatsCrimesPopular$Crimes? crimes}) {
+    return PersonalStatsCrimesPopular(crimes: crimes ?? this.crimes);
   }
 
-  PersonalStatsCriminalOffensesPopular copyWithWrapped(
-      {Wrapped<PersonalStatsCriminalOffensesPopular$CriminalOffenses?>? criminalOffenses}) {
-    return PersonalStatsCriminalOffensesPopular(
-        criminalOffenses: (criminalOffenses != null ? criminalOffenses.value : this.criminalOffenses));
+  PersonalStatsCrimesPopular copyWithWrapped({Wrapped<PersonalStatsCrimesPopular$Crimes?>? crimes}) {
+    return PersonalStatsCrimesPopular(crimes: (crimes != null ? crimes.value : this.crimes));
   }
 }
 
@@ -10514,44 +10650,41 @@ extension $UserPersonalStatsHistoricExtension on UserPersonalStatsHistoric {
 }
 
 @JsonSerializable(explicitToJson: true)
-class PersonalStatsCriminalOffenses {
-  const PersonalStatsCriminalOffenses({
-    this.criminalOffenses,
+class PersonalStatsCrimes {
+  const PersonalStatsCrimes({
+    this.crimes,
   });
 
-  factory PersonalStatsCriminalOffenses.fromJson(Map<String, dynamic> json) =>
-      _$PersonalStatsCriminalOffensesFromJson(json);
+  factory PersonalStatsCrimes.fromJson(Map<String, dynamic> json) => _$PersonalStatsCrimesFromJson(json);
 
-  static const toJsonFactory = _$PersonalStatsCriminalOffensesToJson;
-  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesToJson(this);
+  static const toJsonFactory = _$PersonalStatsCrimesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCrimesToJson(this);
 
-  @JsonKey(name: 'criminal_offenses')
-  final Object? criminalOffenses;
-  static const fromJsonFactory = _$PersonalStatsCriminalOffensesFromJson;
+  @JsonKey(name: 'crimes')
+  final Object? crimes;
+  static const fromJsonFactory = _$PersonalStatsCrimesFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is PersonalStatsCriminalOffenses &&
-            (identical(other.criminalOffenses, criminalOffenses) ||
-                const DeepCollectionEquality().equals(other.criminalOffenses, criminalOffenses)));
+        (other is PersonalStatsCrimes &&
+            (identical(other.crimes, crimes) || const DeepCollectionEquality().equals(other.crimes, crimes)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode => const DeepCollectionEquality().hash(criminalOffenses) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(crimes) ^ runtimeType.hashCode;
 }
 
-extension $PersonalStatsCriminalOffensesExtension on PersonalStatsCriminalOffenses {
-  PersonalStatsCriminalOffenses copyWith({Object? criminalOffenses}) {
-    return PersonalStatsCriminalOffenses(criminalOffenses: criminalOffenses ?? this.criminalOffenses);
+extension $PersonalStatsCrimesExtension on PersonalStatsCrimes {
+  PersonalStatsCrimes copyWith({Object? crimes}) {
+    return PersonalStatsCrimes(crimes: crimes ?? this.crimes);
   }
 
-  PersonalStatsCriminalOffenses copyWithWrapped({Wrapped<Object?>? criminalOffenses}) {
-    return PersonalStatsCriminalOffenses(
-        criminalOffenses: (criminalOffenses != null ? criminalOffenses.value : this.criminalOffenses));
+  PersonalStatsCrimes copyWithWrapped({Wrapped<Object?>? crimes}) {
+    return PersonalStatsCrimes(crimes: (crimes != null ? crimes.value : this.crimes));
   }
 }
 
@@ -13210,6 +13343,133 @@ extension $UserItemMarketResponseExtension on UserItemMarketResponse {
 }
 
 @JsonSerializable(explicitToJson: true)
+class UserFactionBalance {
+  const UserFactionBalance({
+    this.money,
+    this.points,
+  });
+
+  factory UserFactionBalance.fromJson(Map<String, dynamic> json) => _$UserFactionBalanceFromJson(json);
+
+  static const toJsonFactory = _$UserFactionBalanceToJson;
+  Map<String, dynamic> toJson() => _$UserFactionBalanceToJson(this);
+
+  @JsonKey(name: 'money')
+  final int? money;
+  @JsonKey(name: 'points')
+  final int? points;
+  static const fromJsonFactory = _$UserFactionBalanceFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserFactionBalance &&
+            (identical(other.money, money) || const DeepCollectionEquality().equals(other.money, money)) &&
+            (identical(other.points, points) || const DeepCollectionEquality().equals(other.points, points)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(money) ^ const DeepCollectionEquality().hash(points) ^ runtimeType.hashCode;
+}
+
+extension $UserFactionBalanceExtension on UserFactionBalance {
+  UserFactionBalance copyWith({int? money, int? points}) {
+    return UserFactionBalance(money: money ?? this.money, points: points ?? this.points);
+  }
+
+  UserFactionBalance copyWithWrapped({Wrapped<int?>? money, Wrapped<int?>? points}) {
+    return UserFactionBalance(
+        money: (money != null ? money.value : this.money), points: (points != null ? points.value : this.points));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserFactionBalanceResponse {
+  const UserFactionBalanceResponse({
+    this.factionBalance,
+  });
+
+  factory UserFactionBalanceResponse.fromJson(Map<String, dynamic> json) => _$UserFactionBalanceResponseFromJson(json);
+
+  static const toJsonFactory = _$UserFactionBalanceResponseToJson;
+  Map<String, dynamic> toJson() => _$UserFactionBalanceResponseToJson(this);
+
+  @JsonKey(name: 'factionBalance')
+  final Object? factionBalance;
+  static const fromJsonFactory = _$UserFactionBalanceResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserFactionBalanceResponse &&
+            (identical(other.factionBalance, factionBalance) ||
+                const DeepCollectionEquality().equals(other.factionBalance, factionBalance)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(factionBalance) ^ runtimeType.hashCode;
+}
+
+extension $UserFactionBalanceResponseExtension on UserFactionBalanceResponse {
+  UserFactionBalanceResponse copyWith({Object? factionBalance}) {
+    return UserFactionBalanceResponse(factionBalance: factionBalance ?? this.factionBalance);
+  }
+
+  UserFactionBalanceResponse copyWithWrapped({Wrapped<Object?>? factionBalance}) {
+    return UserFactionBalanceResponse(
+        factionBalance: (factionBalance != null ? factionBalance.value : this.factionBalance));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class UserOrganizedCrimeResponse {
+  const UserOrganizedCrimeResponse({
+    this.organizedCrime,
+  });
+
+  factory UserOrganizedCrimeResponse.fromJson(Map<String, dynamic> json) => _$UserOrganizedCrimeResponseFromJson(json);
+
+  static const toJsonFactory = _$UserOrganizedCrimeResponseToJson;
+  Map<String, dynamic> toJson() => _$UserOrganizedCrimeResponseToJson(this);
+
+  @JsonKey(name: 'organizedCrime')
+  final Object? organizedCrime;
+  static const fromJsonFactory = _$UserOrganizedCrimeResponseFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is UserOrganizedCrimeResponse &&
+            (identical(other.organizedCrime, organizedCrime) ||
+                const DeepCollectionEquality().equals(other.organizedCrime, organizedCrime)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(organizedCrime) ^ runtimeType.hashCode;
+}
+
+extension $UserOrganizedCrimeResponseExtension on UserOrganizedCrimeResponse {
+  UserOrganizedCrimeResponse copyWith({Object? organizedCrime}) {
+    return UserOrganizedCrimeResponse(organizedCrime: organizedCrime ?? this.organizedCrime);
+  }
+
+  UserOrganizedCrimeResponse copyWithWrapped({Wrapped<Object?>? organizedCrime}) {
+    return UserOrganizedCrimeResponse(
+        organizedCrime: (organizedCrime != null ? organizedCrime.value : this.organizedCrime));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class UserLookupResponse {
   const UserLookupResponse({
     this.selections,
@@ -14130,9 +14390,7 @@ extension $TornCalendarResponse$CalendarExtension on TornCalendarResponse$Calend
 @JsonSerializable(explicitToJson: true)
 class PersonalStatsOther$Other {
   const PersonalStatsOther$Other({
-    this.timePlayed,
-    this.currentStreak,
-    this.bestStreak,
+    this.activity,
     this.awards,
     this.meritsBought,
     this.refills,
@@ -14145,12 +14403,8 @@ class PersonalStatsOther$Other {
   static const toJsonFactory = _$PersonalStatsOther$OtherToJson;
   Map<String, dynamic> toJson() => _$PersonalStatsOther$OtherToJson(this);
 
-  @JsonKey(name: 'time_played')
-  final int? timePlayed;
-  @JsonKey(name: 'current_streak')
-  final int? currentStreak;
-  @JsonKey(name: 'best_streak')
-  final int? bestStreak;
+  @JsonKey(name: 'activity')
+  final PersonalStatsOther$Other$Activity? activity;
   @JsonKey(name: 'awards')
   final int? awards;
   @JsonKey(name: 'merits_bought')
@@ -14167,12 +14421,7 @@ class PersonalStatsOther$Other {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is PersonalStatsOther$Other &&
-            (identical(other.timePlayed, timePlayed) ||
-                const DeepCollectionEquality().equals(other.timePlayed, timePlayed)) &&
-            (identical(other.currentStreak, currentStreak) ||
-                const DeepCollectionEquality().equals(other.currentStreak, currentStreak)) &&
-            (identical(other.bestStreak, bestStreak) ||
-                const DeepCollectionEquality().equals(other.bestStreak, bestStreak)) &&
+            (identical(other.activity, activity) || const DeepCollectionEquality().equals(other.activity, activity)) &&
             (identical(other.awards, awards) || const DeepCollectionEquality().equals(other.awards, awards)) &&
             (identical(other.meritsBought, meritsBought) ||
                 const DeepCollectionEquality().equals(other.meritsBought, meritsBought)) &&
@@ -14188,9 +14437,7 @@ class PersonalStatsOther$Other {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(timePlayed) ^
-      const DeepCollectionEquality().hash(currentStreak) ^
-      const DeepCollectionEquality().hash(bestStreak) ^
+      const DeepCollectionEquality().hash(activity) ^
       const DeepCollectionEquality().hash(awards) ^
       const DeepCollectionEquality().hash(meritsBought) ^
       const DeepCollectionEquality().hash(refills) ^
@@ -14201,18 +14448,14 @@ class PersonalStatsOther$Other {
 
 extension $PersonalStatsOther$OtherExtension on PersonalStatsOther$Other {
   PersonalStatsOther$Other copyWith(
-      {int? timePlayed,
-      int? currentStreak,
-      int? bestStreak,
+      {PersonalStatsOther$Other$Activity? activity,
       int? awards,
       int? meritsBought,
       PersonalStatsOther$Other$Refills? refills,
       int? donatorDays,
       int? rankedWarWins}) {
     return PersonalStatsOther$Other(
-        timePlayed: timePlayed ?? this.timePlayed,
-        currentStreak: currentStreak ?? this.currentStreak,
-        bestStreak: bestStreak ?? this.bestStreak,
+        activity: activity ?? this.activity,
         awards: awards ?? this.awards,
         meritsBought: meritsBought ?? this.meritsBought,
         refills: refills ?? this.refills,
@@ -14221,18 +14464,14 @@ extension $PersonalStatsOther$OtherExtension on PersonalStatsOther$Other {
   }
 
   PersonalStatsOther$Other copyWithWrapped(
-      {Wrapped<int?>? timePlayed,
-      Wrapped<int?>? currentStreak,
-      Wrapped<int?>? bestStreak,
+      {Wrapped<PersonalStatsOther$Other$Activity?>? activity,
       Wrapped<int?>? awards,
       Wrapped<int?>? meritsBought,
       Wrapped<PersonalStatsOther$Other$Refills?>? refills,
       Wrapped<int?>? donatorDays,
       Wrapped<int?>? rankedWarWins}) {
     return PersonalStatsOther$Other(
-        timePlayed: (timePlayed != null ? timePlayed.value : this.timePlayed),
-        currentStreak: (currentStreak != null ? currentStreak.value : this.currentStreak),
-        bestStreak: (bestStreak != null ? bestStreak.value : this.bestStreak),
+        activity: (activity != null ? activity.value : this.activity),
         awards: (awards != null ? awards.value : this.awards),
         meritsBought: (meritsBought != null ? meritsBought.value : this.meritsBought),
         refills: (refills != null ? refills.value : this.refills),
@@ -14244,9 +14483,7 @@ extension $PersonalStatsOther$OtherExtension on PersonalStatsOther$Other {
 @JsonSerializable(explicitToJson: true)
 class PersonalStatsOtherPopular$Other {
   const PersonalStatsOtherPopular$Other({
-    this.timePlayed,
-    this.currentStreak,
-    this.bestStreak,
+    this.activity,
     this.awards,
     this.meritsBought,
     this.refills,
@@ -14260,12 +14497,8 @@ class PersonalStatsOtherPopular$Other {
   static const toJsonFactory = _$PersonalStatsOtherPopular$OtherToJson;
   Map<String, dynamic> toJson() => _$PersonalStatsOtherPopular$OtherToJson(this);
 
-  @JsonKey(name: 'time_played')
-  final int? timePlayed;
-  @JsonKey(name: 'current_streak')
-  final int? currentStreak;
-  @JsonKey(name: 'best_streak')
-  final int? bestStreak;
+  @JsonKey(name: 'activity')
+  final PersonalStatsOtherPopular$Other$Activity? activity;
   @JsonKey(name: 'awards')
   final int? awards;
   @JsonKey(name: 'merits_bought')
@@ -14282,12 +14515,7 @@ class PersonalStatsOtherPopular$Other {
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is PersonalStatsOtherPopular$Other &&
-            (identical(other.timePlayed, timePlayed) ||
-                const DeepCollectionEquality().equals(other.timePlayed, timePlayed)) &&
-            (identical(other.currentStreak, currentStreak) ||
-                const DeepCollectionEquality().equals(other.currentStreak, currentStreak)) &&
-            (identical(other.bestStreak, bestStreak) ||
-                const DeepCollectionEquality().equals(other.bestStreak, bestStreak)) &&
+            (identical(other.activity, activity) || const DeepCollectionEquality().equals(other.activity, activity)) &&
             (identical(other.awards, awards) || const DeepCollectionEquality().equals(other.awards, awards)) &&
             (identical(other.meritsBought, meritsBought) ||
                 const DeepCollectionEquality().equals(other.meritsBought, meritsBought)) &&
@@ -14303,9 +14531,7 @@ class PersonalStatsOtherPopular$Other {
 
   @override
   int get hashCode =>
-      const DeepCollectionEquality().hash(timePlayed) ^
-      const DeepCollectionEquality().hash(currentStreak) ^
-      const DeepCollectionEquality().hash(bestStreak) ^
+      const DeepCollectionEquality().hash(activity) ^
       const DeepCollectionEquality().hash(awards) ^
       const DeepCollectionEquality().hash(meritsBought) ^
       const DeepCollectionEquality().hash(refills) ^
@@ -14316,18 +14542,14 @@ class PersonalStatsOtherPopular$Other {
 
 extension $PersonalStatsOtherPopular$OtherExtension on PersonalStatsOtherPopular$Other {
   PersonalStatsOtherPopular$Other copyWith(
-      {int? timePlayed,
-      int? currentStreak,
-      int? bestStreak,
+      {PersonalStatsOtherPopular$Other$Activity? activity,
       int? awards,
       int? meritsBought,
       PersonalStatsOtherPopular$Other$Refills? refills,
       int? donatorDays,
       int? rankedWarWins}) {
     return PersonalStatsOtherPopular$Other(
-        timePlayed: timePlayed ?? this.timePlayed,
-        currentStreak: currentStreak ?? this.currentStreak,
-        bestStreak: bestStreak ?? this.bestStreak,
+        activity: activity ?? this.activity,
         awards: awards ?? this.awards,
         meritsBought: meritsBought ?? this.meritsBought,
         refills: refills ?? this.refills,
@@ -14336,18 +14558,14 @@ extension $PersonalStatsOtherPopular$OtherExtension on PersonalStatsOtherPopular
   }
 
   PersonalStatsOtherPopular$Other copyWithWrapped(
-      {Wrapped<int?>? timePlayed,
-      Wrapped<int?>? currentStreak,
-      Wrapped<int?>? bestStreak,
+      {Wrapped<PersonalStatsOtherPopular$Other$Activity?>? activity,
       Wrapped<int?>? awards,
       Wrapped<int?>? meritsBought,
       Wrapped<PersonalStatsOtherPopular$Other$Refills?>? refills,
       Wrapped<int?>? donatorDays,
       Wrapped<int?>? rankedWarWins}) {
     return PersonalStatsOtherPopular$Other(
-        timePlayed: (timePlayed != null ? timePlayed.value : this.timePlayed),
-        currentStreak: (currentStreak != null ? currentStreak.value : this.currentStreak),
-        bestStreak: (bestStreak != null ? bestStreak.value : this.bestStreak),
+        activity: (activity != null ? activity.value : this.activity),
         awards: (awards != null ? awards.value : this.awards),
         meritsBought: (meritsBought != null ? meritsBought.value : this.meritsBought),
         refills: (refills != null ? refills.value : this.refills),
@@ -14900,7 +15118,7 @@ class PersonalStatsTravel$Travel {
     this.total,
     this.timeSpent,
     this.itemsBought,
-    this.huntingSkill,
+    this.hunting,
     this.attacksWon,
     this.defendsLost,
     this.argentina,
@@ -14927,8 +15145,8 @@ class PersonalStatsTravel$Travel {
   final int? timeSpent;
   @JsonKey(name: 'items_bought')
   final int? itemsBought;
-  @JsonKey(name: 'hunting_skill')
-  final double? huntingSkill;
+  @JsonKey(name: 'hunting')
+  final PersonalStatsTravel$Travel$Hunting? hunting;
   @JsonKey(name: 'attacks_won')
   final int? attacksWon;
   @JsonKey(name: 'defends_lost')
@@ -14966,8 +15184,7 @@ class PersonalStatsTravel$Travel {
                 const DeepCollectionEquality().equals(other.timeSpent, timeSpent)) &&
             (identical(other.itemsBought, itemsBought) ||
                 const DeepCollectionEquality().equals(other.itemsBought, itemsBought)) &&
-            (identical(other.huntingSkill, huntingSkill) ||
-                const DeepCollectionEquality().equals(other.huntingSkill, huntingSkill)) &&
+            (identical(other.hunting, hunting) || const DeepCollectionEquality().equals(other.hunting, hunting)) &&
             (identical(other.attacksWon, attacksWon) ||
                 const DeepCollectionEquality().equals(other.attacksWon, attacksWon)) &&
             (identical(other.defendsLost, defendsLost) ||
@@ -14999,7 +15216,7 @@ class PersonalStatsTravel$Travel {
       const DeepCollectionEquality().hash(total) ^
       const DeepCollectionEquality().hash(timeSpent) ^
       const DeepCollectionEquality().hash(itemsBought) ^
-      const DeepCollectionEquality().hash(huntingSkill) ^
+      const DeepCollectionEquality().hash(hunting) ^
       const DeepCollectionEquality().hash(attacksWon) ^
       const DeepCollectionEquality().hash(defendsLost) ^
       const DeepCollectionEquality().hash(argentina) ^
@@ -15021,7 +15238,7 @@ extension $PersonalStatsTravel$TravelExtension on PersonalStatsTravel$Travel {
       {int? total,
       int? timeSpent,
       int? itemsBought,
-      double? huntingSkill,
+      PersonalStatsTravel$Travel$Hunting? hunting,
       int? attacksWon,
       int? defendsLost,
       int? argentina,
@@ -15039,7 +15256,7 @@ extension $PersonalStatsTravel$TravelExtension on PersonalStatsTravel$Travel {
         total: total ?? this.total,
         timeSpent: timeSpent ?? this.timeSpent,
         itemsBought: itemsBought ?? this.itemsBought,
-        huntingSkill: huntingSkill ?? this.huntingSkill,
+        hunting: hunting ?? this.hunting,
         attacksWon: attacksWon ?? this.attacksWon,
         defendsLost: defendsLost ?? this.defendsLost,
         argentina: argentina ?? this.argentina,
@@ -15059,7 +15276,7 @@ extension $PersonalStatsTravel$TravelExtension on PersonalStatsTravel$Travel {
       {Wrapped<int?>? total,
       Wrapped<int?>? timeSpent,
       Wrapped<int?>? itemsBought,
-      Wrapped<double?>? huntingSkill,
+      Wrapped<PersonalStatsTravel$Travel$Hunting?>? hunting,
       Wrapped<int?>? attacksWon,
       Wrapped<int?>? defendsLost,
       Wrapped<int?>? argentina,
@@ -15077,7 +15294,7 @@ extension $PersonalStatsTravel$TravelExtension on PersonalStatsTravel$Travel {
         total: (total != null ? total.value : this.total),
         timeSpent: (timeSpent != null ? timeSpent.value : this.timeSpent),
         itemsBought: (itemsBought != null ? itemsBought.value : this.itemsBought),
-        huntingSkill: (huntingSkill != null ? huntingSkill.value : this.huntingSkill),
+        hunting: (hunting != null ? hunting.value : this.hunting),
         attacksWon: (attacksWon != null ? attacksWon.value : this.attacksWon),
         defendsLost: (defendsLost != null ? defendsLost.value : this.defendsLost),
         argentina: (argentina != null ? argentina.value : this.argentina),
@@ -15375,28 +15592,312 @@ extension $PersonalStatsBounties$BountiesExtension on PersonalStatsBounties$Boun
 }
 
 @JsonSerializable(explicitToJson: true)
-class PersonalStatsCriminalOffensesPopular$CriminalOffenses {
-  const PersonalStatsCriminalOffensesPopular$CriminalOffenses({
+class PersonalStatsCrimesV2$Offenses {
+  const PersonalStatsCrimesV2$Offenses({
+    this.vandalism,
+    this.fraud,
+    this.theft,
+    this.counterfeiting,
+    this.illicitServices,
+    this.cybercrime,
+    this.extortion,
+    this.illegalProduction,
+    this.organizedCrimes,
+    this.total,
+  });
+
+  factory PersonalStatsCrimesV2$Offenses.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCrimesV2$OffensesFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCrimesV2$OffensesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCrimesV2$OffensesToJson(this);
+
+  @JsonKey(name: 'vandalism')
+  final int? vandalism;
+  @JsonKey(name: 'fraud')
+  final int? fraud;
+  @JsonKey(name: 'theft')
+  final int? theft;
+  @JsonKey(name: 'counterfeiting')
+  final int? counterfeiting;
+  @JsonKey(name: 'illicit_services')
+  final int? illicitServices;
+  @JsonKey(name: 'cybercrime')
+  final int? cybercrime;
+  @JsonKey(name: 'extortion')
+  final int? extortion;
+  @JsonKey(name: 'illegal_production')
+  final int? illegalProduction;
+  @JsonKey(name: 'organized_crimes')
+  final int? organizedCrimes;
+  @JsonKey(name: 'total')
+  final int? total;
+  static const fromJsonFactory = _$PersonalStatsCrimesV2$OffensesFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCrimesV2$Offenses &&
+            (identical(other.vandalism, vandalism) ||
+                const DeepCollectionEquality().equals(other.vandalism, vandalism)) &&
+            (identical(other.fraud, fraud) || const DeepCollectionEquality().equals(other.fraud, fraud)) &&
+            (identical(other.theft, theft) || const DeepCollectionEquality().equals(other.theft, theft)) &&
+            (identical(other.counterfeiting, counterfeiting) ||
+                const DeepCollectionEquality().equals(other.counterfeiting, counterfeiting)) &&
+            (identical(other.illicitServices, illicitServices) ||
+                const DeepCollectionEquality().equals(other.illicitServices, illicitServices)) &&
+            (identical(other.cybercrime, cybercrime) ||
+                const DeepCollectionEquality().equals(other.cybercrime, cybercrime)) &&
+            (identical(other.extortion, extortion) ||
+                const DeepCollectionEquality().equals(other.extortion, extortion)) &&
+            (identical(other.illegalProduction, illegalProduction) ||
+                const DeepCollectionEquality().equals(other.illegalProduction, illegalProduction)) &&
+            (identical(other.organizedCrimes, organizedCrimes) ||
+                const DeepCollectionEquality().equals(other.organizedCrimes, organizedCrimes)) &&
+            (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(vandalism) ^
+      const DeepCollectionEquality().hash(fraud) ^
+      const DeepCollectionEquality().hash(theft) ^
+      const DeepCollectionEquality().hash(counterfeiting) ^
+      const DeepCollectionEquality().hash(illicitServices) ^
+      const DeepCollectionEquality().hash(cybercrime) ^
+      const DeepCollectionEquality().hash(extortion) ^
+      const DeepCollectionEquality().hash(illegalProduction) ^
+      const DeepCollectionEquality().hash(organizedCrimes) ^
+      const DeepCollectionEquality().hash(total) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsCrimesV2$OffensesExtension on PersonalStatsCrimesV2$Offenses {
+  PersonalStatsCrimesV2$Offenses copyWith(
+      {int? vandalism,
+      int? fraud,
+      int? theft,
+      int? counterfeiting,
+      int? illicitServices,
+      int? cybercrime,
+      int? extortion,
+      int? illegalProduction,
+      int? organizedCrimes,
+      int? total}) {
+    return PersonalStatsCrimesV2$Offenses(
+        vandalism: vandalism ?? this.vandalism,
+        fraud: fraud ?? this.fraud,
+        theft: theft ?? this.theft,
+        counterfeiting: counterfeiting ?? this.counterfeiting,
+        illicitServices: illicitServices ?? this.illicitServices,
+        cybercrime: cybercrime ?? this.cybercrime,
+        extortion: extortion ?? this.extortion,
+        illegalProduction: illegalProduction ?? this.illegalProduction,
+        organizedCrimes: organizedCrimes ?? this.organizedCrimes,
+        total: total ?? this.total);
+  }
+
+  PersonalStatsCrimesV2$Offenses copyWithWrapped(
+      {Wrapped<int?>? vandalism,
+      Wrapped<int?>? fraud,
+      Wrapped<int?>? theft,
+      Wrapped<int?>? counterfeiting,
+      Wrapped<int?>? illicitServices,
+      Wrapped<int?>? cybercrime,
+      Wrapped<int?>? extortion,
+      Wrapped<int?>? illegalProduction,
+      Wrapped<int?>? organizedCrimes,
+      Wrapped<int?>? total}) {
+    return PersonalStatsCrimesV2$Offenses(
+        vandalism: (vandalism != null ? vandalism.value : this.vandalism),
+        fraud: (fraud != null ? fraud.value : this.fraud),
+        theft: (theft != null ? theft.value : this.theft),
+        counterfeiting: (counterfeiting != null ? counterfeiting.value : this.counterfeiting),
+        illicitServices: (illicitServices != null ? illicitServices.value : this.illicitServices),
+        cybercrime: (cybercrime != null ? cybercrime.value : this.cybercrime),
+        extortion: (extortion != null ? extortion.value : this.extortion),
+        illegalProduction: (illegalProduction != null ? illegalProduction.value : this.illegalProduction),
+        organizedCrimes: (organizedCrimes != null ? organizedCrimes.value : this.organizedCrimes),
+        total: (total != null ? total.value : this.total));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCrimesV2$Skills {
+  const PersonalStatsCrimesV2$Skills({
+    this.searchForCash,
+    this.bootlegging,
+    this.graffiti,
+    this.shoplifting,
+    this.pickpocketing,
+    this.cardSkimming,
+    this.burglary,
+    this.hustling,
+    this.disposal,
+    this.cracking,
+    this.forgery,
+    this.scamming,
+  });
+
+  factory PersonalStatsCrimesV2$Skills.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCrimesV2$SkillsFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsCrimesV2$SkillsToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCrimesV2$SkillsToJson(this);
+
+  @JsonKey(name: 'search_for_cash')
+  final int? searchForCash;
+  @JsonKey(name: 'bootlegging')
+  final int? bootlegging;
+  @JsonKey(name: 'graffiti')
+  final int? graffiti;
+  @JsonKey(name: 'shoplifting')
+  final int? shoplifting;
+  @JsonKey(name: 'pickpocketing')
+  final int? pickpocketing;
+  @JsonKey(name: 'card_skimming')
+  final int? cardSkimming;
+  @JsonKey(name: 'burglary')
+  final int? burglary;
+  @JsonKey(name: 'hustling')
+  final int? hustling;
+  @JsonKey(name: 'disposal')
+  final int? disposal;
+  @JsonKey(name: 'cracking')
+  final int? cracking;
+  @JsonKey(name: 'forgery')
+  final int? forgery;
+  @JsonKey(name: 'scamming')
+  final int? scamming;
+  static const fromJsonFactory = _$PersonalStatsCrimesV2$SkillsFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsCrimesV2$Skills &&
+            (identical(other.searchForCash, searchForCash) ||
+                const DeepCollectionEquality().equals(other.searchForCash, searchForCash)) &&
+            (identical(other.bootlegging, bootlegging) ||
+                const DeepCollectionEquality().equals(other.bootlegging, bootlegging)) &&
+            (identical(other.graffiti, graffiti) || const DeepCollectionEquality().equals(other.graffiti, graffiti)) &&
+            (identical(other.shoplifting, shoplifting) ||
+                const DeepCollectionEquality().equals(other.shoplifting, shoplifting)) &&
+            (identical(other.pickpocketing, pickpocketing) ||
+                const DeepCollectionEquality().equals(other.pickpocketing, pickpocketing)) &&
+            (identical(other.cardSkimming, cardSkimming) ||
+                const DeepCollectionEquality().equals(other.cardSkimming, cardSkimming)) &&
+            (identical(other.burglary, burglary) || const DeepCollectionEquality().equals(other.burglary, burglary)) &&
+            (identical(other.hustling, hustling) || const DeepCollectionEquality().equals(other.hustling, hustling)) &&
+            (identical(other.disposal, disposal) || const DeepCollectionEquality().equals(other.disposal, disposal)) &&
+            (identical(other.cracking, cracking) || const DeepCollectionEquality().equals(other.cracking, cracking)) &&
+            (identical(other.forgery, forgery) || const DeepCollectionEquality().equals(other.forgery, forgery)) &&
+            (identical(other.scamming, scamming) || const DeepCollectionEquality().equals(other.scamming, scamming)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(searchForCash) ^
+      const DeepCollectionEquality().hash(bootlegging) ^
+      const DeepCollectionEquality().hash(graffiti) ^
+      const DeepCollectionEquality().hash(shoplifting) ^
+      const DeepCollectionEquality().hash(pickpocketing) ^
+      const DeepCollectionEquality().hash(cardSkimming) ^
+      const DeepCollectionEquality().hash(burglary) ^
+      const DeepCollectionEquality().hash(hustling) ^
+      const DeepCollectionEquality().hash(disposal) ^
+      const DeepCollectionEquality().hash(cracking) ^
+      const DeepCollectionEquality().hash(forgery) ^
+      const DeepCollectionEquality().hash(scamming) ^
+      runtimeType.hashCode;
+}
+
+extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills {
+  PersonalStatsCrimesV2$Skills copyWith(
+      {int? searchForCash,
+      int? bootlegging,
+      int? graffiti,
+      int? shoplifting,
+      int? pickpocketing,
+      int? cardSkimming,
+      int? burglary,
+      int? hustling,
+      int? disposal,
+      int? cracking,
+      int? forgery,
+      int? scamming}) {
+    return PersonalStatsCrimesV2$Skills(
+        searchForCash: searchForCash ?? this.searchForCash,
+        bootlegging: bootlegging ?? this.bootlegging,
+        graffiti: graffiti ?? this.graffiti,
+        shoplifting: shoplifting ?? this.shoplifting,
+        pickpocketing: pickpocketing ?? this.pickpocketing,
+        cardSkimming: cardSkimming ?? this.cardSkimming,
+        burglary: burglary ?? this.burglary,
+        hustling: hustling ?? this.hustling,
+        disposal: disposal ?? this.disposal,
+        cracking: cracking ?? this.cracking,
+        forgery: forgery ?? this.forgery,
+        scamming: scamming ?? this.scamming);
+  }
+
+  PersonalStatsCrimesV2$Skills copyWithWrapped(
+      {Wrapped<int?>? searchForCash,
+      Wrapped<int?>? bootlegging,
+      Wrapped<int?>? graffiti,
+      Wrapped<int?>? shoplifting,
+      Wrapped<int?>? pickpocketing,
+      Wrapped<int?>? cardSkimming,
+      Wrapped<int?>? burglary,
+      Wrapped<int?>? hustling,
+      Wrapped<int?>? disposal,
+      Wrapped<int?>? cracking,
+      Wrapped<int?>? forgery,
+      Wrapped<int?>? scamming}) {
+    return PersonalStatsCrimesV2$Skills(
+        searchForCash: (searchForCash != null ? searchForCash.value : this.searchForCash),
+        bootlegging: (bootlegging != null ? bootlegging.value : this.bootlegging),
+        graffiti: (graffiti != null ? graffiti.value : this.graffiti),
+        shoplifting: (shoplifting != null ? shoplifting.value : this.shoplifting),
+        pickpocketing: (pickpocketing != null ? pickpocketing.value : this.pickpocketing),
+        cardSkimming: (cardSkimming != null ? cardSkimming.value : this.cardSkimming),
+        burglary: (burglary != null ? burglary.value : this.burglary),
+        hustling: (hustling != null ? hustling.value : this.hustling),
+        disposal: (disposal != null ? disposal.value : this.disposal),
+        cracking: (cracking != null ? cracking.value : this.cracking),
+        forgery: (forgery != null ? forgery.value : this.forgery),
+        scamming: (scamming != null ? scamming.value : this.scamming));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsCrimesPopular$Crimes {
+  const PersonalStatsCrimesPopular$Crimes({
     this.total,
     this.version,
   });
 
-  factory PersonalStatsCriminalOffensesPopular$CriminalOffenses.fromJson(Map<String, dynamic> json) =>
-      _$PersonalStatsCriminalOffensesPopular$CriminalOffensesFromJson(json);
+  factory PersonalStatsCrimesPopular$Crimes.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsCrimesPopular$CrimesFromJson(json);
 
-  static const toJsonFactory = _$PersonalStatsCriminalOffensesPopular$CriminalOffensesToJson;
-  Map<String, dynamic> toJson() => _$PersonalStatsCriminalOffensesPopular$CriminalOffensesToJson(this);
+  static const toJsonFactory = _$PersonalStatsCrimesPopular$CrimesToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsCrimesPopular$CrimesToJson(this);
 
   @JsonKey(name: 'total')
   final int? total;
   @JsonKey(name: 'version')
   final String? version;
-  static const fromJsonFactory = _$PersonalStatsCriminalOffensesPopular$CriminalOffensesFromJson;
+  static const fromJsonFactory = _$PersonalStatsCrimesPopular$CrimesFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
-        (other is PersonalStatsCriminalOffensesPopular$CriminalOffenses &&
+        (other is PersonalStatsCrimesPopular$Crimes &&
             (identical(other.total, total) || const DeepCollectionEquality().equals(other.total, total)) &&
             (identical(other.version, version) || const DeepCollectionEquality().equals(other.version, version)));
   }
@@ -15409,16 +15910,13 @@ class PersonalStatsCriminalOffensesPopular$CriminalOffenses {
       const DeepCollectionEquality().hash(total) ^ const DeepCollectionEquality().hash(version) ^ runtimeType.hashCode;
 }
 
-extension $PersonalStatsCriminalOffensesPopular$CriminalOffensesExtension
-    on PersonalStatsCriminalOffensesPopular$CriminalOffenses {
-  PersonalStatsCriminalOffensesPopular$CriminalOffenses copyWith({int? total, String? version}) {
-    return PersonalStatsCriminalOffensesPopular$CriminalOffenses(
-        total: total ?? this.total, version: version ?? this.version);
+extension $PersonalStatsCrimesPopular$CrimesExtension on PersonalStatsCrimesPopular$Crimes {
+  PersonalStatsCrimesPopular$Crimes copyWith({int? total, String? version}) {
+    return PersonalStatsCrimesPopular$Crimes(total: total ?? this.total, version: version ?? this.version);
   }
 
-  PersonalStatsCriminalOffensesPopular$CriminalOffenses copyWithWrapped(
-      {Wrapped<int?>? total, Wrapped<String?>? version}) {
-    return PersonalStatsCriminalOffensesPopular$CriminalOffenses(
+  PersonalStatsCrimesPopular$Crimes copyWithWrapped({Wrapped<int?>? total, Wrapped<String?>? version}) {
+    return PersonalStatsCrimesPopular$Crimes(
         total: (total != null ? total.value : this.total), version: (version != null ? version.value : this.version));
   }
 }
@@ -17214,6 +17712,53 @@ extension $FactionApplication$User$StatsExtension on FactionApplication$User$Sta
 }
 
 @JsonSerializable(explicitToJson: true)
+class PersonalStatsOther$Other$Activity {
+  const PersonalStatsOther$Other$Activity({
+    this.time,
+    this.streak,
+  });
+
+  factory PersonalStatsOther$Other$Activity.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsOther$Other$ActivityFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOther$Other$ActivityToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOther$Other$ActivityToJson(this);
+
+  @JsonKey(name: 'time')
+  final int? time;
+  @JsonKey(name: 'streak')
+  final PersonalStatsOther$Other$Activity$Streak? streak;
+  static const fromJsonFactory = _$PersonalStatsOther$Other$ActivityFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOther$Other$Activity &&
+            (identical(other.time, time) || const DeepCollectionEquality().equals(other.time, time)) &&
+            (identical(other.streak, streak) || const DeepCollectionEquality().equals(other.streak, streak)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(time) ^ const DeepCollectionEquality().hash(streak) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsOther$Other$ActivityExtension on PersonalStatsOther$Other$Activity {
+  PersonalStatsOther$Other$Activity copyWith({int? time, PersonalStatsOther$Other$Activity$Streak? streak}) {
+    return PersonalStatsOther$Other$Activity(time: time ?? this.time, streak: streak ?? this.streak);
+  }
+
+  PersonalStatsOther$Other$Activity copyWithWrapped(
+      {Wrapped<int?>? time, Wrapped<PersonalStatsOther$Other$Activity$Streak?>? streak}) {
+    return PersonalStatsOther$Other$Activity(
+        time: (time != null ? time.value : this.time), streak: (streak != null ? streak.value : this.streak));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class PersonalStatsOther$Other$Refills {
   const PersonalStatsOther$Other$Refills({
     this.energy,
@@ -17267,6 +17812,54 @@ extension $PersonalStatsOther$Other$RefillsExtension on PersonalStatsOther$Other
         energy: (energy != null ? energy.value : this.energy),
         nerve: (nerve != null ? nerve.value : this.nerve),
         token: (token != null ? token.value : this.token));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsOtherPopular$Other$Activity {
+  const PersonalStatsOtherPopular$Other$Activity({
+    this.time,
+    this.streak,
+  });
+
+  factory PersonalStatsOtherPopular$Other$Activity.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsOtherPopular$Other$ActivityFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOtherPopular$Other$ActivityToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOtherPopular$Other$ActivityToJson(this);
+
+  @JsonKey(name: 'time')
+  final int? time;
+  @JsonKey(name: 'streak')
+  final PersonalStatsOtherPopular$Other$Activity$Streak? streak;
+  static const fromJsonFactory = _$PersonalStatsOtherPopular$Other$ActivityFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOtherPopular$Other$Activity &&
+            (identical(other.time, time) || const DeepCollectionEquality().equals(other.time, time)) &&
+            (identical(other.streak, streak) || const DeepCollectionEquality().equals(other.streak, streak)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(time) ^ const DeepCollectionEquality().hash(streak) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsOtherPopular$Other$ActivityExtension on PersonalStatsOtherPopular$Other$Activity {
+  PersonalStatsOtherPopular$Other$Activity copyWith(
+      {int? time, PersonalStatsOtherPopular$Other$Activity$Streak? streak}) {
+    return PersonalStatsOtherPopular$Other$Activity(time: time ?? this.time, streak: streak ?? this.streak);
+  }
+
+  PersonalStatsOtherPopular$Other$Activity copyWithWrapped(
+      {Wrapped<int?>? time, Wrapped<PersonalStatsOtherPopular$Other$Activity$Streak?>? streak}) {
+    return PersonalStatsOtherPopular$Other$Activity(
+        time: (time != null ? time.value : this.time), streak: (streak != null ? streak.value : this.streak));
   }
 }
 
@@ -17455,10 +18048,50 @@ extension $PersonalStatsDrugs$Drugs$RehabilitationsExtension on PersonalStatsDru
 }
 
 @JsonSerializable(explicitToJson: true)
+class PersonalStatsTravel$Travel$Hunting {
+  const PersonalStatsTravel$Travel$Hunting({
+    this.skill,
+  });
+
+  factory PersonalStatsTravel$Travel$Hunting.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsTravel$Travel$HuntingFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsTravel$Travel$HuntingToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsTravel$Travel$HuntingToJson(this);
+
+  @JsonKey(name: 'skill')
+  final int? skill;
+  static const fromJsonFactory = _$PersonalStatsTravel$Travel$HuntingFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsTravel$Travel$Hunting &&
+            (identical(other.skill, skill) || const DeepCollectionEquality().equals(other.skill, skill)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode => const DeepCollectionEquality().hash(skill) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsTravel$Travel$HuntingExtension on PersonalStatsTravel$Travel$Hunting {
+  PersonalStatsTravel$Travel$Hunting copyWith({int? skill}) {
+    return PersonalStatsTravel$Travel$Hunting(skill: skill ?? this.skill);
+  }
+
+  PersonalStatsTravel$Travel$Hunting copyWithWrapped({Wrapped<int?>? skill}) {
+    return PersonalStatsTravel$Travel$Hunting(skill: (skill != null ? skill.value : this.skill));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class PersonalStatsItems$Items$Found {
   const PersonalStatsItems$Items$Found({
     this.city,
-    this.trash,
+    this.dump,
     this.easterEggs,
   });
 
@@ -17470,8 +18103,8 @@ class PersonalStatsItems$Items$Found {
 
   @JsonKey(name: 'city')
   final int? city;
-  @JsonKey(name: 'trash')
-  final int? trash;
+  @JsonKey(name: 'dump')
+  final int? dump;
   @JsonKey(name: 'easter_eggs')
   final int? easterEggs;
   static const fromJsonFactory = _$PersonalStatsItems$Items$FoundFromJson;
@@ -17481,7 +18114,7 @@ class PersonalStatsItems$Items$Found {
     return identical(this, other) ||
         (other is PersonalStatsItems$Items$Found &&
             (identical(other.city, city) || const DeepCollectionEquality().equals(other.city, city)) &&
-            (identical(other.trash, trash) || const DeepCollectionEquality().equals(other.trash, trash)) &&
+            (identical(other.dump, dump) || const DeepCollectionEquality().equals(other.dump, dump)) &&
             (identical(other.easterEggs, easterEggs) ||
                 const DeepCollectionEquality().equals(other.easterEggs, easterEggs)));
   }
@@ -17492,22 +18125,22 @@ class PersonalStatsItems$Items$Found {
   @override
   int get hashCode =>
       const DeepCollectionEquality().hash(city) ^
-      const DeepCollectionEquality().hash(trash) ^
+      const DeepCollectionEquality().hash(dump) ^
       const DeepCollectionEquality().hash(easterEggs) ^
       runtimeType.hashCode;
 }
 
 extension $PersonalStatsItems$Items$FoundExtension on PersonalStatsItems$Items$Found {
-  PersonalStatsItems$Items$Found copyWith({int? city, int? trash, int? easterEggs}) {
+  PersonalStatsItems$Items$Found copyWith({int? city, int? dump, int? easterEggs}) {
     return PersonalStatsItems$Items$Found(
-        city: city ?? this.city, trash: trash ?? this.trash, easterEggs: easterEggs ?? this.easterEggs);
+        city: city ?? this.city, dump: dump ?? this.dump, easterEggs: easterEggs ?? this.easterEggs);
   }
 
   PersonalStatsItems$Items$Found copyWithWrapped(
-      {Wrapped<int?>? city, Wrapped<int?>? trash, Wrapped<int?>? easterEggs}) {
+      {Wrapped<int?>? city, Wrapped<int?>? dump, Wrapped<int?>? easterEggs}) {
     return PersonalStatsItems$Items$Found(
         city: (city != null ? city.value : this.city),
-        trash: (trash != null ? trash.value : this.trash),
+        dump: (dump != null ? dump.value : this.dump),
         easterEggs: (easterEggs != null ? easterEggs.value : this.easterEggs));
   }
 }
@@ -17520,7 +18153,7 @@ class PersonalStatsItems$Items$Used {
     this.consumables,
     this.candy,
     this.alcohol,
-    this.energy,
+    this.energyDrinks,
     this.statEnhancers,
     this.easterEggs,
   });
@@ -17541,8 +18174,8 @@ class PersonalStatsItems$Items$Used {
   final int? candy;
   @JsonKey(name: 'alcohol')
   final int? alcohol;
-  @JsonKey(name: 'energy')
-  final int? energy;
+  @JsonKey(name: 'energy_drinks')
+  final int? energyDrinks;
   @JsonKey(name: 'stat_enhancers')
   final int? statEnhancers;
   @JsonKey(name: 'easter_eggs')
@@ -17559,7 +18192,8 @@ class PersonalStatsItems$Items$Used {
                 const DeepCollectionEquality().equals(other.consumables, consumables)) &&
             (identical(other.candy, candy) || const DeepCollectionEquality().equals(other.candy, candy)) &&
             (identical(other.alcohol, alcohol) || const DeepCollectionEquality().equals(other.alcohol, alcohol)) &&
-            (identical(other.energy, energy) || const DeepCollectionEquality().equals(other.energy, energy)) &&
+            (identical(other.energyDrinks, energyDrinks) ||
+                const DeepCollectionEquality().equals(other.energyDrinks, energyDrinks)) &&
             (identical(other.statEnhancers, statEnhancers) ||
                 const DeepCollectionEquality().equals(other.statEnhancers, statEnhancers)) &&
             (identical(other.easterEggs, easterEggs) ||
@@ -17576,7 +18210,7 @@ class PersonalStatsItems$Items$Used {
       const DeepCollectionEquality().hash(consumables) ^
       const DeepCollectionEquality().hash(candy) ^
       const DeepCollectionEquality().hash(alcohol) ^
-      const DeepCollectionEquality().hash(energy) ^
+      const DeepCollectionEquality().hash(energyDrinks) ^
       const DeepCollectionEquality().hash(statEnhancers) ^
       const DeepCollectionEquality().hash(easterEggs) ^
       runtimeType.hashCode;
@@ -17589,7 +18223,7 @@ extension $PersonalStatsItems$Items$UsedExtension on PersonalStatsItems$Items$Us
       int? consumables,
       int? candy,
       int? alcohol,
-      int? energy,
+      int? energyDrinks,
       int? statEnhancers,
       int? easterEggs}) {
     return PersonalStatsItems$Items$Used(
@@ -17598,7 +18232,7 @@ extension $PersonalStatsItems$Items$UsedExtension on PersonalStatsItems$Items$Us
         consumables: consumables ?? this.consumables,
         candy: candy ?? this.candy,
         alcohol: alcohol ?? this.alcohol,
-        energy: energy ?? this.energy,
+        energyDrinks: energyDrinks ?? this.energyDrinks,
         statEnhancers: statEnhancers ?? this.statEnhancers,
         easterEggs: easterEggs ?? this.easterEggs);
   }
@@ -17609,7 +18243,7 @@ extension $PersonalStatsItems$Items$UsedExtension on PersonalStatsItems$Items$Us
       Wrapped<int?>? consumables,
       Wrapped<int?>? candy,
       Wrapped<int?>? alcohol,
-      Wrapped<int?>? energy,
+      Wrapped<int?>? energyDrinks,
       Wrapped<int?>? statEnhancers,
       Wrapped<int?>? easterEggs}) {
     return PersonalStatsItems$Items$Used(
@@ -17618,7 +18252,7 @@ extension $PersonalStatsItems$Items$UsedExtension on PersonalStatsItems$Items$Us
         consumables: (consumables != null ? consumables.value : this.consumables),
         candy: (candy != null ? candy.value : this.candy),
         alcohol: (alcohol != null ? alcohol.value : this.alcohol),
-        energy: (energy != null ? energy.value : this.energy),
+        energyDrinks: (energyDrinks != null ? energyDrinks.value : this.energyDrinks),
         statEnhancers: (statEnhancers != null ? statEnhancers.value : this.statEnhancers),
         easterEggs: (easterEggs != null ? easterEggs.value : this.easterEggs));
   }
@@ -17627,7 +18261,7 @@ extension $PersonalStatsItems$Items$UsedExtension on PersonalStatsItems$Items$Us
 @JsonSerializable(explicitToJson: true)
 class PersonalStatsItemsPopular$Items$Found {
   const PersonalStatsItemsPopular$Items$Found({
-    this.trash,
+    this.dump,
   });
 
   factory PersonalStatsItemsPopular$Items$Found.fromJson(Map<String, dynamic> json) =>
@@ -17636,31 +18270,31 @@ class PersonalStatsItemsPopular$Items$Found {
   static const toJsonFactory = _$PersonalStatsItemsPopular$Items$FoundToJson;
   Map<String, dynamic> toJson() => _$PersonalStatsItemsPopular$Items$FoundToJson(this);
 
-  @JsonKey(name: 'trash')
-  final int? trash;
+  @JsonKey(name: 'dump')
+  final int? dump;
   static const fromJsonFactory = _$PersonalStatsItemsPopular$Items$FoundFromJson;
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other is PersonalStatsItemsPopular$Items$Found &&
-            (identical(other.trash, trash) || const DeepCollectionEquality().equals(other.trash, trash)));
+            (identical(other.dump, dump) || const DeepCollectionEquality().equals(other.dump, dump)));
   }
 
   @override
   String toString() => jsonEncode(this);
 
   @override
-  int get hashCode => const DeepCollectionEquality().hash(trash) ^ runtimeType.hashCode;
+  int get hashCode => const DeepCollectionEquality().hash(dump) ^ runtimeType.hashCode;
 }
 
 extension $PersonalStatsItemsPopular$Items$FoundExtension on PersonalStatsItemsPopular$Items$Found {
-  PersonalStatsItemsPopular$Items$Found copyWith({int? trash}) {
-    return PersonalStatsItemsPopular$Items$Found(trash: trash ?? this.trash);
+  PersonalStatsItemsPopular$Items$Found copyWith({int? dump}) {
+    return PersonalStatsItemsPopular$Items$Found(dump: dump ?? this.dump);
   }
 
-  PersonalStatsItemsPopular$Items$Found copyWithWrapped({Wrapped<int?>? trash}) {
-    return PersonalStatsItemsPopular$Items$Found(trash: (trash != null ? trash.value : this.trash));
+  PersonalStatsItemsPopular$Items$Found copyWithWrapped({Wrapped<int?>? dump}) {
+    return PersonalStatsItemsPopular$Items$Found(dump: (dump != null ? dump.value : this.dump));
   }
 }
 
@@ -17672,7 +18306,7 @@ class PersonalStatsItemsPopular$Items$Used {
     this.consumables,
     this.candy,
     this.alcohol,
-    this.energy,
+    this.energyDrinks,
     this.statEnhancers,
     this.easterEggs,
   });
@@ -17693,8 +18327,8 @@ class PersonalStatsItemsPopular$Items$Used {
   final int? candy;
   @JsonKey(name: 'alcohol')
   final int? alcohol;
-  @JsonKey(name: 'energy')
-  final int? energy;
+  @JsonKey(name: 'energy_drinks')
+  final int? energyDrinks;
   @JsonKey(name: 'stat_enhancers')
   final int? statEnhancers;
   @JsonKey(name: 'easter_eggs')
@@ -17711,7 +18345,8 @@ class PersonalStatsItemsPopular$Items$Used {
                 const DeepCollectionEquality().equals(other.consumables, consumables)) &&
             (identical(other.candy, candy) || const DeepCollectionEquality().equals(other.candy, candy)) &&
             (identical(other.alcohol, alcohol) || const DeepCollectionEquality().equals(other.alcohol, alcohol)) &&
-            (identical(other.energy, energy) || const DeepCollectionEquality().equals(other.energy, energy)) &&
+            (identical(other.energyDrinks, energyDrinks) ||
+                const DeepCollectionEquality().equals(other.energyDrinks, energyDrinks)) &&
             (identical(other.statEnhancers, statEnhancers) ||
                 const DeepCollectionEquality().equals(other.statEnhancers, statEnhancers)) &&
             (identical(other.easterEggs, easterEggs) ||
@@ -17728,7 +18363,7 @@ class PersonalStatsItemsPopular$Items$Used {
       const DeepCollectionEquality().hash(consumables) ^
       const DeepCollectionEquality().hash(candy) ^
       const DeepCollectionEquality().hash(alcohol) ^
-      const DeepCollectionEquality().hash(energy) ^
+      const DeepCollectionEquality().hash(energyDrinks) ^
       const DeepCollectionEquality().hash(statEnhancers) ^
       const DeepCollectionEquality().hash(easterEggs) ^
       runtimeType.hashCode;
@@ -17741,7 +18376,7 @@ extension $PersonalStatsItemsPopular$Items$UsedExtension on PersonalStatsItemsPo
       int? consumables,
       int? candy,
       int? alcohol,
-      int? energy,
+      int? energyDrinks,
       int? statEnhancers,
       int? easterEggs}) {
     return PersonalStatsItemsPopular$Items$Used(
@@ -17750,7 +18385,7 @@ extension $PersonalStatsItemsPopular$Items$UsedExtension on PersonalStatsItemsPo
         consumables: consumables ?? this.consumables,
         candy: candy ?? this.candy,
         alcohol: alcohol ?? this.alcohol,
-        energy: energy ?? this.energy,
+        energyDrinks: energyDrinks ?? this.energyDrinks,
         statEnhancers: statEnhancers ?? this.statEnhancers,
         easterEggs: easterEggs ?? this.easterEggs);
   }
@@ -17761,7 +18396,7 @@ extension $PersonalStatsItemsPopular$Items$UsedExtension on PersonalStatsItemsPo
       Wrapped<int?>? consumables,
       Wrapped<int?>? candy,
       Wrapped<int?>? alcohol,
-      Wrapped<int?>? energy,
+      Wrapped<int?>? energyDrinks,
       Wrapped<int?>? statEnhancers,
       Wrapped<int?>? easterEggs}) {
     return PersonalStatsItemsPopular$Items$Used(
@@ -17770,7 +18405,7 @@ extension $PersonalStatsItemsPopular$Items$UsedExtension on PersonalStatsItemsPo
         consumables: (consumables != null ? consumables.value : this.consumables),
         candy: (candy != null ? candy.value : this.candy),
         alcohol: (alcohol != null ? alcohol.value : this.alcohol),
-        energy: (energy != null ? energy.value : this.energy),
+        energyDrinks: (energyDrinks != null ? energyDrinks.value : this.energyDrinks),
         statEnhancers: (statEnhancers != null ? statEnhancers.value : this.statEnhancers),
         easterEggs: (easterEggs != null ? easterEggs.value : this.easterEggs));
   }
@@ -20325,6 +20960,98 @@ extension $UserCrimeDetailsCardSkimming$CardDetails$Areas$ItemExtension
 }
 
 @JsonSerializable(explicitToJson: true)
+class PersonalStatsOther$Other$Activity$Streak {
+  const PersonalStatsOther$Other$Activity$Streak({
+    this.best,
+    this.current,
+  });
+
+  factory PersonalStatsOther$Other$Activity$Streak.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsOther$Other$Activity$StreakFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOther$Other$Activity$StreakToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOther$Other$Activity$StreakToJson(this);
+
+  @JsonKey(name: 'best')
+  final int? best;
+  @JsonKey(name: 'current')
+  final int? current;
+  static const fromJsonFactory = _$PersonalStatsOther$Other$Activity$StreakFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOther$Other$Activity$Streak &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)) &&
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(best) ^ const DeepCollectionEquality().hash(current) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsOther$Other$Activity$StreakExtension on PersonalStatsOther$Other$Activity$Streak {
+  PersonalStatsOther$Other$Activity$Streak copyWith({int? best, int? current}) {
+    return PersonalStatsOther$Other$Activity$Streak(best: best ?? this.best, current: current ?? this.current);
+  }
+
+  PersonalStatsOther$Other$Activity$Streak copyWithWrapped({Wrapped<int?>? best, Wrapped<int?>? current}) {
+    return PersonalStatsOther$Other$Activity$Streak(
+        best: (best != null ? best.value : this.best), current: (current != null ? current.value : this.current));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
+class PersonalStatsOtherPopular$Other$Activity$Streak {
+  const PersonalStatsOtherPopular$Other$Activity$Streak({
+    this.best,
+    this.current,
+  });
+
+  factory PersonalStatsOtherPopular$Other$Activity$Streak.fromJson(Map<String, dynamic> json) =>
+      _$PersonalStatsOtherPopular$Other$Activity$StreakFromJson(json);
+
+  static const toJsonFactory = _$PersonalStatsOtherPopular$Other$Activity$StreakToJson;
+  Map<String, dynamic> toJson() => _$PersonalStatsOtherPopular$Other$Activity$StreakToJson(this);
+
+  @JsonKey(name: 'best')
+  final int? best;
+  @JsonKey(name: 'current')
+  final int? current;
+  static const fromJsonFactory = _$PersonalStatsOtherPopular$Other$Activity$StreakFromJson;
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other is PersonalStatsOtherPopular$Other$Activity$Streak &&
+            (identical(other.best, best) || const DeepCollectionEquality().equals(other.best, best)) &&
+            (identical(other.current, current) || const DeepCollectionEquality().equals(other.current, current)));
+  }
+
+  @override
+  String toString() => jsonEncode(this);
+
+  @override
+  int get hashCode =>
+      const DeepCollectionEquality().hash(best) ^ const DeepCollectionEquality().hash(current) ^ runtimeType.hashCode;
+}
+
+extension $PersonalStatsOtherPopular$Other$Activity$StreakExtension on PersonalStatsOtherPopular$Other$Activity$Streak {
+  PersonalStatsOtherPopular$Other$Activity$Streak copyWith({int? best, int? current}) {
+    return PersonalStatsOtherPopular$Other$Activity$Streak(best: best ?? this.best, current: current ?? this.current);
+  }
+
+  PersonalStatsOtherPopular$Other$Activity$Streak copyWithWrapped({Wrapped<int?>? best, Wrapped<int?>? current}) {
+    return PersonalStatsOtherPopular$Other$Activity$Streak(
+        best: (best != null ? best.value : this.best), current: (current != null ? current.value : this.current));
+  }
+}
+
+@JsonSerializable(explicitToJson: true)
 class PersonalStatsTrading$Trading$Items$Bought {
   const PersonalStatsTrading$Trading$Items$Bought({
     this.market,
@@ -21772,6 +22499,67 @@ List<enums.ReviveSetting>? reviveSettingNullableListFromJson(
   return reviveSetting.map((e) => reviveSettingFromJson(e.toString())).toList();
 }
 
+String? factionCrimeStatusEnumNullableToJson(enums.FactionCrimeStatusEnum? factionCrimeStatusEnum) {
+  return factionCrimeStatusEnum?.value;
+}
+
+String? factionCrimeStatusEnumToJson(enums.FactionCrimeStatusEnum factionCrimeStatusEnum) {
+  return factionCrimeStatusEnum.value;
+}
+
+enums.FactionCrimeStatusEnum factionCrimeStatusEnumFromJson(
+  Object? factionCrimeStatusEnum, [
+  enums.FactionCrimeStatusEnum? defaultValue,
+]) {
+  return enums.FactionCrimeStatusEnum.values.firstWhereOrNull((e) => e.value == factionCrimeStatusEnum) ??
+      defaultValue ??
+      enums.FactionCrimeStatusEnum.swaggerGeneratedUnknown;
+}
+
+enums.FactionCrimeStatusEnum? factionCrimeStatusEnumNullableFromJson(
+  Object? factionCrimeStatusEnum, [
+  enums.FactionCrimeStatusEnum? defaultValue,
+]) {
+  if (factionCrimeStatusEnum == null) {
+    return null;
+  }
+  return enums.FactionCrimeStatusEnum.values.firstWhereOrNull((e) => e.value == factionCrimeStatusEnum) ?? defaultValue;
+}
+
+String factionCrimeStatusEnumExplodedListToJson(List<enums.FactionCrimeStatusEnum>? factionCrimeStatusEnum) {
+  return factionCrimeStatusEnum?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> factionCrimeStatusEnumListToJson(List<enums.FactionCrimeStatusEnum>? factionCrimeStatusEnum) {
+  if (factionCrimeStatusEnum == null) {
+    return [];
+  }
+
+  return factionCrimeStatusEnum.map((e) => e.value!).toList();
+}
+
+List<enums.FactionCrimeStatusEnum> factionCrimeStatusEnumListFromJson(
+  List? factionCrimeStatusEnum, [
+  List<enums.FactionCrimeStatusEnum>? defaultValue,
+]) {
+  if (factionCrimeStatusEnum == null) {
+    return defaultValue ?? [];
+  }
+
+  return factionCrimeStatusEnum.map((e) => factionCrimeStatusEnumFromJson(e.toString())).toList();
+}
+
+List<enums.FactionCrimeStatusEnum>? factionCrimeStatusEnumNullableListFromJson(
+  List? factionCrimeStatusEnum, [
+  List<enums.FactionCrimeStatusEnum>? defaultValue,
+]) {
+  if (factionCrimeStatusEnum == null) {
+    return defaultValue;
+  }
+
+  return factionCrimeStatusEnum.map((e) => factionCrimeStatusEnumFromJson(e.toString())).toList();
+}
+
 String? factionSelectionNameNullableToJson(enums.FactionSelectionName? factionSelectionName) {
   return factionSelectionName?.value;
 }
@@ -22649,6 +23437,128 @@ List<enums.ApiStripTags>? apiStripTagsNullableListFromJson(
   return apiStripTags.map((e) => apiStripTagsFromJson(e.toString())).toList();
 }
 
+String? factionCrimesGetCatNullableToJson(enums.FactionCrimesGetCat? factionCrimesGetCat) {
+  return factionCrimesGetCat?.value;
+}
+
+String? factionCrimesGetCatToJson(enums.FactionCrimesGetCat factionCrimesGetCat) {
+  return factionCrimesGetCat.value;
+}
+
+enums.FactionCrimesGetCat factionCrimesGetCatFromJson(
+  Object? factionCrimesGetCat, [
+  enums.FactionCrimesGetCat? defaultValue,
+]) {
+  return enums.FactionCrimesGetCat.values.firstWhereOrNull((e) => e.value == factionCrimesGetCat) ??
+      defaultValue ??
+      enums.FactionCrimesGetCat.swaggerGeneratedUnknown;
+}
+
+enums.FactionCrimesGetCat? factionCrimesGetCatNullableFromJson(
+  Object? factionCrimesGetCat, [
+  enums.FactionCrimesGetCat? defaultValue,
+]) {
+  if (factionCrimesGetCat == null) {
+    return null;
+  }
+  return enums.FactionCrimesGetCat.values.firstWhereOrNull((e) => e.value == factionCrimesGetCat) ?? defaultValue;
+}
+
+String factionCrimesGetCatExplodedListToJson(List<enums.FactionCrimesGetCat>? factionCrimesGetCat) {
+  return factionCrimesGetCat?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> factionCrimesGetCatListToJson(List<enums.FactionCrimesGetCat>? factionCrimesGetCat) {
+  if (factionCrimesGetCat == null) {
+    return [];
+  }
+
+  return factionCrimesGetCat.map((e) => e.value!).toList();
+}
+
+List<enums.FactionCrimesGetCat> factionCrimesGetCatListFromJson(
+  List? factionCrimesGetCat, [
+  List<enums.FactionCrimesGetCat>? defaultValue,
+]) {
+  if (factionCrimesGetCat == null) {
+    return defaultValue ?? [];
+  }
+
+  return factionCrimesGetCat.map((e) => factionCrimesGetCatFromJson(e.toString())).toList();
+}
+
+List<enums.FactionCrimesGetCat>? factionCrimesGetCatNullableListFromJson(
+  List? factionCrimesGetCat, [
+  List<enums.FactionCrimesGetCat>? defaultValue,
+]) {
+  if (factionCrimesGetCat == null) {
+    return defaultValue;
+  }
+
+  return factionCrimesGetCat.map((e) => factionCrimesGetCatFromJson(e.toString())).toList();
+}
+
+String? factionCrimesGetSortNullableToJson(enums.FactionCrimesGetSort? factionCrimesGetSort) {
+  return factionCrimesGetSort?.value;
+}
+
+String? factionCrimesGetSortToJson(enums.FactionCrimesGetSort factionCrimesGetSort) {
+  return factionCrimesGetSort.value;
+}
+
+enums.FactionCrimesGetSort factionCrimesGetSortFromJson(
+  Object? factionCrimesGetSort, [
+  enums.FactionCrimesGetSort? defaultValue,
+]) {
+  return enums.FactionCrimesGetSort.values.firstWhereOrNull((e) => e.value == factionCrimesGetSort) ??
+      defaultValue ??
+      enums.FactionCrimesGetSort.swaggerGeneratedUnknown;
+}
+
+enums.FactionCrimesGetSort? factionCrimesGetSortNullableFromJson(
+  Object? factionCrimesGetSort, [
+  enums.FactionCrimesGetSort? defaultValue,
+]) {
+  if (factionCrimesGetSort == null) {
+    return null;
+  }
+  return enums.FactionCrimesGetSort.values.firstWhereOrNull((e) => e.value == factionCrimesGetSort) ?? defaultValue;
+}
+
+String factionCrimesGetSortExplodedListToJson(List<enums.FactionCrimesGetSort>? factionCrimesGetSort) {
+  return factionCrimesGetSort?.map((e) => e.value!).join(',') ?? '';
+}
+
+List<String> factionCrimesGetSortListToJson(List<enums.FactionCrimesGetSort>? factionCrimesGetSort) {
+  if (factionCrimesGetSort == null) {
+    return [];
+  }
+
+  return factionCrimesGetSort.map((e) => e.value!).toList();
+}
+
+List<enums.FactionCrimesGetSort> factionCrimesGetSortListFromJson(
+  List? factionCrimesGetSort, [
+  List<enums.FactionCrimesGetSort>? defaultValue,
+]) {
+  if (factionCrimesGetSort == null) {
+    return defaultValue ?? [];
+  }
+
+  return factionCrimesGetSort.map((e) => factionCrimesGetSortFromJson(e.toString())).toList();
+}
+
+List<enums.FactionCrimesGetSort>? factionCrimesGetSortNullableListFromJson(
+  List? factionCrimesGetSort, [
+  List<enums.FactionCrimesGetSort>? defaultValue,
+]) {
+  if (factionCrimesGetSort == null) {
+    return defaultValue;
+  }
+
+  return factionCrimesGetSort.map((e) => factionCrimesGetSortFromJson(e.toString())).toList();
+}
+
 String? factionGetSortNullableToJson(enums.FactionGetSort? factionGetSort) {
   return factionGetSort?.value;
 }
@@ -23324,67 +24234,6 @@ List<enums.UserRacesGetCat>? userRacesGetCatNullableListFromJson(
   }
 
   return userRacesGetCat.map((e) => userRacesGetCatFromJson(e.toString())).toList();
-}
-
-String? userIdForumpostsGetCatNullableToJson(enums.UserIdForumpostsGetCat? userIdForumpostsGetCat) {
-  return userIdForumpostsGetCat?.value;
-}
-
-String? userIdForumpostsGetCatToJson(enums.UserIdForumpostsGetCat userIdForumpostsGetCat) {
-  return userIdForumpostsGetCat.value;
-}
-
-enums.UserIdForumpostsGetCat userIdForumpostsGetCatFromJson(
-  Object? userIdForumpostsGetCat, [
-  enums.UserIdForumpostsGetCat? defaultValue,
-]) {
-  return enums.UserIdForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userIdForumpostsGetCat) ??
-      defaultValue ??
-      enums.UserIdForumpostsGetCat.swaggerGeneratedUnknown;
-}
-
-enums.UserIdForumpostsGetCat? userIdForumpostsGetCatNullableFromJson(
-  Object? userIdForumpostsGetCat, [
-  enums.UserIdForumpostsGetCat? defaultValue,
-]) {
-  if (userIdForumpostsGetCat == null) {
-    return null;
-  }
-  return enums.UserIdForumpostsGetCat.values.firstWhereOrNull((e) => e.value == userIdForumpostsGetCat) ?? defaultValue;
-}
-
-String userIdForumpostsGetCatExplodedListToJson(List<enums.UserIdForumpostsGetCat>? userIdForumpostsGetCat) {
-  return userIdForumpostsGetCat?.map((e) => e.value!).join(',') ?? '';
-}
-
-List<String> userIdForumpostsGetCatListToJson(List<enums.UserIdForumpostsGetCat>? userIdForumpostsGetCat) {
-  if (userIdForumpostsGetCat == null) {
-    return [];
-  }
-
-  return userIdForumpostsGetCat.map((e) => e.value!).toList();
-}
-
-List<enums.UserIdForumpostsGetCat> userIdForumpostsGetCatListFromJson(
-  List? userIdForumpostsGetCat, [
-  List<enums.UserIdForumpostsGetCat>? defaultValue,
-]) {
-  if (userIdForumpostsGetCat == null) {
-    return defaultValue ?? [];
-  }
-
-  return userIdForumpostsGetCat.map((e) => userIdForumpostsGetCatFromJson(e.toString())).toList();
-}
-
-List<enums.UserIdForumpostsGetCat>? userIdForumpostsGetCatNullableListFromJson(
-  List? userIdForumpostsGetCat, [
-  List<enums.UserIdForumpostsGetCat>? defaultValue,
-]) {
-  if (userIdForumpostsGetCat == null) {
-    return defaultValue;
-  }
-
-  return userIdForumpostsGetCat.map((e) => userIdForumpostsGetCatFromJson(e.toString())).toList();
 }
 
 String? userIdForumpostsGetSortNullableToJson(enums.UserIdForumpostsGetSort? userIdForumpostsGetSort) {

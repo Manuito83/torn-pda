@@ -3,7 +3,7 @@
     "info": {
         "title": "Torn API",
         "description": "\n * The development of Torn's API v2 is still ongoing.\n * If selections remain unaltered, they will default to the API v1 version.\n * Unlike API v1, API v2 accepts both selections and IDs as path and query parameters.\n * If any discrepancies or errors are found, please submit a [bug report](https://www.torn.com/forums.php#/p=forums&f=19&b=0&a=0) on the Torn Forums.",
-        "version": "2.0"
+        "version": "1.1.0"
     },
     "servers": [
         {
@@ -20,10 +20,8 @@
                     "Stable"
                 ],
                 "summary": "Get a faction's hall of fame rankings.",
+                "description": "Requires public access key. <br> ",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -45,7 +43,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/hof": {
@@ -56,11 +59,7 @@
                     "Stable"
                 ],
                 "summary": "Get your faction's hall of fame rankings.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br> ",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -72,7 +71,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/{id}/members": {
@@ -82,11 +86,8 @@
                     "Stable"
                 ],
                 "summary": "Get a list of a faction's members",
-                "description": "The 'revive_setting' value will be populated (not Unknown) if you're requesting data for your own faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as 'Unknown'.",
+                "description": "Requires public access key. <br> The 'revive_setting' value will be populated (not Unknown) if you're requesting data for your own faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as 'Unknown'.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -111,7 +112,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/members": {
@@ -121,11 +127,8 @@
                     "Stable"
                 ],
                 "summary": "Get a list of your faction's members",
-                "description": "The 'revive_setting' value will be populated (not Unknown) if you have faction permissions (with custom, limited or full access keys), otherwise it will be set as 'Unknown'.",
+                "description": "Requires public access key. <br> The 'revive_setting' value will be populated (not Unknown) if you have faction permissions (with custom, limited or full access keys), otherwise it will be set as 'Unknown'.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiStripTagsTrue"
                     }
@@ -141,7 +144,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/{id}/basic": {
@@ -151,11 +159,8 @@
                     "Stable"
                 ],
                 "summary": "Get a faction's basic details",
-                "description": "The 'is_enlisted' value will be populated if you're requesting data for your faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as null.",
+                "description": "Requires public access key. <br> The 'is_enlisted' value will be populated if you're requesting data for your faction and have faction permissions (with custom, limited or full access keys), otherwise it will be set as null.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -177,7 +182,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/basic": {
@@ -187,12 +197,7 @@
                     "Stable"
                 ],
                 "summary": "Get your faction's basic details",
-                "description": "The 'is_enlisted' value will be populated if you have API faction permissions (with custom, limited or full access keys), otherwise it will be set as null.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br> The 'is_enlisted' value will be populated if you have API faction permissions (with custom, limited or full access keys), otherwise it will be set as null.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -204,7 +209,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/{id}/wars": {
@@ -214,10 +224,8 @@
                     "Stable"
                 ],
                 "summary": "Get a faction's wars & pacts details",
+                "description": "Requires public access key. <br> ",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -239,7 +247,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/wars": {
@@ -249,11 +262,7 @@
                     "Stable"
                 ],
                 "summary": "Get your faction's wars & pacts details",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br> ",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -265,7 +274,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/news": {
@@ -275,11 +289,8 @@
                     "Stable"
                 ],
                 "summary": "Get your faction's news details",
-                "description": "It is possible to pass up to 10 categories at the time (comma separated). Categories 'attack', 'depositFunds' and 'giveFunds' are only available with 'Custom', 'Limited' or 'Full' access keys.",
+                "description": "Requires minimal access key with faction API access permissions. <br> It is possible to pass up to 10 categories at the time (comma separated). Categories 'attack', 'depositFunds' and 'giveFunds' are only available with 'Custom', 'Limited' or 'Full' access keys.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiStripTagsFalse"
                     },
@@ -316,7 +327,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/attacks": {
@@ -327,10 +343,8 @@
                     "Stable"
                 ],
                 "summary": "Get your faction's detailed attacks",
+                "description": "Requires limited access key with faction API access permissions. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyLimited"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -355,7 +369,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/attacksfull": {
@@ -366,10 +385,8 @@
                     "Stable"
                 ],
                 "summary": "Get your faction's attacks",
+                "description": "Requires limited access key with faction API access permissions. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyLimited"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit1000"
                     },
@@ -394,7 +411,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/applications": {
@@ -404,11 +426,7 @@
                     "Stable"
                 ],
                 "summary": "Get your faction's applications",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    }
-                ],
+                "description": "Requires minimal access key with faction API access permissions. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -420,7 +438,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/{id}/chain": {
@@ -430,10 +453,8 @@
                     "Unstable"
                 ],
                 "summary": "Get a faction's current chain",
+                "description": "Requires public access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -455,7 +476,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/chain": {
@@ -465,11 +491,7 @@
                     "Unstable"
                 ],
                 "summary": "Get your faction's current chain",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -481,7 +503,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/{id}/chains": {
@@ -491,10 +518,8 @@
                     "Unstable"
                 ],
                 "summary": "Get a list of a faction's completed chains",
+                "description": "Requires public access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -528,7 +553,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/chains": {
@@ -538,10 +568,8 @@
                     "Unstable"
                 ],
                 "summary": "Get a list of your faction's completed chains",
+                "description": "Requires public access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -566,7 +594,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/{chainId}/chainreport": {
@@ -576,11 +609,8 @@
                     "Unstable"
                 ],
                 "summary": "Get a chain report",
-                "description": "Chain reports for ongoing chains are available only for your own faction.",
+                "description": "Requires public access key. <br> Chain reports for ongoing chains are available only for your own faction.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "chainId",
                         "in": "path",
@@ -602,7 +632,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/chainreport": {
@@ -612,12 +647,7 @@
                     "Unstable"
                 ],
                 "summary": "Get your faction's latest chain report",
-                "description": "This includes currently ongoing chains.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br> This includes currently ongoing chains.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -629,7 +659,94 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/faction/crimes": {
+            "get": {
+                "tags": [
+                    "Faction",
+                    "Unstable"
+                ],
+                "summary": "Get your faction's organized crimes",
+                "description": "Requires public minimal access key with faction API access permissions. <br> It's possible to get older entries either by timestamp range (from, to) or with offset.",
+                "parameters": [
+                    {
+                        "name": "cat",
+                        "in": "query",
+                        "description": "Category of organized crimes returned. Category 'available' includes both 'recruiting' & 'planning', and category 'completed' includes both 'successful' & 'failure'<br>Default category is 'all'",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "all",
+                                "recruiting",
+                                "planning",
+                                "failure",
+                                "successful",
+                                "expired",
+                                "available",
+                                "completed"
+                            ]
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/ApiOffset"
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "description": "Returns crimes created after this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "description": "Returns crimes created before this timestamp",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "description": "Direction to sort rows in",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "DESC",
+                                "ASC"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FactionCrimesResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/lookup": {
@@ -639,12 +756,7 @@
                     "Lookup",
                     "Stable"
                 ],
-                "summary": "Get all available faction selections",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -656,7 +768,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction/timestamp": {
@@ -666,11 +783,7 @@
                     "Stable"
                 ],
                 "summary": "Get current server time",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -682,7 +795,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/faction": {
@@ -692,11 +810,8 @@
                     "Stable"
                 ],
                 "summary": "Get any Faction selection",
-                "description": "Choose one or more selections (comma separated).",
+                "description": "Key access level depends on the required selections. <br> Choose one or more selections (comma separated).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "selections",
                         "in": "query",
@@ -811,6 +926,9 @@
                                             "$ref": "#/components/schemas/FactionChainReportResponse"
                                         },
                                         {
+                                            "$ref": "#/components/schemas/FactionCrimesResponse"
+                                        },
+                                        {
                                             "$ref": "#/components/schemas/FactionLookupResponse"
                                         },
                                         {
@@ -821,7 +939,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum/categories": {
@@ -831,11 +954,7 @@
                     "Stable"
                 ],
                 "summary": "Get publicly available forum categories",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -847,7 +966,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum/{categoryIds}/threads": {
@@ -857,10 +981,8 @@
                     "Stable"
                 ],
                 "summary": "Get threads for specific public forum category or categories",
+                "description": "Requires public access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -901,13 +1023,10 @@
                         "in": "path",
                         "description": "Category id or a list of category ids (comma separated)",
                         "required": true,
-                        "style": "form",
+                        "style": "simple",
                         "explode": false,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/ForumId"
-                            }
+                            "type": "string"
                         }
                     }
                 ],
@@ -922,7 +1041,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum/threads": {
@@ -932,10 +1056,8 @@
                     "Stable"
                 ],
                 "summary": "Get threads across all forum categories",
+                "description": "Requires public access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -983,7 +1105,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum/{threadId}/thread": {
@@ -993,11 +1120,8 @@
                     "Stable"
                 ],
                 "summary": "Get specific thread details",
-                "description": "Contains details of a thread including topic content and poll (if any).",
+                "description": "Requires public access key. <br>Contains details of a thread including topic content and poll (if any).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "threadId",
                         "in": "path",
@@ -1019,7 +1143,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum/{threadId}/posts": {
@@ -1029,11 +1158,8 @@
                     "Stable"
                 ],
                 "summary": "Get specific forum thread posts",
-                "description": "Returns 20 posts per page for a specific thread.",
+                "description": "Requires public access key. <br>Returns 20 posts per page for a specific thread.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "offset",
                         "in": "query",
@@ -1068,7 +1194,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum/lookup": {
@@ -1079,11 +1210,7 @@
                     "Stable"
                 ],
                 "summary": "Get all available forum selections",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1095,7 +1222,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum/timestamp": {
@@ -1105,11 +1237,7 @@
                     "Stable"
                 ],
                 "summary": "Get current server time",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1121,7 +1249,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/forum": {
@@ -1131,11 +1264,8 @@
                     "Stable"
                 ],
                 "summary": "Get any Forum selection",
-                "description": "Choose one or more selections (comma separated).",
+                "description": "Requires public access key. <br>Choose one or more selections (comma separated).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "selections",
                         "in": "query",
@@ -1239,7 +1369,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/market/{id}/itemmarket": {
@@ -1250,10 +1385,8 @@
                     "Unstable"
                 ],
                 "summary": "Get item market listings",
+                "description": "Requires public access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -1287,7 +1420,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/market/lookup": {
@@ -1298,11 +1436,7 @@
                     "Stable"
                 ],
                 "summary": "Get all available market selections",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1314,7 +1448,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/market/timestamp": {
@@ -1324,11 +1463,7 @@
                     "Stable"
                 ],
                 "summary": "Get current server time",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1340,7 +1475,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/market": {
@@ -1350,11 +1490,8 @@
                     "Stable"
                 ],
                 "summary": "Get any Market selection",
-                "description": "Choose one or more selections (comma separated).",
+                "description": "Requires public access key. <br>Choose one or more selections (comma separated).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "selections",
                         "in": "query",
@@ -1434,7 +1571,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/races": {
@@ -1444,11 +1586,8 @@
                     "Stable"
                 ],
                 "summary": "Get races",
-                "description": "Returns a list of races, ordered by race start timestamp.",
+                "description": "Requires public access key. <br>Returns a list of races, ordered by race start timestamp.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "limit",
                         "in": "query",
@@ -1518,7 +1657,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/{trackId}/records": {
@@ -1528,11 +1672,8 @@
                     "Stable"
                 ],
                 "summary": "Get track records",
-                "description": "Returns a list of 10 best lap records for the chosen track and car class. Results are cached globally 1 hour.",
+                "description": "Requires public access key. <br>Returns a list of 10 best lap records for the chosen track and car class. Results are cached globally 1 hour.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "trackId",
                         "in": "path",
@@ -1563,7 +1704,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/{raceId}/race": {
@@ -1573,13 +1719,10 @@
                     "Stable"
                 ],
                 "summary": "Get specific race details",
-                "description": "Returns the details of a race.",
+                "description": "Requires public access key. <br>Returns the details of a race.",
                 "parameters": [
                     {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
-                    {
-                        "name": "id",
+                        "name": "raceId",
                         "in": "path",
                         "description": "Race id",
                         "required": true,
@@ -1599,7 +1742,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/cars": {
@@ -1609,12 +1757,7 @@
                     "Stable"
                 ],
                 "summary": "Get cars and their racing stats",
-                "description": "Returns the stat details about racing cars.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>Returns the stat details about racing cars.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1626,7 +1769,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/tracks": {
@@ -1636,12 +1784,7 @@
                     "Stable"
                 ],
                 "summary": "Get race tracks and descriptions",
-                "description": "Returns the details about racing tracks.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>Returns the details about racing tracks.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1653,7 +1796,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/carupgrades": {
@@ -1663,12 +1811,7 @@
                     "Stable"
                 ],
                 "summary": "Get all possible car upgrades",
-                "description": "Returns the details about all possible car upgrades.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>Returns the details about all possible car upgrades.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1680,7 +1823,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/lookup": {
@@ -1691,11 +1839,7 @@
                     "Stable"
                 ],
                 "summary": "Get all available racing selections",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1707,7 +1851,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing/timestamp": {
@@ -1717,11 +1866,7 @@
                     "Stable"
                 ],
                 "summary": "Get current server time",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1733,7 +1878,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/racing": {
@@ -1743,11 +1893,8 @@
                     "Stable"
                 ],
                 "summary": "Get any Racing selection",
-                "description": "Choose one or more selections (comma separated).",
+                "description": "Requires public access key. <br>Choose one or more selections (comma separated).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "selections",
                         "in": "query",
@@ -1854,7 +2001,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/{crimeId}/subcrimes": {
@@ -1865,11 +2017,8 @@
                     "Stable"
                 ],
                 "summary": "Get Subcrimes information",
-                "description": "Return the details about possible actions for a specific crime.",
+                "description": "Requires public access key. <br> Return the details about possible actions for a specific crime.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "crimeId",
                         "in": "path",
@@ -1891,7 +2040,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/crimes": {
@@ -1902,12 +2056,7 @@
                     "Stable"
                 ],
                 "summary": "Get crimes information",
-                "description": "Return the details about released crimes.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br> Return the details about released crimes.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1919,7 +2068,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/calendar": {
@@ -1929,12 +2083,7 @@
                     "Stable"
                 ],
                 "summary": "Get calendar information",
-                "description": "Get the details about competitions & events in the running year.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br> Get the details about competitions & events in the running year.",
                 "responses": {
                     "200": {
                         "description": "Success",
@@ -1946,7 +2095,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/hof": {
@@ -1957,10 +2111,8 @@
                     "Stable"
                 ],
                 "summary": "Get player hall of fame positions for a specific category",
+                "description": "Requires public key.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -1988,7 +2140,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/factionhof": {
@@ -1999,10 +2156,8 @@
                     "Stable"
                 ],
                 "summary": "Get faction hall of fame positions for a specific category",
+                "description": "Requires public access key. <br> ",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -2030,7 +2185,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/{logCategoryId}/logtypes": {
@@ -2041,10 +2201,8 @@
                     "Stable"
                 ],
                 "summary": "Get available log ids for a specific log category",
+                "description": "Requires public key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "logCategoryId",
                         "in": "path",
@@ -2066,7 +2224,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/logtypes": {
@@ -2077,11 +2240,7 @@
                     "Stable"
                 ],
                 "summary": "Get all available log ids",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -2093,7 +2252,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/logcategories": {
@@ -2104,11 +2268,7 @@
                     "Stable"
                 ],
                 "summary": "Get available log categories",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -2120,7 +2280,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/bounties": {
@@ -2131,10 +2296,8 @@
                     "Stable"
                 ],
                 "summary": "Get bounties",
+                "description": "Requires public key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -2153,7 +2316,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/lookup": {
@@ -2164,11 +2332,7 @@
                     "Stable"
                 ],
                 "summary": "Get all available torn selections",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -2180,7 +2344,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn/timestamp": {
@@ -2190,11 +2359,7 @@
                     "Stable"
                 ],
                 "summary": "Get current server time",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -2206,7 +2371,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/torn": {
@@ -2216,11 +2386,8 @@
                     "Stable"
                 ],
                 "summary": "Get any Torn selection",
-                "description": "Choose one or more selections (comma separated).",
+                "description": "Requires public access key. <br> Choose one or more selections (comma separated).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "selections",
                         "in": "query",
@@ -2336,7 +2503,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/{id}/personalstats": {
@@ -2346,11 +2518,8 @@
                     "Unstable"
                 ],
                 "summary": "Get a player's personal stats",
-                "description": "\n *  UserPersonalStatsFull is returned only when this selection is requested for the key owner with Limited, Full or Custom key.\n *  UserPersonalStatsFullPublic is returned when the requested category is 'all'.\n *  UserPersonalStatsPopular is returned when the requested category is 'popular'. Please try to use UserPersonalStatsPopular over UserPersonalStatsFullPublic wherever possible in order to reduce the server load.\n *  Otherwise, UserPersonalStatsCategory is returned for the matched category.\n *  It's possible to request specific stats via 'stat' parameter. In this case the response will vary depending on the stats requested. Private stats are still available only to the key owner (with Limited or higher key).\n *  Additionally, historical stats can also be fetched via 'stat' query parameter, but 'timestamp' parameter must be provided as well. It's only possible to pass up to 10 historical stats at once (the rest is trimmed). When requesting historical stats the response will be of type UserPersonalStatsHistoric.",
+                "description": "Requires public access key. <br>\n *  UserPersonalStatsFull is returned only when this selection is requested for the key owner with Limited, Full or Custom key.\n *  UserPersonalStatsFullPublic is returned when the requested category is 'all'.\n *  UserPersonalStatsPopular is returned when the requested category is 'popular'. Please try to use UserPersonalStatsPopular over UserPersonalStatsFullPublic wherever possible in order to reduce the server load.\n *  Otherwise, UserPersonalStatsCategory is returned for the matched category.\n *  It's possible to request specific stats via 'stat' parameter. In this case the response will vary depending on the stats requested. Private stats are still available only to the key owner (with Limited or higher key).\n *  Additionally, historical stats can also be fetched via 'stat' query parameter, but 'timestamp' parameter must be provided as well. It's only possible to pass up to 10 historical stats at once (the rest is trimmed). When requesting historical stats the response will be of type UserPersonalStatsHistoric.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -2404,7 +2573,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/personalstats": {
@@ -2414,11 +2588,8 @@
                     "Unstable"
                 ],
                 "summary": "Get your personal stats",
-                "description": "\n * UserPersonalStatsFull is returned only when this selection is requested with Limited, Full or Custom key access key.\n * UserPersonalStatsFullPublic is returned when the requested category is 'all'.\n * UserPersonalStatsPopular is returned when the requested category is 'popular'. Please try to use UserPersonalStatsPopular over UserPersonalStatsFullPublic wherever possible in order to reduce the server load.\n * Otherwise, UserPersonalStatsCategory is returned for the matched category.\n * It's possible to request specific stats via 'stat' parameter. In this case the response will vary depending on the stats requested. Private stats are still available only to the key owner (with Limited or higher key).\n * Additionally, historical stats can also be fetched via 'stat' query parameter, but 'timestamp' parameter must be provided as well. It's only possible to pass up to 10 historical stats at once (the rest is trimmed). When requesting historical stats the response will be of type UserPersonalStatsHistoric.",
+                "description": "Requires public access key. <br>\n * UserPersonalStatsFull is returned only when this selection is requested with Limited, Full or Custom key access key.\n * UserPersonalStatsFullPublic is returned when the requested category is 'all'.\n * UserPersonalStatsPopular is returned when the requested category is 'popular'. Please try to use UserPersonalStatsPopular over UserPersonalStatsFullPublic wherever possible in order to reduce the server load.\n * Otherwise, UserPersonalStatsCategory is returned for the matched category.\n * It's possible to request specific stats via 'stat' parameter. In this case the response will vary depending on the stats requested. Private stats are still available only to the key owner (with Limited or higher key).\n * Additionally, historical stats can also be fetched via 'stat' query parameter, but 'timestamp' parameter must be provided as well. It's only possible to pass up to 10 historical stats at once (the rest is trimmed). When requesting historical stats the response will be of type UserPersonalStatsHistoric.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "cat",
                         "in": "query",
@@ -2463,7 +2634,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/{crimeId}/crimes": {
@@ -2474,11 +2650,8 @@
                     "Stable"
                 ],
                 "summary": "Get your crime statistics",
-                "description": "Return the details and statistics about for a specific crime.",
+                "description": "Requires minimal access key. <br>Return the details and statistics about for a specific crime.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    },
                     {
                         "name": "crimeId",
                         "in": "path",
@@ -2500,7 +2673,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/races": {
@@ -2511,11 +2689,8 @@
                     "Stable"
                 ],
                 "summary": "Get user races",
-                "description": "Returns a list of user races, ordered by race start timestamp.",
+                "description": "Requires minimal access key. <br>Returns a list of user races, ordered by race start timestamp.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiLimit100"
                     },
@@ -2577,7 +2752,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/enlistedcars": {
@@ -2588,12 +2768,7 @@
                     "Stable"
                 ],
                 "summary": "Get user enlisted cars",
-                "description": "Returns a list of all user enlisted cars.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    }
-                ],
+                "description": "Requires minimal access key. <br>Returns a list of all user enlisted cars.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -2605,7 +2780,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/{id}/forumposts": {
@@ -2616,26 +2796,8 @@
                     "Stable"
                 ],
                 "summary": "Get posts for a specific player",
-                "description": "Returns 20 posts per page for a specific player.",
+                "description": "Requires public access key. <br>Returns 20 posts per page for a specific player.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
-                    {
-                        "name": "cat",
-                        "in": "query",
-                        "description": "This parameter is being replaced with 'stripTags' parameter and will be removed on 1st December 2024. Determines if the 'content' field returns raw HTML or plain text",
-                        "required": false,
-                        "deprecated": true,
-                        "schema": {
-                            "type": "string",
-                            "default": "plain",
-                            "enum": [
-                                "raw",
-                                "plain"
-                            ]
-                        }
-                    },
                     {
                         "$ref": "#/components/parameters/ApiStripTagsTrue"
                     },
@@ -2703,7 +2865,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/forumposts": {
@@ -2714,11 +2881,8 @@
                     "Stable"
                 ],
                 "summary": "Get your posts",
-                "description": "Returns 20 posts per page.",
+                "description": "Requires public access key. <br>Returns 20 posts per page.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiStripTagsTrue"
                     },
@@ -2777,7 +2941,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/{id}/forumthreads": {
@@ -2788,11 +2957,8 @@
                     "Stable"
                 ],
                 "summary": "Get threads for a specific player",
-                "description": "Returns 100 threads per page for a specific player. When requesting data for the key owner, a field 'new_posts' is also available, indicating the amount of unread posts. Minimum API key is required for that.",
+                "description": "Requires public access key. <br>Returns 100 threads per page for a specific player. When requesting data for the key owner, a field 'new_posts' is also available, indicating the amount of unread posts. Minimum API key is required for that.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -2857,7 +3023,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/forumthreads": {
@@ -2868,11 +3039,8 @@
                     "Stable"
                 ],
                 "summary": "Get your threads",
-                "description": "Returns 100 threads per page. The field 'new_posts' is also available, indicating the amount of unread posts with a Minimum API key (or higher).",
+                "description": "Requires public access key. <br>Returns 100 threads per page. The field 'new_posts' is also available, indicating the amount of unread posts with a Minimum API key (or higher).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "limit",
                         "in": "query",
@@ -2928,7 +3096,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/forumsubscribedthreads": {
@@ -2939,12 +3112,7 @@
                     "Stable"
                 ],
                 "summary": "Get updates on threads you subscribed to",
-                "description": "This selection returns data visible in 'Subscribed Threads' section on forum page. Threads are sorted in the same way as on site.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    }
-                ],
+                "description": "Requires minimal access key. <br>This selection returns data visible in 'Subscribed Threads' section on forum page. Threads are sorted in the same way as on site.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -2956,7 +3124,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/forumfeed": {
@@ -2967,12 +3140,7 @@
                     "Stable"
                 ],
                 "summary": "Get updates on your threads and posts",
-                "description": "This selection returns data visible in 'Feed' section on forum page. Feed is sorted by timestamp descending. Only a maximum of 100 rows are returned.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    }
-                ],
+                "description": "Requires minimal access key. <br>This selection returns data visible in 'Feed' section on forum page. Feed is sorted by timestamp descending. Only a maximum of 100 rows are returned.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -2984,7 +3152,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/forumfriends": {
@@ -2995,12 +3168,7 @@
                     "Stable"
                 ],
                 "summary": "Get updates on your friends' activity",
-                "description": "This selection returns data visible in 'Friends' section on forum page. Feed is sorted by timestamp descending. Only a maximum of 100 rows are returned.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    }
-                ],
+                "description": "Requires minimal access key. <br>This selection returns data visible in 'Friends' section on forum page. Feed is sorted by timestamp descending. Only a maximum of 100 rows are returned.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -3012,7 +3180,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/{id}/hof": {
@@ -3023,11 +3196,8 @@
                     "Stable"
                 ],
                 "summary": "Get hall of fame rankings for a specific player",
-                "description": "The battle_stats selection will be populated only when requesting selection with Limited, Full or Custom key and for yourself.",
+                "description": "Requires public access key. <br>The battle_stats selection will be populated only when requesting selection with Limited, Full or Custom key and for yourself.",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -3049,7 +3219,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/hof": {
@@ -3060,12 +3235,7 @@
                     "Stable"
                 ],
                 "summary": "Get your hall of fame rankings",
-                "description": "When requesting selection with Limited, Full or Custom key, battle_stats selection will be populated.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>When requesting selection with Limited, Full or Custom key, battle_stats selection will be populated.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -3077,7 +3247,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/calendar": {
@@ -3087,12 +3262,7 @@
                     "Stable"
                 ],
                 "summary": "Get your competition's event start time",
-                "description": "Only available to yourself.",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    }
-                ],
+                "description": "Requires minimal access key. <br>Only available to yourself.",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -3104,7 +3274,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/{id}/bounties": {
@@ -3115,10 +3290,8 @@
                     "Stable"
                 ],
                 "summary": "Get bounties placed on a specific user",
+                "description": "Requires public access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "id",
                         "in": "path",
@@ -3140,7 +3313,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/bounties": {
@@ -3151,11 +3329,7 @@
                     "Stable"
                 ],
                 "summary": "Get bounties placed on you",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -3167,7 +3341,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/jobranks": {
@@ -3177,11 +3356,7 @@
                     "Stable"
                 ],
                 "summary": "Get your starter job positions",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyMinimal"
-                    }
-                ],
+                "description": "Requires minimal access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -3193,7 +3368,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/itemmarket": {
@@ -3204,10 +3384,8 @@
                     "Unstable"
                 ],
                 "summary": "Get your item market listings for a specific item",
+                "description": "Requires limited access key. <br>",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyLimited"
-                    },
                     {
                         "$ref": "#/components/parameters/ApiOffset"
                     }
@@ -3223,7 +3401,66 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/user/factionbalance": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Stable"
+                ],
+                "summary": "Get your current faction balance",
+                "description": "Requires limited access key. <br>",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserFactionBalanceResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
+            }
+        },
+        "/user/organizedcrime": {
+            "get": {
+                "tags": [
+                    "User",
+                    "Unstable"
+                ],
+                "summary": "Get your current ongoing organized crime",
+                "description": "Requires minimal access key. <br>",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserOrganizedCrimeResponse"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/lookup": {
@@ -3234,11 +3471,7 @@
                     "Stable"
                 ],
                 "summary": "Get all available user selections",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -3250,7 +3483,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user/timestamp": {
@@ -3260,11 +3498,7 @@
                     "Stable"
                 ],
                 "summary": "Get current server time",
-                "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    }
-                ],
+                "description": "Requires public access key. <br>",
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -3276,7 +3510,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         },
         "/user": {
@@ -3286,11 +3525,8 @@
                     "Stable"
                 ],
                 "summary": "Get any User selection",
-                "description": "Choose one or more selections (comma separated).",
+                "description": "Key access level depends on the required selections. <br>Choose one or more selections (comma separated).",
                 "parameters": [
-                    {
-                        "$ref": "#/components/parameters/ApiKeyPublic"
-                    },
                     {
                         "name": "selections",
                         "in": "query",
@@ -3423,6 +3659,9 @@
                                             "$ref": "#/components/schemas/UserPersonalStatsResponse"
                                         },
                                         {
+                                            "$ref": "#/components/schemas/UserOrganizedCrimeResponse"
+                                        },
+                                        {
                                             "$ref": "#/components/schemas/UserLookupResponse"
                                         },
                                         {
@@ -3433,7 +3672,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "api_key": []
+                    }
+                ]
             }
         }
     },
@@ -3754,8 +3998,7 @@
                     "Engine Cleaning",
                     "Computer",
                     "Camshaft",
-                    "Pads",
-                    "Fluid"
+                    "Pads"
                 ]
             },
             "FactionApplicationStatusEnum": {
@@ -3794,6 +4037,9 @@
                 "type": "integer"
             },
             "FactionId": {
+                "type": "integer"
+            },
+            "FactionCrimeId": {
                 "type": "integer"
             },
             "ChainId": {
@@ -3865,6 +4111,16 @@
                     "Friends & faction",
                     "No one",
                     "Unknown"
+                ]
+            },
+            "FactionCrimeStatusEnum": {
+                "type": "string",
+                "enum": [
+                    "Recruiting",
+                    "Planning",
+                    "Successful",
+                    "Failure",
+                    "Expired"
                 ]
             },
             "AttackPlayerFaction": {
@@ -3967,6 +4223,10 @@
                     },
                     "chain": {
                         "type": "integer"
+                    },
+                    "is_interrupted": {
+                        "description": "This is an experimental flag which should help determine 'assist' attacks which have not contributed to the chain. For example, attacks such as where the opponent lost to someoene else before the attacker could finish the attack. This flag might not work entirely correctly, so use with caution.",
+                        "type": "boolean"
                     },
                     "is_stealthed": {
                         "type": "boolean"
@@ -4104,12 +4364,24 @@
                         "type": "string"
                     },
                     "level": {
-                        "type": "number"
+                        "type": "integer"
                     },
                     "days_in_faction": {
-                        "type": "number"
+                        "type": "integer"
                     },
                     "is_revivable": {
+                        "type": "boolean"
+                    },
+                    "is_on_wall": {
+                        "description": "Shows if the member is currently defending territory wall.",
+                        "type": "boolean"
+                    },
+                    "is_in_oc": {
+                        "description": "Shows if the member is currently participating in an organized crime. Show false for members of other factions.",
+                        "type": "boolean"
+                    },
+                    "has_early_discharge": {
+                        "description": "Shows if the member is eligible for an early discharge from the hospital.",
                         "type": "boolean"
                     },
                     "last_action": {
@@ -4134,7 +4406,7 @@
                         "type": "string"
                     },
                     "timestamp": {
-                        "type": "number"
+                        "type": "integer"
                     },
                     "relative": {
                         "type": "string"
@@ -4146,10 +4418,10 @@
                 "description": "Details about a user's life.",
                 "properties": {
                     "current": {
-                        "type": "number"
+                        "type": "integer"
                     },
                     "maximum": {
-                        "type": "number"
+                        "type": "integer"
                     }
                 },
                 "type": "object"
@@ -4168,7 +4440,7 @@
                         "type": "string"
                     },
                     "until": {
-                        "type": "string",
+                        "type": "integer",
                         "nullable": true
                     }
                 },
@@ -4845,32 +5117,212 @@
                 },
                 "type": "object"
             },
+            "FactionCrimeUser": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/UserId"
+                    },
+                    "joined_at": {
+                        "description": "The timestamp at which the user joined the slot.",
+                        "type": "integer"
+                    },
+                    "progress": {
+                        "description": "Current planning progress on the slot.",
+                        "type": "number",
+                        "format": "float"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionCrimeRewardItem": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/ItemId"
+                    },
+                    "quantity": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionCrimeReward": {
+                "properties": {
+                    "money": {
+                        "type": "integer"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionCrimeRewardItem"
+                        }
+                    },
+                    "respect": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionCrimeSlot": {
+                "properties": {
+                    "position": {
+                        "type": "string"
+                    },
+                    "item_requirement": {
+                        "description": "Details of item required for the slot, if applicable.",
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "properties": {
+                                    "id": {
+                                        "$ref": "#/components/schemas/ItemId"
+                                    },
+                                    "is_reusable": {
+                                        "description": "Shows if the item is reusable or consumed during the crime.",
+                                        "type": "boolean"
+                                    },
+                                    "is_available": {
+                                        "description": "Shows if user has the required item.",
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true
+                            }
+                        ]
+                    },
+                    "user_id": {
+                        "$ref": "#/components/schemas/UserId"
+                    },
+                    "user": {
+                        "description": "Details about the user joined the slot, if any.",
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/FactionCrimeUser"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true
+                            }
+                        ]
+                    },
+                    "success_chance": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "FactionCrime": {
+                "properties": {
+                    "id": {
+                        "$ref": "#/components/schemas/FactionCrimeId"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "difficulty": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/FactionCrimeStatusEnum"
+                    },
+                    "created_at": {
+                        "description": "The timestamp at which the crime was created.",
+                        "type": "integer"
+                    },
+                    "initiated_at": {
+                        "description": "Replaced by the 'planning_at' field (same value). This field will be removed in the future (1st Februrary 2025 or later).",
+                        "type": "integer",
+                        "nullable": true,
+                        "deprecated": true
+                    },
+                    "planning_at": {
+                        "description": "The timestamp at which the planning phase for the crime has begun.",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "ready_at": {
+                        "description": "The timestamp at which the crime will be ready.",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "expired_at": {
+                        "description": "The timestamp at which the crime will expire.",
+                        "type": "integer"
+                    },
+                    "executed_at": {
+                        "description": "The timestamp at which the crime was executed. <br> Note: this value is null for all crimes executed before January 15th, 2025.",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "slots": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionCrimeSlot"
+                        }
+                    },
+                    "rewards": {
+                        "description": "Details about the crime rewards. Available only for crimes with 'Successful' status.",
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/FactionCrimeReward"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "FactionCrimesResponse": {
+                "properties": {
+                    "crimes": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/FactionCrime"
+                        }
+                    },
+                    "_metadata": {
+                        "$ref": "#/components/schemas/RequestMetadataWithLinks"
+                    }
+                },
+                "type": "object"
+            },
             "FactionSelectionName": {
+                "description": "The following selections will fallback to API v1 and may change at any time: 'armor', 'boosters', 'caches', 'cesium', 'contributors', 'crimeexp', 'currency', 'donations', 'drugs', 'medical', 'positions', 'rankedwars', 'reports', 'revives', 'revivesfull', 'stats', 'temporary', 'upgrades', 'weapons'.",
                 "type": "string",
                 "enum": [
                     "applications",
-                    "armor",
                     "attacks",
                     "attacksfull",
                     "basic",
-                    "boosters",
-                    "caches",
-                    "cesium",
                     "chain",
                     "chainreport",
                     "chains",
+                    "crimes",
+                    "hof",
+                    "lookup",
+                    "members",
+                    "news",
+                    "territory",
+                    "timestamp",
+                    "wars",
+                    "armor",
+                    "boosters",
+                    "caches",
+                    "cesium",
                     "contributors",
                     "crimeexp",
-                    "crimenews",
-                    "crimes",
                     "currency",
                     "donations",
                     "drugs",
-                    "hof",
-                    "lookup",
                     "medical",
-                    "members",
-                    "news",
                     "positions",
                     "rankedwars",
                     "reports",
@@ -4878,11 +5330,7 @@
                     "revivesfull",
                     "stats",
                     "temporary",
-                    "territory",
-                    "territorynews",
-                    "timestamp",
                     "upgrades",
-                    "wars",
                     "weapons"
                 ]
             },
@@ -5285,7 +5733,7 @@
             "ItemMarketListingItemDetails": {
                 "properties": {
                     "uid": {
-                        "$ref": "#/components/schemas/ItemUid"
+                        "type": "integer"
                     },
                     "stats": {
                         "$ref": "#/components/schemas/ItemMarketListingItemStats"
@@ -5358,12 +5806,13 @@
                 "type": "object"
             },
             "MarketSelectionName": {
+                "description": "The following selections will fallback to API v1 and may change at any time: 'pointsmarket'.",
                 "type": "string",
                 "enum": [
                     "itemmarket",
                     "lookup",
-                    "pointsmarket",
-                    "timestamp"
+                    "timestamp",
+                    "pointsmarket"
                 ]
             },
             "MarketLookupResponse": {
@@ -5678,7 +6127,7 @@
                         "nullable": true
                     },
                     "time_ended": {
-                        "type": "number",
+                        "type": "integer",
                         "nullable": true
                     }
                 },
@@ -6059,29 +6508,32 @@
                 "type": "object"
             },
             "TornSelectionName": {
+                "description": "The following selections will fallback to API v1 and may change at any time: 'bank','cards','cityshops','companies','competition','dirtybombs','education','factiontree','gyms','honors','itemdetails','items','itemstats','medals','organisedcrimes','pawnshop','pokertables','properties','rackets','raidreport','raids','rankedwarreport','rankedwars','rockpaperscissors','searchforcash','shoplifting','stats','stocks','territory','territorynames','territorywarreport','territorywars'.",
                 "type": "string",
                 "enum": [
-                    "bank",
+                    "bounties",
                     "calendar",
+                    "crimes",
+                    "factionHof",
+                    "hof",
+                    "logcategories",
+                    "logtypes",
+                    "lookup",
+                    "subcrimes",
+                    "timestamp",
+                    "bank",
                     "cards",
-                    "chainreport",
                     "cityshops",
                     "companies",
                     "competition",
-                    "crimes",
                     "dirtybombs",
                     "education",
-                    "factionHof",
                     "factiontree",
                     "gyms",
-                    "hof",
                     "honors",
                     "itemdetails",
                     "items",
                     "itemstats",
-                    "logcategories",
-                    "logtypes",
-                    "lookup",
                     "medals",
                     "organisedcrimes",
                     "pawnshop",
@@ -6097,12 +6549,10 @@
                     "shoplifting",
                     "stats",
                     "stocks",
-                    "subcrimes",
                     "territory",
                     "territorynames",
                     "territorywarreport",
-                    "territorywars",
-                    "timestamp"
+                    "territorywars"
                 ]
             },
             "TornLookupResponse": {
@@ -6120,14 +6570,25 @@
                 "properties": {
                     "other": {
                         "properties": {
-                            "time_played": {
-                                "type": "integer"
-                            },
-                            "current_streak": {
-                                "type": "integer"
-                            },
-                            "best_streak": {
-                                "type": "integer"
+                            "activity": {
+                                "properties": {
+                                    "time": {
+                                        "description": "Time played in seconds",
+                                        "type": "integer"
+                                    },
+                                    "streak": {
+                                        "properties": {
+                                            "best": {
+                                                "type": "integer"
+                                            },
+                                            "current": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
                             },
                             "awards": {
                                 "type": "integer"
@@ -6165,14 +6626,25 @@
                 "properties": {
                     "other": {
                         "properties": {
-                            "time_played": {
-                                "type": "integer"
-                            },
-                            "current_streak": {
-                                "type": "integer"
-                            },
-                            "best_streak": {
-                                "type": "integer"
+                            "activity": {
+                                "properties": {
+                                    "time": {
+                                        "description": "Time played in seconds",
+                                        "type": "integer"
+                                    },
+                                    "streak": {
+                                        "properties": {
+                                            "best": {
+                                                "type": "integer"
+                                            },
+                                            "current": {
+                                                "type": "integer"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                },
+                                "type": "object"
                             },
                             "awards": {
                                 "type": "integer"
@@ -6410,8 +6882,13 @@
                             "items_bought": {
                                 "type": "integer"
                             },
-                            "hunting_skill": {
-                                "type": "number"
+                            "hunting": {
+                                "properties": {
+                                    "skill": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
                             },
                             "attacks_won": {
                                 "type": "integer"
@@ -6483,7 +6960,7 @@
                                     "city": {
                                         "type": "integer"
                                     },
-                                    "trash": {
+                                    "dump": {
                                         "type": "integer"
                                     },
                                     "easter_eggs": {
@@ -6512,7 +6989,7 @@
                                     "alcohol": {
                                         "type": "integer"
                                     },
-                                    "energy": {
+                                    "energy_drinks": {
                                         "type": "integer"
                                     },
                                     "stat_enhancers": {
@@ -6539,7 +7016,7 @@
                         "properties": {
                             "found": {
                                 "properties": {
-                                    "trash": {
+                                    "dump": {
                                         "type": "integer"
                                     }
                                 },
@@ -6562,7 +7039,7 @@
                                     "alcohol": {
                                         "type": "integer"
                                     },
-                                    "energy": {
+                                    "energy_drinks": {
                                         "type": "integer"
                                     },
                                     "stat_enhancers": {
@@ -6670,34 +7147,83 @@
                 },
                 "type": "object"
             },
-            "PersonalStatsCriminalOffensesV2": {
+            "PersonalStatsCrimesV2": {
                 "properties": {
-                    "total": {
-                        "type": "integer"
+                    "offenses": {
+                        "properties": {
+                            "vandalism": {
+                                "type": "integer"
+                            },
+                            "fraud": {
+                                "type": "integer"
+                            },
+                            "theft": {
+                                "type": "integer"
+                            },
+                            "counterfeiting": {
+                                "type": "integer"
+                            },
+                            "illicit_services": {
+                                "type": "integer"
+                            },
+                            "cybercrime": {
+                                "type": "integer"
+                            },
+                            "extortion": {
+                                "type": "integer"
+                            },
+                            "illegal_production": {
+                                "type": "integer"
+                            },
+                            "organized_crimes": {
+                                "type": "integer"
+                            },
+                            "total": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
                     },
-                    "vandalism": {
-                        "type": "integer"
-                    },
-                    "theft": {
-                        "type": "integer"
-                    },
-                    "counterfeiting": {
-                        "type": "integer"
-                    },
-                    "illicit_services": {
-                        "type": "integer"
-                    },
-                    "cybercrime": {
-                        "type": "integer"
-                    },
-                    "extortion": {
-                        "type": "integer"
-                    },
-                    "illegal_production": {
-                        "type": "integer"
-                    },
-                    "organized_crimes": {
-                        "type": "integer"
+                    "skills": {
+                        "properties": {
+                            "search_for_cash": {
+                                "type": "integer"
+                            },
+                            "bootlegging": {
+                                "type": "integer"
+                            },
+                            "graffiti": {
+                                "type": "integer"
+                            },
+                            "shoplifting": {
+                                "type": "integer"
+                            },
+                            "pickpocketing": {
+                                "type": "integer"
+                            },
+                            "card_skimming": {
+                                "type": "integer"
+                            },
+                            "burglary": {
+                                "type": "integer"
+                            },
+                            "hustling": {
+                                "type": "integer"
+                            },
+                            "disposal": {
+                                "type": "integer"
+                            },
+                            "cracking": {
+                                "type": "integer"
+                            },
+                            "forgery": {
+                                "type": "integer"
+                            },
+                            "scamming": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
                     },
                     "version": {
                         "type": "string"
@@ -6705,7 +7231,7 @@
                 },
                 "type": "object"
             },
-            "PersonalStatsCriminalOffensesV1": {
+            "PersonalStatsCrimesV1": {
                 "properties": {
                     "total": {
                         "type": "integer"
@@ -6743,9 +7269,9 @@
                 },
                 "type": "object"
             },
-            "PersonalStatsCriminalOffensesPopular": {
+            "PersonalStatsCrimesPopular": {
                 "properties": {
-                    "criminal_offenses": {
+                    "crimes": {
                         "properties": {
                             "total": {
                                 "type": "integer"
@@ -7586,17 +8112,17 @@
                 },
                 "type": "object"
             },
-            "PersonalStatsCriminalOffenses": {
-                "description": "Response for PersonalStatsCriminalOffenses depends on which crime version user is currently.",
+            "PersonalStatsCrimes": {
+                "description": "Response for PersonalStatsCrimes depends on which crime version user is currently.",
                 "properties": {
-                    "criminal_offenses": {
+                    "crimes": {
                         "type": "object",
                         "oneOf": [
                             {
-                                "$ref": "#/components/schemas/PersonalStatsCriminalOffensesV1"
+                                "$ref": "#/components/schemas/PersonalStatsCrimesV1"
                             },
                             {
-                                "$ref": "#/components/schemas/PersonalStatsCriminalOffensesV2"
+                                "$ref": "#/components/schemas/PersonalStatsCrimesV2"
                             }
                         ]
                     }
@@ -7617,7 +8143,7 @@
                                 "$ref": "#/components/schemas/PersonalStatsHospitalPopular"
                             },
                             {
-                                "$ref": "#/components/schemas/PersonalStatsCriminalOffensesPopular"
+                                "$ref": "#/components/schemas/PersonalStatsCrimesPopular"
                             },
                             {
                                 "$ref": "#/components/schemas/PersonalStatsItemsPopular"
@@ -7666,7 +8192,7 @@
                                 "$ref": "#/components/schemas/PersonalStatsCommunication"
                             },
                             {
-                                "$ref": "#/components/schemas/PersonalStatsCriminalOffenses"
+                                "$ref": "#/components/schemas/PersonalStatsCrimes"
                             },
                             {
                                 "$ref": "#/components/schemas/PersonalStatsBounties"
@@ -7726,7 +8252,7 @@
                                 "$ref": "#/components/schemas/PersonalStatsCommunication"
                             },
                             {
-                                "$ref": "#/components/schemas/PersonalStatsCriminalOffenses"
+                                "$ref": "#/components/schemas/PersonalStatsCrimes"
                             },
                             {
                                 "$ref": "#/components/schemas/PersonalStatsBounties"
@@ -7786,7 +8312,7 @@
                                 "$ref": "#/components/schemas/PersonalStatsCommunication"
                             },
                             {
-                                "$ref": "#/components/schemas/PersonalStatsCriminalOffenses"
+                                "$ref": "#/components/schemas/PersonalStatsCrimes"
                             },
                             {
                                 "$ref": "#/components/schemas/PersonalStatsBounties"
@@ -7849,7 +8375,7 @@
                     "hospital",
                     "finishing_hits",
                     "communication",
-                    "criminal_offenses",
+                    "crimes",
                     "bounties",
                     "investments",
                     "items",
@@ -7949,7 +8475,7 @@
                     "autotheftcrime",
                     "drugdealscrime",
                     "computercrime",
-                    "arsoncrime",
+                    "fraudold",
                     "murdercrime",
                     "othercrime",
                     "organizedcrimes",
@@ -7975,7 +8501,6 @@
                     "traveltimes",
                     "timespenttraveling",
                     "itemsboughtabroad",
-                    "hunting",
                     "attackswonabroad",
                     "defendslostabroad",
                     "argtravel",
@@ -8020,7 +8545,6 @@
                     "nerverefills",
                     "tokenrefills",
                     "meritsbought",
-                    "daysbeendonator",
                     "daysbeendonator",
                     "criminaloffenses",
                     "vandalism",
@@ -8068,7 +8592,20 @@
                     "networthpiggybank",
                     "networthpending",
                     "networthloan",
-                    "networthunpaidfees"
+                    "networthunpaidfees",
+                    "huntingskill",
+                    "searchforcashskill",
+                    "bootleggingskill",
+                    "graffitiskill",
+                    "shopliftingskill",
+                    "pickpocketingskill",
+                    "cardskimmingskill",
+                    "burglaryskill",
+                    "hustlingskill",
+                    "disposalskill",
+                    "crackingskill",
+                    "forgeryskill",
+                    "scammingskill"
                 ]
             },
             "UserCrimeDetailsBootlegging": {
@@ -8916,8 +9453,27 @@
                 "type": "object"
             },
             "UserSelectionName": {
+                "description": "The following selections will fallback to API v1 and may change at any time: 'ammo','attacks','attacksfull','bars','basic','battlestats','bazaar','cooldowns','criminalrecord','discord','display','education','equipment','events','gym','honors','icons','inventory','jobpoints','log','medals','merits','messages','missions','money','networth','newevents','newmessages','notifications','perks','profile','properties','refills','reports','revives','revivesfull','skills','stocks','travel','weaponexp','workstats'.",
                 "type": "string",
                 "enum": [
+                    "bounties",
+                    "calendar",
+                    "crimes",
+                    "enlistedcars",
+                    "factionbalance",
+                    "forumfeed",
+                    "forumfriends",
+                    "forumposts",
+                    "forumsubscribedthreads",
+                    "forumthreads",
+                    "hof",
+                    "itemmarket",
+                    "jobranks",
+                    "lookup",
+                    "organizedcrime",
+                    "personalstats",
+                    "races",
+                    "timestamp",
                     "ammo",
                     "attacks",
                     "attacksfull",
@@ -8925,30 +9481,19 @@
                     "basic",
                     "battlestats",
                     "bazaar",
-                    "calendar",
                     "cooldowns",
-                    "crimes",
                     "criminalrecord",
                     "discord",
                     "display",
                     "education",
-                    "enlistedcars",
                     "equipment",
                     "events",
-                    "forumfeed",
-                    "forumfriends",
-                    "forumposts",
-                    "forumsubscribedthreads",
-                    "forumthreads",
                     "gym",
-                    "hof",
                     "honors",
                     "icons",
                     "inventory",
-                    "itemmarket",
                     "jobpoints",
                     "log",
-                    "lookup",
                     "medals",
                     "merits",
                     "messages",
@@ -8959,22 +9504,63 @@
                     "newmessages",
                     "notifications",
                     "perks",
-                    "personalstats",
                     "profile",
                     "properties",
-                    "publicStatus",
-                    "races",
                     "refills",
                     "reports",
                     "revives",
                     "revivesfull",
                     "skills",
                     "stocks",
-                    "timestamp",
                     "travel",
                     "weaponexp",
                     "workstats"
                 ]
+            },
+            "UserFactionBalance": {
+                "properties": {
+                    "money": {
+                        "type": "integer"
+                    },
+                    "points": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "UserFactionBalanceResponse": {
+                "properties": {
+                    "factionBalance": {
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UserFactionBalance"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "UserOrganizedCrimeResponse": {
+                "properties": {
+                    "organizedCrime": {
+                        "type": "object",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/FactionCrime"
+                            },
+                            {
+                                "type": "object",
+                                "nullable": true
+                            }
+                        ]
+                    }
+                },
+                "type": "object"
             },
             "UserLookupResponse": {
                 "properties": {
@@ -9138,6 +9724,14 @@
                         "false"
                     ]
                 }
+            }
+        },
+        "securitySchemes": {
+            "api_key": {
+                "type": "apiKey",
+                "description": "Pass your API key as the value.<br>Example header:<br>Authorization: ApiKey rnavT95qnTCTAbdK<br>The 'ApiKey' prefix is automatically added in Swagger.",
+                "name": "Authorization",
+                "in": "header"
             }
         }
     },

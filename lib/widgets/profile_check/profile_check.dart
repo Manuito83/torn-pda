@@ -477,12 +477,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           int bazaar = 0;
           if (otherProfile.bazaar!.isNotEmpty) {
             for (final b in otherProfile.bazaar!) {
-              if (b["market_price"] is double) {
-                b["market_price"] = b["market_price"].round();
-              }
-
-              var itemCost = b["market_price"] * b["quantity"];
-              bazaar += itemCost as int;
+              var itemCost = b.marketPrice! * b.quantity!;
+              bazaar += itemCost;
             }
           }
 
@@ -586,7 +582,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     } else {
       try {
         estimatedStats = StatsCalculator.calculateStats(
-          criminalRecordTotal: otherProfile.personalstats?.criminalOffenses?.total,
+          criminalRecordTotal: otherProfile.personalstats?.crimes?.offenses?.total,
           level: otherProfile.level,
           networth: otherProfile.personalstats!.networth!.total,
           rank: otherProfile.rank,

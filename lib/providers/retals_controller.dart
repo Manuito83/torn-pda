@@ -82,7 +82,7 @@ class RetalsController extends GetxController {
         _assignSpiedStats(retal);
 
         retal.statsEstimated = StatsCalculator.calculateStats(
-          criminalRecordTotal: updatedTarget.personalstats?.criminalOffenses?.total,
+          criminalRecordTotal: updatedTarget.personalstats?.crimes?.offenses?.total,
           level: updatedTarget.level,
           networth: updatedTarget.personalstats!.networth!.total,
           rank: updatedTarget.rank,
