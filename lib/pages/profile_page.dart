@@ -4796,7 +4796,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: timestamp,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone)
-        .formatHourWithDaysElapsed();
+        .formatHourWithDaysElapsed(includeYesterday: true);
 
     // Loop all other sources
     for (final v in _user!.networth!.entries) {

@@ -36,11 +36,13 @@ class TimeFormatter {
     return hourFormatted;
   }
 
-  String formatHourWithDaysElapsed({bool includeToday = false}) {
+  String formatHourWithDaysElapsed({bool includeToday = false, bool includeYesterday = false}) {
     late DateTime timeZonedTime;
     late DateTime now;
     String? hourFormatted;
     String? zoneId;
+
+    // Convert input time to the appropriate time zone and get current time accordingly
     switch (timeZoneSetting) {
       case TimeZoneSetting.localTime:
         timeZonedTime = inputTime!.toLocal();
@@ -54,17 +56,24 @@ class TimeFormatter {
         break;
     }
 
-    int differenceInDays = timeZonedTime.difference(now).inDays;
+    // Calculate the full difference
+    Duration difference = timeZonedTime.difference(now);
+    int differenceInDays = difference.inDays;
 
-    // Handle cases where [differenceInDays] can lead to errors
-    if (differenceInDays == 0 && timeZonedTime.day != now.day) {
-      // Event is happening later in the day but after midnight, so consider it as "tomorrow"
-      differenceInDays = 1;
-    } else if (differenceInDays == 1 && timeZonedTime.day != now.add(Duration(days: 1)).day) {
-      // Event is happening after two midnights, so consider it as "in 2 days"
-      differenceInDays = 2;
+    // Adjust the difference in days to account for partial days
+    if (difference.isNegative) {
+      // If the event is in the past, retain the negative difference
+      differenceInDays = difference.inDays;
+    } else {
+      // If the event is in the future, check for additional hours or minutes
+      differenceInDays = difference.inDays;
+      if (difference.inHours.remainder(24) > 0 || difference.inMinutes.remainder(60) > 0) {
+        // Increment days if there's any remaining hours or minutes beyond full days
+        differenceInDays += 1;
+      }
     }
 
+    // Format the hour based on the specified time format settings
     switch (timeFormatSetting) {
       case TimeFormatSetting.h24:
         final formatter = DateFormat('HH:mm');
@@ -77,12 +86,20 @@ class TimeFormatter {
     }
 
     String suffix;
+
+    // Determine the appropriate suffix based on the difference in days
     if (differenceInDays == 0) {
+      // If the event is today, optionally append "today"
       suffix = includeToday ? ' today' : '';
     } else if (differenceInDays == 1) {
+      // If the event is tomorrow
       suffix = ' tomorrow';
-    } else {
+    } else if (differenceInDays > 1) {
+      // If the event is in multiple days
       suffix = ' in $differenceInDays days';
+    } else {
+      // If the event is in the past, indicate "yesterday"
+      suffix = includeYesterday ? ' yesterday' : '';
     }
 
     return '$hourFormatted$suffix';
