@@ -256,6 +256,10 @@ class WebViewProvider extends ChangeNotifier {
           if (!settings.fullScreenOverBottom) SystemUiOverlay.bottom,
         ],
       );
+
+      // Prevent tabs from hiding in full screen
+      // This also triggers proper padding calculations for webview in stackview
+      hideTabs = false;
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
@@ -332,6 +336,10 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _hideTabs = false;
   bool get hideTabs => _hideTabs;
+  set hideTabs(bool value) {
+    _hideTabs = value;
+    notifyListeners();
+  }
 
   bool _gymMessageActive = false;
 
