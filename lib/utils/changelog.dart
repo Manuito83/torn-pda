@@ -51,17 +51,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.8 - Build 481 - 18/01/2025
+    // v3.6.8 - Build 482 - 19/01/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.6.7'
+        ..version = 'Torn PDA v3.6.8'
         ..date = '25 JAN 2025'
         ..features = [
+          "Enhanced browser floating action button with additional customization options for buttons and actions",
           "Fixed player profile widget",
           "Fixed estimated stats calculation",
           "Fixed player level calculation for recent attacks [Tenren]",
           "Fixed relative time calculation for events in the past",
-          "Fixed margin issues when webview is started in full screen mode with hidden tabs",
+          "Fixed margin issues when browser is started in full screen mode with hidden tabs",
         ],
     );
 

@@ -27,6 +27,7 @@ import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   final UserDetailsProvider userDetailsProvider;
@@ -2314,6 +2315,155 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
+                ),
+              ),
+            ],
+          ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Number of buttons")),
+                    Row(
+                      children: [
+                        Text(_webViewProvider.fabButtonCount.toString()),
+                        Slider(
+                          value: _webViewProvider.fabButtonCount.toDouble(),
+                          min: FabSettings.minButtons.toDouble(),
+                          max: FabSettings.maxButtons.toDouble(),
+                          divisions: FabSettings.maxButtons - FabSettings.minButtons,
+                          label: _webViewProvider.fabButtonCount.toString(),
+                          onChanged: (value) {
+                            setState(() {
+                              _webViewProvider.fabButtonCount = value.toInt();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "Adjust the number of action buttons displayed when the FAB is expanded.",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              ...List.generate(_webViewProvider.fabButtonCount, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Button ${index + 1} action'),
+                      DropdownButton<WebviewFabAction>(
+                        value: _webViewProvider.fabButtonActions[index],
+                        items: FabSettings.actions.map((action) {
+                          return DropdownMenuItem(
+                            value: action,
+                            child: SizedBox(
+                              width: 80,
+                              child: Text(
+                                action.fabActionName,
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (newAction) {
+                          if (newAction != null) {
+                            setState(() {
+                              _webViewProvider.updateFabButtonAction(index, newAction);
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Double tap action"),
+                    DropdownButton<WebviewFabAction>(
+                      value: _webViewProvider.fabDoubleTapAction,
+                      items: FabSettings.actions.map((action) {
+                        return DropdownMenuItem(
+                          value: action,
+                          child: SizedBox(
+                            width: 80,
+                            child: Text(
+                              action.fabActionName,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (action) {
+                        if (action != null) {
+                          _webViewProvider.updateFabDoubleTapAction(action);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Triple tap action"),
+                    DropdownButton<WebviewFabAction>(
+                      value: _webViewProvider.fabTripleTapAction,
+                      items: FabSettings.actions.map((action) {
+                        return DropdownMenuItem(
+                          value: action,
+                          child: SizedBox(
+                            width: 80,
+                            child: Text(
+                              action.fabActionName,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (action) {
+                        if (action != null) {
+                          _webViewProvider.updateFabTripleTapAction(action);
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],
