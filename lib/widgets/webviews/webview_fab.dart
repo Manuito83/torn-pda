@@ -8,86 +8,235 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/multitab_detector.dart';
 
+enum WebviewFabAction {
+  home,
+  back,
+  forward,
+  reload,
+  openTabsMenu,
+  closeCurrentTab,
+}
+
+extension FabActionExtension on WebviewFabAction {
+  String get fabActionName {
+    switch (this) {
+      case WebviewFabAction.home:
+        return 'Home';
+      case WebviewFabAction.back:
+        return 'Back';
+      case WebviewFabAction.forward:
+        return 'Forward';
+      case WebviewFabAction.reload:
+        return 'Reload';
+      case WebviewFabAction.openTabsMenu:
+        return 'Open tab nenu';
+      case WebviewFabAction.closeCurrentTab:
+        return 'Close current tab';
+    }
+  }
+
+  // Retrieve FabAction using its index
+  static WebviewFabAction fromIndex(int index) {
+    // Return default action for invalid indices
+    if (index >= 0 && index < WebviewFabAction.values.length) {
+      return WebviewFabAction.values[index];
+    }
+    return WebviewFabAction.home;
+  }
+}
+
+class FabSettings {
+  static const int minButtons = 2;
+  static const int maxButtons = 6;
+
+  static const List<WebviewFabAction> actions = [
+    WebviewFabAction.home,
+    WebviewFabAction.back,
+    WebviewFabAction.forward,
+    WebviewFabAction.reload,
+    WebviewFabAction.openTabsMenu,
+    WebviewFabAction.closeCurrentTab,
+  ];
+
+  static VoidCallback? getCallbackForAction(
+    BuildContext context,
+    WebViewProvider webviewProvider,
+    WebviewFabAction action,
+  ) {
+    switch (action) {
+      case WebviewFabAction.home:
+        return () => webviewProvider.loadCurrentTabUrl("https://www.torn.com");
+      case WebviewFabAction.back:
+        return webviewProvider.tryGoBack;
+      case WebviewFabAction.forward:
+        return webviewProvider.tryGoForward;
+      case WebviewFabAction.reload:
+        return webviewProvider.reloadFromOutside;
+      case WebviewFabAction.openTabsMenu:
+        return () => toggleVerticalMenu(webviewProvider);
+      case WebviewFabAction.closeCurrentTab:
+        return () {
+          if (!webviewProvider.tabList[webviewProvider.currentTab].isLocked) {
+            webviewProvider.removeTab(position: webviewProvider.currentTab);
+          } else {
+            if (context.read<SettingsProvider>().showTabLockWarnings) {
+              showLockedTabWarning(context, webviewProvider);
+            }
+          }
+        };
+    }
+  }
+
+  static void toggleVerticalMenu(WebViewProvider webviewProvider) {
+    webviewProvider.verticalMenuCurrentIndex = webviewProvider.currentTab;
+    if (webviewProvider.verticalMenuIsOpen) {
+      webviewProvider.verticalMenuClose();
+    } else {
+      webviewProvider.verticalMenuOpen();
+    }
+  }
+
+  static void showLockedTabWarning(BuildContext context, WebViewProvider webviewProvider) {
+    toastification.show(
+      alignment: Alignment.bottomCenter,
+      title: Icon(
+        Icons.lock,
+        color: webviewProvider.tabList[webviewProvider.currentTab].isLockFull ? Colors.red : Colors.orange,
+      ),
+      autoCloseDuration: const Duration(seconds: 2),
+      animationDuration: const Duration(milliseconds: 0),
+      showProgressBar: false,
+      style: ToastificationStyle.simple,
+      borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
+    );
+  }
+}
+
 class WebviewFab extends StatelessWidget {
   const WebviewFab({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final webviewProvider = context.read<WebViewProvider>();
+    final webviewProvider = context.watch<WebViewProvider>();
 
-    // Helper function to create styled ActionButton
-    Widget createStyledActionButton({
-      required VoidCallback? onPressed,
-      required IconData icon,
-      Color backgroundColor = Colors.blue,
-      Color iconColor = Colors.white,
-    }) {
-      return SizedBox(
-        height: 40,
-        width: 40,
-        child: Material(
-          shape: const CircleBorder(),
-          clipBehavior: Clip.antiAlias,
-          color: backgroundColor,
-          elevation: 4,
-          child: IconButton(
-            onPressed: onPressed,
-            icon: Icon(icon, color: iconColor),
-          ),
-        ),
-      );
+    double fanDistance = 75;
+    if (webviewProvider.fabButtonCount == 6) {
+      if (webviewProvider.fabDirection == "center") {
+        fanDistance = 100;
+      } else {
+        fanDistance = 120;
+      }
+    } else if (webviewProvider.fabButtonCount == 5 && webviewProvider.fabDirection != "center") {
+      fanDistance = 100;
     }
 
-    bool canGoBack = webviewProvider.tabList[webviewProvider.currentTab].historyBack.isNotEmpty;
-    bool canGoForward = webviewProvider.tabList[webviewProvider.currentTab].historyForward.isNotEmpty;
-    return ExpandableFab(
-      distance: 75,
-      children: [
-        createStyledActionButton(
-          onPressed: () {
-            webviewProvider.loadCurrentTabUrl("https://www.torn.com");
-            final state = context.findAncestorStateOfType<_ExpandableFabState>();
-            state?._toggle();
-          },
-          icon: Icons.home,
-          backgroundColor: Colors.blueGrey,
-          iconColor: Colors.white,
+    return Positioned(
+      right: 16,
+      bottom: 16,
+      child: ExpandableFab(
+        distance: fanDistance,
+        children: _buildActionButtons(context, webviewProvider),
+      ),
+    );
+  }
+
+  List<Widget> _buildActionButtons(BuildContext context, WebViewProvider webviewProvider) {
+    return List.generate(webviewProvider.fabButtonCount, (index) {
+      final action = webviewProvider.fabButtonActions[index];
+      return _createStyledActionButton(
+        onPressed: _getCallbackForAction(context, webviewProvider, action),
+        icon: _getIconForAction(action),
+        backgroundColor: Colors.blueGrey,
+        iconColor: Colors.white,
+      );
+    });
+  }
+
+  Widget _createStyledActionButton({
+    required VoidCallback? onPressed,
+    required IconData icon,
+    Color backgroundColor = Colors.blue,
+    Color iconColor = Colors.white,
+  }) {
+    return SizedBox(
+      height: 40,
+      width: 40,
+      child: Material(
+        shape: const CircleBorder(),
+        clipBehavior: Clip.antiAlias,
+        color: backgroundColor,
+        elevation: 4,
+        child: IconButton(
+          onPressed: onPressed,
+          icon: Icon(icon, color: iconColor),
         ),
-        createStyledActionButton(
-          onPressed: !canGoBack
-              ? () {}
-              : () {
-                  webviewProvider.tryGoBack();
-                  final state = context.findAncestorStateOfType<_ExpandableFabState>();
-                  state?._toggle();
-                },
-          icon: Icons.arrow_back,
-          backgroundColor: !canGoBack ? Colors.grey : Colors.blueGrey,
-          iconColor: Colors.white,
-        ),
-        createStyledActionButton(
-          onPressed: !canGoForward
-              ? () {}
-              : () {
-                  webviewProvider.tryGoForward();
-                  final state = context.findAncestorStateOfType<_ExpandableFabState>();
-                  state?._toggle();
-                },
-          icon: Icons.arrow_forward,
-          backgroundColor: !canGoForward ? Colors.grey : Colors.blueGrey,
-          iconColor: Colors.white,
-        ),
-        createStyledActionButton(
-          onPressed: () {
-            webviewProvider.reloadFromOutside();
-            final state = context.findAncestorStateOfType<_ExpandableFabState>();
-            state?._toggle();
-          },
-          icon: Icons.refresh,
-          backgroundColor: Colors.blueGrey,
-          iconColor: Colors.white,
-        ),
-      ],
+      ),
+    );
+  }
+
+  IconData _getIconForAction(WebviewFabAction action) {
+    switch (action) {
+      case WebviewFabAction.home:
+        return Icons.home;
+      case WebviewFabAction.back:
+        return Icons.arrow_back;
+      case WebviewFabAction.forward:
+        return Icons.arrow_forward;
+      case WebviewFabAction.reload:
+        return Icons.refresh;
+      case WebviewFabAction.openTabsMenu:
+        return Icons.tab;
+      case WebviewFabAction.closeCurrentTab:
+        return Icons.close;
+    }
+  }
+
+  VoidCallback? _getCallbackForAction(BuildContext context, WebViewProvider webviewProvider, WebviewFabAction action) {
+    switch (action) {
+      case WebviewFabAction.home:
+        return () => webviewProvider.loadCurrentTabUrl("https://www.torn.com");
+      case WebviewFabAction.back:
+        return webviewProvider.tryGoBack;
+      case WebviewFabAction.forward:
+        return webviewProvider.tryGoForward;
+      case WebviewFabAction.reload:
+        return webviewProvider.reloadFromOutside;
+      case WebviewFabAction.openTabsMenu:
+        return () => _toggleVerticalMenu(webviewProvider);
+      case WebviewFabAction.closeCurrentTab:
+        return () {
+          if (!webviewProvider.tabList[webviewProvider.currentTab].isLocked) {
+            webviewProvider.removeTab(position: webviewProvider.currentTab);
+          } else {
+            if (context.read<SettingsProvider>().showTabLockWarnings) {
+              _showLockedTabWarning(context, webviewProvider);
+            }
+          }
+        };
+    }
+  }
+
+  void _toggleVerticalMenu(WebViewProvider webviewProvider) {
+    webviewProvider.verticalMenuCurrentIndex = webviewProvider.currentTab;
+    if (webviewProvider.verticalMenuIsOpen) {
+      webviewProvider.verticalMenuClose();
+    } else {
+      webviewProvider.verticalMenuOpen();
+    }
+  }
+
+  void _showLockedTabWarning(BuildContext context, WebViewProvider webviewProvider) {
+    toastification.show(
+      alignment: Alignment.bottomCenter,
+      title: Icon(
+        Icons.lock,
+        color: webviewProvider.tabList[webviewProvider.currentTab].isLockFull ? Colors.red : Colors.orange,
+      ),
+      autoCloseDuration: const Duration(seconds: 2),
+      animationDuration: const Duration(milliseconds: 0),
+      showProgressBar: false,
+      style: ToastificationStyle.simple,
+      borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
     );
   }
 }
@@ -238,8 +387,18 @@ class _ExpandableFabState extends State<ExpandableFab>
     double fanAngle;
     if (_webviewProvider.fabDirection == "center") {
       fanAngle = 140;
+      if (_webviewProvider.fabButtonCount == 3) {
+        fanAngle = 90;
+      } else if (_webviewProvider.fabButtonCount == 2) {
+        fanAngle = 60;
+      }
     } else {
       fanAngle = 120;
+      if (_webviewProvider.fabButtonCount == 3) {
+        fanAngle = 90;
+      } else if (_webviewProvider.fabButtonCount == 2) {
+        fanAngle = 60;
+      }
     }
 
     return Positioned(
@@ -420,38 +579,22 @@ class _ExpandableFabState extends State<ExpandableFab>
   void _onFabTapped() {
     multiTapDetector.onTap((numTaps) {
       if (numTaps == 1) {
-        _toggle();
-        if (_webviewProvider.verticalMenuIsOpen) {
-          _webviewProvider.verticalMenuClose();
-        }
-      } else if (numTaps == 2) {
-        // Double tap
-        _webviewProvider.verticalMenuCurrentIndex = _webviewProvider.currentTab;
-        if (_webviewProvider.verticalMenuIsOpen) {
-          _webviewProvider.verticalMenuClose();
-        } else {
-          _webviewProvider.verticalMenuOpen();
-        }
-      } else if (numTaps == 3) {
-        // Triple tap
-        if (!_webviewProvider.tabList[_webviewProvider.currentTab].isLocked) {
-          _webviewProvider.removeTab(position: _webviewProvider.currentTab);
-        } else {
-          if (context.read<SettingsProvider>().showTabLockWarnings) {
-            toastification.show(
-              alignment: Alignment.bottomCenter,
-              title: Icon(
-                Icons.lock,
-                color: _webviewProvider.tabList[_webviewProvider.currentTab].isLockFull ? Colors.red : Colors.orange,
-              ),
-              autoCloseDuration: const Duration(seconds: 2),
-              animationDuration: const Duration(milliseconds: 0),
-              showProgressBar: false,
-              style: ToastificationStyle.simple,
-              borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-            );
+        setState(() {
+          _open = !_open;
+          if (_open) {
+            _controller.forward();
+          } else {
+            _controller.reverse();
           }
-        }
+        });
+      } else if (numTaps == 2) {
+        final callback =
+            FabSettings.getCallbackForAction(context, _webviewProvider, _webviewProvider.fabDoubleTapAction);
+        callback?.call();
+      } else if (numTaps == 3) {
+        final callback =
+            FabSettings.getCallbackForAction(context, _webviewProvider, _webviewProvider.fabTripleTapAction);
+        callback?.call();
       }
     });
   }

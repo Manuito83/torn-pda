@@ -20,7 +20,6 @@ class ApiCallsV2 {
       payload_v2: payload,
       apiCall: (client, apiKey) {
         return client.marketIdItemmarketGet(
-          key: apiKey,
           id: payload["id"],
           bonus: payload["bonus"],
           offset: payload["offset"],
@@ -36,9 +35,7 @@ class ApiCallsV2 {
       apiSelection_v2: ApiSelection_v2.marketItem,
       payload_v2: {},
       apiCall: (client, apiKey) {
-        return client.userItemmarketGet(
-          key: apiKey,
-        );
+        return client.userItemmarketGet();
       },
     );
     return apiResponse;
@@ -51,7 +48,6 @@ class ApiCallsV2 {
       payload_v2: {},
       apiCall: (client, apiKey) {
         return client.userGet(
-          key: apiKey,
           selections: "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket",
         );
       },
@@ -73,7 +69,6 @@ class ApiCallsV2 {
       payload_v2: payload,
       apiCall: (client, apiKey) {
         return client.userGet(
-          key: apiKey,
           id: payload["id"],
           selections: "profile,personalstats,bazaar",
           cat: "all",

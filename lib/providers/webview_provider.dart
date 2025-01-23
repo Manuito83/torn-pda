@@ -29,6 +29,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 // Package imports:
 
@@ -256,6 +257,10 @@ class WebViewProvider extends ChangeNotifier {
           if (!settings.fullScreenOverBottom) SystemUiOverlay.bottom,
         ],
       );
+
+      // Prevent tabs from hiding in full screen
+      // This also triggers proper padding calculations for webview in stackview
+      hideTabs = false;
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
@@ -332,6 +337,10 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _hideTabs = false;
   bool get hideTabs => _hideTabs;
+  set hideTabs(bool value) {
+    _hideTabs = value;
+    notifyListeners();
+  }
 
   bool _gymMessageActive = false;
 
@@ -410,6 +419,42 @@ class WebViewProvider extends ChangeNotifier {
   set fabEnabled(value) {
     _fabEnabled = value;
     Prefs().setWebviewFabEnabled(_fabEnabled);
+    notifyListeners();
+  }
+
+  int _fabButtonCount = 4;
+  int get fabButtonCount => _fabButtonCount;
+  set fabButtonCount(int value) {
+    if (value >= FabSettings.minButtons && value <= FabSettings.maxButtons) {
+      _fabButtonCount = value;
+      Prefs().setFabButtonCount(value);
+      notifyListeners();
+    }
+  }
+
+  List<WebviewFabAction> _fabButtonActions = [];
+  List<WebviewFabAction> get fabButtonActions => _fabButtonActions;
+  void updateFabButtonAction(int index, WebviewFabAction action) {
+    if (index >= 0 && index < _fabButtonActions.length) {
+      _fabButtonActions[index] = action;
+      Prefs().setFabButtonActions(_fabButtonActions);
+      notifyListeners();
+    }
+  }
+
+  WebviewFabAction _fabDoubleTapAction = WebviewFabAction.openTabsMenu;
+  WebviewFabAction get fabDoubleTapAction => _fabDoubleTapAction;
+  void updateFabDoubleTapAction(WebviewFabAction action) {
+    _fabDoubleTapAction = action;
+    Prefs().setFabDoubleTapAction(action);
+    notifyListeners();
+  }
+
+  WebviewFabAction _fabTripleTapAction = WebviewFabAction.closeCurrentTab;
+  WebviewFabAction get fabTripleTapAction => _fabTripleTapAction;
+  void updateFabTripleTapAction(WebviewFabAction action) {
+    _fabTripleTapAction = action;
+    Prefs().setFabTripleTapAction(action);
     notifyListeners();
   }
 
@@ -1769,6 +1814,10 @@ class WebViewProvider extends ChangeNotifier {
     _fabDirection = await Prefs().getWebviewFabDirection();
     _fabSavedPositionXY = await Prefs().getWebviewFabPositionXY();
     _fabOnlyFullScreen = await Prefs().getWebviewFabOnlyFullScreen();
+    _fabButtonCount = await Prefs().getFabButtonCount();
+    _fabButtonActions = await Prefs().getFabButtonActions();
+    _fabDoubleTapAction = await Prefs().getFabDoubleTapAction();
+    _fabTripleTapAction = await Prefs().getFabTripleTapAction();
 
     String splitType = await Prefs().getSplitScreenWebview();
     switch (splitType) {

@@ -5,6 +5,7 @@ import 'dart:convert';
 // Package imports:
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class Prefs {
   ///
@@ -96,12 +97,17 @@ class Prefs {
   final String _kWebviewCacheEnabled = "pda_webviewCacheEnabled";
   final String _kAndroidBrowserScale = "pda_androidBrowserScale";
   final String _kAndroidBrowserTextScale = "pda_androidBrowserTextScale";
+
   // Webview FAB
   final String _kWebviewFabEnabled = "pda_webviewFabEnabled";
   final String _kWebviewFabShownNow = "pda_webviewFabShownNow";
   final String _kWebviewFabDirection = "pda_webviewFabDirection";
   final String _kWebviewFabPositionXY = "pda_webviewFabPositionXY";
   final String _kWebviewFabOnlyFullScreen = "pda_webviewFabOnlyFullScreen";
+  final String _kFabButtonCount = "pda_fabButtonCount";
+  final String _kFabButtonActions = "pda_fabButtonActions";
+  final String _kFabDoubleTapAction = "pda_fabDoubleTapAction";
+  final String _kFabTripleTapAction = "pda_fabTripleTapAction";
 
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
@@ -1212,6 +1218,84 @@ class Prefs {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kWebviewFabOnlyFullScreen, value);
   }
+
+  // --
+
+  Future<bool> setFabButtonCount(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kFabButtonCount, value);
+  }
+
+  Future<int> getFabButtonCount() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kFabButtonCount) ?? 4; // Default to 4 buttons
+  }
+
+// --
+
+  Future<bool> setFabButtonActions(List<WebviewFabAction> actions) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final actionIndices = actions.map((action) => action.index).toList();
+    return prefs.setStringList(
+      _kFabButtonActions,
+      actionIndices.map((e) => e.toString()).toList(),
+    );
+  }
+
+  Future<List<WebviewFabAction>> getFabButtonActions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final actionStrings = prefs.getStringList(_kFabButtonActions);
+
+    if (actionStrings != null) {
+      return actionStrings
+          .map((actionIndex) => int.tryParse(actionIndex))
+          .whereType<int>() // Eliminate null values
+          .map((index) => FabActionExtension.fromIndex(index))
+          .toList();
+    }
+
+    // Default actions
+    return [
+      WebviewFabAction.home,
+      WebviewFabAction.back,
+      WebviewFabAction.forward,
+      WebviewFabAction.reload,
+      WebviewFabAction.openTabsMenu,
+      WebviewFabAction.closeCurrentTab,
+    ];
+  }
+
+// --
+
+  Future<bool> setFabDoubleTapAction(WebviewFabAction action) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kFabDoubleTapAction, action.index);
+  }
+
+  Future<WebviewFabAction> getFabDoubleTapAction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final actionIndex = prefs.getInt(_kFabDoubleTapAction);
+    return actionIndex != null
+        ? FabActionExtension.fromIndex(actionIndex)
+        : WebviewFabAction.openTabsMenu; // Default to Open Tabs Menu
+  }
+
+// --
+
+  Future<bool> setFabTripleTapAction(WebviewFabAction action) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kFabTripleTapAction, action.index);
+  }
+
+  Future<WebviewFabAction> getFabTripleTapAction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final actionIndex = prefs.getInt(_kFabTripleTapAction);
+    return actionIndex != null
+        ? FabActionExtension.fromIndex(actionIndex)
+        : WebviewFabAction.closeCurrentTab; // Default to Close Current Tab
+  }
+
+  // FAB ENDS ###
 
   // Settings - Browser Gestures
 

@@ -237,9 +237,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   TornEducationModel? _tornEducationModel;
   UserItemMarketResponse? _marketItemsV2;
 
-  var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
+  DateTime? _rentedPropertiesLastChecked;
 
   // We will first try to get the full crimes if we have AA access, in which case
   // we consider it as Complex. Otherwise, with events, it will be Simple.
@@ -360,7 +360,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
     if (secondsSinceLastMiscFetch > 60 || forceMisc) {
       _miscTickLastTime = DateTime.now();
-      _getMiscCardInfo();
+      _getMiscCardInfo(forcedUpdate: forceMisc);
       _getStatsChart();
       _getRankedWars();
       _getCompanyAddiction();
@@ -4796,7 +4796,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: timestamp,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone)
-        .formatHourWithDaysElapsed();
+        .formatHourWithDaysElapsed(includeYesterday: true);
 
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
@@ -5025,7 +5025,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
   }
 
-  Future _getMiscCardInfo() async {
+  Future _getMiscCardInfo({bool forcedUpdate = false}) async {
     if (_user == null) return;
 
     try {
@@ -5044,26 +5044,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       // Get Education
-      _tornEducationModel ??= await ApiCallsV1.getEducation();
+      var education = await ApiCallsV1.getEducation();
+      if (education != null) {
+        _tornEducationModel = education;
+      }
 
       // Get Market Items V2
-      _marketItemsV2 ??= await _getUserMarketItems();
+      var marketItems = await _getUserMarketItems();
+      if (marketItems != null) {
+        _marketItemsV2 = marketItems;
+      }
 
       // Get this async
       if (_settingsProvider!.oCrimesEnabled) {
         _getFactionCrimes();
       }
 
-      // Assess properties async, but wait some more time
-      if (miscApiResponse.properties != null) {
-        if (_rentedPropertiesTick == 0) {
-          _checkProperties(miscApiResponse);
-        } else if (_rentedPropertiesTick > 30) {
-          _checkProperties(miscApiResponse);
-          _rentedPropertiesTick = 0;
-        }
-        _rentedPropertiesTick++;
-      }
+      _checkProperties(miscApiResponse, forcedUpdate);
 
       setState(() {
         _miscModel = miscApiResponse;
@@ -7418,8 +7415,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return sectionSort;
   }
 
-  Future<void> _checkProperties(OwnProfileMisc miscApiResponse) async {
-    // Get the properties we are renting into a map
+  // Check whethere we actually need to call the API (we call every 10 minutes for properties to easy API usage)
+  Future<void> _checkProperties(OwnProfileMisc miscApiResponse, bool forcedUpdate) async {
+    final now = DateTime.now();
+
+    final propertyInfoIsAbsolete =
+        _rentedPropertiesLastChecked == null || now.difference(_rentedPropertiesLastChecked!).inMinutes >= 10;
+
+    if (forcedUpdate || propertyInfoIsAbsolete) {
+      _rentedPropertiesLastChecked = now;
+      await _fetchAndUpdateProperties(miscApiResponse);
+    }
+  }
+
+  Future<void> _fetchAndUpdateProperties(OwnProfileMisc miscApiResponse) async {
     final thisRented = <String, Map<String, String>>{};
     final propertyModel = miscApiResponse.properties!;
 
@@ -7439,7 +7448,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (rentDetails is PropertyModel) {
         final timeLeft = rentDetails.property!.rented!.daysLeft!;
         final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
-        // Was 7, now shows always
         if (timeLeft > 0) {
           thisRented.addAll({
             element: {
@@ -7467,15 +7475,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 const Icon(Icons.house_outlined),
                 const SizedBox(width: 10),
                 Flexible(
-                  child: Text(
-                    value["text"]!,
-                    style: TextStyle(
-                      color: numberDays <= 5
-                          ? numberDays <= 2
-                              ? Colors.red[500]
-                              : Colors.orange[800]
-                          : _themeProvider!.mainText,
-                    ),
+                  child: Consumer<ThemeProvider>(
+                    builder: (context, tP, child) {
+                      return Text(
+                        value["text"]!,
+                        style: TextStyle(
+                          color: numberDays <= 5
+                              ? numberDays <= 2
+                                  ? Colors.red[500]
+                                  : Colors.orange[800]
+                              : tP.mainText,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -7496,7 +7508,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               );
             },
             child: Padding(
-              padding: EdgeInsets.only(left: 5),
+              padding: const EdgeInsets.only(left: 5),
               child: Icon(MdiIcons.openInApp, size: 18),
             ),
           ),

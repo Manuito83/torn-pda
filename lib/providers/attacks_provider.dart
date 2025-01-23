@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:collection';
-import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -129,10 +128,10 @@ class AttacksProvider extends ChangeNotifier {
       if (thisAttack.result == Result.MUGGED) {
         modifiers *= 0.75;
       }
+
+      // https://wiki.torn.com/wiki/Chain#Base_respect
       final double baseRespect = respectGain / modifiers;
-      // Base respect = (Ln(level) + 1.0)/4.0
-      // From the second formula: Level = e^(Base Respect / 4 - 1)
-      final double levelD = exp(4 * baseRespect - 1);
+      final double levelD = 198 * (baseRespect - (197 / 198));
       thisAttack.targetLevel = levelD.round();
     } else {
       thisAttack.respectGain = 0;

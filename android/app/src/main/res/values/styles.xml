@@ -16,5 +16,9 @@
 
     <style name="NormalTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/main_background</item>
+        <!--
+        When targeting Android 15
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+        -->
     </style>
 </resources>
