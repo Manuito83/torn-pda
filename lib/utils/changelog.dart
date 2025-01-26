@@ -51,6 +51,22 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.7.0 - Build 484 - 25/01/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.7.0'
+        ..date = '14 FEB 2025'
+        ..features = [
+          ComplexFeature(
+            "Alerts: added notification for subscribed forum threads",
+            explanation: "Disabled by default: you can enable it in Alerts"
+                "\n\nNOTE: in order to reduce API load, checks will be performed "
+                "every 15 minutes, so the notification may not be immediate "
+                "after a new post is made",
+          ),
+        ],
+    );
+
     // v3.6.8 - Build 483 - 22/01/2025
     itemList.add(
       ChangeLogItem()

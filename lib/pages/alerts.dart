@@ -1063,6 +1063,29 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           );
                         },
                       ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel!.forumsSubscription ?? false,
+                          title: const Text("Forums subscribed threads"),
+                          subtitle: const Text(
+                            "Get notifications for new posts in threads you are subscribed to. "
+                            "NOTE: checks will be performed every 15 minutes to avoid excessive API load",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.forumsSubscription = value;
+                            });
+                            FirestoreHelper().subscribeToForumsSubcriptionsNotification(value);
+                          },
+                        ),
+                      ),
                       const SizedBox(height: 60),
                     ],
                   ),

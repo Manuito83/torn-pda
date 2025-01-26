@@ -12,6 +12,7 @@ import { factionAssistGroup } from "./faction_assist";
 import { retalsGroup } from "./retals";
 import { prefsBackupGroup } from "./prefs_backup";
 import { troubleshootingGroup } from "./troubleshooting_notification";
+import { forumsGroup } from "./forums";
 //import { testGroup } from "./tests";
 //import { helperGroup } from "./helpers";
 
@@ -35,5 +36,6 @@ export const factionAssist = factionAssistGroup;
 export const retals = retalsGroup;
 export const prefsBackup = prefsBackupGroup;
 export const troubleshooting = troubleshootingGroup;
+export const forums = forumsGroup;
 //export const tests = testGroup;
 //export const helper = helperGroup;

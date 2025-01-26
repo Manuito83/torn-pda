@@ -762,6 +762,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool loot = false;
     bool retals = false;
     bool sendbird = false;
+    bool forums = false;
 
     String? channel = '';
     String? messageId = '';
@@ -821,6 +822,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       retals = true;
     } else if (channel.contains("Torn chat")) {
       sendbird = true;
+    } else if (channel.contains("Alerts forums")) {
+      forums = true;
     }
 
     if (travel) {
@@ -1068,6 +1071,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     } else if (sendbird) {
       showBrowserForeground = true;
+    } else if (forums) {
+      if (bulkDetails != null && bulkDetails.isNotEmpty) {
+        launchBrowserWithUrl = true;
+        browserUrl = bulkDetails;
+      }
     }
 
     if (launchBrowserWithUrl) {
@@ -1396,6 +1404,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       } else if (payload.contains('sendbird')) {
         showBrowserForeground = true;
+      } else if (payload == 'forums###') {
+        launchBrowserWithUrl = true;
+        browserUrl = payload.split('###')[1];
       }
 
       if (launchBrowserWithUrl) {

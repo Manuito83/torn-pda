@@ -29,7 +29,7 @@ extension FabActionExtension on WebviewFabAction {
       case WebviewFabAction.reload:
         return 'Reload';
       case WebviewFabAction.openTabsMenu:
-        return 'Open tab nenu';
+        return 'Open tab menu';
       case WebviewFabAction.closeCurrentTab:
         return 'Close current tab';
     }

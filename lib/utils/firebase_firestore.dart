@@ -379,6 +379,13 @@ class FirestoreHelper {
     });
   }
 
+  Future<void> subscribeToForumsSubcriptionsNotification(bool? subscribe) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "forumsSubscriptionsNotification": subscribe,
+      "forumsSubscriptionsNotified": [],
+    });
+  }
+
   Future<String> _getMessagingToken() async {
     // On iOS, ensure we have an APNS token before getting the FCM one
     if (Platform.isIOS) {
