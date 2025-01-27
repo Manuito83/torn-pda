@@ -1341,6 +1341,12 @@ class SettingsProvider extends ChangeNotifier {
       // Define the date ranges
       final awarenessWeekStart = DateTime(now.year, 01, 15);
       final awarenessWeekEnd = DateTime(now.year, 01, 21, 23, 59, 59);
+      final stValentineStart = DateTime(now.year, 02, 13, 10, 30);
+      final stValentineEnd = DateTime(now.year, 02, 15, 10, 30);
+      final stPatrickStart = DateTime(now.year, 03, 16, 10, 30);
+      final stPatrickEnd = DateTime(now.year, 03, 18, 10, 30);
+      final easterStart = DateTime(now.year, 04, 17, 10, 30);
+      final easterEnd = DateTime(now.year, 04, 24, 10, 30);
       final halloweenStart = DateTime(now.year, 10, 25);
       final halloweenEnd = DateTime(now.year, 11, 1, 23, 59, 59);
       final christmasStart = DateTime(now.year, 12, 19);
@@ -1349,6 +1355,12 @@ class SettingsProvider extends ChangeNotifier {
       // Determine the icon based on date ranges
       if (now.isAfter(awarenessWeekStart) && now.isBefore(awarenessWeekEnd)) {
         iconName = "AppIconAwareness";
+      } else if (now.isAfter(stValentineStart) && now.isBefore(stValentineEnd)) {
+        iconName = "AppIconStValentine";
+      } else if (now.isAfter(stPatrickStart) && now.isBefore(stPatrickEnd)) {
+        iconName = "AppIconStPatrick";
+      } else if (now.isAfter(easterStart) && now.isBefore(easterEnd)) {
+        iconName = "AppIconEaster";
       } else if (now.isAfter(halloweenStart) && now.isBefore(halloweenEnd)) {
         iconName = "AppIconHalloween";
       } else if (now.isAfter(christmasStart) && now.isBefore(christmasEnd)) {
@@ -1357,15 +1369,28 @@ class SettingsProvider extends ChangeNotifier {
         iconName = null; // Default icon
       }
     } else {
+      // Manual override for specific icons
       switch (_dynamicAppIconsManual) {
         case "awareness":
           iconName = "AppIconAwareness";
+          break;
+        case "stvalentine":
+          iconName = "AppIconStValentine";
+          break;
+        case "stpatrick":
+          iconName = "AppIconStPatrick";
+          break;
+        case "easter":
+          iconName = "AppIconEaster";
+          break;
         case "halloween":
           iconName = "AppIconHalloween";
+          break;
         case "christmas":
           iconName = "AppIconChristmas";
+          break;
         default:
-          iconName = null;
+          iconName = null; // Default icon
       }
     }
 

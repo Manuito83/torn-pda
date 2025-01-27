@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.0 - Build 484 - 25/01/2025
+    // v3.7.0 - Build 485 - 27/01/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.0'
@@ -64,6 +64,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "every 15 minutes, so the notification may not be immediate "
                 "after a new post is made",
           ),
+          if (Platform.isIOS) "Added additional app icons",
         ],
     );
 

@@ -2948,6 +2948,45 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "stvalentine",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Valentine's Day",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "stpatrick",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "St. Patrick's Day",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "easter",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Easter Egg Hunt",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         if (value == null) return;
