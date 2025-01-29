@@ -2978,7 +2978,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             "Opens the browser in full screen mode when a target is short-tapped in the Chaining section. "
-            "Defaul to OFF. Note that you can still access the chaining sequence controls by "
+            "Defaults to OFF. Note that you can still access the chaining sequence controls by "
             "double tapping the main tab",
             style: TextStyle(
               color: Colors.grey[600],
@@ -3018,7 +3018,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             "Opens the browser in full screen mode when a target is long-pressed in the Chaining section. "
-            "Defaul to OFF. Note that you can still access the chaining sequence controls by "
+            "Defaults to OFF. Note that you can still access the chaining sequence controls by "
             "double tapping the main tab",
             style: TextStyle(
               color: Colors.grey[600],
