@@ -134,13 +134,9 @@ class WebviewFab extends StatelessWidget {
       }
     }
 
-    return Positioned(
-      right: 16,
-      bottom: 16,
-      child: ExpandableFab(
-        distance: fanDistance,
-        children: _buildActionButtons(context, webviewProvider),
-      ),
+    return ExpandableFab(
+      distance: fanDistance,
+      children: _buildActionButtons(context, webviewProvider),
     );
   }
 

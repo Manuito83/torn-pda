@@ -4172,7 +4172,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 color: Colors.white,
               ),
               contentColor: Colors.blue,
-              duration: const Duration(seconds: 1),
+              duration: const Duration(seconds: 2),
               contentPadding: const EdgeInsets.all(10),
             );
           },
@@ -4210,7 +4210,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 color: Colors.white,
               ),
               contentColor: Colors.grey[700]!,
-              duration: const Duration(seconds: 1),
+              duration: const Duration(seconds: 2),
               contentPadding: const EdgeInsets.all(10),
             );
           },

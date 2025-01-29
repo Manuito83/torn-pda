@@ -2948,6 +2948,45 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "stvalentine",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Valentine's Day",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "stpatrick",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "St. Patrick's Day",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "easter",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Easter Egg Hunt",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         if (value == null) return;
@@ -3678,6 +3717,9 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _getApiDetails({required bool userTriggered}) async {
+    int errorPlayerId = 0;
+    dynamic firebaseErrorUser;
+
     try {
       setState(() {
         _apiIsLoading = true;
@@ -3704,20 +3746,22 @@ class SettingsPageState extends State<SettingsPage> {
           uc.playerName = myProfile.name!;
         }
 
+        errorPlayerId = uc.playerId;
+
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
           if (!Platform.isWindows) {
             // See note in [firebase_auth.dart]
-            final user = await firebaseAuth.getUID();
+            final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
             // Only sign in if there is currently no user registered (to avoid duplicates)
-            if (user == null || (user is User && user.uid.isEmpty)) {
-              final User mFirebaseUser = await (firebaseAuth.signInAnon());
-              await FirestoreHelper().setUID(mFirebaseUser.uid);
+            if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
+              final User newFirebaseUser = await (firebaseAuth.signInAnon());
+              await FirestoreHelper().setUID(newFirebaseUser.uid);
               // Returns UID to Drawer so that it can be passed to settings
-              widget.changeUID(mFirebaseUser.uid);
-              log("Settings: signed in with UID ${mFirebaseUser.uid}");
+              widget.changeUID(newFirebaseUser.uid);
+              log("Settings: signed in with UID ${newFirebaseUser.uid}");
             } else {
-              log("Settings: existing user UID $user");
+              log("Settings: existing user UID ${firebaseUser.uid}");
             }
 
             await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
@@ -3765,7 +3809,11 @@ class SettingsPageState extends State<SettingsPage> {
       if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
             "Error: $e. Stack: $stack");
-        FirebaseCrashlytics.instance.recordError(e, null);
+        FirebaseCrashlytics.instance.recordError(
+          e,
+          stack,
+          information: ['API Key: $_myCurrentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser.uid}'],
+        );
       }
     }
   }

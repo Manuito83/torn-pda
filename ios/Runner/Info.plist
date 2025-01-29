@@ -131,6 +131,36 @@
                 <key>UIPrerenderedIcon</key>
                 <false/>
             </dict>
+			<!-- Alternate icon for St Valentine -->
+            <key>AppIconStValentine</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIconStValentine</string>
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+			<!-- Alternate icon for St Valentine -->
+            <key>AppIconStPatrick</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIconStPatrick</string>
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
+			<!-- Alternate icon for St Valentine -->
+            <key>AppIconEaster</key>
+            <dict>
+                <key>CFBundleIconFiles</key>
+                <array>
+                    <string>AppIconEaster</string>
+                </array>
+                <key>UIPrerenderedIcon</key>
+                <false/>
+            </dict>
         </dict>
     </dict>
 </dict>
