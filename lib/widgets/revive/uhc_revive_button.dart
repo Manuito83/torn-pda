@@ -50,9 +50,10 @@ class UhcReviveButtonState extends State<UhcReviveButton> {
   }
 }
 
-openUhcReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExtended? user) {
+openUhcReviveDialog(BuildContext c, ThemeProvider themeProvider, OwnProfileExtended? user) {
+  final revivePrice = c.read<SettingsProvider>().reviveUhcPrice;
   return showDialog<void>(
-    context: _,
+    context: c,
     barrierDismissible: false, // user must tap button!
     builder: (BuildContext context) {
       return AlertDialog(
@@ -157,7 +158,7 @@ openUhcReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExten
                               ),
                               TextSpan(
                                 text: "\n\nEach revive must be paid directly to the reviver and costs "
-                                    "${context.read<SettingsProvider>().reviveUhcPrice}. "
+                                    "$revivePrice. "
                                     "There are special prices for faction contracts "
                                     "(more information in the forums).",
                               ),
@@ -230,7 +231,7 @@ openUhcReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExten
                                 if (value == "200") {
                                   resultString = "Request received by UHC!\n\n"
                                       "Please pay your reviver "
-                                      "1 Xanax or \$1M";
+                                      "${revivePrice}!";
                                   resultColor = Colors.green[800];
                                 } else if (value == "error") {
                                   resultString = "There was an error contacting UHC, try again later"
