@@ -9,8 +9,8 @@ import 'package:torn_pda/providers/webview_provider.dart';
 
 class StatusColorCounter extends StatefulWidget {
   const StatusColorCounter({
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<StatusColorCounter> createState() => StatusColorCounterState();

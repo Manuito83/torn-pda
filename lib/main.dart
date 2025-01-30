@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
@@ -18,7 +19,9 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -30,15 +33,17 @@ import 'package:toastification/toastification.dart';
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/firebase_options.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -47,6 +52,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
@@ -55,23 +61,23 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:windows_notification/windows_notification.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.6.0';
-const String androidCompilation = '453';
-const String iosCompilation = '453';
+const String appVersion = '3.7.0';
+const String androidCompilation = '487';
+const String iosCompilation = '487';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
 const bool pointFunctionsEmulatorToLocal = false;
 
 // TODO (App release)
-const bool enableWakelockForDebug = false;
+const bool enableWakelockForDebug = true;
 
 bool logAndShowToUser = false;
 
@@ -79,11 +85,6 @@ final FirebaseAnalytics? analytics = Platform.isWindows ? null : FirebaseAnalyti
 final FirebaseRemoteConfig remoteConfig = FirebaseRemoteConfig.instance;
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-
-// TODO Run [flutter run --machine] to set up
-final winNotifyPlugin = WindowsNotification(
-  applicationId: kDebugMode ? r"{fdf9adab-cc5d-4660-aec3-f9b7e4b3e355}\WindowsPowerShell\v1.0\powershell.exe" : null,
-);
 
 final StreamController<ReceivedNotification> didReceiveLocalNotificationStream =
     StreamController<ReceivedNotification>.broadcast();
@@ -110,9 +111,10 @@ class ReceivedNotification {
   final String payload;
 }
 
+@pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
-    if (message.data["channelId"].contains("Alerts stocks") == true) {
+    if (message.data["channelId"]?.contains("Alerts stocks") == true) {
       // Reload isolate (as we are reading from background)
       await Prefs().reload();
       final oldData = await Prefs().getDataStockMarket();
@@ -123,6 +125,19 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
         newData = "$oldData${message.notification!.body}";
       }
       Prefs().setDataStockMarket(newData);
+    }
+
+    if (message.data["sendbird"] != null) {
+      Map<String, dynamic> sendbirdData = jsonDecode(message.data["sendbird"]);
+      String channelUrl = sendbirdData['channel']['channel_url'];
+
+      String sender = "";
+      String msg = "";
+      List<String> parts = message.data["message"].split(":");
+      sender = parts.isNotEmpty ? parts[0].trim() : "";
+      msg = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
+
+      await showSendbirdNotification(sender, msg, channelUrl);
     }
   } catch (e) {
     if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");
@@ -153,34 +168,82 @@ Future<void> main() async {
   // [isInDebugMode] sends notifications each time a task is performed
   if (Platform.isAndroid) Workmanager().initialize(pdaWidget_backgroundUpdate);
 
+  Get.put(UserController(), permanent: true);
+  Get.put(AudioController(), permanent: true);
+  Get.put(SpiesController(), permanent: true);
+  Get.put(ApiCallerController(), permanent: true);
+  Get.put(WarController(), permanent: true);
+  Get.put(PeriodicExecutionController(), permanent: true);
+
+  final sb = Get.put(SendbirdController(), permanent: true);
+  await sb.init();
+
+  tz.initializeTimeZones();
+
   // Flutter Local Notifications
-  if (!Platform.isWindows) {
-    if (Platform.isAndroid) {
-      final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
-      await androidImplementation.requestNotificationsPermission();
-      exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
-    }
+  if (Platform.isAndroid) {
+    final AndroidFlutterLocalNotificationsPlugin androidImplementation = flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()!;
+    await androidImplementation.requestNotificationsPermission();
+    exactAlarmsPermissionAndroid = await androidImplementation.canScheduleExactNotifications() ?? false;
+  }
+  const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+  const initializationSettingsIOS = DarwinInitializationSettings();
+  const initizationSettingsWindows = WindowsInitializationSettings(
+    appName: 'Torn PDA',
+    appUserModelId: 'com.manuito.tornpda',
+    // Run [flutter run --machine] to set up ??
+    guid: 'fdf9adab-cc5d-4660-aec3-f9b7e4b3e355',
+  );
 
-    tz.initializeTimeZones();
-    const initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
-    const initializationSettingsIOS = DarwinInitializationSettings();
+  const initializationSettings = InitializationSettings(
+    android: initializationSettingsAndroid,
+    iOS: initializationSettingsIOS,
+    windows: initizationSettingsWindows,
+  );
 
-    const initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
-    );
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
+      String? payload = notificationResponse.payload;
 
-    await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse notificationResponse) async {
-        final String? payload = notificationResponse.payload;
-        if (notificationResponse.payload != null) {
-          log('Notification payload: $payload');
-          selectNotificationStream.add(payload);
+      // Handle reply action on Sendbird notifications (while on background and foreground)
+      if (notificationResponse.id.toString().startsWith('666')) {
+        if (notificationResponse.actionId == "sb_reply_action") {
+          // Reply message
+          final message = notificationResponse.input ?? "";
+
+          // Get channel URL from notification payload
+          final payload = notificationResponse.payload;
+          Map<String, dynamic> decodedPayload = jsonDecode(payload ?? "{}");
+          final String channelUrl = decodedPayload["channelUrl"] ?? "";
+
+          // Send reply message
+          if (message.isNotEmpty && channelUrl.isNotEmpty) {
+            SendbirdController sb = Get.find<SendbirdController>();
+            sb.sendMessage(channelUrl: channelUrl, message: message);
+          }
         }
-      },
-    );
+
+        // Reassign payload so that the browser opens in Drawwer
+        payload = "sendbird";
+      }
+
+      if (notificationResponse.payload != null) {
+        log('Notification payload: $payload');
+        selectNotificationStream.add(payload);
+      }
+    },
+  );
+
+  // Check if app was launched by tapping a notification (from killed state)
+  final notificationAppLaunchDetails = await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
+  if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+    // Handle tap
+    await Prefs().setBringBrowserForwardOnStart(true);
+    Future.delayed(Duration(seconds: 3)).then((value) {
+      handleNotificationTap(notificationAppLaunchDetails!.notificationResponse);
+    });
   }
 
   // END # Flutter Local Notifications
@@ -203,10 +266,12 @@ Future<void> main() async {
       // ! Consider disabling for public release - Enable in beta to get plugins' method channel errors in Crashlytics
       // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
       // https://docs.flutter.dev/testing/errors#errors-not-caught-by-flutter
-      PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return false;
-      };
+      if (kDebugMode) {
+        PlatformDispatcher.instance.onError = (error, stack) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          return false;
+        };
+      }
     }
 
     // Pass all uncaught errors from the framework to Crashlytics
@@ -217,11 +282,6 @@ Future<void> main() async {
   if (Platform.isIOS) {
     DartPingIOS.register();
   }
-
-  Get.put(AudioController(), permanent: true);
-  Get.put(SpiesController(), permanent: true);
-  Get.put(ApiCallerController(), permanent: true);
-  Get.put(WarController(), permanent: true);
 
   HttpOverrides.global = MyHttpOverrides();
 
@@ -316,6 +376,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         );
       },
     );
+
+    setAndroidDisplayMode();
   }
 
   @override
@@ -491,6 +553,13 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       if (!splitNowActive && splitUserEnabled && screenIsWide) {
         _webViewProvider.webViewSplitActive = true;
         _webViewProvider.browserForegroundWithSplitTransition();
+
+        // Chat notifications should be omitted when switching into splitview
+        //   (note: the case where we are no longer in splitiew is handled below,
+        //    by notifying the webviewProvider with true/false which in turns
+        //    will update the Sendbird Controller with the right value)
+        SendbirdController sb = Get.find<SendbirdController>();
+        sb.webviewInForeground = true;
       } else if (splitNowActive && (!splitUserEnabled || !screenIsWide)) {
         _webViewProvider.webViewSplitActive = false;
         if (_webViewProvider.splitScreenRevertsToApp) {
@@ -549,6 +618,21 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       nativeAuth.authStatus = NativeAuthStatus.loggedIn;
     }
   }
+
+  Future<void> setAndroidDisplayMode() async {
+    if (!Platform.isAndroid) return;
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
+      try {
+        await FlutterDisplayMode.setHighRefreshRate();
+        DisplayMode refresh = await FlutterDisplayMode.active;
+        log("Refresh rate at: $refresh");
+        setState(() {});
+      } on PlatformException catch (e, trace) {
+        log("Refresh rate error: $e");
+        FirebaseCrashlytics.instance.recordError("Refresh rate error: $e", trace);
+      }
+    });
+  }
 }
 
 class AppBorder extends StatefulWidget {
@@ -605,14 +689,21 @@ Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
   }
 }
 
-logToUser(String? message, {int duration = 3, Color? color, Color? borderColor}) {
+logToUser(
+  String? message, {
+  int duration = 3,
+  Color? textColor,
+  Color? backgroundcolor,
+  Color? borderColor,
+}) {
   log(message.toString());
   if (message == null) return;
-  color ??= Colors.red.shade600;
+  backgroundcolor ??= Colors.red.shade600;
   borderColor ??= Colors.red.shade800;
+  textColor ??= Colors.white;
   if (logAndShowToUser) {
     toastification.showCustom(
-      autoCloseDuration: const Duration(seconds: 3),
+      autoCloseDuration: Duration(seconds: duration),
       alignment: Alignment.bottomCenter,
       builder: (BuildContext context, ToastificationItem holder) {
         return Center(
@@ -621,15 +712,15 @@ logToUser(String? message, {int duration = 3, Color? color, Color? borderColor})
               child: Container(
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
-                  color: color,
+                  color: backgroundcolor,
                   border: Border.all(color: borderColor!, width: 2),
                 ),
-                padding: const EdgeInsets.all(16),
-                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
+                margin: const EdgeInsets.all(2),
                 child: Column(
                   children: [
-                    Text("Debug Message\n", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    Text(message.toString(), style: TextStyle(color: Colors.white)),
+                    Text("Debug Message\n", style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
+                    Text(message.toString(), maxLines: 10, style: TextStyle(color: textColor)),
                   ],
                 ),
               )),

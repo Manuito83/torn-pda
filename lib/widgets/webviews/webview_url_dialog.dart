@@ -15,7 +15,7 @@ import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -153,7 +153,13 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             Navigator.of(context).pop();
 
                             final String attackId = widget.url.split("user2ID=")[1];
-                            final t = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: attackId);
+
+                            final dynamic t = await ApiCallsV2.getOtherUserProfile_v2(
+                              payload: {
+                                "id": attackId,
+                              },
+                            );
+
                             dynamic attackAssistMessageArg;
                             if (t is OtherProfileModel) {
                               final SpiesController spyController = Get.find<SpiesController>();
@@ -182,15 +188,15 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     "updated ${readTimestamp(spy.update!)}";
                               }
                               String estimatedStats = StatsCalculator.calculateStats(
-                                criminalRecordTotal: t.criminalrecord!.total,
+                                criminalRecordTotal: t.personalstats?.crimes?.offenses?.total,
                                 level: t.level,
-                                networth: t.personalstats!.networth,
+                                networth: t.personalstats!.networth!.total,
                                 rank: t.rank,
                               );
 
-                              estimatedStats += "\n- Xanax: ${t.personalstats!.xantaken}";
-                              estimatedStats += "\n- Refills (E): ${t.personalstats!.refills}";
-                              estimatedStats += "\n- Drinks (E): ${t.personalstats!.energydrinkused}";
+                              estimatedStats += "\n- Xanax: ${t.personalstats!.drugs!.xanax}";
+                              estimatedStats += "\n- Refills (E): ${t.personalstats!.other!.refills!.energy}";
+                              estimatedStats += "\n- Drinks (E): ${t.personalstats!.items!.used!.energy}";
                               estimatedStats += "\n(tap to get a comparison with you)";
                               attackAssistMessageArg = (
                                 attackId: attackId,
@@ -200,9 +206,9 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 attackAge: t.age.toString(),
                                 estimatedStats: estimatedStats,
                                 exactStats: exactStats ?? "",
-                                xanax: t.personalstats!.xantaken.toString(),
-                                refills: t.personalstats!.refills.toString(),
-                                drinks: t.personalstats!.energydrinkused.toString(),
+                                xanax: t.personalstats!.drugs!.xanax.toString(),
+                                refills: t.personalstats!.other!.refills!.energy.toString(),
+                                drinks: t.personalstats!.items!.used!.energy.toString(),
                               );
                             } else {
                               attackAssistMessageArg = (attackId: attackId);

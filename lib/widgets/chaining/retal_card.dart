@@ -5,7 +5,6 @@ import 'dart:math';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -25,8 +24,8 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
-import 'package:torn_pda/utils/offset_animation.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -1096,7 +1095,7 @@ class RetalCardState extends State<RetalCard> {
         await _webViewProvider.openBrowserPreference(
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: BrowserTapType.chain,
+          browserTapType: BrowserTapType.chainShort,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..war = true
@@ -1156,252 +1155,6 @@ class RetalCardState extends State<RetalCard> {
             ),
           )
       ],
-    );
-  }
-
-  void _showEstimatedDetailsDialog(
-    int xanaxCompare,
-    Color xanaxColor,
-    int refillCompare,
-    Color refillColor,
-    int enhancementCompare,
-    Color? enhancementColor,
-    int cansCompare,
-    Color cansColor,
-    Color sslColor,
-    bool sslProb,
-    Retal retal,
-  ) {
-    String xanaxRelative = "";
-    if (xanaxCompare > 0) {
-      xanaxRelative = "${xanaxCompare.abs()} MORE than you";
-    } else if (xanaxCompare == 0) {
-      xanaxRelative = "SAME as you";
-    } else {
-      xanaxRelative = "${xanaxCompare.abs()} LESS than you";
-    }
-    final Widget xanaxWidget = Row(
-      children: [
-        const Text(
-          "> Xanax: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            xanaxRelative,
-            style: TextStyle(color: xanaxColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String refillRelative = "";
-    if (refillCompare > 0) {
-      refillRelative = "${refillCompare.abs()} MORE than you";
-    } else if (refillCompare == 0) {
-      refillRelative = "SAME as you";
-    } else {
-      refillRelative = "${refillCompare.abs()} LESS than you";
-    }
-    final Widget refillWidget = Row(
-      children: [
-        const Text(
-          "> (E) Refills: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            refillRelative,
-            style: TextStyle(color: refillColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String enhancementRelative = "";
-    if (enhancementColor == Colors.white) enhancementColor = _themeProvider.mainText;
-    if (enhancementCompare > 0) {
-      enhancementRelative = "${enhancementCompare.abs()} MORE than you";
-    } else if (enhancementCompare == 0) {
-      enhancementRelative = "SAME as you";
-    } else if (enhancementCompare < 0) {
-      enhancementRelative = "${enhancementCompare.abs()} LESS than you";
-    }
-    final Widget enhancementWidget = Row(
-      children: [
-        const Text(
-          "> Enhancer(s): ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            enhancementRelative,
-            style: TextStyle(color: enhancementColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    String cansRelative = "";
-    if (cansCompare > 0) {
-      cansRelative = "${cansCompare.abs()} MORE than you";
-    } else if (cansCompare == 0) {
-      cansRelative = "SAME as you";
-    } else if (cansCompare < 0) {
-      cansRelative = "${cansCompare.abs()} LESS than you";
-    }
-    final Widget cansWidget = Row(
-      children: [
-        const Text(
-          "> Cans: ",
-          style: TextStyle(fontSize: 14),
-        ),
-        Flexible(
-          child: Text(
-            cansRelative,
-            style: TextStyle(color: cansColor, fontSize: 14),
-          ),
-        ),
-      ],
-    );
-
-    final Widget sslWidget = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Text(
-              "> SSL probability: ",
-              style: TextStyle(fontSize: 14),
-            ),
-            Text(
-              !sslProb
-                  ? "none"
-                  : sslColor == Colors.green
-                      ? "low"
-                      : sslColor == Colors.orange
-                          ? "med"
-                          : "high",
-              style: TextStyle(
-                color: sslColor,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-        const Padding(
-          padding: EdgeInsets.only(left: 12),
-          child: Text(
-            "[Sports Science Lab Gym]",
-            style: TextStyle(fontSize: 9),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Xanax: ${retal.retalXanax}",
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                "Ecstasy: ${retal.retalEcstasy}",
-                style: const TextStyle(fontSize: 12),
-              ),
-              Text(
-                "LSD: ${retal.retalLsd}",
-                style: const TextStyle(fontSize: 12),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-
-    BotToast.showAnimationWidget(
-      allowClick: false,
-      onlyOne: true,
-      wrapToastAnimation: (controller, cancel, child) => Stack(
-        children: <Widget>[
-          GestureDetector(
-            onTap: () {
-              cancel();
-            },
-            child: AnimatedBuilder(
-              builder: (_, child) => Opacity(
-                opacity: controller.value,
-                child: child,
-              ),
-              animation: controller,
-              child: const DecoratedBox(
-                decoration: BoxDecoration(color: Colors.black26),
-                child: SizedBox.expand(),
-              ),
-            ),
-          ),
-          CustomOffsetAnimation(
-            controller: controller,
-            child: child,
-          )
-        ],
-      ),
-      toastBuilder: (cancelFunc) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
-        title: Text(retal.name!),
-        backgroundColor: _themeProvider.secondBackground,
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (retal.factionName != "0")
-              Padding(
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  "Faction: ${retal.factionName}",
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-            if (retal.lastAction.relative!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  "Online: ${retal.lastAction.relative!.replaceAll("0 minutes ago", "now")}",
-                  style: const TextStyle(fontSize: 12),
-                ),
-              ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: xanaxWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: refillWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: enhancementWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: cansWidget,
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 20, left: 4),
-              child: sslWidget,
-            ),
-          ],
-        ),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () {
-              cancelFunc();
-            },
-            child: const Text('Thanks'),
-          ),
-        ],
-      ),
-      animationDuration: const Duration(milliseconds: 300),
     );
   }
 }

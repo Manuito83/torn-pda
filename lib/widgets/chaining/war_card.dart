@@ -8,7 +8,6 @@ import 'package:animations/animations.dart';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -22,12 +21,13 @@ import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/dotted_border.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
-import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
@@ -68,8 +68,6 @@ class WarCardState extends State<WarCard> {
 
   late String _lastUpdatedString;
   late int _lastUpdatedMinutes;
-
-  bool _addButtonActive = true;
 
   final WarController _w = Get.find<WarController>();
 
@@ -159,7 +157,10 @@ class WarCardState extends State<WarCard> {
                               ],
                             ),
                             onTap: () {
-                              _startAttack();
+                              _startAttack(shortTap: true);
+                            },
+                            onLongPress: () {
+                              _startAttack(shortTap: false);
                             },
                           ),
                         ],
@@ -199,14 +200,15 @@ class WarCardState extends State<WarCard> {
                             Text(
                               'L${_member.level}',
                             ),
+                            const SizedBox(width: 3),
                             Row(
                               children: [
                                 SizedBox(
                                   height: 22,
-                                  width: 30,
+                                  width: 35,
                                   child: _addAsTargetButton(),
                                 ),
-                                const SizedBox(width: 5),
+                                const SizedBox(width: 3),
                                 SizedBox(
                                   height: 22,
                                   width: 22,
@@ -389,106 +391,12 @@ class WarCardState extends State<WarCard> {
   }
 
   Widget _addAsTargetButton() {
-    bool existingTarget = false;
-
-    final targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
-    final targetList = targetsProvider.allTargets;
-    for (final tar in targetList) {
-      if (tar.playerId == _member.memberId) {
-        existingTarget = true;
-      }
-    }
-
-    if (existingTarget) {
-      return IconButton(
-        padding: const EdgeInsets.all(0.0),
-        iconSize: 20,
-        icon: const Icon(
-          Icons.remove_circle_outline,
-          color: Colors.red,
-        ),
-        onPressed: () {
-          targetsProvider.deleteTargetById(_member.memberId.toString());
-          BotToast.showText(
-            clickClose: true,
-            text: HtmlParser.fix('Removed ${_member.name}!'),
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.orange[900]!,
-            duration: const Duration(seconds: 5),
-            contentPadding: const EdgeInsets.all(10),
-          );
-          // Update the button
-          setState(() {});
-        },
-      );
-    } else {
-      return IconButton(
-        padding: const EdgeInsets.all(0.0),
-        iconSize: 20,
-        icon: _addButtonActive
-            ? const Icon(
-                Icons.add_circle_outline,
-                color: Colors.green,
-              )
-            : const SizedBox(
-                height: 15,
-                width: 15,
-                child: CircularProgressIndicator(),
-              ),
-        onPressed: _addButtonActive
-            ? () async {
-                setState(() {
-                  _addButtonActive = false;
-                });
-
-                // There is no need to pass attackFull because it's very improbable
-                // that this target is in our previous attacks. Respect won't be calculated,
-                // but it will be much faster
-                final AddTargetResult tryAddTarget = await targetsProvider.addTarget(
-                  targetId: _member.memberId.toString(),
-                  attacks: await targetsProvider.getAttacks(),
-                );
-
-                if (tryAddTarget.success) {
-                  BotToast.showText(
-                    clickClose: true,
-                    text: HtmlParser.fix('Added ${tryAddTarget.targetName} [${tryAddTarget.targetId}] to your '
-                        'main targets list in Torn PDA!'),
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.green[700]!,
-                    duration: const Duration(seconds: 5),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                } else if (!tryAddTarget.success) {
-                  BotToast.showText(
-                    clickClose: true,
-                    text: HtmlParser.fix('Error adding ${_member.memberId}. ${tryAddTarget.errorReason}'),
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.red[900]!,
-                    duration: const Duration(seconds: 5),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                }
-
-                // Update the button
-                if (mounted) {
-                  setState(() {
-                    _addButtonActive = true;
-                  });
-                }
-              }
-            : null,
-      );
-    }
+    return ProfileCheckAddButton(
+      profileId: widget.memberModel.memberId!,
+      playerName: widget.memberModel.name,
+      factionId: null,
+      icon: Icons.add_circle_outline,
+    );
   }
 
   Widget _factionName() {
@@ -1143,7 +1051,7 @@ class WarCardState extends State<WarCard> {
     }
   }
 
-  Future<void> _startAttack() async {
+  Future<void> _startAttack({required bool shortTap}) async {
     final browserType = _settingsProvider.currentBrowser;
     switch (browserType) {
       case BrowserSetting.app:
@@ -1170,7 +1078,7 @@ class WarCardState extends State<WarCard> {
         _webViewProvider.openBrowserPreference(
           context: context,
           url: 'https://www.torn.com/loader.php?sid=attack&user2ID=${attacksIds[0]}',
-          browserTapType: BrowserTapType.chain,
+          browserTapType: shortTap ? BrowserTapType.chainShort : BrowserTapType.chainLong,
           isChainingBrowser: true,
           chainingPayload: ChainingPayload()
             ..war = true
@@ -1568,7 +1476,6 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       androidScheduleMode: exactAlarmsPermissionAndroid
           ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG

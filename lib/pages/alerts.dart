@@ -11,7 +11,9 @@ import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/pages/alerts/alerts_tsm_dialog.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -19,6 +21,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
+import 'package:torn_pda/widgets/alerts/sendbird_dnd_dialog.dart';
 import 'package:torn_pda/widgets/loot/loot_rangers_explanation.dart';
 
 class AlertsSettings extends StatefulWidget {
@@ -90,7 +93,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           future: _getFirebaseAndTornDetails,
           builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              if (snapshot.data[0] is FirebaseUserModel) {
+              if (snapshot.data != null && snapshot.data[0] is FirebaseUserModel) {
                 _firebaseUserModel ??= snapshot.data[0] as FirebaseUserModel?;
                 return SingleChildScrollView(
                   controller: _scrollController,
@@ -985,6 +988,104 @@ class AlertsSettingsState extends State<AlertsSettings> {
                             ],
                           ),
                         ),
+                      GetBuilder(
+                        init: SendbirdController(),
+                        builder: (sendbird) {
+                          return Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                                child: CheckboxListTile(
+                                  checkColor: Colors.white,
+                                  activeColor: Colors.blueGrey,
+                                  value: sendbird.sendBirdNotificationsEnabled,
+                                  title: Row(
+                                    children: [
+                                      const Padding(
+                                        padding: EdgeInsets.only(right: 5),
+                                        child: Text(
+                                          "Torn chat messages",
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  subtitle: const Text(
+                                    "Enable notifications for TORN chat messages",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                  onChanged: (enabled) async {
+                                    sendbird.sendBirdNotificationsToggle(enabled: enabled!);
+                                  },
+                                ),
+                              ),
+                              if (sendbird.sendBirdNotificationsEnabled)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 30, right: 32),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(Icons.keyboard_arrow_right_outlined),
+                                          const Padding(
+                                            padding: EdgeInsets.only(left: 10),
+                                            child: Text(
+                                              "Do not disturb",
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      GestureDetector(
+                                        child: Icon(Icons.more_time_outlined),
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              return SendbirdDoNotDisturbDialog();
+                                            },
+                                          );
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          );
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+                        child: CheckboxListTile(
+                          checkColor: Colors.white,
+                          activeColor: Colors.blueGrey,
+                          value: _firebaseUserModel!.forumsSubscription ?? false,
+                          title: const Text("Forums subscribed threads"),
+                          subtitle: const Text(
+                            "Get notifications for new posts in threads you are subscribed to. "
+                            "NOTE: checks will be performed every 15 minutes to avoid excessive API load",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          onChanged: (value) {
+                            setState(() {
+                              _firebaseUserModel?.forumsSubscription = value;
+                            });
+                            FirestoreHelper().subscribeToForumsSubcriptionsNotification(value);
+                          },
+                        ),
+                      ),
                       const SizedBox(height: 60),
                     ],
                   ),
@@ -1641,7 +1742,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   Future _getFactionApiAccess() async {
     // Assess whether we have permits
-    final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+    final attacksResult = await ApiCallsV1.getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       _factionApiAccess = true;
     } else if (attacksResult is ApiError) {

@@ -7,7 +7,7 @@ String countryCheck({required String? state, required String? description}) {
       return description!.split("In ")[1];
     }
 
-    // Travelling
+    // Traveling
     if (state == "Traveling") {
       if (description!.contains("Returning to Torn")) {
         return "Torn";
@@ -52,7 +52,7 @@ String countryCheck({required String? state, required String? description}) {
 /// Takes a player status and returns if the player is traveling (active flight)
 bool isTraveling({required String? state}) {
   try {
-    // Travelling
+    // Traveling
     if (state == "Traveling") {
       return true;
     }

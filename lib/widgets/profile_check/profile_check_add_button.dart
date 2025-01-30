@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,7 +10,7 @@ import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
@@ -22,11 +24,13 @@ class ProfileCheckAddButton extends StatefulWidget {
   final int profileId;
   final int? factionId;
   final String? playerName;
+  final IconData? icon;
 
   const ProfileCheckAddButton({
     required this.profileId,
     required this.factionId,
     this.playerName = "Player",
+    this.icon,
     super.key,
   });
 
@@ -95,7 +99,7 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
                       descTextStyle: const TextStyle(fontSize: 13),
                       tooltipPadding: const EdgeInsets.all(20),
                       child: Icon(
-                        Icons.person,
+                        widget.icon ?? Icons.person,
                         color: anyExists ? Colors.orange : Colors.green,
                         size: 18,
                       ),
@@ -255,6 +259,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // TARGET
+            if (Platform.isWindows) SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -276,6 +281,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // STAKEOUT
+            if (Platform.isWindows) SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -297,6 +303,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // PANIC
+            if (Platform.isWindows) SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -318,7 +325,8 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // FACTION
-            if (widget.factionId != 0)
+            if (Platform.isWindows) SizedBox(height: 6),
+            if (widget.factionId != null && widget.factionId != 0)
               GetBuilder<WarController>(
                 builder: (w) {
                   if (w.initialised) {
@@ -494,7 +502,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
         seconds: 3,
       );
     } else {
-      final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: widget.profileId.toString());
+      final dynamic target = await ApiCallsV1.getTarget(playerId: widget.profileId.toString());
       String message = "";
       Color? messageColor = Colors.green[700];
       if (target is TargetModel) {

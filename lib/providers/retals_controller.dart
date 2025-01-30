@@ -13,7 +13,9 @@ import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart' as other;
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
@@ -50,7 +52,12 @@ class RetalsController extends GetxController {
 
     // Perform update
     try {
-      final dynamic updatedTarget = await Get.find<ApiCallerController>().getOtherProfileExtended(playerId: retalKey);
+      final dynamic updatedTarget = await ApiCallsV2.getOtherUserProfile_v2(
+        payload: {
+          "id": retalKey,
+        },
+      );
+
       if (updatedTarget is other.OtherProfileModel) {
         retal.name = updatedTarget.name;
         retal.level = updatedTarget.level;
@@ -75,25 +82,30 @@ class RetalsController extends GetxController {
         _assignSpiedStats(retal);
 
         retal.statsEstimated = StatsCalculator.calculateStats(
-          criminalRecordTotal: updatedTarget.criminalrecord!.total,
+          criminalRecordTotal: updatedTarget.personalstats?.crimes?.offenses?.total,
           level: updatedTarget.level,
-          networth: updatedTarget.personalstats!.networth,
+          networth: updatedTarget.personalstats!.networth!.total,
           rank: updatedTarget.rank,
         );
 
         retal.statsComparisonSuccess = false;
         if (ownStatsSuccess is OwnPersonalStatsModel) {
           retal.statsComparisonSuccess = true;
-          retal.retalXanax = updatedTarget.personalstats!.xantaken;
+
+          retal.retalXanax = updatedTarget.personalstats!.drugs!.xanax;
           retal.myXanax = ownStatsSuccess.personalstats!.xantaken;
-          retal.retalRefill = updatedTarget.personalstats!.refills;
+
+          retal.retalRefill = updatedTarget.personalstats!.other!.refills!.energy;
           retal.myRefill = ownStatsSuccess.personalstats!.refills;
-          retal.retalEnhancement = updatedTarget.personalstats!.statenhancersused;
-          retal.retalCans = updatedTarget.personalstats!.energydrinkused;
+
+          retal.retalCans = updatedTarget.personalstats!.items!.used!.energy;
           retal.myCans = ownStatsSuccess.personalstats!.energydrinkused;
+
+          retal.retalEnhancement = updatedTarget.personalstats!.items!.used!.statEnhancers;
           retal.myEnhancement = ownStatsSuccess.personalstats!.statenhancersused;
-          retal.retalEcstasy = updatedTarget.personalstats!.exttaken;
-          retal.retalLsd = updatedTarget.personalstats!.lsdtaken;
+
+          retal.retalEcstasy = updatedTarget.personalstats!.drugs!.ecstasy;
+          retal.retalLsd = updatedTarget.personalstats!.drugs!.lsd;
         }
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
@@ -199,7 +211,7 @@ class RetalsController extends GetxController {
   }
 
   dynamic getAllAttacks() async {
-    final result = await Get.find<ApiCallerController>().getAttacks();
+    final result = await ApiCallsV1.getAttacks();
     if (result is am.AttackModel) {
       return result;
     }
@@ -207,7 +219,7 @@ class RetalsController extends GetxController {
   }
 
   dynamic getOwnStats() async {
-    final result = await Get.find<ApiCallerController>().getOwnPersonalStats();
+    final result = await ApiCallsV1.getOwnPersonalStats();
     if (result is OwnPersonalStatsModel) {
       return result;
     }
@@ -260,7 +272,7 @@ class RetalsController extends GetxController {
   Future<String> _getApiEvaluateRetals(BuildContext context) async {
     List<Retal> newList = <Retal>[];
 
-    final attacksResult = await Get.find<ApiCallerController>().getFactionAttacks();
+    final attacksResult = await ApiCallsV1.getFactionAttacks();
     if (attacksResult is FactionAttacksModel) {
       final dynamic allAttacksSuccess = await getAllAttacks();
       final dynamic ownStatsSuccess = await getOwnStats();

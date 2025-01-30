@@ -369,7 +369,6 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
       androidScheduleMode: exactAlarmsPermissionAndroid
           ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
   }
 

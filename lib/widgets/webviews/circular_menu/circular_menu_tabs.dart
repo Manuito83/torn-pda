@@ -97,6 +97,61 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.webViewProvider!.verticalMenuIsOpen) {
+      _animationController.forward();
+    } else {
+      _animationController.reverse();
+    }
+    return Stack(
+      alignment: AlignmentDirectional.bottomCenter,
+      children: <Widget>[
+        AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Stack(
+              children: [
+                widget.backgroundWidget ?? Container(),
+                ..._buildMenuItems(),
+                _buildMenuButton(context),
+              ],
+            );
+          },
+        ),
+        Material(
+          color: Colors.transparent,
+          clipBehavior: Clip.none,
+          child: SizedBox(
+            height: 40,
+            width: 40,
+            child: InkWell(
+              hoverColor: Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {
+                if (!mounted) return;
+                _onTabTapped(context);
+              },
+              child: ReorderableDelayedDragStartListener(
+                index: widget.tabIndex,
+                child: Container(
+                  alignment: Alignment.center,
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
   List<Widget> _buildMenuItems() {
     List<Widget> items = [];
     widget.items.asMap().forEach((index, item) {
@@ -134,49 +189,7 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
           padding: 50,
           onTap: () {
             if (!mounted) return;
-            multiTapDetector.onTap((numTaps) {
-              if (numTaps == 1) {
-                // Single tap
-                if (widget.toggleButtonOnPressed != null) {
-                  widget.toggleButtonOnPressed!();
-                }
-              } else if (numTaps == 2) {
-                // Double tab
-                // Opens the menu
-                if (_animationController.status == AnimationStatus.dismissed) {
-                  widget.webViewProvider!.verticalMenuOpen();
-                } else {
-                  // Closes the menu but permits the menu to shift from one tab to another
-                  // without the user noticing (closes and reopens the new tapped tab)
-                  widget.webViewProvider!.verticalMenuClose();
-                  if (widget.webViewProvider!.verticalMenuCurrentIndex != widget.tabIndex) {
-                    widget.webViewProvider!.verticalMenuCurrentIndex = widget.tabIndex;
-                    widget.webViewProvider!.verticalMenuOpen();
-                  }
-                }
-                widget.webViewProvider!.verticalMenuCurrentIndex = widget.tabIndex;
-              } else if (numTaps == 3) {
-                // Triple tab
-                if (!widget.webViewProvider!.tabList[widget.tabIndex].isLocked) {
-                  widget.webViewProvider!.removeTab(position: widget.tabIndex);
-                } else {
-                  if (context.read<SettingsProvider>().showTabLockWarnings) {
-                    toastification.show(
-                      alignment: Alignment.bottomCenter,
-                      title: Icon(
-                        Icons.lock,
-                        color: widget.webViewProvider!.tabList[widget.tabIndex].isLockFull ? Colors.red : Colors.orange,
-                      ),
-                      autoCloseDuration: Duration(seconds: 2),
-                      animationDuration: Duration(milliseconds: 0),
-                      showProgressBar: false,
-                      style: ToastificationStyle.simple,
-                      borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
-                    );
-                  }
-                }
-              }
-            });
+            _onTabTapped(context);
           },
           boxShadow: widget.toggleButtonBoxShadow,
           animatedIcon: AnimatedIcon(
@@ -190,34 +203,49 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (widget.webViewProvider!.verticalMenuIsOpen) {
-      _animationController.forward();
-    } else {
-      _animationController.reverse();
-    }
-    return Stack(
-      children: <Widget>[
-        AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Stack(
-              children: [
-                widget.backgroundWidget ?? Container(),
-                ..._buildMenuItems(),
-                _buildMenuButton(context),
-              ],
+  void _onTabTapped(BuildContext context) {
+    multiTapDetector.onTap((numTaps) {
+      if (numTaps == 1) {
+        // Single tap
+        if (widget.toggleButtonOnPressed != null) {
+          widget.toggleButtonOnPressed!();
+        }
+      } else if (numTaps == 2) {
+        // Double tab
+        // Opens the menu
+        if (_animationController.status == AnimationStatus.dismissed) {
+          widget.webViewProvider!.verticalMenuOpen();
+        } else {
+          // Closes the menu but permits the menu to shift from one tab to another
+          // without the user noticing (closes and reopens the new tapped tab)
+          widget.webViewProvider!.verticalMenuClose();
+          if (widget.webViewProvider!.verticalMenuCurrentIndex != widget.tabIndex) {
+            widget.webViewProvider!.verticalMenuCurrentIndex = widget.tabIndex;
+            widget.webViewProvider!.verticalMenuOpen();
+          }
+        }
+        widget.webViewProvider!.verticalMenuCurrentIndex = widget.tabIndex;
+      } else if (numTaps == 3) {
+        // Triple tab
+        if (!widget.webViewProvider!.tabList[widget.tabIndex].isLocked) {
+          widget.webViewProvider!.removeTab(position: widget.tabIndex);
+        } else {
+          if (context.read<SettingsProvider>().showTabLockWarnings) {
+            toastification.show(
+              alignment: Alignment.bottomCenter,
+              title: Icon(
+                Icons.lock,
+                color: widget.webViewProvider!.tabList[widget.tabIndex].isLockFull ? Colors.red : Colors.orange,
+              ),
+              autoCloseDuration: Duration(seconds: 2),
+              animationDuration: Duration(milliseconds: 0),
+              showProgressBar: false,
+              style: ToastificationStyle.simple,
+              borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
             );
-          },
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+          }
+        }
+      }
+    });
   }
 }

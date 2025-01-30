@@ -22,7 +22,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -1380,7 +1380,7 @@ class AddFactionDialog extends StatelessWidget {
 
                         // If an user ID was inserted, we need to transform it first
                         if (warController.addFromUserId) {
-                          final dynamic target = await Get.find<ApiCallerController>().getTarget(playerId: inputId);
+                          final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
                           String convertError = "";
                           if (target is TargetModel) {
                             inputId = target.faction!.factionId.toString();

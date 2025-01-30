@@ -18,7 +18,8 @@ import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -45,7 +46,7 @@ class TargetsProvider extends ChangeNotifier {
 
   List<TargetModel> _oldTargetsList = [];
 
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   String _currentWordFilter = '';
   String get currentWordFilter => _currentWordFilter;
@@ -83,7 +84,7 @@ class TargetsProvider extends ChangeNotifier {
         );
       }
 
-      final dynamic myNewTargetModel = await Get.find<ApiCallerController>().getTarget(playerId: targetId);
+      final dynamic myNewTargetModel = await ApiCallsV1.getTarget(playerId: targetId);
 
       if (myNewTargetModel is TargetModel) {
         _getRespectFF(attacks, myNewTargetModel);
@@ -129,7 +130,7 @@ class TargetsProvider extends ChangeNotifier {
   /// to call several times if looping. Example: we can loop the addTarget method 100 times, but
   /// the attack variable we provide is the same and we only requested it once.
   dynamic getAttacks() async {
-    return await Get.find<ApiCallerController>().getAttacks();
+    return await ApiCallsV1.getAttacks();
   }
 
   void _getTargetFaction(TargetModel myNewTargetModel) {
@@ -229,8 +230,7 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final dynamic myUpdatedTargetModel =
-          await Get.find<ApiCallerController>().getTarget(playerId: targetToUpdate.playerId.toString());
+      final dynamic myUpdatedTargetModel = await ApiCallsV1.getTarget(playerId: targetToUpdate.playerId.toString());
       if (myUpdatedTargetModel is TargetModel) {
         _getRespectFF(
           attacks,
@@ -280,8 +280,7 @@ class TargetsProvider extends ChangeNotifier {
     final dynamic attacks = await getAttacks();
     for (var i = 0; i < _targets.length; i++) {
       try {
-        final dynamic myUpdatedTargetModel =
-            await Get.find<ApiCallerController>().getTarget(playerId: _targets[i].playerId.toString());
+        final dynamic myUpdatedTargetModel = await ApiCallsV1.getTarget(playerId: _targets[i].playerId.toString());
         if (myUpdatedTargetModel is TargetModel) {
           _getRespectFF(
             attacks,
@@ -348,8 +347,7 @@ class TargetsProvider extends ChangeNotifier {
           tar.isUpdating = true;
           notifyListeners();
           try {
-            final dynamic attackedTarget =
-                await Get.find<ApiCallerController>().getTarget(playerId: tar.playerId.toString());
+            final dynamic attackedTarget = await ApiCallsV1.getTarget(playerId: tar.playerId.toString());
             if (attackedTarget is TargetModel) {
               final targetIndex = _targets.indexOf(tar);
               _getRespectFF(

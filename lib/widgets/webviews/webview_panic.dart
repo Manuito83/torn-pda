@@ -6,16 +6,14 @@ import 'dart:io';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
-import 'package:dotted_border/dotted_border.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -23,6 +21,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
+import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
@@ -505,7 +504,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       // We'll skip maximum of 10 targets
       for (var i = 0; i < 10; i++) {
         // Get the status of our next target
-        final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[i]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: widget.attackIdList[i]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -517,8 +516,7 @@ class WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user =
-                await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: _userProv!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -601,7 +599,7 @@ class WebViewPanicState extends State<WebViewPanic> {
     // This will show the note of the first target, if applicable
     if (widget.showNotes) {
       if (widget.showOnlineFactionWarning) {
-        final nextTarget = await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[0]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: widget.attackIdList[0]);
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction!.factionName;
           _lastOnline = nextTarget.lastAction!.timestamp;
@@ -629,8 +627,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       // We'll skip maximum of 3 targets
       for (var i = 0; i < 3; i++) {
         // Get the status of our next target
-        final nextTarget =
-            await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           // If in hospital or jail (even in a different country), we skip
@@ -642,8 +639,7 @@ class WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user =
-                await Get.find<ApiCallerController>().getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: _userProv!.basic!.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -714,8 +710,7 @@ class WebViewPanicState extends State<WebViewPanic> {
     // from the API
     else {
       if (widget.showOnlineFactionWarning) {
-        final nextTarget =
-            await Get.find<ApiCallerController>().getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
+        final nextTarget = await ApiCallsV1.getTarget(playerId: widget.attackIdList[_attackNumber + 1]);
 
         if (nextTarget is TargetModel) {
           _factionName = nextTarget.faction!.factionName;

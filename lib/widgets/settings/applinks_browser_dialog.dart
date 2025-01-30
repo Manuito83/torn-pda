@@ -21,7 +21,7 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             EasyRichText(
-              "Please be aware that Torn PDA will open Torn links by default, unless you change this behaviour in "
+              "Please be aware that Torn PDA will open Torn links by default, unless you change this behavior in "
               "your device's system settings.\n\n"
               "This is part of a native integration that is made possible by the Torn developers.\n\n"
               "If you prefer to use an external browser, you WILL NEED to change your device app's settings and "

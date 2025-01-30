@@ -19,7 +19,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
-import 'package:torn_pda/utils/external/torn_exchange_comm.dart';
+import 'package:torn_pda/widgets/trades/trades_receipt_widget.dart';
 import 'package:torn_pda/widgets/webviews/webview_full_awh.dart';
 
 class TradesWidget extends StatefulWidget {
@@ -521,61 +521,16 @@ class TradesWidgetState extends State<TradesWidget> {
                   ],
                 ),
             const SizedBox(height: 5),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(padding: const EdgeInsets.only(right: 10), child: clipboardIcon),
-                SizedBox(
-                  height: 23,
-                  width: 23,
-                  child: IconButton(
-                    padding: const EdgeInsets.all(0),
-                    iconSize: 23,
-                    onPressed: () async {
-                      // Build trade receipt model
-                      final receiptOut = TornExchangeReceiptOutModel(
-                        ownerUserId: _tradesProv.container.tornExchangeBuyerId,
-                        ownerUsername: _tradesProv.container.tornExchangeBuyerName,
-                        sellerUsername: _tradesProv.container.sellerName,
-                        prices: _tradesProv.container.tornExchangePrices,
-                        itemQuantities: _tradesProv.container.tornExchangeQuantities,
-                        itemNames: _tradesProv.container.tornExchangeNames,
-                      );
-
-                      final receipt = await TornExchangeComm.getReceipt(receiptOut);
-
-                      if (receipt.serverError) {
-                        BotToast.showText(
-                          text: "There was an error getting your receipt, no information copied!",
-                          textStyle: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                          contentColor: Colors.red[800]!,
-                          duration: const Duration(seconds: 5),
-                          contentPadding: const EdgeInsets.all(10),
-                        );
-                      } else {
-                        String message = receipt.tradeMessage;
-                        int secondsToShow = 5;
-                        if (message.isEmpty) {
-                          message = "Thanks for the trade! Your receipt is available at "
-                              "https://www.tornexchange.com/receipt/${receipt.receiptId}\n\n"
-                              "Note: this is a default receipt template, you can create your own in Torn Exchange";
-                          secondsToShow = 8;
-                        }
-
-                        _copyToClipboard(message, "Receipt copied to clipboard:\n\n$message", seconds: secondsToShow);
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.receipt_long_outlined,
-                      size: 23,
-                      color: ttColor,
-                    ),
-                  ),
-                ),
-              ],
+            TradeReceiptRow(
+              clipboardIcon: clipboardIcon,
+              tornExchangeOutModel: TornExchangeReceiptOutModel(
+                ownerUserId: _tradesProv.container.tornExchangeBuyerId,
+                ownerUsername: _tradesProv.container.tornExchangeBuyerName,
+                sellerUsername: _tradesProv.container.sellerName,
+                prices: _tradesProv.container.tornExchangePrices,
+                itemQuantities: _tradesProv.container.tornExchangeQuantities,
+                itemNames: _tradesProv.container.tornExchangeNames,
+              ),
             ),
           ],
         );

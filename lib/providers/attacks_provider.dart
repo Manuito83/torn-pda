@@ -1,6 +1,5 @@
 // Dart imports:
 import 'dart:collection';
-import 'dart:math';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -9,7 +8,8 @@ import 'package:get/get.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/attack_sort.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -38,11 +38,11 @@ class AttacksProvider extends ChangeNotifier {
 
   String _ownId = '';
 
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
 
   Future initializeAttacks() async {
     await restoreSharedPreferences();
-    final dynamic attacksResult = await Get.find<ApiCallerController>().getAttacks();
+    final dynamic attacksResult = await ApiCallsV1.getAttacks();
     if (attacksResult is AttackModel) {
       _apiError = false;
       _attacks.clear();
@@ -128,10 +128,10 @@ class AttacksProvider extends ChangeNotifier {
       if (thisAttack.result == Result.MUGGED) {
         modifiers *= 0.75;
       }
+
+      // https://wiki.torn.com/wiki/Chain#Base_respect
       final double baseRespect = respectGain / modifiers;
-      // Base respect = (Ln(level) + 1.0)/4.0
-      // From the second formula: Level = e^(Base Respect / 4 - 1)
-      final double levelD = exp(4 * baseRespect - 1);
+      final double levelD = 198 * (baseRespect - (197 / 198));
       thisAttack.targetLevel = levelD.round();
     } else {
       thisAttack.respectGain = 0;

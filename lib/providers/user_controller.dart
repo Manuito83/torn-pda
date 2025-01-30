@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 class UserController extends GetxController {
   String? apiKey = "";
   int playerId = 0;
+  String playerName = "";
 
   // Alternative keys YATA
   bool _alternativeYataKeyEnabled = false;

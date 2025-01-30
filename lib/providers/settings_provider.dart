@@ -380,6 +380,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _fullScreenByShortChainingTap = false;
+  bool get fullScreenByShortChainingTap => _fullScreenByShortChainingTap;
+  set fullScreenByShortChainingTap(bool value) {
+    _fullScreenByShortChainingTap = value;
+    Prefs().setFullScreenByShortChainingTap(_fullScreenByShortChainingTap);
+    notifyListeners();
+  }
+
+  var _fullScreenByLongChainingTap = false;
+  bool get fullScreenByLongChainingTap => _fullScreenByLongChainingTap;
+  set fullScreenByLongChainingTap(bool value) {
+    _fullScreenByLongChainingTap = value;
+    Prefs().setFullScreenByLongChainingTap(_fullScreenByLongChainingTap);
+    notifyListeners();
+  }
+
   var _lifeNotificationTapAction = "ownItems";
   get lifeNotificationTapAction => _lifeNotificationTapAction;
   set lifeNotificationTapAction(value) {
@@ -473,6 +489,14 @@ class SettingsProvider extends ChangeNotifier {
   set changeRemoveAirplane(bool value) {
     _removeAirplane = value;
     Prefs().setRemoveAirplane(_removeAirplane);
+    notifyListeners();
+  }
+
+  var _removeTravelQuickReturnButton = false;
+  bool get removeTravelQuickReturnButton => _removeTravelQuickReturnButton;
+  set removeTravelQuickReturnButton(bool value) {
+    _removeTravelQuickReturnButton = value;
+    Prefs().setRemoveTravelQuickReturnButton(_removeTravelQuickReturnButton);
     notifyListeners();
   }
 
@@ -1040,6 +1064,42 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // REVIVES
+  String _reviveHelaPrice = "1 million or 1 Xanax each";
+  String get reviveHelaPrice => _reviveHelaPrice;
+  set reviveHelaPrice(String value) {
+    _reviveHelaPrice = value;
+    notifyListeners();
+  }
+
+  String _reviveMidnightPrice = "1 million or 1 Xanax each";
+  String get reviveMidnightPrice => _reviveMidnightPrice;
+  set reviveMidnightPrice(String value) {
+    _reviveMidnightPrice = value;
+    notifyListeners();
+  }
+
+  String _reviveNukePrice = "1 million or 1 Xanax each";
+  String get reviveNukePrice => _reviveNukePrice;
+  set reviveNukePrice(String value) {
+    _reviveNukePrice = value;
+    notifyListeners();
+  }
+
+  String _reviveUhcPrice = "1 million or 1 Xanax each";
+  String get reviveUhcPrice => _reviveUhcPrice;
+  set reviveUhcPrice(String value) {
+    _reviveUhcPrice = value;
+    notifyListeners();
+  }
+
+  String _reviveWtfPrice = "1 million or 1 Xanax each";
+  String get reviveWtfPrice => _reviveWtfPrice;
+  set reviveWtfPrice(String value) {
+    _reviveWtfPrice = value;
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1087,6 +1147,8 @@ class SettingsProvider extends ChangeNotifier {
     _fullScreenByShortTap = await Prefs().getFullScreenByShortTap();
     _fullScreenByLongTap = await Prefs().getFullScreenByLongTap();
     _fullScreenByNotificationTap = await Prefs().getFullScreenByNotificationTap();
+    _fullScreenByShortChainingTap = await Prefs().getFullScreenByShortChainingTap();
+    _fullScreenByLongChainingTap = await Prefs().getFullScreenByLongChainingTap();
     _fullScreenByDeepLinkTap = await Prefs().getFullScreenByDeepLinkTap();
     _fullScreenByQuickItemTap = await Prefs().getFullScreenByQuickItemTap();
     _fullScreenIncludesPDAButtonTap = await Prefs().getFullScreenIncludesPDAButtonTap();
@@ -1115,6 +1177,7 @@ class SettingsProvider extends ChangeNotifier {
     _highlightWordList = await Prefs().getHighlightWordList();
 
     _removeAirplane = await Prefs().getRemoveAirplane();
+    _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
 
@@ -1278,6 +1341,12 @@ class SettingsProvider extends ChangeNotifier {
       // Define the date ranges
       final awarenessWeekStart = DateTime(now.year, 01, 15);
       final awarenessWeekEnd = DateTime(now.year, 01, 21, 23, 59, 59);
+      final stValentineStart = DateTime(now.year, 02, 13, 10, 30);
+      final stValentineEnd = DateTime(now.year, 02, 15, 10, 30);
+      final stPatrickStart = DateTime(now.year, 03, 16, 10, 30);
+      final stPatrickEnd = DateTime(now.year, 03, 18, 10, 30);
+      final easterStart = DateTime(now.year, 04, 17, 10, 30);
+      final easterEnd = DateTime(now.year, 04, 24, 10, 30);
       final halloweenStart = DateTime(now.year, 10, 25);
       final halloweenEnd = DateTime(now.year, 11, 1, 23, 59, 59);
       final christmasStart = DateTime(now.year, 12, 19);
@@ -1286,6 +1355,12 @@ class SettingsProvider extends ChangeNotifier {
       // Determine the icon based on date ranges
       if (now.isAfter(awarenessWeekStart) && now.isBefore(awarenessWeekEnd)) {
         iconName = "AppIconAwareness";
+      } else if (now.isAfter(stValentineStart) && now.isBefore(stValentineEnd)) {
+        iconName = "AppIconStValentine";
+      } else if (now.isAfter(stPatrickStart) && now.isBefore(stPatrickEnd)) {
+        iconName = "AppIconStPatrick";
+      } else if (now.isAfter(easterStart) && now.isBefore(easterEnd)) {
+        iconName = "AppIconEaster";
       } else if (now.isAfter(halloweenStart) && now.isBefore(halloweenEnd)) {
         iconName = "AppIconHalloween";
       } else if (now.isAfter(christmasStart) && now.isBefore(christmasEnd)) {
@@ -1294,15 +1369,28 @@ class SettingsProvider extends ChangeNotifier {
         iconName = null; // Default icon
       }
     } else {
+      // Manual override for specific icons
       switch (_dynamicAppIconsManual) {
         case "awareness":
           iconName = "AppIconAwareness";
+          break;
+        case "stvalentine":
+          iconName = "AppIconStValentine";
+          break;
+        case "stpatrick":
+          iconName = "AppIconStPatrick";
+          break;
+        case "easter":
+          iconName = "AppIconEaster";
+          break;
         case "halloween":
           iconName = "AppIconHalloween";
+          break;
         case "christmas":
           iconName = "AppIconChristmas";
+          break;
         default:
-          iconName = null;
+          iconName = null; // Default icon
       }
     }
 

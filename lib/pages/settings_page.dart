@@ -28,12 +28,16 @@ import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
@@ -593,7 +597,7 @@ class SettingsPageState extends State<SettingsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            "If enabled, if a target's spy information cannot be found in the preferred spies source, it will also "
+            "Whilst enabled, if a target's spy information cannot be found in the preferred spies source, it will also "
             "be taken from the other source if available. When switching from one source to the other, the spy "
             "information is preserved unless the new active source also contains a spy for a target",
             style: TextStyle(
@@ -1065,7 +1069,7 @@ class SettingsPageState extends State<SettingsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
-                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so"
+                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so "
                   "that you can later restore them if needed or share them across different devices",
                   style: TextStyle(
                     color: Colors.grey[600],
@@ -1103,7 +1107,7 @@ class SettingsPageState extends State<SettingsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   "This will download your saved settings and restore them in the app. Please be aware that this will "
-                  "overwritte your current preferences",
+                  "overwrite your current preferences",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -1383,8 +1387,8 @@ class SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             "Use this section to configure alternative API keys for the external partners that "
-            "Torn PDA connects with. CAUTION: ensure this other keys are working correctly, as Torn PDA "
-            "won't be able to check for errors and certain sections might stop working",
+            "Torn PDA connects with. CAUTION: ensure these other keys are working correctly, as Torn PDA "
+            "is unable to check for errors and certain sections may stop working",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -1568,7 +1572,7 @@ class SettingsPageState extends State<SettingsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'If enabled, the device screen will be splitted to show the main app the the browser at the same time. '
+            'If enabled, the device screen will be split to show the main app the the browser at the same time. '
             'A minimum width (800 dpi) is needed for this to be allowed',
             style: TextStyle(
               color: Colors.grey[600],
@@ -2542,7 +2546,7 @@ class SettingsPageState extends State<SettingsPage> {
                                     FocusScope.of(context).requestFocus(FocusNode());
                                     if (_formKey.currentState!.validate()) {
                                       _myCurrentKey = _apiKeyInputController.text.trim();
-                                      _getApiDetails(userTriggered: true, reload: true);
+                                      _getApiDetails(userTriggered: true);
                                     }
                                   },
                                 ),
@@ -2563,8 +2567,8 @@ class SettingsPageState extends State<SettingsPage> {
                                       _apiError = false;
                                     });
                                     if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
-                                    await FirestoreHelper().deleteUserProfile();
-                                    await firebaseAuth.signOut();
+                                    if (!Platform.isWindows) await FirestoreHelper().deleteUserProfile();
+                                    if (!Platform.isWindows) await firebaseAuth.signOut();
                                     widget.changeUID("");
                                   },
                                 ),
@@ -2937,6 +2941,45 @@ class SettingsPageState extends State<SettingsPage> {
             width: 120,
             child: Text(
               "Christmas",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "stvalentine",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Valentine's Day",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "stpatrick",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "St. Patrick's Day",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "easter",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "Easter Egg Hunt",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -3673,13 +3716,16 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _getApiDetails({required bool userTriggered, bool reload = false}) async {
+  Future<void> _getApiDetails({required bool userTriggered}) async {
+    int errorPlayerId = 0;
+    dynamic firebaseErrorUser;
+
     try {
       setState(() {
         _apiIsLoading = true;
       });
 
-      final dynamic myProfile = await _apiController.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
+      final dynamic myProfile = await ApiCallsV1.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
           ..userApiKey = _myCurrentKey
@@ -3693,26 +3739,41 @@ class SettingsPageState extends State<SettingsPage> {
           _userProfile = myProfile;
         });
 
+        final uc = Get.find<UserController>();
+        if (uc.playerId == 0 && myProfile.playerId != null) {
+          uc.playerId = myProfile.playerId!;
+          uc.apiKey = myProfile.userApiKey;
+          uc.playerName = myProfile.name!;
+        }
+
+        errorPlayerId = uc.playerId;
+
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
           if (!Platform.isWindows) {
             // See note in [firebase_auth.dart]
-            final user = await firebaseAuth.getUID();
+            final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
             // Only sign in if there is currently no user registered (to avoid duplicates)
-            if (user == null || (user is User && user.uid.isEmpty)) {
-              final User mFirebaseUser = await (firebaseAuth.signInAnon());
-              await FirestoreHelper().setUID(mFirebaseUser.uid);
+            if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
+              final User newFirebaseUser = await (firebaseAuth.signInAnon());
+              await FirestoreHelper().setUID(newFirebaseUser.uid);
               // Returns UID to Drawer so that it can be passed to settings
-              widget.changeUID(mFirebaseUser.uid);
-              log("Settings: signed in with UID ${mFirebaseUser.uid}");
+              widget.changeUID(newFirebaseUser.uid);
+              log("Settings: signed in with UID ${newFirebaseUser.uid}");
             } else {
-              log("Settings: existing user UID $user");
+              log("Settings: existing user UID ${firebaseUser.uid}");
             }
 
             await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
             await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
             if (Platform.isAndroid) {
               FirestoreHelper().setVibrationPattern(_vibrationValue);
+            }
+
+            // Sendbird notifications
+            final sbController = Get.find<SendbirdController>();
+            if (sbController.sendBirdNotificationsEnabled) {
+              sbController.register();
             }
           } else {
             log("Windows: skipping Firestore sign up!");
@@ -3748,7 +3809,11 @@ class SettingsPageState extends State<SettingsPage> {
       if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
             "Error: $e. Stack: $stack");
-        FirebaseCrashlytics.instance.recordError(e, null);
+        FirebaseCrashlytics.instance.recordError(
+          e,
+          stack,
+          information: ['API Key: $_myCurrentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser.uid}'],
+        );
       }
     }
   }

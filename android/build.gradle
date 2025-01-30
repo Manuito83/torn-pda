@@ -20,6 +20,19 @@ subprojects {
     }
 }
 
+// Needed for sendbird_chat 4.2.26 to build with no namespace issues
+subprojects {
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin("com.android.library")) {
+            project.android {
+                if (namespace == null) {
+                    namespace project.group
+                }
+            }
+        }
+    }
+}
+
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
 }

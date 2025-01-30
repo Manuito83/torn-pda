@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 // Package imports:
 import 'package:provider/provider.dart';
@@ -11,7 +10,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_user_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -200,7 +199,9 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       iconTheme: IconThemeData(color: Colors.white),
       elevation: _settingsP!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
-      title: const Text("Stock market alerts", style: TextStyle(color: Colors.white)),
+      title: Platform.isWindows
+          ? const Text("Stock market", style: TextStyle(color: Colors.white))
+          : const Text("Stock market alerts", style: TextStyle(color: Colors.white)),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
         children: [
@@ -318,12 +319,12 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     try {
       // If we call from the main menu, we have to get the fbUser before loading anything, as it won't come from
       // the alerts pages, like in other cases
-      if (widget.calledFromMenu) {
+      if (widget.calledFromMenu && !Platform.isWindows) {
         _fbUser = await FirestoreHelper().getUserProfile(); // We are NOT getting updated stocks every time
       }
 
-      final allStocksReply = await Get.find<ApiCallerController>().getAllStocks();
-      final userStocksReply = await Get.find<ApiCallerController>().getUserStocks();
+      final allStocksReply = await ApiCallsV1.getAllStocks();
+      final userStocksReply = await ApiCallsV1.getUserStocks();
 
       if (allStocksReply is! StockMarketModel || userStocksReply is! StockMarketUserModel) {
         _errorInitializing = true;
@@ -373,19 +374,21 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       }
 
       // Complete details based on what's saved in Firebase
-      for (final fbAlert in _fbUser!.stockMarketShares) {
-        final acronym = fbAlert.toString().substring(0, 3);
-        final regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
-        final match = regex.firstMatch(fbAlert.toString())!;
-        final fbGain = match.group(1);
-        final fbLoss = match.group(2);
-        for (final listedStock in _stockList) {
-          if (listedStock.acronym == acronym) {
-            if (fbGain != "n") {
-              listedStock.alertGain = double.tryParse(fbGain!);
-            }
-            if (fbLoss != "n") {
-              listedStock.alertLoss = double.tryParse(fbLoss!);
+      if (!Platform.isWindows) {
+        for (final fbAlert in _fbUser!.stockMarketShares) {
+          final acronym = fbAlert.toString().substring(0, 3);
+          final regex = RegExp(r"[A-Z]+-G-((?:\d+(?:\.)?(?:\d{1,2}))|n)-L-((?:\d+(?:\.)?(?:\d{1,2}))|n)");
+          final match = regex.firstMatch(fbAlert.toString())!;
+          final fbGain = match.group(1);
+          final fbLoss = match.group(2);
+          for (final listedStock in _stockList) {
+            if (listedStock.acronym == acronym) {
+              if (fbGain != "n") {
+                listedStock.alertGain = double.tryParse(fbGain!);
+              }
+              if (fbLoss != "n") {
+                listedStock.alertLoss = double.tryParse(fbLoss!);
+              }
             }
           }
         }

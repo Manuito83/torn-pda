@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
@@ -25,6 +26,7 @@ import 'package:timeline_tile/timeline_tile.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/chain_model.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
@@ -38,7 +40,9 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -59,6 +63,7 @@ import 'package:torn_pda/widgets/profile/disregard_crime_dialog.dart';
 import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
+import 'package:torn_pda/widgets/profile/market_status.dart';
 import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
@@ -149,7 +154,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late ChainStatusProvider _chainProvider;
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
-  final UserController _u = Get.put(UserController());
+  final UserController _u = Get.find<UserController>();
   final WarController _w = Get.find<WarController>();
 
   late int _travelNotificationAhead;
@@ -230,10 +235,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   DateTime _miscTickLastTime = DateTime.now();
   OwnProfileMisc? _miscModel;
   TornEducationModel? _tornEducationModel;
+  UserItemMarketResponse? _marketItemsV2;
 
-  var _rentedPropertiesTick = 0;
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
+  DateTime? _rentedPropertiesLastChecked;
 
   // We will first try to get the full crimes if we have AA access, in which case
   // we consider it as Complex. Otherwise, with events, it will be Simple.
@@ -354,7 +360,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
     if (secondsSinceLastMiscFetch > 60 || forceMisc) {
       _miscTickLastTime = DateTime.now();
-      _getMiscCardInfo();
+      _getMiscCardInfo(forcedUpdate: forceMisc);
       _getStatsChart();
       _getRankedWars();
       _getCompanyAddiction();
@@ -1195,47 +1201,53 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     child: Column(
                       children: <Widget>[
                         if (!repatriated)
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 60,
-                                    child: Text('Status: '),
-                                  ),
-                                  Text(_user!.status!.state!),
-                                  stateBall(),
-                                ],
-                              ),
-                              if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
-                                _notificationIcon(ProfileNotification.hospital),
-                              if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
-                                _notificationIcon(ProfileNotification.jail),
-                            ],
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 60,
+                                      child: Text('Status: '),
+                                    ),
+                                    Text(_user!.status!.state!),
+                                    stateBall(),
+                                  ],
+                                ),
+                                if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
+                                  _notificationIcon(ProfileNotification.hospital),
+                                if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
+                                  _notificationIcon(ProfileNotification.jail),
+                              ],
+                            ),
                           )
                         else
-                          // Travelling while in hospital (repatriation)
+                          // Traveling while in hospital (repatriation)
                           Column(
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  Row(
-                                    children: [
-                                      const SizedBox(
-                                        width: 60,
-                                        child: Text('Status: '),
-                                      ),
-                                      Text(_user!.status!.state!),
-                                      stateBall(),
-                                    ],
-                                  ),
-                                  if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
-                                    _notificationIcon(ProfileNotification.hospital),
-                                  if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
-                                    _notificationIcon(ProfileNotification.jail),
-                                ],
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: <Widget>[
+                                    Row(
+                                      children: [
+                                        const SizedBox(
+                                          width: 60,
+                                          child: Text('Status: '),
+                                        ),
+                                        Text(_user!.status!.state!),
+                                        stateBall(),
+                                      ],
+                                    ),
+                                    if (_user!.status!.color == 'red' && _user!.status!.state == "Hospital")
+                                      _notificationIcon(ProfileNotification.hospital),
+                                    if (_user!.status!.color == 'red' && _user!.status!.state == "Jail")
+                                      _notificationIcon(ProfileNotification.jail),
+                                  ],
+                                ),
                               ),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1258,6 +1270,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           bazaarModel: _miscModel?.bazaar,
                           launchBrowser: _launchBrowser,
                         ),
+                        if (_marketItemsV2?.itemmarket != null && _marketItemsV2!.itemmarket!.isNotEmpty)
+                          MarketStatusCard(
+                            marketModel: _marketItemsV2!,
+                            launchBrowser: _launchBrowser,
+                          ),
                         if (!_dedicatedTravelCard) _travelWidget(),
                         descriptionWidget(),
                         if (_user!.status!.state == 'Hospital' && _w.nukeReviveActive)
@@ -1355,6 +1372,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final double percentage = _getTravelPercentage(totalTravelTimeSeconds);
       final String ballAssetLocation = _flagBallAsset();
 
+      bool isChristmasPeriod() {
+        final now = DateTime.now();
+        final christmasStart = DateTime(now.year, 12, 19);
+        final christmasEnd = DateTime(now.year, 12, 31, 23, 59, 59);
+        return now.isAfter(christmasStart) && now.isBefore(christmasEnd);
+      }
+
       return Padding(
         padding: const EdgeInsets.only(top: 10),
         child: Column(
@@ -1388,8 +1412,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             // Make icon transparent when about to pass over text
                             opacity: percentage < 0.2 || percentage > 0.7 ? 1 : 0.3,
                             child: _user!.travel!.destination == "Torn"
-                                ? Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
-                                : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
+                                ? isChristmasPeriod()
+                                    ? Transform(
+                                        alignment: Alignment.center,
+                                        transform: Matrix4.identity()..scale(-1.0, 1.0),
+                                        child: Icon(FontAwesomeIcons.sleigh, color: Colors.blue[900], size: 22),
+                                      )
+                                    : Image.asset('images/icons/plane_left.png', color: Colors.blue[900], height: 22)
+                                : isChristmasPeriod()
+                                    ? Icon(FontAwesomeIcons.sleigh, color: Colors.blue[900], size: 22)
+                                    : Image.asset('images/icons/plane_right.png', color: Colors.blue[900], height: 22),
                           ),
                         ),
                         animateFromLastPercent: true,
@@ -2150,8 +2182,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     double size = 22,
     NotificationType? forcedTravelIcon,
   }) {
-    if (Platform.isWindows) return SizedBox.shrink();
-
     int? secondsToGo = 0;
     bool percentageError = false;
     late bool notificationsPending;
@@ -4301,7 +4331,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     //_miscModel.educationTimeleft = 6000;
     // DEBUG ******************************
 
-    if (_miscModel == null || _tornEducationModel == null) {
+    if (_miscModel == null) {
       return const SizedBox.shrink();
     }
 
@@ -4565,83 +4595,85 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // EDUCATION
     Widget educationWidget = const SizedBox.shrink();
-    if (_miscModel!.educationTimeleft! > 0) {
-      showMisc = true;
-      educationActive = true;
-      final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.educationTimeleft!));
-      final timeDifference = timeExpiry.difference(DateTime.now());
-      Color? expiryColor = Colors.orange[800];
-      String expiryString;
-      if (timeDifference.inHours < 1) {
-        expiryString = 'less than an hour';
-      } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-        expiryString = 'about an hour';
-      } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-        expiryString = '${timeDifference.inHours} hours';
-      } else if (timeDifference.inDays == 1) {
-        expiryString = '1 day';
-        expiryColor = _themeProvider!.mainText;
-      } else {
-        expiryString = '${timeDifference.inDays} days';
-        expiryColor = _themeProvider!.mainText;
-      }
-
-      String? courseName;
-      _tornEducationModel!.education.forEach((key, value) {
-        if (key == _miscModel!.educationCurrent.toString()) {
-          courseName = value.name;
-        }
-      });
-
-      educationWidget = Row(
-        children: <Widget>[
-          Icon(MdiIcons.schoolOutline),
-          const SizedBox(width: 10),
-          Flexible(
-            child: RichText(
-              text: TextSpan(
-                text: "Your course: ",
-                style: DefaultTextStyle.of(context).style,
-                children: <TextSpan>[
-                  TextSpan(
-                    text: "$courseName",
-                    /*
-                    style: TextStyle(
-                      color: Colors.green,
-                    ),
-                    */
-                  ),
-                  const TextSpan(text: ", will end in "),
-                  TextSpan(
-                    text: expiryString,
-                    style: TextStyle(color: expiryColor),
-                  ),
-                ],
-              ),
-            ),
-          )
-        ],
-      );
-    }
-    // There is no education on going... why? All done, or forgotten?
-    else {
-      // If the number of courses studied and available are not the same, we have forgotten
-      // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
-      if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education.length - 1) {
+    if (_tornEducationModel is TornEducationModel) {
+      if (_miscModel!.educationTimeleft! > 0) {
         showMisc = true;
         educationActive = true;
+        final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.educationTimeleft!));
+        final timeDifference = timeExpiry.difference(DateTime.now());
+        Color? expiryColor = Colors.orange[800];
+        String expiryString;
+        if (timeDifference.inHours < 1) {
+          expiryString = 'less than an hour';
+        } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+          expiryString = 'about an hour';
+        } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+          expiryString = '${timeDifference.inHours} hours';
+        } else if (timeDifference.inDays == 1) {
+          expiryString = '1 day';
+          expiryColor = _themeProvider!.mainText;
+        } else {
+          expiryString = '${timeDifference.inDays} days';
+          expiryColor = _themeProvider!.mainText;
+        }
+
+        String? courseName;
+        _tornEducationModel!.education.forEach((key, value) {
+          if (key == _miscModel!.educationCurrent.toString()) {
+            courseName = value.name;
+          }
+        });
+
         educationWidget = Row(
           children: <Widget>[
             Icon(MdiIcons.schoolOutline),
             const SizedBox(width: 10),
             Flexible(
-              child: Text(
-                "You are not enrolled in any education course!",
-                style: TextStyle(color: Colors.red[500]),
+              child: RichText(
+                text: TextSpan(
+                  text: "Your course: ",
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: "$courseName",
+                      /*
+                    style: TextStyle(
+                      color: Colors.green,
+                    ),
+                    */
+                    ),
+                    const TextSpan(text: ", will end in "),
+                    TextSpan(
+                      text: expiryString,
+                      style: TextStyle(color: expiryColor),
+                    ),
+                  ],
+                ),
               ),
             )
           ],
         );
+      }
+      // There is no education on going... why? All done, or forgotten?
+      else {
+        // If the number of courses studied and available are not the same, we have forgotten
+        // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
+        if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education.length - 1) {
+          showMisc = true;
+          educationActive = true;
+          educationWidget = Row(
+            children: <Widget>[
+              Icon(MdiIcons.schoolOutline),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  "You are not enrolled in any education course!",
+                  style: TextStyle(color: Colors.red[500]),
+                ),
+              )
+            ],
+          );
+        }
       }
     }
 
@@ -4764,7 +4796,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             inputTime: timestamp,
             timeFormatSetting: _settingsProvider!.currentTimeFormat,
             timeZoneSetting: _settingsProvider!.currentTimeZone)
-        .formatHourWithDaysElapsed();
+        .formatHourWithDaysElapsed(includeYesterday: true);
 
     // Loop all other sources
     for (final v in _user!.networth!.entries) {
@@ -4915,7 +4947,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_messagesShowNumber! > limit) limit = _messagesShowNumber!;
     if (_eventsShowNumber! > limit) limit = _eventsShowNumber!;
 
-    final apiResponse = await Get.find<ApiCallerController>().getOwnProfileExtended(limit: limit);
+    final apiResponse = await ApiCallsV1.getOwnProfileExtended(limit: limit);
 
     // Try to get the chain from the ChainStatusProvider if it's running (to save calls)
     // Otherwise, call the API
@@ -4924,7 +4956,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (_chainProvider.chainModel is ChainModel) {
       chain = _chainProvider.chainModel;
     } else {
-      chain = await Get.find<ApiCallerController>().getChainStatus();
+      chain = await ApiCallsV1.getChainStatus();
     }
 
     if (mounted) {
@@ -4963,7 +4995,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             );
           }
 
-          if (!Platform.isWindows) _checkIfNotificationsAreCurrent();
+          _checkIfNotificationsAreCurrent();
         } else {
           if (_apiGoodData && _apiRetries < 8) {
             _apiRetries++;
@@ -4993,40 +5025,57 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
   }
 
-  Future _getMiscCardInfo() async {
+  Future _getMiscCardInfo({bool forcedUpdate = false}) async {
     if (_user == null) return;
 
     try {
-      final miscApiResponse = await Get.find<ApiCallerController>().getOwnProfileMisc();
+      dynamic miscApiResponse;
 
-      _tornEducationModel ??= await Get.find<ApiCallerController>().getEducation();
+      // 1.- Try first with API V2
+      miscApiResponse = await ApiCallsV2.getUserProfileMisc_v2();
 
-      // The ones that are inside this condition, show in the MISC card (which
-      // is disabled if the MISC API call is not successful
-      if (miscApiResponse is OwnProfileMisc && _tornEducationModel is TornEducationModel) {
-        // Get this async
-        if (_settingsProvider!.oCrimesEnabled) {
-          _getFactionCrimes();
-        }
-
-        // Assess properties async, but wait some more time
-        if (miscApiResponse.properties != null) {
-          if (_rentedPropertiesTick == 0) {
-            _checkProperties(miscApiResponse);
-          } else if (_rentedPropertiesTick > 30) {
-            _checkProperties(miscApiResponse);
-            _rentedPropertiesTick = 0;
-          }
-          _rentedPropertiesTick++;
-        }
-
-        setState(() {
-          _miscModel = miscApiResponse;
-          _miscApiFetchedOnce = true;
-        });
+      // 2.- Try to fall back to API V1
+      if (miscApiResponse is! OwnProfileMisc) {
+        miscApiResponse = await ApiCallsV1.getOwnProfileMisc();
       }
+
+      if (miscApiResponse is! OwnProfileMisc) {
+        return;
+      }
+
+      // Get Education
+      var education = await ApiCallsV1.getEducation();
+      if (education != null) {
+        _tornEducationModel = education;
+      }
+
+      // Get Market Items V2
+      var marketItems = await _getUserMarketItems();
+      if (marketItems != null) {
+        _marketItemsV2 = marketItems;
+      }
+
+      // Get this async
+      if (_settingsProvider!.oCrimesEnabled) {
+        _getFactionCrimes();
+      }
+
+      _checkProperties(miscApiResponse, forcedUpdate);
+
+      setState(() {
+        _miscModel = miscApiResponse;
+        _miscApiFetchedOnce = true;
+      });
     } catch (e) {
       // If something fails, we simple don't show the MISC section
+    }
+  }
+
+  Future<dynamic> _getUserMarketItems() async {
+    try {
+      return await ApiCallsV2.getUserMarketItemsApi_v2();
+    } catch (e, t) {
+      log("Issue getting market items: $e, $t");
     }
   }
 
@@ -5101,7 +5150,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_user!.faction!.factionId == 0) return;
       if (!_settingsProvider!.rankedWarsInProfile) return;
 
-      final dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
+      final dynamic apiResponse = await ApiCallsV1.getRankedWars();
       if (apiResponse is RankedWarsModel) {
         for (final warMap in apiResponse.rankedwars!.entries) {
           if (warMap.value.factions!.keys.contains(_user!.faction!.factionId.toString())) {
@@ -5138,7 +5187,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // If we should call the API, fetch the data and update SharedPreferences
       if (shouldCallApi || nextFetchTime == 0) {
         log("Fetching job addiction!");
-        final dynamic apiResponse = await Get.find<ApiCallerController>().getCompanyEmployees();
+        final dynamic apiResponse = await ApiCallsV1.getCompanyEmployees();
         if (apiResponse is CompanyEmployees) {
           for (final eMap in apiResponse.companyEmployees!.entries) {
             // Loop until we find the user
@@ -5194,7 +5243,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         int? lastTs = eventsSave[0].timestamp;
 
         // Get new events after that and add them
-        final dynamic newEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: lastTs);
+        final dynamic newEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: lastTs);
         if (newEventsResponse is List<Event>) {
           if (newEventsResponse.isNotEmpty) {
             for (int i = 0; i < newEventsResponse.length; i++) {
@@ -5235,7 +5284,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       // Calculate one month ago
       log("Events save elapse more than 30 minutes, getting all events");
       final int monthAgo = ((DateTime.now().subtract(const Duration(days: 30)).millisecondsSinceEpoch) / 1000).ceil();
-      final dynamic allEventsResponse = await Get.find<ApiCallerController>().getEvents(limit: 100, from: monthAgo);
+      final dynamic allEventsResponse = await ApiCallsV1.getEvents(limit: 100, from: monthAgo);
       if (allEventsResponse is List<Event>) {
         // Save events and last retrieved timestamp
         List<String> eventsListToSave = [];
@@ -5269,8 +5318,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _getFactionCrimes() async {
     try {
       if (_user == null) return;
-      final factionCrimes =
-          await Get.find<ApiCallerController>().getFactionCrimes(playerId: _user!.playerId.toString());
+      final factionCrimes = await ApiCallsV1.getFactionCrimes(playerId: _user!.playerId.toString());
 
       // OPTION 1 - Check if we have faction access
       if (factionCrimes != null && factionCrimes is FactionCrimesModel) {
@@ -5646,8 +5694,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _scheduleNotification(ProfileNotification profileNotification) async {
-    if (Platform.isWindows) return;
-
     int? secondsToNotification;
     late String channelTitle;
     String? channelSubtitle;
@@ -5848,7 +5894,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       androidScheduleMode: exactAlarmsPermissionAndroid
           ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG
@@ -5859,8 +5904,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future<void> _retrievePendingNotifications() async {
-    if (Platform.isWindows) return;
-
     bool travel = false;
     bool energy = false;
     bool nerve = false;
@@ -5877,27 +5920,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     if (pendingNotificationRequests.isNotEmpty) {
       for (final notification in pendingNotificationRequests) {
-        if (notification.payload!.contains('travel')) {
+        if (notification.id == 201) {
           travel = true;
-        } else if (notification.payload!.contains('energy')) {
+        }
+        if (notification.id == 101) {
           energy = true;
-        } else if (notification.payload!.contains('nerve')) {
+        }
+        if (notification.id == 102) {
           nerve = true;
-        } else if (notification.payload!.contains('life')) {
+        }
+        if (notification.id == 103) {
           life = true;
-        } else if (notification.payload!.contains('drugs')) {
+        }
+        if (notification.id == 104) {
           drugs = true;
-        } else if (notification.payload!.contains('medical')) {
+        }
+        if (notification.id == 105) {
           medical = true;
-        } else if (notification.payload!.contains('booster')) {
+        }
+        if (notification.id == 106) {
           booster = true;
-        } else if (notification.payload!.contains('hospital')) {
+        }
+        if (notification.id == 107) {
           hospital = true;
-        } else if (notification.payload!.contains('jail')) {
+        }
+        if (notification.id == 108) {
           jail = true;
-        } else if (notification.payload!.contains('war')) {
+        }
+        if (notification.id == 109) {
           war = true;
-        } else if (notification.payload!.contains('raceStart')) {
+        }
+        if (notification.id == 201) {
           raceStart = true;
         }
       }
@@ -7362,8 +7415,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return sectionSort;
   }
 
-  Future<void> _checkProperties(OwnProfileMisc miscApiResponse) async {
-    // Get the properties we are renting into a map
+  // Check whethere we actually need to call the API (we call every 10 minutes for properties to easy API usage)
+  Future<void> _checkProperties(OwnProfileMisc miscApiResponse, bool forcedUpdate) async {
+    final now = DateTime.now();
+
+    final propertyInfoIsAbsolete =
+        _rentedPropertiesLastChecked == null || now.difference(_rentedPropertiesLastChecked!).inMinutes >= 10;
+
+    if (forcedUpdate || propertyInfoIsAbsolete) {
+      _rentedPropertiesLastChecked = now;
+      await _fetchAndUpdateProperties(miscApiResponse);
+    }
+  }
+
+  Future<void> _fetchAndUpdateProperties(OwnProfileMisc miscApiResponse) async {
     final thisRented = <String, Map<String, String>>{};
     final propertyModel = miscApiResponse.properties!;
 
@@ -7378,12 +7443,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     int number = 0;
     await Future.forEach(keys, (dynamic element) async {
-      final rentDetails = await Get.find<ApiCallerController>().getProperty(propertyId: element.toString());
+      final rentDetails = await ApiCallsV1.getProperty(propertyId: element.toString());
 
       if (rentDetails is PropertyModel) {
         final timeLeft = rentDetails.property!.rented!.daysLeft!;
         final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
-        // Was 7, now shows always
         if (timeLeft > 0) {
           thisRented.addAll({
             element: {
@@ -7411,15 +7475,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 const Icon(Icons.house_outlined),
                 const SizedBox(width: 10),
                 Flexible(
-                  child: Text(
-                    value["text"]!,
-                    style: TextStyle(
-                      color: numberDays <= 5
-                          ? numberDays <= 2
-                              ? Colors.red[500]
-                              : Colors.orange[800]
-                          : _themeProvider!.mainText,
-                    ),
+                  child: Consumer<ThemeProvider>(
+                    builder: (context, tP, child) {
+                      return Text(
+                        value["text"]!,
+                        style: TextStyle(
+                          color: numberDays <= 5
+                              ? numberDays <= 2
+                                  ? Colors.red[500]
+                                  : Colors.orange[800]
+                              : tP.mainText,
+                        ),
+                      );
+                    },
                   ),
                 ),
               ],
@@ -7440,7 +7508,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               );
             },
             child: Padding(
-              padding: EdgeInsets.only(left: 5),
+              padding: const EdgeInsets.only(left: 5),
               child: Icon(MdiIcons.openInApp, size: 18),
             ),
           ),

@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 final firebaseAuth = AuthService();
 
@@ -33,10 +34,17 @@ class AuthService {
     try {
       if (_firebaseAuth.currentUser != null) {
         final user = _firebaseAuth.currentUser;
-        return user!.uid;
+        return user;
       }
-    } catch (e) {
-      log(e.toString());
+    } catch (e, stack) {
+      FirebaseCrashlytics.instance.log("PDA Crash at GET UID. Error: $e. Stack: $stack");
+      FirebaseCrashlytics.instance.recordError(
+        e,
+        stack,
+        information: [
+          'Firebase Auth User: ${_firebaseAuth.currentUser}',
+        ],
+      );
     }
     return null;
   }

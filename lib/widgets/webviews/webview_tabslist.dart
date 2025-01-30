@@ -432,20 +432,23 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
           toastification.show(
             closeOnClick: true,
             alignment: Alignment.bottomCenter,
-            title: Column(
-              children: [
-                Icon(
-                  Icons.lock,
-                  color: _webViewProvider!.tabList[start].isLockFull || _webViewProvider!.tabList[end].isLockFull
-                      ? Colors.red
-                      : Colors.orange,
-                ),
-                SizedBox(height: 10),
-                Text(
-                  "A locked tab cannot be exchanged with an unlocked one!",
-                  textAlign: TextAlign.center,
-                ),
-              ],
+            title: SizedBox(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.lock,
+                    color: _webViewProvider!.tabList[start].isLockFull || _webViewProvider!.tabList[end].isLockFull
+                        ? Colors.red
+                        : Colors.orange,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "A locked tab cannot be exchanged with an unlocked one!",
+                    maxLines: 5,
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
             ),
             autoCloseDuration: Duration(seconds: 3),
             animationDuration: Duration(milliseconds: 0),

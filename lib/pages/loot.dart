@@ -13,7 +13,6 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +26,7 @@ import 'package:torn_pda/models/loot/loot_rangers_model.dart';
 import 'package:torn_pda/pages/loot/loot_notification_android.dart';
 import 'package:torn_pda/pages/loot/loot_notification_ios.dart';
 import 'package:torn_pda/pages/profile_page.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -276,7 +275,7 @@ class LootPageState extends State<LootPage> {
           )
         else
           const SizedBox.shrink(),
-        if (_apiSuccess && Platform.isIOS)
+        if (_apiSuccess && (Platform.isIOS || Platform.isWindows))
           IconButton(
             icon: Icon(
               Icons.alarm_on,
@@ -428,7 +427,7 @@ class LootPageState extends State<LootPage> {
             }
 
             Widget notificationIcon;
-            if (!Platform.isWindows && (!isPast && !isCurrent)) {
+            if (!isPast && !isCurrent) {
               bool isPending = false;
               for (final id in _activeNotificationsIds) {
                 if (id == int.parse('400$npcId$levelNumber')) {
@@ -922,7 +921,7 @@ class LootPageState extends State<LootPage> {
                       context.read<WebViewProvider>().openBrowserPreference(
                             context: context,
                             url: "https://www.torn.com/loader.php?sid=attack&user2ID=${_lootRangersIdOrder[0]}",
-                            browserTapType: BrowserTapType.chain,
+                            browserTapType: BrowserTapType.chainShort,
                             isChainingBrowser: true,
                             chainingPayload: ChainingPayload()
                               ..attackIdList = _lootRangersIdOrder
@@ -936,13 +935,12 @@ class LootPageState extends State<LootPage> {
                     },
                   ),
                 ),
-                if (!Platform.isWindows)
-                  Row(
-                    children: [
-                      const SizedBox(width: 15),
-                      notificationIcon,
-                    ],
-                  ),
+                Row(
+                  children: [
+                    const SizedBox(width: 15),
+                    notificationIcon,
+                  ],
+                ),
               ],
             ),
         ],
@@ -1074,7 +1072,7 @@ class LootPageState extends State<LootPage> {
     try {
       for (final id in _npcIds) {
         // Get each target from our static list from Torn
-        final tornTarget = await Get.find<ApiCallerController>().getTarget(playerId: id);
+        final tornTarget = await ApiCallsV1.getTarget(playerId: id);
 
         final newNpcLoot = LootModel();
         if (tornTarget is TargetModel) {
@@ -1285,7 +1283,6 @@ class LootPageState extends State<LootPage> {
       androidScheduleMode: exactAlarmsPermissionAndroid
           ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
           : AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     // DEBUG
@@ -1294,8 +1291,6 @@ class LootPageState extends State<LootPage> {
   }
 
   Future _retrievePendingNotifications() async {
-    if (Platform.isWindows) return;
-
     try {
       final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -1311,8 +1306,6 @@ class LootPageState extends State<LootPage> {
   }
 
   Future _cancelPassedNotifications() async {
-    if (Platform.isWindows) return;
-
     try {
       final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 

@@ -26,6 +26,8 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
+import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
   final UserDetailsProvider userDetailsProvider;
@@ -50,6 +52,16 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
   late WebViewProvider _webViewProvider;
+
+  final List<TabsWipeTimeRange> tabsRemoveTimeRangesList = [
+    TabsWipeTimeRange.oneDay,
+    TabsWipeTimeRange.twoDays,
+    TabsWipeTimeRange.threeDays,
+    TabsWipeTimeRange.fiveDays,
+    TabsWipeTimeRange.sevenDays,
+    TabsWipeTimeRange.fifteenDays,
+    TabsWipeTimeRange.oneMonth,
+  ];
 
   @override
   void initState() {
@@ -110,6 +122,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           const Divider(),
                           const SizedBox(height: 10),
                           _tabs(),
+                          const SizedBox(height: 15),
+                          const Divider(),
+                          const SizedBox(height: 10),
+                          _fab(),
                           const SizedBox(height: 15),
                           const Divider(),
                           const SizedBox(height: 10),
@@ -908,12 +924,52 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Row(
             children: [
-              Text(
-                'Removes airplane and cloud animation when travelling',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
+              Flexible(
+                child: Text(
+                  'Removes airplane and cloud animation when traveling',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text("Remove quick return button"),
+              Switch(
+                value: _settingsProvider.removeTravelQuickReturnButton,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.removeTravelQuickReturnButton = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  "By default, when abroad, you'll see a home icon button that you can "
+                  "double-tap to initiate your travel back to Torn. You can optionally disable "
+                  "it by using this option",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ],
@@ -1724,15 +1780,17 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
-              child: Text(
-                'Tabs might increase memory and processor usage; be sure that you get familiar with how tabs work (see '
-                'the Tips section). It is highly recommended to use tabs to improve your Torn PDA experience.',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
+            Flexible(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 5, 20, 5),
+                child: Text(
+                  'Tabs might increase memory and processor usage; be sure that you get familiar with how tabs work (see '
+                  'the Tips section). It is highly recommended to use tabs to improve your Torn PDA experience.',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ),
             ),
@@ -1824,6 +1882,103 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         ),
                       ),
                     ),
+                    // -- Unused tabs
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          const Text("Remove unused tabs"),
+                          Switch(
+                            value: _webViewProvider.removeUnusedTabs,
+                            onChanged: (enabled) {
+                              _webViewProvider.removeUnusedTabs = enabled;
+                              _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: enabled);
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                      child: Text(
+                        'Removes unused tabs periodically (checks are performed when the app starts and then once every 24 hours)',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                    if (_webViewProvider.removeUnusedTabs)
+                      Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30, right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(child: Text("Include locked tabs")),
+                                    ],
+                                  ),
+                                ),
+                                Switch(
+                                  value: _webViewProvider.removeUnusedTabsIncludesLocked,
+                                  onChanged: (value) {
+                                    _webViewProvider.removeUnusedTabsIncludesLocked = value;
+                                    // Ensure we update the periodic task parameters
+                                    _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: true);
+                                  },
+                                  activeTrackColor: Colors.lightGreenAccent,
+                                  activeColor: Colors.green,
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 30, right: 20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: <Widget>[
+                                Flexible(
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(child: const Text("Inactive for")),
+                                    ],
+                                  ),
+                                ),
+                                DropdownButton<TabsWipeTimeRange>(
+                                  value: _webViewProvider.removeUnusedTabsRangeDays,
+                                  items: tabsRemoveTimeRangesList.map((TabsWipeTimeRange range) {
+                                    return DropdownMenuItem<TabsWipeTimeRange>(
+                                      value: range,
+                                      child: Text(range.displayName),
+                                    );
+                                  }).toList(),
+                                  onChanged: (TabsWipeTimeRange? newValue) {
+                                    if (newValue != null) {
+                                      setState(() {
+                                        _webViewProvider.removeUnusedTabsRangeDays = newValue;
+                                      });
+                                      // Ensure we update the periodic task parameters
+                                      _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: true);
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                    // -- Unused tabs ENDS --
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
@@ -1902,29 +2057,26 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    _showColorPickerTabs(context);
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        const Text("Choose hide bar colour"),
-                        Container(
-                          width: 25,
-                          height: 25,
-                          color: Color(_settingsProvider.tabsHideBarColor),
-                        )
-                      ],
-                    ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 35, 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      const Text("Select hide bar color"),
+                      ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Color(_settingsProvider.tabsHideBarColor).withAlpha(255),
+                            foregroundColor: Colors.white, // Ensures icon color is always white
+                          ),
+                          child: Icon(Icons.palette), // No need to set icon color explicitly
+                          onPressed: () => _showColorPickerTabs(context)),
+                    ],
                   ),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Text(
-                    'Choose the colour of the bar that indicates that tabs are hidden',
+                    'Choose the color of the bar that indicates that tabs are hidden',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,
@@ -2050,6 +2202,268 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
+                ),
+              ),
+            ],
+          ),
+      ],
+    );
+  }
+
+  Column _fab() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'FLOATING ACTION BUTON',
+              style: TextStyle(fontSize: 10),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: const Text("Enabled")),
+              Switch(
+                value: _webViewProvider.fabEnabled,
+                onChanged: (value) {
+                  _webViewProvider.fabEnabled = value;
+                  // Reset coordinates in case something's gone wrong
+                  // with height and width calculations
+                  if (value) {
+                    _webViewProvider.fabSavedPositionXY = [100, 100];
+                  }
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+          child: Text(
+            "Shows a Floating Action Button while using the browser, which adds several "
+            "action buttons and gestures to enhance navigation. NOTE: it is highly recommended "
+            "that you read about how to use this button in the Tips section!",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Expand direction")),
+                    _fabDirectionDropdown(),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  "Dictates where to expand the option buttons when the Floating Action Button is tapped",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Only in fullscreen")),
+                    Switch(
+                      value: _webViewProvider.fabOnlyFullScreen,
+                      onChanged: (value) {
+                        _webViewProvider.fabOnlyFullScreen = value;
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 5),
+                child: Text(
+                  "Only show the Floating Action Button when in full screen mode",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Number of buttons")),
+                    Row(
+                      children: [
+                        Text(_webViewProvider.fabButtonCount.toString()),
+                        Slider(
+                          value: _webViewProvider.fabButtonCount.toDouble(),
+                          min: FabSettings.minButtons.toDouble(),
+                          max: FabSettings.maxButtons.toDouble(),
+                          divisions: FabSettings.maxButtons - FabSettings.minButtons,
+                          label: _webViewProvider.fabButtonCount.toString(),
+                          onChanged: (value) {
+                            setState(() {
+                              _webViewProvider.fabButtonCount = value.toInt();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "Adjust the number of action buttons displayed when the FAB is expanded.",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              ...List.generate(_webViewProvider.fabButtonCount, (index) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Button ${index + 1} action'),
+                      DropdownButton<WebviewFabAction>(
+                        value: _webViewProvider.fabButtonActions[index],
+                        items: FabSettings.actions.map((action) {
+                          return DropdownMenuItem(
+                            value: action,
+                            child: SizedBox(
+                              width: 80,
+                              child: Text(
+                                action.fabActionName,
+                                textAlign: TextAlign.right,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (newAction) {
+                          if (newAction != null) {
+                            setState(() {
+                              _webViewProvider.updateFabButtonAction(index, newAction);
+                            });
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ],
+          ),
+        if (_webViewProvider.fabEnabled)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Double tap action"),
+                    DropdownButton<WebviewFabAction>(
+                      value: _webViewProvider.fabDoubleTapAction,
+                      items: FabSettings.actions.map((action) {
+                        return DropdownMenuItem(
+                          value: action,
+                          child: SizedBox(
+                            width: 80,
+                            child: Text(
+                              action.fabActionName,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (action) {
+                        if (action != null) {
+                          _webViewProvider.updateFabDoubleTapAction(action);
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Triple tap action"),
+                    DropdownButton<WebviewFabAction>(
+                      value: _webViewProvider.fabTripleTapAction,
+                      items: FabSettings.actions.map((action) {
+                        return DropdownMenuItem(
+                          value: action,
+                          child: SizedBox(
+                            width: 80,
+                            child: Text(
+                              action.fabActionName,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (action) {
+                        if (action != null) {
+                          _webViewProvider.updateFabTripleTapAction(action);
+                        }
+                      },
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -2533,6 +2947,86 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        //--
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                  Text("Short tap opens full screen"),
+                ],
+              )),
+              Switch(
+                value: _settingsProvider.fullScreenByShortChainingTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByShortChainingTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a target is short-tapped in the Chaining section. "
+            "Defaults to OFF. Note that you can still access the chaining sequence controls by "
+            "double tapping the main tab",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        //--
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                  child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                  Text("Long tap opens full screen"),
+                ],
+              )),
+              Switch(
+                value: _settingsProvider.fullScreenByLongChainingTap,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.fullScreenByLongChainingTap = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Opens the browser in full screen mode when a target is long-pressed in the Chaining section. "
+            "Defaults to OFF. Note that you can still access the chaining sequence controls by "
+            "double tapping the main tab",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -2803,6 +3297,58 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             _webViewProvider.bottomBarStyleEnabled = true;
             _webViewProvider.bottomBarStyleType = 2;
         }
+      },
+    );
+  }
+
+  Widget _fabDirectionDropdown() {
+    return DropdownButton<String>(
+      value: _webViewProvider.fabDirection,
+      items: const [
+        DropdownMenuItem(
+          value: "center",
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Top",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "left",
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Left",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "right",
+          child: SizedBox(
+            width: 70,
+            child: Text(
+              "Right",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _webViewProvider.fabDirection = value!;
+        });
       },
     );
   }

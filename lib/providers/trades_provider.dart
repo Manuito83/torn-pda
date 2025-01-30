@@ -1,6 +1,5 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 // Package imports:
 import 'package:html/dom.dart' as dom;
@@ -10,7 +9,8 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_in.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_item.dart';
 import 'package:torn_pda/models/trades/trade_item_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_utils.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/external/torn_exchange_comm.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -113,7 +113,7 @@ class TradesProvider extends ChangeNotifier {
     if (leftItemsElements.isNotEmpty || rightItemsElements.isNotEmpty) {
       dynamic allTornItems;
       try {
-        allTornItems = await Get.find<ApiCallerController>().getItems();
+        allTornItems = await ApiCallsV1.getItems();
       } catch (e) {
         print(e);
       }

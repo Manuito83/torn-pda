@@ -67,9 +67,9 @@ class EventIcons extends StatelessWidget {
         color: Colors.green,
         size: 20,
       );
-    } else if (message.contains('A stock dividend from')) {
+    } else if (message.contains('A stock dividend from') || message.contains('Stock dividends from')) {
       insideIcon = Icon(
-        MdiIcons.bankTransfer,
+        Icons.monetization_on,
         color: Colors.green,
         size: 20,
       );
@@ -200,6 +200,24 @@ class EventIcons extends StatelessWidget {
       insideIcon = Icon(
         Icons.house_outlined,
         color: Colors.orange[900],
+        size: 20,
+      );
+    } else if (message.contains('ranked up from')) {
+      insideIcon = Icon(
+        MdiIcons.trendingUp,
+        color: Colors.green,
+        size: 20,
+      );
+    } else if (message.contains('ranked down from')) {
+      insideIcon = Icon(
+        MdiIcons.trendingDown,
+        color: Colors.orange[900],
+        size: 20,
+      );
+    } else if (message.contains('ranked war')) {
+      insideIcon = Icon(
+        MdiIcons.swordCross,
+        color: Colors.brown,
         size: 20,
       );
     } else {

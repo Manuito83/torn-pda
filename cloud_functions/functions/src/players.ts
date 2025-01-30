@@ -101,6 +101,10 @@ export const playersGroup = {
         promises.push(manageStats("retalsNotification", -1));
       }
 
+      if (beforeStat.forumsSubscriptionsNotification) {
+        promises.push(manageStats("forumsSubscriptionsNotification", -1));
+      }
+
       if (beforeStat.platform === "android") {
         promises.push(manageStats("android", -1));
       }
@@ -224,6 +228,12 @@ export const playersGroup = {
           )
         );
 
+      if (beforeStat.forumsSubscriptionsNotification !== afterStat.forumsSubscriptionsNotification)
+        promises.push(
+          manageStats("forumsSubscriptionsNotification", afterStat.forumsSubscriptionsNotification ? 1 : -1
+          )
+        );
+
       if (
         !afterStat.energyNotification &&
         !afterStat.nerveNotification &&
@@ -239,6 +249,7 @@ export const playersGroup = {
         !afterStat.eventsNotification &&
         !afterStat.refillsNotification &&
         !afterStat.stockMarketNotification &&
+        !afterStat.forumsSubscriptionsNotification &&
         // NOTE: do NOT include here notifications that are outside of the main notification loop
         // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
         // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active
@@ -269,6 +280,7 @@ export const playersGroup = {
           || afterStat.eventsNotification
           || afterStat.refillsNotification
           || afterStat.stockMarketNotification
+          || afterStat.forumsSubscriptionsNotification
           // NOTE: do NOT include here notifications that are outside of the main notification loop
           // (e.g. retals, assists, loot), as they don't take into account the "alertsEnabled", but just their own parameter
           // Adding them here would cause unnecessary reads for people with "alertsEnabled" if no other specific alerts are active

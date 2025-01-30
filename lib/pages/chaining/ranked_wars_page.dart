@@ -5,11 +5,10 @@ import 'dart:async';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
-import 'package:torn_pda/providers/api_caller.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -390,7 +389,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
   }
 
   Future _fetchRankedWards() async {
-    final dynamic apiResponse = await Get.find<ApiCallerController>().getRankedWars();
+    final dynamic apiResponse = await ApiCallsV1.getRankedWars();
 
     if (apiResponse is RankedWarsModel) {
       if (apiResponse.rankedwars != null) {
