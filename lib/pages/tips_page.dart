@@ -766,7 +766,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
         headerValue: "Hide tabs temporarily",
         expandedValue: "You can temporarily hide tabs so that they don't take space."
             "\n\nIf you are using the 'default' browser style: tap and hold the title bar, then slide up or down.\n\n"
-            "If you are using the 'bottom-bar' or 'dialog' styles: tab and hold the CLOSE button, then slide up or down.",
+            "If you are using the 'bottom-bar' or 'dialog' styles: tap and hold the CLOSE button, then slide up or down.",
       ),
     );
     tips.add(
@@ -1143,7 +1143,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     tips.add(
       ExpandableTip(
         headerValue: "Can I pin a target to the top?",
-        expandedValue: "Yes. Swipe right the target's card to pin/unpin it.",
+        expandedValue: "Yes. Swipe right on the target's card to pin/unpin it.",
       ),
     );
     tips.add(
@@ -1155,7 +1155,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     tips.add(
       ExpandableTip(
         headerValue: "Can I hide a target?",
-        expandedValue: "Yes. Swipe left the target's card to hide it.",
+        expandedValue: "Yes. Swipe left on the target's card to hide it.",
       ),
     );
     tips.add(

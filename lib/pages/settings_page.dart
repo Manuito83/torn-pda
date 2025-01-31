@@ -597,7 +597,7 @@ class SettingsPageState extends State<SettingsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            "If enabled, if a target's spy information cannot be found in the preferred spies source, it will also "
+            "Whilst enabled, if a target's spy information cannot be found in the preferred spies source, it will also "
             "be taken from the other source if available. When switching from one source to the other, the spy "
             "information is preserved unless the new active source also contains a spy for a target",
             style: TextStyle(
@@ -1107,7 +1107,7 @@ class SettingsPageState extends State<SettingsPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Text(
                   "This will download your saved settings and restore them in the app. Please be aware that this will "
-                  "overwritte your current preferences",
+                  "overwrite your current preferences",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 12,
@@ -1387,8 +1387,8 @@ class SettingsPageState extends State<SettingsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
             "Use this section to configure alternative API keys for the external partners that "
-            "Torn PDA connects with. CAUTION: ensure this other keys are working correctly, as Torn PDA "
-            "won't be able to check for errors and certain sections might stop working",
+            "Torn PDA connects with. CAUTION: ensure these other keys are working correctly, as Torn PDA "
+            "is unable to check for errors and certain sections may stop working",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
@@ -1572,7 +1572,7 @@ class SettingsPageState extends State<SettingsPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            'If enabled, the device screen will be splitted to show the main app the the browser at the same time. '
+            'If enabled, the device screen will be split to show the main app the the browser at the same time. '
             'A minimum width (800 dpi) is needed for this to be allowed',
             style: TextStyle(
               color: Colors.grey[600],

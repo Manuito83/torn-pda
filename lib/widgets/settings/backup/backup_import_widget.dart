@@ -117,7 +117,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                 SizedBox(width: 15),
                 const Flexible(
                   child: Text(
-                    "Overwritte existing",
+                    "Overwrite existing",
                   ),
                 ),
                 SizedBox(width: 15),
@@ -200,7 +200,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                 SizedBox(width: 15),
                 const Flexible(
                   child: Text(
-                    "Overwritte existing",
+                    "Overwrite existing",
                   ),
                 ),
                 SizedBox(width: 15),
@@ -269,7 +269,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                 SizedBox(width: 15),
                 const Flexible(
                   child: Text(
-                    "Overwritte existing",
+                    "Overwrite existing",
                   ),
                 ),
                 SizedBox(width: 15),

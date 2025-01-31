@@ -218,7 +218,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
 
   Text _addExistingSubtitle() {
     return Text(
-      "EXISTING SAVE (OVERWRITTE)",
+      "EXISTING SAVE (OVERWRITE)",
       style: TextStyle(fontSize: 11, color: Colors.red),
     );
   }
