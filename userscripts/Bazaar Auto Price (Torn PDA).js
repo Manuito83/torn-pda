@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Item Market Auto Price
 // @namespace    dev.kwack.torn.imarket-auto-price
-// @version      1.0.1
+// @version      1.0.2
 // @description  Automatically set the price of items relative to the current market
 // @author       Kwack [2190604]
 // @match        https://www.torn.com/page.php?sid=ItemMarket
@@ -9,6 +9,13 @@
 // ==/UserScript==
 
 // @ts-check
+
+const inputSelector = `
+	div[class*=itemRowWrapper] div[class*=priceInputWrapper]
+	> div.input-money-group > input.input-money:not([type=hidden]):not(.kw--price-set),
+	div[class*=itemRowWrapper] div[class*=amountInputWrapper][class*=hideMaxButton]
+	> div.input-money-group > input.input-money:not([type=hidden]):not(.kw--price-set)
+`;
 
 /**
  * @type {number}
@@ -35,22 +42,22 @@ const key = "###PDA-APIKEY###";
  * @returns {Promise<number>} the lowest price for the item
  */
 function getLowestPrice(itemId) {
-	const baseURL = "https://api.torn.com/v2/market";
-	const searchParams = new URLSearchParams({
-		selections: "itemmarket",
-		key,
-		id: itemId,
-		offset: "0",
-	});
-	const url = new URL(`?${searchParams.toString()}`, baseURL);
-	return fetch(url)
-		.then((res) => res.json())
-		.then((data) => {
-			if ("error" in data) throw new Error(data.error.error);
-			const price = data?.itemmarket?.listings?.[0]?.price;
-			if (typeof price === "number" && price >= 1) return price;
-			throw new Error(`Invalid price: ${price}`);
-		});
+  const baseURL = "https://api.torn.com/v2/market";
+  const searchParams = new URLSearchParams({
+    selections: "itemmarket",
+    key,
+    id: itemId,
+    offset: "0",
+  });
+  const url = new URL(`?${searchParams.toString()}`, baseURL);
+  return fetch(url)
+    .then((res) => res.json())
+    .then((data) => {
+      if ("error" in data) throw new Error(data.error.error);
+      const price = data?.itemmarket?.listings?.[0]?.price;
+      if (typeof price === "number" && price >= 1) return price;
+      throw new Error(`Invalid price: ${price}`);
+    });
 }
 
 /**
@@ -61,9 +68,9 @@ function getLowestPrice(itemId) {
  * @see https://github.com/Mephiles/torntools_extension/blob/54db1d1dbe2dc84e3267d56815e0dedce36e4bf1/extension/scripts/global/functions/torn.js#L1573
  */
 function updateInput(input, value) {
-	input.value = `${value}`;
-	// Needed to trigger React to update its state
-	input.dispatchEvent(new Event("input", { bubbles: true }));
+  input.value = `${value}`;
+  // Needed to trigger React to update its state
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 /**
@@ -71,38 +78,59 @@ function updateInput(input, value) {
  * @param {HTMLInputElement} input
  */
 async function addPrice(input) {
-	if (!(input instanceof HTMLInputElement)) throw new Error("Input is not an HTMLInputElement");
-	const row = input.closest("div[class*=itemRowWrapper]");
-	const image = row?.querySelector("img");
-	if (!image) throw new Error("Could not find image element");
-	if (image.parentElement?.matches("[class*='glow-']")) throw new Warning("Skipping a glowing RW item");
-	const itemId = image.src?.match(/\/images\/items\/([\d]+)\//)?.[1];
-	if (!itemId) throw new Error("Could not find item ID");
-	const currentLowestPrice = await getLowestPrice(itemId);
-	if (!currentLowestPrice) throw new Error("Could not get lowest price");
-	// Sets price to either 1 or the current lowest price minus 5, whichever is higher. This prevents negative prices
-	const priceToSet = Math.max(1, currentLowestPrice - diff);
-	updateInput(input, priceToSet);
-	input.classList.add("kw--price-set");
+  if (!(input instanceof HTMLInputElement))
+    throw new Error("Input is not an HTMLInputElement");
+  const row = input.closest("div[class*=itemRowWrapper]");
+  const image = row?.querySelector("img");
+  if (!image) throw new Error("Could not find image element");
+  if (image.parentElement?.matches("[class*='glow-']"))
+    throw new Warning("Skipping a glowing RW item");
+  const itemId = image.src?.match(/\/images\/items\/([\d]+)\//)?.[1];
+  if (!itemId) throw new Error("Could not find item ID");
+  const currentLowestPrice = await getLowestPrice(itemId);
+  if (!currentLowestPrice) throw new Error("Could not get lowest price");
+  // Sets price to either 1 or the current lowest price minus 5, whichever is higher. This prevents negative prices
+  const priceToSet = Math.max(1, currentLowestPrice - diff);
+  updateInput(input, priceToSet);
+  input.classList.add("kw--price-set");
+}
+
+/**
+ * Fills quantity inputs with the maximum quantity possible when
+ * @param {HTMLInputElement} input
+ */
+async function addQuantity(input) {
+  if (!(input instanceof HTMLInputElement))
+    throw new Error("Input is not an HTMLInputElement");
+  updateInput(input, "max");
+  input.classList.add("kw--price-set");
 }
 
 function main() {
-	$(document).on(
-		"click",
-		"div[class*=itemRowWrapper] div[class*=priceInputWrapper] > div.input-money-group > input.input-money:not([type=hidden]):not(.kw--price-set)",
-		(e) => {
-			const input = e.target;
-			addPrice(input).catch((e) => {
-				if (e instanceof Warning) {
-					console.warn(e);
-					input.style.outline = "2px solid yellow";
-				} else {
-					console.error(e);
-					input.style.outline = "2px solid red";
-				}
-			});
-		}
-	);
+  $(document).on("click", inputSelector, (e) => {
+    const input = e.target;
+    if (input.getAttribute("placeholder") === "Qty") {
+      addQuantity(input).catch((e) => {
+        if (e instanceof Warning) {
+          console.warn(e);
+          input.style.outline = "2px solid yellow";
+        } else {
+          console.error(e);
+          input.style.outline = "2px solid red";
+        }
+      });
+    } else {
+      addPrice(input).catch((e) => {
+        if (e instanceof Warning) {
+          console.warn(e);
+          input.style.outline = "2px solid yellow";
+        } else {
+          console.error(e);
+          input.style.outline = "2px solid red";
+        }
+      });
+    }
+  });
 }
 
 main();
