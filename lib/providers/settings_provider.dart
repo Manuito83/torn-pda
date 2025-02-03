@@ -1100,6 +1100,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _tctClockHighlightsEvents = true;
+  bool get tctClockHighlightsEvents => _tctClockHighlightsEvents;
+  set tctClockHighlightsEvents(bool value) {
+    _tctClockHighlightsEvents = value;
+    Prefs().setTctClockHighlightsEvents(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1316,6 +1324,8 @@ class SettingsProvider extends ChangeNotifier {
     _exactPermissionDialogShownAndroid = await Prefs().getExactPermissionDialogShownAndroid();
 
     _downloadActionShare = await Prefs().getDownloadActionShare();
+
+    _tctClockHighlightsEvents = await Prefs().getTctClockHighlightsEvents();
 
     await WebviewConfig().generateUserAgentForUser();
 

@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.0 - Build 487 - 28/01/2025
+    // v3.7.0 - Build 488 - 03/02/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.0'
@@ -63,6 +63,12 @@ class ChangeLogState extends State<ChangeLog> {
                 "\n\nNOTE: in order to reduce API load, checks will be performed "
                 "every 15 minutes, so the notification may not be immediate "
                 "after a new post is made",
+          ),
+          ComplexFeature(
+            "Clock now highlights active events and competitions",
+            explanation: "Enabled by default (can be disabled in Settings > Time).\n\n"
+                "Tapping the clock will now display a toast notification when an event or competition is active, showing "
+                "details and the remaining time until it ends.",
           ),
           if (Platform.isIOS) "Added additional app icons",
         ],

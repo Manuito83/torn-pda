@@ -422,6 +422,11 @@ class Prefs {
   // Periodic tasks
   final String _taskPrefix = "pda_periodic_";
 
+  // Torn Calendar
+  final String _kTornCalendarModel = "pda_tornCalendarModel";
+  final String _kTornCalendarLastUpdate = "pda_tornCalendarLastUpdate";
+  final String _kTctClockHighlightsEvents = "pda_tctClockHighlightsEvents";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -4022,5 +4027,39 @@ class Prefs {
   Future<bool> removeLastExecutionTime(String taskName) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.remove("$_taskPrefix$taskName");
+  }
+
+  /// -----------------------------------
+  /// Methods for Torn Calendar
+  /// -----------------------------------
+
+  Future<String> getTornCalendarModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTornCalendarModel) ?? "";
+  }
+
+  Future<bool> setTornCalendarModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTornCalendarModel, value);
+  }
+
+  Future<int> getTornCalendarLastUpdate() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTornCalendarLastUpdate) ?? 0;
+  }
+
+  Future<bool> setTornCalendarLastUpdate(int timestamp) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTornCalendarLastUpdate, timestamp);
+  }
+
+  Future<bool> getTctClockHighlightsEvents() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTctClockHighlightsEvents) ?? true;
+  }
+
+  Future<bool> setTctClockHighlightsEvents(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTctClockHighlightsEvents, value);
   }
 }

@@ -37,6 +37,7 @@ enum ApiSelection_v2 {
   userMarketItems,
   userProfileMisc,
   otherUserProfile,
+  tornCalendar,
 }
 
 class ApiError {

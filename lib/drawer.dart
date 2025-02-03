@@ -1718,7 +1718,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                       ),
                     ],
                   ),
-                  GestureDetector(
+                  TctClock(
+                    color: _themeProvider!.mainText!,
                     onTap: () {
                       _webViewProvider.openBrowserPreference(
                         context: context,
@@ -1733,7 +1734,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         browserTapType: BrowserTapType.long,
                       );
                     },
-                    child: TctClock(color: _themeProvider!.mainText!),
                   ),
                 ],
               ),

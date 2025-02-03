@@ -687,26 +687,34 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (_apiGoodData)
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () {
-                _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: true);
-              },
-              onLongPress: () {
-                _launchBrowser(url: "https://www.torn.com/calendar.php", shortTap: false);
-              },
-              child: Showcase(
-                key: _showcaseProfileClock,
-                title: 'There is a lot to explore!',
-                description: '\nAlmost anything in Torn PDA can be interacted with!\n\n'
-                    "Try for yourself, and don't forget to visit the Tips section for more "
-                    'information!',
-                showArrow: false,
-                disableMovingAnimation: true,
-                textColor: _themeProvider!.mainText!,
-                tooltipBackgroundColor: _themeProvider!.secondBackground!,
-                descTextStyle: const TextStyle(fontSize: 13),
-                tooltipPadding: const EdgeInsets.all(20),
-                child: const TctClock(color: Colors.white),
+            child: Showcase(
+              key: _showcaseProfileClock,
+              title: 'There is a lot to explore!',
+              description: '\nAlmost anything in Torn PDA can be interacted with!\n\n'
+                  "Try for yourself, and don't forget to visit the Tips section for more "
+                  'information!',
+              showArrow: false,
+              disableMovingAnimation: true,
+              textColor: _themeProvider!.mainText!,
+              tooltipBackgroundColor: _themeProvider!.secondBackground!,
+              descTextStyle: const TextStyle(fontSize: 13),
+              tooltipPadding: const EdgeInsets.all(20),
+              child: TctClock(
+                color: Colors.white,
+                onTap: () {
+                  _webViewProvider.openBrowserPreference(
+                    context: context,
+                    url: "https://www.torn.com/calendar.php",
+                    browserTapType: BrowserTapType.short,
+                  );
+                },
+                onLongPress: () {
+                  _webViewProvider.openBrowserPreference(
+                    context: context,
+                    url: "https://www.torn.com/calendar.php",
+                    browserTapType: BrowserTapType.long,
+                  );
+                },
               ),
             ),
           )

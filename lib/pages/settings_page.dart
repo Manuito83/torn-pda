@@ -432,6 +432,52 @@ class SettingsPageState extends State<SettingsPage> {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Highlight events",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.tctClockHighlightsEvents,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.tctClockHighlightsEvents = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  'If enabled, the TCT Clock will be highlighted whenever there is an event or competition active in Torn',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
