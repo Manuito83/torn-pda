@@ -215,6 +215,11 @@ class Prefs {
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
   final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
+
+  // OC v2
+  final String _kPlayerAlreadyInOCv2 = "pda_PlayerAlreadyInOCv2";
+
+  // OC v1
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
@@ -3146,9 +3151,24 @@ class Prefs {
     return prefs.setStringList(_kUserScriptsForcedVersions, value);
   }
 
+  /// --------------------------------
+  /// METHODS FOR ORGANIZED CRIMES v2
+  /// --------------------------------
+
+  Future<bool> getPlayerInOCv2() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kPlayerAlreadyInOCv2) ?? false;
+  }
+
+  Future<bool> setPlayerInOCv2(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kPlayerAlreadyInOCv2, value);
+  }
+
   /// -----------------------------
   /// METHODS FOR ORGANIZED CRIMES
   /// -----------------------------
+
   Future<bool> getOCrimesEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kOCrimesEnabled) ?? true;

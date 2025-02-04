@@ -8,10 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 
 // Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
@@ -638,6 +640,14 @@ class SettingsProvider extends ChangeNotifier {
   set changeOCrimeLastKnown(int value) {
     _oCrimeLastKnown = value;
     Prefs().setOCrimeLastKnown(_oCrimeLastKnown);
+    notifyListeners();
+  }
+
+  bool _playerInOCv2 = false;
+  bool get playerInOCv2 => _playerInOCv2;
+  set playerInOCv2(bool value) {
+    _playerInOCv2 = value;
+    Prefs().setPlayerInOCv2(value);
     notifyListeners();
   }
 
@@ -1426,6 +1436,38 @@ class SettingsProvider extends ChangeNotifier {
       await platform.invokeMethod('changeIcon');
     } on PlatformException catch (e) {
       log("Failed to reset icon: ${e.message}");
+    }
+  }
+
+  /// Determine whether the user is still using OC v1 or is already in OC v2
+  /// This will be used by several client widgets to call the appropriate API
+  ///
+  /// 1. We only perform this check if the user is still in OC v1 in SharedPreferences
+  /// 2. We call the v2 API and, if there is a crime active, we will transition to v2
+  /// 3. Note that the user can manually revert back to OC v1 in Settings
+  ///    If he does, he will stay in OC v1 until he manually reverts to OC2 or until
+  ///    we can find a positive crime in API v2
+  ///
+  /// Players might want to revert to OC1 crimes if they change to an OC1 faction, for example
+  /// But they might forget to change back to OC2 later when applicable, so we will keep calling the API
+  void checkIfUserIsOnOCv2() async {
+    bool alreadyInOC2 = await Prefs().getPlayerInOCv2();
+
+    if (alreadyInOC2) {
+      log("Player already in OC v2: no check needed");
+      return;
+    }
+
+    final dynamic apiResponse = await ApiCallsV2.getUserOC2Crime_v2();
+    if (apiResponse != null) {
+      final crime = apiResponse as UserOrganizedCrimeResponse;
+      if (crime.organizedCrime != null) {
+        playerInOCv2 = true;
+        log("Switching player to OC v2");
+        return;
+      }
+
+      log("Can't verify if player is in OC v2, keeping OC v1");
     }
   }
 }

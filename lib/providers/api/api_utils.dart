@@ -38,6 +38,7 @@ enum ApiSelection_v2 {
   userProfileMisc,
   otherUserProfile,
   tornCalendar,
+  oc2UserCrime,
 }
 
 class ApiError {

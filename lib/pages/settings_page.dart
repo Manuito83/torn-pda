@@ -921,6 +921,47 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Row(
+                  children: [
+                    const Flexible(
+                      child: Text(
+                        "Organized Crimes v2 in use",
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.playerInOCv2,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.playerInOCv2 = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Torn PDA will try to identify if your faction has changed to OC v2. If you would like to remain '
+            'in OC v1 (e.g.: if you join an OC1 faction), revert back by using this toggle',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

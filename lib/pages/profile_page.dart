@@ -761,7 +761,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             // If we reactivated faction crimes, they might take up to a minute
             // to appear unless we call them directly
             if (newOptions.oCrimesReactivated) {
-              _getFactionCrimes();
+              _getFactionCrimesV1();
             }
             if (_settingsProvider!.tornStatsChartDateTime == 0) {
               _getStatsChart();
@@ -5065,7 +5065,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // Get this async
       if (_settingsProvider!.oCrimesEnabled) {
-        _getFactionCrimes();
+        _getFactionCrimesV1();
       }
 
       _checkProperties(miscApiResponse, forcedUpdate);
@@ -5323,7 +5323,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> _getFactionCrimes() async {
+  Future<void> _getFactionCrimesV1() async {
+    // If we are in OCv2, we don't need to get v1 crimes
+    if (_settingsProvider!.playerInOCv2) return;
+
     try {
       if (_user == null) return;
       final factionCrimes = await ApiCallsV1.getFactionCrimes(playerId: _user!.playerId.toString());

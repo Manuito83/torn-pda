@@ -4822,6 +4822,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
   // ORGANIZED CRIMES NNB
   Future<void> _assessOCnnb(String calledUrl) async {
+    if (_settingsProvider.playerInOCv2) return;
+
     if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.off) return;
 
     if (!calledUrl.contains("factions.php?step=your") || !calledUrl.contains("/tab=crimes")) {

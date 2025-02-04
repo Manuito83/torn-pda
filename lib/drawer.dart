@@ -2031,6 +2031,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // This is triggered to true if the changelog activates.
         _forceFireUserReload = false;
       }
+
+      if (duration.inDays > 2 || kDebugMode) {
+        _settingsProvider.checkIfUserIsOnOCv2();
+      }
     });
   }
 

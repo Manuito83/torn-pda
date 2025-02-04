@@ -71,6 +71,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "details and the remaining time until it ends.",
           ),
           if (Platform.isIOS) "Added additional app icons",
+          "Scripts and UI fixes [Kwack]",
         ],
     );
 
