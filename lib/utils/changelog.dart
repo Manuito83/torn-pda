@@ -65,6 +65,14 @@ class ChangeLogState extends State<ChangeLog> {
                 "after a new post is made",
           ),
           ComplexFeature(
+            "Profile: added OC v2 information to the misc card",
+            explanation: "Torn PDA will try to assess whether your faction has already switched to OC v2 "
+                "every couple of days (in order to save API calls). Hoever, you can manually set the OC version in "
+                "Settings / Organized Crime\n\n"
+                "Should you wish to return to OC v1 (if you join a faction that hasn't changed yet), remember "
+                "to revert the OC version in Settings",
+          ),
+          ComplexFeature(
             "Clock now highlights active events and competitions",
             explanation: "Enabled by default (can be disabled in Settings > Time).\n\n"
                 "Tapping the clock will now display a toast notification when an event or competition is active, showing "

@@ -1255,6 +1255,7 @@ class SettingsProvider extends ChangeNotifier {
     _oCrimesEnabled = await Prefs().getOCrimesEnabled();
     _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
     _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
+    _playerInOCv2 = await Prefs().getPlayerInOCv2();
 
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
 

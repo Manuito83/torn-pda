@@ -64,6 +64,7 @@ import 'package:torn_pda/widgets/profile/event_icons.dart';
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 import 'package:torn_pda/widgets/profile/jobpoints_dialog.dart';
 import 'package:torn_pda/widgets/profile/market_status.dart';
+import 'package:torn_pda/widgets/profile/oc_v2_widget.dart';
 import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
@@ -241,6 +242,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
   DateTime? _rentedPropertiesLastChecked;
 
+  // ######## //
+  /// OC V2 ///
+  // ######## //
+  UserOrganizedCrimeResponse? _oc2Model;
+
+  // ######## //
+  /// OC V1 ///
+  // ######## //
   // We will first try to get the full crimes if we have AA access, in which case
   // we consider it as Complex. Otherwise, with events, it will be Simple.
   DateTime _ocTime = DateTime.now();
@@ -253,6 +262,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   String _ocFinalStringShort = "";
   int _ocComplexPeopleNotReady = 0;
   bool _ocComplexReady = false;
+  // ## END OC ## //
 
   bool _warnAboutChains = false;
   bool _showHeaderWallet = false;
@@ -4464,87 +4474,102 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // FACTION CRIMES
     var factionCrimesActive = false;
     Widget factionCrimes = const SizedBox.shrink();
-    if (_ocFinalStringLong.isNotEmpty) {
-      factionCrimesActive = true;
-      factionCrimes = Row(
-        children: [
-          Icon(MdiIcons.fingerprint),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              _ocFinalStringLong,
-              style: TextStyle(
-                color: _ocComplexReady
-                    ? _ocComplexPeopleNotReady == 0
-                        ? Colors.green
-                        : Colors.orange[700]
-                    : _themeProvider!.mainText,
-              ),
-            ),
-          ),
-          if (_ocComplexReady)
-            InkWell(
-              borderRadius: BorderRadius.circular(100),
-              onLongPress: () {
-                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
-              },
-              onTap: () {
-                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
-              },
-              child: Padding(
-                padding: EdgeInsets.only(right: 5),
-                child: Icon(MdiIcons.openInApp, size: 18),
-              ),
-            ),
-        ],
+
+    // OC v2
+    if (_settingsProvider!.playerInOCv2 && _oc2Model != null) {
+      factionCrimes = OrganizedCrimeWidget(
+        crimeResponse: _oc2Model!,
+        playerId: _userProv!.basic!.playerId!,
       );
-    } else if (_ocSimpleExists) {
-      factionCrimesActive = true;
-      factionCrimes = Row(
-        children: [
-          Icon(MdiIcons.fingerprint),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              _ocSimpleStringFinal,
-              style: TextStyle(color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText),
-            ),
-          ),
-          if (_ocComplexReady)
-            InkWell(
-              borderRadius: BorderRadius.circular(100),
-              onLongPress: () {
-                _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
-              },
-              onTap: () {
-                _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
-              },
-              child: Padding(
-                padding: EdgeInsets.only(right: 5),
-                child: Icon(MdiIcons.openInApp, size: 18),
+
+      if (factionCrimes != const SizedBox.shrink()) {
+        factionCrimesActive = true;
+      }
+    }
+    // OC v1
+    else {
+      if (_ocFinalStringLong.isNotEmpty) {
+        factionCrimesActive = true;
+        factionCrimes = Row(
+          children: [
+            Icon(MdiIcons.fingerprint),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                _ocFinalStringLong,
+                style: TextStyle(
+                  color: _ocComplexReady
+                      ? _ocComplexPeopleNotReady == 0
+                          ? Colors.green
+                          : Colors.orange[700]
+                      : _themeProvider!.mainText,
+                ),
               ),
             ),
-          GestureDetector(
-            child: Icon(
-              MdiIcons.closeCircleOutline,
-              size: 16,
-              color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText,
-            ),
-            onTap: () {
-              showDialog(
-                useRootNavigator: false,
-                context: context,
-                barrierDismissible: true,
-                builder: (BuildContext context) {
-                  return DisregardCrimeDialog(
-                    disregardCallback: _disregardCrimeCallback,
-                  );
+            if (_ocComplexReady)
+              InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onLongPress: () {
+                  _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
                 },
-              );
-            },
-          ),
-        ],
-      );
+                onTap: () {
+                  _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(right: 5),
+                  child: Icon(MdiIcons.openInApp, size: 18),
+                ),
+              ),
+          ],
+        );
+      } else if (_ocSimpleExists) {
+        factionCrimesActive = true;
+        factionCrimes = Row(
+          children: [
+            Icon(MdiIcons.fingerprint),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                _ocSimpleStringFinal,
+                style: TextStyle(color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText),
+              ),
+            ),
+            if (_ocComplexReady)
+              InkWell(
+                borderRadius: BorderRadius.circular(100),
+                onLongPress: () {
+                  _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
+                },
+                onTap: () {
+                  _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
+                },
+                child: Padding(
+                  padding: EdgeInsets.only(right: 5),
+                  child: Icon(MdiIcons.openInApp, size: 18),
+                ),
+              ),
+            GestureDetector(
+              child: Icon(
+                MdiIcons.closeCircleOutline,
+                size: 16,
+                color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText,
+              ),
+              onTap: () {
+                showDialog(
+                  useRootNavigator: false,
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (BuildContext context) {
+                    return DisregardCrimeDialog(
+                      disregardCallback: _disregardCrimeCallback,
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      }
     }
 
     // BANK
@@ -4750,7 +4775,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
                     child: racingWidget,
                   ),
-                if (factionCrimesActive)
+                if (factionCrimesActive && _settingsProvider!.oCrimesEnabled)
                   Padding(
                     padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
                     child: factionCrimes,
@@ -5065,7 +5090,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // Get this async
       if (_settingsProvider!.oCrimesEnabled) {
-        _getFactionCrimesV1();
+        if (_settingsProvider!.playerInOCv2) {
+          _getFactionCrimesV2();
+        } else {
+          _getFactionCrimesV1();
+        }
       }
 
       _checkProperties(miscApiResponse, forcedUpdate);
@@ -5486,6 +5515,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } catch (e) {
       // Don't fill anything
       log(e.toString());
+    }
+  }
+
+  Future<void> _getFactionCrimesV2() async {
+    // If we are in OCv1, we don't need to get v2 crimes
+    if (!_settingsProvider!.playerInOCv2) return;
+    if (_userProv!.basic!.faction!.factionId == 0) return;
+
+    final dynamic apiResponse = await ApiCallsV2.getUserOC2Crime_v2();
+    if (apiResponse != null) {
+      final crime = apiResponse as UserOrganizedCrimeResponse;
+      setState(() {
+        _oc2Model = crime;
+      });
     }
   }
 
