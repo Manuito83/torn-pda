@@ -95,9 +95,9 @@ class TctClockState extends State<TctClock> {
                 shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents
                     ? [
                         Shadow(
-                          color: Colors.orange.shade800.withValues(alpha: 0.8),
+                          color: Colors.orange.shade800.withValues(alpha: 1),
                           offset: const Offset(0, 0),
-                          blurRadius: 5,
+                          blurRadius: 20,
                         )
                       ]
                     : null,
@@ -113,9 +113,9 @@ class TctClockState extends State<TctClock> {
                 shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents
                     ? [
                         Shadow(
-                          color: Colors.orange.shade800.withValues(alpha: 0.8),
+                          color: Colors.orange.shade800.withValues(alpha: 1),
                           offset: const Offset(0, 0),
-                          blurRadius: 5,
+                          blurRadius: 20,
                         )
                       ]
                     : null,
@@ -134,9 +134,9 @@ class TctClockState extends State<TctClock> {
                   shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents
                       ? [
                           Shadow(
-                            color: Colors.orange.shade800.withValues(alpha: 0.8),
+                            color: Colors.orange.shade800.withValues(alpha: 1),
                             offset: const Offset(0, 0),
-                            blurRadius: 5,
+                            blurRadius: 20,
                           )
                         ]
                       : null,

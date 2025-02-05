@@ -3,6 +3,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 
 /// Widget that displays a message about an Organized Crime (OC)
@@ -32,6 +33,7 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
   @override
   Widget build(BuildContext context) {
     SettingsProvider settingsProvider = context.read<SettingsProvider>();
+    ThemeProvider themeProvider = context.read<ThemeProvider>();
 
     final ocDynamic = widget.crimeResponse.organizedCrime;
 
@@ -107,12 +109,12 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
       // - The formatted time in red if less than 24 hours remain, otherwise in default style
       readyTextSpan = TextSpan(
         children: [
-          const TextSpan(text: 'planned to start at ', style: TextStyle(fontSize: 14)),
+          TextSpan(text: 'planned to start at ', style: TextStyle(fontSize: 14, color: themeProvider.mainText)),
           TextSpan(
             text: formattedTime,
             style: lessThan24Hours
                 ? const TextStyle(color: Colors.red, fontSize: 14)
-                : const TextStyle(color: Colors.black, fontSize: 14),
+                : TextStyle(color: themeProvider.mainText, fontSize: 14),
           ),
         ],
       );
@@ -126,10 +128,18 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     final TextSpan messageTextSpan = TextSpan(
       style: const TextStyle(fontSize: 16.0, color: Colors.black),
       children: [
-        TextSpan(text: "OC '$ocName' is ", style: TextStyle(fontSize: 14)),
+        TextSpan(
+          text: "OC '$ocName' is ",
+          style: TextStyle(fontSize: 14, color: themeProvider.mainText),
+        ),
         readyTextSpan,
         TextSpan(
-            text: ', you are in as a $position with a pass rate of $successChance%', style: TextStyle(fontSize: 14)),
+          text: ', you are in as a $position with a pass rate of $successChance%',
+          style: TextStyle(
+            fontSize: 14,
+            color: themeProvider.mainText,
+          ),
+        ),
       ],
     );
 
