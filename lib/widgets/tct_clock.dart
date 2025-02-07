@@ -92,15 +92,7 @@ class TctClockState extends State<TctClock> {
                 color: widget.color,
                 fontWeight:
                     _isEventActive && settingsProvider.tctClockHighlightsEvents ? FontWeight.bold : FontWeight.normal,
-                shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents
-                    ? [
-                        Shadow(
-                          color: Colors.orange.shade800.withValues(alpha: 1),
-                          offset: const Offset(0, 0),
-                          blurRadius: 20,
-                        )
-                      ]
-                    : null,
+                shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents ? _shadowList() : null,
               ),
             ),
             Text(
@@ -110,15 +102,7 @@ class TctClockState extends State<TctClock> {
                 color: widget.color,
                 fontWeight:
                     _isEventActive && settingsProvider.tctClockHighlightsEvents ? FontWeight.bold : FontWeight.normal,
-                shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents
-                    ? [
-                        Shadow(
-                          color: Colors.orange.shade800.withValues(alpha: 1),
-                          offset: const Offset(0, 0),
-                          blurRadius: 20,
-                        )
-                      ]
-                    : null,
+                shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents ? _shadowList() : null,
               ),
             ),
             if (settingsProvider.showDateInClock != "off")
@@ -131,15 +115,7 @@ class TctClockState extends State<TctClock> {
                   color: widget.color,
                   fontWeight:
                       _isEventActive && settingsProvider.tctClockHighlightsEvents ? FontWeight.bold : FontWeight.normal,
-                  shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents
-                      ? [
-                          Shadow(
-                            color: Colors.orange.shade800.withValues(alpha: 1),
-                            offset: const Offset(0, 0),
-                            blurRadius: 20,
-                          )
-                        ]
-                      : null,
+                  shadows: _isEventActive && settingsProvider.tctClockHighlightsEvents ? _shadowList() : null,
                 ),
               ),
           ],
@@ -244,22 +220,20 @@ class TctClockState extends State<TctClock> {
       }
     }
 
-    if (debug && !kReleaseMode) {
-      eventsList = [
-        {
-          "title": "Valentine's Day",
-          "description": "Love Juice reduces the energy cost of attacking & reviving",
-          "start": (now.subtract(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000),
-          "end": (now.add(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
-        },
-        {
-          "title": "Christmas Town",
-          "description": "Torn's very own festive theme park opens its doors to the public",
-          "start": (now.subtract(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
-          "end": (now.add(const Duration(hours: 3)).millisecondsSinceEpoch ~/ 1000),
-        }
-      ];
-    }
+    eventsList = [
+      {
+        "title": "Valentine's Day",
+        "description": "Love Juice reduces the energy cost of attacking & reviving",
+        "start": (now.subtract(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000),
+        "end": (now.add(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
+      },
+      {
+        "title": "Christmas Town",
+        "description": "Torn's very own festive theme park opens its doors to the public",
+        "start": (now.subtract(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
+        "end": (now.add(const Duration(hours: 3)).millisecondsSinceEpoch ~/ 1000),
+      }
+    ];
 
     return eventsList;
   }
@@ -304,5 +278,25 @@ class TctClockState extends State<TctClock> {
   Future<dynamic> _fetchCalendarDataFromApi() async {
     final dynamic calendar = await ApiCallsV2.getTornCalendar_v2();
     return calendar;
+  }
+
+  List<Shadow> _shadowList() {
+    return [
+      Shadow(
+        color: Colors.orange.shade800.withValues(alpha: 1),
+        offset: const Offset(0, 0),
+        blurRadius: 20,
+      ),
+      Shadow(
+        color: Colors.orange.shade800.withValues(alpha: 1),
+        offset: const Offset(0, 0),
+        blurRadius: 20,
+      ),
+      Shadow(
+        color: Colors.orange.shade800.withValues(alpha: 1),
+        offset: const Offset(0, 0),
+        blurRadius: 5,
+      ),
+    ];
   }
 }
