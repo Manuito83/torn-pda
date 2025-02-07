@@ -48,6 +48,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   int? _browserStyle = 0;
 
+  final _travelMoneyWarningFormKey = GlobalKey<FormState>();
+
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
@@ -1363,6 +1365,80 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       ],
                     ),
                   ],
+                ),
+              ),
+            ],
+          ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Low wallet money"),
+              Switch(
+                value: _settingsProvider.travelWalletMoneyWarning,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.travelWalletMoneyWarning = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        if (_settingsProvider.travelWalletMoneyWarning)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              SizedBox(
+                width: 180,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 50, right: 10, bottom: 15),
+                  child: Form(
+                    key: _travelMoneyWarningFormKey,
+                    child: TextFormField(
+                      maxLength: 10,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Minimum cash",
+                        isDense: true,
+                        counterText: '',
+                      ),
+                      initialValue: _settingsProvider.travelWalletMoneyWarningThreshold.toString(),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "This field cannot be empty";
+                        }
+                        final parsedValue = int.tryParse(value);
+                        if (parsedValue == null || parsedValue < 0) {
+                          return "Invalid number";
+                        }
+                        if (parsedValue > 1000000000) {
+                          return "Max 1 billion!";
+                        }
+                        return null;
+                      },
+                      onSaved: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          _settingsProvider.travelWalletMoneyWarningThreshold = int.parse(value);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 15),
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_travelMoneyWarningFormKey.currentState!.validate()) {
+                      FocusScope.of(context).unfocus();
+                      _travelMoneyWarningFormKey.currentState!.save();
+                    }
+                  },
+                  child: const Icon(Icons.save),
                 ),
               ),
             ],

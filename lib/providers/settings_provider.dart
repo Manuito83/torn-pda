@@ -780,6 +780,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _travelWalletMoneyWarning = true;
+  bool get travelWalletMoneyWarning => _travelWalletMoneyWarning;
+  set travelWalletMoneyWarning(bool choice) {
+    _travelWalletMoneyWarning = choice;
+    Prefs().setTravelWalletMoneyWarning(_travelWalletMoneyWarning);
+    notifyListeners();
+  }
+
+  var _travelWalletMoneyWarningThreshold = 50000;
+  int get travelWalletMoneyWarningThreshold => _travelWalletMoneyWarningThreshold;
+  set travelWalletMoneyWarningThreshold(int choice) {
+    _travelWalletMoneyWarningThreshold = choice;
+    Prefs().setTravelWalletMoneyWarningThreshold(_travelWalletMoneyWarningThreshold);
+    notifyListeners();
+  }
+
   var _warnAboutChains = true;
   bool get warnAboutChains => _warnAboutChains;
   set changeWarnAboutChains(bool choice) {
@@ -1277,6 +1293,8 @@ class SettingsProvider extends ChangeNotifier {
     _travelLifeExcessWarningThreshold = await Prefs().getTravelLifeExcessWarningThreshold();
     _travelDrugCooldownWarning = await Prefs().getTravelDrugCooldownWarning();
     _travelBoosterCooldownWarning = await Prefs().getTravelBoosterCooldownWarning();
+    _travelWalletMoneyWarning = await Prefs().getTravelWalletMoneyWarning();
+    _travelWalletMoneyWarningThreshold = await Prefs().getTravelWalletMoneyWarningThreshold();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
 

@@ -65,6 +65,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview/webview_utils.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
@@ -4323,7 +4324,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (!mounted) return;
 
     if (_assessGymAndHuntingEnergyWarningTriggerTime != null &&
-        DateTime.now().difference(_assessGymAndHuntingEnergyWarningTriggerTime!).inSeconds < 2) return;
+        DateTime.now().difference(_assessGymAndHuntingEnergyWarningTriggerTime!).inSeconds < 2) {
+      return;
+    }
     _assessGymAndHuntingEnergyWarningTriggerTime = DateTime.now();
 
     if (!_settingsProvider.warnAboutExcessEnergy && !_settingsProvider.warnAboutChains) return;
@@ -4366,7 +4369,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (!mounted) return;
 
     if (_assessTravelAgencyEnergyNerveLifeWarningTriggerTime != null &&
-        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 2) return;
+        DateTime.now().difference(_assessTravelAgencyEnergyNerveLifeWarningTriggerTime!).inSeconds < 2) {
+      return;
+    }
     _assessTravelAgencyEnergyNerveLifeWarningTriggerTime = DateTime.now();
 
     final easyUrl = targetUrl.replaceAll('#', '');
@@ -4636,6 +4641,46 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                         ),
                     ],
                   ),
+                ],
+              ),
+            ),
+          );
+        }
+      }
+
+      final walletMoneyCheck = _settingsProvider.travelWalletMoneyWarning;
+      if (walletMoneyCheck) {
+        if (stats.moneyOnhand != null && stats.moneyOnhand! < _settingsProvider.travelWalletMoneyWarningThreshold) {
+          // Format threshold to show in the message
+          final cash = formatBigNumbers(_settingsProvider.travelWalletMoneyWarningThreshold);
+          warnRows.add(
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(Icons.money, size: 24, color: Colors.green),
+                        SizedBox(width: 20),
+                        Flexible(
+                          child: Text(
+                            'Low on cash! (< $cash)',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (stats.vaultAmount != null && stats.vaultAmount! > 0)
+                    GestureDetector(
+                      child: Icon(MdiIcons.safe, size: 24, color: _themeProvider.mainText),
+                      onTap: () {
+                        _loadUrl("https://www.torn.com/properties.php#/p=options&tab=vault");
+                        toastification.dismissAll();
+                      },
+                    ),
                 ],
               ),
             ),

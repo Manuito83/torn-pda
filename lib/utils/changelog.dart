@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.0 - Build 490 - 05/02/2025
+    // v3.7.0 - Build 490 - 07/02/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.0'
@@ -78,6 +78,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "Tapping the clock will now display a toast notification when an event or competition is active, showing "
                 "details and the remaining time until it ends.",
           ),
+          "Added minimum money on hand to the travel warning dialog",
           if (Platform.isIOS) "Added additional app icons",
           "Scripts and UI fixes [Kwack]",
         ],
