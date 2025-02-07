@@ -2067,16 +2067,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (savedCompilation != currentCompilation) {
       Prefs().setAppCompilation(currentCompilation);
 
-      // Corrections for hot-fixes
-      if (savedCompilation == '291') {
-        // Clear hidden foreign stocks in 291 > 292+ due to a bug with persistence
-        Prefs().setHiddenForeignStocks([]);
-      }
-
-      if (appVersion == '3.2.0') {
-        _settingsProvider.changeHighlightColor = 0xFF009628;
-      }
-
       // Will trigger an extra upload to Firebase when version changes
       _forceFireUserReload = true;
 
@@ -2089,6 +2079,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       _changelogIsActive = true;
       await _showChangeLogDialog(context);
+
+      // TODO Note: added in v3.7.0 so that right after update we transfer the users to OC2
+      // This can be removed in the future since [_updateLastActiveTime] will take care
+      // of this when the app launches for first time
+      _preferencesCompleter.future.whenComplete(() async {
+        _settingsProvider.checkIfUserIsOnOCv2();
+      });
     } else {
       // Other dialogs we need to show when the dialog is not being displayed
 
