@@ -220,20 +220,22 @@ class TctClockState extends State<TctClock> {
       }
     }
 
-    eventsList = [
-      {
-        "title": "Valentine's Day",
-        "description": "Love Juice reduces the energy cost of attacking & reviving",
-        "start": (now.subtract(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000),
-        "end": (now.add(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
-      },
-      {
-        "title": "Christmas Town",
-        "description": "Torn's very own festive theme park opens its doors to the public",
-        "start": (now.subtract(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
-        "end": (now.add(const Duration(hours: 3)).millisecondsSinceEpoch ~/ 1000),
-      }
-    ];
+    if (debug && !kReleaseMode) {
+      eventsList = [
+        {
+          "title": "Valentine's Day",
+          "description": "Love Juice reduces the energy cost of attacking & reviving",
+          "start": (now.subtract(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000),
+          "end": (now.add(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
+        },
+        {
+          "title": "Christmas Town",
+          "description": "Torn's very own festive theme park opens its doors to the public",
+          "start": (now.subtract(const Duration(hours: 2)).millisecondsSinceEpoch ~/ 1000),
+          "end": (now.add(const Duration(hours: 3)).millisecondsSinceEpoch ~/ 1000),
+        }
+      ];
+    }
 
     return eventsList;
   }
