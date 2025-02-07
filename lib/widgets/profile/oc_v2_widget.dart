@@ -12,9 +12,11 @@ import 'package:torn_pda/utils/time_formatter.dart';
 /// It shows a text message with the following format:
 /// "OC {ocName} is [planned to start at {time} / ready to start], you are in as a {position} with a pass rate of {successChance}%"
 ///
-/// If less than 24 hours remain until the planned start time
-/// the part "planned to start at {time}" is displayed in red
+/// If less than 24 hours remain until the planned start time,
+/// the part "planned to start at {time}" is displayed in red.
 ///
+/// Additionally, if the user's slot has an item requirement,
+/// it appends "Item available" (in green) or "Item missing" (in red)
 class OrganizedCrimeWidget extends StatefulWidget {
   final UserOrganizedCrimeResponse crimeResponse;
   final int playerId;
@@ -125,6 +127,22 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     final String position = playerSlot['position'] as String? ?? '';
     final int successChance = playerSlot['success_chance'] as int? ?? 0;
 
+    // Check if the player's slot has an item requirement.
+    TextSpan? itemRequirementTextSpan;
+    if (playerSlot['item_requirement'] != null) {
+      final Map<String, dynamic> itemRequirement = playerSlot['item_requirement'] as Map<String, dynamic>;
+      final bool isAvailable = itemRequirement['is_available'] as bool? ?? false;
+      final String itemStatus = isAvailable ? 'Item provided' : 'Item missing';
+      final Color itemStatusColor = isAvailable ? Colors.green : Colors.red;
+
+      // Create a text span for the item requirement status.
+      itemRequirementTextSpan = TextSpan(
+        text: itemStatus,
+        style: TextStyle(fontSize: 14, color: itemStatusColor),
+      );
+    }
+
+    // Construct the complete message text span.
     final TextSpan messageTextSpan = TextSpan(
       style: const TextStyle(fontSize: 16.0, color: Colors.black),
       children: [
@@ -135,11 +153,14 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
         readyTextSpan,
         TextSpan(
           text: ', you are in as a $position with a pass rate of $successChance%',
-          style: TextStyle(
-            fontSize: 14,
-            color: themeProvider.mainText,
-          ),
+          style: TextStyle(fontSize: 14, color: themeProvider.mainText),
         ),
+        if (itemRequirementTextSpan != null)
+          TextSpan(
+            text: ' - ',
+            style: TextStyle(fontSize: 14, color: themeProvider.mainText),
+          ),
+        if (itemRequirementTextSpan != null) itemRequirementTextSpan,
       ],
     );
 
