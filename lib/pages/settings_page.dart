@@ -3138,6 +3138,17 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
         DropdownMenuItem(
+          value: "browser_full",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "Browser (full screen)",
+              textAlign: TextAlign.right,
+              style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "0",
           child: SizedBox(
             width: 80,

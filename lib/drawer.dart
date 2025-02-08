@@ -1935,9 +1935,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _activeDrawerIndex = _settingsPosition;
     } else {
       String defaultSection = await Prefs().getDefaultSection();
-      if (defaultSection == "browser") {
+      if (defaultSection == "browser" || defaultSection == "browser_full") {
         // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
         _webViewProvider.browserShowInForeground = true;
+
+        if (defaultSection == "browser_full") {
+          _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+        }
 
         // Change to Profile as a base for loading the browser
         defaultSection = "0";
