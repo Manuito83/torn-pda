@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/chaining/tsc/tsc_response_model.dart';
+import 'package:torn_pda/utils/env/env.dart';
 
 class TSCComm {
   static Future<TscResponse> checkIfUserExists({required String targetId, required String ownApiKey}) async {
@@ -17,6 +18,7 @@ class TSCComm {
       Map<String, String> headers = {
         "Authorization": "10000000-6000-0000-0009-000000000001",
         "Content-Type": "application/json",
+        "PDA": Env.tscHeader,
       };
 
       final data = {
