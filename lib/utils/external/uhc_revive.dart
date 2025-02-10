@@ -33,7 +33,7 @@ class UhcRevive {
 
     try {
       final response = await http.post(
-        Uri.parse('https://elimination.me/api/request'),
+        Uri.parse('https://tornuhc.eu/api/request'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

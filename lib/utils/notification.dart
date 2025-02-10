@@ -210,6 +210,13 @@ Future showNotificationBoth(Map payload, int notId) async {
     onTapPayload += 'sendbird';
     notificationIcon = "notification_chat";
     notificationColor = Colors.green;
+  } else if (channel.contains("Alerts forums")) {
+    notificationIcon = "notification_forums";
+    notificationColor = Colors.green;
+    onTapPayload += 'forums###$bulkDetails';
+    channelId = 'Alerts forums';
+    channelName = 'Alerts forums';
+    channelDescription = 'Automatic alerts for forums';
   }
 
   String title = payload["title"] ?? "";
@@ -837,9 +844,9 @@ Future configureNotificationChannels({String? mod = ""}) async {
 
   channels.add(
     AndroidNotificationChannel(
-      'Manual war member ${modifier.channelIdModifier}',
-      'Manual war member ${modifier.channelIdModifier}',
-      description: 'Manual notifications for war member',
+      'Alerts forums ${modifier.channelIdModifier} s',
+      'Alerts forums ${modifier.channelIdModifier}',
+      description: 'Automatic alerts for forums',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
@@ -855,6 +862,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       description: 'Torn chat notifications',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('keyboard'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual scripts ${modifier.channelIdModifier}',
+      'Manual scripts ${modifier.channelIdModifier}',
+      description: 'Manual notifications for scripts',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),

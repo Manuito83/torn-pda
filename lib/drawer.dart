@@ -762,6 +762,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     bool loot = false;
     bool retals = false;
     bool sendbird = false;
+    bool forums = false;
 
     String? channel = '';
     String? messageId = '';
@@ -821,6 +822,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       retals = true;
     } else if (channel.contains("Torn chat")) {
       sendbird = true;
+    } else if (channel.contains("Alerts forums")) {
+      forums = true;
     }
 
     if (travel) {
@@ -1068,6 +1071,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     } else if (sendbird) {
       showBrowserForeground = true;
+    } else if (forums) {
+      if (bulkDetails != null && bulkDetails.isNotEmpty) {
+        launchBrowserWithUrl = true;
+        browserUrl = bulkDetails;
+      }
     }
 
     if (launchBrowserWithUrl) {
@@ -1396,6 +1404,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       } else if (payload.contains('sendbird')) {
         showBrowserForeground = true;
+      } else if (payload == 'forums###') {
+        launchBrowserWithUrl = true;
+        browserUrl = payload.split('###')[1];
       }
 
       if (launchBrowserWithUrl) {
@@ -1707,7 +1718,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                       ),
                     ],
                   ),
-                  GestureDetector(
+                  TctClock(
+                    color: _themeProvider!.mainText!,
                     onTap: () {
                       _webViewProvider.openBrowserPreference(
                         context: context,
@@ -1722,7 +1734,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         browserTapType: BrowserTapType.long,
                       );
                     },
-                    child: TctClock(color: _themeProvider!.mainText!),
                   ),
                 ],
               ),
@@ -1924,9 +1935,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _activeDrawerIndex = _settingsPosition;
     } else {
       String defaultSection = await Prefs().getDefaultSection();
-      if (defaultSection == "browser") {
+      if (defaultSection == "browser" || defaultSection == "browser_full") {
         // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
         _webViewProvider.browserShowInForeground = true;
+
+        if (defaultSection == "browser_full") {
+          _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+        }
 
         // Change to Profile as a base for loading the browser
         defaultSection = "0";
@@ -2020,6 +2035,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // This is triggered to true if the changelog activates.
         _forceFireUserReload = false;
       }
+
+      if (duration.inDays > 2 || kDebugMode) {
+        _settingsProvider.checkIfUserIsOnOCv2();
+      }
     });
   }
 
@@ -2052,16 +2071,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (savedCompilation != currentCompilation) {
       Prefs().setAppCompilation(currentCompilation);
 
-      // Corrections for hot-fixes
-      if (savedCompilation == '291') {
-        // Clear hidden foreign stocks in 291 > 292+ due to a bug with persistence
-        Prefs().setHiddenForeignStocks([]);
-      }
-
-      if (appVersion == '3.2.0') {
-        _settingsProvider.changeHighlightColor = 0xFF009628;
-      }
-
       // Will trigger an extra upload to Firebase when version changes
       _forceFireUserReload = true;
 
@@ -2074,6 +2083,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       _changelogIsActive = true;
       await _showChangeLogDialog(context);
+
+      // TODO Note: added in v3.7.0 so that right after update we transfer the users to OC2
+      // This can be removed in the future since [_updateLastActiveTime] will take care
+      // of this when the app launches for first time
+      _preferencesCompleter.future.whenComplete(() async {
+        _settingsProvider.checkIfUserIsOnOCv2();
+      });
     } else {
       // Other dialogs we need to show when the dialog is not being displayed
 

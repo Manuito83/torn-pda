@@ -8,10 +8,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 
 // Project imports:
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
@@ -641,6 +643,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _playerInOCv2 = false;
+  bool get playerInOCv2 => _playerInOCv2;
+  set playerInOCv2(bool value) {
+    _playerInOCv2 = value;
+    Prefs().setPlayerInOCv2(value);
+    notifyListeners();
+  }
+
   var _allowScreenRotation = false;
   bool get allowScreenRotation => _allowScreenRotation;
   set changeAllowScreenRotation(bool allow) {
@@ -767,6 +777,22 @@ class SettingsProvider extends ChangeNotifier {
   set travelBoosterCooldownWarning(bool choice) {
     _travelBoosterCooldownWarning = choice;
     Prefs().setTravelBoosterCooldownWarning(_travelBoosterCooldownWarning);
+    notifyListeners();
+  }
+
+  var _travelWalletMoneyWarning = true;
+  bool get travelWalletMoneyWarning => _travelWalletMoneyWarning;
+  set travelWalletMoneyWarning(bool choice) {
+    _travelWalletMoneyWarning = choice;
+    Prefs().setTravelWalletMoneyWarning(_travelWalletMoneyWarning);
+    notifyListeners();
+  }
+
+  var _travelWalletMoneyWarningThreshold = 50000;
+  int get travelWalletMoneyWarningThreshold => _travelWalletMoneyWarningThreshold;
+  set travelWalletMoneyWarningThreshold(int choice) {
+    _travelWalletMoneyWarningThreshold = choice;
+    Prefs().setTravelWalletMoneyWarningThreshold(_travelWalletMoneyWarningThreshold);
     notifyListeners();
   }
 
@@ -1100,6 +1126,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _tctClockHighlightsEvents = true;
+  bool get tctClockHighlightsEvents => _tctClockHighlightsEvents;
+  set tctClockHighlightsEvents(bool value) {
+    _tctClockHighlightsEvents = value;
+    Prefs().setTctClockHighlightsEvents(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1237,6 +1271,7 @@ class SettingsProvider extends ChangeNotifier {
     _oCrimesEnabled = await Prefs().getOCrimesEnabled();
     _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
     _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
+    _playerInOCv2 = await Prefs().getPlayerInOCv2();
 
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
 
@@ -1258,6 +1293,8 @@ class SettingsProvider extends ChangeNotifier {
     _travelLifeExcessWarningThreshold = await Prefs().getTravelLifeExcessWarningThreshold();
     _travelDrugCooldownWarning = await Prefs().getTravelDrugCooldownWarning();
     _travelBoosterCooldownWarning = await Prefs().getTravelBoosterCooldownWarning();
+    _travelWalletMoneyWarning = await Prefs().getTravelWalletMoneyWarning();
+    _travelWalletMoneyWarningThreshold = await Prefs().getTravelWalletMoneyWarningThreshold();
 
     _terminalEnabled = await Prefs().getTerminalEnabled();
 
@@ -1317,6 +1354,8 @@ class SettingsProvider extends ChangeNotifier {
 
     _downloadActionShare = await Prefs().getDownloadActionShare();
 
+    _tctClockHighlightsEvents = await Prefs().getTctClockHighlightsEvents();
+
     await WebviewConfig().generateUserAgentForUser();
 
     notifyListeners();
@@ -1341,6 +1380,12 @@ class SettingsProvider extends ChangeNotifier {
       // Define the date ranges
       final awarenessWeekStart = DateTime(now.year, 01, 15);
       final awarenessWeekEnd = DateTime(now.year, 01, 21, 23, 59, 59);
+      final stValentineStart = DateTime(now.year, 02, 13, 10, 30);
+      final stValentineEnd = DateTime(now.year, 02, 15, 10, 30);
+      final stPatrickStart = DateTime(now.year, 03, 16, 10, 30);
+      final stPatrickEnd = DateTime(now.year, 03, 18, 10, 30);
+      final easterStart = DateTime(now.year, 04, 17, 10, 30);
+      final easterEnd = DateTime(now.year, 04, 24, 10, 30);
       final halloweenStart = DateTime(now.year, 10, 25);
       final halloweenEnd = DateTime(now.year, 11, 1, 23, 59, 59);
       final christmasStart = DateTime(now.year, 12, 19);
@@ -1349,6 +1394,12 @@ class SettingsProvider extends ChangeNotifier {
       // Determine the icon based on date ranges
       if (now.isAfter(awarenessWeekStart) && now.isBefore(awarenessWeekEnd)) {
         iconName = "AppIconAwareness";
+      } else if (now.isAfter(stValentineStart) && now.isBefore(stValentineEnd)) {
+        iconName = "AppIconStValentine";
+      } else if (now.isAfter(stPatrickStart) && now.isBefore(stPatrickEnd)) {
+        iconName = "AppIconStPatrick";
+      } else if (now.isAfter(easterStart) && now.isBefore(easterEnd)) {
+        iconName = "AppIconEaster";
       } else if (now.isAfter(halloweenStart) && now.isBefore(halloweenEnd)) {
         iconName = "AppIconHalloween";
       } else if (now.isAfter(christmasStart) && now.isBefore(christmasEnd)) {
@@ -1357,15 +1408,28 @@ class SettingsProvider extends ChangeNotifier {
         iconName = null; // Default icon
       }
     } else {
+      // Manual override for specific icons
       switch (_dynamicAppIconsManual) {
         case "awareness":
           iconName = "AppIconAwareness";
+          break;
+        case "stvalentine":
+          iconName = "AppIconStValentine";
+          break;
+        case "stpatrick":
+          iconName = "AppIconStPatrick";
+          break;
+        case "easter":
+          iconName = "AppIconEaster";
+          break;
         case "halloween":
           iconName = "AppIconHalloween";
+          break;
         case "christmas":
           iconName = "AppIconChristmas";
+          break;
         default:
-          iconName = null;
+          iconName = null; // Default icon
       }
     }
 
@@ -1391,6 +1455,38 @@ class SettingsProvider extends ChangeNotifier {
       await platform.invokeMethod('changeIcon');
     } on PlatformException catch (e) {
       log("Failed to reset icon: ${e.message}");
+    }
+  }
+
+  /// Determine whether the user is still using OC v1 or is already in OC v2
+  /// This will be used by several client widgets to call the appropriate API
+  ///
+  /// 1. We only perform this check if the user is still in OC v1 in SharedPreferences
+  /// 2. We call the v2 API and, if there is a crime active, we will transition to v2
+  /// 3. Note that the user can manually revert back to OC v1 in Settings
+  ///    If he does, he will stay in OC v1 until he manually reverts to OC2 or until
+  ///    we can find a positive crime in API v2
+  ///
+  /// Players might want to revert to OC1 crimes if they change to an OC1 faction, for example
+  /// But they might forget to change back to OC2 later when applicable, so we will keep calling the API
+  void checkIfUserIsOnOCv2() async {
+    bool alreadyInOC2 = await Prefs().getPlayerInOCv2();
+
+    if (alreadyInOC2) {
+      log("Player already in OC v2: no check needed");
+      return;
+    }
+
+    final dynamic apiResponse = await ApiCallsV2.getUserOC2Crime_v2();
+    if (apiResponse != null) {
+      final crime = apiResponse as UserOrganizedCrimeResponse;
+      if (crime.organizedCrime != null) {
+        playerInOCv2 = true;
+        log("Switching player to OC v2");
+        return;
+      }
+
+      log("Can't verify if player is in OC v2, keeping OC v1");
     }
   }
 }

@@ -201,6 +201,8 @@ class Prefs {
   final String _kTravelLifeExcessWarningThreshold = "pda_travelLifeExcessWarningThreshold";
   final String _kTravelDrugCooldownWarning = "pda_travelDrugCooldownWarning";
   final String _kTravelBoosterCooldownWarning = "pda_travelBoosterCooldownWarning";
+  final String _kTravelWalletMoneyWarning = "pda_travelWalletMoneyWarning";
+  final String _kTravelWalletMoneyWarningThreshold = "pda_travelWalletMoneyWarningThreshold";
 
   final String _kExpandEvents = "pda_ExpandEvents";
   final String _kExpandMessages = "pda_ExpandMessages";
@@ -215,6 +217,11 @@ class Prefs {
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
   final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
+
+  // OC v2
+  final String _kPlayerAlreadyInOCv2 = "pda_PlayerAlreadyInOCv2";
+
+  // OC v1
   final String _kOCrimesEnabled = "pda_OCrimesEnabled";
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
@@ -421,6 +428,11 @@ class Prefs {
 
   // Periodic tasks
   final String _taskPrefix = "pda_periodic_";
+
+  // Torn Calendar
+  final String _kTornCalendarModel = "pda_tornCalendarModel";
+  final String _kTornCalendarLastUpdate = "pda_tornCalendarLastUpdate";
+  final String _kTctClockHighlightsEvents = "pda_tctClockHighlightsEvents";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -2317,6 +2329,26 @@ class Prefs {
     return prefs.setBool(_kTravelBoosterCooldownWarning, value);
   }
 
+  Future<bool> getTravelWalletMoneyWarning() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTravelWalletMoneyWarning) ?? true;
+  }
+
+  Future<bool> setTravelWalletMoneyWarning(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTravelWalletMoneyWarning, value);
+  }
+
+  Future<int> getTravelWalletMoneyWarningThreshold() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTravelWalletMoneyWarningThreshold) ?? 50000;
+  }
+
+  Future<bool> setTravelWalletMoneyWarningThreshold(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTravelWalletMoneyWarningThreshold, value);
+  }
+
   // -- Terminal
 
   Future<bool> getTerminalEnabled() async {
@@ -3141,9 +3173,24 @@ class Prefs {
     return prefs.setStringList(_kUserScriptsForcedVersions, value);
   }
 
+  /// --------------------------------
+  /// METHODS FOR ORGANIZED CRIMES v2
+  /// --------------------------------
+
+  Future<bool> getPlayerInOCv2() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kPlayerAlreadyInOCv2) ?? false;
+  }
+
+  Future<bool> setPlayerInOCv2(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kPlayerAlreadyInOCv2, value);
+  }
+
   /// -----------------------------
   /// METHODS FOR ORGANIZED CRIMES
   /// -----------------------------
+
   Future<bool> getOCrimesEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getBool(_kOCrimesEnabled) ?? true;
@@ -4022,5 +4069,39 @@ class Prefs {
   Future<bool> removeLastExecutionTime(String taskName) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.remove("$_taskPrefix$taskName");
+  }
+
+  /// -----------------------------------
+  /// Methods for Torn Calendar
+  /// -----------------------------------
+
+  Future<String> getTornCalendarModel() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kTornCalendarModel) ?? "";
+  }
+
+  Future<bool> setTornCalendarModel(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kTornCalendarModel, value);
+  }
+
+  Future<int> getTornCalendarLastUpdate() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kTornCalendarLastUpdate) ?? 0;
+  }
+
+  Future<bool> setTornCalendarLastUpdate(int timestamp) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kTornCalendarLastUpdate, timestamp);
+  }
+
+  Future<bool> getTctClockHighlightsEvents() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kTctClockHighlightsEvents) ?? true;
+  }
+
+  Future<bool> setTctClockHighlightsEvents(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kTctClockHighlightsEvents, value);
   }
 }

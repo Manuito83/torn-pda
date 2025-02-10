@@ -406,8 +406,11 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                   GestureDetector(
                                     onTap: () {
                                       BotToast.showText(
-                                        text: '${item.name}\n\n${item.description}\n\n'
-                                            'You have ${item.inventory} in your inventory',
+                                        text: '${item.name}\n\n${item.description}',
+                                        /* Inventory not shown in API v2 yet
+                                          text: '${item.name}\n\n${item.description}\n\n'
+                                          'You have ${item.inventory} in your inventory',
+                                        */
                                         textStyle: const TextStyle(
                                           fontSize: 14,
                                           color: Colors.white,
@@ -703,8 +706,11 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                       GestureDetector(
                                         onTap: () {
                                           BotToast.showText(
+                                            text: '${item.name}\n\n${item.description}',
+                                            /* Inventory not shown in API v2 yet
                                             text: '${item.name}\n\n${item.description}\n\n'
                                                 'You have ${item.inventory} in your inventory',
+                                            */
                                             textStyle: const TextStyle(
                                               fontSize: 14,
                                               color: Colors.white,

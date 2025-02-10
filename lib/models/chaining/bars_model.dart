@@ -43,6 +43,8 @@ class BarsStatusCooldownsModel {
   Competition? competition;
   Travel? travel;
   Cooldowns? cooldowns;
+  int? moneyOnhand;
+  int? vaultAmount;
 
   BarsStatusCooldownsModel({
     this.serverTime,
@@ -79,6 +81,8 @@ class BarsStatusCooldownsModel {
     this.competition,
     this.travel,
     this.cooldowns,
+    this.moneyOnhand,
+    this.vaultAmount,
   });
 
   factory BarsStatusCooldownsModel.fromJson(Map<String, dynamic> json) => BarsStatusCooldownsModel(
@@ -120,6 +124,8 @@ class BarsStatusCooldownsModel {
         competition: json["competition"] == null ? null : Competition.fromJson(json["competition"]),
         travel: json["travel"] == null ? null : Travel.fromJson(json["travel"]),
         cooldowns: Cooldowns.fromJson(json["cooldowns"]),
+        moneyOnhand: json["money_onhand"],
+        vaultAmount: json["vault_amount"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -157,6 +163,8 @@ class BarsStatusCooldownsModel {
         "competition": competition?.toJson(),
         "travel": travel?.toJson(),
         "cooldowns": cooldowns?.toJson(),
+        "money_onhand": moneyOnhand,
+        "vault_amount": vaultAmount,
       };
 }
 

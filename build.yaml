@@ -6,7 +6,12 @@ targets:
       - pubspec.yaml
       - lib/models/api_v2/**
       - lib/models/api_v2/swagger/**
+      - lib/utils/env/**
     builders:
+      envied_generator|envied:
+        options:
+          path: .env
+          override: true 
       chopper_generator:
         options:
           header: "//Generated code"

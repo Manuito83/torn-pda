@@ -51,11 +51,45 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.6.8 - Build 482 - 19/01/2025
+    // v3.7.0 - Build 492 - 08/02/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.7.0'
+        ..date = '14 FEB 2025'
+        ..features = [
+          ComplexFeature(
+            "Alerts: added notification for subscribed forum threads",
+            explanation: "Disabled by default: you can enable it in Alerts"
+                "\n\nNOTE: in order to reduce API load, checks will be performed "
+                "every 15 minutes, so the notification may not be immediate "
+                "after a new post is made",
+          ),
+          ComplexFeature(
+            "Profile: added OC v2 information to the misc card",
+            explanation: "Torn PDA will try to assess whether your faction has already switched to OC v2 "
+                "every couple of days (in order to save API calls). Hoever, you can manually set the OC version in "
+                "Settings / Organized Crime\n\n"
+                "Should you wish to return to OC v1 (if you join a faction that hasn't changed yet), remember "
+                "to revert the OC version in Settings",
+          ),
+          ComplexFeature(
+            "Clock now highlights active events and competitions",
+            explanation: "Enabled by default (can be disabled in Settings > Time).\n\n"
+                "Tapping the clock will now display a toast notification when an event or competition is active, showing "
+                "details and the remaining time until it ends.",
+          ),
+          "Added full-screen browser as default app launch option",
+          "Added minimum money on hand to the travel warning dialog",
+          if (Platform.isIOS) "Added additional app icons",
+          "Scripts and UI fixes [Kwack]",
+        ],
+    );
+
+    // v3.6.8 - Build 483 - 22/01/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.6.8'
-        ..date = '25 JAN 2025'
+        ..date = '26 JAN 2025'
         ..features = [
           "Enhanced browser floating action button with additional customization options for buttons and actions",
           "Fixed player profile widget",

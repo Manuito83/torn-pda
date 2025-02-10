@@ -84,4 +84,40 @@ class ApiCallsV2 {
       return null;
     }
   }
+
+  static Future<dynamic> getTornCalendar_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.tornCalendar,
+      payload_v2: {},
+      apiCall: (client, apiKey) {
+        return client.tornCalendarGet();
+      },
+    );
+
+    if (apiResponse is TornCalendarResponse) {
+      return apiResponse;
+    }
+
+    log("Error converting V2 TornCalendarModel");
+    return null;
+  }
+
+  static Future<dynamic> getUserOC2Crime_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
+      apiSelection_v2: ApiSelection_v2.oc2UserCrime,
+      payload_v2: {},
+      apiCall: (client, apiKey) {
+        return client.userOrganizedcrimeGet();
+      },
+    );
+
+    if (apiResponse is UserOrganizedCrimeResponse) {
+      return apiResponse;
+    }
+
+    log("No OC2 crime found");
+    return null;
+  }
 }

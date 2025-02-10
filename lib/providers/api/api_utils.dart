@@ -37,6 +37,8 @@ enum ApiSelection_v2 {
   userMarketItems,
   userProfileMisc,
   otherUserProfile,
+  tornCalendar,
+  oc2UserCrime,
 }
 
 class ApiError {

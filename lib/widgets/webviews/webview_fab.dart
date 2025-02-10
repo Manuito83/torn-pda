@@ -29,7 +29,7 @@ extension FabActionExtension on WebviewFabAction {
       case WebviewFabAction.reload:
         return 'Reload';
       case WebviewFabAction.openTabsMenu:
-        return 'Open tab nenu';
+        return 'Open tab menu';
       case WebviewFabAction.closeCurrentTab:
         return 'Close current tab';
     }
@@ -126,17 +126,17 @@ class WebviewFab extends StatelessWidget {
       } else {
         fanDistance = 120;
       }
-    } else if (webviewProvider.fabButtonCount == 5 && webviewProvider.fabDirection != "center") {
-      fanDistance = 100;
+    } else if (webviewProvider.fabDirection != "center") {
+      if (webviewProvider.fabButtonCount == 5) {
+        fanDistance = 100;
+      } else {
+        fanDistance = 90;
+      }
     }
 
-    return Positioned(
-      right: 16,
-      bottom: 16,
-      child: ExpandableFab(
-        distance: fanDistance,
-        children: _buildActionButtons(context, webviewProvider),
-      ),
+    return ExpandableFab(
+      distance: fanDistance,
+      children: _buildActionButtons(context, webviewProvider),
     );
   }
 
@@ -187,7 +187,7 @@ class WebviewFab extends StatelessWidget {
       case WebviewFabAction.openTabsMenu:
         return Icons.tab;
       case WebviewFabAction.closeCurrentTab:
-        return Icons.close;
+        return Icons.delete_forever_outlined;
     }
   }
 
@@ -290,8 +290,8 @@ class _ExpandableFabState extends State<ExpandableFab>
       vsync: this,
     );
     _expandAnimation = CurvedAnimation(
-      curve: Curves.fastOutSlowIn,
-      reverseCurve: Curves.easeOutQuad,
+      curve: Curves.ease,
+      reverseCurve: Curves.ease,
       parent: _controller,
     );
 
@@ -481,7 +481,7 @@ class _ExpandableFabState extends State<ExpandableFab>
           clipBehavior: Clip.antiAlias,
           elevation: 4,
           child: InkWell(
-            onTap: _toggle,
+            onTap: _onFabTapped,
             child: Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).primaryColor,
@@ -511,12 +511,17 @@ class _ExpandableFabState extends State<ExpandableFab>
     final count = widget.children.length;
 
     double startAngle;
+    Offset shiftOffset = Offset.zero;
+
     if (_webviewProvider.fabDirection == "center") {
       startAngle = 270 - (fanAngle / 2); // Positioned upwards
+      shiftOffset = Offset(0, 20);
     } else if (_webviewProvider.fabDirection == "right") {
       startAngle = 0 - (fanAngle / 2); // Positioned to the right
+      shiftOffset = Offset(-30, 0);
     } else {
       startAngle = 180 - (fanAngle / 2); // Positioned to the left
+      shiftOffset = Offset(30, 0);
     }
 
     final step = fanAngle / (count - 1);
@@ -536,6 +541,7 @@ class _ExpandableFabState extends State<ExpandableFab>
           onPressedAction: () {
             _toggle();
           },
+          shiftOffset: shiftOffset,
         ),
       );
     }
@@ -672,6 +678,7 @@ class _ExpandingActionButton extends StatelessWidget {
     required this.containerHeight,
     required this.fabSize,
     this.onPressedAction,
+    this.shiftOffset = Offset.zero,
   });
 
   final double directionInDegrees;
@@ -682,6 +689,7 @@ class _ExpandingActionButton extends StatelessWidget {
   final double containerHeight;
   final double fabSize;
   final VoidCallback? onPressedAction;
+  final Offset shiftOffset;
 
   @override
   Widget build(BuildContext context) {
@@ -694,16 +702,27 @@ class _ExpandingActionButton extends StatelessWidget {
     final centerY = containerHeight / 2;
 
     // Adjusting the positioning offset to center the action buttons properly
-    final buttonX = centerX + offset.dx - 20;
-    final buttonY = centerY + offset.dy - 20;
+    final buttonX = centerX + offset.dx - 20 + shiftOffset.dx;
+    final buttonY = centerY + offset.dy - 20 + shiftOffset.dy;
+
+    // We only allow opacity to show after a 40%, since we are not closing the
+    // smaller buttons in the FAB exactly (and we avoid to show that part)
+    double fadeValue = 0.0;
+    if (progress.value < 0.4) {
+      fadeValue = 0.0;
+    } else if (progress.value > 0.6) {
+      fadeValue = 1.0;
+    } else {
+      fadeValue = (progress.value - 0.4) / 0.2;
+    }
 
     return Positioned(
       left: buttonX,
       top: buttonY,
       child: Transform.rotate(
         angle: (1.0 - progress.value) * math.pi / 2,
-        child: FadeTransition(
-          opacity: progress,
+        child: Opacity(
+          opacity: fadeValue,
           child: GestureDetector(
             onTap: () {
               // Close FAB if an ActionButton is pressed
