@@ -4765,6 +4765,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                                   _settingsProvider.travelLifeExcessWarning = false;
                                   _settingsProvider.travelDrugCooldownWarning = false;
                                   _settingsProvider.travelBoosterCooldownWarning = false;
+                                  _settingsProvider.travelWalletMoneyWarning = false;
                                 },
                                 child: Text(
                                   "DISABLE",
