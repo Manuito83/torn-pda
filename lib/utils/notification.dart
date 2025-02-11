@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
@@ -926,8 +927,20 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
   }
 }
 
-showSendbirdNotification(String sender, String message, String channelUrl) async {
-  if (sender.toLowerCase() == Get.find<UserController>().playerName.toLowerCase()) return;
+showSendbirdNotification(String sender, String message, String channelUrl, {bool fromBackground = false}) async {
+  // Don't show own messages
+  // Note: with the app on the background we can't access providers, so take Prefs()
+  String ownName = "";
+  if (fromBackground) {
+    final savedUser = await Prefs().getOwnDetails();
+    if (savedUser != '') {
+      ownName = ownProfileBasicFromJson(savedUser).name ?? "";
+    }
+  } else {
+    ownName = Get.find<UserController>().playerName;
+  }
+
+  if (sender.toLowerCase() == ownName.toLowerCase()) return;
 
   final modifier = await getNotificationChannelsModifiers();
   String channelTitle = "Torn chat ${modifier.channelIdModifier} s";

@@ -137,7 +137,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       sender = parts.isNotEmpty ? parts[0].trim() : "";
       msg = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
 
-      await showSendbirdNotification(sender, msg, channelUrl);
+      await showSendbirdNotification(sender, msg, channelUrl, fromBackground: true);
     }
   } catch (e) {
     if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");
