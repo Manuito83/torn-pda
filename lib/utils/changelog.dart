@@ -51,6 +51,18 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.7.1 - Build 493 - 13/02/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.7.1'
+        ..date = '18 FEB 2025'
+        ..features = [
+          "Fixed chat notifications",
+          "Fixed deep links issues",
+          "Fixed deactivation of money on hand travel warning from dialog",
+        ],
+    );
+
     // v3.7.0 - Build 492 - 08/02/2025
     itemList.add(
       ChangeLogItem()
