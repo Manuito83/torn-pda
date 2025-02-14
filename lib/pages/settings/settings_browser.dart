@@ -1801,6 +1801,35 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+        if (_browserStyle == 0)
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Flexible(child: const Text("Show navigation arrows")),
+                    _navArrowsDropdown(),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  'When using the default browser style, forward and backward navigation arrows will be shown '
+                  'by default when using a wide enough screen. You can disable them or make them also visible '
+                  'on narrower screens (bear in mind that this might interfere with the space available for page title)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
         /*
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -3518,6 +3547,79 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           _settingsProvider.changeBrowserRefreshMethod = value;
           _webViewProvider.updatePullToRefresh(value);
         });
+      },
+    );
+  }
+
+  Widget _navArrowsDropdown() {
+    return DropdownButton<String>(
+      value: _settingsProvider.browserShowNavArrowsAppbar,
+      items: const [
+        DropdownMenuItem(
+          value: "off",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Off",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "narrow",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Always",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "wide",
+          child: SizedBox(
+            width: 100,
+            child: Text(
+              "Wide screen",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          _settingsProvider.browserShowNavArrowsAppbar = value;
+        });
+
+        if (_settingsProvider.browserShowNavArrowsAppbar == "narrow") {
+          double width = MediaQuery.of(context).size.width;
+          if (width < 500) {
+            BotToast.showText(
+              clickClose: true,
+              text: "Please note that your current screen configuration (${width.round()} DPI) might "
+                  "not be wide enough to display the navigation arrows in all circumstances (e.g. when other "
+                  "icons are present, such as when chaining)."
+                  "\n\nRemember you can always swipe left or right in the page title to navigate.",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.blue[600]!,
+              duration: const Duration(seconds: 15),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
+        }
       },
     );
   }

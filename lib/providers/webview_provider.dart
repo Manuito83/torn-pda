@@ -1223,6 +1223,22 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  int returnBackPagesNumber() {
+    if (_tabList.isNotEmpty) {
+      var tab = _tabList[_currentTab];
+      return tab.historyBack.length;
+    }
+    return 0;
+  }
+
+  int returnForwardPagesNumber() {
+    if (_tabList.isNotEmpty) {
+      var tab = _tabList[_currentTab];
+      return tab.historyForward.length;
+    }
+    return 0;
+  }
+
   bool tryGoBack() {
     final tab = _tabList[_currentTab];
     if (tab.historyBack.isNotEmpty) {

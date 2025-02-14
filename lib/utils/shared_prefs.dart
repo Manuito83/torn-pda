@@ -91,6 +91,7 @@ class Prefs {
   final String _kBrowserStyleBottomBarType = "pda_browserStyleAlternativeType";
   final String _kBrowserBottomBarStylePlaceTabsAtBottom = "pda_browserBottomBarStylePlaceTabsAtBottom";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
+  final String _kBrowserShowNavArrowsAppbar = "pda_browserShowNavArrowsAppbar";
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
@@ -1060,12 +1061,22 @@ class Prefs {
 
   Future<String> getBrowserRefreshMethod() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBrowserRefreshMethod2) ?? "icon";
+    return prefs.getString(_kBrowserRefreshMethod2) ?? "both";
   }
 
   Future<bool> setBrowserRefreshMethod(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kBrowserRefreshMethod2, value);
+  }
+
+  Future<String> getBrowserShowNavArrowsAppbar() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kBrowserShowNavArrowsAppbar) ?? "wide";
+  }
+
+  Future<bool> setBrowserShowNavArrowsAppbar(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kBrowserShowNavArrowsAppbar, value);
   }
 
   Future<bool> getBrowserBottomBarStyleEnabled() async {

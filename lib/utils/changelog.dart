@@ -57,6 +57,16 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.7.1'
         ..date = '18 FEB 2025'
         ..features = [
+          ComplexFeature(
+            "Added navigation arrows to the browser (see details)",
+            explanation: "Forward and backward navigation arrows can now be shown in the browser "
+                "when using the default browser style.\n\n"
+                "The default configuration is to show them only in wide-screen mode, but you can "
+                "force them to always be visible, even on narrower screens. In this case, please note that Torn PDA "
+                "will do its best to accommodate the icons, but they may not always be displayed "
+                "(e.g., when other icons need to be shown, such as when chaining).\n\n"
+                "You can change this configuration in Settings / Advanced Browser Settings / Show Navigation Arrows",
+          ),
           "Fixed chat notifications",
           "Fixed deep links issues",
           "Fixed deactivation of money on hand travel warning from dialog",
