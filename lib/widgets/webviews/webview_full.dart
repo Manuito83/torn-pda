@@ -445,6 +445,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       //
       useOnDownloadStart: widget.allowDownloads,
       minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
+      // Block favicon.ico requests
+      contentBlockers: _getContentBlockers,
     );
 
     _pullToRefreshController = Platform.isWindows
@@ -462,6 +464,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               await _reload();
             },
           );
+  }
+
+  List<ContentBlocker> get _getContentBlockers {
+    return [
+      if (_settingsProvider.browserRemoveFavIconsRemoteConfig)
+        ContentBlocker(
+          trigger: ContentBlockerTrigger(
+            urlFilter: ".*favicon\\.ico.*",
+            resourceType: [ContentBlockerTriggerResourceType.IMAGE],
+          ),
+          action: ContentBlockerAction(
+            type: ContentBlockerActionType.BLOCK,
+          ),
+        ),
+    ];
   }
 
   @override
@@ -486,6 +503,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+        if (_webViewProvider.browserDoNotPauseWebview) return;
         webViewController?.pauseTimers();
       } else {
         webViewController?.resumeTimers();

@@ -332,6 +332,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "tornexchange_enabled": true,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
+        "favicons_remove": "false",
         // Revives
         "revive_hela": "1 million or 1 Xanax",
         "revive_revive": "1 million or 1 Xanax",
@@ -349,6 +350,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
         _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+        _settingsProvider.browserRemoveFavIconsRemoteConfig = remoteConfig.getBool("favicons_remove");
         // Revives
         _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
         _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
@@ -369,6 +371,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
           _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
           _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+          _settingsProvider.browserRemoveFavIconsRemoteConfig = remoteConfig.getBool("favicons_remove");
           // Revives
           _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
           _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");

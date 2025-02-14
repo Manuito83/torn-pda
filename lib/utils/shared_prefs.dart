@@ -110,6 +110,8 @@ class Prefs {
   final String _kFabDoubleTapAction = "pda_fabDoubleTapAction";
   final String _kFabTripleTapAction = "pda_fabTripleTapAction";
 
+  final String _kBrowserDoNotPauseWebviews = "pda_browserDoNotPauseWebviews";
+
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
@@ -1319,6 +1321,16 @@ class Prefs {
   }
 
   // FAB ENDS ###
+
+  Future<bool> getBrowserDoNotPauseWebviews() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserDoNotPauseWebviews) ?? false;
+  }
+
+  Future<bool> setBrowserDoNotPauseWebviews(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserDoNotPauseWebviews, value);
+  }
 
   // Settings - Browser Gestures
 

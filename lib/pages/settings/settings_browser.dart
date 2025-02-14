@@ -875,10 +875,41 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
           child: Text(
             'Enable this option if you are getting logged out from Torn consistently; '
             'Torn PDA will try to reestablish your session ID when the browser opens',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(child: const Text("Do not pause webviews")),
+              Switch(
+                value: _webViewProvider.browserDoNotPauseWebview,
+                onChanged: (value) {
+                  setState(() {
+                    _webViewProvider.browserDoNotPauseWebview = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Text(
+            'This will prevent the browser from pausing when the app or browser are in the background. '
+            'NOTE: it is NOT recommended to activate this setting, as it will consume more battery and resources',
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,
