@@ -51,11 +51,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.1 - Build 493 - 13/02/2025
+    // v3.7.1 - Build 494 - 15/02/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.1'
-        ..date = '18 FEB 2025'
+        ..date = '20 FEB 2025'
         ..features = [
           ComplexFeature(
             "Added navigation arrows to the browser (see details)",
