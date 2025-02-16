@@ -928,16 +928,21 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
 }
 
 showSendbirdNotification(String sender, String message, String channelUrl, {bool fromBackground = false}) async {
-  // Don't show own messages
   // Note: with the app on the background we can't access providers, so take Prefs()
   String ownName = "";
+  bool excludeFaction = false;
   if (fromBackground) {
+    // Don't show own messages
     final savedUser = await Prefs().getOwnDetails();
     if (savedUser != '') {
       ownName = ownProfileBasicFromJson(savedUser).name ?? "";
     }
+
+    // Filter faction
+    excludeFaction = await Prefs().getSendbirdExcludeFactionMessages();
   } else {
     ownName = Get.find<UserController>().playerName;
+    excludeFaction = Get.find<SendbirdController>().excludeFactionMessages;
   }
 
   if (sender.toLowerCase() == ownName.toLowerCase()) return;
@@ -964,6 +969,12 @@ showSendbirdNotification(String sender, String message, String channelUrl, {bool
   for (final entry in patterns.entries) {
     if (channelUrl.contains(entry.key)) {
       suffix = entry.value;
+
+      // Exclude faction messages
+      if (suffix == "(faction)" && excludeFaction) {
+        return;
+      }
+
       break;
     }
   }

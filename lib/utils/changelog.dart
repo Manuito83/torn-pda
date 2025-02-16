@@ -51,12 +51,13 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.1 - Build 494 - 15/02/2025
+    // v3.7.1 - Build 495 - 16/02/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.1'
-        ..date = '20 FEB 2025'
+        ..date = '22 FEB 2025'
         ..features = [
+          "Alerts: faction messages can now be filtered out in chat notifications",
           ComplexFeature(
             "Added navigation arrows to the browser (see details)",
             explanation: "Forward and backward navigation arrows can now be shown in the browser "

@@ -1034,7 +1034,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                         children: [
                                           Icon(Icons.keyboard_arrow_right_outlined),
                                           const Padding(
-                                            padding: EdgeInsets.only(left: 10),
+                                            padding: EdgeInsets.only(left: 17),
                                             child: Text(
                                               "Do not disturb",
                                               style: TextStyle(
@@ -1056,6 +1056,43 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                           );
                                         },
                                       )
+                                    ],
+                                  ),
+                                ),
+                              if (sendbird.sendBirdNotificationsEnabled)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 30, right: 8),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(
+                                        child: CheckboxListTile(
+                                          checkColor: Colors.white,
+                                          activeColor: Colors.red[900],
+                                          value: sendbird.excludeFactionMessages,
+                                          title: Row(
+                                            children: [
+                                              Text(
+                                                "Exclude faction messages",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          subtitle: const Text(
+                                            "Faction messages won't be shown",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                          onChanged: (enabled) async {
+                                            sendbird.excludeFactionMessages = enabled!;
+                                          },
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 ),

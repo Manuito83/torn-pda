@@ -426,6 +426,7 @@ class Prefs {
   final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
   final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
   final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
+  final String _kSendbirdExcludeFactionMessages = "pda_sendbirdExcludeFactionMessages";
 
   final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
 
@@ -4060,7 +4061,17 @@ class Prefs {
     return prefs.setInt(_kSendbirdTokenTimestamp, timestamp);
   }
 
-  //
+  Future<bool> getSendbirdExcludeFactionMessages() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSendbirdExcludeFactionMessages) ?? false;
+  }
+
+  Future<bool> setSendbirdExcludeFactionMessages(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSendbirdExcludeFactionMessages, value);
+  }
+
+  ///////
 
   Future<bool> getBringBrowserForwardOnStart() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
