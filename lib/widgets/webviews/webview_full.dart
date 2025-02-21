@@ -445,8 +445,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       //
       useOnDownloadStart: widget.allowDownloads,
       minimumFontSize: Platform.isAndroid ? _settingsProvider.androidBrowserTextScale : 0,
-      // Block favicon.ico requests
-      contentBlockers: _getContentBlockers,
     );
 
     _pullToRefreshController = Platform.isWindows
@@ -1873,22 +1871,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               action: HttpAuthResponseAction.CANCEL,
             );
           },
-          shouldInterceptRequest: (controller, request) async {
-            // Check if the requested URL contains "favicon.ico"
-            if (Platform.isAndroid && _settingsProvider.browserRemoveFavIconsRemoteConfig) {
-              if (request.url.toString().contains("favicon.ico")) {
-                return WebResourceResponse(
-                  data: Uint8List(0),
-                  statusCode: 200,
-                  reasonPhrase: "OK",
-                  headers: {},
-                  contentType: "image/png",
-                );
-              }
-            }
-
-            return null;
-          },
           /*
             shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
               // MAIN AJAX REQUEST RETURN
@@ -1921,25 +1903,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         ),
       ],
     );
-  }
-
-  List<ContentBlocker> get _getContentBlockers {
-    // Content blockers are not entirely supported on Android
-    // (they block, for example, loading the page title)
-    if (!Platform.isIOS) return [];
-
-    return [
-      if (_settingsProvider.browserRemoveFavIconsRemoteConfig)
-        ContentBlocker(
-          trigger: ContentBlockerTrigger(
-            urlFilter: ".*favicon\\.ico.*",
-            resourceType: [ContentBlockerTriggerResourceType.IMAGE],
-          ),
-          action: ContentBlockerAction(
-            type: ContentBlockerActionType.BLOCK,
-          ),
-        ),
-    ];
   }
 
   bool _lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {

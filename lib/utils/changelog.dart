@@ -51,11 +51,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.1 - Build 495 - 16/02/2025
+    // v3.7.1 - Build 497 - 20/02/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.1'
-        ..date = '22 FEB 2025'
+        ..date = '25 FEB 2025'
         ..features = [
           "Alerts: faction messages can now be filtered out in chat notifications",
           ComplexFeature(

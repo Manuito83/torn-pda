@@ -1026,13 +1026,6 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _browserRemoveFavIconsRemoteConfig = false;
-  bool get browserRemoveFavIconsRemoteConfig => _browserRemoveFavIconsRemoteConfig;
-  set browserRemoveFavIconsRemoteConfig(bool value) {
-    _browserRemoveFavIconsRemoteConfig = value;
-    notifyListeners();
-  }
-
   var _debugMessages = false;
   bool get debugMessages => _debugMessages;
   set debugMessages(bool value) {
