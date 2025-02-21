@@ -68,9 +68,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.7.0';
-const String androidCompilation = '492';
-const String iosCompilation = '492';
+const String appVersion = '3.7.1';
+const String androidCompilation = '497';
+const String iosCompilation = '497';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -137,7 +137,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       sender = parts.isNotEmpty ? parts[0].trim() : "";
       msg = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
 
-      await showSendbirdNotification(sender, msg, channelUrl);
+      await showSendbirdNotification(sender, msg, channelUrl, fromBackground: true);
     }
   } catch (e) {
     if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Messaging Background Handler");

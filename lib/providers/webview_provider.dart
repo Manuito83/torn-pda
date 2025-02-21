@@ -490,6 +490,14 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _browserDoNotPauseWebview = false;
+  bool get browserDoNotPauseWebview => _browserDoNotPauseWebview;
+  set browserDoNotPauseWebview(bool value) {
+    _browserDoNotPauseWebview = value;
+    Prefs().setBrowserDoNotPauseWebviews(_browserDoNotPauseWebview);
+    notifyListeners();
+  }
+
   /// [recallLastSession] should be used to open a browser session where we left it last time
   Future initialiseMain({
     required String? initUrl,
@@ -966,6 +974,8 @@ class WebViewProvider extends ChangeNotifier {
 
   void pauseAllWebviews() {
     if (Platform.isWindows) return;
+    if (browserDoNotPauseWebview) return;
+
     try {
       if (_tabList.isEmpty) return;
       final currentTab = _tabList[_currentTab];
@@ -990,7 +1000,7 @@ class WebViewProvider extends ChangeNotifier {
         var pausedAgain = 0;
         if (Platform.isAndroid) {
           for (final tab in _tabList) {
-            if (tab != currentTab) {
+            if (tab != currentTab && !browserDoNotPauseWebview) {
               tab.webViewKey?.currentState?.pauseThisWebview();
               pausedAgain++;
             }
@@ -1221,6 +1231,22 @@ class WebViewProvider extends ChangeNotifier {
     if (tab.historyForward.length > 25) {
       tab.historyForward.removeAt(0);
     }
+  }
+
+  int returnBackPagesNumber() {
+    if (_tabList.isNotEmpty) {
+      var tab = _tabList[_currentTab];
+      return tab.historyBack.length;
+    }
+    return 0;
+  }
+
+  int returnForwardPagesNumber() {
+    if (_tabList.isNotEmpty) {
+      var tab = _tabList[_currentTab];
+      return tab.historyForward.length;
+    }
+    return 0;
   }
 
   bool tryGoBack() {
@@ -1818,6 +1844,8 @@ class WebViewProvider extends ChangeNotifier {
     _fabButtonActions = await Prefs().getFabButtonActions();
     _fabDoubleTapAction = await Prefs().getFabDoubleTapAction();
     _fabTripleTapAction = await Prefs().getFabTripleTapAction();
+
+    _browserDoNotPauseWebview = await Prefs().getBrowserDoNotPauseWebviews();
 
     String splitType = await Prefs().getSplitScreenWebview();
     switch (splitType) {

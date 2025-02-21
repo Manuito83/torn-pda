@@ -46,11 +46,11 @@ dependencies:
   ## ffi: ^1.0.0
   firebase_analytics: 11.4.1
   firebase_auth: 5.4.1
-  firebase_core: 3.10.1
+  firebase_core: 3.11.0
   firebase_crashlytics: 4.3.1
   firebase_database: 11.3.1
   firebase_messaging: 15.2.1
-  firebase_remote_config: 5.3.1
+  firebase_remote_config: 5.4.0
   fl_chart: 0.69.2
   flex_color_picker: 3.6.0
   flutter_displaymode: 0.6.0

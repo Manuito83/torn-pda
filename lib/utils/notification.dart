@@ -13,6 +13,7 @@ import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
@@ -926,8 +927,25 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
   }
 }
 
-showSendbirdNotification(String sender, String message, String channelUrl) async {
-  if (sender.toLowerCase() == Get.find<UserController>().playerName.toLowerCase()) return;
+showSendbirdNotification(String sender, String message, String channelUrl, {bool fromBackground = false}) async {
+  // Note: with the app on the background we can't access providers, so take Prefs()
+  String ownName = "";
+  bool excludeFaction = false;
+  if (fromBackground) {
+    // Don't show own messages
+    final savedUser = await Prefs().getOwnDetails();
+    if (savedUser != '') {
+      ownName = ownProfileBasicFromJson(savedUser).name ?? "";
+    }
+
+    // Filter faction
+    excludeFaction = await Prefs().getSendbirdExcludeFactionMessages();
+  } else {
+    ownName = Get.find<UserController>().playerName;
+    excludeFaction = Get.find<SendbirdController>().excludeFactionMessages;
+  }
+
+  if (sender.toLowerCase() == ownName.toLowerCase()) return;
 
   final modifier = await getNotificationChannelsModifiers();
   String channelTitle = "Torn chat ${modifier.channelIdModifier} s";
@@ -951,6 +969,12 @@ showSendbirdNotification(String sender, String message, String channelUrl) async
   for (final entry in patterns.entries) {
     if (channelUrl.contains(entry.key)) {
       suffix = entry.value;
+
+      // Exclude faction messages
+      if (suffix == "(faction)" && excludeFaction) {
+        return;
+      }
+
       break;
     }
   }

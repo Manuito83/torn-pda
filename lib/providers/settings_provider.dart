@@ -249,6 +249,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _browserShowNavArrowsAppbar = "wide";
+  String get browserShowNavArrowsAppbar => _browserShowNavArrowsAppbar;
+  set browserShowNavArrowsAppbar(String value) {
+    _browserShowNavArrowsAppbar = value;
+    Prefs().setBrowserShowNavArrowsAppbar(value);
+    notifyListeners();
+  }
+
   var _useTabsFullBrowser = true;
   bool get useTabsFullBrowser => _useTabsFullBrowser;
   set changeUseTabsFullBrowser(bool value) {
@@ -1201,6 +1209,8 @@ class SettingsProvider extends ChangeNotifier {
       case "both":
         _browserRefreshMethod = BrowserRefreshSetting.both;
     }
+
+    _browserShowNavArrowsAppbar = await Prefs().getBrowserShowNavArrowsAppbar();
 
     _onBackButtonAppExit = await Prefs().getOnBackButtonAppExit();
 

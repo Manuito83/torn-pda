@@ -28,6 +28,14 @@ class SendbirdController extends GetxController {
   TimeOfDay endTime = TimeOfDay(hour: 0, minute: 0);
   String timeZoneName = DateTime.now().timeZoneName;
 
+  bool _excludeFactionMessages = false;
+  bool get excludeFactionMessages => _excludeFactionMessages;
+  set excludeFactionMessages(bool value) {
+    _excludeFactionMessages = value;
+    Prefs().setSendbirdExcludeFactionMessages(value);
+    update();
+  }
+
   bool _sendBirdNotificationsEnabled = false;
   bool get sendBirdNotificationsEnabled => _sendBirdNotificationsEnabled;
   sendBirdNotificationsToggle({required bool enabled}) async {
@@ -58,6 +66,7 @@ class SendbirdController extends GetxController {
     if (_initialised) return;
     _initialised = true;
 
+    _excludeFactionMessages = await Prefs().getSendbirdExcludeFactionMessages();
     _sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
 
     try {

@@ -91,6 +91,7 @@ class Prefs {
   final String _kBrowserStyleBottomBarType = "pda_browserStyleAlternativeType";
   final String _kBrowserBottomBarStylePlaceTabsAtBottom = "pda_browserBottomBarStylePlaceTabsAtBottom";
   final String _kBrowserRefreshMethod2 = "pda_browserRefreshMethod"; // second try to make it icon default
+  final String _kBrowserShowNavArrowsAppbar = "pda_browserShowNavArrowsAppbar";
   final String _kUseQuickBrowser = "pda_useQuickBrowser";
   //final String _kClearBrowserCacheNextOpportunity = "pda_clearBrowserCacheNextOpportunity";
   final String _kRestoreSessionCookie = "pda_restoreSessionCookie";
@@ -108,6 +109,8 @@ class Prefs {
   final String _kFabButtonActions = "pda_fabButtonActions";
   final String _kFabDoubleTapAction = "pda_fabDoubleTapAction";
   final String _kFabTripleTapAction = "pda_fabTripleTapAction";
+
+  final String _kBrowserDoNotPauseWebviews = "pda_browserDoNotPauseWebviews";
 
   // Browser gestures
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
@@ -423,6 +426,7 @@ class Prefs {
   final String _kSendbirdnotificationsEnabled = "pda_sendbirdNotificationsEnabled";
   final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
   final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
+  final String _kSendbirdExcludeFactionMessages = "pda_sendbirdExcludeFactionMessages";
 
   final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
 
@@ -1060,12 +1064,22 @@ class Prefs {
 
   Future<String> getBrowserRefreshMethod() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBrowserRefreshMethod2) ?? "icon";
+    return prefs.getString(_kBrowserRefreshMethod2) ?? "both";
   }
 
   Future<bool> setBrowserRefreshMethod(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kBrowserRefreshMethod2, value);
+  }
+
+  Future<String> getBrowserShowNavArrowsAppbar() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kBrowserShowNavArrowsAppbar) ?? "wide";
+  }
+
+  Future<bool> setBrowserShowNavArrowsAppbar(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kBrowserShowNavArrowsAppbar, value);
   }
 
   Future<bool> getBrowserBottomBarStyleEnabled() async {
@@ -1308,6 +1322,16 @@ class Prefs {
   }
 
   // FAB ENDS ###
+
+  Future<bool> getBrowserDoNotPauseWebviews() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserDoNotPauseWebviews) ?? false;
+  }
+
+  Future<bool> setBrowserDoNotPauseWebviews(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserDoNotPauseWebviews, value);
+  }
 
   // Settings - Browser Gestures
 
@@ -4037,7 +4061,17 @@ class Prefs {
     return prefs.setInt(_kSendbirdTokenTimestamp, timestamp);
   }
 
-  //
+  Future<bool> getSendbirdExcludeFactionMessages() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSendbirdExcludeFactionMessages) ?? false;
+  }
+
+  Future<bool> setSendbirdExcludeFactionMessages(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSendbirdExcludeFactionMessages, value);
+  }
+
+  ///////
 
   Future<bool> getBringBrowserForwardOnStart() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

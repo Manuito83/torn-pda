@@ -1693,7 +1693,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
-    late Widget alertsButton;
+    Widget? alertsButton;
     if (Platform.isAndroid) {
       alertsButton = Row(
         children: [
@@ -1764,6 +1764,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           size: 20,
         ),
       );
+    } else {
+      alertsButton = const SizedBox.shrink();
     }
 
     Widget buttonsRow;
@@ -7216,7 +7218,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         });
       }
 
-      String headerString = "$currentPoints job points";
+      String headerString = "${currentPoints ?? '0'} job point${currentPoints == 1 ? '' : 's'}";
       if (unemployed) {
         headerString = "Unemployed";
       }

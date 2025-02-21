@@ -486,6 +486,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
     if (Platform.isAndroid) {
       if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+        if (_webViewProvider.browserDoNotPauseWebview) return;
         webViewController?.pauseTimers();
       } else {
         webViewController?.resumeTimers();
@@ -1888,7 +1889,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             }
           },
           onDoubleTap: () {
-            // Return to windowed mode
             if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
               _webViewProvider.verticalMenuClose();
               _webViewProvider.setCurrentUiMode(UiMode.window, context);
@@ -2502,74 +2502,136 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               },
             );
           },
-          child: DottedBorder(
-            padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
-            dashPattern: assistPossible ? const [1, 1] : const [1, 4],
-            color: assistPossible ? Colors.orange : Colors.white70,
-            child: ClipRRect(
-              child: Showcase(
-                key: _showCaseTitleBar,
-                title: 'Options menu',
-                description: '\nTap the page title to open a menu with additional options, '
-                    'including faction attack assists calls!\n\n'
-                    'Swipe left/right to browse back/forward\n\n'
-                    'Swipe down/up to hide or show your tab bar!',
-                targetPadding: const EdgeInsets.all(10),
-                disableMovingAnimation: true,
-                textColor: _themeProvider.mainText!,
-                tooltipBackgroundColor: _themeProvider.secondBackground!,
-                descTextStyle: const TextStyle(fontSize: 13),
-                tooltipPadding: const EdgeInsets.all(20),
-                child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
-                        _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
-                    ? Row(
+          child: LayoutBuilder(builder: (context, constraints) {
+            // Layout builder to check the width of the app bar
+            // and assess whether to show back/forward navigation buttons
+            return Container(
+              width: constraints.maxWidth,
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Flexible(
+                    child: DottedBorder(
+                      padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
+                      dashPattern: assistPossible ? const [1, 1] : const [1, 4],
+                      color: assistPossible ? Colors.orange : Colors.white70,
+                      child: ClipRRect(
+                        child: Showcase(
+                          key: _showCaseTitleBar,
+                          title: 'Options menu',
+                          description: '\nTap the page title to open a menu with additional options, '
+                              'including faction attack assists calls!\n\n'
+                              'Swipe left/right to browse back/forward\n\n'
+                              'Swipe down/up to hide or show your tab bar!',
+                          targetPadding: const EdgeInsets.all(10),
+                          disableMovingAnimation: true,
+                          textColor: _themeProvider.mainText!,
+                          tooltipBackgroundColor: _themeProvider.secondBackground!,
+                          descTextStyle: const TextStyle(fontSize: 13),
+                          tooltipPadding: const EdgeInsets.all(20),
+                          child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
+                                  _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
+                              ? Row(
+                                  children: [
+                                    Icon(
+                                      MdiIcons.text,
+                                      size: 14,
+                                      color: Colors.lime,
+                                    ),
+                                    SizedBox(width: 6),
+                                    Text(
+                                      _webViewProvider.tabList[_webViewProvider.currentTab].customName,
+                                      overflow: TextOverflow.fade,
+                                      style: const TextStyle(
+                                          fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
+                                    ),
+                                  ],
+                                )
+                              : Row(
+                                  children: [
+                                    if (assistPossible)
+                                      Flexible(
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            const Text(
+                                              "ASSIST",
+                                              overflow: TextOverflow.fade,
+                                              style: TextStyle(fontSize: 9, color: Colors.orange),
+                                            ),
+                                            Text(
+                                              _pageTitle!,
+                                              overflow: TextOverflow.fade,
+                                              style: const TextStyle(fontSize: 14, color: Colors.white),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      Flexible(
+                                        child: Text(
+                                          _pageTitle!,
+                                          overflow: TextOverflow.fade,
+                                          style: const TextStyle(fontSize: 16, color: Colors.white),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  if ((_settingsProvider.browserShowNavArrowsAppbar == "narrow" && constraints.maxWidth > 200) ||
+                      (_settingsProvider.browserShowNavArrowsAppbar == "wide" && constraints.maxWidth > 400))
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: Row(
                         children: [
-                          Icon(
-                            MdiIcons.text,
-                            size: 14,
-                            color: Colors.lime,
-                          ),
-                          SizedBox(width: 6),
-                          Text(
-                            _webViewProvider.tabList[_webViewProvider.currentTab].customName,
-                            overflow: TextOverflow.fade,
-                            style: const TextStyle(fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
-                          ),
-                        ],
-                      )
-                    : Row(
-                        children: [
-                          if (assistPossible)
-                            Flexible(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const Text(
-                                    "ASSIST",
-                                    overflow: TextOverflow.fade,
-                                    style: TextStyle(fontSize: 9, color: Colors.orange),
-                                  ),
-                                  Text(
-                                    _pageTitle!,
-                                    overflow: TextOverflow.fade,
-                                    style: const TextStyle(fontSize: 14, color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            )
-                          else
-                            Flexible(
-                              child: Text(
-                                _pageTitle!,
-                                overflow: TextOverflow.fade,
-                                style: const TextStyle(fontSize: 16, color: Colors.white),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              splashColor: Colors.blueGrey,
+                              onTap: () async {
+                                await _tryGoBack();
+                              },
+                              child: SizedBox(
+                                width: 40,
+                                child: Icon(
+                                  Icons.arrow_back_ios_outlined,
+                                  color: _webViewProvider.returnBackPagesNumber() == 0 ? Colors.grey : Colors.white,
+                                  size: 20,
+                                ),
                               ),
                             ),
+                          ),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              splashColor: Colors.blueGrey,
+                              onTap: () async {
+                                await _tryGoForward();
+                              },
+                              child: SizedBox(
+                                width: 40,
+                                child: Icon(
+                                  Icons.arrow_forward_ios_outlined,
+                                  color: _webViewProvider.returnForwardPagesNumber() == 0 ? Colors.grey : Colors.white,
+                                  size: 20,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
+                    )
+                  else
+                    const SizedBox.shrink(),
+                ],
               ),
-            ),
-          ),
+            );
+          }),
         ),
         actions: _isChainingBrowser
             ? _chainingActionButtons()
@@ -4765,6 +4827,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                                   _settingsProvider.travelLifeExcessWarning = false;
                                   _settingsProvider.travelDrugCooldownWarning = false;
                                   _settingsProvider.travelBoosterCooldownWarning = false;
+                                  _settingsProvider.travelWalletMoneyWarning = false;
                                 },
                                 child: Text(
                                   "DISABLE",
@@ -4872,7 +4935,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (_settingsProvider.naturalNerveBarSource == NaturalNerveBarSource.off) return;
 
     if (!calledUrl.contains("factions.php?step=your") || !calledUrl.contains("/tab=crimes")) {
-      // Return calls and reset widget if we are in another URL
       if (_ocNnbTriggered) _ocNnbTriggered = false;
       if (_ocNnbController.expanded) {
         setState(() {
