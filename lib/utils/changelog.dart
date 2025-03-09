@@ -51,13 +51,13 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.2 - Build 501 - 09/03/2025
+    // v3.7.2 - Build 502 - 09/03/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.2'
         ..date = '01 APR 2025'
         ..features = [
-          "Packages update",
+          "Improved information provided for OC 2",
           //"Fixed reported issues when loading API key",
         ],
     );
