@@ -79,13 +79,11 @@ class SettingsPageState extends State<SettingsPage> {
   final _formKey = GlobalKey<FormState>();
   Timer? _ticker;
 
-  String? _myCurrentKey = '';
-  bool _userToLoad = false;
   bool _apiError = false;
   String _errorReason = '';
   String _errorDetails = '';
   bool _apiIsLoading = false;
-  late OwnProfileBasic _userProfile;
+  OwnProfileBasic? _userProfile;
 
   Future? _preferencesRestored;
 
@@ -117,6 +115,8 @@ class SettingsPageState extends State<SettingsPage> {
 
   double _extraMargin = 0.0;
 
+  final _apiFormKey = GlobalKey();
+
   @override
   void initState() {
     super.initState();
@@ -125,7 +125,6 @@ class SettingsPageState extends State<SettingsPage> {
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
-    _ticker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     analytics?.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
@@ -163,7 +162,7 @@ class SettingsPageState extends State<SettingsPage> {
                       SizedBox(height: _extraMargin),
                       _apiKeyWidget(),
                       const SizedBox(height: 15),
-                      if (_userToLoad)
+                      if (_userProfile != null)
                         const Column(
                           children: [
                             NativeLoginWidget(),
@@ -1140,15 +1139,17 @@ class SettingsPageState extends State<SettingsPage> {
                     ),
                     ElevatedButton(
                       child: const Icon(Icons.upload),
-                      onPressed: () {
-                        showDialog(
-                          useRootNavigator: false,
-                          context: context,
-                          builder: (BuildContext context) {
-                            return BackupSaveDialog(userProfile: _userProfile);
-                          },
-                        );
-                      },
+                      onPressed: _userProfile == null
+                          ? null
+                          : () {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupSaveDialog(userProfile: _userProfile!);
+                                },
+                              );
+                            },
                     ),
                   ],
                 ),
@@ -1177,15 +1178,17 @@ class SettingsPageState extends State<SettingsPage> {
                     ),
                     ElevatedButton(
                       child: const Icon(Icons.download),
-                      onPressed: () {
-                        showDialog(
-                          useRootNavigator: false,
-                          context: context,
-                          builder: (BuildContext context) {
-                            return BackupRestoreDialog(userProfile: _userProfile);
-                          },
-                        );
-                      },
+                      onPressed: _userProfile == null
+                          ? null
+                          : () {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupRestoreDialog(userProfile: _userProfile!);
+                                },
+                              );
+                            },
                     ),
                   ],
                 ),
@@ -1214,18 +1217,20 @@ class SettingsPageState extends State<SettingsPage> {
                     ),
                     ElevatedButton(
                       child: const Icon(Icons.share),
-                      onPressed: () {
-                        showDialog(
-                          useRootNavigator: false,
-                          context: context,
-                          builder: (BuildContext context) {
-                            return BackupShareDialog(
-                              userProfile: _userProfile,
-                              themeProvider: _themeProvider,
-                            );
-                          },
-                        );
-                      },
+                      onPressed: _userProfile == null
+                          ? null
+                          : () {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupShareDialog(
+                                    userProfile: _userProfile!,
+                                    themeProvider: _themeProvider,
+                                  );
+                                },
+                              );
+                            },
                     ),
                   ],
                 ),
@@ -1254,15 +1259,17 @@ class SettingsPageState extends State<SettingsPage> {
                     ),
                     ElevatedButton(
                       child: const Icon(Icons.delete_outline),
-                      onPressed: () async {
-                        showDialog(
-                          useRootNavigator: false,
-                          context: context,
-                          builder: (BuildContext context) {
-                            return BackupDeleteDialog(userProfile: _userProfile);
-                          },
-                        );
-                      },
+                      onPressed: _userProfile == null
+                          ? null
+                          : () async {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupDeleteDialog(userProfile: _userProfile!);
+                                },
+                              );
+                            },
                     ),
                   ],
                 ),
@@ -2551,12 +2558,13 @@ class SettingsPageState extends State<SettingsPage> {
         child: CircularProgressIndicator(),
       );
     }
-    if (_userToLoad) {
-      _expandableController.expanded = false;
+    if (_userProfile != null) {
       return Padding(
+        key: _apiFormKey,
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
         child: Card(
           child: ExpandablePanel(
+            controller: _expandableController,
             collapsed: Container(),
             header: Padding(
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
@@ -2578,7 +2586,7 @@ class SettingsPageState extends State<SettingsPage> {
                   Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: Text(
-                      "${_userProfile.name} [${_userProfile.playerId}]",
+                      "${_userProfile!.name} [${_userProfile!.playerId}]",
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
@@ -2609,7 +2617,7 @@ class SettingsPageState extends State<SettingsPage> {
                                   style: TextStyle(fontSize: 13),
                                 ),
                                 onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: _userProfile.userApiKey.toString()));
+                                  Clipboard.setData(ClipboardData(text: _userProfile!.userApiKey.toString()));
                                   BotToast.showText(
                                     text: "API key copied to the clipboard, be careful!",
                                     textStyle: const TextStyle(
@@ -2629,13 +2637,15 @@ class SettingsPageState extends State<SettingsPage> {
                                     "Reload",
                                     style: TextStyle(fontSize: 13),
                                   ),
-                                  onPressed: () {
-                                    FocusScope.of(context).requestFocus(FocusNode());
-                                    if (_formKey.currentState!.validate()) {
-                                      _myCurrentKey = _apiKeyInputController.text.trim();
-                                      _getApiDetails(userTriggered: true);
-                                    }
-                                  },
+                                  onPressed: _apiKeyInputController.text.trim().isEmpty
+                                      ? null
+                                      : () {
+                                          FocusScope.of(context).requestFocus(FocusNode());
+                                          if (_formKey.currentState!.validate()) {
+                                            String myCurrentKey = _apiKeyInputController.text.trim();
+                                            _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
+                                          }
+                                        },
                                 ),
                               ),
                               Padding(
@@ -2647,10 +2657,9 @@ class SettingsPageState extends State<SettingsPage> {
                                     // Removes the form error
                                     _formKey.currentState!.reset();
                                     _apiKeyInputController.clear();
-                                    _myCurrentKey = '';
                                     _userProvider.removeUser();
                                     setState(() {
-                                      _userToLoad = false;
+                                      _userProfile = null;
                                       _apiError = false;
                                     });
                                     if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
@@ -2728,13 +2737,15 @@ class SettingsPageState extends State<SettingsPage> {
                             children: <Widget>[
                               ElevatedButton(
                                 child: const Text("Load"),
-                                onPressed: () {
-                                  FocusScope.of(context).requestFocus(FocusNode());
-                                  if (_formKey.currentState!.validate()) {
-                                    _myCurrentKey = _apiKeyInputController.text.trim();
-                                    _getApiDetails(userTriggered: true);
-                                  }
-                                },
+                                onPressed: _apiKeyInputController.text.trim().isEmpty
+                                    ? null
+                                    : () {
+                                        FocusScope.of(context).requestFocus(FocusNode());
+                                        if (_formKey.currentState!.validate()) {
+                                          String myCurrentKey = _apiKeyInputController.text.trim();
+                                          _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
+                                        }
+                                      },
                               ),
                             ],
                           ),
@@ -2784,9 +2795,12 @@ class SettingsPageState extends State<SettingsPage> {
           onEditingComplete: () {
             FocusScope.of(context).requestFocus(FocusNode());
             if (_formKey.currentState!.validate()) {
-              _myCurrentKey = _apiKeyInputController.text.trim();
-              _getApiDetails(userTriggered: true);
+              String myCurrentKey = _apiKeyInputController.text.trim();
+              _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
             }
+          },
+          onChanged: (value) {
+            setState(() {});
           },
         ),
       ),
@@ -2825,7 +2839,7 @@ class SettingsPageState extends State<SettingsPage> {
           ],
         ),
       );
-    } else if (_myCurrentKey == '') {
+    } else if (_userProfile == null) {
       return Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
         child: Column(
@@ -2904,17 +2918,17 @@ class SettingsPageState extends State<SettingsPage> {
         child: Column(
           children: <Widget>[
             Text(
-              "${_userProfile.name} [${_userProfile.playerId}]",
+              "${_userProfile!.name} [${_userProfile!.playerId}]",
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Text("Gender: ${_userProfile.gender}"),
-            Text("Level: ${_userProfile.level}"),
-            Text("Life: ${_userProfile.life!.current}"),
-            Text("Status: ${_userProfile.status!.description}"),
-            Text("Last action: ${_userProfile.lastAction!.relative}"),
-            Text("Rank: ${_userProfile.rank}"),
+            Text("Gender: ${_userProfile!.gender}"),
+            Text("Level: ${_userProfile!.level}"),
+            Text("Life: ${_userProfile!.life!.current}"),
+            Text("Status: ${_userProfile!.status!.description}"),
+            Text("Last action: ${_userProfile!.lastAction!.relative}"),
+            Text("Rank: ${_userProfile!.rank}"),
           ],
         ),
       );
@@ -3814,7 +3828,7 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _getApiDetails({required bool userTriggered}) async {
+  Future<void> _getApiDetails({required bool userTriggered, required String currentKey}) async {
     int errorPlayerId = 0;
     dynamic firebaseErrorUser;
 
@@ -3823,16 +3837,15 @@ class SettingsPageState extends State<SettingsPage> {
         _apiIsLoading = true;
       });
 
-      final dynamic myProfile = await ApiCallsV1.getOwnProfileBasic(forcedApiKey: _myCurrentKey);
+      final dynamic myProfile = await ApiCallsV1.getOwnProfileBasic(forcedApiKey: currentKey);
       if (myProfile is OwnProfileBasic) {
         myProfile
-          ..userApiKey = _myCurrentKey
+          ..userApiKey = currentKey
           ..userApiKeyValid = true;
         _userProvider.setUserDetails(userDetails: myProfile);
 
         setState(() {
           _apiIsLoading = false;
-          _userToLoad = true;
           _apiError = false;
           _userProfile = myProfile;
         });
@@ -3848,6 +3861,10 @@ class SettingsPageState extends State<SettingsPage> {
 
         // Firestore uploading, but only if "Load" pressed by user
         if (userTriggered) {
+          setState(() {
+            _expandableController.expanded = false;
+          });
+
           if (!Platform.isWindows) {
             // See note in [firebase_auth.dart]
             final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
@@ -3890,7 +3907,7 @@ class SettingsPageState extends State<SettingsPage> {
       } else if (myProfile is ApiError) {
         setState(() {
           _apiIsLoading = false;
-          _userToLoad = false;
+          _userProfile = null;
           _apiError = true;
           _errorReason = myProfile.errorReason;
           _errorDetails = myProfile.pdaErrorDetails;
@@ -3905,12 +3922,13 @@ class SettingsPageState extends State<SettingsPage> {
       }
     } catch (e, stack) {
       if (!Platform.isWindows) {
-        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $_myCurrentKey. "
+        String currentKey = _apiKeyInputController.text.trim();
+        FirebaseCrashlytics.instance.log("PDA Crash at LOAD API KEY. User $currentKey. "
             "Error: $e. Stack: $stack");
         FirebaseCrashlytics.instance.recordError(
           e,
           stack,
-          information: ['API Key: $_myCurrentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser.uid}'],
+          information: ['API Key: $currentKey', 'ID: $errorPlayerId', 'Firebase User UID: ${firebaseErrorUser.uid}'],
         );
       }
     }
@@ -3930,12 +3948,12 @@ class SettingsPageState extends State<SettingsPage> {
     });
 
     if (_userProvider.basic!.userApiKeyValid!) {
+      String savedKey = _userProvider.basic!.userApiKey!;
       setState(() {
         _apiKeyInputController.text = _userProvider.basic!.userApiKey!;
-        _myCurrentKey = _userProvider.basic!.userApiKey;
         _apiIsLoading = true;
       });
-      _getApiDetails(userTriggered: false);
+      _getApiDetails(userTriggered: false, currentKey: savedKey);
     }
 
     final onAppExit = _settingsProvider.onBackButtonAppExit;
@@ -3993,12 +4011,6 @@ class SettingsPageState extends State<SettingsPage> {
       _manualAlarmSound = manualAlarmSound;
       _manualAlarmVibration = manualAlarmVibration;
     });
-  }
-
-  void _timerUpdateInformation() {
-    if (_myCurrentKey != '') {
-      _getApiDetails(userTriggered: false);
-    }
   }
 
   DropdownButton _shortcutTileDropdown() {

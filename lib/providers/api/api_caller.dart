@@ -8,6 +8,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:flutter/material.dart';
 import 'package:chopper/chopper.dart' as chopper;
@@ -282,70 +283,102 @@ class ApiCallerController extends GetxController {
       apiKey = user.apiKey;
     }
 
+    // Make sure we don't allow calls without an API key
+    // (e.g. when checking something in Drawer on first launch)
+    if (apiKey == null || apiKey.isEmpty) {
+      return ApiError(errorId: 999);
+    }
+
     String url = 'https://api.torn.com:443/';
 
     switch (apiSelection) {
       case ApiSelection_v1.appWidget:
         url += 'user/?selections=profile,icons,bars,cooldowns,newevents,newmessages,travel,money';
+        break;
       case ApiSelection_v1.travel:
         url += 'user/?selections=money,travel';
+        break;
       case ApiSelection_v1.ownBasic:
         url += 'user/?selections=profile,battlestats,bars';
+        break;
       case ApiSelection_v1.ownExtended:
-        url += 'user/?selections=profile,bars,networth,cooldowns,notifications,'
-            'travel,icons,money,education,messages';
+        url += 'user/?selections=profile,bars,networth,cooldowns,notifications,travel,icons,money,education,messages';
+        break;
       case ApiSelection_v1.events:
         url += 'user/?selections=events';
+        break;
       case ApiSelection_v1.ownPersonalStats:
         final stats = "xantaken,statenhancersused,refills,exttaken,lsdtaken,networth,energydrinkused";
         url += 'user/?selections=personalstats&stat=$stats';
+        break;
       case ApiSelection_v1.ownMisc:
         url += 'user/?selections=money,education,workstats,battlestats,jobpoints,properties,skills,bazaar';
+        break;
       case ApiSelection_v1.bazaar:
         url += 'user/?selections=bazaar';
+        break;
       case ApiSelection_v1.basicProfile:
         url += 'user/$prefix?selections=profile';
+        break;
       case ApiSelection_v1.target:
         url += 'user/$prefix?selections=profile,discord';
+        break;
       case ApiSelection_v1.attacks:
         url += 'user/$prefix?selections=attacks';
+        break;
       case ApiSelection_v1.attacksFull:
         url += 'user/$prefix?selections=attacksfull';
+        break;
       case ApiSelection_v1.chainStatus:
         url += 'faction/?selections=chain';
+        break;
       case ApiSelection_v1.barsAndPlayerStatus:
         url += 'user/?selections=bars,profile,travel,cooldowns,money';
+        break;
       case ApiSelection_v1.items:
         url += 'torn/?selections=items';
+        break;
       case ApiSelection_v1.inventory:
         url += 'user/?selections=inventory,display';
+        break;
       case ApiSelection_v1.education:
         url += 'torn/?selections=education';
+        break;
       case ApiSelection_v1.faction:
         url += 'faction/$prefix?selections=';
+        break;
       case ApiSelection_v1.factionCrimes:
         url += 'faction/?selections=crimes';
+        break;
       case ApiSelection_v1.factionAttacks:
         url += 'faction/?selections=attacks';
+        break;
       case ApiSelection_v1.friends:
         url += 'user/$prefix?selections=profile,discord';
+        break;
       case ApiSelection_v1.property:
         url += 'property/$prefix?selections=property';
+        break;
       case ApiSelection_v1.userStocks:
         url += 'user/?selections=stocks';
+        break;
       case ApiSelection_v1.tornStocks:
         url += 'torn/?selections=stocks';
+        break;
       case ApiSelection_v1.perks:
         url += 'user/$prefix?selections=perks';
+        break;
       case ApiSelection_v1.rankedWars:
         url += 'torn/?selections=rankedwars';
+        break;
       case ApiSelection_v1.companyEmployees:
         url += 'company/?selections=employees';
+        break;
     }
-    url += '&key=${apiKey!.trim()}&comment=PDA-App&limit=$limit${from != null ? "&from=$from" : ""}';
+    url += '&key=${apiKey.trim()}&comment=PDA-App&limit=$limit${from != null ? "&from=$from" : ""}';
 
     // DEBUG
-    //return ApiError(errorId: 0);
+    // if (kDebugMode) return ApiError(errorId: 0);
 
     try {
       final response = await http.get(
@@ -443,6 +476,12 @@ class ApiCallerController extends GetxController {
   }) async {
     final UserController user = Get.find<UserController>();
     final String apiKey = user.apiKey!;
+
+    // Make sure we don't allow calls without an API key
+    // (e.g. when checking something in Drawer on first launch)
+    if (apiKey.isEmpty) {
+      return ApiError(errorId: 999);
+    }
 
     final TornV2 client = TornV2.create(
       baseUrl: Uri.parse('https://api.torn.com:443/v2'),

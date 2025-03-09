@@ -68,15 +68,15 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.7.1';
-const String androidCompilation = '497';
-const String iosCompilation = '497';
+const String appVersion = '3.7.2';
+const String androidCompilation = '501';
+const String iosCompilation = '501';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
 const bool pointFunctionsEmulatorToLocal = false;
 
-// TODO (App release)
+// TODO (App release)cle
 const bool enableWakelockForDebug = true;
 
 bool logAndShowToUser = false;

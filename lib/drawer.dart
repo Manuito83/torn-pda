@@ -2066,6 +2066,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _handleChangelog() async {
+    _preferencesCompleter.future.whenComplete(() async {
+      _settingsProvider.checkIfUserIsOnOCv2();
+    });
+
     final String savedCompilation = await Prefs().getAppCompilation();
     final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
 
