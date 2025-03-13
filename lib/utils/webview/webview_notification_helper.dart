@@ -31,7 +31,7 @@ class WebviewNotificationsHelper {
     final exists = pendingNotificationRequests.any((notif) => notif.id == finalId);
 
     if (exists && !overwriteID) {
-      return 'Error: Notification with ID $finalId already exists and overwriteID=false';
+      return 'Error: Notification with ID $id already exists and overwriteID=false';
     }
 
     if (exists && overwriteID) {
@@ -91,7 +91,7 @@ class WebviewNotificationsHelper {
       );
     }
 
-    return 'Notification scheduled successfully with ID $finalId';
+    return 'Notification scheduled successfully with ID $id';
   }
 
   /// Set an Android Alarm via Intent

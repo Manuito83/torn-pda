@@ -85,6 +85,7 @@ import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_terminal.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -1113,51 +1114,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               else
                 const SizedBox.shrink(),
               // Terminal
-              Consumer<SettingsProvider>(
-                builder: (_, value, __) {
-                  if (value.terminalEnabled) {
-                    return Stack(
-                      alignment: Alignment.topRight,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(width: 2, color: Colors.green[900]!),
-                          ),
-                          height: 120,
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      _terminalProvider.terminal,
-                                      style: const TextStyle(color: Colors.green, fontSize: 13),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            _terminalProvider.clearTerminal();
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 3, 2, 0),
-                            child: Icon(
-                              Icons.delete,
-                              color: Colors.orange,
-                              size: 16,
-                            ),
-                          ),
-                        )
-                      ],
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+              WebviewTerminal(
+                context: context,
+                terminalProvider: _terminalProvider,
               ),
             ],
           ),
