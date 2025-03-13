@@ -1115,7 +1115,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 const SizedBox.shrink(),
               // Terminal
               WebviewTerminal(
-                context: context,
                 terminalProvider: _terminalProvider,
               ),
             ],
