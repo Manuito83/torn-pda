@@ -30,6 +30,7 @@ import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 // 555 chain watcher
 // 666 + timestamp Torn chat (Sendbird)
 // 777 script updates
+const webviewNotificationIdPrefix = 88; // 88001, 88002, etc
 
 Future showNotification(Map payload, int notId) async {
   showNotificationBoth(payload, notId);

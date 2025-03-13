@@ -332,7 +332,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "tornexchange_enabled": true,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
-        "favicons_remove": "false",
         // Revives
         "revive_hela": "1 million or 1 Xanax",
         "revive_revive": "1 million or 1 Xanax",
