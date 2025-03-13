@@ -311,7 +311,7 @@ Future<void> main() async {
         ChangeNotifierProvider<ShortcutsProvider>(create: (context) => ShortcutsProvider()),
         ChangeNotifierProvider<AwardsProvider>(create: (context) => AwardsProvider()),
         ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
-        ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider("")),
+        ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider()),
         ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
         // Native login
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),

@@ -1115,7 +1115,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 const SizedBox.shrink(),
               // Terminal
               WebviewTerminal(
+                webviewKey: widget.key,
                 terminalProvider: _terminalProvider,
+                webViewController: webViewController,
               ),
             ],
           ),
@@ -1143,8 +1145,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               await InAppWebViewController.clearAllCache();
             }
 
-            _terminalProvider.terminal = "Terminal";
-
             // Userscripts initial load
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
@@ -1160,10 +1160,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
+                  widget.key,
                   "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
                   "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             } else if (Platform.isWindows && widget.windowId != null) {
               _terminalProvider.addInstruction(
+                  widget.key,
                   "TORN PDA NOTE: Windows does not support user scripts injection in new windows (like this one), but only in "
                   "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             }
@@ -1716,7 +1718,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                   !consoleMessage.message.contains("Error with Permissions-Policy header") &&
                   !consoleMessage.message.contains("srcset") &&
                   !consoleMessage.message.contains("Missed ID for Quote saving")) {
-                _terminalProvider.addInstruction(consoleMessage.message);
+                _terminalProvider.addInstruction(widget.key, consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
             }
