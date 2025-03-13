@@ -883,6 +883,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
     ),
   );
 
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual webview ${modifier.channelIdModifier}',
+      'Manual webview ${modifier.channelIdModifier}',
+      description: 'Manual notifications from browser',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
   for (final channel in channels) {
     await flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()

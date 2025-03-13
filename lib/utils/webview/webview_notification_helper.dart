@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:timezone/timezone.dart' as tz;
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/notification.dart';
 
 class WebviewNotificationsHelper {
@@ -21,6 +22,7 @@ class WebviewNotificationsHelper {
     String toastMessage = '',
     String toastColor = 'blue',
     int toastDurationSeconds = 3,
+    required Function assessNotificationPermissions,
   }) async {
     final int finalId = int.parse('$webviewNotificationIdPrefix$id');
     final notificationTimestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
@@ -38,15 +40,16 @@ class WebviewNotificationsHelper {
       await _notificationsPlugin.cancel(finalId);
     }
 
-    const androidDetails = AndroidNotificationDetails(
-      'js_notifications_channel',
-      'JS Notifications',
-      channelDescription: 'Notifications created from JavaScript',
+    final modifier = await getNotificationChannelsModifiers();
+    final androidDetails = AndroidNotificationDetails(
+      'Manual webview ${modifier.channelIdModifier}',
+      'Manual webview ${modifier.channelIdModifier}',
+      channelDescription: 'Manual notifications from browser',
       priority: Priority.high,
       visibility: NotificationVisibility.public,
-      icon: 'notification_travel',
-      color: Colors.blue,
-      ledColor: Color.fromARGB(255, 255, 0, 0),
+      icon: 'notification_icon',
+      color: Colors.grey,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
       ledOnMs: 1000,
       ledOffMs: 500,
     );
@@ -61,6 +64,10 @@ class WebviewNotificationsHelper {
       iOS: iosDetails,
     );
 
+    if (Platform.isAndroid) {
+      await assessNotificationPermissions();
+    }
+
     // Schedule notification
     await _notificationsPlugin.zonedSchedule(
       finalId,
@@ -69,7 +76,9 @@ class WebviewNotificationsHelper {
       tz.TZDateTime.from(notificationTimestamp, tz.local),
       details,
       payload: timestampMillis.toString(),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: exactAlarmsPermissionAndroid
+          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          : AndroidScheduleMode.inexactAllowWhileIdle,
     );
 
     if (launchNativeToast) {

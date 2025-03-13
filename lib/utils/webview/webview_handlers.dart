@@ -80,6 +80,7 @@ class WebviewHandlers {
   static void addNotificationHandlers({
     required InAppWebViewController webview,
     required FlutterLocalNotificationsPlugin notificationsPlugin,
+    required Function assessNotificationPermissions,
   }) {
     webview.addJavaScriptHandler(
       handlerName: 'scheduleNotification',
@@ -125,6 +126,7 @@ class WebviewHandlers {
           toastMessage: params['toastMessage'] ?? '',
           toastColor: params['toastColor'] ?? 'blue',
           toastDurationSeconds: params['toastDurationSeconds'] ?? 3,
+          assessNotificationPermissions: assessNotificationPermissions,
         );
 
         if (result.startsWith('Error')) {

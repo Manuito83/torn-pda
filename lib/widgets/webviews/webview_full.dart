@@ -64,6 +64,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
@@ -1185,6 +1186,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             WebviewHandlers.addNotificationHandlers(
               webview: webViewController!,
               notificationsPlugin: FlutterLocalNotificationsPlugin(),
+              assessNotificationPermissions: _assessNotificationPermissions,
             );
 
             WebviewHandlers.addLoadoutChangeHandler(
@@ -5960,6 +5962,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         duration: Duration(seconds: split ? 1 : 4),
         contentPadding: const EdgeInsets.all(10),
       );
+    }
+  }
+
+  _assessNotificationPermissions() async {
+    if (Platform.isAndroid) {
+      await assessExactAlarmsPermissionsAndroid(context, _settingsProvider);
     }
   }
 }
