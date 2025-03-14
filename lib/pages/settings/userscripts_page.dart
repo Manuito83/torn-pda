@@ -1018,6 +1018,59 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 25),
+                const Text(
+                  "NOTIFICATION HANDLERS (ADVANCED)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "You can schedule native notifications (+ alarms and timers on Android) from JS code "
+                        "by using the notification handlers. To learn more about this and the different handlers avaiblable "
+                        ", please visit the docs section in Github\n\n",
+                    style: const TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "Notification Handlers wiki",
+                        style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String url =
+                                "https://github.com/Manuito83/torn-pda/blob/notification-handler/docs/webview/notification-handlers.md";
+                            await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  browserTapType: BrowserTapType.short,
+                                );
+                          },
+                      ),
+                      const TextSpan(
+                        text: "\n\nAlso, you can access this website to try out the different paramenters and "
+                            "trigger a real action in your mobile device: ",
+                      ),
+                      TextSpan(
+                        text: "\n\nNotification Handlers test website",
+                        style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String url = "https://info.tornpda.com/notifications-test.html";
+                            await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  browserTapType: BrowserTapType.short,
+                                );
+                          },
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

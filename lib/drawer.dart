@@ -332,7 +332,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "tornexchange_enabled": true,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
-        "favicons_remove": "false",
         // Revives
         "revive_hela": "1 million or 1 Xanax",
         "revive_revive": "1 million or 1 Xanax",
@@ -1100,6 +1099,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // when the app is open). Also for manual notifications when app is open.
   Future<void> _onForegroundNotification() async {
     selectNotificationStream.stream.listen((String? payload) async {
+      if (payload == null) return;
+
       // Opens new tab in broser
       bool launchBrowserWithUrl = false;
       var browserUrl = "https://www.torn.com";
@@ -1107,13 +1108,28 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Shows browser but does not change URL
       bool showBrowserForeground = false;
 
-      if (payload == 'travel') {
+      // ##-88-## comes in the payload for browser notifications (triggered from user scripts)
+      // We put them first to ensure they are not overridden by other conditions
+      if (payload.contains("##-88-##")) {
+        final parts = payload.split("##-88-##");
+        if (parts[1].isNotEmpty) {
+          final String urlPart = parts[1];
+          final uri = Uri.tryParse(urlPart);
+          if (uri == null || !uri.hasScheme || !(uri.scheme == 'http' || uri.scheme == 'https')) {
+            launchBrowserWithUrl = false;
+          } else {
+            final validatedUrl = (uri.scheme == 'http') ? uri.replace(scheme: 'https').toString() : urlPart;
+            browserUrl = validatedUrl;
+            launchBrowserWithUrl = true;
+          }
+        }
+      } else if (payload == 'travel') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com';
       } else if (payload == 'restocks') {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/travelagency.php';
-      } else if (payload!.contains('energy')) {
+      } else if (payload.contains('energy')) {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/gym.php';
       } else if (payload.contains('nerve')) {

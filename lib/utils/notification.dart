@@ -30,6 +30,7 @@ import 'package:torn_pda/widgets/settings/alarm_permissions_dialog.dart';
 // 555 chain watcher
 // 666 + timestamp Torn chat (Sendbird)
 // 777 script updates
+const webviewNotificationIdPrefix = 88; // 88001, 88002, etc
 
 Future showNotification(Map payload, int notId) async {
   showNotificationBoth(payload, notId);
@@ -874,6 +875,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       'Manual scripts ${modifier.channelIdModifier}',
       'Manual scripts ${modifier.channelIdModifier}',
       description: 'Manual notifications for scripts',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Manual webview ${modifier.channelIdModifier}',
+      'Manual webview ${modifier.channelIdModifier}',
+      description: 'Manual notifications from browser',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
       vibrationPattern: modifier.vibrationPattern,

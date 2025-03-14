@@ -1,20 +1,35 @@
 import 'package:flutter/material.dart';
 
 class TerminalProvider extends ChangeNotifier {
-  String _text;
-  String get terminal => _text;
-  set terminal(String text) => _text = _text;
+  // Map to store individual terminal texts keyed by webview id
+  final Map<Key, String> _terminals = {};
 
-  TerminalProvider(this._text);
+  // Retrieve the terminal text for a specific webview
+  String getTerminal(Key? webviewKey) {
+    if (webviewKey == null) return "";
 
-  void addInstruction(String instruction) {
-    final existing = _text;
-    _text = "$instruction\n\n$existing";
+    return _terminals[webviewKey] ?? "";
+  }
+
+  // Set the terminal text for a specific webview
+  void setTerminal(Key? webviewKey, String text) {
+    if (webviewKey == null) return;
+    _terminals[webviewKey] = text;
     notifyListeners();
   }
 
-  void clearTerminal() {
-    _text = "";
+  // Add an instruction to a specific webview's terminal
+  void addInstruction(Key? webviewKey, String instruction) {
+    if (webviewKey == null) return;
+    final existing = _terminals[webviewKey] ?? "";
+    _terminals[webviewKey] = "$instruction\n\n$existing";
+    notifyListeners();
+  }
+
+  // Clear the terminal for a specific webview
+  void clearTerminal(Key? webviewKey) {
+    if (webviewKey == null) return;
+    _terminals[webviewKey] = "";
     notifyListeners();
   }
 }
