@@ -116,6 +116,17 @@ class WebviewHandlers {
           return {'status': 'error', 'message': errorMsg};
         }
 
+        final urlCallbackParam = params['urlCallback'];
+        if (urlCallbackParam != null && urlCallbackParam is! String) {
+          final errorMsg = 'Parameter "urlCallback" must be a string';
+          log('[PDA Handler Error] $errorMsg');
+          return {'status': 'error', 'message': errorMsg};
+        }
+        final urlCallback = urlCallbackParam ?? '';
+
+        // Combine timestamp and urlCallback in the payload using "##-88-##" as delimiter
+        final combinedPayload = "$timestamp##-88-##$urlCallback";
+
         final result = await WebviewNotificationsHelper.scheduleJsNotification(
           title: params['title'],
           subtitle: params['subtitle'] ?? '',
@@ -127,6 +138,7 @@ class WebviewHandlers {
           toastColor: params['toastColor'] ?? 'blue',
           toastDurationSeconds: params['toastDurationSeconds'] ?? 3,
           assessNotificationPermissions: assessNotificationPermissions,
+          payload: combinedPayload,
         );
 
         if (result.startsWith('Error')) {
@@ -201,7 +213,10 @@ class WebviewHandlers {
           return {'status': 'error', 'message': errorMsg};
         }
 
-        final timestampMillis = int.tryParse(notif.payload ?? '') ?? 0;
+        // Split the payload using the "##-88-##" delimiter to extract the timestamp and URL
+        final payloadParts = (notif.payload ?? '').split('##-88-##');
+        final timestampMillis = int.tryParse(payloadParts.first) ?? 0;
+
         final successMsg = 'Notification with ID $id found';
         log('[Notification Query] $successMsg');
         return {
@@ -226,17 +241,16 @@ class WebviewHandlers {
           return {'status': 'error', 'message': errorMsg};
         }
 
-        if (args.isEmpty || args[0]['id'] == null || args[0]['timestamp'] == null) {
-          const errorMsg = 'Missing required parameter(s): id or timestamp';
+        if (args.isEmpty || args[0]['timestamp'] == null) {
+          const errorMsg = 'Missing required parameter: timestamp';
           log('[Alarm Handler] $errorMsg');
           return {'status': 'error', 'message': errorMsg};
         }
 
         final result = await WebviewNotificationsHelper.setAndroidAlarm(
-          id: args[0]['id'],
           timestampMillis: args[0]['timestamp'],
           vibrate: args[0]['vibrate'] ?? true,
-          ringtone: args[0]['ringtone'] ?? '',
+          sound: args[0]['sound'] ?? true,
           message: args[0]['message'] ?? 'TORN PDA Alarm',
         );
 

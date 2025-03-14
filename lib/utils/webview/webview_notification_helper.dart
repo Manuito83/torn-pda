@@ -22,14 +22,32 @@ class WebviewNotificationsHelper {
     String toastMessage = '',
     String toastColor = 'blue',
     int toastDurationSeconds = 3,
+    String payload = '',
     required Function assessNotificationPermissions,
   }) async {
     final int finalId = int.parse('$webviewNotificationIdPrefix$id');
     final notificationTimestamp = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
 
-    // Check existing notifications
-    final pendingNotificationRequests = await _notificationsPlugin.pendingNotificationRequests();
+    String finalPayload = "";
+    if (payload.isNotEmpty && payload.contains("##-88-##")) {
+      final parts = payload.split("##-88-##");
 
+      if (parts[1].isNotEmpty) {
+        final String urlPart = parts[1];
+        final uri = Uri.tryParse(urlPart);
+        if (uri == null || !uri.hasScheme || !(uri.scheme == 'http' || uri.scheme == 'https')) {
+          return 'Error: Provided payload does not contain a valid URL';
+        }
+        final validatedUrl = (uri.scheme == 'http') ? uri.replace(scheme: 'https').toString() : urlPart;
+        finalPayload = "$timestampMillis##-88-##$validatedUrl";
+      } else {
+        finalPayload = "$timestampMillis##-88-##";
+      }
+    } else {
+      return 'Error: Payload error, no valid timestamp found!';
+    }
+
+    final pendingNotificationRequests = await _notificationsPlugin.pendingNotificationRequests();
     final exists = pendingNotificationRequests.any((notif) => notif.id == finalId);
 
     if (exists && !overwriteID) {
@@ -68,16 +86,15 @@ class WebviewNotificationsHelper {
       await assessNotificationPermissions();
     }
 
-    // Schedule notification
     await _notificationsPlugin.zonedSchedule(
       finalId,
       title,
       subtitle,
       tz.TZDateTime.from(notificationTimestamp, tz.local),
       details,
-      payload: timestampMillis.toString(),
+      payload: finalPayload,
       androidScheduleMode: exactAlarmsPermissionAndroid
-          ? AndroidScheduleMode.exactAllowWhileIdle // Deliver at exact time (needs permission)
+          ? AndroidScheduleMode.exactAllowWhileIdle
           : AndroidScheduleMode.inexactAllowWhileIdle,
     );
 
@@ -105,10 +122,9 @@ class WebviewNotificationsHelper {
 
   /// Set an Android Alarm via Intent
   static Future<String> setAndroidAlarm({
-    required int id,
     required int timestampMillis,
     bool vibrate = true,
-    String ringtone = '',
+    bool sound = true,
     String message = 'TORN PDA Alarm',
   }) async {
     if (!Platform.isAndroid) {
@@ -123,7 +139,7 @@ class WebviewNotificationsHelper {
         'android.intent.extra.alarm.MINUTES': alarmTime.minute,
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': vibrate,
-        'android.intent.extra.alarm.RINGTONE': ringtone.isEmpty ? 'silent' : ringtone,
+        'android.intent.extra.alarm.RINGTONE': sound ? '' : 'silent',
         'android.intent.extra.alarm.MESSAGE': message,
       },
     );

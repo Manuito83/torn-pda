@@ -2,6 +2,8 @@
 
 ## Overview
 This document describes how to use Torn PDA's notification handlers from JavaScript.
+
+Note: refer to this [working example website](https://info.tornpda.com/notifications-test.html) (with Torn PDA) to test these features. Its [source code](https://github.com/Manuito83/torn-pda/blob/notification-handler/docs/webview/notification-test-web.md) is also available for easier reference. 
 <br/><br/>
 
 ## Handler #1 - Schedule Notification
@@ -11,15 +13,16 @@ Schedules a notification from JavaScript.
 ### 🔹 Usage Example:
 ```javascript
 window.flutter_inappwebview.callHandler('scheduleNotification', {
-  title: 'Notification title',
+  title: 'Notification title',                // [required]
   subtitle: 'Optional subtitle',
-  id: 123,
-  timestamp: Date.now() + 60000,  // Example: notification in 1 minute
-  overwriteID: true,              // Overwrite existing notification ID if true
-  launchNativeToast: true,        // Shows a toast confirmation
-  toastMessage: 'Notification scheduled!', 
-  toastColor: 'blue',             // Defaults to 'blue', but also accepts 'red' and 'green' 
-  toastDurationSeconds: 4         // Duration of the toast on screen (the user can always click to close)
+  id: 123,                                    // [required] Beware of existing notification ID (can be checked with another handler)
+  timestamp: Date.now() + 60000,              // [required] UNIX timestamp in ms. Example: notification in 1 minute
+  overwriteID: false,                         // Overwrite existing notification ID if true (default: false)
+  launchNativeToast: true,                    // Shows a toast confirmation (default: true)
+  toastMessage: 'Notification scheduled!',    // (default: if empty a custom message will show with date + time)
+  toastColor: 'blue',                         // (default: 'blue', but also accepts 'red' and 'green')
+  toastDurationSeconds: 4                     // Duration of the toast on screen (default: 3). The user can click to close.
+  urlCallback: 'https://www.torn.com/gym.php' // (default: empty)
 });
 ```
 📖 Note: 
@@ -44,18 +47,17 @@ Sets an alarm on Android from JavaScript.
 ### 🔹 Usage Example:
 ```javascript
 window.flutter_inappwebview.callHandler('setAlarm', {
-  id: 456,                        // Unique alarm ID
-  timestamp: Date.now() + 300000, // Alarm set for 5 minutes from now (in milliseconds)
-  vibrate: true,                  // Optional: enable vibration (default: true)
-  ringtone: 'default',            // Optional: alarm ringtone (default: empty string)
-  message: 'Alarm triggered!'     // Optional: custom alarm message (default: 'TORN PDA Alarm')
+  timestamp: Date.now() + 300000, // [required] UNIX timestamp in ms. Example: 5 minutes from now
+  vibrate: true,                  // Enable vibration (default: true)
+  sound: true,                    // Alarm sound (default: true)
+  message: 'Alarm triggered!'     // Custom alarm message (default: 'TORN PDA Alarm')
 });
 ```
 
 🔸 Error Cases:
-	•	Alarms are only supported on Android.
-	•	Missing parameters: id or timestamp.
-	•	Native helper errors (e.g., issues during scheduling) will return an error message.
+- Alarms are only supported on Android.
+- Missing parameters: id or timestamp.
+- Native helper errors (e.g., issues during scheduling) will return an error message.
 
 
 ---
@@ -68,15 +70,15 @@ Starts a timer on Android from JavaScript.
 ### 🔹 Usage Example:
 ```javascript
 window.flutter_inappwebview.callHandler('setTimer', {
-  seconds: 120,                   // Timer duration in seconds
-  message: 'Timer finished!'      // Optional: custom timer message (default: 'TORN PDA Timer')
+  seconds: 120,                   // [required] Timer duration in seconds
+  message: 'Timer finished!'      // Custom timer message (default: 'TORN PDA Timer')
 });
 ```
 
 🔸 Error Cases:
-	•	Timers are only supported on Android.
-	•	Missing required parameter: seconds.
-	•	Native helper errors (e.g., issues during timer setup) will return an error message.
+-	Timers are only supported on Android.
+-	Missing required parameter: seconds.
+-	Native helper errors (e.g., issues during timer setup) will return an error message.
 
 
 ---
@@ -90,14 +92,14 @@ Cancels a scheduled notification.
 
 ```javascript
 window.flutter_inappwebview.callHandler('cancelNotification', {
-  id: 123
+  id: 123   // [required]
 });
 ```
 
 🔸 Error Cases:
-	-	Missing parameter id
-	-	Invalid ID (not between 0-9999)
-	-	Non-existent notification ID
+-	Missing parameter id
+-	Invalid ID (not between 0-9999)
+-	Non-existent notification ID
 
 
 
@@ -112,21 +114,58 @@ Checks for an existing notification and retrieves its details.
 
 ```javascript
 window.flutter_inappwebview.callHandler('getNotification', {
-  id: 123
+  id: 123   // [required] Must be an integer between 0 and 9999
 }).then(response => {
-  if (response.status === 'success') {
-    const data = response.data;
-    console.log(`Notification ${data.id} scheduled for ${new Date(data.timestamp)}`);
-  } else {
-    console.error(response.message);
-  }
+  // Process the response here
 });
 ```
 
+### Response Details
+
+- **Success Response:**
+  - **status:** `"success"`
+  - **message:** A message indicating that the notification was found.
+  - **data:** An object containing:
+    - **id:** Notification ID.
+    - **timestamp:** Scheduled time for the notification (Unix timestamp in milliseconds).
+    - **title:** Notification title.
+    - **body:** Notification body.
+
+- **Error Response:**
+  - **status:** `"error"`
+  - **message:** A description of the error, such as:
+    - Missing parameter `id`
+    - Invalid `id` (must be between 0 and 9999)
+    - Notification does not exist
+
+### Web Example
+
+Below is a valid example of how to use the **getNotification** handler:
+
+```javascript
+window.flutter_inappwebview.callHandler('getNotification', params)
+  .then(response => {
+    if (response.status === 'error') {
+      console.error(`Error getting notification: ${response.message}`);
+      showToast(`No notification found with ID ${id}`, 'warning');
+    } else {
+      const notif = response.data;
+      const notifTime = new Date(notif.timestamp).toLocaleString();
+      console.log(`Notification found: ${response.message}`);
+      console.log(`Scheduled for: ${notifTime}`);
+      showToast(`Notification #${id} found: ${notifTime}`, 'success');
+    }
+  })
+  .catch(e => {
+    console.error(`Error checking notification: ${e}`);
+    showToast(`Error: ${e}`, 'error');
+  });
+```
+
 🔸 Error Cases:
-	-	Missing parameter id
-	-	Invalid ID (not between 0-9999)
-	-	Notification doesn’t exist
+-	Missing parameter id
+-	Invalid ID (not between 0-9999)
+-	Notification doesn’t exist
 
 ---
 <br/><br/>
@@ -144,23 +183,11 @@ window.flutter_inappwebview.callHandler('getPlatform').then(response => {
 ```
 
 🔸 Possible Results:
-	-	Android
-	-	iOS
-	-	Windows
-	-	Unknown
+-	Android
+-	iOS
+-	Windows
+-	Unknown
 
-```javascript
-.then(response => {
-  if (response.status === 'error') {
-    console.error(`[Flutter JS Error] ${response.message}`);
-  } else {
-    console.log(`[Flutter JS Success] ${response.message}`);
-  }
-})
-.catch(e => {
-  console.error(`[Flutter JS Exception] ${e}`);
-});
-```
 ---
 ---
 <br></br>
