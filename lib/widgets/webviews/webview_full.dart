@@ -1171,10 +1171,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                   "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             }
 
+            // ### HANDLERS ###
+
+            WebviewHandlers.addTornPDACheckHandler(webview: webViewController!);
+
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
-            WebviewHandlers.addCopyToClipboardHandler(
-              webview: webViewController!,
-            );
+            WebviewHandlers.addCopyToClipboardHandler(webview: webViewController!);
 
             WebviewHandlers.addThemeChangeHandler(
               webview: webViewController!,

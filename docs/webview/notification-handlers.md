@@ -50,7 +50,7 @@ window.flutter_inappwebview.callHandler('setAlarm', {
   timestamp: Date.now() + 300000, // [required] UNIX timestamp in ms. Example: 5 minutes from now
   vibrate: true,                  // Enable vibration (default: true)
   sound: true,                    // Alarm sound (default: true)
-  message: 'Alarm triggered!'     // Custom alarm message (default: 'TORN PDA Alarm')
+  message: 'Torn PDA alarm'     // Custom alarm message (default: 'TORN PDA Alarm')
 });
 ```
 
@@ -71,7 +71,7 @@ Starts a timer on Android from JavaScript.
 ```javascript
 window.flutter_inappwebview.callHandler('setTimer', {
   seconds: 120,                   // [required] Timer duration in seconds
-  message: 'Timer finished!'      // Custom timer message (default: 'TORN PDA Timer')
+  message: 'Torn PDA Timer'      // Custom timer message (default: 'TORN PDA Timer')
 });
 ```
 

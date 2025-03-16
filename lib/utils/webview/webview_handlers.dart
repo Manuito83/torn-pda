@@ -16,6 +16,18 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
 
 class WebviewHandlers {
+  static void addTornPDACheckHandler({
+    required InAppWebViewController webview,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'isTornPDA',
+      callback: (args) async {
+        debugPrint("Handler: isTornPDA");
+        return {'isTornPDA': true};
+      },
+    );
+  }
+
   /// Registers the Copy to Clipboard handler
   static void addCopyToClipboardHandler({
     required InAppWebViewController webview,

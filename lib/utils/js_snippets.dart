@@ -166,9 +166,19 @@ String travelRemovePlaneJS() {
   return '''
     var style = document.createElement('style');
     style.type = 'text/css';
-    style.innerHTML = '.travel-agency-travelling .stage, .travel-agency-travelling .popup-info { display: none !important; }';
-    document.getElementsByTagName('head')[0].appendChild(style);
-        
+    style.innerHTML = `
+        .travel-agency-travelling .stage, 
+        .travel-agency-travelling .popup-info, 
+        [class^="airspaceScene___"][class*="outboundFlight___"], 
+        [class^="airspaceScene___"][class*="returnFlight___"], 
+        [class^="randomFact___"], 
+        [class^="randomFactWrapper___"], 
+        [class^="delimiter-"] { 
+            display: none !important; 
+        }
+    `;
+    document.head.appendChild(style);
+            
     // Return to avoid iOS WKErrorDomain
     123;
   ''';

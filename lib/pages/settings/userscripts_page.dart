@@ -1041,7 +1041,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         recognizer: TapGestureRecognizer()
                           ..onTap = () async {
                             const String url =
-                                "https://github.com/Manuito83/torn-pda/blob/notification-handler/docs/webview/notification-handlers.md";
+                                "https://github.com/Manuito83/torn-pda/blob/develop/docs/webview/notification-handlers.md";
                             await context.read<WebViewProvider>().openBrowserPreference(
                                   context: context,
                                   url: url,
