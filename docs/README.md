@@ -1,86 +1,17 @@
 # Documentation for developers
 
-## Javascript-webview communication
+Main index:
+- [Javascript-webview communication](./webview/webview-handlers.md)
 
-From JS code, you can communicate with the native (Flutter) side of Torn PDA, which offers some additional capabilities (such as notifications) and also helps to overcome restrictions imposed by Torn (such as cross-origin http requests).
-
-Index:
-- [Platform readiness before calling a handler](#platform-readiness-before-calling-a-handler)
-- [Utility handlers](#utility-handlers)
-- [HTTP handlers](#http-handlers)
-- [Notification handlers](#notification-handlers)
+  From JS code, you can communicate with the native (Flutter) side of Torn PDA, which offers some additional capabilities (such as notifications) and also helps to overcome restrictions imposed by Torn (such as cross-origin http requests).
 <br></br>
----
----
-<br></br>
-### Platform readiness before calling a handler
+- [GM for PDA](https://github.com/Manuito83/torn-pda/blob/master/userscripts/GMforPDA.user.js)
 
-The main communication with the native side of Torn PDA takes place by using ```window.flutter_inappwebview.callHandler``` either inside a JavaScript file or within a `<script>` tag in your HTML.
+  As a general rule, Torn PDA supports standard Javascript and jQuery, but it does not include any external libraries that are served in frameworks such as GM or TM. 
 
-If you expect to call this as soon as possible while the page is loading, **you need to wait for the underlying Flutter InAppWebView platform to be ready**. This readiness is signaled by the dispatch of the flutterInAppWebViewPlatformReady event. Once this event fires, the callHandler method becomes fully available, allowing you to safely execute your calls.
+  However, Torn PDA incorporates basic GM handlers to make life easier when converting scripts, supporting dot notation (e.g.: 'GM.addStyle') and underscore notation (e.g.: 'GM_addStyle').
 
-There are two common approaches to ensure you only call callHandler after the platform is ready:
+  Whilst these handlers supply vanilla JS counterparts to the GM_ functions, they cannot prepare your script to run on mobile devices: viewports are different, the page looks different, some selectors change, etcetera. So even if using these handlers, be prepared to adapt your script as necessary.
 
-1. Using an event listener:
-   Attach an event listener to the flutterInAppWebViewPlatformReady event and execute your callHandler code within the callback. For example:
-   ```javascript
-    window.addEventListener("flutterInAppWebViewPlatformReady", function(event) {
-      window.flutter_inappwebview.callHandler('isTornPDA')
-        .then(response => {
-          if (response.isTornPDA) {
-            console.log("Running in Torn PDA");
-          } else {
-            console.log("Not running in Torn PDA");
-          }
-        })
-        .catch(error => {
-          console.error("Error checking Torn PDA:", error);
-        });
-    });
-   ```
 
-2. Using a global flag variable:
-   Set a global flag variable when the flutterInAppWebViewPlatformReady event is dispatched, and check this flag before calling callHandler anywhere in your code. For example:
-   ```javascript
-    // First set a global flag when the platform is ready
-    var isFlutterReady = false;
-    window.addEventListener("flutterInAppWebViewPlatformReady", function(event) {
-      isFlutterReady = true;
-    });
 
-    // Later in your code, check the flag before calling "isTornPDA"
-    if (isFlutterReady) {
-      window.flutter_inappwebview.callHandler('isTornPDA')
-        .then(response => {
-          if (response.isTornPDA) {
-            console.log("Running in Torn PDA");
-          } else {
-            console.log("Not running in Torn PDA");
-          }
-        })
-        .catch(error => {
-          console.error("Error checking Torn PDA:", error);
-        });
-    } else {
-      console.log("Platform not ready yet.");
-    }
-   ```
-
-Using either of these approaches ensures that your code will not attempt to call callHandler before the platform is ready, thereby preventing errors or unexpected behavior.
-
----
-
-### Utility handlers
-* [Torn PDA Check Handler](./webview/torn-pda-check-handler.md) – Check if running in Torn PDA.
-* [Evaluate JavaScript Handler](./webview/evaluate-js-handler.md) – Execute JavaScript code fetched from external sources.
-
----
-
-### HTTP handlers
-* [HTTP Handlers](./webview/http-handlers.md) – HTTP GET and POST handlers for data fetching.
-
----
-
-### Notification handlers
-* [User scripts notification handlers](./webview/notification-handlers.md), in order to trigger notifications, alarms (Android) and timers (Android) directly from user scripts.
-* [HTML source code](./webview/notification-handlers.md) of the [example website](https://info.tornpda.com/notifications-test.html), which serves as a sandbox for testing notifications, alarms, and timers for Torn PDA using JavaScript code.
