@@ -2743,6 +2743,7 @@ class SettingsPageState extends State<SettingsPage> {
                                         FocusScope.of(context).requestFocus(FocusNode());
                                         if (_formKey.currentState!.validate()) {
                                           String myCurrentKey = _apiKeyInputController.text.trim();
+                                          myCurrentKey = _sanitizeApiKey(myCurrentKey);
                                           _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
                                         }
                                       },
@@ -2796,6 +2797,7 @@ class SettingsPageState extends State<SettingsPage> {
             FocusScope.of(context).requestFocus(FocusNode());
             if (_formKey.currentState!.validate()) {
               String myCurrentKey = _apiKeyInputController.text.trim();
+              myCurrentKey = _sanitizeApiKey(myCurrentKey);
               _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
             }
           },
@@ -3826,6 +3828,13 @@ class SettingsPageState extends State<SettingsPage> {
         });
       },
     );
+  }
+
+  /// Removes characters that do not appear in the whitelist.
+  String _sanitizeApiKey(String myCurrentKey) {
+    String allowedChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    myCurrentKey = myCurrentKey.replaceAll(RegExp('[^$allowedChars]+'), '');
+    return myCurrentKey;
   }
 
   Future<void> _getApiDetails({required bool userTriggered, required String currentKey}) async {

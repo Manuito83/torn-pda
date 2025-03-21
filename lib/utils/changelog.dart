@@ -74,6 +74,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "Terminals are now independent for each tab, and you can also clear them individually.",
           ),
           "Fixed airplane removal setting while traveling",
+          "Fixed API key not working when pasted in certain devices",
         ],
     );
 
