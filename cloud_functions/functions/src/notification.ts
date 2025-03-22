@@ -878,6 +878,15 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             }
           }
 
+          if (filters.includes('market_sales')) {
+            if (newEventsDescriptions[i].includes('You sold') &&
+              newEventsDescriptions[i].includes('on the Item Market to')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
           if (filters.includes('attacks')) {
             if (newEventsDescriptions[i].includes('attacked you') ||
               newEventsDescriptions[i].includes('mugged you and stole') ||

@@ -224,6 +224,32 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
+                  const Text("Market sales"),
+                  Switch(
+                    value: _firebaseUserModel!.eventsFilter.contains('market_sales'),
+                    onChanged: (value) {
+                      if (value) {
+                        setState(() {
+                          FirestoreHelper().addToEventsFilter('market_sales');
+                        });
+                      } else {
+                        setState(() {
+                          FirestoreHelper().removeFromEventsFilter('market_sales');
+                        });
+                      }
+                    },
+                    activeTrackColor: Colors.redAccent[100],
+                    activeColor: Colors.red,
+                    inactiveThumbColor: Colors.green[100],
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
                   const Text("Bounty claims"),
                   Switch(
                     value: _firebaseUserModel!.eventsFilter.contains('bounty_claims'),

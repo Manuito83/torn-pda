@@ -74,6 +74,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "Terminals are now independent for each tab, and you can also clear them individually.",
           ),
           "Chaining: targets can now be sorted by time added",
+          "Alerts: added events notification filter for market sales",
           if (Platform.isAndroid) "Fixed app widget not resizing properly to one row in certain devices",
           "Fixed airplane removal setting while traveling",
           "Fixed API key not working when pasted in certain devices",
