@@ -18,6 +18,8 @@ enum TargetSortType {
   notesDes,
   notesAsc,
   bounty,
+  timeAddedAsc,
+  timeAddedDes,
 }
 
 class TargetSort {
@@ -64,6 +66,11 @@ class TargetSort {
         description = 'Sort by note (asc)';
       case TargetSortType.bounty:
         description = 'Sort by bounty amount';
+      case TargetSortType.timeAddedDes:
+        description = 'Sort by time added (des)';
+      case TargetSortType.timeAddedAsc:
+        description = 'Sort by time added (asc)';
+
       default:
         description = 'Sort by respect (des)';
         break;

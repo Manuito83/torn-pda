@@ -92,6 +92,7 @@ class TargetsProvider extends ChangeNotifier {
         myNewTargetModel.personalNote = notes;
         myNewTargetModel.personalNoteColor = notesColor;
         myNewTargetModel.hospitalSort = targetsSortHospitalTime(myNewTargetModel);
+        myNewTargetModel.timeAdded = DateTime.now().millisecondsSinceEpoch;
 
         // Parse bounty ammount if it exists
         if (myNewTargetModel.basicicons?.icon13 != null) {
@@ -526,6 +527,14 @@ class TargetsProvider extends ChangeNotifier {
         _targets.sort((a, b) {
           return b.bountyAmount!.compareTo(a.bountyAmount!);
         });
+      case TargetSortType.timeAddedDes:
+        _targets.sort((a, b) {
+          return b.timeAdded.compareTo(a.timeAdded);
+        });
+      case TargetSortType.timeAddedAsc:
+        _targets.sort((a, b) {
+          return a.timeAdded.compareTo(b.timeAdded);
+        });
     }
     _saveSortSharedPrefs();
     await _saveTargetsSharedPrefs();
@@ -597,6 +606,10 @@ class TargetsProvider extends ChangeNotifier {
         sortToSave = 'notesAsc';
       case TargetSortType.bounty:
         sortToSave = 'bounty';
+      case TargetSortType.timeAddedDes:
+        sortToSave = 'timeAddedDes';
+      case TargetSortType.timeAddedAsc:
+        sortToSave = 'timeAddedAsc';
     }
     Prefs().setTargetsSort(sortToSave);
   }
@@ -660,6 +673,10 @@ class TargetsProvider extends ChangeNotifier {
         currentSort = TargetSortType.onlineAsc;
       case 'bounty':
         currentSort = TargetSortType.bounty;
+      case 'timeAddedDes':
+        currentSort = TargetSortType.timeAddedDes;
+      case 'timeAddedAsc':
+        currentSort = TargetSortType.timeAddedAsc;
     }
 
     // Targets color filter

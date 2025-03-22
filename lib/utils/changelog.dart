@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.2 - Build 504 - 15/03/2025
+    // v3.7.2 - Build 505 - 22/03/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.2'
@@ -73,6 +73,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "to enter text and execute commands.\n\n"
                 "Terminals are now independent for each tab, and you can also clear them individually.",
           ),
+          "Chaining: targets can now be sorted by time added",
           "Fixed airplane removal setting while traveling",
           "Fixed API key not working when pasted in certain devices",
         ],
