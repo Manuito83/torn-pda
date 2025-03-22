@@ -1735,6 +1735,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             if (request.mimeType != null && request.mimeType!.contains("image/")) {
               // We don't want to download images automatically
               final String u = request.url.toString().replaceAll("http:", "https:");
+
+              // Avoid downloading the same image many times in a loop
+              if (u == _currentUrl) {
+                final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
+                newSettings.useOnDownloadStart = false;
+                webViewController!.setSettings(settings: newSettings);
+                _firstLoadRestoreDownloads = false;
+                loadImageWithBackground(controller, u);
+                return;
+              }
+
               _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
@@ -1939,6 +1950,46 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     return false;
   }
 
+  Future<void> loadImageWithBackground(
+    InAppWebViewController controller,
+    String imageUrl,
+  ) async {
+    String backgroundColor = _themeProvider.currentTheme == AppTheme.light ? '#FFFFFF' : '#000000';
+
+    final String html = '''
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+        margin: 0;
+        background-color: $backgroundColor;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      img {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="$imageUrl" />
+  </body>
+</html>
+''';
+
+    await controller.loadData(
+      data: html,
+      mimeType: 'text/html',
+      encoding: 'utf-8',
+      baseUrl: WebUri(imageUrl),
+    );
+  }
+
   void evaluateGreasyForMockVM(WebUri? uri, InAppWebViewController c) {
     if (uri?.host == "greasyfork.org") {
       c.evaluateJavascript(
@@ -1948,26 +1999,28 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future<void> _assessLongPressOptions(InAppWebViewHitTestResult result, InAppWebViewController controller) async {
-    final bool notCurrentUrl = result.extra!.replaceAll("#", "") != _currentUrl;
-    final bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
-    final bool isAnchorImageType = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
+    final String resultExtra = result.extra ?? '';
+    final bool isDifferentUrl = resultExtra.replaceAll("#", "") != _currentUrl;
+
+    final bool isAnchor = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
+    final bool isImageAnchor = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
     final bool isImage = result.type == InAppWebViewHitTestResultType.IMAGE_TYPE;
-    final bool notProfileLink = !result.extra!.contains("https://www.torn.com/profiles.php?XID=");
-    // Awards and honors have a native popup
-    final bool notAwardImage = !result.extra!.contains("awardimages");
-    // Also, honors might open quick profiles in Torn (native)
-    final bool notHonorImage = !result.extra!.contains("images/honors");
 
-    if (notCurrentUrl && ((isAnchorType && notProfileLink) || (isAnchorImageType && notAwardImage && notHonorImage))) {
-      final focus = (await controller.requestFocusNodeHref());
-      if (focus?.url != null) {
-        _showLongPressCard(focus?.src, focus?.url);
-      }
-    }
+    final bool isProfileLink = resultExtra.contains("https://www.torn.com/profiles.php?XID=");
+    final bool isAwardImage = resultExtra.contains("awardimages");
+    final bool isHonorImage = resultExtra.contains("images/honors");
 
-    if ((isImage || isAnchorImageType) && notHonorImage) {
-      final focus = (await controller.requestFocusNodeHref());
-      if (focus?.src != null) {
+    // Evaluate if the result requires handling via long-press card
+    final bool shouldHandleAnchor =
+        isDifferentUrl && ((isAnchor && !isProfileLink) || (isImageAnchor && !isAwardImage && !isHonorImage));
+
+    final bool shouldHandleImage = (isImage || isImageAnchor) && !isHonorImage;
+
+    if (shouldHandleAnchor || shouldHandleImage) {
+      final RequestFocusNodeHrefResult? focus = await controller.requestFocusNodeHref();
+
+      // Ensure valid URL or image source before displaying card
+      if ((shouldHandleAnchor && focus?.url != null) || (shouldHandleImage && focus?.src != null)) {
         _showLongPressCard(focus?.src, focus?.url);
       }
     }
