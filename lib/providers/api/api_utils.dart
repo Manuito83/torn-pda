@@ -50,9 +50,10 @@ class ApiError {
   ApiError({this.errorId = 0, this.pdaErrorDetails = "", this.tornErrorDetails = ""}) {
     switch (errorId) {
       // Torn PDA codes
+      case 999:
+        errorReason = 'API key not set yet';
       case 100:
         errorReason = 'connection timed out';
-      // Torn PDA codes
       case 101:
         errorReason = 'issue with PDA data model';
         pdaErrorDetails = pdaErrorDetails;

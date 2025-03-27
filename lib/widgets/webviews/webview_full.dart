@@ -12,13 +12,12 @@ import 'package:dio/dio.dart';
 //import 'package:bubble_showcase/bubble_showcase.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
@@ -65,8 +64,10 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart' as pda_parser;
 import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/webview/webview_handlers.dart';
 import 'package:torn_pda/utils/webview/webview_utils.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
@@ -85,6 +86,7 @@ import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
+import 'package:torn_pda/widgets/webviews/webview_terminal.dart';
 import 'package:torn_pda/widgets/webviews/webview_url_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -412,10 +414,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       useShouldOverrideUrlLoading: true,
       javaScriptCanOpenWindowsAutomatically: true,
       userAgent: Platform.isAndroid
-          ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.6613.88 "
+          ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 "
               "Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
-          : "Mozilla/5.0 (iPhone; CPU iPhone OS 17_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-              "CriOS/128.0.6613.98 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
+          : "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+              "CriOS/132.0.6834.100 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
@@ -1113,51 +1115,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               else
                 const SizedBox.shrink(),
               // Terminal
-              Consumer<SettingsProvider>(
-                builder: (_, value, __) {
-                  if (value.terminalEnabled) {
-                    return Stack(
-                      alignment: Alignment.topRight,
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            border: Border.all(width: 2, color: Colors.green[900]!),
-                          ),
-                          height: 120,
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: const EdgeInsets.all(5),
-                              child: Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      _terminalProvider.terminal,
-                                      style: const TextStyle(color: Colors.green, fontSize: 13),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            _terminalProvider.clearTerminal();
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.fromLTRB(0, 3, 2, 0),
-                            child: Icon(
-                              Icons.delete,
-                              color: Colors.orange,
-                              size: 16,
-                            ),
-                          ),
-                        )
-                      ],
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
+              WebviewTerminal(
+                webviewKey: widget.key,
+                terminalProvider: _terminalProvider,
+                webViewController: webViewController,
               ),
             ],
           ),
@@ -1185,8 +1146,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               await InAppWebViewController.clearAllCache();
             }
 
-            _terminalProvider.terminal = "Terminal";
-
             // Userscripts initial load
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
@@ -1202,65 +1161,42 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
             } else if (Platform.isIOS && widget.windowId != null) {
               _terminalProvider.addInstruction(
+                  widget.key,
                   "TORN PDA NOTE: iOS does not support user scripts injection in new windows (like this one), but only in "
                   "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             } else if (Platform.isWindows && widget.windowId != null) {
               _terminalProvider.addInstruction(
+                  widget.key,
                   "TORN PDA NOTE: Windows does not support user scripts injection in new windows (like this one), but only in "
                   "full webviews. If you are trying to run a script, close this tab and open a new one from scratch.");
             }
 
+            // ### HANDLERS ###
+
+            WebviewHandlers.addTornPDACheckHandler(webview: webViewController!);
+
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
-            webViewController!.addJavaScriptHandler(
-              handlerName: 'copyToClipboard',
-              callback: (args) {
-                String copy = args.toString();
-                if (copy.startsWith("[")) {
-                  copy = copy.replaceFirst("[", "");
-                  copy = copy.substring(0, copy.length - 1);
-                }
-                Clipboard.setData(ClipboardData(text: copy));
-              },
+            WebviewHandlers.addCopyToClipboardHandler(webview: webViewController!);
+
+            WebviewHandlers.addThemeChangeHandler(
+              webview: webViewController!,
+              setStateCallback: setState,
+              themeProvider: _themeProvider,
+              settingsProvider: _settingsProvider,
             );
 
-            // Theme change received from web
-            webViewController!.addJavaScriptHandler(
-              handlerName: 'webThemeChange',
-              callback: (args) {
-                if (!_settingsProvider.syncTornWebTheme) return;
-                if (args.contains("dark")) {
-                  // Only change to dark themes if we are currently in light (the web will respond with a
-                  // theme change event when we initiate the change, and it could revert to the default dark)
-                  if (_themeProvider.currentTheme == AppTheme.light) {
-                    if (_settingsProvider.darkThemeToSyncFromWeb == "dark") {
-                      _themeProvider.changeTheme = AppTheme.dark;
-                      log("Web theme changed to dark!");
-                    } else {
-                      _themeProvider.changeTheme = AppTheme.extraDark;
-                      log("Web theme changed to extra dark!");
-                    }
-                  }
-                } else if (args.contains("light")) {
-                  _themeProvider.changeTheme = AppTheme.light;
-                  log("Web theme changed to light!");
-                }
-
-                setState(() {
-                  SystemChrome.setSystemUIOverlayStyle(
-                    SystemUiOverlayStyle(
-                      statusBarColor: _themeProvider.statusBar,
-                      systemNavigationBarColor: _themeProvider.statusBar,
-                      systemNavigationBarIconBrightness: Brightness.light,
-                      statusBarIconBrightness: Brightness.light,
-                    ),
-                  );
-                });
-              },
+            WebviewHandlers.addNotificationHandlers(
+              webview: webViewController!,
+              notificationsPlugin: FlutterLocalNotificationsPlugin(),
+              assessNotificationPermissions: _assessNotificationPermissions,
             );
 
-            _addLoadoutChangeHandler(webViewController!);
+            WebviewHandlers.addLoadoutChangeHandler(
+              webview: webViewController!,
+              reloadCallback: _reload,
+            );
 
-            _addScriptApiHandlers(webViewController!);
+            WebviewHandlers.addScriptApiHandlers(webview: webViewController!);
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
@@ -1786,7 +1722,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                   !consoleMessage.message.contains("Error with Permissions-Policy header") &&
                   !consoleMessage.message.contains("srcset") &&
                   !consoleMessage.message.contains("Missed ID for Quote saving")) {
-                _terminalProvider.addInstruction(consoleMessage.message);
+                _terminalProvider.addInstruction(widget.key, consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
             }
@@ -1799,6 +1735,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             if (request.mimeType != null && request.mimeType!.contains("image/")) {
               // We don't want to download images automatically
               final String u = request.url.toString().replaceAll("http:", "https:");
+
+              // Avoid downloading the same image many times in a loop
+              if (u == _currentUrl) {
+                final InAppWebViewSettings newSettings = (await webViewController!.getSettings())!;
+                newSettings.useOnDownloadStart = false;
+                webViewController!.setSettings(settings: newSettings);
+                _firstLoadRestoreDownloads = false;
+                loadImageWithBackground(controller, u);
+                return;
+              }
+
               _webViewProvider.addTab(url: u, allowDownloads: Platform.isIOS ? false : true);
               _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
               return;
@@ -2003,6 +1950,46 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     return false;
   }
 
+  Future<void> loadImageWithBackground(
+    InAppWebViewController controller,
+    String imageUrl,
+  ) async {
+    String backgroundColor = _themeProvider.currentTheme == AppTheme.light ? '#FFFFFF' : '#000000';
+
+    final String html = '''
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      body {
+        margin: 0;
+        background-color: $backgroundColor;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      img {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="$imageUrl" />
+  </body>
+</html>
+''';
+
+    await controller.loadData(
+      data: html,
+      mimeType: 'text/html',
+      encoding: 'utf-8',
+      baseUrl: WebUri(imageUrl),
+    );
+  }
+
   void evaluateGreasyForMockVM(WebUri? uri, InAppWebViewController c) {
     if (uri?.host == "greasyfork.org") {
       c.evaluateJavascript(
@@ -2012,26 +1999,28 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future<void> _assessLongPressOptions(InAppWebViewHitTestResult result, InAppWebViewController controller) async {
-    final bool notCurrentUrl = result.extra!.replaceAll("#", "") != _currentUrl;
-    final bool isAnchorType = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
-    final bool isAnchorImageType = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
+    final String resultExtra = result.extra ?? '';
+    final bool isDifferentUrl = resultExtra.replaceAll("#", "") != _currentUrl;
+
+    final bool isAnchor = result.type == InAppWebViewHitTestResultType.SRC_ANCHOR_TYPE;
+    final bool isImageAnchor = result.type == InAppWebViewHitTestResultType.SRC_IMAGE_ANCHOR_TYPE;
     final bool isImage = result.type == InAppWebViewHitTestResultType.IMAGE_TYPE;
-    final bool notProfileLink = !result.extra!.contains("https://www.torn.com/profiles.php?XID=");
-    // Awards and honors have a native popup
-    final bool notAwardImage = !result.extra!.contains("awardimages");
-    // Also, honors might open quick profiles in Torn (native)
-    final bool notHonorImage = !result.extra!.contains("images/honors");
 
-    if (notCurrentUrl && ((isAnchorType && notProfileLink) || (isAnchorImageType && notAwardImage && notHonorImage))) {
-      final focus = (await controller.requestFocusNodeHref());
-      if (focus?.url != null) {
-        _showLongPressCard(focus?.src, focus?.url);
-      }
-    }
+    final bool isProfileLink = resultExtra.contains("https://www.torn.com/profiles.php?XID=");
+    final bool isAwardImage = resultExtra.contains("awardimages");
+    final bool isHonorImage = resultExtra.contains("images/honors");
 
-    if ((isImage || isAnchorImageType) && notHonorImage) {
-      final focus = (await controller.requestFocusNodeHref());
-      if (focus?.src != null) {
+    // Evaluate if the result requires handling via long-press card
+    final bool shouldHandleAnchor =
+        isDifferentUrl && ((isAnchor && !isProfileLink) || (isImageAnchor && !isAwardImage && !isHonorImage));
+
+    final bool shouldHandleImage = (isImage || isImageAnchor) && !isHonorImage;
+
+    if (shouldHandleAnchor || shouldHandleImage) {
+      final RequestFocusNodeHrefResult? focus = await controller.requestFocusNodeHref();
+
+      // Ensure valid URL or image source before displaying card
+      if ((shouldHandleAnchor && focus?.url != null) || (shouldHandleImage && focus?.src != null)) {
         _showLongPressCard(focus?.src, focus?.url);
       }
     }
@@ -2070,89 +2059,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     return false;
   }
 
-  void _addScriptApiHandlers(InAppWebViewController webView) {
-    // API HANDLERS
-    webView.addJavaScriptHandler(
-      handlerName: 'PDA_httpGet',
-      callback: (args) async {
-        final http.Response resp = await http.get(WebUri(args[0]), headers: Map<String, String>.from(args[1]));
-        return _makeScriptApiResponse(resp);
-      },
-    );
-
-    webView.addJavaScriptHandler(
-      handlerName: 'PDA_httpPost',
-      callback: (args) async {
-        Object? body = args[2];
-        if (body is Map<String, dynamic>) {
-          body = Map<String, String>.from(body);
-        }
-        final http.Response resp =
-            await http.post(WebUri(args[0]), headers: Map<String, String>.from(args[1]), body: body);
-        return _makeScriptApiResponse(resp);
-      },
-    );
-
-    // JS HANDLER
-    webView.addJavaScriptHandler(
-      handlerName: 'PDA_evaluateJavascript',
-      callback: (args) async {
-        webView.evaluateJavascript(source: args[0]);
-        return;
-      },
-    );
-  }
-
   _addExtraHeightForPullToRefresh() {
     webViewController!.evaluateJavascript(source: addHeightForPullToRefresh());
-  }
-
-  void _addLoadoutChangeHandler(InAppWebViewController webView) {
-    webView.addJavaScriptHandler(
-      handlerName: 'loadoutChangeHandler',
-      callback: (args) async {
-        if (args.isNotEmpty) {
-          final String message = args[0];
-          if (message.contains("equippedSet")) {
-            final regex = RegExp(r'"equippedSet":(\d)');
-            final match = regex.firstMatch(message)!;
-            final loadout = match.group(1);
-            _reload();
-            BotToast.showText(
-              text: "Loadout $loadout activated!",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.blue[600]!,
-              duration: const Duration(seconds: 1),
-              contentPadding: const EdgeInsets.all(10),
-            );
-            return;
-          }
-        }
-
-        BotToast.showText(
-          text: "There was a problem activating the loadout, are you already using it?",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red[600]!,
-          contentPadding: const EdgeInsets.all(10),
-        );
-      },
-    );
-  }
-
-  Map<String, dynamic> _makeScriptApiResponse(http.Response resp) {
-    // Create a return value that mimics GM_xmlHttpRequest()
-    return {
-      'status': resp.statusCode,
-      'statusText': resp.reasonPhrase,
-      'responseText': resp.body,
-      'responseHeaders': resp.headers.keys.map((key) => '$key: ${resp.headers[key]}').join("\r\n")
-    };
   }
 
   Future removeAllUserScripts() async {
@@ -6109,6 +6017,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         duration: Duration(seconds: split ? 1 : 4),
         contentPadding: const EdgeInsets.all(10),
       );
+    }
+  }
+
+  _assessNotificationPermissions() async {
+    if (Platform.isAndroid) {
+      await assessExactAlarmsPermissionsAndroid(context, _settingsProvider);
     }
   }
 }

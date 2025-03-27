@@ -1,3 +1,5 @@
+import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
@@ -37,113 +39,116 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     SettingsProvider settingsProvider = context.read<SettingsProvider>();
     ThemeProvider themeProvider = context.read<ThemeProvider>();
 
-    final ocDynamic = widget.crimeResponse.organizedCrime;
+    Map<String, dynamic>? organizedCrimeData;
 
-    // If there is no organized crime, notify parent and return an empty widget
+    if (kDebugMode) {
+      // 🔥 🔥 Debug data instead of API data 🔥 🔥
+      //organizedCrimeData = _getDebugExample(caseNumber: 3);
+    }
+
+    final ocDynamic = organizedCrimeData ?? widget.crimeResponse.organizedCrime;
+
     if (ocDynamic == null) {
-      final TextSpan noOCText = TextSpan(
-        style: const TextStyle(fontSize: 16.0, color: Colors.black),
-        children: [
-          TextSpan(
-            text: "No OC planned!",
-            style: TextStyle(fontSize: 14, color: Colors.orange[800]),
-          ),
-        ],
-      );
-
       return Row(
         children: [
           Icon(MdiIcons.fingerprint),
           const SizedBox(width: 10),
-          Flexible(child: RichText(text: noOCText)),
-        ],
-      );
-    }
-
-    final Map<String, dynamic> organizedCrime = ocDynamic as Map<String, dynamic>;
-
-    // Retrieve the list of slots (if null, default to an empty list)
-    final List<dynamic> slots = organizedCrime['slots'] as List<dynamic>? ?? [];
-
-    final dynamic playerSlot = slots.firstWhere(
-      (slot) => slot['user_id'] == widget.playerId,
-      orElse: () => null,
-    );
-
-    // If the user is not found in any slot, notify parent and return empty widget
-    if (playerSlot == null) {
-      return const SizedBox.shrink();
-    }
-
-    // At this point, the user is in an OC
-    final int readyTimestamp = organizedCrime['ready_at'] as int;
-    final DateTime planningDateTime = DateTime.fromMillisecondsSinceEpoch(readyTimestamp * 1000);
-
-    final DateTime now = DateTime.now();
-    final bool hasExpired = now.isAfter(planningDateTime);
-
-    bool lessThan24Hours = false;
-    if (!hasExpired) {
-      final Duration remaining = planningDateTime.difference(now);
-      lessThan24Hours = remaining.inHours < 24;
-    }
-
-    // Prepares the text span that will display the planning information.
-    TextSpan readyTextSpan;
-
-    if (hasExpired) {
-      readyTextSpan = const TextSpan(
-        text: 'ready to start',
-        style: TextStyle(
-          fontSize: 14,
-          color: Colors.green,
-          fontWeight: FontWeight.bold,
-        ),
-      );
-    } else {
-      final formattedTime = TimeFormatter(
-        inputTime: planningDateTime,
-        timeFormatSetting: settingsProvider.currentTimeFormat,
-        timeZoneSetting: settingsProvider.currentTimeZone,
-      ).formatHourWithDaysElapsed();
-
-      // - The static text "planned to start at "
-      // - The formatted time in red if less than 24 hours remain, otherwise in default style
-      readyTextSpan = TextSpan(
-        children: [
-          TextSpan(text: 'planned to start at ', style: TextStyle(fontSize: 14, color: themeProvider.mainText)),
-          TextSpan(
-            text: formattedTime,
-            style: lessThan24Hours
-                ? const TextStyle(color: Colors.red, fontSize: 14)
-                : TextStyle(color: themeProvider.mainText, fontSize: 14),
+          Flexible(
+            child: RichText(
+              text: TextSpan(
+                text: "No OC planned!",
+                style: TextStyle(fontSize: 14, color: Colors.orange[800]),
+              ),
+            ),
           ),
         ],
       );
     }
 
-    // Extract additional data
+    final organizedCrime = ocDynamic as Map<String, dynamic>;
+    final slots = organizedCrime['slots'] as List<dynamic>? ?? [];
+
+    final playerSlot = slots.firstWhereOrNull(
+      (slot) => slot['user_id'] == widget.playerId,
+    );
+
+    if (playerSlot == null) {
+      return const SizedBox.shrink();
+    }
+
+    int missingSlots = slots.where((slot) => slot['user_id'] == null).length;
+    int readyTimestamp = organizedCrime['ready_at'] as int;
+    DateTime planningDateTime = DateTime.fromMillisecondsSinceEpoch(readyTimestamp * 1000);
+
+    if (missingSlots > 0) {
+      planningDateTime = planningDateTime.add(Duration(hours: 24 * missingSlots));
+    }
+
+    final now = DateTime.now();
+    final hasExpired = now.isAfter(planningDateTime);
+    final remaining = planningDateTime.difference(now);
+
+    Color countdownColor = themeProvider.mainText!;
+    if (remaining.inHours < 8) {
+      countdownColor = Colors.red;
+    } else if (remaining.inHours < 12) {
+      countdownColor = Colors.orange[700]!;
+    } else if (remaining.inHours < 24) {
+      countdownColor = Colors.blue[700]!;
+    }
+
+    final formattedTime = TimeFormatter(
+      inputTime: planningDateTime,
+      timeFormatSetting: settingsProvider.currentTimeFormat,
+      timeZoneSetting: settingsProvider.currentTimeZone,
+    ).formatHourWithDaysElapsed();
+
+    final readyTextSpan = hasExpired
+        ? TextSpan(
+            text: 'ready to start',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.green,
+              fontWeight: FontWeight.bold,
+            ),
+          )
+        : TextSpan(
+            children: [
+              if (missingSlots > 0)
+                TextSpan(
+                  text: 'incomplete, ',
+                  style: const TextStyle(fontSize: 14, color: Colors.red),
+                ),
+              TextSpan(
+                text: missingSlots > 0 ? 'earliest possible start at ' : 'planned to start at ',
+                style: TextStyle(fontSize: 14, color: themeProvider.mainText),
+              ),
+              TextSpan(
+                text: formattedTime,
+                style: TextStyle(color: countdownColor, fontSize: 14),
+              ),
+            ],
+          );
+
     final String ocName = organizedCrime['name'] as String? ?? 'OC';
     final String position = playerSlot['position'] as String? ?? '';
     final int successChance = playerSlot['success_chance'] as int? ?? 0;
 
-    // Check if the player's slot has an item requirement.
     TextSpan? itemRequirementTextSpan;
     if (playerSlot['item_requirement'] != null) {
-      final Map<String, dynamic> itemRequirement = playerSlot['item_requirement'] as Map<String, dynamic>;
+      final itemRequirement = playerSlot['item_requirement'] as Map<String, dynamic>;
       final bool isAvailable = itemRequirement['is_available'] as bool? ?? false;
-      final String itemStatus = isAvailable ? 'Item provided' : 'Item missing';
-      final Color itemStatusColor = isAvailable ? Colors.green : Colors.red;
+      final itemStatus = isAvailable ? 'Item provided' : 'Item missing';
+      final itemStatusColor = isAvailable ? Colors.green : Colors.red;
+      final itemFontWeight = isAvailable ? FontWeight.normal : FontWeight.bold;
 
-      // Create a text span for the item requirement status.
       itemRequirementTextSpan = TextSpan(
         text: itemStatus,
-        style: TextStyle(fontSize: 14, color: itemStatusColor),
+        style: TextStyle(fontSize: 14, color: itemStatusColor, fontWeight: itemFontWeight),
       );
     }
 
-    // Construct the complete message text span.
-    final TextSpan messageTextSpan = TextSpan(
+    final messageTextSpan = TextSpan(
       style: const TextStyle(fontSize: 16.0, color: Colors.black),
       children: [
         TextSpan(
@@ -155,12 +160,13 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
           text: ', you are in as a $position with a pass rate of $successChance%',
           style: TextStyle(fontSize: 14, color: themeProvider.mainText),
         ),
-        if (itemRequirementTextSpan != null)
+        if (itemRequirementTextSpan != null) ...[
           TextSpan(
             text: ' - ',
             style: TextStyle(fontSize: 14, color: themeProvider.mainText),
           ),
-        if (itemRequirementTextSpan != null) itemRequirementTextSpan,
+          itemRequirementTextSpan,
+        ],
       ],
     );
 
@@ -171,5 +177,75 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
         Flexible(child: RichText(text: messageTextSpan)),
       ],
     );
+  }
+
+  /// Debug example cases
+  // ignore: unused_element
+  Map<String, dynamic> _getDebugExample({required int caseNumber}) {
+    final now = DateTime.now();
+
+    switch (caseNumber) {
+      // Case 1: OC complete
+      case 1:
+        return {
+          'name': 'OC Test 1',
+          'difficulty': 7,
+          'ready_at': (now.subtract(const Duration(hours: 1)).millisecondsSinceEpoch ~/ 1000),
+          'slots': [
+            {
+              'user_id': widget.playerId,
+              'position': 'Picklock',
+              'success_chance': 76,
+              'item_requirement': {'is_available': false}
+            },
+            {'user_id': 1234, 'position': 'Hacker'},
+            {'user_id': 12345, 'position': 'Engineer'},
+            {'user_id': 123456, 'position': 'Bomber'},
+            {'user_id': 1243567, 'position': 'Muscle'},
+            {'user_id': 12345678, 'position': 'Picklock'},
+          ],
+        };
+
+      // Case 2: OC incomplete (positions missing)
+      case 2:
+        return {
+          'name': 'OC Test 2',
+          'difficulty': 8,
+          'ready_at': (now.add(const Duration(hours: 6)).millisecondsSinceEpoch ~/ 1000),
+          'slots': [
+            {
+              'user_id': widget.playerId,
+              'position': 'Thief',
+              'success_chance': 64,
+              'item_requirement': {'is_available': false}
+            },
+            {'user_id': null, 'position': 'Robber'},
+            {'user_id': null, 'position': 'Muscle'},
+            {'user_id': null, 'position': 'Muscle'},
+          ],
+        };
+
+      // Case 3: OC complete, less than 12 hours remaining
+      case 3:
+        return {
+          'name': 'OC Test 3',
+          'difficulty': 4,
+          'ready_at': (now.add(const Duration(hours: 12)).millisecondsSinceEpoch ~/ 1000),
+          'slots': [
+            {
+              'user_id': widget.playerId,
+              'position': 'Hustler',
+              'success_chance': 83,
+              'item_requirement': {'is_available': false}
+            },
+            {'user_id': 1234, 'position': 'Impersonator'},
+            {'user_id': 12345, 'position': 'Muscle'},
+            {'user_id': 123456, 'position': 'Muscle'},
+          ],
+        };
+
+      default:
+        return {};
+    }
   }
 }

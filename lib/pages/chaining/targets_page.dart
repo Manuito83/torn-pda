@@ -106,6 +106,8 @@ class TargetsPageState extends State<TargetsPage> {
     TargetSort(type: TargetSortType.notesDes),
     TargetSort(type: TargetSortType.notesAsc),
     TargetSort(type: TargetSortType.bounty),
+    TargetSort(type: TargetSortType.timeAddedDes),
+    TargetSort(type: TargetSortType.timeAddedAsc),
   ];
 
   final _popupOptionsChoices = <TargetsOptions>[
@@ -659,6 +661,11 @@ class TargetsPageState extends State<TargetsPage> {
         _targetsProvider.sortTargets(TargetSortType.notesAsc);
       case TargetSortType.bounty:
         _targetsProvider.sortTargets(TargetSortType.bounty);
+      case TargetSortType.timeAddedDes:
+        _targetsProvider.sortTargets(TargetSortType.timeAddedDes);
+      case TargetSortType.timeAddedAsc:
+        _targetsProvider.sortTargets(TargetSortType.timeAddedAsc);
+
       default:
         _targetsProvider.sortTargets(TargetSortType.ffAsc);
         break;

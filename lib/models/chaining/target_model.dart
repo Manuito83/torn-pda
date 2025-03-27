@@ -30,6 +30,7 @@ class TargetModel {
   DateTime? lastUpdated;
   bool? hasFaction;
   int? hospitalSort;
+  int timeAdded;
 
   // Internal from API profiles
   String? rank;
@@ -71,6 +72,7 @@ class TargetModel {
     this.lastUpdated,
     this.hasFaction,
     this.hospitalSort = 0,
+    this.timeAdded = 0,
     /////////////////
 
     this.rank,
@@ -113,6 +115,7 @@ class TargetModel {
         lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
         hasFaction: json["hasFaction"] ?? false,
         hospitalSort: json["hospitalSort"] ?? 0,
+        timeAdded: json["timeAdded"] ?? 0,
         rank: json["rank"],
         level: json["level"],
         gender: json["gender"],
@@ -151,6 +154,7 @@ class TargetModel {
         "lastUpdated": lastUpdated!.toIso8601String(),
         "hasFaction": hasFaction,
         "hospitalSort": hospitalSort,
+        "timeAdded": timeAdded,
         "rank": rank,
         "level": level,
         "gender": gender,

@@ -51,6 +51,38 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.7.2 - Build 505 - 22/03/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.7.2'
+        ..date = '01 APR 2025'
+        ..features = [
+          "Improved information provided for OC 2",
+          ComplexFeature(
+            "User scripts: added handlers to schedule notifications from JS code (see details)",
+            explanation: "You can trigger native notifications from your user scripts using the "
+                "new handlers available. This also includes alarms and timers for Android.\n\n"
+                "Please refer to the disclaimer in the user scripts section, or visit Torn PDA's wiki or "
+                "./docs section in Github for more information.\n\n"
+                "A test website has also been created to help you understand the different features available.",
+          ),
+          ComplexFeature(
+            "Browser: improved developer terminal (see details)",
+            explanation: "The terminal can now be resized, shared and its text is selectable.\n\n"
+                "You can also expand the terminal in a dialog covering the whole screen, which includes the capacity "
+                "to enter text and execute commands.\n\n"
+                "Terminals are now independent for each tab, and you can also clear them individually.",
+          ),
+          "Chaining: targets can now be sorted by time added",
+          "Alerts: added events notification filter for market sales",
+          if (Platform.isAndroid)
+            "Fixed app widget not resizing properly to one row in certain devices (requires re-adding)",
+          "Fixed browser opening images several times in a row",
+          "Fixed airplane removal setting while traveling",
+          "Fixed API key not working when pasted in certain devices",
+        ],
+    );
+
     // v3.7.1 - Build 497 - 20/02/2025
     itemList.add(
       ChangeLogItem()
