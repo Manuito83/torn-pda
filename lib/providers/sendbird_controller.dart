@@ -36,6 +36,14 @@ class SendbirdController extends GetxController {
     update();
   }
 
+  bool _excludeCompanyMessages = false;
+  bool get excludeCompanyMessages => _excludeCompanyMessages;
+  set excludeCompanyMessages(bool value) {
+    _excludeCompanyMessages = value;
+    Prefs().setSendbirdExcludeCompanyMessages(value);
+    update();
+  }
+
   bool _sendBirdNotificationsEnabled = false;
   bool get sendBirdNotificationsEnabled => _sendBirdNotificationsEnabled;
   sendBirdNotificationsToggle({required bool enabled}) async {
@@ -67,6 +75,7 @@ class SendbirdController extends GetxController {
     _initialised = true;
 
     _excludeFactionMessages = await Prefs().getSendbirdExcludeFactionMessages();
+    _excludeCompanyMessages = await Prefs().getSendbirdExcludeCompanyMessages();
     _sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
 
     try {

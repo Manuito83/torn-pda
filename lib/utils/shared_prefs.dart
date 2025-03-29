@@ -427,6 +427,7 @@ class Prefs {
   final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
   final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
   final String _kSendbirdExcludeFactionMessages = "pda_sendbirdExcludeFactionMessages";
+  final String _kSendbirdExcludeCompanyMessages = "pda_sendbirdExcludeCompanyMessages";
 
   final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
 
@@ -4069,6 +4070,16 @@ class Prefs {
   Future<bool> setSendbirdExcludeFactionMessages(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kSendbirdExcludeFactionMessages, value);
+  }
+
+  Future<bool> getSendbirdExcludeCompanyMessages() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSendbirdExcludeCompanyMessages) ?? false;
+  }
+
+  Future<bool> setSendbirdExcludeCompanyMessages(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSendbirdExcludeCompanyMessages, value);
   }
 
   ///////

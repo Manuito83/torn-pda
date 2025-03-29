@@ -1061,12 +1061,17 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 ),
                               if (sendbird.sendBirdNotificationsEnabled)
                                 Padding(
-                                  padding: const EdgeInsets.only(left: 30, right: 8),
+                                  padding: const EdgeInsets.only(
+                                    left: 30,
+                                    right: 8,
+                                    top: 12, // Top padding for the first checkbox to compensate for the icon
+                                  ),
                                   child: Row(
                                     children: [
                                       Icon(Icons.keyboard_arrow_right_outlined),
                                       Flexible(
                                         child: CheckboxListTile(
+                                          dense: true,
                                           checkColor: Colors.white,
                                           activeColor: Colors.red[900],
                                           value: sendbird.excludeFactionMessages,
@@ -1090,6 +1095,44 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                           ),
                                           onChanged: (enabled) async {
                                             sendbird.excludeFactionMessages = enabled!;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              if (sendbird.sendBirdNotificationsEnabled)
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 30, right: 8),
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                      Flexible(
+                                        child: CheckboxListTile(
+                                          dense: true,
+                                          checkColor: Colors.white,
+                                          activeColor: Colors.red[900],
+                                          value: sendbird.excludeCompanyMessages,
+                                          title: Row(
+                                            children: [
+                                              Text(
+                                                "Exclude company messages",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          subtitle: const Text(
+                                            "Company messages won't be shown",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                          onChanged: (enabled) async {
+                                            sendbird.excludeCompanyMessages = enabled!;
                                           },
                                         ),
                                       ),

@@ -57,6 +57,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.7.3'
         ..date = '01 APR 2025'
         ..features = [
+          "Alerts: company messages can now be filtered out in chat notifications",
           "Fixed trade page not updating automatically when the other user updates the contents",
         ],
     );
