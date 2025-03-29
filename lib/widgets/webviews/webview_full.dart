@@ -1239,6 +1239,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               }
             }
 
+            // On Android, if we are in the trade page and the user received an update via
+            // window.location.reload(), we need to reload the page manually
+            // It comes as a standard request (which contains the same URL as the current one)
+            if (Platform.isAndroid &&
+                action.request.url.toString() == _currentUrl &&
+                action.request.url.toString().contains("trade.php") &&
+                action.request.url.toString().contains("step=view")) {
+              _reload();
+            }
+
             // If a tab is fully locked, cancel navigation
             // Note: the mini profiles consideration (above) should come first
             final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
