@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:async';
 import 'package:chopper/chopper.dart' as chopper;
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
@@ -124,7 +126,6 @@ class ApiCallRequest {
 
   // API V2 configuration
   final ApiSelection_v2? apiSelection_v2;
-  final Map<String, dynamic>? payload_v2;
   final Future<chopper.Response<dynamic>> Function(TornV2 client, String apiKey)? apiCall;
 
   // Constructor to create a queued API call request
@@ -137,7 +138,6 @@ class ApiCallRequest {
     this.from,
     this.forcedApiKey,
     this.apiSelection_v2, // For API V2
-    this.payload_v2,
     this.apiCall,
   }) : assert(
           (apiSelection_v1 != null && apiSelection_v2 == null) || (apiSelection_v1 == null && apiSelection_v2 != null),

@@ -8,9 +8,9 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
-import 'package:flutter/foundation.dart';
 // Package imports:
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:chopper/chopper.dart' as chopper;
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -88,7 +88,6 @@ class ApiCallerController extends GetxController {
     int? from, // Optional timestamp for API V1
     // API V2
     ApiSelection_v2? apiSelection_v2, // For API V2
-    Map<String, dynamic>? payload_v2, // Payload for API V2
     Future<chopper.Response<T>> Function(TornV2 client, String apiKey)? apiCall, // API V2 logic
     // Others
     String? forcedApiKey = "", // (e.g.: Android App Widget)
@@ -112,7 +111,6 @@ class ApiCallerController extends GetxController {
       return _queueApiCall(
         apiSelection: apiSelection,
         apiSelection_v2: apiSelection_v2,
-        payload_v2: payload_v2,
         apiCall: apiCall,
         prefix: prefix,
         limit: limit,
@@ -129,12 +127,11 @@ class ApiCallerController extends GetxController {
     try {
       if (apiSelection_v2 != null) {
         // API V2
-        if (apiCall == null || payload_v2 == null) {
-          throw ArgumentError("For API V2, both 'apiCall' and 'payload_v2' must be provided.");
+        if (apiCall == null) {
+          throw ArgumentError("For API V2, 'apiCall' must be provided.");
         }
         return await _launchApiCall_v2(
           apiSelection_v2: apiSelection_v2,
-          payload: payload_v2,
           apiCall: apiCall,
         );
       } else if (apiSelection != null) {
@@ -174,7 +171,6 @@ class ApiCallerController extends GetxController {
       timestamp: DateTime.now(),
       apiSelection_v1: apiSelection,
       apiSelection_v2: apiSelection_v2,
-      payload_v2: payload_v2,
       apiCall: apiCall,
       prefix: prefix,
       limit: limit,
@@ -216,7 +212,6 @@ class ApiCallerController extends GetxController {
         // Handle API V2 request
         responseFuture = _launchApiCall_v2(
           apiSelection_v2: apiCallRequest.apiSelection_v2!,
-          payload: apiCallRequest.payload_v2!,
           apiCall: apiCallRequest.apiCall!,
         );
       }
@@ -471,7 +466,6 @@ class ApiCallerController extends GetxController {
 
   Future<dynamic> _launchApiCall_v2<T>({
     required ApiSelection_v2 apiSelection_v2,
-    Map<String, dynamic>? payload,
     required Future<chopper.Response<T>> Function(TornV2 client, String apiKey) apiCall,
   }) async {
     final UserController user = Get.find<UserController>();
