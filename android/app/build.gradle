@@ -105,3 +105,11 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'androidx.work' && 
+            (details.requested.name == 'work-runtime' || details.requested.name == 'work-runtime-ktx')) {
+            details.useVersion '2.7.1'
+        }
+    }
+}
