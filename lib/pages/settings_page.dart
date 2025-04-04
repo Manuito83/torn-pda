@@ -318,7 +318,7 @@ class SettingsPageState extends State<SettingsPage> {
                   "Advanced browser settings",
                 ),
                 IconButton(
-                  icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                  icon: Icon(MdiIcons.web),
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
