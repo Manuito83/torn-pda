@@ -1408,9 +1408,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             if (!mounted) return;
 
             try {
-              if (_settingsProvider.removeAirplane) {
-                webViewController!.evaluateJavascript(source: travelRemovePlaneJS());
-              }
+              _removeTravelAirplaneIfEnabled(c);
 
               hideChatOnLoad();
 
@@ -1860,6 +1858,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         ),
       ],
     );
+  }
+
+  _removeTravelAirplaneIfEnabled(InAppWebViewController c) async {
+    if (_settingsProvider.removeAirplane) {
+      if ((await c.getUrl()).toString() == "https://www.torn.com/page.php?sid=travel") {
+        webViewController!.evaluateJavascript(source: travelRemovePlaneJS());
+      }
+    }
   }
 
   bool _lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
