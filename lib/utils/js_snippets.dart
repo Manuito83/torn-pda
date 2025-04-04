@@ -172,8 +172,7 @@ String travelRemovePlaneJS() {
         [class^="airspaceScene___"][class*="outboundFlight___"], 
         [class^="airspaceScene___"][class*="returnFlight___"], 
         [class^="randomFact___"], 
-        [class^="randomFactWrapper___"], 
-        [class^="delimiter-"] { 
+        [class^="randomFactWrapper___"] { 
             display: none !important; 
         }
     `;

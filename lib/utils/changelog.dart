@@ -59,6 +59,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Alerts: company messages can now be filtered out in chat notifications",
           "Fixed trade page not updating automatically when the other user updates the contents",
+          "Fixed issues with HTML spacing in forums",
         ],
     );
 
