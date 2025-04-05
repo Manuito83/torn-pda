@@ -69,6 +69,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
+import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
@@ -86,8 +87,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   @override
   bool get wantKeepAlive => true;
 
-  final int _settingsPosition = 11;
-  final int _aboutPosition = 12;
+  final int _settingsPosition = 12;
+  final int _aboutPosition = 13;
   var _allowSectionsWithoutKey = <int>[];
 
   // !! Note: if order is changed, remember to look for other pages calling [_callSectionFromOutside]
@@ -103,6 +104,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     "Items",
     "Ranked Wars",
     "Stock Market",
+    "Wiki",
     "Alerts",
     "Settings",
     "About",
@@ -1796,7 +1798,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         if (settingsProvider.disableTravelSection && _drawerItemsList[i] == "Travel") {
           continue;
         }
+
         if (!settingsProvider.rankedWarsInMenu && _drawerItemsList[i] == "Ranked Wars") {
+          continue;
+        }
+
+        if (_drawerItemsList[i] == "Wiki") {
+          if (settingsProvider.showWikiInDrawer) {
+            drawerOptions.add(WikiMenu(themeProvider: _themeProvider!));
+          } else {
+            drawerOptions.add(SizedBox.shrink());
+          }
+
           continue;
         }
 
@@ -1863,16 +1876,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case 9:
         return StockMarketAlertsPage(calledFromMenu: true, stockMarketInMenuCallback: _onChangeStockMarketInMenu);
       case 10:
+        return Column(
+          children: [
+            WikiMenu(themeProvider: _themeProvider!),
+          ],
+        );
+      case 11:
         if (Platform.isWindows) return AlertsSettingsWindows();
         return AlertsSettings(_onChangeStockMarketInMenu);
-      case 11:
+      case 12:
         return SettingsPage(
           changeUID: changeUID,
           statsController: _statsController,
         );
-      case 12:
-        return AboutPage(uid: _userUID);
       case 13:
+        return AboutPage(uid: _userUID);
+      case 14:
         return TipsPage();
 
       default:
@@ -1902,13 +1921,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return const Icon(MaterialCommunityIcons.sword_cross);
       case 9:
         return Icon(MdiIcons.bankTransfer);
-      case 10:
-        return const Icon(Icons.notifications_active);
+      // Case 10 is Wiki, which is a widget with its own icon
       case 11:
-        return const Icon(Icons.settings);
+        return const Icon(Icons.notifications_active);
       case 12:
-        return const Icon(Icons.info_outline);
+        return const Icon(Icons.settings);
       case 13:
+        return const Icon(Icons.info_outline);
+      case 14:
         return const Icon(Icons.question_answer_outlined);
       default:
         return const SizedBox.shrink();

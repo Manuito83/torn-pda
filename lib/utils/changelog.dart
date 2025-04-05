@@ -51,13 +51,14 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.3 - Build 506 - 29/03/2025
+    // v3.7.3 - Build 507 - 05/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.3'
-        ..date = '01 APR 2025'
+        ..date = '15 APR 2025'
         ..features = [
           "Alerts: company messages can now be filtered out in chat notifications",
+          "Added Wiki to the main drawer menu",
           "Fixed trade page not updating automatically when the other user updates the contents",
           "Fixed issues with HTML spacing in forums",
           if (Platform.isAndroid) "Fixed homescreen widget sizing and update frequency issues",

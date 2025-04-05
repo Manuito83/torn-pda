@@ -2092,6 +2092,40 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Flexible(
+                child: Text(
+                  "Show Wiki",
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.showWikiInDrawer,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.showWikiInDrawer = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "If enabled, you will have a quick access to the Torn wiki from the app drawer menu",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
       ],
     );
   }

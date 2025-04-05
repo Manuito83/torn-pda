@@ -439,6 +439,9 @@ class Prefs {
   final String _kTornCalendarLastUpdate = "pda_tornCalendarLastUpdate";
   final String _kTctClockHighlightsEvents = "pda_tctClockHighlightsEvents";
 
+  // Drawer menu
+  final String _kShowWikiInDrawer = "pda_showWikiInDrawer";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -4148,5 +4151,19 @@ class Prefs {
   Future<bool> setTctClockHighlightsEvents(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTctClockHighlightsEvents, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for Drawer Sections
+  /// -----------------------------------
+
+  Future<bool> getShowWikiInDrawer() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowWikiInDrawer) ?? true;
+  }
+
+  Future<bool> setShowWikiInDrawer(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowWikiInDrawer, value);
   }
 }

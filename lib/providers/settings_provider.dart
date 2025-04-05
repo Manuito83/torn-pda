@@ -1142,6 +1142,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _showWikiInDrawer = true;
+  bool get showWikiInDrawer => _showWikiInDrawer;
+  set showWikiInDrawer(bool value) {
+    _showWikiInDrawer = value;
+    Prefs().setShowWikiInDrawer(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1365,6 +1373,8 @@ class SettingsProvider extends ChangeNotifier {
     _downloadActionShare = await Prefs().getDownloadActionShare();
 
     _tctClockHighlightsEvents = await Prefs().getTctClockHighlightsEvents();
+
+    _showWikiInDrawer = await Prefs().getShowWikiInDrawer();
 
     await WebviewConfig().generateUserAgentForUser();
 
