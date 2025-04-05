@@ -1738,7 +1738,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     ],
                   ),
                   TctClock(
-                    color: _themeProvider!.mainText!,
+                    color: _themeProvider!.mainText,
                     onTap: () {
                       _webViewProvider.openBrowserPreference(
                         context: context,

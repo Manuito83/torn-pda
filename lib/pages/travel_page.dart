@@ -170,7 +170,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
                   }
                 },
                 closedColor: Colors.orange,
-                openColor: _themeProvider.canvas!,
+                openColor: _themeProvider.canvas,
                 closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return SizedBox(
                     height: 56,

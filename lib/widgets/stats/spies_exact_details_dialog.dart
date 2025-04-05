@@ -34,9 +34,9 @@ class SpiesExactDetailsDialog extends StatelessWidget {
         ? Colors.red
         : themeProvider.mainText;
 
-    Color lastSpyUpdateColor = themeProvider.mainText!;
+    Color lastSpyUpdateColor = themeProvider.mainText;
     if (spiesPayload.update != null) {
-      lastSpyUpdateColor = (spiesPayload.update! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText!;
+      lastSpyUpdateColor = (spiesPayload.update! * 1000 < oneMonthAgo) ? Colors.red : themeProvider.mainText;
     }
 
     Widget strWidget;

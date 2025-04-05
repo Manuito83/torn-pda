@@ -198,8 +198,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                       "later at any time by using the 'eye' icon in the app bar.",
                   targetPadding: const EdgeInsets.all(10),
                   disableMovingAnimation: true,
-                  textColor: _themeProvider.mainText!,
-                  tooltipBackgroundColor: _themeProvider.secondBackground!,
+                  textColor: _themeProvider.mainText,
+                  tooltipBackgroundColor: _themeProvider.secondBackground,
                   descTextStyle: const TextStyle(fontSize: 13),
                   tooltipPadding: const EdgeInsets.all(20),
                   child: const SizedBox(height: 80),
@@ -291,16 +291,16 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       average = _formatDuration(Duration(seconds: _averageTimeToRestock));
       if (_restockReliability < 33) {
         reliability = "low";
-        reliabilityColor = Colors.red;
+        reliabilityColor = _themeProvider.getTextColor(Colors.red);
       } else if (_restockReliability >= 33 && _restockReliability < 66) {
         reliability = "medium";
-        reliabilityColor = Colors.orangeAccent;
+        reliabilityColor = _themeProvider.getTextColor(Colors.orangeAccent);
       } else if (_restockReliability >= 66 && _restockReliability < 80) {
         reliability = "medium-high";
-        reliabilityColor = Colors.green;
+        reliabilityColor = _themeProvider.getTextColor(Colors.green);
       } else {
         reliability = "high";
-        reliabilityColor = Colors.green;
+        reliabilityColor = _themeProvider.getTextColor(Colors.green);
       }
     }
 
@@ -556,12 +556,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             );
           } else {
             String errorMessage = "There is an issue contacting the server, please try again later";
-            Color errorColor = Colors.red;
+            Color errorColor = _themeProvider.getTextColor(Colors.red);
 
             if (errorReason.contains("cannot get field")) {
               errorMessage = "There's no further information for this item yet!\n\nIt could be an issue with the "
                   "server or either a very rare item that hasn't been reported a minumum number of times.";
-              errorColor = Colors.orange;
+              errorColor = _themeProvider.getTextColor(Colors.orange);
             }
 
             return Padding(
@@ -609,7 +609,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 fontSize: 14,
                 color: Colors.white,
               ),
-              contentColor: Colors.orange[700]!,
+              contentColor: _themeProvider.getTextColor(Colors.orange[700]),
               duration: const Duration(seconds: 4),
               contentPadding: const EdgeInsets.all(10),
             );
@@ -667,7 +667,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           child: Text(
             'x${stock.quantity}',
             style: TextStyle(
-              color: stock.quantity! > 0 ? Colors.green : Colors.red,
+              color: stock.quantity! > 0
+                  ? _themeProvider.getTextColor(Colors.green)
+                  : _themeProvider.getTextColor(Colors.red),
               fontWeight: stock.quantity! > 0 ? FontWeight.bold : FontWeight.normal,
             ),
           ),
@@ -714,8 +716,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   ' If you do, tap the safe to vault icon to access it in game.',
               targetPadding: const EdgeInsets.all(10),
               disableMovingAnimation: true,
-              textColor: _themeProvider.mainText!,
-              tooltipBackgroundColor: _themeProvider.secondBackground!,
+              textColor: _themeProvider.mainText,
+              tooltipBackgroundColor: _themeProvider.secondBackground,
               descTextStyle: const TextStyle(fontSize: 13),
               tooltipPadding: const EdgeInsets.all(20),
               child: Icon(
@@ -730,7 +732,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: moneyToBuyColor!,
+                contentColor: _themeProvider.getTextColor(moneyToBuyColor),
                 duration: const Duration(seconds: 4),
                 contentPadding: const EdgeInsets.all(10),
               );
@@ -818,7 +820,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     // Profit and profit per hour
     Widget profitWidget;
     Widget profitPerMinuteWidget;
-    final profitColor = stock.value <= 0 ? Colors.red : Colors.green;
+    final profitColor =
+        stock.value <= 0 ? _themeProvider.getTextColor(Colors.red) : _themeProvider.getTextColor(Colors.green);
 
     String profitFormatted = formatProfit(inputInt: stock.value.abs());
     if (stock.value <= 0) {
@@ -885,8 +888,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             description: '\nTap any flag to access the Travel Agency directly from this section!',
             targetPadding: const EdgeInsets.all(10),
             disableMovingAnimation: true,
-            textColor: _themeProvider.mainText!,
-            tooltipBackgroundColor: _themeProvider.secondBackground!,
+            textColor: _themeProvider.mainText,
+            tooltipBackgroundColor: _themeProvider.secondBackground,
             descTextStyle: const TextStyle(fontSize: 13),
             tooltipPadding: const EdgeInsets.all(20),
             child: CountryCodeAndFlag(stock: stock),
@@ -906,8 +909,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           description: '\nClick to expand the item card and learn more details about your travel and stock!',
           targetPadding: const EdgeInsets.all(10),
           disableMovingAnimation: true,
-          textColor: _themeProvider.mainText!,
-          tooltipBackgroundColor: _themeProvider.secondBackground!,
+          textColor: _themeProvider.mainText,
+          tooltipBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: const TextStyle(fontSize: 13),
           tooltipPadding: const EdgeInsets.all(20),
           child: const Padding(
@@ -929,12 +932,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     if (moneyOnHand >= stock.cost! * widget.capacity!) {
       moneyToBuy = 'You HAVE the \$${costCurrency.format(stock.cost! * widget.capacity!)} necessary to '
           'buy ${widget.capacity} ${stock.name}';
-      moneyToBuyColor = Colors.green;
+      moneyToBuyColor = _themeProvider.getTextColor(Colors.green);
     } else {
       moneyToBuy = 'You DO NOT HAVE the \$${costCurrency.format(stock.cost! * widget.capacity!)} '
           'necessary to buy ${widget.capacity} ${stock.name}. Add another '
           '\$${costCurrency.format((stock.cost! * widget.capacity!) - moneyOnHand)}';
-      moneyToBuyColor = Colors.red;
+      moneyToBuyColor = _themeProvider.getTextColor(Colors.red);
     }
 
     BotToast.showText(
@@ -954,31 +957,31 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     final inputTime = DateTime.fromMillisecondsSinceEpoch(widget.foreignStock.timestamp! * 1000);
     final timeDifference = DateTime.now().difference(inputTime);
     String timeString;
-    MaterialColor color;
+    Color color;
     if (timeDifference.inMinutes < 1) {
       timeString = 'now';
-      color = Colors.green;
+      color = _themeProvider.getTextColor(Colors.green);
     } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
       timeString = '1 min';
-      color = Colors.green;
+      color = _themeProvider.getTextColor(Colors.green);
     } else if (timeDifference.inMinutes > 1 && timeDifference.inMinutes < 30) {
       timeString = '${timeDifference.inMinutes} min';
-      color = Colors.green;
+      color = _themeProvider.getTextColor(Colors.green);
     } else if (timeDifference.inMinutes >= 30 && timeDifference.inHours < 1) {
       timeString = '${timeDifference.inMinutes} min';
-      color = Colors.orange;
+      color = _themeProvider.getTextColor(Colors.orange);
     } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
       timeString = '1 hour';
-      color = Colors.orange;
+      color = _themeProvider.getTextColor(Colors.orange);
     } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
       timeString = '${timeDifference.inHours} hours';
-      color = Colors.red;
+      color = _themeProvider.getTextColor(Colors.red);
     } else if (timeDifference.inDays == 1) {
       timeString = '1 day';
-      color = Colors.red;
+      color = _themeProvider.getTextColor(Colors.red);
     } else {
       timeString = '${timeDifference.inDays} days';
-      color = Colors.red;
+      color = _themeProvider.getTextColor(Colors.red);
     }
     return Row(
       children: <Widget>[
@@ -1110,8 +1113,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 : energyGap.inHours > 24
                     ? "- Energy will be full more than a day before your return"
                     : "- Energy will be full ${_formatDuration(energyGap)} before your return",
-            style: const TextStyle(
-              color: Colors.orange,
+            style: TextStyle(
+              color: _themeProvider.getTextColor(Colors.orange),
               fontSize: 12,
             ),
           ),
@@ -1119,12 +1122,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       );
     } else {
       affected.add(
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 5),
           child: Text(
             "- Energy OK",
             style: TextStyle(
-              color: Colors.green,
+              color: _themeProvider.getTextColor(Colors.green),
               fontSize: 12,
             ),
           ),
@@ -1145,8 +1148,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 : nerveGap.inHours > 24
                     ? "- Nerve will be full more than a day before your return"
                     : "- Nerve will be full ${_formatDuration(nerveGap)} before your return",
-            style: const TextStyle(
-              color: Colors.orange,
+            style: TextStyle(
+              color: _themeProvider.getTextColor(Colors.orange),
               fontSize: 12,
             ),
           ),
@@ -1154,12 +1157,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       );
     } else {
       affected.add(
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 5),
           child: Text(
             "- Nerve OK",
             style: TextStyle(
-              color: Colors.green,
+              color: _themeProvider.getTextColor(Colors.green),
               fontSize: 12,
             ),
           ),
@@ -1180,8 +1183,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 : drugsGap.inHours > 24
                     ? "- Drug cooldown will be over more than a day before your return"
                     : "- Drug cooldown will be over ${_formatDuration(drugsGap)} before your return",
-            style: const TextStyle(
-              color: Colors.orange,
+            style: TextStyle(
+              color: _themeProvider.getTextColor(Colors.orange),
               fontSize: 12,
             ),
           ),
@@ -1189,12 +1192,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       );
     } else {
       affected.add(
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 5),
           child: Text(
             "- Drug cooldown OK",
             style: TextStyle(
-              color: Colors.green,
+              color: _themeProvider.getTextColor(Colors.green),
               fontSize: 12,
             ),
           ),
@@ -1215,8 +1218,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 : medicalGap.inHours > 24
                     ? "- Medical cooldown will be over more than a day before your return"
                     : "- Medical cooldown will be over ${_formatDuration(medicalGap)} before your return",
-            style: const TextStyle(
-              color: Colors.orange,
+            style: TextStyle(
+              color: _themeProvider.getTextColor(Colors.orange),
               fontSize: 12,
             ),
           ),
@@ -1224,12 +1227,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       );
     } else {
       affected.add(
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 5),
           child: Text(
             "- Medical cooldown OK",
             style: TextStyle(
-              color: Colors.green,
+              color: _themeProvider.getTextColor(Colors.green),
               fontSize: 12,
             ),
           ),
@@ -1250,8 +1253,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 : boosterGap.inHours > 24
                     ? "- Booster cooldown will be over more than a day before your return"
                     : "- Booster cooldown will be over ${_formatDuration(boosterGap)} before your return",
-            style: const TextStyle(
-              color: Colors.orange,
+            style: TextStyle(
+              color: _themeProvider.getTextColor(Colors.orange),
               fontSize: 12,
             ),
           ),
@@ -1259,12 +1262,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       );
     } else {
       affected.add(
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 5),
           child: Text(
             "- Booster cooldown OK",
             style: TextStyle(
-              color: Colors.green,
+              color: _themeProvider.getTextColor(Colors.green),
               fontSize: 12,
             ),
           ),
@@ -1274,12 +1277,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
 
     if (!anyAffectation) {
       affected.add(
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(left: 5),
           child: Text(
             "No affectation",
             style: TextStyle(
-              color: Colors.green,
+              color: _themeProvider.getTextColor(Colors.green),
               fontSize: 12,
             ),
           ),
@@ -1324,8 +1327,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   : energyGap.inHours > 24
                       ? "- Energy will be full more than a day before your return"
                       : "- Energy will be full ${_formatDuration(energyGap)} before your return",
-              style: const TextStyle(
-                color: Colors.orange,
+              style: TextStyle(
+                color: _themeProvider.getTextColor(Colors.orange),
                 fontSize: 12,
               ),
             ),
@@ -1346,8 +1349,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   : nerveGap.inHours > 24
                       ? "- Nerve will be full more than a day before your return"
                       : "- Nerve will be full ${_formatDuration(nerveGap)} before your return",
-              style: const TextStyle(
-                color: Colors.orange,
+              style: TextStyle(
+                color: _themeProvider.getTextColor(Colors.orange),
                 fontSize: 12,
               ),
             ),
@@ -1368,8 +1371,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   : drugsGap.inHours > 24
                       ? "- Drug cooldown will be over more than a day before your return"
                       : "- Drug cooldown will be over ${_formatDuration(drugsGap)} before your return",
-              style: const TextStyle(
-                color: Colors.orange,
+              style: TextStyle(
+                color: _themeProvider.getTextColor(Colors.orange),
                 fontSize: 12,
               ),
             ),
@@ -1390,8 +1393,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   : medicalsGap.inHours > 24
                       ? "- Medical cooldown will be over more than a day before your return"
                       : "- Medical cooldown will be over ${_formatDuration(medicalsGap)} before your return",
-              style: const TextStyle(
-                color: Colors.orange,
+              style: TextStyle(
+                color: _themeProvider.getTextColor(Colors.orange),
                 fontSize: 12,
               ),
             ),
@@ -1412,8 +1415,8 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                   : boostersGap.inHours > 24
                       ? "- Booster cooldown will be over more than a day before your return"
                       : "- Booster cooldown will be over ${_formatDuration(boostersGap)} before your return",
-              style: const TextStyle(
-                color: Colors.orange,
+              style: TextStyle(
+                color: _themeProvider.getTextColor(Colors.orange),
                 fontSize: 12,
               ),
             ),
@@ -1424,12 +1427,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       // No delayed affectation
       if (!anyDelayedAffectation) {
         affected.add(
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 5),
             child: Text(
               "No affectation",
               style: TextStyle(
-                color: Colors.green,
+                color: _themeProvider.getTextColor(Colors.green),
                 fontSize: 12,
               ),
             ),
@@ -1537,6 +1540,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 "${spot.y.toInt()} items"
                 "\nat ${_timeFormatter(date)}",
                 const TextStyle(
+                  color: Colors.white,
                   fontSize: 12,
                 ),
               );
@@ -1589,9 +1593,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
 
               Color myColor = Colors.transparent;
               if (difference < 24) {
-                myColor = Colors.green;
+                myColor = _themeProvider.getTextColor(Colors.green);
               } else {
-                myColor = Colors.blue;
+                myColor = _themeProvider.getTextColor(Colors.blue);
               }
               myStyle = TextStyle(
                 color: myColor,
@@ -1840,21 +1844,33 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         const SizedBox(width: 2),
         if (_flyingToThisCountry)
           if (_landedInWidgetCountry)
-            const Text(
+            Text(
               "LANDED",
-              style: TextStyle(fontSize: 11, color: Colors.green, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                fontSize: 11,
+                color: _themeProvider.getTextColor(Colors.green),
+                fontStyle: FontStyle.italic,
+              ),
             )
           else
             Text(
               "${_timeFormatter(_earliestArrival)}",
-              style: const TextStyle(fontSize: 11, color: Colors.green, fontStyle: FontStyle.italic),
+              style: TextStyle(
+                fontSize: 11,
+                color: _themeProvider.getTextColor(Colors.green),
+                fontStyle: FontStyle.italic,
+              ),
             )
         else if (_flyingElsewhere)
           Row(
             children: [
               Text(
                 "${_timeFormatter(_earliestArrival)}",
-                style: TextStyle(fontSize: 11, color: Colors.orange[700], fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: _themeProvider.getTextColor(Colors.orange[700]),
+                  fontStyle: FontStyle.italic,
+                ),
               ),
               const SizedBox(width: 3),
               GestureDetector(
@@ -1870,7 +1886,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                       fontSize: 14,
                       color: Colors.white,
                     ),
-                    contentColor: Colors.grey[700]!,
+                    contentColor: _themeProvider.getTextColor(Colors.grey[700]),
                     duration: const Duration(seconds: 6),
                     contentPadding: const EdgeInsets.all(10),
                   );

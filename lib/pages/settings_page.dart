@@ -545,7 +545,7 @@ class SettingsPageState extends State<SettingsPage> {
             if (lastUpdatedTs > 0) {
               final currentTime = DateTime.now().millisecondsSinceEpoch;
               final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
-              spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : context.read<ThemeProvider>().mainText!;
+              spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : context.read<ThemeProvider>().mainText;
             }
 
             return Padding(
@@ -1844,6 +1844,45 @@ class SettingsPageState extends State<SettingsPage> {
               ),
             ],
           ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(left: 20, right: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Flexible(
+                    child: Text(
+                      "Accesible text colors",
+                    ),
+                  ),
+                  Switch(
+                    value: _themeProvider.accesibilityNoTextColors,
+                    onChanged: (enabled) async {
+                      _themeProvider.accesibilityNoTextColors = enabled;
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
+                "Activate this option to replace all colored texts with the default text color (white or black). "
+                "This can improve readability for users with color vision deficiencies, but might make "
+                "it harder to identify the performance of some indicators. Note: this option "
+                "only applies to the app and not to the web, and is not yet available in all sections",
+                style: TextStyle(
+                  color: _themeProvider.mainText,
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }

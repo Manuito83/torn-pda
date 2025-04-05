@@ -177,7 +177,7 @@ class TargetCardState extends State<TargetCard> {
                                     ),
                                   ),
                                   closedColor: Colors.transparent,
-                                  openColor: _themeProvider.canvas!,
+                                  openColor: _themeProvider.canvas,
                                   closedBuilder: (BuildContext context, VoidCallback openContainer) {
                                     return const SizedBox(
                                       height: 22,
@@ -255,7 +255,9 @@ class TargetCardState extends State<TargetCard> {
                             Text(
                               ' $_lastUpdatedString',
                               style: TextStyle(
-                                color: _lastUpdatedMinutes <= 120 ? _themeProvider.mainText : Colors.deepOrangeAccent,
+                                color: _lastUpdatedMinutes <= 120
+                                    ? _themeProvider.mainText
+                                    : _themeProvider.getTextColor(Colors.deepOrangeAccent),
                                 fontStyle: _lastUpdatedMinutes <= 120 ? FontStyle.normal : FontStyle.italic,
                               ),
                             ),
@@ -480,10 +482,10 @@ class TargetCardState extends State<TargetCard> {
           ),
         );
       } else {
-        respectResult = const TextSpan(
+        respectResult = TextSpan(
           text: 'Lost',
           style: TextStyle(
-            color: Colors.red,
+            color: _themeProvider.getTextColor(Colors.red),
             fontWeight: FontWeight.bold,
           ),
         );
@@ -506,11 +508,11 @@ class TargetCardState extends State<TargetCard> {
         ),
       );
     } else {
-      var ffColor = Colors.red;
+      var ffColor = _themeProvider.getTextColor(Colors.red);
       if (fairFight! >= 2.2 && fairFight < 2.8) {
-        ffColor = Colors.orange;
+        ffColor = _themeProvider.getTextColor(Colors.orange);
       } else if (fairFight >= 2.8) {
-        ffColor = Colors.green;
+        ffColor = _themeProvider.getTextColor(Colors.green);
       }
 
       fairFightResult = TextSpan(
@@ -751,11 +753,11 @@ class TargetCardState extends State<TargetCard> {
   Color? _returnTargetNoteColor() {
     switch (_target!.personalNoteColor) {
       case 'red':
-        return Colors.red[600];
+        return _themeProvider.getTextColor(Colors.red[600]);
       case 'orange':
-        return Colors.orange[600];
+        return _themeProvider.getTextColor(Colors.orange[600]);
       case 'green':
-        return Colors.green[600];
+        return _themeProvider.getTextColor(Colors.green[600]);
       default:
         return _themeProvider.mainText;
     }
@@ -796,7 +798,7 @@ class TargetCardState extends State<TargetCard> {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.red,
+        contentColor: _themeProvider.getTextColor(Colors.red),
         duration: const Duration(seconds: 3),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -929,7 +931,7 @@ class TargetCardState extends State<TargetCard> {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: Colors.red,
+      contentColor: _themeProvider.getTextColor(Colors.red),
       duration: const Duration(seconds: 5),
       contentPadding: const EdgeInsets.all(10),
     );

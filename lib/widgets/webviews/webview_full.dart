@@ -822,8 +822,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       'Swipe down/up to hide or show your tab bar!',
                   targetPadding: const EdgeInsets.only(top: 8),
                   disableMovingAnimation: true,
-                  textColor: _themeProvider.mainText!,
-                  tooltipBackgroundColor: _themeProvider.secondBackground!,
+                  textColor: _themeProvider.mainText,
+                  tooltipBackgroundColor: _themeProvider.secondBackground,
                   descTextStyle: const TextStyle(fontSize: 13),
                   tooltipPadding: const EdgeInsets.all(20),
                   child: GestureDetector(
@@ -2449,8 +2449,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                               'Swipe down/up to hide or show your tab bar!',
                           targetPadding: const EdgeInsets.all(10),
                           disableMovingAnimation: true,
-                          textColor: _themeProvider.mainText!,
-                          tooltipBackgroundColor: _themeProvider.secondBackground!,
+                          textColor: _themeProvider.mainText,
+                          tooltipBackgroundColor: _themeProvider.secondBackground,
                           descTextStyle: const TextStyle(fontSize: 13),
                           tooltipPadding: const EdgeInsets.all(20),
                           child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
@@ -3190,7 +3190,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas!,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -3457,8 +3457,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             'widget to gain some space.',
         targetPadding: const EdgeInsets.all(10),
         disableMovingAnimation: true,
-        textColor: _themeProvider.mainText!,
-        tooltipBackgroundColor: _themeProvider.secondBackground!,
+        textColor: _themeProvider.mainText,
+        tooltipBackgroundColor: _themeProvider.secondBackground,
         descTextStyle: const TextStyle(fontSize: 13),
         tooltipPadding: const EdgeInsets.all(20),
         child: OpenContainer(
@@ -3477,7 +3477,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             ),
           ),
           closedColor: Colors.transparent,
-          openColor: _themeProvider.canvas!,
+          openColor: _themeProvider.canvas,
           closedBuilder: (BuildContext context, VoidCallback openContainer) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -3615,7 +3615,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas!,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -3775,7 +3775,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas!,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.all(8.0),
@@ -3938,7 +3938,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           ),
         ),
         closedColor: Colors.transparent,
-        openColor: _themeProvider.canvas!,
+        openColor: _themeProvider.canvas,
         closedBuilder: (BuildContext context, VoidCallback openContainer) {
           return Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -4733,13 +4733,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                                 },
                                 child: Text(
                                   "CLOSE",
-                                  style: TextStyle(color: _themeProvider.mainText!, fontSize: 10),
+                                  style: TextStyle(color: _themeProvider.mainText, fontSize: 10),
                                 ),
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12.0),
-                                    side: BorderSide(color: _themeProvider.mainText!, width: 1.0),
+                                    side: BorderSide(color: _themeProvider.mainText, width: 1.0),
                                   ),
                                 ),
                               ),
@@ -4755,13 +4755,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                                 },
                                 child: Text(
                                   "DISABLE",
-                                  style: TextStyle(color: _themeProvider.mainText!, fontSize: 10),
+                                  style: TextStyle(color: _themeProvider.mainText, fontSize: 10),
                                 ),
                                 style: TextButton.styleFrom(
                                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12.0),
-                                    side: BorderSide(color: _themeProvider.mainText!, width: 1.0),
+                                    side: BorderSide(color: _themeProvider.mainText, width: 1.0),
                                   ),
                                 ),
                               ),
@@ -5523,8 +5523,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           'to revert to a standard browser tab!',
       targetPadding: const EdgeInsets.all(10),
       disableMovingAnimation: true,
-      textColor: _themeProvider.mainText!,
-      tooltipBackgroundColor: _themeProvider.secondBackground!,
+      textColor: _themeProvider.mainText,
+      tooltipBackgroundColor: _themeProvider.secondBackground,
       descTextStyle: const TextStyle(fontSize: 13),
       tooltipPadding: const EdgeInsets.all(20),
       child: Padding(

@@ -71,6 +71,7 @@ class Prefs {
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
   final String _kUseMaterial3Theme = "pda_useMaterial3Theme";
+  final String _kAccesibilityNoTextColors = "pda_accesibilityNoTextColors";
   final String _kSyncTornWebTheme = "tornLite_syncTheme";
   final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
   final String _kDarkThemeToSync = "tornLite_themeToSync";
@@ -918,6 +919,16 @@ class Prefs {
   Future<bool> setUseMaterial3(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseMaterial3Theme, value);
+  }
+
+  Future<bool> getAccesibilityNoTextColors() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAccesibilityNoTextColors) ?? false;
+  }
+
+  Future<bool> setAccesibilityNoTextColors(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAccesibilityNoTextColors, value);
   }
 
   /// ----------------------------

@@ -94,8 +94,8 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
                           'he/she is at least associated with one of them.\n\nTry it out!',
                       targetPadding: const EdgeInsets.all(10),
                       disableMovingAnimation: true,
-                      textColor: _themeProvider.mainText!,
-                      tooltipBackgroundColor: _themeProvider.secondBackground!,
+                      textColor: _themeProvider.mainText,
+                      tooltipBackgroundColor: _themeProvider.secondBackground,
                       descTextStyle: const TextStyle(fontSize: 13),
                       tooltipPadding: const EdgeInsets.all(20),
                       child: Icon(

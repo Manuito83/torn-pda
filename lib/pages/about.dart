@@ -119,7 +119,10 @@ class AboutPageState extends State<AboutPage> {
                           children: <TextSpan>[
                             TextSpan(
                               text: 'Discord channel',
-                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                              style: TextStyle(
+                                  decoration: _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                  fontWeight: FontWeight.bold,
+                                  color: _themeProvider.getTextColor(Colors.blue)),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () async {
                                   const url = 'https://discord.gg/vyP23kJ';
@@ -171,9 +174,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Torn Forums',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -227,9 +234,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Github',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -281,9 +292,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'donation in game',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -310,11 +325,11 @@ class AboutPageState extends State<AboutPage> {
                         Flexible(
                           child: InkWell(
                             onTap: _showChangeLogDialog,
-                            child: const Text(
+                            child: Text(
                               "show",
                               style: TextStyle(
                                 decoration: TextDecoration.underline,
-                                color: Colors.blue,
+                                color: _themeProvider.getTextColor(Colors.blue),
                               ),
                             ),
                           ),
@@ -383,9 +398,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Manuito',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -410,9 +429,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Kwack',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -437,9 +460,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Mavri',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -478,9 +505,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Phillip_J_Fry',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -505,9 +536,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'VioletStorm',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -546,9 +581,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Kivou',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -574,9 +613,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'IceBlueFire',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -603,9 +646,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Prometheus',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -667,9 +714,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'Knoxby',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  style: TextStyle(
+                                      decoration:
+                                          _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.getTextColor(Colors.blue)),
                                 ),
                               ),
                             ),
@@ -708,9 +759,13 @@ class AboutPageState extends State<AboutPage> {
                                         browserTapType: BrowserTapType.long,
                                       );
                                 },
-                                child: const Text(
+                                child: Text(
                                   'privacy policy',
-                                  style: TextStyle(color: Colors.blue),
+                                  style: TextStyle(
+                                    decoration:
+                                        _themeProvider.accesibilityNoTextColors ? TextDecoration.underline : null,
+                                    color: _themeProvider.getTextColor(Colors.blue),
+                                  ),
                                 ),
                               ),
                             ),

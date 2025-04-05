@@ -465,9 +465,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               child: _shortcutsCarrousel(),
                             ),
                             const SizedBox(height: 50),
-                            const Text(
+                            Text(
                               'OOPS!',
-                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: _themeProvider!.getTextColor(Colors.red),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 20),
@@ -510,7 +514,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                               "Otherwise, you can head to the forums of Discord to see if there "
                                               "is any more information available.",
                                               textAlign: TextAlign.center,
-                                              style: TextStyle(color: Colors.red[700]),
+                                              style: TextStyle(color: _themeProvider!.getTextColor(Colors.red)),
                                             ),
                                         ],
                                       ),
@@ -683,8 +687,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   'your taps (quick or long) to launch the browser in windowed or full screen modes!',
               showArrow: false,
               disableMovingAnimation: true,
-              textColor: _themeProvider!.mainText!,
-              tooltipBackgroundColor: _themeProvider!.secondBackground!,
+              textColor: _themeProvider!.mainText,
+              tooltipBackgroundColor: _themeProvider!.secondBackground,
               descTextStyle: const TextStyle(fontSize: 13),
               tooltipPadding: const EdgeInsets.all(20),
               child: PdaBrowserIcon(),
@@ -705,8 +709,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   'information!',
               showArrow: false,
               disableMovingAnimation: true,
-              textColor: _themeProvider!.mainText!,
-              tooltipBackgroundColor: _themeProvider!.secondBackground!,
+              textColor: _themeProvider!.mainText,
+              tooltipBackgroundColor: _themeProvider!.secondBackground,
               descTextStyle: const TextStyle(fontSize: 13),
               tooltipPadding: const EdgeInsets.all(20),
               child: TctClock(
@@ -978,7 +982,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     Text(
                       'No shortcuts configured, add some!',
                       style: TextStyle(
-                        color: Colors.orange[900],
+                        color: _themeProvider!.getTextColor(Colors.orange[900]),
                         fontStyle: FontStyle.italic,
                         fontSize: 13,
                       ),
@@ -986,7 +990,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     Text(
                       'Tap the icon to configure',
                       style: TextStyle(
-                        color: Colors.orange[900],
+                        color: _themeProvider!.getTextColor(Colors.orange[900]),
                         fontStyle: FontStyle.italic,
                         fontSize: 10,
                       ),
@@ -996,7 +1000,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 GestureDetector(
                   child: IconButton(
                     icon: const Icon(Icons.switch_access_shortcut_outlined),
-                    color: Colors.orange[900],
+                    color: _themeProvider!.getTextColor(Colors.orange[900]),
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
@@ -1105,7 +1109,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     Color? stateColor;
     if (_user!.status!.color == 'red') {
-      stateColor = Colors.red;
+      stateColor = _themeProvider!.getTextColor(Colors.red);
       if (_user!.travel!.timeLeft! > 0) {
         repatriated = true;
       }
@@ -1161,7 +1165,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
           Container(
             decoration: BoxDecoration(
-              color: _themeProvider!.cardColor!,
+              color: _themeProvider!.cardColor,
               borderRadius: BorderRadius.circular(_settingsProvider!.colorCodedStatusCard ? 5 : 0),
             ),
             //color: _themeProvider!.cardColor!,
@@ -1496,13 +1500,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       header = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(left: 55),
             child: Text(
               "REPATRIATED",
               style: TextStyle(
                 fontSize: 11,
-                color: Colors.red,
+                color: _themeProvider!.getTextColor(Colors.red),
               ),
             ),
           ),
@@ -1889,8 +1893,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   'straight to the gym, crimes or items sections!',
                               targetPadding: const EdgeInsets.all(10),
                               disableMovingAnimation: true,
-                              textColor: _themeProvider!.mainText!,
-                              tooltipBackgroundColor: _themeProvider!.secondBackground!,
+                              textColor: _themeProvider!.mainText,
+                              tooltipBackgroundColor: _themeProvider!.secondBackground,
                               descTextStyle: const TextStyle(fontSize: 13),
                               tooltipPadding: const EdgeInsets.all(20),
                               child: LinearPercentIndicator(
@@ -2599,7 +2603,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: percentageError ? Colors.red : Colors.green,
+                  contentColor: percentageError
+                      ? _themeProvider!.getTextColor(Colors.red)
+                      : _themeProvider!.getTextColor(Colors.green),
                   duration: const Duration(seconds: 5),
                   contentPadding: const EdgeInsets.all(10),
                 );
@@ -2611,7 +2617,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     fontSize: 14,
                     color: Colors.white,
                   ),
-                  contentColor: Colors.orange[800]!,
+                  contentColor: _themeProvider!.getTextColor(Colors.orange[800]),
                   duration: const Duration(seconds: 5),
                   contentPadding: const EdgeInsets.all(10),
                 );
@@ -2627,7 +2633,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   fontSize: 14,
                   color: Colors.white,
                 ),
-                contentColor: percentageError ? Colors.red : Colors.green,
+                contentColor: percentageError
+                    ? _themeProvider!.getTextColor(Colors.red)
+                    : _themeProvider!.getTextColor(Colors.green),
                 duration: const Duration(seconds: 5),
                 contentPadding: const EdgeInsets.all(10),
               );
@@ -3075,7 +3083,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Text(
             unreadString,
             style: TextStyle(
-              color: unreadCount == 0 ? Colors.green : Colors.red,
+              color: unreadCount == 0
+                  ? _themeProvider!.getTextColor(Colors.green)
+                  : _themeProvider!.getTextColor(Colors.red),
               fontWeight: unreadCount == 0 ? FontWeight.normal : FontWeight.bold,
             ),
           ),
@@ -3361,7 +3371,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Text(
                 unreadRecentString,
                 style: TextStyle(
-                  color: unreadRecentCount == 0 ? Colors.green : Colors.red,
+                  color: unreadRecentCount == 0
+                      ? _themeProvider!.getTextColor(Colors.green)
+                      : _themeProvider!.getTextColor(Colors.red),
                   fontWeight: unreadRecentCount == 0 ? FontWeight.normal : FontWeight.bold,
                 ),
               ),
@@ -3473,10 +3485,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       strengthModifiedTotal += strengthModifiedTotal * strengthModifier / 100;
       if (strengthModifier < 0) {
         strengthString = "($strengthModifier%)";
-        strengthColor = Colors.red;
+        strengthColor = _themeProvider!.getTextColor(Colors.red);
       } else {
         strengthString = "(+$strengthModifier%)";
-        strengthColor = Colors.green;
+        strengthColor = _themeProvider!.getTextColor(Colors.green);
       }
     }
 
@@ -3505,10 +3517,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       defenseModifiedTotal += defenseModifiedTotal * defenseModifier / 100;
       if (defenseModifier < 0) {
         defenseString = "($defenseModifier%)";
-        defenseColor = Colors.red;
+        defenseColor = _themeProvider!.getTextColor(Colors.red);
       } else {
         defenseString = "(+$defenseModifier%)";
-        defenseColor = Colors.green;
+        defenseColor = _themeProvider!.getTextColor(Colors.green);
       }
     }
 
@@ -3537,10 +3549,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       speedModifiedTotal += speedModifiedTotal * speedModifier / 100;
       if (speedModifier < 0) {
         speedString = "($speedModifier%)";
-        speedColor = Colors.red;
+        speedColor = _themeProvider!.getTextColor(Colors.red);
       } else {
         speedString = "(+$speedModifier%)";
-        speedColor = Colors.green;
+        speedColor = _themeProvider!.getTextColor(Colors.green);
       }
     }
 
@@ -3569,10 +3581,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       dexModifiedTotal += dexModifiedTotal * dexModifier / 100;
       if (dexModifier < 0) {
         dexString = "($dexModifier%)";
-        dexColor = Colors.red;
+        dexColor = _themeProvider!.getTextColor(Colors.red);
       } else {
         dexString = "(+$dexModifier%)";
-        dexColor = Colors.green;
+        dexColor = _themeProvider!.getTextColor(Colors.green);
       }
     }
 
@@ -3706,15 +3718,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     if (totalEffectiveModifier < 0)
                       Text(
                         ' ($totalEffectiveModifier%)',
-                        style: const TextStyle(
-                          color: Colors.red,
+                        style: TextStyle(
+                          color: _themeProvider!.getTextColor(Colors.red),
                         ),
                       )
                     else if (totalEffectiveModifier > 0)
                       Text(
                         ' (+$totalEffectiveModifier%)',
-                        style: const TextStyle(
-                          color: Colors.green,
+                        style: TextStyle(
+                          color: _themeProvider!.getTextColor(Colors.green),
                         ),
                       )
                   ],
@@ -4325,7 +4337,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             style: TextStyle(
               fontSize: dense ? 13 : 14,
               fontWeight: dense ? FontWeight.bold : FontWeight.normal,
-              color: dense ? Colors.green : _themeProvider!.mainText,
+              color: dense ? _themeProvider!.getTextColor(Colors.green) : _themeProvider!.mainText,
             ),
           )
         ],
@@ -4582,7 +4594,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final moneyFormat = NumberFormat("#,##0", "en_US");
       final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.cityBank!.timeLeft!));
       final timeDifference = timeExpiry.difference(DateTime.now());
-      Color? expiryColor = Colors.orange[800];
+      Color? expiryColor = _themeProvider!.getTextColor(Colors.orange[800]);
       String expiryString;
       if (timeDifference.inHours < 1) {
         expiryString = 'less than an hour';
@@ -4611,8 +4623,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 children: <TextSpan>[
                   TextSpan(
                     text: "\$${moneyFormat.format(_miscModel!.cityBank!.amount)}",
-                    style: const TextStyle(
-                      color: Colors.green,
+                    style: TextStyle(
+                      color: _themeProvider!.getTextColor(Colors.green),
                     ),
                   ),
                   const TextSpan(text: " will expire in "),
@@ -4703,7 +4715,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Flexible(
                 child: Text(
                   "You are not enrolled in any education course!",
-                  style: TextStyle(color: Colors.red[500]),
+                  style: TextStyle(color: _themeProvider!.getTextColor(Colors.red[500])),
                 ),
               )
             ],
@@ -4885,7 +4897,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         Text(
           '\$${moneyFormat.format(v.value!.round())}',
           style: TextStyle(
-            color: v.value! < 0 ? Colors.red : Colors.green,
+            color: v.value! < 0 ? _themeProvider!.getTextColor(Colors.red) : _themeProvider!.getTextColor(Colors.green),
           ),
         ),
       );
@@ -4922,7 +4934,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               Text(
                 '\$${moneyFormat.format(total)}',
                 style: TextStyle(
-                  color: total! < 0 ? Colors.red : Colors.green,
+                  color: total! < 0
+                      ? _themeProvider!.getTextColor(Colors.red)
+                      : _themeProvider!.getTextColor(Colors.green),
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -4964,7 +4978,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: total <= 0 ? Colors.red : Colors.green,
+              color: total <= 0 ? _themeProvider!.getTextColor(Colors.red) : _themeProvider!.getTextColor(Colors.green),
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -6788,7 +6802,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           fontSize: 14,
           color: Colors.white,
         ),
-        contentColor: Colors.red,
+        contentColor: _themeProvider!.getTextColor(Colors.red),
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
       );
@@ -6801,7 +6815,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         fontSize: 14,
         color: Colors.white,
       ),
-      contentColor: percentageError ? Colors.red : Colors.green,
+      contentColor:
+          percentageError ? _themeProvider!.getTextColor(Colors.red) : _themeProvider!.getTextColor(Colors.green),
       duration: const Duration(seconds: 5),
       contentPadding: const EdgeInsets.all(10),
     );
@@ -7277,8 +7292,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       if (_companyAddiction == null) return const SizedBox.shrink();
 
       Color? c = _themeProvider!.mainText;
-      if (_companyAddiction! < -1) c = Colors.orange[700];
-      if (_companyAddiction! < -12) c = Colors.red[700];
+      if (_companyAddiction! < -1) c = _themeProvider!.getTextColor(Colors.orange[700]);
+      if (_companyAddiction! < -12) c = _themeProvider!.getTextColor(Colors.red[700]);
 
       return Padding(
         padding: const EdgeInsets.only(left: 2),
@@ -7538,8 +7553,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         style: TextStyle(
                           color: numberDays <= 5
                               ? numberDays <= 2
-                                  ? Colors.red[500]
-                                  : Colors.orange[800]
+                                  ? _themeProvider!.getTextColor(Colors.red[500])
+                                  : _themeProvider!.getTextColor(Colors.orange[800])
                               : tP.mainText,
                         ),
                       );

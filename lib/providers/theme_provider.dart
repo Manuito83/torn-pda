@@ -14,14 +14,14 @@ enum AppTheme {
 }
 
 class ThemeProvider extends ChangeNotifier {
-  Color? canvas;
-  Color? secondBackground;
-  Color? mainText;
-  Color? buttonText;
-  Color? navSelected;
-  Color? cardColor;
-  Color? cardSurfaceTintColor;
-  Color? statusBar;
+  late Color canvas;
+  late Color secondBackground;
+  late Color mainText;
+  late Color buttonText;
+  late Color navSelected;
+  late Color cardColor;
+  late Color cardSurfaceTintColor;
+  late Color statusBar;
 
   bool _useMaterial3 = true;
   bool get useMaterial3 => _useMaterial3;
@@ -44,34 +44,44 @@ class ThemeProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _accesibilityNoTextColors = false;
+  bool get accesibilityNoTextColors => _accesibilityNoTextColors;
+  set accesibilityNoTextColors(bool value) {
+    _accesibilityNoTextColors = value;
+    Prefs().setAccesibilityNoTextColors(value);
+    notifyListeners();
+    // Get the colors again to update the internal changes in the provider
+    _getColors();
+  }
+
   // COLORS ##LIGHT##
-  final _canvasBackgroundLIGHT = Colors.grey[50];
-  final _colorBackgroundLIGHT = Colors.grey[200];
+  final _canvasBackgroundLIGHT = Colors.grey[50]!;
+  final _colorBackgroundLIGHT = Colors.grey[200]!;
   final _colorMainTextLIGHT = Colors.black;
   final _colorButtonTextLIGHT = Colors.white;
-  final _colorNavSelectedLIGHT = Colors.blueGrey[100];
+  final _colorNavSelectedLIGHT = Colors.blueGrey[100]!;
   final _colorStatusBarLIGHT = Colors.blueGrey;
   // Cards
   final _colorCardLIGHT = Colors.white;
   final _surfaceTintCardLIGHT = Colors.white;
 
   // COLORS ##DARK##
-  final _canvasBackgroundDARK = Colors.grey[900];
-  final _colorBackgroundDARK = Colors.grey[800];
-  final _colorMainTextDARK = Colors.grey[50];
-  final _colorButtonTextDARK = Colors.grey[200];
-  final _colorNavSelectedDARK = Colors.blueGrey[600];
+  final _canvasBackgroundDARK = Colors.grey[900]!;
+  final _colorBackgroundDARK = Colors.grey[800]!;
+  final _colorMainTextDARK = Colors.grey[50]!;
+  final _colorButtonTextDARK = Colors.grey[200]!;
+  final _colorNavSelectedDARK = Colors.blueGrey[600]!;
   final _colorStatusBarDARK = Color.fromARGB(255, 37, 37, 37);
   // Cards
-  final _colorCardDARK = Colors.grey[800];
-  final _surfaceTintCardDARK = Colors.grey[800];
+  final _colorCardDARK = Colors.grey[800]!;
+  final _surfaceTintCardDARK = Colors.grey[800]!;
 
   // COLORS ##EXTRA DARK##
   final _canvasBackgroundExtraDARK = Colors.black;
   final _colorBackgroundExtraDARK = Color(0xFF0C0C0C);
-  final _colorMainTextExtraDARK = Colors.grey[50];
-  final _colorButtonTextExtraDARK = Colors.grey[200];
-  final _colorNavSelectedExtraDARK = Colors.blueGrey[800];
+  final _colorMainTextExtraDARK = Colors.grey[50]!;
+  final _colorButtonTextExtraDARK = Colors.grey[200]!;
+  final _colorNavSelectedExtraDARK = Colors.blueGrey[800]!;
   final _colorStatusBarExtraDARK = Color(0xFF0C0C0C);
   // Cards
   final _colorCardExtraDARK = Color.fromARGB(255, 14, 14, 14);
@@ -85,28 +95,33 @@ class ThemeProvider extends ChangeNotifier {
         mainText = _colorMainTextLIGHT;
         buttonText = _colorButtonTextLIGHT;
         navSelected = _colorNavSelectedLIGHT;
+        statusBar = _colorStatusBarLIGHT;
         cardColor = _colorCardLIGHT;
         cardSurfaceTintColor = _surfaceTintCardLIGHT;
-        statusBar = _colorStatusBarLIGHT;
       case AppTheme.dark:
         canvas = _canvasBackgroundDARK;
         secondBackground = _colorBackgroundDARK;
         mainText = _colorMainTextDARK;
         buttonText = _colorButtonTextDARK;
         navSelected = _colorNavSelectedDARK;
+        statusBar = _colorStatusBarDARK;
         cardColor = _colorCardDARK;
         cardSurfaceTintColor = _surfaceTintCardDARK;
-        statusBar = _colorStatusBarDARK;
       case AppTheme.extraDark:
         canvas = _canvasBackgroundExtraDARK;
-        secondBackground = _colorBackgroundExtraDARK;
-        mainText = _colorMainTextExtraDARK;
-        buttonText = _colorButtonTextExtraDARK;
+        secondBackground = _accesibilityNoTextColors ? Colors.black : _colorBackgroundExtraDARK;
+        mainText = _accesibilityNoTextColors ? Colors.white : _colorMainTextExtraDARK;
+        buttonText = _accesibilityNoTextColors ? Colors.white : _colorButtonTextExtraDARK;
         navSelected = _colorNavSelectedExtraDARK;
-        cardColor = _colorCardExtraDARK;
-        cardSurfaceTintColor = _surfaceTintCardExtraDARK;
-        statusBar = _colorStatusBarExtraDARK;
+        statusBar = _accesibilityNoTextColors ? Colors.black : _colorStatusBarExtraDARK;
+        cardColor = _accesibilityNoTextColors ? Colors.black : _colorCardExtraDARK;
+        cardSurfaceTintColor = _accesibilityNoTextColors ? Colors.black : _surfaceTintCardExtraDARK;
     }
+  }
+
+  Color getTextColor(Color? originalColor) {
+    if (originalColor == null) return mainText;
+    return _accesibilityNoTextColors ? mainText : originalColor;
   }
 
   void _saveThemeSharedPrefs() {
@@ -120,6 +135,7 @@ class ThemeProvider extends ChangeNotifier {
         themeSave = 'extraDark';
     }
     Prefs().setAppTheme(themeSave);
+    Prefs().setAccesibilityNoTextColors(_accesibilityNoTextColors);
   }
 
   Future<void> _restoreSharedPreferences() async {
@@ -135,6 +151,8 @@ class ThemeProvider extends ChangeNotifier {
     }
 
     useMaterial3 = await Prefs().getUseMaterial3();
+
+    _accesibilityNoTextColors = await Prefs().getAccesibilityNoTextColors();
 
     _getColors();
     notifyListeners();

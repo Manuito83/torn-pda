@@ -59,6 +59,15 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Alerts: company messages can now be filtered out in chat notifications",
           "Added Wiki to the main drawer menu",
+          ComplexFeature(
+            "Added accesible text color option",
+            explanation: "See Settings / Theme.\n\n"
+                "Activate this option to replace all colored texts with the default text color (white or black). "
+                "\n\nThis can improve readability for users with color vision deficiencies, but might make "
+                "it harder to identify the performance of some indicators."
+                "\n\nNote: this option only applies to the app and not to the web, "
+                "and is not yet available in all sections. You can contact us to offer further suggestions.",
+          ),
           "Fixed trade page not updating automatically when the other user updates the contents",
           "Fixed issues with HTML spacing in forums",
           if (Platform.isAndroid) "Fixed homescreen widget sizing and update frequency issues",

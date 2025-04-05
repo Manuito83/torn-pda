@@ -96,7 +96,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                                       targetString: "TSC's Discord server",
                                       style: TextStyle(
                                         decoration: TextDecoration.underline,
-                                        color: Colors.blue[400],
+                                        color: context.read<ThemeProvider>().getTextColor(Colors.blue[400]),
                                       ),
                                       recognizer: TapGestureRecognizer()
                                         ..onTap = () async {
@@ -135,7 +135,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                               targetString: 'Mavri',
                               style: TextStyle(
                                 decoration: TextDecoration.underline,
-                                color: Colors.blue[400],
+                                color: context.read<ThemeProvider>().getTextColor(Colors.blue[400]),
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () async {
@@ -152,7 +152,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                               targetString: 'forum thread',
                               style: TextStyle(
                                 decoration: TextDecoration.underline,
-                                color: Colors.blue[400],
+                                color: context.read<ThemeProvider>().getTextColor(Colors.blue[400]),
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () async {
@@ -169,7 +169,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                               targetString: "TSC's Dicord server",
                               style: TextStyle(
                                 decoration: TextDecoration.underline,
-                                color: Colors.blue[400],
+                                color: context.read<ThemeProvider>().getTextColor(Colors.blue[400]),
                               ),
                               recognizer: TapGestureRecognizer()
                                 ..onTap = () async {
@@ -199,7 +199,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                                     borderRadius: BorderRadius.circular(5),
                                   ),
                                   side: BorderSide(
-                                    color: widget.themeProvider.mainText!,
+                                    color: widget.themeProvider.mainText,
                                     width: 2,
                                   ),
                                 ),
@@ -219,7 +219,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                                     borderRadius: BorderRadius.circular(5),
                                   ),
                                   side: BorderSide(
-                                    color: widget.themeProvider.mainText!,
+                                    color: widget.themeProvider.mainText,
                                     width: 2,
                                   ),
                                 ),

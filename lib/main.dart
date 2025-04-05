@@ -415,6 +415,12 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       primarySwatch: Colors.blueGrey,
       useMaterial3: _themeProvider.useMaterial3,
       brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+      textButtonTheme: TextButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor:
+              _themeProvider.accesibilityNoTextColors ? WidgetStateProperty.all(_themeProvider.mainText) : null,
+        ),
+      ),
     );
 
     SystemChrome.setSystemUIOverlayStyle(

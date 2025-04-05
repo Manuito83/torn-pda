@@ -234,8 +234,8 @@ class StakeoutsPageState extends State<StakeoutsPage> {
           description: '\nMake sure to read this to understand how stakeouts are implemented in Torn PDA!',
           targetPadding: const EdgeInsets.all(10),
           disableMovingAnimation: true,
-          textColor: _themeProvider.mainText!,
-          tooltipBackgroundColor: _themeProvider.secondBackground!,
+          textColor: _themeProvider.mainText,
+          tooltipBackgroundColor: _themeProvider.secondBackground,
           descTextStyle: const TextStyle(fontSize: 13),
           tooltipPadding: const EdgeInsets.all(20),
           child: Padding(

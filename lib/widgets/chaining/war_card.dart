@@ -183,7 +183,7 @@ class WarCardState extends State<WarCard> {
                                   Radius.circular(56 / 2),
                                 ),
                               ),
-                              openColor: _themeProvider.canvas!,
+                              openColor: _themeProvider.canvas,
                               closedColor: Colors.transparent,
                               closedBuilder: (BuildContext context, VoidCallback openContainer) {
                                 return const SizedBox(
