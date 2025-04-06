@@ -1178,6 +1178,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             // Copy to clipboard from the log doesn't work so we use a handler from JS fired from Torn
             WebviewHandlers.addCopyToClipboardHandler(webview: webViewController!);
 
+            WebviewHandlers.addPageReloadHandler(webview: webViewController!);
+
             WebviewHandlers.addThemeChangeHandler(
               webview: webViewController!,
               setStateCallback: setState,
@@ -1197,6 +1199,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             );
 
             WebviewHandlers.addScriptApiHandlers(webview: webViewController!);
+
+            WebviewHandlers.addToastHandler(webview: webViewController!);
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();

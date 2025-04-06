@@ -67,17 +67,19 @@ Using either of these approaches ensures that your code will not attempt to call
 
 <br></br>
 ## Utility handlers
-* [Torn PDA Check Handler](./webview/torn-pda-check-handler.md) – Check if running in Torn PDA.
-* [Evaluate JavaScript Handler](./webview/evaluate-js-handler.md) – Execute JavaScript code fetched from external sources.
+* [Torn PDA Check Handler](./torn-pda-check-handler.md) – Check if running in Torn PDA.
+* [Evaluate JavaScript Handler](./evaluate-js-handler.md) – Execute JavaScript code fetched from external sources.
+* [Reload page Handler](./reload-page-handler.md) – Reload the page in the native webview from the app (fix for `window.location.reload`in some devices)
+* [Toast Handler](./toast-handler.md) - Display toast messages within Torn PDA
 
 
 <br></br>
 ## HTTP handlers
-* [HTTP Handlers](./webview/http-handlers.md) – HTTP GET and POST handlers for data fetching.
+* [HTTP Handlers](./http-handlers.md) – HTTP GET and POST handlers for data fetching.
 
 
 <br></br>
 ## Notification handlers
-* [User scripts notification handlers](./webview/notification-handlers.md), in order to trigger notifications, alarms (Android) and timers (Android) directly from user scripts.
-* [HTML source code](./webview/notification-handlers.md) of the [example website](https://info.tornpda.com/notifications-test.html), which serves as a sandbox for testing notifications, alarms, and timers for Torn PDA using JavaScript code.
+* [User scripts notification handlers](./notification-handlers.md), in order to trigger notifications, alarms (Android) and timers (Android) directly from user scripts.
+* [HTML source code](./notification-handlers.md) of the [example website](https://info.tornpda.com/notifications-test.html), which serves as a sandbox for testing notifications, alarms, and timers for Torn PDA using JavaScript code.
 

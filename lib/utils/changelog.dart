@@ -76,6 +76,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "\n\nThe notes icon is actionable (tap to change notes)",
           ),
           "Notes are not properly shared between targets, war target, stakeouts and friends",
+          "Added new webview handlers to show a native toast and force a page reload from native code",
           "Fixed trade page not updating automatically when the other user updates the contents",
           "Fixed issues with HTML spacing in forums",
           if (Platform.isAndroid) "Fixed homescreen widget sizing and update frequency issues",

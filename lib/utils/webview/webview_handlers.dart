@@ -22,8 +22,18 @@ class WebviewHandlers {
     webview.addJavaScriptHandler(
       handlerName: 'isTornPDA',
       callback: (args) async {
-        debugPrint("Handler: isTornPDA");
         return {'isTornPDA': true};
+      },
+    );
+  }
+
+  static void addPageReloadHandler({
+    required InAppWebViewController webview,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'reloadPage',
+      callback: (args) async {
+        webview.reload();
       },
     );
   }
@@ -421,5 +431,61 @@ class WebviewHandlers {
       'responseText': resp.body,
       'responseHeaders': resp.headers.keys.map((key) => '$key: ${resp.headers[key]}').join("\r\n")
     };
+  }
+
+  /// Registers a Toast Handler that shows a toast message using BotToast
+  static void addToastHandler({
+    required InAppWebViewController webview,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'showToast',
+      callback: (args) {
+        final params = args.isNotEmpty && args[0] is Map ? args[0] as Map : {};
+
+        final String? text = params['text'] as String?;
+        if (text == null || text.trim().isEmpty) {
+          log('Toast Handler: No message provided, toast aborted');
+          return {'status': 'error', 'message': 'Toast requires a non-empty "text" parameter'};
+        }
+
+        final bool clickClose = params['clickClose'] is bool ? params['clickClose'] as bool : false;
+        final int seconds = params['seconds'] is int ? params['seconds'] as int : 3;
+
+        final bgColorMap = params['bgColor'] is Map ? params['bgColor'] as Map : null;
+        final textColorMap = params['textColor'] is Map ? params['textColor'] as Map : null;
+
+        final bgColor = bgColorMap != null
+            ? Color.fromARGB(
+                bgColorMap['a'] ?? 255,
+                bgColorMap['r'] ?? 0,
+                bgColorMap['g'] ?? 0,
+                bgColorMap['b'] ?? 255,
+              )
+            : Colors.blue;
+
+        final textColor = textColorMap != null
+            ? Color.fromARGB(
+                textColorMap['a'] ?? 255,
+                textColorMap['r'] ?? 255,
+                textColorMap['g'] ?? 255,
+                textColorMap['b'] ?? 255,
+              )
+            : Colors.white;
+
+        BotToast.showText(
+          clickClose: clickClose,
+          text: text,
+          textStyle: TextStyle(
+            fontSize: 14,
+            color: textColor,
+          ),
+          contentColor: bgColor,
+          duration: Duration(seconds: seconds),
+          contentPadding: const EdgeInsets.all(10),
+        );
+
+        return {'status': 'success', 'message': 'Toast displayed successfully'};
+      },
+    );
   }
 }
