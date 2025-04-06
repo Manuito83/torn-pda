@@ -340,6 +340,44 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
+                        const Text("Show player notes"),
+                        Switch(
+                          value: _settingsProvider.notesWidgetEnabledProfile,
+                          onChanged: (value) {
+                            setState(() {
+                              _settingsProvider.changeNotesWidgetEnabledProfile = value;
+                            });
+                          },
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.green,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      "If enabled, this will show a notes widget in the profile page "
+                      "for those players that you have added notes to (as friends, stakeouts or targets). "
+                      "The notes icon is actionable (tap to change notes)",
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            if (_settingsProvider.extraPlayerInformation)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
                         const Text("Show networth"),
                         Switch(
                           value: _settingsProvider.extraPlayerNetworth,

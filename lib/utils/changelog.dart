@@ -68,6 +68,14 @@ class ChangeLogState extends State<ChangeLog> {
                 "\n\nNote: this option only applies to the app and not to the web, "
                 "and is not yet available in all sections. You can contact us to offer further suggestions.",
           ),
+          ComplexFeature(
+            "Added notes to player profile widgets",
+            explanation: "Enabled by default. See Settings / Advanced Browser Settings / Player Profiles\n\n"
+                "If enabled, this will show a notes widget in the profile page "
+                "for those players that you have added notes to (as friends, stakeouts or targets)"
+                "\n\nThe notes icon is actionable (tap to change notes)",
+          ),
+          "Notes are not properly shared between targets, war target, stakeouts and friends",
           "Fixed trade page not updating automatically when the other user updates the contents",
           "Fixed issues with HTML spacing in forums",
           if (Platform.isAndroid) "Fixed homescreen widget sizing and update frequency issues",

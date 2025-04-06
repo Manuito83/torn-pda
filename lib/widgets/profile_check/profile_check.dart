@@ -25,6 +25,7 @@ import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
+import 'package:torn_pda/widgets/profile_check/profile_check_notes.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 
 enum ProfileCheckType {
@@ -147,6 +148,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               ],
             ),
           ),
+        if (_settingsProvider.notesWidgetEnabledProfile) ProfileCheckNotes(profileId: widget.profileId.toString()),
         if (_networthWidgetEnabled) _networthWidget,
         if (_isTornPda) _tornPdaWidget,
         // Container so that the background color can be changed for certain widgets

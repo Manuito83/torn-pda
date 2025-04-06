@@ -47,6 +47,7 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
+import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
@@ -173,6 +174,7 @@ Future<void> main() async {
   Get.put(SpiesController(), permanent: true);
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
+  Get.put(StakeoutsController(), permanent: true);
   Get.put(PeriodicExecutionController(), permanent: true);
 
   final sb = Get.put(SendbirdController(), permanent: true);

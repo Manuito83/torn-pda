@@ -14,14 +14,14 @@ enum AppTheme {
 }
 
 class ThemeProvider extends ChangeNotifier {
-  late Color canvas;
-  late Color secondBackground;
-  late Color mainText;
-  late Color buttonText;
-  late Color navSelected;
-  late Color cardColor;
-  late Color cardSurfaceTintColor;
-  late Color statusBar;
+  Color canvas = Colors.transparent;
+  Color secondBackground = Colors.transparent;
+  Color mainText = Colors.transparent;
+  Color buttonText = Colors.transparent;
+  Color navSelected = Colors.transparent;
+  Color cardColor = Colors.transparent;
+  Color cardSurfaceTintColor = Colors.transparent;
+  Color statusBar = Colors.transparent;
 
   bool _useMaterial3 = true;
   bool get useMaterial3 => _useMaterial3;

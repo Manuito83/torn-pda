@@ -248,47 +248,41 @@ class PersonalNotesDialogState extends State<PersonalNotesDialog> {
                         TextButton(
                           child: const Text("Insert"),
                           onPressed: () {
-                            // Pop and then perform the work
                             Navigator.of(context).pop();
-                            if (widget.noteType == PersonalNoteType.target) {
-                              _targetsProvider.setTargetNote(
-                                _target,
-                                _personalNotesController.text,
-                                _myTempChosenColor,
-                              );
-                              // Update also the war target if it exists
-                              if (_targetAndWarTargetExists) {
-                                Member? m;
-                                for (final f in _w.factions) {
-                                  if (f.members!.keys.contains(widget.targetModel!.playerId.toString())) {
-                                    m = f.members![widget.targetModel!.playerId.toString()];
-                                    _w.setMemberNote(
-                                      m,
-                                      _personalNotesController.text,
-                                      _myTempChosenColor,
-                                    );
-                                    break;
-                                  }
-                                }
+
+                            final noteText = _personalNotesController.text;
+                            final noteColor = _myTempChosenColor;
+
+                            final playerId = widget.targetModel?.playerId.toString() ??
+                                widget.friendModel?.playerId.toString() ??
+                                widget.stakeoutModel?.id ??
+                                widget.memberModel?.memberId.toString();
+
+                            if (playerId == null) return;
+
+                            final target =
+                                _targetsProvider.allTargets.firstWhereOrNull((t) => t.playerId.toString() == playerId);
+                            if (target != null) {
+                              _targetsProvider.setTargetNote(target, noteText, noteColor);
+                            }
+
+                            final friend =
+                                _friendsProvider.allFriends.firstWhereOrNull((f) => f.playerId.toString() == playerId);
+                            if (friend != null) {
+                              _friendsProvider.setFriendNote(friend, noteText, noteColor);
+                            }
+
+                            final stakeout = _s.stakeouts.firstWhereOrNull((s) => s.id == playerId);
+                            if (stakeout != null) {
+                              _s.setStakeoutNote(stakeout, noteText, noteColor);
+                            }
+
+                            for (final faction in _w.factions) {
+                              if (faction.members!.containsKey(playerId)) {
+                                final member = faction.members![playerId];
+                                _w.setMemberNote(member, noteText, noteColor);
+                                break;
                               }
-                            } else if (widget.noteType == PersonalNoteType.friend) {
-                              _friendsProvider.setFriendNote(
-                                _friend!,
-                                _personalNotesController.text,
-                                _myTempChosenColor,
-                              );
-                            } else if (widget.noteType == PersonalNoteType.factionMember) {
-                              _w.setMemberNote(
-                                _factionMember,
-                                _personalNotesController.text,
-                                _myTempChosenColor,
-                              );
-                            } else if (widget.noteType == PersonalNoteType.stakeout) {
-                              _s.setStakeoutNote(
-                                _stakeout,
-                                _personalNotesController.text,
-                                _myTempChosenColor,
-                              );
                             }
                           },
                         ),

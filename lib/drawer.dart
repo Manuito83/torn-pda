@@ -118,7 +118,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
   late WebViewProvider _webViewProvider;
-  final StakeoutsController _s = Get.put(StakeoutsController(), permanent: true);
+  final StakeoutsController _s = Get.find<StakeoutsController>();
   final ApiCallerController _apiController = Get.find<ApiCallerController>();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;

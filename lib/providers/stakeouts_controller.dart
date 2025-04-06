@@ -616,7 +616,7 @@ class CustomWidgetState extends State<CustomWidget> {
                 IconButton(
                   icon: Icon(MdiIcons.cctv),
                   onPressed: () async {
-                    final s = Get.put(StakeoutsController());
+                    final s = Get.find<StakeoutsController>();
                     s.callbackBrowser('https://www.torn.com/profiles.php?XID=${widget.stakeoutId}');
                     widget.cancelFunc;
                   },

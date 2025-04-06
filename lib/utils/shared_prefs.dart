@@ -139,6 +139,7 @@ class Prefs {
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
+  final String _kNotesWidgetEnabledProfile = "pda_notesWidgetEnabledProfile";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
   final String _kHitInMiniProfileOpensNewTab = "pda__hitInMiniProfileOpensNewTab";
   final String _kHitInMiniProfileOpensNewTabAndChangeTab = "pda__hitInMiniProfileOpensNewTabAndChangeTab";
@@ -1736,6 +1737,17 @@ class Prefs {
   Future<bool> setFriendlyFactions(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kFriendlyFactions, value);
+  }
+
+  // *************
+  Future<bool> getNotesWidgetEnabledProfile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kNotesWidgetEnabledProfile) ?? false;
+  }
+
+  Future<bool> setNotesWidgetEnabledProfile(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kNotesWidgetEnabledProfile, value);
   }
 
   // *************

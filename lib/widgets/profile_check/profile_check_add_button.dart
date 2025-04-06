@@ -185,7 +185,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   bool _toggleTargetActive = false;
   bool _isTarget = false;
 
-  final StakeoutsController _s = Get.put(StakeoutsController());
+  final StakeoutsController _s = Get.find<StakeoutsController>();
   bool _toggleStakeoutActive = false;
   bool _isStakeout = false;
 
