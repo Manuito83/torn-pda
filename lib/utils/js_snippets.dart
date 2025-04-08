@@ -510,22 +510,6 @@ String addOthersBazaarFillButtonsJS() {
   ''';
 }
 
-String removeChatOnLoadStartJS() {
-  return '''
-    try {
-      var style = document.createElement('style');
-      style.type = 'text/css';
-      style.innerHTML = '[class*="chat-app-container_"] { height: 39px; position: fixed; right: 0; bottom: 0; color: #fff; z-index: 999999; display: none }';
-      document.getElementsByTagName('head')[0].appendChild(style);
-    } catch (e) {
-      // Sometimes firing too early and generating error in other scripts
-    }
-    
-    // Return to avoid iOS WKErrorDomain
-    123;
-  ''';
-}
-
 String addHeightForPullToRefresh() {
   return '''
     (function() {
@@ -545,37 +529,37 @@ String addHeightForPullToRefresh() {
 String removeChatJS() {
   return '''
     try {
-      var chatBox = document.querySelectorAll("[class*='chat-app-container_']");
-      if (chatBox.length > 0) {
-        chatBox[0].style.display = 'none';
+      function hideElement(el) {
+        el.style.setProperty("display", "none", "important");
       }
-
-      var chatBox2 = document.getElementById("chatRoot");
-      if (chatBox2 !== undefined) {
-        chatBox2.style.display = 'none';
-      }
+      
+      // Select all chat elements (both the old one and the new one... just in case)
+      var chatBoxes = document.querySelectorAll("[class*='chat-app-container_'], #chatRoot");
+      chatBoxes.forEach(function(el) {
+        hideElement(el);
+      });
     } catch (e) {
-      // Sometimes firing too early and generating error in other scripts
+      //console.error("Error hiding chat elements: ", e);
     }
     
-    // Return to avoid iOS WKErrorDomain
+    // Return a value to avoid iOS WKErrorDomain errors
     123;
   ''';
 }
 
 String restoreChatJS() {
   return '''
-    var chatBox = document.querySelectorAll("[class*='chat-app-container_']");
-    if (chatBox.length > 0) {
-      chatBox[0].style.display = 'block';
-    }
-
-    var chatBox2 = document.getElementById("chatRoot");
-    if (chatBox2 !== undefined) {
-      chatBox2.style.display = 'block';
+    try {
+      // Select all chat elements (both the old one and the new one)
+      var chatBoxes = document.querySelectorAll("[class*='chat-app-container_'], #chatRoot");
+      chatBoxes.forEach(function(el) {
+        el.style.removeProperty("display");
+      });
+    } catch (e) {
+      //console.error("Error restoring chat elements: ", e);
     }
     
-    // Return to avoid iOS WKErrorDomain
+    // Return a value to avoid iOS WKErrorDomain errors
     123;
   ''';
 }

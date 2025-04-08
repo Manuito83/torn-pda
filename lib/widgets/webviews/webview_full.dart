@@ -2248,7 +2248,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   void hideChatOnLoad() {
     if ((_webViewProvider.chatRemovalEnabledGlobal && _localChatRemovalActive) ||
         _webViewProvider.chatRemovalWhileFullScreen) {
-      webViewController!.evaluateJavascript(source: removeChatOnLoadStartJS());
+      webViewController!.evaluateJavascript(source: removeChatJS());
     }
   }
 
