@@ -16,7 +16,7 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '509'
+    flutterVersionCode = '510'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
@@ -80,6 +80,10 @@ android {
                     'proguard-android-optimize.txt'),
                     'proguard-rules.pro'
         }
+    }
+
+    buildFeatures {
+        compose true
     }
 
 }
