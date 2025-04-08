@@ -96,8 +96,8 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
         twoRowWide = loadWidgetData(twoRowWide, context, prefs);
 
         Map<SizeF, RemoteViews> viewMapping = new ArrayMap<>();
-        viewMapping.put(new SizeF(60f, 40f), oneRowNarrow);
-        viewMapping.put(new SizeF(300f, 40f), oneRowWide);
+        viewMapping.put(new SizeF(60f, 0f), oneRowNarrow);
+        viewMapping.put(new SizeF(300f, 0f), oneRowWide);
         viewMapping.put(new SizeF(60f, 150f), twoRowNarrow);
         viewMapping.put(new SizeF(300f, 150f), twoRowWide);
 
