@@ -68,7 +68,8 @@ import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/drawer/announcement_dialog.dart';
+import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
+import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -2145,35 +2146,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       }
 
-      // Announcement dialog
-      // Version hardcoded - only allow users with version 0
-      if ((await Prefs().getAppAnnouncementDialogVersion()) <= 0) {
-        // For version 1, user needs to have 24 hours of app use
-        final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
-        if (savedSeconds < 86400) return;
+      // Stats Announcement dialog
+      bool statsShown = await _showAppStatsAnnouncementDialog();
 
-        // If we are still in an old dialog version, get DB to see if we can are free to show it
-        try {
-          int? databaseDialogAllowed =
-              (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
-          if (databaseDialogAllowed == 1) {
-            // If we are allowed to proceed, show the dialog
-            await showDialog(
-              useRootNavigator: false,
-              context: context,
-              barrierDismissible: false,
-              builder: (context) {
-                return AnnouncementDialog(themeProvider: _themeProvider);
-              },
-            );
-
-            // Then update the version to the current one
-            Prefs().setAppAnnouncementDialogVersion(1);
-            return; // Do not show more dialogs below
-          }
-        } catch (e) {
-          //
-        }
+      if (!statsShown) {
+        await _showBugsAnnouncementDialog();
       }
 
       // Other dialogs
@@ -2205,6 +2182,67 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return AppwidgetExplanationDialog();
       },
     );
+  }
+
+  Future<bool> _showAppStatsAnnouncementDialog() async {
+    // Version hardcoded - only allow users with version 0
+    if ((await Prefs().getAppStatsAnnouncementDialogVersion()) <= 0) {
+      // For version 1, user needs to have 24 hours of app use
+      final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+      if (savedSeconds < 86400) return false;
+
+      // If we are still in an old dialog version, get DB to see if we can are free to show it
+      try {
+        int? databaseDialogAllowed =
+            (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
+        if (databaseDialogAllowed == 1) {
+          // If we are allowed to proceed, show the dialog
+          await showDialog(
+            useRootNavigator: false,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return StatsAnnouncementDialog(themeProvider: _themeProvider);
+            },
+          );
+
+          // Then update the version to the current one
+          Prefs().setAppStatsAnnouncementDialogVersion(1);
+          return true; // Do not show more dialogs below
+        }
+      } catch (e) {
+        log("Error while checking if stats announcement dialog is allowed: $e");
+      }
+    }
+
+    return false;
+  }
+
+  Future<bool> _showBugsAnnouncementDialog() async {
+    final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+    // Do not show version 0 (user scripts bugs) to new users
+    // 43200 seconds = 12 hours
+    if (savedSeconds < 43200) return false;
+    if ((await Prefs().getBugsAnnouncementDialogVersion()) <= 0) {
+      try {
+        await showDialog(
+          useRootNavigator: false,
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return BugsAnnouncementDialog();
+          },
+        );
+
+        // Then update the version to the current one
+        Prefs().setBugsAnnouncementDialogVersion(1);
+        return true; // Do not show more dialogs below
+      } catch (e) {
+        log("Error while checking if bugs announcement dialog is allowed: $e");
+      }
+    }
+
+    return false;
   }
 
   void _callSectionFromOutside(int section) {

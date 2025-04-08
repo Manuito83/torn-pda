@@ -15,6 +15,7 @@ class Prefs {
   // General
   final String _kAppVersion = "pda_appVersion";
   final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
+  final String _kBugsAnnouncementDialogVersion = "pda_bugsAnnouncementDialogVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
 
@@ -470,14 +471,24 @@ class Prefs {
   /// Methods for announcement dialog
   /// -------------------------------
 
-  Future<int> getAppAnnouncementDialogVersion() async {
+  Future<int> getAppStatsAnnouncementDialogVersion() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kAppAnnouncementDialogVersion) ?? 0;
   }
 
-  Future<bool> setAppAnnouncementDialogVersion(int value) async {
+  Future<bool> setAppStatsAnnouncementDialogVersion(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kAppAnnouncementDialogVersion, value);
+  }
+
+  Future<int> getBugsAnnouncementDialogVersion() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kBugsAnnouncementDialogVersion) ?? 0;
+  }
+
+  Future<bool> setBugsAnnouncementDialogVersion(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kBugsAnnouncementDialogVersion, value);
   }
 
   /// ----------------------------
