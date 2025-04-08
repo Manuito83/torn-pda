@@ -31,3 +31,8 @@ window.flutter_inappwebview.callHandler('showToast', {
 .catch(error => {
   console.error("Error showing toast:", error);
 });
+```
+
+### Result:
+
+![example](./images/toast-handler-example.png)

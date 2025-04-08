@@ -75,11 +75,12 @@ class ChangeLogState extends State<ChangeLog> {
                 "for those players that you have added notes to (as friends, stakeouts or targets)"
                 "\n\nThe notes icon is actionable (tap to change notes)",
           ),
-          "Notes are not properly shared between targets, war target, stakeouts and friends",
+          "Notes are now properly shared between targets, war target, stakeouts and friends",
           "Added new webview handlers to show a native toast and force a page reload from native code",
+          "Flower and Plushie sets are now properly identified in Torn Exchange trades",
           "Fixed trade page not updating automatically when the other user updates the contents",
           "Fixed issues with HTML spacing in forums",
-          if (Platform.isAndroid) "Fixed homescreen widget sizing and update frequency issues",
+          if (Platform.isAndroid) "Fixed home screen widget sizing and update frequency issues",
         ],
     );
 
