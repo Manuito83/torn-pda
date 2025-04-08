@@ -1320,6 +1320,41 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                 const TextSpan(
                   text: ".",
                 ),
+                const TextSpan(
+                  text: "\n\nYou can test your app links in ",
+                ),
+                WidgetSpan(
+                  child: GestureDetector(
+                    onTap: () {
+                      const String url = "https://info.tornpda.com/applinks.html";
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: url,
+                            browserTapType: BrowserTapType.short,
+                          );
+                    },
+                    onLongPress: () {
+                      const String url = "https://info.tornpda.com/applinks.html";
+                      context.read<WebViewProvider>().openBrowserPreference(
+                            context: context,
+                            url: url,
+                            browserTapType: BrowserTapType.long,
+                          );
+                    },
+                    child: const Text(
+                      'https://info.tornpda.com/applinks.html',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+                const TextSpan(
+                  text: " (you'll need to visit this with another app or browser "
+                      "to check whether it actually redirects to Torn PDA).",
+                ),
               ],
             ),
           );
