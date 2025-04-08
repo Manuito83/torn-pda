@@ -242,6 +242,7 @@ class TctClockState extends State<TctClock> {
 
   /// Checks if the current time falls within any event or competition period
   Future<void> _checkActiveEvents() async {
+    if (!mounted) return;
     List<dynamic> activeEvents = _getActiveEvents();
     setState(() {
       _isEventActive = activeEvents.isNotEmpty || (debug && !kReleaseMode);

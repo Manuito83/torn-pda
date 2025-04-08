@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.3 - Build 508 - 08/04/2025
+    // v3.7.3 - Build 509 - 08/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.3'
@@ -80,6 +80,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Flower and Plushie sets are now properly identified in Torn Exchange trades",
           "Fixed trade page not updating automatically when the other user updates the contents",
           "Fixed issues with HTML spacing in forums",
+          "Fixed issues when hiding chat",
           if (Platform.isAndroid) "Fixed home screen widget sizing and update frequency issues",
         ],
     );
