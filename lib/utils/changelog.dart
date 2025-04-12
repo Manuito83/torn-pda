@@ -51,6 +51,40 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.7.3 - Build 510 - 08/04/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.7.3'
+        ..date = '15 APR 2025'
+        ..features = [
+          "Alerts: company messages can now be filtered out in chat notifications",
+          "Added Wiki to the main drawer menu",
+          ComplexFeature(
+            "Added accesible text color option",
+            explanation: "See Settings / Theme.\n\n"
+                "Activate this option to replace all colored texts with the default text color (white or black). "
+                "\n\nThis can improve readability for users with color vision deficiencies, but might make "
+                "it harder to identify the performance of some indicators."
+                "\n\nNote: this option only applies to the app and not to the web, "
+                "and is not yet available in all sections. You can contact us to offer further suggestions.",
+          ),
+          ComplexFeature(
+            "Added notes to player profile widgets",
+            explanation: "Enabled by default. See Settings / Advanced Browser Settings / Player Profiles\n\n"
+                "If enabled, this will show a notes widget in the profile page "
+                "for those players that you have added notes to (as friends, stakeouts or targets)"
+                "\n\nThe notes icon is actionable (tap to change notes)",
+          ),
+          "Notes are now properly shared between targets, war target, stakeouts and friends",
+          "Added new webview handlers to show a native toast and force a page reload from native code",
+          "Flower and Plushie sets are now properly identified in Torn Exchange trades",
+          "Fixed trade page not updating automatically when the other user updates the contents",
+          "Fixed issues with HTML spacing in forums",
+          "Fixed issues when hiding chat",
+          if (Platform.isAndroid) "Fixed home screen widget sizing and update frequency issues",
+        ],
+    );
+
     // v3.7.2 - Build 505 - 22/03/2025
     itemList.add(
       ChangeLogItem()

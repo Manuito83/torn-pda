@@ -135,7 +135,7 @@ class FriendCardState extends State<FriendCard> {
                               ),
                             ),
                             closedColor: Colors.transparent,
-                            openColor: _themeProvider.canvas!,
+                            openColor: _themeProvider.canvas,
                             closedBuilder: (BuildContext context, VoidCallback openContainer) {
                               return const SizedBox(
                                 height: 20,

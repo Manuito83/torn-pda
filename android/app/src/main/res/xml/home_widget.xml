@@ -4,7 +4,7 @@
     android:minWidth="250dp"
     android:minHeight="40dp"
     android:maxResizeWidth="700dp"
-    android:maxResizeHeight="120dp"
+    android:maxResizeHeight="240dp"
     android:targetCellWidth="5"
     android:updatePeriodMillis="86400000"
     android:description="@string/example_appwidget_description"

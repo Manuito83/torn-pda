@@ -159,7 +159,7 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
                   ),
                 ),
                 closedColor: Colors.transparent,
-                openColor: _themeProvider.canvas!,
+                openColor: _themeProvider.canvas,
                 closedBuilder: (BuildContext context, VoidCallback openContainer) {
                   return const SizedBox(
                     width: 20,

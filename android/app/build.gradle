@@ -16,12 +16,12 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '505'
+    flutterVersionCode = '510'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
 if (flutterVersionName == null) {
-    flutterVersionName = '3.7.2'
+    flutterVersionName = '3.7.3'
 }
 
 def keystoreProperties = new Properties()
@@ -82,6 +82,10 @@ android {
         }
     }
 
+    buildFeatures {
+        compose true
+    }
+
 }
 
 flutter {
@@ -105,3 +109,11 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
 }
 
+configurations.all {
+    resolutionStrategy.eachDependency { details ->
+        if (details.requested.group == 'androidx.work' && 
+            (details.requested.name == 'work-runtime' || details.requested.name == 'work-runtime-ktx')) {
+            details.useVersion '2.7.1'
+        }
+    }
+}

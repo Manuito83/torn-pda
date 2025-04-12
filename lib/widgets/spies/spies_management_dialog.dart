@@ -72,7 +72,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
     if (lastUpdatedTs > 0) {
       final currentTime = DateTime.now().millisecondsSinceEpoch;
       final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
-      spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : context.read<ThemeProvider>().mainText!;
+      spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : context.read<ThemeProvider>().mainText;
     }
 
     return Container(

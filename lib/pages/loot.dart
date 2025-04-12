@@ -387,8 +387,8 @@ class LootPageState extends State<LootPage> {
               style = const TextStyle(color: Colors.grey);
             } else if (isCurrent) {
               timeString += " (now)";
-              style = const TextStyle(
-                color: Colors.green,
+              style = TextStyle(
+                color: _themeProvider!.getTextColor(Colors.green),
                 fontWeight: FontWeight.bold,
               );
             } else {
@@ -401,8 +401,8 @@ class LootPageState extends State<LootPage> {
               }
               if (timeDiff.inMinutes < 10) {
                 if (npcDetails.levels!.next! >= 4) {
-                  style = const TextStyle(
-                    color: Colors.orange,
+                  style = TextStyle(
+                    color: _themeProvider!.getTextColor(Colors.orange),
                     fontWeight: FontWeight.bold,
                   );
                 } else {
@@ -549,11 +549,11 @@ class LootPageState extends State<LootPage> {
 
           Widget hospitalized;
           if (npcDetails.status == "hospitalized") {
-            hospitalized = const Text(
+            hospitalized = Text(
               '[HOSPITALIZED]',
               style: TextStyle(
                 fontSize: 12,
-                color: Colors.red,
+                color: _themeProvider!.getTextColor(Colors.red),
                 fontWeight: FontWeight.bold,
               ),
             );
@@ -878,16 +878,17 @@ class LootPageState extends State<LootPage> {
           if (_lootRangersTime == 0 && !_lootRangersAttackOngoing)
             Column(
               children: [
-                Text("Next attack not set!", style: TextStyle(color: Colors.orange[700])),
+                Text("Next attack not set!", style: TextStyle(color: _themeProvider!.getTextColor(Colors.orange[700]))),
                 if (_lootRangersClearAtZeroReason.isNotEmpty)
                   Text(
                     "Looting will resume after $_lootRangersClearAtZeroReason",
-                    style: TextStyle(color: Colors.orange[700]),
+                    style: TextStyle(color: _themeProvider!.getTextColor(Colors.orange[700])),
                   ),
               ],
             )
           else if (_lootRangersTime == 0 && _lootRangersAttackOngoing)
-            Text("ATTACK ONGOING NOW", style: TextStyle(color: Colors.red[700], fontWeight: FontWeight.bold))
+            Text("ATTACK ONGOING NOW",
+                style: TextStyle(color: _themeProvider!.getTextColor(Colors.red[700]), fontWeight: FontWeight.bold))
           else
             Text("Next attack $timeString"),
           if (_lootRangersTime > 0 || (_lootRangersTime == 0 && _lootRangersAttackOngoing))

@@ -256,7 +256,7 @@ class WebViewPanicState extends State<WebViewPanic> {
 
   void _hideChat() {
     if (_chatRemovalEnabled && _chatRemovalActive) {
-      _webViewController!.runJavaScript(removeChatOnLoadStartJS());
+      _webViewController!.runJavaScript(removeChatJS());
     }
   }
 

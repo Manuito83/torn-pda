@@ -47,6 +47,7 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
+import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/tac_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/terminal_provider.dart';
@@ -68,9 +69,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.7.2';
-const String androidCompilation = '505';
-const String iosCompilation = '505';
+const String appVersion = '3.7.3';
+const String androidCompilation = '510';
+const String iosCompilation = '510';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -173,6 +174,7 @@ Future<void> main() async {
   Get.put(SpiesController(), permanent: true);
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
+  Get.put(StakeoutsController(), permanent: true);
   Get.put(PeriodicExecutionController(), permanent: true);
 
   final sb = Get.put(SendbirdController(), permanent: true);
@@ -415,6 +417,12 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
       primarySwatch: Colors.blueGrey,
       useMaterial3: _themeProvider.useMaterial3,
       brightness: _themeProvider.currentTheme == AppTheme.light ? Brightness.light : Brightness.dark,
+      textButtonTheme: TextButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor:
+              _themeProvider.accesibilityNoTextColors ? WidgetStateProperty.all(_themeProvider.mainText) : null,
+        ),
+      ),
     );
 
     SystemChrome.setSystemUIOverlayStyle(

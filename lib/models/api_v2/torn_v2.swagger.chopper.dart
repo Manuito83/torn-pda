@@ -24,6 +24,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionHofResponse, FactionHofResponse>($request);
   }
@@ -35,6 +36,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionHofResponse, FactionHofResponse>($request);
   }
@@ -50,7 +52,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionMembersResponse, FactionMembersResponse>($request);
   }
@@ -63,7 +65,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionMembersResponse, FactionMembersResponse>($request);
   }
@@ -75,6 +77,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionBasicResponse, FactionBasicResponse>($request);
   }
@@ -86,6 +89,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionBasicResponse, FactionBasicResponse>($request);
   }
@@ -97,6 +101,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionWarsResponse, FactionWarsResponse>($request);
   }
@@ -108,6 +113,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionWarsResponse, FactionWarsResponse>($request);
   }
@@ -134,7 +140,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionNewsResponse, FactionNewsResponse>($request);
   }
@@ -157,7 +163,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionAttacksResponse, FactionAttacksResponse>($request);
   }
@@ -180,7 +186,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionAttacksFullResponse, FactionAttacksFullResponse>($request);
   }
@@ -192,6 +198,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionApplicationsResponse, FactionApplicationsResponse>($request);
   }
@@ -203,6 +210,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionOngoingChainResponse, FactionOngoingChainResponse>($request);
   }
@@ -214,6 +222,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionOngoingChainResponse, FactionOngoingChainResponse>($request);
   }
@@ -237,7 +246,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionChainsResponse, FactionChainsResponse>($request);
   }
@@ -260,7 +269,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionChainsResponse, FactionChainsResponse>($request);
   }
@@ -272,6 +281,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionChainReportResponse, FactionChainReportResponse>($request);
   }
@@ -283,6 +293,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionChainReportResponse, FactionChainReportResponse>($request);
   }
@@ -307,7 +318,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<FactionCrimesResponse, FactionCrimesResponse>($request);
   }
@@ -319,6 +330,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<FactionLookupResponse, FactionLookupResponse>($request);
   }
@@ -330,6 +342,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TimestampResponse, TimestampResponse>($request);
   }
@@ -362,7 +375,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<dynamic, dynamic>($request);
   }
@@ -374,6 +387,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<ForumCategoriesResponse, ForumCategoriesResponse>($request);
   }
@@ -397,7 +411,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<ForumThreadsResponse, ForumThreadsResponse>($request);
   }
@@ -420,7 +434,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<ForumThreadsResponse, ForumThreadsResponse>($request);
   }
@@ -432,6 +446,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<ForumThreadResponse, ForumThreadResponse>($request);
   }
@@ -451,7 +466,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<ForumPostsResponse, ForumPostsResponse>($request);
   }
@@ -463,6 +478,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<ForumLookupResponse, ForumLookupResponse>($request);
   }
@@ -474,6 +490,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TimestampResponse, TimestampResponse>($request);
   }
@@ -506,7 +523,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<dynamic, dynamic>($request);
   }
@@ -516,17 +533,19 @@ final class _$TornV2 extends TornV2 {
     required int? id,
     String? bonus,
     int? offset,
+    String? comment,
   }) {
     final Uri $url = Uri.parse('/market/${id}/itemmarket');
     final Map<String, dynamic> $params = <String, dynamic>{
       'bonus': bonus,
       'offset': offset,
+      'comment': comment,
     };
     final Request $request = Request(
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<MarketItemMarketResponse, MarketItemMarketResponse>($request);
   }
@@ -538,6 +557,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<MarketLookupResponse, MarketLookupResponse>($request);
   }
@@ -549,6 +569,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TimestampResponse, TimestampResponse>($request);
   }
@@ -575,7 +596,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<dynamic, dynamic>($request);
   }
@@ -600,7 +621,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<RacingRacesResponse, RacingRacesResponse>($request);
   }
@@ -616,7 +637,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<RacingTrackRecordsResponse, RacingTrackRecordsResponse>($request);
   }
@@ -628,6 +649,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<RacingRaceDetailsResponse, RacingRaceDetailsResponse>($request);
   }
@@ -639,6 +661,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<RacingCarsResponse, RacingCarsResponse>($request);
   }
@@ -650,6 +673,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<RacingTracksResponse, RacingTracksResponse>($request);
   }
@@ -661,6 +685,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<RacingCarUpgradesResponse, RacingCarUpgradesResponse>($request);
   }
@@ -672,6 +697,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<RacingLookupResponse, RacingLookupResponse>($request);
   }
@@ -683,6 +709,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TimestampResponse, TimestampResponse>($request);
   }
@@ -713,7 +740,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<dynamic, dynamic>($request);
   }
@@ -725,6 +752,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TornSubcrimesResponse, TornSubcrimesResponse>($request);
   }
@@ -736,6 +764,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TornCrimesResponse, TornCrimesResponse>($request);
   }
@@ -747,6 +776,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TornCalendarResponse, TornCalendarResponse>($request);
   }
@@ -767,7 +797,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<TornHofResponse, TornHofResponse>($request);
   }
@@ -788,7 +818,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<TornFactionHofResponse, TornFactionHofResponse>($request);
   }
@@ -800,6 +830,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TornLogTypesResponse, TornLogTypesResponse>($request);
   }
@@ -811,6 +842,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TornLogTypesResponse, TornLogTypesResponse>($request);
   }
@@ -822,6 +854,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TornLogCategoriesResponse, TornLogCategoriesResponse>($request);
   }
@@ -840,7 +873,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<TornBountiesResponse, TornBountiesResponse>($request);
   }
@@ -852,6 +885,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TornLookupResponse, TornLookupResponse>($request);
   }
@@ -863,6 +897,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TimestampResponse, TimestampResponse>($request);
   }
@@ -895,7 +930,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<dynamic, dynamic>($request);
   }
@@ -917,7 +952,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserPersonalStatsResponse, UserPersonalStatsResponse>($request);
   }
@@ -938,7 +973,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserPersonalStatsResponse, UserPersonalStatsResponse>($request);
   }
@@ -950,6 +985,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserCrimesResponse, UserCrimesResponse>($request);
   }
@@ -974,7 +1010,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserRacesResponse, UserRacesResponse>($request);
   }
@@ -986,6 +1022,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserEnlistedCarsResponse, UserEnlistedCarsResponse>($request);
   }
@@ -1011,7 +1048,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserForumPostsResponse, UserForumPostsResponse>($request);
   }
@@ -1036,7 +1073,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserForumPostsResponse, UserForumPostsResponse>($request);
   }
@@ -1060,7 +1097,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserForumThreadsResponse, UserForumThreadsResponse>($request);
   }
@@ -1083,7 +1120,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserForumThreadsResponse, UserForumThreadsResponse>($request);
   }
@@ -1095,6 +1132,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserForumSubscribedThreadsResponse, UserForumSubscribedThreadsResponse>($request);
   }
@@ -1106,6 +1144,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserForumFeedResponse, UserForumFeedResponse>($request);
   }
@@ -1117,6 +1156,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserForumFriendsResponse, UserForumFriendsResponse>($request);
   }
@@ -1128,6 +1168,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserHofResponse, UserHofResponse>($request);
   }
@@ -1139,6 +1180,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserHofResponse, UserHofResponse>($request);
   }
@@ -1150,6 +1192,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserCalendarResponse, UserCalendarResponse>($request);
   }
@@ -1161,6 +1204,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserBountiesResponse, UserBountiesResponse>($request);
   }
@@ -1172,6 +1216,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserBountiesResponse, UserBountiesResponse>($request);
   }
@@ -1183,19 +1228,23 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserJobRanksResponse, UserJobRanksResponse>($request);
   }
 
   @override
-  Future<Response<UserItemMarketResponse>> _userItemmarketGet({int? offset}) {
+  Future<Response<UserItemMarketResponse>> _userItemmarketGet({int? offset, String? comment}) {
     final Uri $url = Uri.parse('/user/itemmarket');
-    final Map<String, dynamic> $params = <String, dynamic>{'offset': offset};
+    final Map<String, dynamic> $params = <String, dynamic>{
+      'offset': offset,
+      'comment': comment,
+    };
     final Request $request = Request(
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<UserItemMarketResponse, UserItemMarketResponse>($request);
   }
@@ -1207,6 +1256,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserFactionBalanceResponse, UserFactionBalanceResponse>($request);
   }
@@ -1218,6 +1268,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserOrganizedCrimeResponse, UserOrganizedCrimeResponse>($request);
   }
@@ -1229,6 +1280,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<UserLookupResponse, UserLookupResponse>($request);
   }
@@ -1240,6 +1292,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
+      parameters: {'comment': 'PDA-App'},
     );
     return client.send<TimestampResponse, TimestampResponse>($request);
   }
@@ -1274,7 +1327,7 @@ final class _$TornV2 extends TornV2 {
       'GET',
       $url,
       client.baseUrl,
-      parameters: $params,
+      parameters: {...$params, 'comment': 'PDA-App'},
     );
     return client.send<dynamic, dynamic>($request);
   }

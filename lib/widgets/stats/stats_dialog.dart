@@ -213,50 +213,62 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                 children: <Widget>[
                   if (widget.spiesPayload != null)
                     SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          SpiesExactDetailsDialog(
-                            spiesPayload: widget.spiesPayload!,
-                            themeProvider: _themeProvider,
-                          ),
-                        ],
+                      child: Container(
+                        color: _themeProvider.accesibilityNoTextColors ? _themeProvider.cardColor : null,
+                        child: Column(
+                          children: [
+                            SpiesExactDetailsDialog(
+                              spiesPayload: widget.spiesPayload!,
+                              themeProvider: _themeProvider,
+                            ),
+                          ],
+                        ),
                       ),
                     )
                   else
                     Container(),
-                  SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        EstimatedStatsDialog(
-                          estimatedStatsPayload: widget.estimatedStatsPayload,
-                          themeProvider: _themeProvider,
-                        ),
-                      ],
+                  Container(
+                    color: _themeProvider.accesibilityNoTextColors ? _themeProvider.cardColor : null,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          EstimatedStatsDialog(
+                            estimatedStatsPayload: widget.estimatedStatsPayload,
+                            themeProvider: _themeProvider,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   if (widget.tscStatsPayload != null &&
                       !_disableTSCcalledBack &&
                       _settingsProvider.tscEnabledStatusRemoteConfig)
                     SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          TSCStatsDialog(
-                            tscStatsPayload: widget.tscStatsPayload!,
-                            themeProvider: _themeProvider,
-                            callBackToDisableTSCtab: _disableTSC,
-                          ),
-                        ],
+                      child: Container(
+                        color: _themeProvider.accesibilityNoTextColors ? _themeProvider.cardColor : null,
+                        child: Column(
+                          children: [
+                            TSCStatsDialog(
+                              tscStatsPayload: widget.tscStatsPayload!,
+                              themeProvider: _themeProvider,
+                              callBackToDisableTSCtab: _disableTSC,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   if (widget.yataStatsPayload != null && _settingsProvider.yataStatsEnabledStatusRemoteConfig)
                     SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          YataStatsDialog(
-                            yataStatsPayload: widget.yataStatsPayload!,
-                            themeProvider: _themeProvider,
-                          ),
-                        ],
+                      child: Container(
+                        color: _themeProvider.accesibilityNoTextColors ? _themeProvider.cardColor : null,
+                        child: Column(
+                          children: [
+                            YataStatsDialog(
+                              yataStatsPayload: widget.yataStatsPayload!,
+                              themeProvider: _themeProvider,
+                            ),
+                          ],
+                        ),
                       ),
                     )
                 ],

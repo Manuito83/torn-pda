@@ -4,8 +4,8 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
-class AnnouncementDialog extends StatelessWidget {
-  const AnnouncementDialog({
+class StatsAnnouncementDialog extends StatelessWidget {
+  const StatsAnnouncementDialog({
     required ThemeProvider? themeProvider,
     super.key,
   }) : _themeProvider = themeProvider;

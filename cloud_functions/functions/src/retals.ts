@@ -155,7 +155,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
         promisesFaction.push(db.ref(`retals/factions/${ownFactionId}/timestamp`).set(currentDateInMillis));
 
         // Use api to get attacks information and see if we have new retals
-        const response = await fetch(`https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}`);
+        const response = await fetch(`https://api.torn.com/faction/${ownFactionId}?selections=basic,attacks&key=${apiKey}&comment=PDA-App`);
         const apiAttacks = await response.json();
 
         // If permissions are not right, remove this user as a host

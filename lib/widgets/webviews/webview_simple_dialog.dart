@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 // Package imports:
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
@@ -99,6 +100,8 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
     _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
 
+    PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
+
     _initialWebViewSettings = InAppWebViewSettings(
       transparentBackground: true,
       useOnLoadResource: true,
@@ -164,6 +167,16 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: IconButton(
+              onPressed: () => webView.goBack(),
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: _themeProvider.mainText,
+              ),
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(top: 8),
@@ -195,6 +208,16 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
               ),
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: IconButton(
+              onPressed: () => webView.goForward(),
+              icon: Icon(
+                Icons.arrow_forward_ios,
+                color: _themeProvider.mainText,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -218,6 +241,7 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       onWebViewCreated: (c) {
         webView = c;
       },
+      /*
       onLoadStart: (c, uri) async {
         //
       },
@@ -227,6 +251,10 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       onLoadStop: (c, uri) async {
         //
       },
+      onConsoleMessage: (controller, consoleMessage) {
+        //
+      },
+      */
       onLoadResource: (c, resource) async {
         // If this is a widget captcha, try to capture the success message to request auth again
         if (widget.captchaWorkflow!) {

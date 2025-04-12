@@ -251,10 +251,10 @@ class TradesWidgetState extends State<TradesWidget> {
     if (side == 'left') {
       total += _tradesProv.container.leftMoney;
       for (final item in _tradesProv.container.leftItems) {
-        total += item.totalPrice;
+        total += item.totalBuyPrice;
       }
       for (final share in _tradesProv.container.leftShares) {
-        total += share.totalPrice;
+        total += share.totalBuyPrice;
       }
       for (final property in _tradesProv.container.leftProperties) {
         if (property.name != 'No properties in trade') {
@@ -265,10 +265,10 @@ class TradesWidgetState extends State<TradesWidget> {
     } else {
       total += _tradesProv.container.rightMoney;
       for (final item in _tradesProv.container.rightItems) {
-        total += item.totalPrice;
+        total += item.totalBuyPrice;
       }
       for (final share in _tradesProv.container.rightShares) {
-        total += share.totalPrice;
+        total += share.totalBuyPrice;
       }
       for (final property in _tradesProv.container.rightProperties) {
         if (property.name != 'No properties in trade') {
@@ -588,7 +588,7 @@ class TradesWidgetState extends State<TradesWidget> {
         int thisItemTotalMarketProfit = 0;
         for (var marketItem in sideItems) {
           if (marketItem.name == tornExchangeProduct.name) {
-            int thisItemMarketPrice = marketItem.priceUnit;
+            int thisItemMarketPrice = marketItem.marketPricePerUnit;
             int thisItemMarketQuantity = marketItem.quantity;
             thisItemTotalMarketProfit = (thisItemMarketPrice - tornExchangeProduct.price) * thisItemMarketQuantity;
             break;
@@ -640,17 +640,18 @@ class TradesWidgetState extends State<TradesWidget> {
                         ),
                       ),
                     ),
-                    Flexible(
-                      child: Text(
-                        '$marketItemProfit profit (market)',
-                        textAlign: TextAlign.end,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontStyle: FontStyle.italic,
+                    if (itemName != "Flower Set" && itemName != "Plushie Set")
+                      Flexible(
+                        child: Text(
+                          '$marketItemProfit profit (market)',
+                          textAlign: TextAlign.end,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
                         ),
                       ),
-                    ),
                   ],
                 ),
             ],
@@ -713,10 +714,10 @@ class TradesWidgetState extends State<TradesWidget> {
         int remainingTotal = 0;
         remainingTotal += _tradesProv.container.rightMoney;
         for (final rem in sideItems) {
-          remainingTotal += rem.totalPrice;
+          remainingTotal += rem.totalBuyPrice;
         }
         for (final sha in sideShares) {
-          remainingTotal += sha.totalPrice;
+          remainingTotal += sha.totalBuyPrice;
         }
         items.add(
           Padding(
@@ -758,9 +759,9 @@ class TradesWidgetState extends State<TradesWidget> {
       );
 
       // Item price
-      String itemPrice = '\$${_moneyFormat.format(item.totalPrice)}';
+      String itemPrice = '\$${_moneyFormat.format(item.totalBuyPrice)}';
       if (item.quantity > 1) {
-        itemPrice += ' (@ \$${_moneyFormat.format(item.priceUnit)})';
+        itemPrice += ' (@ \$${_moneyFormat.format(item.marketPricePerUnit)})';
       }
 
       items.add(
@@ -863,7 +864,7 @@ class TradesWidgetState extends State<TradesWidget> {
       );
 
       // Share price
-      String sharePrice = '\$${_moneyFormat.format(share.totalPrice)}';
+      String sharePrice = '\$${_moneyFormat.format(share.totalBuyPrice)}';
       if (share.quantity > 1) {
         sharePrice += ' (@ \$${_moneyDecimalFormat.format(share.shareUnit)})';
       }
@@ -932,7 +933,7 @@ class TradesWidgetState extends State<TradesWidget> {
     final awhContainer = ArsonWarehouseOut();
 
     final theirItems = <AwhItem>[];
-    for (final item in _tradesProv.container.rightItems) {
+    for (final item in _tradesProv.container.rightOriginalItemsBeforeTornExchange) {
       if (!item.name.contains("No items in trade")) {
         final awhItem = AwhItem()
           ..name = item.name

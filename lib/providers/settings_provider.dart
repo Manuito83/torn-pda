@@ -589,6 +589,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _notesWidgetEnabledProfile = true;
+  bool get notesWidgetEnabledProfile => _notesWidgetEnabledProfile;
+  set changeNotesWidgetEnabledProfile(bool value) {
+    _notesWidgetEnabledProfile = value;
+    Prefs().setNotesWidgetEnabledProfile(_notesWidgetEnabledProfile);
+    notifyListeners();
+  }
+
   var _extraPlayerNetworth = false;
   bool get extraPlayerNetworth => _extraPlayerNetworth;
   set changeExtraPlayerNetworth(bool value) {
@@ -1142,6 +1150,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _showWikiInDrawer = true;
+  bool get showWikiInDrawer => _showWikiInDrawer;
+  set showWikiInDrawer(bool value) {
+    _showWikiInDrawer = value;
+    Prefs().setShowWikiInDrawer(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1238,6 +1254,7 @@ class SettingsProvider extends ChangeNotifier {
       }
     }
 
+    _notesWidgetEnabledProfile = await Prefs().getNotesWidgetEnabledProfile();
     _extraPlayerNetworth = await Prefs().getExtraPlayerNetworth();
 
     _hitInMiniProfileOpensNewTab = await Prefs().getHitInMiniProfileOpensNewTab();
@@ -1365,6 +1382,8 @@ class SettingsProvider extends ChangeNotifier {
     _downloadActionShare = await Prefs().getDownloadActionShare();
 
     _tctClockHighlightsEvents = await Prefs().getTctClockHighlightsEvents();
+
+    _showWikiInDrawer = await Prefs().getShowWikiInDrawer();
 
     await WebviewConfig().generateUserAgentForUser();
 

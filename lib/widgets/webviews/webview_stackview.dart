@@ -615,8 +615,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
 
     return Showcase(
       disableMovingAnimation: true,
-      textColor: _themeProvider.mainText!,
-      tooltipBackgroundColor: _themeProvider.secondBackground!,
+      textColor: _themeProvider.mainText,
+      tooltipBackgroundColor: _themeProvider.secondBackground,
       key: _showcaseTabsGeneral,
       title: 'New tab...!',
       description: "\nYou've opened a new tab!\n\nThere are two important things to remember: a DOUBLE TAP will "
@@ -676,8 +676,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                         'When in full screen mode, long-press to revert to windowed mode immediately',
                     targetPadding: const EdgeInsets.all(10),
                     disableMovingAnimation: true,
-                    textColor: _themeProvider.mainText!,
-                    tooltipBackgroundColor: _themeProvider.secondBackground!,
+                    textColor: _themeProvider.mainText,
+                    tooltipBackgroundColor: _themeProvider.secondBackground,
                     descTextStyle: const TextStyle(fontSize: 13),
                     tooltipPadding: const EdgeInsets.all(20),
                     child: Row(
@@ -985,8 +985,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                         '\n\nLong-press to change between icons and page titles in your tabs.',
                     targetPadding: const EdgeInsets.all(10),
                     disableMovingAnimation: true,
-                    textColor: _themeProvider.mainText!,
-                    tooltipBackgroundColor: _themeProvider.secondBackground!,
+                    textColor: _themeProvider.mainText,
+                    tooltipBackgroundColor: _themeProvider.secondBackground,
                     descTextStyle: const TextStyle(fontSize: 13),
                     tooltipPadding: const EdgeInsets.all(20),
                     child: Column(

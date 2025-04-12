@@ -88,7 +88,7 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     final hasExpired = now.isAfter(planningDateTime);
     final remaining = planningDateTime.difference(now);
 
-    Color countdownColor = themeProvider.mainText!;
+    Color countdownColor = themeProvider.mainText;
     if (remaining.inHours < 8) {
       countdownColor = Colors.red;
     } else if (remaining.inHours < 12) {

@@ -43,7 +43,7 @@ class StakeoutCardState extends State<StakeoutCard> {
   late WebViewProvider _webViewProvider;
 
   Stakeout? _stakeout;
-  final StakeoutsController _s = Get.put(StakeoutsController());
+  final StakeoutsController _s = Get.find<StakeoutsController>();
 
   final _expandableController = ExpandableController();
 

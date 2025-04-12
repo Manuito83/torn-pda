@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names
+
 import 'dart:developer';
 
 import 'package:get/get.dart';
@@ -17,12 +19,10 @@ class ApiCallsV2 {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<MarketItemMarketResponse>(
       apiSelection_v2: ApiSelection_v2.marketItem,
-      payload_v2: payload,
       apiCall: (client, apiKey) {
         return client.marketIdItemmarketGet(
           id: payload["id"],
           bonus: payload["bonus"],
-          offset: payload["offset"],
         );
       },
     );
@@ -33,7 +33,6 @@ class ApiCallsV2 {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<UserItemMarketResponse>(
       apiSelection_v2: ApiSelection_v2.marketItem,
-      payload_v2: {},
       apiCall: (client, apiKey) {
         return client.userItemmarketGet();
       },
@@ -45,7 +44,6 @@ class ApiCallsV2 {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
       apiSelection_v2: ApiSelection_v2.userProfileMisc,
-      payload_v2: {},
       apiCall: (client, apiKey) {
         return client.userGet(
           selections: "money,education,workstats,battlestats,jobpoints,properties,skills,bazaar,itemmarket",
@@ -66,7 +64,6 @@ class ApiCallsV2 {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
       apiSelection_v2: ApiSelection_v2.otherUserProfile,
-      payload_v2: payload,
       apiCall: (client, apiKey) {
         return client.userGet(
           id: payload["id"],
@@ -89,7 +86,6 @@ class ApiCallsV2 {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
       apiSelection_v2: ApiSelection_v2.tornCalendar,
-      payload_v2: {},
       apiCall: (client, apiKey) {
         return client.tornCalendarGet();
       },
@@ -107,7 +103,6 @@ class ApiCallsV2 {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(
       apiSelection_v2: ApiSelection_v2.oc2UserCrime,
-      payload_v2: {},
       apiCall: (client, apiKey) {
         return client.userOrganizedcrimeGet();
       },

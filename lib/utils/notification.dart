@@ -945,6 +945,7 @@ showSendbirdNotification(String sender, String message, String channelUrl, {bool
   // Note: with the app on the background we can't access providers, so take Prefs()
   String ownName = "";
   bool excludeFaction = false;
+  bool excludeCompany = false;
   if (fromBackground) {
     // Don't show own messages
     final savedUser = await Prefs().getOwnDetails();
@@ -954,9 +955,12 @@ showSendbirdNotification(String sender, String message, String channelUrl, {bool
 
     // Filter faction
     excludeFaction = await Prefs().getSendbirdExcludeFactionMessages();
+    // Filter company
+    excludeCompany = await Prefs().getSendbirdExcludeCompanyMessages();
   } else {
     ownName = Get.find<UserController>().playerName;
     excludeFaction = Get.find<SendbirdController>().excludeFactionMessages;
+    excludeCompany = Get.find<SendbirdController>().excludeCompanyMessages;
   }
 
   if (sender.toLowerCase() == ownName.toLowerCase()) return;
@@ -986,6 +990,11 @@ showSendbirdNotification(String sender, String message, String channelUrl, {bool
 
       // Exclude faction messages
       if (suffix == "(faction)" && excludeFaction) {
+        return;
+      }
+
+      // Exclude faction messages
+      if (suffix == "(company)" && excludeCompany) {
         return;
       }
 

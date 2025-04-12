@@ -15,6 +15,7 @@ class Prefs {
   // General
   final String _kAppVersion = "pda_appVersion";
   final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
+  final String _kBugsAnnouncementDialogVersion = "pda_bugsAnnouncementDialogVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
 
@@ -71,6 +72,7 @@ class Prefs {
   final String _kFriendsSort = "pda_friendsSort";
   final String _kTheme = "pda_theme";
   final String _kUseMaterial3Theme = "pda_useMaterial3Theme";
+  final String _kAccesibilityNoTextColors = "pda_accesibilityNoTextColors";
   final String _kSyncTornWebTheme = "tornLite_syncTheme";
   final String _kSyncDeviceTheme = "tornLite_syncDeviceTheme";
   final String _kDarkThemeToSync = "tornLite_themeToSync";
@@ -138,6 +140,7 @@ class Prefs {
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
+  final String _kNotesWidgetEnabledProfile = "pda_notesWidgetEnabledProfile";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
   final String _kHitInMiniProfileOpensNewTab = "pda__hitInMiniProfileOpensNewTab";
   final String _kHitInMiniProfileOpensNewTabAndChangeTab = "pda__hitInMiniProfileOpensNewTabAndChangeTab";
@@ -427,6 +430,7 @@ class Prefs {
   final String _kSendbirdSessionToken = "pda_sendbirdSessionToken";
   final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
   final String _kSendbirdExcludeFactionMessages = "pda_sendbirdExcludeFactionMessages";
+  final String _kSendbirdExcludeCompanyMessages = "pda_sendbirdExcludeCompanyMessages";
 
   final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
 
@@ -437,6 +441,9 @@ class Prefs {
   final String _kTornCalendarModel = "pda_tornCalendarModel";
   final String _kTornCalendarLastUpdate = "pda_tornCalendarLastUpdate";
   final String _kTctClockHighlightsEvents = "pda_tctClockHighlightsEvents";
+
+  // Drawer menu
+  final String _kShowWikiInDrawer = "pda_showWikiInDrawer";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -464,14 +471,24 @@ class Prefs {
   /// Methods for announcement dialog
   /// -------------------------------
 
-  Future<int> getAppAnnouncementDialogVersion() async {
+  Future<int> getAppStatsAnnouncementDialogVersion() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_kAppAnnouncementDialogVersion) ?? 0;
   }
 
-  Future<bool> setAppAnnouncementDialogVersion(int value) async {
+  Future<bool> setAppStatsAnnouncementDialogVersion(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kAppAnnouncementDialogVersion, value);
+  }
+
+  Future<int> getBugsAnnouncementDialogVersion() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kBugsAnnouncementDialogVersion) ?? 0;
+  }
+
+  Future<bool> setBugsAnnouncementDialogVersion(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kBugsAnnouncementDialogVersion, value);
   }
 
   /// ----------------------------
@@ -914,6 +931,16 @@ class Prefs {
   Future<bool> setUseMaterial3(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kUseMaterial3Theme, value);
+  }
+
+  Future<bool> getAccesibilityNoTextColors() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kAccesibilityNoTextColors) ?? false;
+  }
+
+  Future<bool> setAccesibilityNoTextColors(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kAccesibilityNoTextColors, value);
   }
 
   /// ----------------------------
@@ -1721,6 +1748,17 @@ class Prefs {
   Future<bool> setFriendlyFactions(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kFriendlyFactions, value);
+  }
+
+  // *************
+  Future<bool> getNotesWidgetEnabledProfile() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kNotesWidgetEnabledProfile) ?? false;
+  }
+
+  Future<bool> setNotesWidgetEnabledProfile(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kNotesWidgetEnabledProfile, value);
   }
 
   // *************
@@ -4071,6 +4109,16 @@ class Prefs {
     return prefs.setBool(_kSendbirdExcludeFactionMessages, value);
   }
 
+  Future<bool> getSendbirdExcludeCompanyMessages() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kSendbirdExcludeCompanyMessages) ?? false;
+  }
+
+  Future<bool> setSendbirdExcludeCompanyMessages(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kSendbirdExcludeCompanyMessages, value);
+  }
+
   ///////
 
   Future<bool> getBringBrowserForwardOnStart() async {
@@ -4137,5 +4185,19 @@ class Prefs {
   Future<bool> setTctClockHighlightsEvents(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTctClockHighlightsEvents, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for Drawer Sections
+  /// -----------------------------------
+
+  Future<bool> getShowWikiInDrawer() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowWikiInDrawer) ?? true;
+  }
+
+  Future<bool> setShowWikiInDrawer(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowWikiInDrawer, value);
   }
 }
