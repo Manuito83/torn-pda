@@ -162,6 +162,10 @@ class TradesProvider extends ChangeNotifier {
           addColor2Items(itemLine, allTornItems, tradesContainer.rightItems);
         }
 
+        // We need to save the original rightItems before applying the Torn Exchange
+        // data so that we can send them unaltered to AWH
+        tradesContainer.rightOriginalItemsBeforeTornExchange = tradesContainer.rightItems;
+
         // Check Arson Warehouse.
         tradesContainer.awhActive = await Prefs().getAWHEnabled();
 
@@ -189,10 +193,6 @@ class TradesProvider extends ChangeNotifier {
               // We merge them into our existing rightItems, subtracting the relevant items if TE says there’s a set,
               // and preserving any leftover items that TE doesn’t mention.
               // This also ensures we keep original market prices for items that TE sets to zero.
-
-              // If we have a Torn Exchange response, we need to save the original rightItems
-              // before applying the Torn Exchange data so that we can send them unaltered to AWH
-              tradesContainer.rightOriginalItemsBeforeTornExchange = tradesContainer.rightItems;
 
               // Apply Torn Exchange data to our existing rightItems
               tradesContainer.rightItems = applyTornExchangeIn(
