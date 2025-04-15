@@ -51,11 +51,12 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.3 - Build 510 - 08/04/2025
+    // v3.7.4 - Build 511 - 012/04/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.7.3'
+        ..version = 'Torn PDA v3.7.4'
         ..date = '15 APR 2025'
+        ..infoString = "Hotfix: fixed issue with AWH pricing"
         ..features = [
           "Alerts: company messages can now be filtered out in chat notifications",
           "Added Wiki to the main drawer menu",
