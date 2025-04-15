@@ -182,6 +182,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                               if (Platform.isIOS) _pinchGesture(),
                               if (Platform.isIOS) _iosDisallowOverScroll(),
                               _reverseNavigationSwipe(),
+                              _centerEditingTextField()
                             ],
                           ),
                           const SizedBox(height: 15),
@@ -748,6 +749,47 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Text(
             'By default, swiping left-to-right in the page title navigates backwards, and right-to-left navigates '
             ' forwards. Enable this option to reverse the swipe direction',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Column _centerEditingTextField() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text("Center text field when editing"),
+              ),
+              Switch(
+                value: _settingsProvider.browserReverseNavitagtionSwipe,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.browserCenterEditingTextField = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Automatically scrolls the screen to keep the text field "
+            "visible when the keyboard appears",
             style: TextStyle(
               color: Colors.grey[600],
               fontSize: 12,

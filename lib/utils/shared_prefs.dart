@@ -118,6 +118,7 @@ class Prefs {
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
+  final String _kBrowserCenterEditingTextField = "pda_browserCenterEditingTextField";
 
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -1390,6 +1391,16 @@ class Prefs {
   Future<bool> setBrowserReverseNavigationSwipe(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kBrowserReverseNavigationSwipe, value);
+  }
+
+  Future<bool> getBrowserCenterEditingTextField() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserCenterEditingTextField) ?? true;
+  }
+
+  Future<bool> setBrowserCenterEditingTextField(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserCenterEditingTextField, value);
   }
 
   /// ----------------------------

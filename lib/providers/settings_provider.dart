@@ -134,6 +134,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _browserCenterEditingTextField = true;
+  bool get browserCenterEditingTextField => _browserCenterEditingTextField;
+  set browserCenterEditingTextField(bool value) {
+    _browserCenterEditingTextField = value;
+    Prefs().setBrowserCenterEditingTextField(_browserCenterEditingTextField);
+    notifyListeners();
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {
@@ -1183,6 +1191,7 @@ class SettingsProvider extends ChangeNotifier {
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
     _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();
     _browserReverseNavigationSwipe = await Prefs().getBrowserReverseNavigationSwipe();
+    _browserCenterEditingTextField = await Prefs().getBrowserCenterEditingTextField();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 

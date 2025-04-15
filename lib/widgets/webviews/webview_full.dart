@@ -1440,6 +1440,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           onLoadStop: (c, uri) async {
             if (!mounted) return;
 
+            if (_settingsProvider.browserCenterEditingTextField) {
+              c.evaluateJavascript(source: '''
+              window.addEventListener('focusin', (event) => {
+                setTimeout(() => {
+                  event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+              });
+            ''');
+            }
+
             _firstLoadCompleted = true;
 
             // Ensure that transparent background is set to false after first load

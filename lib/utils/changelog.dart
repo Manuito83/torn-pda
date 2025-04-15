@@ -51,6 +51,16 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.7.5 - Build 512 - 15/04/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.7.5'
+        ..date = '01 MAY 2025'
+        ..features = [
+          "Browser should now center fields correctly when the keyboard is shown",
+        ],
+    );
+
     // v3.7.4 - Build 511 - 012/04/2025
     itemList.add(
       ChangeLogItem()
