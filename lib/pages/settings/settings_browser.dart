@@ -66,23 +66,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     TabsWipeTimeRange.oneMonth,
   ];
 
+  // SEARCH #######
   String _searchText = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
-
-    _preferencesRestored = _restorePreferences();
-
-    routeWithDrawer = false;
-    routeName = "settings_browser";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
-      if (mounted && routeName == "settings_browser") _goBack();
-    });
-  }
-
+  final TextEditingController _searchController = TextEditingController();
   List<Widget> buildFilteredSections() {
     List<Widget> sections = [
       _general(),
@@ -128,6 +114,22 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     }
     return finalSections;
   }
+  // SEARCH END #######
+
+  @override
+  void initState() {
+    super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+
+    _preferencesRestored = _restorePreferences();
+
+    routeWithDrawer = false;
+    routeName = "settings_browser";
+    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+      if (mounted && routeName == "settings_browser") _goBack();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,9 +169,21 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                           Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: TextField(
-                              decoration: const InputDecoration(
-                                hintText: 'Search browser settings...',
+                              controller: _searchController,
+                              decoration: InputDecoration(
+                                hintText: 'Search browser settings',
                                 prefixIcon: Icon(Icons.search),
+                                suffixIcon: _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() {
+                                            _searchText = '';
+                                          });
+                                        },
+                                      )
+                                    : null,
                               ),
                               onChanged: (text) {
                                 setState(() {

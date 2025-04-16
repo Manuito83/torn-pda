@@ -12,10 +12,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:expandable/expandable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -48,6 +46,7 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discreet_info.dart';
+import 'package:torn_pda/widgets/settings/api_auth_widget.dart';
 import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_delete_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_restore_dialog.dart';
@@ -58,7 +57,6 @@ import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/stats/tsc_info.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
-import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:vibration/vibration.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -115,7 +113,59 @@ class SettingsPageState extends State<SettingsPage> {
 
   double _extraMargin = 0.0;
 
-  final _apiFormKey = GlobalKey();
+  final _apiFormKey = GlobalKey<FormState>();
+
+  // SEARCH ##########
+  String _searchText = '';
+  final TextEditingController _searchController = TextEditingController();
+  List<Widget> buildFilteredSections() {
+    List<Widget> sections = [
+      _browserSection(),
+      _shortcutsSection(),
+      _timeSection(),
+      _notificationsSection(),
+      if (Platform.isAndroid) _appWidgetSection(),
+      _spiesSection(),
+      _statsSection(),
+      _ocSection(),
+      _revivingServicesSection(),
+      _screenConfigurationSection(),
+      _themeSection(),
+      if (Platform.isIOS) _appIconSection(),
+      _miscSection(),
+      _externalPartnersSection(),
+      _apiRateSection(),
+      _saveSettingsSection(),
+      _troubleshootingSection(),
+    ];
+
+    // Filter out empty sections
+    sections = sections.where((widget) => widget is! SizedBox).toList();
+
+    if (sections.isEmpty) return sections;
+
+    // If only one section is visible, return it without any divider
+    if (sections.length == 1) return sections;
+
+    List<Widget> finalSections = [];
+    for (int i = 0; i < sections.length; i++) {
+      if (i > 0) {
+        finalSections.add(
+          Column(
+            children: [
+              SizedBox(height: 20),
+              Divider(),
+              SizedBox(height: 10),
+            ],
+          ),
+        );
+      }
+
+      finalSections.add(sections[i]);
+    }
+    return finalSections;
+  }
+  // SEARCH ENDS ##########
 
   @override
   void initState() {
@@ -129,2463 +179,6 @@ class SettingsPageState extends State<SettingsPage> {
 
     routeWithDrawer = true;
     routeName = "settings";
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    _themeProvider = Provider.of<ThemeProvider>(context);
-    _webViewProvider = Provider.of<WebViewProvider>(context);
-
-    return Scaffold(
-      backgroundColor: _themeProvider.canvas,
-      drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
-      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
-      bottomNavigationBar: !_settingsProvider.appBarTop
-          ? SizedBox(
-              height: AppBar().preferredSize.height,
-              child: buildAppBar(),
-            )
-          : null,
-      body: Container(
-        color: _themeProvider.canvas,
-        child: FutureBuilder(
-          future: _preferencesRestored,
-          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-            if (snapshot.connectionState == ConnectionState.done) {
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: <Widget>[
-                      SizedBox(height: _extraMargin),
-                      _apiKeyWidget(),
-                      const SizedBox(height: 15),
-                      if (_userProfile != null)
-                        const Column(
-                          children: [
-                            NativeLoginWidget(),
-                            SizedBox(height: 15),
-                          ],
-                        ),
-                      _browserSection(context),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _shortcutsSection(context),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _timeSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _notificationsSection(context),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      if (Platform.isAndroid)
-                        Column(
-                          children: [
-                            _appWidgetSection(context),
-                            const SizedBox(height: 15),
-                            const Divider(),
-                            const SizedBox(height: 5),
-                          ],
-                        ),
-                      _spiesSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _statsSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _ocSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _revivingServicesSection(context),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _screenConfigurationSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _themeSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      if (Platform.isIOS)
-                        Column(
-                          children: [
-                            _appIconSection(),
-                            const SizedBox(height: 15),
-                            const Divider(),
-                            const SizedBox(height: 5),
-                          ],
-                        ),
-                      _miscSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _externalPartnersSection(context),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      _apiRateSection(),
-                      const SizedBox(height: 15),
-                      const Divider(),
-                      const SizedBox(height: 5),
-                      // Cloud functions are not supported on Windows
-                      Column(
-                        children: [
-                          _saveSettingsSection(),
-                          const SizedBox(height: 15),
-                          const Divider(),
-                          const SizedBox(height: 5),
-                        ],
-                      ),
-                      _troubleshootingSection(),
-                      const SizedBox(height: 50),
-                    ],
-                  ),
-                ),
-              );
-            } else {
-              return const Center(child: CircularProgressIndicator());
-            }
-          },
-        ),
-      ),
-    );
-  }
-
-  Column _browserSection(BuildContext context) {
-    return Column(
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'BROWSER',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  const Flexible(
-                    child: Text(
-                      "Web browser",
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.info_outline),
-                    onPressed: () {
-                      showDialog(
-                        useRootNavigator: false,
-                        context: context,
-                        builder: (BuildContext context) {
-                          return BrowserInfoDialog();
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-              Flexible(
-                child: _openBrowserDropdown(),
-              ),
-            ],
-          ),
-        ),
-        if (_openBrowserValue == "0")
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                const Text(
-                  "Advanced browser settings",
-                ),
-                IconButton(
-                  icon: Icon(MdiIcons.web),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (BuildContext context) => SettingsBrowserPage(userDetailsProvider: _userProvider),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Column _timeSection() {
-    return Column(
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'TIME',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Time format",
-                ),
-              ),
-              Flexible(
-                child: _timeFormatDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Time zone",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _timeZoneDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Show date in clock",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _dateInClockDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              Flexible(
-                child: Text(
-                  'Add an extra row for the date wherever the TCT clock is shown. You can also specify '
-                  'the desired format (day/month or month/day)',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Seconds in clock",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _secondsInClockDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
-                child: Row(
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        "Highlight events",
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.tctClockHighlightsEvents,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.tctClockHighlightsEvents = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              Flexible(
-                child: Text(
-                  'If enabled, the TCT Clock will be highlighted whenever there is an event or competition active in Torn',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _spiesSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'SPIES',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Spies source",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _spiesSourceDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Choose the source of spied stats. This affects the stats shown when you visit a profile '
-            'in the browser, as well as those shown in the War section (Chaining)',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        GetBuilder<SpiesController>(
-          builder: (s) {
-            String lastUpdated = "Never updated";
-            int lastUpdatedTs = 0;
-
-            if (_spyController.spiesSource == SpiesSource.yata && _spyController.yataSpiesTime != null) {
-              lastUpdatedTs = _spyController.yataSpiesTime!.millisecondsSinceEpoch;
-              if (lastUpdatedTs > 0) {
-                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
-              }
-            } else if (_spyController.spiesSource == SpiesSource.tornStats &&
-                _spyController.tornStatsSpiesTime != null) {
-              lastUpdatedTs = _spyController.tornStatsSpiesTime!.millisecondsSinceEpoch;
-              if (lastUpdatedTs > 0) {
-                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
-              }
-            }
-
-            Color spiesUpdateColor = Colors.blue;
-            if (lastUpdatedTs > 0) {
-              final currentTime = DateTime.now().millisecondsSinceEpoch;
-              final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
-              spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : context.read<ThemeProvider>().mainText;
-            }
-
-            return Padding(
-              padding: const EdgeInsets.only(top: 15, left: 40),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Icon(MdiIcons.accountMultipleOutline, size: 18),
-                      ),
-                      Text(
-                        "${s.spiesSource == SpiesSource.yata ? 'YATA' : 'Torn Stats'} database: "
-                        "${s.spiesSource == SpiesSource.yata ? s.yataSpies.length : s.tornStatsSpies.spies.length} spies",
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 5),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Icon(MdiIcons.clockOutline, size: 18),
-                      ),
-                      Text(
-                        lastUpdated,
-                        style: TextStyle(color: spiesUpdateColor),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Manage spies",
-                ),
-              ),
-              IconButton(
-                icon: Icon(MdiIcons.incognito),
-                onPressed: () {
-                  showDialog(
-                    barrierDismissible: false,
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SpiesManagementDialog();
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
-                child: Row(
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        "Allow mixed sources",
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _spyController.allowMixedSpiesSources,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _spyController.allowMixedSpiesSources = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Whilst enabled, if a target's spy information cannot be found in the preferred spies source, it will also "
-            "be taken from the other source if available. When switching from one source to the other, the spy "
-            "information is preserved unless the new active source also contains a spy for a target",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
-                child: Row(
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        "Delete spies",
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              ElevatedButton(
-                child: const Icon(Icons.delete_outlined),
-                onPressed: () async {
-                  _spyController.deleteSpies();
-
-                  BotToast.showText(
-                    text: "Spies deleted!",
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.blue,
-                    duration: const Duration(seconds: 1),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Deletes all the spies information available in the local database if case you would prefer not to use '
-            'spies information or if there is a problem with the information and stats downloaded',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _statsSection() {
-    return Column(
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'STATS',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        if (_settingsProvider.tscEnabledStatusRemoteConfig)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Flexible(
-                      child: Row(
-                        children: [
-                          const Flexible(
-                            child: Text(
-                              "Use Torn Spies Central",
-                            ),
-                          ),
-                          SizedBox(width: 8),
-                          GestureDetector(
-                            child: Icon(Icons.info_outline, size: 18),
-                            onTap: () {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return TSCInfoDialog(
-                                    settingsProvider: _settingsProvider,
-                                    themeProvider: _themeProvider,
-                                  );
-                                },
-                              );
-                            },
-                          )
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _settingsProvider.tscEnabledStatus == 1 ? true : false,
-                      onChanged: (enabled) async {
-                        if (_settingsProvider.tscEnabledStatus != 1) {
-                          await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return TSCInfoDialog(
-                                settingsProvider: _settingsProvider,
-                                themeProvider: _themeProvider,
-                              );
-                            },
-                          );
-                          if (_settingsProvider.tscEnabledStatus == 1) {
-                            setState(() {
-                              // Force switch update as we are not listening the provider
-                            });
-                          }
-                        } else {
-                          setState(() {
-                            _settingsProvider.tscEnabledStatus = 0;
-                          });
-                        }
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Enable Torn Spies Central estimations in the sections where spied or estimated stats are shown (e.g.: '
-                  'war targets cards, retal cards or profile widget)',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              children: [
-                Text(
-                  "TSC temporarily deactivated",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (_settingsProvider.yataStatsEnabledStatusRemoteConfig)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Flexible(
-                      child: Row(
-                        children: [
-                          const Flexible(
-                            child: Text(
-                              "Use YATA stats estimates",
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Switch(
-                      value: _settingsProvider.yataStatsEnabledStatus == 1 ? true : false,
-                      onChanged: (enabled) async {
-                        setState(() {
-                          _settingsProvider.yataStatsEnabledStatus = enabled ? 1 : 0;
-                        });
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'Enable YATA stats estimations in the sections where spied or estimated stats are shown (e.g.: '
-                  'war targets cards, retal cards or profile widget)',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              children: [
-                Text(
-                  "YATA stats temporarily deactivated",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
-
-  Column _ocSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'ORGANIZED CRIMES',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Nerve bar source",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _naturalNerveBarSourceDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each '
-            'member of your faction available to plan an organized crime',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
-                child: Row(
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        "Organized Crimes v2 in use",
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.playerInOCv2,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _settingsProvider.playerInOCv2 = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Torn PDA will try to identify if your faction has changed to OC v2. If you would like to remain '
-            'in OC v1 (e.g.: if you join an OC1 faction), revert back by using this toggle',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _apiRateSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'API CALL RATE',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Display API call rate",
-                ),
-              ),
-              Switch(
-                value: _apiController.showApiRateInDrawer.value,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _apiController.showApiRateInDrawer = RxBool(enabled);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Enables a small progress bar on top of Torn PDA's logo in the main drawer menu, with real-time count "
-            "of the number of API calls performed in the last minute",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Warn max. call rate",
-                ),
-              ),
-              Switch(
-                value: _apiController.showApiMaxCallWarning,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _apiController.showApiMaxCallWarning = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "If enabled, a quick message will be shown when approaching (95 calls in 60 seconds) the maximum "
-            "API call rate. This message will be then inhibited for 30 seconds",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Delay API calls",
-                ),
-              ),
-              Switch(
-                value: _apiController.delayCalls,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _apiController.delayCalls = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Artificially delay API calls above 95 in 60 seconds to avoid hitting the max API rate. If enabled, the "
-            "current queue information will be shown in the main drawer menu API bar. NOTE: this option cannot take "
-            "into account API calls generated outside of Torn PDA",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _saveSettingsSection() {
-    return Column(
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'ONLINE BACKUP',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        if (!_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
-          Padding(
-            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(
-                      "Online backup is temporarily disabled, please check in game or Discord for more information",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.red[600],
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        if (_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Upload settings",
-                      ),
-                    ),
-                    ElevatedButton(
-                      child: const Icon(Icons.upload),
-                      onPressed: _userProfile == null
-                          ? null
-                          : () {
-                              showDialog(
-                                useRootNavigator: false,
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return BackupSaveDialog(userProfile: _userProfile!);
-                                },
-                              );
-                            },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so "
-                  "that you can later restore them if needed or share them across different devices",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Restore settings",
-                      ),
-                    ),
-                    ElevatedButton(
-                      child: const Icon(Icons.download),
-                      onPressed: _userProfile == null
-                          ? null
-                          : () {
-                              showDialog(
-                                useRootNavigator: false,
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return BackupRestoreDialog(userProfile: _userProfile!);
-                                },
-                              );
-                            },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "This will download your saved settings and restore them in the app. Please be aware that this will "
-                  "overwrite your current preferences",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Share settings",
-                      ),
-                    ),
-                    ElevatedButton(
-                      child: const Icon(Icons.share),
-                      onPressed: _userProfile == null
-                          ? null
-                          : () {
-                              showDialog(
-                                useRootNavigator: false,
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return BackupShareDialog(
-                                    userProfile: _userProfile!,
-                                    themeProvider: _themeProvider,
-                                  );
-                                },
-                              );
-                            },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "This will allow you to share your settings and receive settings from other players with the use "
-                  "of the player ID and a password",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Clear backup",
-                      ),
-                    ),
-                    ElevatedButton(
-                      child: const Icon(Icons.delete_outline),
-                      onPressed: _userProfile == null
-                          ? null
-                          : () async {
-                              showDialog(
-                                useRootNavigator: false,
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return BackupDeleteDialog(userProfile: _userProfile!);
-                                },
-                              );
-                            },
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "In case there is something wrong with your online backup when trying to restore it, or you want to "
-                  "clear it for any other reason, this will delete the online saved data",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  Column _troubleshootingSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'TROUBLESHOOTING',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Test API",
-                ),
-              ),
-              ElevatedButton(
-                child: const Text("PING"),
-                onPressed: () async {
-                  BotToast.showText(
-                    text: "Please wait...",
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.blue,
-                    duration: const Duration(seconds: 1),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                  final ping = Ping('api.torn.com', count: 4);
-                  ping.stream.listen((event) {
-                    if (event.summary != null || event.error != null) {
-                      String message = "";
-                      if (event.error != null) {
-                        message = "CONNECTION PROBLEM\n\n${event.error}";
-                      } else {
-                        if (event.summary!.transmitted == event.summary!.received) {
-                          message = "SUCCESS\n\n${event.summary}";
-                        } else {
-                          message = "CONNECTION PROBLEM\n\n${event.summary}";
-                        }
-                      }
-
-                      BotToast.showText(
-                        clickClose: true,
-                        text: message,
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.blue,
-                        duration: const Duration(seconds: 10),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    }
-                  });
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "In case that you are facing connection problems, this will ping Torn's API and show whether "
-            "it is reachable from your device. If it isn't, it might be because of your DNS servers (you "
-            "can try switching from WiFi to data)",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Enable debug messages",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.debugMessages,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _settingsProvider.debugMessages = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Enable specific debug messages for app failure testing. This is an advanced feature that might create '
-            'additional error messages: avoid using it unless you have been requested to do so',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Reset tutorials",
-                ),
-              ),
-              ElevatedButton(
-                child: const Text("CLEAR"),
-                onPressed: () async {
-                  _settingsProvider.clearShowCases();
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "This will clear all the app's tutorial pop-ups in case that you want to review them again. Be aware that "
-            "some of them (e.g.: those in the browser) will require an app restart to complete reset.",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _externalPartnersSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'EXTERNAL PARTNERS',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Text(
-                "Alternative API keys",
-              ),
-              IconButton(
-                icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) => const AlternativeKeysPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Use this section to configure alternative API keys for the external partners that "
-            "Torn PDA connects with. CAUTION: ensure these other keys are working correctly, as Torn PDA "
-            "is unable to check for errors and certain sections may stop working",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _shortcutsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'SHORTCUTS',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Text("Configure shortcuts"),
-              IconButton(
-                icon: const Icon(Icons.switch_access_shortcut_outlined),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) => ShortcutsPage(),
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Text("Use Profile section shortcuts"),
-              Switch(
-                value: _settingsProvider.shortcutsEnabledProfile,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.shortcutsEnabledProfile = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Enable configurable shortcuts in the Profile section to quickly access your favorite sections in Torn',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        if (_settingsProvider.shortcutsEnabledProfile)
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 30, right: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Profile shortcuts menu",
-                      ),
-                    ),
-                    Flexible(
-                      child: _shortcutMenuDropdown(),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 30, right: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Profile tile type",
-                      ),
-                    ),
-                    Flexible(
-                      child: _shortcutTileDropdown(),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-
-  Column _screenConfigurationSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'SCREEN CONFIGURATION',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Allow auto rotation",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.allowScreenRotation,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.changeAllowScreenRotation = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'If enabled, the interface will rotate from portrait to landscape if the device is rotated. '
-            'Be aware that landscape might not be comfortable in narrow mobile devices (e.g. some dialogs will need '
-            'to be manually scrolled and some elements might look too big)',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Split screen",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _splitScreenDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'If enabled, the device screen will be split to show the main app the the browser at the same time. '
-            'A minimum width (800 dpi) is needed for this to be allowed',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Split reverts to",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _splitScreenRevertionDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'When the split screen condition is no longer active (e.g.: if the device is rotated and the width is '
-            'loweer than 800 dpi), this option dictates whether the webview or the app should remain in the foreground',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _themeSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'THEME',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
-          child: Text(
-            "Please note that the main theme selector switch is located in the drawer menu of Torn PDA. Here you "
-            "will be able to select other theming options",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Use Material theme",
-                ),
-              ),
-              Switch(
-                value: _themeProvider.useMaterial3,
-                onChanged: (enabled) async {
-                  _themeProvider.useMaterial3 = enabled;
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Sync app with device theme",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.syncDeviceTheme,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _settingsProvider.syncDeviceTheme = enabled;
-
-                    if (enabled) {
-                      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
-                      if (brightness == Brightness.dark && _themeProvider.currentTheme == AppTheme.light) {
-                        _themeProvider.changeTheme = AppTheme.dark;
-                      } else if (brightness == Brightness.light && _themeProvider.currentTheme != AppTheme.light) {
-                        _themeProvider.changeTheme = AppTheme.light;
-                      }
-                    }
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Sync app and web themes",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.syncTornWebTheme,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _settingsProvider.syncTornWebTheme = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        if (_settingsProvider.syncTornWebTheme)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Dark theme equivalent",
-                      ),
-                    ),
-                    Flexible(
-                      flex: 2,
-                      child: _themeToSyncDropdown(),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  "Specifies which of the two dark themes is activated in the app when the web or your device themes "
-                  "(depending on the options above) are switched to dark",
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 20, right: 20),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  const Flexible(
-                    child: Text(
-                      "Accesible text colors",
-                    ),
-                  ),
-                  Switch(
-                    value: _themeProvider.accesibilityNoTextColors,
-                    onChanged: (enabled) async {
-                      _themeProvider.accesibilityNoTextColors = enabled;
-                    },
-                    activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Text(
-                "Activate this option to replace all colored texts with the default text color (white or black). "
-                "This can improve readability for users with color vision deficiencies, but might make "
-                "it harder to identify the performance of some indicators. Note: this option "
-                "only applies to the app and not to the web, and is not yet available in all sections",
-                style: TextStyle(
-                  color: _themeProvider.mainText,
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Column _appIconSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'APP ICON',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Dynamic app icons",
-                ),
-              ),
-              Switch(
-                value: !_settingsProvider.dynamicAppIconEnabledRemoteConfig ? false : _settingsProvider.dynamicAppIcons,
-                onChanged: !_settingsProvider.dynamicAppIconEnabledRemoteConfig
-                    ? null
-                    : (enabled) async {
-                        setState(() {
-                          _settingsProvider.dynamicAppIcons = enabled;
-                        });
-
-                        if (enabled) {
-                          // Set an alternate icon
-                          _settingsProvider.appIconChangeBasedOnCondition();
-                        } else {
-                          // Reset to the default icon
-                          _settingsProvider.appIconResetDefault();
-                        }
-                      },
-                activeTrackColor:
-                    _settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.lightGreenAccent : Colors.grey[700],
-                activeColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.green : Colors.grey[700],
-                inactiveThumbColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig ? null : Colors.grey[800],
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "Allows Torn PDA to change the main app icon based on certain conditions",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig)
-                Text(
-                  "Deactivated remotely for the time being",
-                  style: TextStyle(
-                    color: Colors.orange[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig ? false : _settingsProvider.dynamicAppIcons)
-          Padding(
-            padding: const EdgeInsets.only(left: 20, right: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                const Flexible(
-                  child: Text(
-                    "Override icon",
-                  ),
-                ),
-                Flexible(
-                  child: _manualAppIconDropdown(),
-                ),
-              ],
-            ),
-          ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "By using this option, you can manually trigger (some) app icons even if the conditions "
-                "are not met",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-              if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig)
-                Text(
-                  "Deactivated remotely for the time being",
-                  style: TextStyle(
-                    color: Colors.orange[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _miscSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'MISC',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Show status color counter",
-                ),
-              ),
-              Switch(
-                value: context.read<ChainStatusProvider>().statusColorWidgetEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    context.read<ChainStatusProvider>().statusColorWidgetEnabled = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Shows a player status counter attached to the Torn PDA icon in the main app sections and in the browser '
-            'three-dotted icon, whenever the player is hospitalised, jailed or traveling',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "App bar position",
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: _appBarPositionDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Note: this will affect other quick access items such as '
-            'the quick crimes bar in the browser',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Default launch section",
-                ),
-              ),
-              Flexible(
-                child: _openSectionDropdown(),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 5),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Back button exits app",
-                ),
-              ),
-              Flexible(
-                child: _backButtonAppExitDropdown(),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "This will only have effect in certain devices, depending on "
-            "your configuration. Dictates how to proceed when the app detects a back button "
-            "press or swipe that would otherwise close the app. Note: while in the browser, the back button will "
-            "always trigger backwards navigation",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Show Wiki",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.showWikiInDrawer,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.showWikiInDrawer = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "If enabled, you will have a quick access to the Torn wiki from the app drawer menu",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _revivingServicesSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'REVIVING SERVICES',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Text(
-                "Choose reviving providers",
-              ),
-              IconButton(
-                icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                onPressed: () {
-                  showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return RevivingServicesDialog();
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Choose which reviving services you might want to use. "
-            "If enabled, when you are in hospital you'll have the option to call "
-            "one of their revivers from several places (e.g. Profile and Chaining sections).",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Column _notificationsSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'NOTIFICATIONS',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Flexible(
-                child: Row(
-                  children: [
-                    const Flexible(
-                      child: Text(
-                        "Discreet notifications",
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.info_outline),
-                      onPressed: () {
-                        showDialog(
-                          useRootNavigator: false,
-                          context: context,
-                          builder: (BuildContext context) {
-                            return DiscreetInfo();
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.discreetNotifications,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.discreetNotifications = value;
-                    FirestoreHelper().toggleDiscreet(value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        if (Platform.isAndroid)
-          Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 20, right: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Remove notifications on launch",
-                      ),
-                    ),
-                    Switch(
-                      value: _removeNotificationsLaunch,
-                      onChanged: (value) {
-                        _settingsProvider.changeRemoveNotificationsOnLaunch = value;
-                        setState(() {
-                          _removeNotificationsLaunch = value;
-                        });
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'This will remove all Torn PDA notifications from your notifications bar '
-                  'when you launch the app. Deactivate it if you would prefer to keep them '
-                  'and erase them later manually',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 5),
-              Padding(
-                padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Flexible(
-                      child: Text(
-                        "Alerts vibration",
-                      ),
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.only(left: 20),
-                    ),
-                    Flexible(
-                      flex: 2,
-                      child: _vibrationDropdown(),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(
-                  'This vibration applies to the automatic alerts only, with the '
-                  'app in use or in the background',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 5),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Text("Manual alarm sound"),
-                    Switch(
-                      value: _manualAlarmSound,
-                      onChanged: (value) {
-                        setState(() {
-                          _manualAlarmSound = value;
-                        });
-                        Prefs().setManualAlarmSound(value);
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    const Text("Manual alarm vibration"),
-                    Switch(
-                      value: _manualAlarmVibration,
-                      onChanged: (value) {
-                        setState(() {
-                          _manualAlarmVibration = value;
-                        });
-                        Prefs().setManualAlarmVibration(value);
-                      },
-                      activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: RichText(
-                  text: TextSpan(
-                    text: 'Applies to manually activated alarms in all sections '
-                        '(Travel, Loot, Profile, etc.). '
-                        'Some Android clock applications do not work well '
-                        'with more than 1 timer or do not allow to choose '
-                        'between sound and vibration for alarms. If you experience '
-                        'any issue, it is recommended to install ',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontSize: 12,
-                      fontStyle: FontStyle.italic,
-                    ),
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: "Google's Clock application",
-                        style: const TextStyle(color: Colors.blue),
-                        recognizer: TapGestureRecognizer()
-                          ..onTap = () async {
-                            const AndroidIntent intent = AndroidIntent(
-                              action: 'action_view',
-                              data: 'https://play.google.com/store'
-                                  '/apps/details?id=com.google.android.deskclock',
-                            );
-                            await intent.launch();
-                          },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          )
-      ],
-    );
-  }
-
-  Column _appWidgetSection(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'HOME SCREEN WIDGET',
-              style: TextStyle(fontSize: 10),
-            ),
-          ],
-        ),
-        const SizedBox(height: 5),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Dark mode",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.appwidgetDarkMode,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.appwidgetDarkMode = value;
-                    HomeWidget.saveWidgetData<bool>('darkMode', value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Remove shortcuts from short layout",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.appwidgetRemoveShortcutsOneRowLayout,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.appwidgetRemoveShortcutsOneRowLayout = value;
-                    HomeWidget.saveWidgetData<bool>('removeShortcutsOneRowLayout', value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'By default, the short, one-row layout, accomodates a couple of shortcuts by sacrificing the chaining '
-            'information and moving the reload icon to the top. By enabling this, this particular layout will not '
-            'include shortcuts in order to make more space for the chaining bar',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        const SizedBox(height: 5),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Show wallet money",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.appwidgetMoneyEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.appwidgetMoneyEnabled = value;
-                    HomeWidget.saveWidgetData<bool>('money_enabled', value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
-              Text(
-                'This is only applicable for the tall widget layout',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              const Flexible(
-                child: Text(
-                  "Cooldown tap launches browser",
-                ),
-              ),
-              Switch(
-                value: _settingsProvider.appwidgetCooldownTapOpenBrowser,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.appwidgetCooldownTapOpenBrowser = value;
-                    HomeWidget.saveWidgetData<bool>('cooldown_tap_opens_browser', value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'If enabled, a tap on any of the cooldown icons will launch the app and browser to your personal '
-            'or faction items. Otherwise, you will be shown the cooldown time remaining. NOTE: you might have '
-            'to try a couple of times after switching this option for the widget to update properly',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-        ),
-        if (_settingsProvider.appwidgetCooldownTapOpenBrowser) _appWidgetCooldownTapDestinationSelector(),
-      ],
-    );
   }
 
   AppBar buildAppBar() {
@@ -2624,390 +217,2284 @@ class SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
-  Widget _apiKeyWidget() {
-    if (_apiIsLoading) {
-      return const Padding(
-        padding: EdgeInsets.all(40),
-        child: CircularProgressIndicator(),
-      );
-    }
-    if (_userProfile != null) {
-      return Padding(
-        key: _apiFormKey,
-        padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
-        child: Card(
-          child: ExpandablePanel(
-            controller: _expandableController,
-            collapsed: Container(),
-            header: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Row(
-                    children: <Widget>[
-                      Text(
-                        "TORN API USER LOADED",
-                        style: TextStyle(
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Padding(
-                    padding: const EdgeInsets.only(left: 10),
-                    child: Text(
-                      "${_userProfile!.name} [${_userProfile!.playerId}]",
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            expanded: Padding(
-              padding: const EdgeInsets.only(bottom: 20),
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          _apiKeyForm(enabled: false),
-                          const Padding(
-                            padding: EdgeInsetsDirectional.only(top: 10),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              ElevatedButton(
-                                child: const Text(
-                                  "Copy",
-                                  style: TextStyle(fontSize: 13),
-                                ),
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: _userProfile!.userApiKey.toString()));
-                                  BotToast.showText(
-                                    text: "API key copied to the clipboard, be careful!",
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: Colors.blue,
-                                    duration: const Duration(seconds: 4),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  );
-                                },
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: ElevatedButton(
-                                  child: const Text(
-                                    "Reload",
-                                    style: TextStyle(fontSize: 13),
-                                  ),
-                                  onPressed: _apiKeyInputController.text.trim().isEmpty
-                                      ? null
-                                      : () {
-                                          FocusScope.of(context).requestFocus(FocusNode());
-                                          if (_formKey.currentState!.validate()) {
-                                            String myCurrentKey = _apiKeyInputController.text.trim();
-                                            _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
-                                          }
-                                        },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 10),
-                                child: ElevatedButton(
-                                  child: const Icon(Icons.delete_outline),
-                                  onPressed: () async {
-                                    FocusScope.of(context).requestFocus(FocusNode());
-                                    // Removes the form error
-                                    _formKey.currentState!.reset();
-                                    _apiKeyInputController.clear();
-                                    _userProvider.removeUser();
-                                    setState(() {
-                                      _userProfile = null;
-                                      _apiError = false;
-                                    });
-                                    if (!Platform.isWindows) await FirebaseMessaging.instance.deleteToken();
-                                    if (!Platform.isWindows) await FirestoreHelper().deleteUserProfile();
-                                    if (!Platform.isWindows) await firebaseAuth.signOut();
-                                    widget.changeUID("");
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                          _bottomExplanatory(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    } else {
-      _expandableController.expanded = true;
-      return Padding(
-        padding: const EdgeInsets.fromLTRB(10, 20, 10, 10),
-        child: Card(
-          child: ExpandablePanel(
-            collapsed: Container(),
-            controller: _expandableController,
-            header: const Padding(
-              padding: EdgeInsets.fromLTRB(20, 15, 20, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Text(
-                        "NO USER LOADED",
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Text(
-                      "(expand for details)",
-                      style: TextStyle(
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            expanded: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(20.0),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: <Widget>[
-                          _apiKeyForm(enabled: true),
-                          const Padding(
-                            padding: EdgeInsetsDirectional.only(top: 10),
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              ElevatedButton(
-                                child: const Text("Load"),
-                                onPressed: _apiKeyInputController.text.trim().isEmpty
-                                    ? null
-                                    : () {
-                                        FocusScope.of(context).requestFocus(FocusNode());
-                                        if (_formKey.currentState!.validate()) {
-                                          String myCurrentKey = _apiKeyInputController.text.trim();
-                                          myCurrentKey = _sanitizeApiKey(myCurrentKey);
-                                          _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
-                                        }
-                                      },
-                              ),
-                            ],
-                          ),
-                          _bottomExplanatory(),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-  }
+  @override
+  Widget build(BuildContext context) {
+    _themeProvider = Provider.of<ThemeProvider>(context);
+    _webViewProvider = Provider.of<WebViewProvider>(context);
 
-  SizedBox _apiKeyForm({required bool enabled}) {
-    return SizedBox(
-      width: 300,
-      child: Form(
-        key: _formKey,
-        child: TextFormField(
-          enabled: enabled,
-          validator: (value) {
-            if (value!.isEmpty) {
-              return "The API Key is empty!";
+    return Scaffold(
+      backgroundColor: _themeProvider.canvas,
+      drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
+      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
+      appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      bottomNavigationBar: !_settingsProvider.appBarTop
+          ? SizedBox(
+              height: AppBar().preferredSize.height,
+              child: buildAppBar(),
+            )
+          : null,
+      body: Container(
+        color: _themeProvider.canvas,
+        child: FutureBuilder(
+          future: _preferencesRestored,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: <Widget>[
+                      SizedBox(height: _extraMargin),
+                      ApiKeySectionWidget(
+                        apiIsLoading: _apiIsLoading,
+                        userProfile: _userProfile,
+                        apiError: _apiError,
+                        errorReason: _errorReason,
+                        errorDetails: _errorDetails,
+                        formKey: _formKey,
+                        apiFormKey: _apiFormKey,
+                        apiKeyInputController: _apiKeyInputController,
+                        expandableController: _expandableController,
+                        getApiDetails: _getApiDetails,
+                        changeUID: (value) => widget.changeUID(value),
+                        setStateOnParent: () => setState(() {}),
+                        removeUserProvider: () => _userProvider.removeUser(),
+                        changeApiError: (val) => setState(() => _apiError = val),
+                        changeUserProfile: (val) => setState(() => _userProfile = val),
+                      ),
+                      if (_userProfile != null)
+                        const Column(
+                          children: [
+                            NativeLoginWidget(),
+                            SizedBox(height: 15),
+                          ],
+                        ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search settings',
+                            prefixIcon: Icon(Icons.search),
+                            suffixIcon: _searchController.text.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(Icons.clear),
+                                    onPressed: () {
+                                      _searchController.clear();
+                                      setState(() {
+                                        _searchText = '';
+                                      });
+                                    },
+                                  )
+                                : null,
+                          ),
+                          onChanged: (text) {
+                            setState(() {
+                              _searchText = text;
+                            });
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ...buildFilteredSections(),
+                      const SizedBox(height: 50),
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              return const Center(child: CircularProgressIndicator());
             }
-            return null;
-          },
-          controller: _apiKeyInputController,
-          maxLength: 30,
-          style: const TextStyle(fontSize: 14),
-          decoration: InputDecoration(
-            hintText: 'Please insert your Torn API Key',
-            hintStyle: const TextStyle(fontSize: 14),
-            counterText: "",
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(5.0),
-              borderSide: const BorderSide(
-                color: Colors.amber,
-              ),
-            ),
-          ),
-          // This is here in case the user submits from the keyboard and not
-          // hitting the "Load" button
-          onEditingComplete: () {
-            FocusScope.of(context).requestFocus(FocusNode());
-            if (_formKey.currentState!.validate()) {
-              String myCurrentKey = _apiKeyInputController.text.trim();
-              myCurrentKey = _sanitizeApiKey(myCurrentKey);
-              _getApiDetails(userTriggered: true, currentKey: myCurrentKey);
-            }
-          },
-          onChanged: (value) {
-            setState(() {});
           },
         ),
       ),
     );
   }
 
-  Widget _bottomExplanatory() {
-    if (_apiError) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 25),
-        child: Column(
-          children: <Widget>[
-            const Padding(
-              padding: EdgeInsetsDirectional.only(bottom: 15),
-              child: Text(
-                "ERROR LOADING USER",
-                style: TextStyle(
-                  color: Colors.red,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Text("Error: $_errorReason"),
-            if (_errorDetails.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: 5),
-                child: Text(
-                  _errorDetails,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontStyle: FontStyle.italic,
+  Widget _browserSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Web browser",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(child: const Text("Web browser")),
+                  IconButton(
+                    icon: const Icon(Icons.info_outline),
+                    onPressed: () {
+                      showDialog(
+                        useRootNavigator: false,
+                        context: context,
+                        builder: (BuildContext context) {
+                          return BrowserInfoDialog();
+                        },
+                      );
+                    },
                   ),
-                ),
+                ],
               ),
-          ],
+              Flexible(child: _openBrowserDropdown()),
+            ],
+          ),
         ),
-      );
-    } else if (_userProfile == null) {
-      return Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
-        child: Column(
-          children: <Widget>[
-            const Text(
-              "Torn PDA needs your API Key to obtain your user's "
-              'information. The key is protected in the app and will not '
-              'be shared under any circumstances.',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
+      ),
+      if (_openBrowserValue == "0")
+        SearchableRow(
+          label: "Advanced browser settings",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Advanced browser settings"),
+                IconButton(
+                  icon: Icon(MdiIcons.web),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (BuildContext context) => SettingsBrowserPage(userDetailsProvider: _userProvider),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+    ];
+    return buildSectionWithRows(
+      title: "BROWSER",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _shortcutsSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Configure shortcuts",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Configure shortcuts"),
+              IconButton(
+                icon: const Icon(Icons.switch_access_shortcut_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => ShortcutsPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Use Profile section shortcuts",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Use Profile section shortcuts"),
+              Switch(
+                value: _settingsProvider.shortcutsEnabledProfile,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.shortcutsEnabledProfile = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Shortcuts description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Enable configurable shortcuts in the Profile section to quickly access your favorite sections in Torn',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+      if (_settingsProvider.shortcutsEnabledProfile)
+        SearchableRow(
+          label: "Profile shortcuts menu",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30, right: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(child: Text("Profile shortcuts menu")),
+                Flexible(child: _shortcutMenuDropdown()),
+              ],
+            ),
+          ),
+        ),
+      if (_settingsProvider.shortcutsEnabledProfile)
+        SearchableRow(
+          label: "Profile tile type",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30, right: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(child: Text("Profile tile type")),
+                Flexible(child: _shortcutTileDropdown()),
+              ],
+            ),
+          ),
+        ),
+    ];
+
+    return buildSectionWithRows(
+      title: "SHORTCUTS",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _timeSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Time format",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Time format")),
+              Flexible(child: _timeFormatDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Time zone",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Time zone")),
+              Flexible(flex: 2, child: _timeZoneDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Show date in clock",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Show date in clock")),
+              Flexible(flex: 2, child: _dateInClockDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Date in clock description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Add an extra row for the date wherever the TCT clock is shown. You can also specify the desired format (day/month or month/day)',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Seconds in clock",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Seconds in clock")),
+              Flexible(flex: 2, child: _secondsInClockDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Highlight events",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Highlight events")),
+              Switch(
+                value: _settingsProvider.tctClockHighlightsEvents,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.tctClockHighlightsEvents = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Highlight events description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'If enabled, the TCT Clock will be highlighted whenever there is an event or competition active in Torn',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+    ];
+    return buildSectionWithRows(
+      title: 'TIME',
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _notificationsSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Discreet notifications",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Discreet notifications")),
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () {
+                  showDialog(
+                    useRootNavigator: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return DiscreetInfo();
+                    },
+                  );
+                },
+              ),
+              Switch(
+                value: _settingsProvider.discreetNotifications,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.discreetNotifications = value;
+                    FirestoreHelper().toggleDiscreet(value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Remove notifications on launch",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(child: Text("Remove notifications on launch")),
+                Switch(
+                  value: _removeNotificationsLaunch,
+                  onChanged: (value) {
+                    _settingsProvider.changeRemoveNotificationsOnLaunch = value;
+                    setState(() {
+                      _removeNotificationsLaunch = value;
+                    });
+                  },
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Remove notifications description",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'This will remove all Torn PDA notifications from your notifications bar when you launch the app. Deactivate it if you prefer to clear them manually.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Alerts vibration",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Flexible(child: Text("Alerts vibration")),
+                Flexible(flex: 2, child: _vibrationDropdown()),
+              ],
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Alerts vibration description",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              'This vibration applies to automatic alerts while the app is active or in the background.',
+              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Manual alarm sound",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Manual alarm sound"),
+                Switch(
+                  value: _manualAlarmSound,
+                  onChanged: (value) {
+                    setState(() {
+                      _manualAlarmSound = value;
+                    });
+                    Prefs().setManualAlarmSound(value);
+                  },
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Manual alarm vibration",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Manual alarm vibration"),
+                Switch(
+                  value: _manualAlarmVibration,
+                  onChanged: (value) {
+                    setState(() {
+                      _manualAlarmVibration = value;
+                    });
+                    Prefs().setManualAlarmVibration(value);
+                  },
+                  activeTrackColor: Colors.lightGreenAccent,
+                  activeColor: Colors.green,
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Manual alarm info",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: RichText(
+              text: TextSpan(
+                text:
+                    'Applies to manually activated alarms in all sections (Travel, Loot, Profile, etc.). Some Android clock apps have issues with multiple timers or distinguishing between sound and vibration. If you experience issues, consider installing ',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                children: <TextSpan>[
+                  TextSpan(
+                    text: "Google's Clock application",
+                    style: const TextStyle(color: Colors.blue),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () async {
+                        const AndroidIntent intent = AndroidIntent(
+                          action: 'action_view',
+                          data: 'https://play.google.com/store/apps/details?id=com.google.android.deskclock',
+                        );
+                        await intent.launch();
+                      },
+                  ),
+                ],
               ),
             ),
-            Row(
-              children: [
-                const Icon(Icons.info_outline, color: Colors.blue),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+          ),
+        ),
+    ];
+    return buildSectionWithRows(
+      title: "NOTIFICATIONS",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _appWidgetSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Dark mode",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Dark mode")),
+              Switch(
+                value: _settingsProvider.appwidgetDarkMode,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetDarkMode = value;
+                    HomeWidget.saveWidgetData<bool>('darkMode', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Remove shortcuts from short layout",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Remove shortcuts from short layout")),
+              Switch(
+                value: _settingsProvider.appwidgetRemoveShortcutsOneRowLayout,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetRemoveShortcutsOneRowLayout = value;
+                    HomeWidget.saveWidgetData<bool>('removeShortcutsOneRowLayout', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Remove shortcuts description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'By default, the short, one-row layout accommodates a couple of shortcuts by sacrificing chaining information and moving the reload icon to the top. Enabling this option removes shortcuts to free up space for the chaining bar',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Show wallet money",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Show wallet money")),
+              Switch(
+                value: _settingsProvider.appwidgetMoneyEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetMoneyEnabled = value;
+                    HomeWidget.saveWidgetData<bool>('money_enabled', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Wallet money description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Text(
+                'This is only applicable for the tall widget layout',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Cooldown tap launches browser",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Cooldown tap launches browser")),
+              Switch(
+                value: _settingsProvider.appwidgetCooldownTapOpenBrowser,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.appwidgetCooldownTapOpenBrowser = value;
+                    HomeWidget.saveWidgetData<bool>('cooldown_tap_opens_browser', value);
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Cooldown tap launches browser description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'If enabled, a tap on any cooldown icon will launch the app and browser to your personal or faction items. Otherwise, the remaining cooldown time is displayed. NOTE: you may need to try a couple of times after switching for the widget to update properly.',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+      if (_settingsProvider.appwidgetCooldownTapOpenBrowser)
+        SearchableRow(
+          label: "Cooldown tap destination",
+          searchText: _searchText,
+          child: _appWidgetCooldownTapDestinationSelector(),
+        ),
+    ];
+    return buildSectionWithRows(
+      title: "HOME SCREEN WIDGET",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _spiesSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Spies source",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Spies source")),
+              Flexible(flex: 2, child: _spiesSourceDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Spies source description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Choose the source of spied stats. This affects the stats shown when you visit a profile in the browser, as well as those shown in the War section (Chaining)',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Spies info",
+        searchText: _searchText,
+        filterable: false,
+        child: GetBuilder<SpiesController>(
+          builder: (s) {
+            String lastUpdated = "Never updated";
+            int lastUpdatedTs = 0;
+            if (_spyController.spiesSource == SpiesSource.yata && _spyController.yataSpiesTime != null) {
+              lastUpdatedTs = _spyController.yataSpiesTime!.millisecondsSinceEpoch;
+              if (lastUpdatedTs > 0) {
+                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
+              }
+            } else if (_spyController.spiesSource == SpiesSource.tornStats &&
+                _spyController.tornStatsSpiesTime != null) {
+              lastUpdatedTs = _spyController.tornStatsSpiesTime!.millisecondsSinceEpoch;
+              if (lastUpdatedTs > 0) {
+                lastUpdated = _spyController.statsOld((lastUpdatedTs / 1000).round());
+              }
+            }
+            Color spiesUpdateColor = Colors.blue;
+            if (lastUpdatedTs > 0) {
+              final currentTime = DateTime.now().millisecondsSinceEpoch;
+              final oneMonthAgo = currentTime - (30.44 * 24 * 60 * 60 * 1000).round();
+              spiesUpdateColor = (lastUpdatedTs < oneMonthAgo) ? Colors.red : context.read<ThemeProvider>().mainText;
+            }
+            return Padding(
+              padding: const EdgeInsets.only(top: 15, left: 40),
+              child: Column(
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      const Text(
-                        "\nYou can get your API key in the Torn website by tapping your profile picture (upper right corner)"
-                        " and going to Settings, API Keys. Torn PDA only needs a Limited Access key.\n",
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(MdiIcons.accountMultipleOutline, size: 18),
                       ),
-                      RichText(
-                        text: TextSpan(
-                          style: DefaultTextStyle.of(context).style,
-                          children: <InlineSpan>[
-                            WidgetSpan(
-                              child: GestureDetector(
-                                onTap: () {
-                                  const url = 'https://www.torn.com/preferences.php#tab=api';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.short,
-                                      );
-                                },
-                                onLongPress: () {
-                                  const url = 'https://www.torn.com/preferences.php#tab=api';
-                                  context.read<WebViewProvider>().openBrowserPreference(
-                                        context: context,
-                                        url: url,
-                                        browserTapType: BrowserTapType.long,
-                                      );
-                                },
-                                child: const Text(
-                                  'Tap here',
-                                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
-                                ),
-                              ),
-                            ),
-                            TextSpan(
-                              text: ' to be redirected',
-                              style: DefaultTextStyle.of(context).style,
-                            ),
-                          ],
-                        ),
+                      Text(
+                        "${s.spiesSource == SpiesSource.yata ? 'YATA' : 'Torn Stats'} database: ${s.spiesSource == SpiesSource.yata ? s.yataSpies.length : s.tornStatsSpies.spies.length} spies",
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(MdiIcons.clockOutline, size: 18),
+                      ),
+                      Text(lastUpdated, style: TextStyle(color: spiesUpdateColor)),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+      SearchableRow(
+        label: "Manage spies",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Manage spies")),
+              IconButton(
+                icon: Icon(MdiIcons.incognito),
+                onPressed: () {
+                  showDialog(
+                    barrierDismissible: false,
+                    useRootNavigator: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return SpiesManagementDialog();
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Allow mixed sources",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Allow mixed sources")),
+              Switch(
+                value: _spyController.allowMixedSpiesSources,
+                onChanged: (enabled) {
+                  setState(() {
+                    _spyController.allowMixedSpiesSources = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Allow mixed sources description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Whilst enabled, if a target's spy info cannot be found in the preferred source, it will also be taken from the other source if available. Switching sources preserves info unless the new source also contains a spy for the target.",
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Delete spies",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Delete spies")),
+              ElevatedButton(
+                child: const Icon(Icons.delete_outlined),
+                onPressed: () async {
+                  _spyController.deleteSpies();
+                  BotToast.showText(
+                    text: "Spies deleted!",
+                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                    contentColor: Colors.blue,
+                    duration: const Duration(seconds: 1),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Delete spies description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Deletes all spies information from the local database if you prefer not to use spies info or if there is an issue with the downloaded stats.',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+    ];
+    return buildSectionWithRows(
+      title: "SPIES",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _statsSection() {
+    List<SearchableRow> rows = [];
+
+    // TSC Block
+    if (_settingsProvider.tscEnabledStatusRemoteConfig) {
+      rows.add(
+        SearchableRow(
+          label: "Use Torn Spies Central",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Row(
+                        children: [
+                          Flexible(child: const Text("Use Torn Spies Central")),
+                          const SizedBox(width: 8),
+                          GestureDetector(
+                            child: const Icon(Icons.info_outline, size: 18),
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return TSCInfoDialog(
+                                    settingsProvider: _settingsProvider,
+                                    themeProvider: _themeProvider,
+                                  );
+                                },
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _settingsProvider.tscEnabledStatus == 1,
+                      onChanged: (enabled) async {
+                        if (_settingsProvider.tscEnabledStatus != 1) {
+                          await showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return TSCInfoDialog(
+                                settingsProvider: _settingsProvider,
+                                themeProvider: _themeProvider,
+                              );
+                            },
+                          );
+                          if (_settingsProvider.tscEnabledStatus == 1) {
+                            setState(() {}); // Force update
+                          }
+                        } else {
+                          setState(() {
+                            _settingsProvider.tscEnabledStatus = 0;
+                          });
+                        }
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'Enable Torn Spies Central estimations in sections where spied or estimated stats are shown (e.g.: war targets cards, retal cards or profile widget)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
                   ),
                 ),
               ],
             ),
-            const Text('\nIn any case, please make sure to '
-                "follow Torn's staff recommendations on how to protect your key "
-                'from any malicious use.'),
-            const Text('\nYou can always remove it from the '
-                'app or reset it in your Torn preferences page.'),
-          ],
+          ),
         ),
       );
     } else {
-      return Padding(
-        padding: const EdgeInsets.only(top: 20),
-        child: Column(
-          children: <Widget>[
-            Text(
-              "${_userProfile!.name} [${_userProfile!.playerId}]",
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
+      rows.add(
+        SearchableRow(
+          label: "TSC temporarily deactivated",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Text(
+              "TSC temporarily deactivated",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
               ),
             ),
-            Text("Gender: ${_userProfile!.gender}"),
-            Text("Level: ${_userProfile!.level}"),
-            Text("Life: ${_userProfile!.life!.current}"),
-            Text("Status: ${_userProfile!.status!.description}"),
-            Text("Last action: ${_userProfile!.lastAction!.relative}"),
-            Text("Rank: ${_userProfile!.rank}"),
-          ],
+          ),
         ),
       );
     }
+
+    // YATA Block
+    if (_settingsProvider.yataStatsEnabledStatusRemoteConfig) {
+      rows.add(
+        SearchableRow(
+          label: "Use YATA stats estimates",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      child: Row(
+                        children: [
+                          Flexible(child: const Text("Use YATA stats estimates")),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: _settingsProvider.yataStatsEnabledStatus == 1,
+                      onChanged: (enabled) async {
+                        setState(() {
+                          _settingsProvider.yataStatsEnabledStatus = enabled ? 1 : 0;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'Enable YATA stats estimations in sections where spied or estimated stats are shown (e.g.: war targets cards, retal cards or profile widget)',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    } else {
+      rows.add(
+        SearchableRow(
+          label: "YATA stats temporarily deactivated",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Text(
+              "YATA stats temporarily deactivated",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return buildSectionWithRows(
+      title: "STATS",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _ocSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Nerve bar source",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Nerve bar source")),
+              Flexible(flex: 2, child: _naturalNerveBarSourceDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Nerve bar source description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each member of your faction available to plan an organized crime',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Organized Crimes v2 in use",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Row(
+                  children: [Flexible(child: const Text("Organized Crimes v2 in use"))],
+                ),
+              ),
+              Switch(
+                value: _settingsProvider.playerInOCv2,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.playerInOCv2 = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Organized Crimes v2 description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Torn PDA will try to identify if your faction has changed to OC v2. If you would like to remain in OC v1 (e.g.: if you join an OC1 faction), revert back by using this toggle',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "ORGANIZED CRIMES",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _revivingServicesSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Choose reviving providers",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Choose reviving providers"),
+              IconButton(
+                icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                onPressed: () {
+                  showDialog(
+                    useRootNavigator: false,
+                    context: context,
+                    builder: (BuildContext context) {
+                      return RevivingServicesDialog();
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Reviving services description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Choose which reviving services you might want to use. If enabled, when you are in hospital you'll have the option to call one of their revivers from several places (e.g., Profile and Chaining sections).",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "REVIVING SERVICES",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _screenConfigurationSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Allow auto rotation",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Allow auto rotation")),
+                  Switch(
+                    value: _settingsProvider.allowScreenRotation,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.changeAllowScreenRotation = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'If enabled, the interface will rotate from portrait to landscape if the device is rotated. Be aware that landscape might not be comfortable on narrow mobile devices.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Split screen",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Split screen")),
+                  Flexible(flex: 2, child: _splitScreenDropdown()),
+                ],
+              ),
+              Text(
+                'If enabled, the device screen will be split to show the main app and the browser simultaneously. A minimum width of 800 dpi is required.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Split reverts to",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Split reverts to")),
+                  Flexible(flex: 2, child: _splitScreenRevertionDropdown()),
+                ],
+              ),
+              Text(
+                'When split screen is no longer active (e.g., device rotated to a width lower than 800 dpi), this option determines whether the webview or the app remains in the foreground.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "SCREEN CONFIGURATION",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _themeSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Theme description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+          child: Text(
+            "Please note that the main theme selector switch is located in the drawer menu of Torn PDA. Here you will be able to select other theming options",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Use Material theme",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Use Material theme")),
+              Switch(
+                value: _themeProvider.useMaterial3,
+                onChanged: (enabled) async {
+                  _themeProvider.useMaterial3 = enabled;
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Sync app with device theme",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Sync app with device theme")),
+              Switch(
+                value: _settingsProvider.syncDeviceTheme,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.syncDeviceTheme = enabled;
+                    if (enabled) {
+                      final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+                      if (brightness == Brightness.dark && _themeProvider.currentTheme == AppTheme.light) {
+                        _themeProvider.changeTheme = AppTheme.dark;
+                      } else if (brightness == Brightness.light && _themeProvider.currentTheme != AppTheme.light) {
+                        _themeProvider.changeTheme = AppTheme.light;
+                      }
+                    }
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Sync app and web themes",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(child: const Text("Sync app and web themes")),
+              Switch(
+                value: _settingsProvider.syncTornWebTheme,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.syncTornWebTheme = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      if (_settingsProvider.syncTornWebTheme)
+        SearchableRow(
+          label: "Dark theme equivalent",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(child: const Text("Dark theme equivalent")),
+                    Flexible(flex: 2, child: _themeToSyncDropdown()),
+                  ],
+                ),
+                Text(
+                  "Specifies which dark theme is activated when the web or device switches to dark mode",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      SearchableRow(
+        label: "Accesible text colors",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Accesible text colors")),
+                  Switch(
+                    value: _themeProvider.accesibilityNoTextColors,
+                    onChanged: (enabled) async {
+                      _themeProvider.accesibilityNoTextColors = enabled;
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Replaces colored texts with the default color for improved accessibility; applies only to the app, not the web.",
+                style: TextStyle(
+                  color: _themeProvider.mainText,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "THEME",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _appIconSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Dynamic app icons",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Dynamic app icons")),
+                  Switch(
+                    value: !_settingsProvider.dynamicAppIconEnabledRemoteConfig
+                        ? false
+                        : _settingsProvider.dynamicAppIcons,
+                    onChanged: !_settingsProvider.dynamicAppIconEnabledRemoteConfig
+                        ? null
+                        : (enabled) async {
+                            setState(() {
+                              _settingsProvider.dynamicAppIcons = enabled;
+                            });
+                            if (enabled) {
+                              _settingsProvider.appIconChangeBasedOnCondition();
+                            } else {
+                              _settingsProvider.appIconResetDefault();
+                            }
+                          },
+                    activeTrackColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig
+                        ? Colors.lightGreenAccent
+                        : Colors.grey[700],
+                    activeColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.green : Colors.grey[700],
+                    inactiveThumbColor: !_settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.grey[800] : null,
+                  ),
+                ],
+              ),
+              Text(
+                "Allows Torn PDA to change the main app icon based on certain conditions",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig)
+                Text(
+                  "Deactivated remotely for the time being",
+                  style: TextStyle(
+                    color: Colors.orange[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+      if (_settingsProvider.dynamicAppIconEnabledRemoteConfig && _settingsProvider.dynamicAppIcons)
+        SearchableRow(
+          label: "Override icon",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, right: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(child: const Text("Override icon")),
+                    Flexible(child: _manualAppIconDropdown()),
+                  ],
+                ),
+                Text(
+                  "By using this option, you can manually trigger (some) app icons even if the conditions are not met",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+                if (!_settingsProvider.dynamicAppIconEnabledRemoteConfig)
+                  Text(
+                    "Deactivated remotely for the time being",
+                    style: TextStyle(
+                      color: Colors.orange[600],
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+    ];
+
+    return buildSectionWithRows(
+      title: "APP ICON",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _miscSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Show status color counter",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Show status color counter")),
+              Switch(
+                value: context.read<ChainStatusProvider>().statusColorWidgetEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    context.read<ChainStatusProvider>().statusColorWidgetEnabled = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Status color counter description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Shows a player status counter attached to the Torn PDA icon in the main app sections and in the browser three-dotted icon, whenever the player is hospitalised, jailed or traveling',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "App bar position",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("App bar position")),
+              Flexible(flex: 2, child: _appBarPositionDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "App bar position description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Note: this will affect other quick access items such as the quick crimes bar in the browser',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Default launch section",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Default launch section")),
+              Flexible(child: _openSectionDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Back button exits app",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Back button exits app")),
+              Flexible(child: _backButtonAppExitDropdown()),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Back button description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "This will only have effect on certain devices, depending on your configuration. Dictates how to proceed when the app detects a back button press or swipe that would otherwise close the app. Note: in the browser, the back button always triggers backwards navigation",
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Show Wiki",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Show Wiki")),
+              Switch(
+                value: _settingsProvider.showWikiInDrawer,
+                onChanged: (value) {
+                  setState(() {
+                    _settingsProvider.showWikiInDrawer = value;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Wiki description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "If enabled, you will have quick access to the Torn wiki from the app drawer menu",
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "MISC",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _externalPartnersSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Alternative API keys",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text("Alternative API keys"),
+              IconButton(
+                icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (BuildContext context) => const AlternativeKeysPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Alternative API keys description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "Use this section to configure alternative API keys for the external partners that Torn PDA connects with. CAUTION: ensure these other keys are working correctly, as Torn PDA is unable to check for errors and certain sections may stop working",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+    ];
+    return buildSectionWithRows(
+      title: "EXTERNAL PARTNERS",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _apiRateSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Display API call rate",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Display API call rate")),
+                  Switch(
+                    value: _apiController.showApiRateInDrawer.value,
+                    onChanged: (enabled) async {
+                      setState(() {
+                        _apiController.showApiRateInDrawer = RxBool(enabled);
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Enables a small progress bar on top of Torn PDA's logo in the main drawer menu, with real-time count of the number of API calls performed in the last minute",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Warn max. call rate",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Warn max. call rate")),
+                  Switch(
+                    value: _apiController.showApiMaxCallWarning,
+                    onChanged: (enabled) async {
+                      setState(() {
+                        _apiController.showApiMaxCallWarning = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "If enabled, a quick message will be shown when approaching (95 calls in 60 seconds) the maximum API call rate. This message will be then inhibited for 30 seconds",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Delay API calls",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(child: const Text("Delay API calls")),
+                  Switch(
+                    value: _apiController.delayCalls,
+                    onChanged: (enabled) async {
+                      setState(() {
+                        _apiController.delayCalls = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "Artificially delay API calls above 95 in 60 seconds to avoid hitting the max API rate. If enabled, the current queue information will be shown in the main drawer menu API bar. NOTE: this option cannot take into account API calls generated outside of Torn PDA",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "API CALL RATE",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _saveSettingsSection() {
+    List<SearchableRow> rows = [
+      if (!_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
+        SearchableRow(
+          label: "Backup disabled",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(
+                      "Online backup is temporarily disabled, please check in game or Discord for more information",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.red[600],
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      if (_settingsProvider.backupPrefsEnabledStatusRemoteConfig) ...[
+        SearchableRow(
+          label: "Upload settings",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(child: const Text("Upload settings")),
+                ElevatedButton(
+                  child: const Icon(Icons.upload),
+                  onPressed: _userProfile == null
+                      ? null
+                      : () {
+                          showDialog(
+                            useRootNavigator: false,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return BackupSaveDialog(userProfile: _userProfile!);
+                            },
+                          );
+                        },
+                ),
+              ],
+            ),
+          ),
+        ),
+        SearchableRow(
+          label: "Upload settings description",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so that you can later restore them if needed or share them across different devices",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+        SearchableRow(
+          label: "Restore settings",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(child: const Text("Restore settings")),
+                ElevatedButton(
+                  child: const Icon(Icons.download),
+                  onPressed: _userProfile == null
+                      ? null
+                      : () {
+                          showDialog(
+                            useRootNavigator: false,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return BackupRestoreDialog(userProfile: _userProfile!);
+                            },
+                          );
+                        },
+                ),
+              ],
+            ),
+          ),
+        ),
+        SearchableRow(
+          label: "Restore settings description",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              "This will download your saved settings and restore them in the app. Please be aware that this will overwrite your current preferences",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+        SearchableRow(
+          label: "Share settings",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(child: const Text("Share settings")),
+                ElevatedButton(
+                  child: const Icon(Icons.share),
+                  onPressed: _userProfile == null
+                      ? null
+                      : () {
+                          showDialog(
+                            useRootNavigator: false,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return BackupShareDialog(
+                                userProfile: _userProfile!,
+                                themeProvider: _themeProvider,
+                              );
+                            },
+                          );
+                        },
+                ),
+              ],
+            ),
+          ),
+        ),
+        SearchableRow(
+          label: "Share settings description",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              "This will allow you to share your settings and receive settings from other players using the player ID and a password",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+        SearchableRow(
+          label: "Clear backup",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(child: const Text("Clear backup")),
+                ElevatedButton(
+                  child: const Icon(Icons.delete_outline),
+                  onPressed: _userProfile == null
+                      ? null
+                      : () async {
+                          showDialog(
+                            useRootNavigator: false,
+                            context: context,
+                            builder: (BuildContext context) {
+                              return BackupDeleteDialog(userProfile: _userProfile!);
+                            },
+                          );
+                        },
+                ),
+              ],
+            ),
+          ),
+        ),
+        SearchableRow(
+          label: "Clear backup description",
+          searchText: _searchText,
+          filterable: false,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Text(
+              "In case there is an issue with your online backup when restoring or if you simply want to clear it, this will delete the online saved data",
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ];
+    return buildSectionWithRows(
+      title: "ONLINE BACKUP",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _troubleshootingSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Test API",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Test API")),
+              ElevatedButton(
+                child: const Text("PING"),
+                onPressed: () async {
+                  BotToast.showText(
+                    text: "Please wait...",
+                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                    contentColor: Colors.blue,
+                    duration: const Duration(seconds: 1),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                  final ping = Ping('api.torn.com', count: 4);
+                  ping.stream.listen((event) {
+                    if (event.summary != null || event.error != null) {
+                      String message = "";
+                      if (event.error != null) {
+                        message = "CONNECTION PROBLEM\n\n${event.error}";
+                      } else {
+                        if (event.summary!.transmitted == event.summary!.received) {
+                          message = "SUCCESS\n\n${event.summary}";
+                        } else {
+                          message = "CONNECTION PROBLEM\n\n${event.summary}";
+                        }
+                      }
+                      BotToast.showText(
+                        clickClose: true,
+                        text: message,
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                        contentColor: Colors.blue,
+                        duration: const Duration(seconds: 10),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    }
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Test API description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "In case you are facing connection problems, this will ping Torn's API and show whether it is reachable from your device. If it isn't, it might be due to your DNS servers (try switching from WiFi to mobile data).",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Enable debug messages",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Enable debug messages")),
+              Switch(
+                value: _settingsProvider.debugMessages,
+                onChanged: (enabled) async {
+                  setState(() {
+                    _settingsProvider.debugMessages = enabled;
+                  });
+                },
+                activeTrackColor: Colors.lightGreenAccent,
+                activeColor: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Debug messages description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            'Enable specific debug messages for app failure testing. This is an advanced feature that may generate extra error messages; do not use unless requested.',
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Reset tutorials",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(child: Text("Reset tutorials")),
+              ElevatedButton(
+                child: const Text("CLEAR"),
+                onPressed: () async {
+                  _settingsProvider.clearShowCases();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Reset tutorials description",
+        searchText: _searchText,
+        filterable: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Text(
+            "This will clear all the app's tutorial pop-ups so you can review them again. Note that some tutorials (e.g., those in the browser) require an app restart to fully reset.",
+            style: TextStyle(
+              color: Colors.grey[600],
+              fontSize: 12,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "TROUBLESHOOTING",
+      rows: rows,
+      searchText: _searchText,
+    );
   }
 
   DropdownButton _splitScreenDropdown() {
@@ -3901,13 +3388,6 @@ class SettingsPageState extends State<SettingsPage> {
         });
       },
     );
-  }
-
-  /// Removes characters that do not appear in the whitelist.
-  String _sanitizeApiKey(String myCurrentKey) {
-    String allowedChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    myCurrentKey = myCurrentKey.replaceAll(RegExp('[^$allowedChars]+'), '');
-    return myCurrentKey;
   }
 
   Future<void> _getApiDetails({required bool userTriggered, required String currentKey}) async {
