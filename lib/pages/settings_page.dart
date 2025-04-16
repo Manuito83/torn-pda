@@ -4251,3 +4251,70 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 }
+
+class SearchableRow extends StatelessWidget {
+  // [filterable] allows certain rows (such as explanatory text)
+  // to be excluded from filtering, so they only show when there's no active query
+  final String label;
+  final bool filterable;
+  final Widget child;
+  final String searchText;
+
+  const SearchableRow({
+    super.key,
+    required this.label,
+    required this.child,
+    required this.searchText,
+    this.filterable = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return child;
+  }
+}
+
+Widget buildSectionWithRows({
+  required String title,
+  required List<SearchableRow> rows,
+  required String searchText,
+}) {
+  // "showAll" forces all rows to be visible if the section title matches the search text
+  // This ensures a search for the section name displays all rows in that section.
+  bool showAll = searchText.isNotEmpty && title.toLowerCase().contains(searchText.toLowerCase());
+
+  // For each filterable row, we show it if there's no search query,
+  // or if its label contains the search text, or if showAll is true
+  List<bool> isVisible = List.filled(rows.length, false);
+  for (int i = 0; i < rows.length; i++) {
+    SearchableRow row = rows[i];
+    if (row.filterable) {
+      isVisible[i] = searchText.isEmpty || row.label.toLowerCase().contains(searchText.toLowerCase()) || showAll;
+    } else {
+      isVisible[i] = searchText.isEmpty || (i > 0 && isVisible[i - 1]);
+    }
+  }
+
+  List<Widget> visibleWidgets = [];
+  for (int i = 0; i < rows.length; i++) {
+    if (isVisible[i]) {
+      visibleWidgets.add(rows[i].child);
+    }
+  }
+
+  if (visibleWidgets.isEmpty) return SizedBox.shrink();
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Section title is always displayed when the section has visible content
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 10)),
+        ],
+      ),
+      ...visibleWidgets,
+    ],
+  );
+}

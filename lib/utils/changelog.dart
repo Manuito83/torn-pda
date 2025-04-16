@@ -57,6 +57,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.7.5'
         ..date = '01 MAY 2025'
         ..features = [
+          "Browser settings are now searchable",
           "Browser should now center fields correctly when the keyboard is shown",
         ],
     );
