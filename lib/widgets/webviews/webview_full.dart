@@ -1442,10 +1442,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
             if (_settingsProvider.browserCenterEditingTextField) {
               c.evaluateJavascript(source: '''
-              window.addEventListener('focusin', (event) => {
-                setTimeout(() => {
-                  event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }, 300);
+                window.addEventListener('focusin', (event) => {
+                // Only proceed if it's an <input> element
+                // (otherwise, e.g. attacks buttons will trigger this)
+                const target = event.target;
+                if (target.tagName === 'INPUT') {
+                  setTimeout(() => {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 300);
+                }
               });
             ''');
             }
