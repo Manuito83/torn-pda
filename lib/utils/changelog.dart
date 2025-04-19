@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.5 - Build 513 - 17/04/2025
+    // v3.7.5 - Build 514 - 19/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.5'
@@ -59,6 +59,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Main settings section is now searchable",
           "Browser should now center fields correctly when the keyboard is shown",
+          "Fixed Torn Exchange profit calculation"
         ],
     );
 

@@ -264,7 +264,7 @@ class TradesWidgetState extends State<TradesWidget> {
       }
     } else {
       total += _tradesProv.container.rightMoney;
-      for (final item in _tradesProv.container.rightItems) {
+      for (final item in _tradesProv.container.rightOriginalItemsBeforeTornExchange) {
         total += item.totalBuyPrice;
       }
       for (final share in _tradesProv.container.rightShares) {
@@ -373,12 +373,12 @@ class TradesWidgetState extends State<TradesWidget> {
         );
       } else {
         // Do out best to parse the Torn Exchange total money and add money formatting
-        String tornExchangeTotal = "";
-        int? tornExchangeTotalMoney = int.tryParse(_tradesProv.container.tornExchangeTotalMoney);
-        if (tornExchangeTotalMoney != null) {
-          tornExchangeTotal = _moneyFormat.format(tornExchangeTotalMoney);
+        String tornExchangeTotalString = "";
+        int tornExchangeTotalMoney = int.tryParse(_tradesProv.container.tornExchangeTotalMoney) ?? -1;
+        if (tornExchangeTotalMoney != -1) {
+          tornExchangeTotalString = _moneyFormat.format(tornExchangeTotalMoney);
         } else {
-          tornExchangeTotal = _tradesProv.container.tornExchangeTotalMoney;
+          tornExchangeTotalString = _tradesProv.container.tornExchangeTotalMoney;
         }
 
         String tornExchangeProfit = "";
@@ -420,13 +420,26 @@ class TradesWidgetState extends State<TradesWidget> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Flexible(
-                  child: Text(
-                    '\$$tornExchangeTotal',
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'LIST',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                            color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 8),
+                      ),
+                      Text(
+                        '\$$tornExchangeTotalString',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -462,8 +475,8 @@ class TradesWidgetState extends State<TradesWidget> {
                   child: Text(
                     '\$${_moneyFormat.format(total)} market price',
                     textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: total <= tornExchangeTotalMoney ? Colors.orange : Colors.green,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -562,9 +575,18 @@ class TradesWidgetState extends State<TradesWidget> {
     if (_tornExchangeActive && side == 'right' && (!_tradesProv.container.tornExchangeServerError)) {
       final tornExchangeItems = _tradesProv.container.tornExchangeItems;
 
+      int tornExchangeListedItems = 0;
       for (final tornExchangeProduct in tornExchangeItems) {
         if (tornExchangeProduct.price == 0) {
           continue;
+        }
+
+        if (tornExchangeListedItems == 0) {
+          items.add(Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: Text('LISTED ITEMS', style: TextStyle(color: ttColor, fontSize: 8, fontWeight: FontWeight.bold)),
+          ));
+          tornExchangeListedItems = 1;
         }
 
         String itemName = tornExchangeProduct.name;
