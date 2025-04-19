@@ -17,7 +17,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
@@ -158,7 +158,7 @@ Future<void> main() async {
   // END ## Release splash screen
 
   // Avoid screen lock when testing in real device
-  if (kDebugMode && enableWakelockForDebug) {
+  if ((kDebugMode || kProfileMode) && enableWakelockForDebug) {
     log("########################################################");
     log("####### WAKELOCK ENABLED FOR DEBUGGING PURPOSES #######");
     log("########################################################");

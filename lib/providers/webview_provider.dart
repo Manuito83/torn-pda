@@ -499,7 +499,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   /// [recallLastSession] should be used to open a browser session where we left it last time
-  Future initialiseMain({
+  Future<void> initialiseMain({
     required String? initUrl,
     required BuildContext context,
     bool recallLastSession = false,
@@ -507,10 +507,11 @@ class WebViewProvider extends ChangeNotifier {
     ChainingPayload? chainingPayload,
     bool restoreSessionCookie = false,
   }) async {
+    // Restore session cookie if requested
     if (restoreSessionCookie) {
       try {
         final String sessionCookie = await Prefs().getWebViewSessionCookie();
-        if (sessionCookie != "") {
+        if (sessionCookie.isNotEmpty) {
           final cm = CookieManager.instance();
 
           final allCookies = await cm.getCookies(url: WebUri("https://www.torn.com"));
@@ -535,6 +536,7 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
 
+    // Load user preferences
     _bottomBarStyleEnabled = await Prefs().getBrowserBottomBarStyleEnabled();
     _bottomBarStyleType = await Prefs().getBrowserBottomBarStyleType();
     _browserBottomBarStylePlaceTabsAtBottom = await Prefs().getBrowserBottomBarStylePlaceTabsAtBottom();
@@ -545,11 +547,10 @@ class WebViewProvider extends ChangeNotifier {
     _useTabIcons = await Prefs().getUseTabsIcons();
     _hideTabs = await Prefs().getHideTabs();
 
-    // If we are sharing the downloads, we need to clear the files in the cache folder (although theoretically the OS
-    // should do this for us), as the user might not have access to the cache folder and can't free up space
+    // Clear temporary downloads if sharing is enabled
     await _clearTemporaryDownloadedFiles(context);
 
-    // Add the main opener
+    // Add the main opener tab, restoring last session if requested
     String? url = initUrl;
     if (recallLastSession) {
       final String savedJson = await Prefs().getWebViewMainTab();
@@ -577,6 +578,7 @@ class WebViewProvider extends ChangeNotifier {
         chainingPayload: chainingPayload,
       );
     }
+
     _currentTab = 0;
   }
 
@@ -662,6 +664,8 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  // TODO: old references to [windowId] can theoretically be removed since we are no longer using the windowId to open new tabs
+  //       (as we now use the [_openNewTabFromWindowRequest] method in WebViewFull and avoid creating new windows)
   Future addTab({
     GlobalKey? tabKey,
     int? windowId,
@@ -1548,6 +1552,8 @@ class WebViewProvider extends ChangeNotifier {
     }
     _lastBrowserOpenedTime = DateTime.now();
 
+    final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+
     final UiMode uiMode = _decideBrowserScreenMode(tapType: browserTapType, context: context);
     setCurrentUiMode(uiMode, context);
 
@@ -1557,7 +1563,6 @@ class WebViewProvider extends ChangeNotifier {
 
       String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
 
-      final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
       w.stackView = WebViewStackView(
         initUrl: authUrl,
         recallLastSession: recallLastSession,

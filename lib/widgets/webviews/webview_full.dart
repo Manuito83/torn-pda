@@ -469,12 +469,24 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   @override
   void dispose() {
     try {
-      super.dispose();
       WidgetsBinding.instance.removeObserver(this);
-      webViewController?.dispose();
+
       _findController.dispose();
+      _findFocus.dispose();
+
       _chainWidgetController.dispose();
+      _crimesController.dispose();
+      _quickItemsController.dispose();
+      _quickItemsFactionController.dispose();
+      _ocNnbController.dispose();
+
+      _pullToRefreshController?.dispose();
+
       _scrollControllerBugsReport.dispose();
+
+      webViewController?.dispose();
+
+      super.dispose();
     } catch (e) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
       if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
@@ -1348,16 +1360,16 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           },
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
+
             // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
             // to open a window, a new tab is created but we can't see it and looks like a glitch)
             if (!_settingsProvider.useTabsFullBrowser) {
               final String url = request.request.url.toString().replaceAll("http:", "https:");
               _loadUrl(url);
             } else {
-              // If we are using tabs, add a tab
-              final String url = request.request.url.toString().replaceAll("http:", "https:");
-              _webViewProvider.addTab(url: url, windowId: request.windowId);
-              _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+              // Creates a completely new webview with the URL (instead of a webview window)
+              _openNewTabFromWindowRequest(request.request.url.toString().replaceAll("http:", "https:"));
+              return false;
             }
             return true;
           },
@@ -1879,6 +1891,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     );
   }
 
+  _openNewTabFromWindowRequest(String url) {
+    _webViewProvider.addTab(url: url);
+    _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
+  }
+
   _removeTravelAirplaneIfEnabled(InAppWebViewController c) async {
     if (_settingsProvider.removeAirplane) {
       if ((await c.getUrl()).toString() == "https://www.torn.com/page.php?sid=travel") {
@@ -2099,10 +2116,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future removeAllUserScripts() async {
-    try {
-      await webViewController?.removeAllUserScripts();
-    } catch (e) {
-      log("Webview controller is null at userscripts removal");
+    if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
+      try {
+        await webViewController?.removeAllUserScripts();
+      } catch (e) {
+        log("Webview controller is null at userscripts removal");
+      }
     }
   }
 
