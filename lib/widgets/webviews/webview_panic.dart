@@ -119,10 +119,10 @@ class WebViewPanicState extends State<WebViewPanic> {
       ..setBackgroundColor(const Color(0x00000000))
       ..setUserAgent(
         Platform.isAndroid
-            ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
-            : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
+            ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 "
+                "Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
+            : "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                "CriOS/132.0.6834.100 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
       )
       ..addJavaScriptChannel(
         'loadoutChangeHandler',

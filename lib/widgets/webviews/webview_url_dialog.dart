@@ -318,11 +318,16 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                         onPressed: () {
                           Navigator.of(context).pop();
-                          widget.inAppWebview!.loadUrl(
-                            urlRequest: URLRequest(
-                              url: WebUri("https://www.torn.com"),
-                            ),
-                          );
+                          if (widget.inAppWebview != null) {
+                            widget.inAppWebview!.loadUrl(
+                              urlRequest: URLRequest(
+                                url: WebUri("https://www.torn.com"),
+                              ),
+                            );
+                          }
+                          if (widget.stockWebView != null) {
+                            widget.stockWebView!.loadRequest(Uri.parse("https://www.torn.com"));
+                          }
                         },
                       ),
                     ),
@@ -654,7 +659,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
           ),
         );
       } else {
-        widget.stockWebView!.loadRequest(Uri.parse(_customURLController.text));
+        widget.stockWebView!.loadRequest(Uri.parse(url));
       }
 
       _customURLController.text = "";
