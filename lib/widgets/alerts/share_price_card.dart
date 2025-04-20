@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/alerts/share_price_dialog.dart';
@@ -134,7 +134,7 @@ class SharePriceCardState extends State<SharePriceCard> {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(MdiIcons.vectorPolylineEdit),
+            icon: const Icon(MdiIcons.vectorPolylineEdit),
             onPressed: () {
               _showSharePriceDialog();
             },

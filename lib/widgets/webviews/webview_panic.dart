@@ -8,7 +8,7 @@ import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
 // Project imports:
@@ -408,7 +408,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       hideChatIcon = Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.chatOutline),
+          child: const Icon(MdiIcons.chatOutline),
           onTap: () async {
             _webViewController!.runJavaScript(removeChatJS());
             Prefs().setChatRemovalActive(true);
@@ -442,7 +442,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.refresh),
+          child: const Icon(MdiIcons.refresh),
           onTap: () async {
             await _webViewController!.reload();
 
@@ -465,7 +465,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.linkVariant),
+          child: const Icon(MdiIcons.linkVariant),
           onTap: () {
             _chainWidgetController.expanded
                 ? _chainWidgetController.expanded = false

@@ -3,7 +3,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 
 // Project imports:
@@ -124,7 +124,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                   child: SizedBox(
                     height: 34,
                     width: 34,
-                    child: Icon(MdiIcons.backupRestore),
+                    child: const Icon(MdiIcons.backupRestore),
                   ),
                 ),
               ),

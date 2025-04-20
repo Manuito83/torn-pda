@@ -1,6 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -185,7 +185,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                                 _callBackValues();
                               }
                             },
-                            child: Icon(MdiIcons.minus),
+                            child: const Icon(MdiIcons.minus),
                           ),
                           const SizedBox(width: 10),
                           OutlinedButton(
@@ -197,7 +197,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                                 _callBackValues();
                               }
                             },
-                            child: Icon(MdiIcons.plus),
+                            child: const Icon(MdiIcons.plus),
                           ),
                         ],
                       )

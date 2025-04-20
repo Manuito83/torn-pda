@@ -17,7 +17,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
@@ -3357,7 +3357,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 },
                 child: Padding(
                   padding: EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size: 18),
+                  child: const Icon(MdiIcons.openInApp, size: 18),
                 ),
               ),
             ],
@@ -4459,7 +4459,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 },
                 child: Padding(
                   padding: EdgeInsets.only(left: 5),
-                  child: Icon(MdiIcons.openInApp, size: 24),
+                  child: const Icon(MdiIcons.openInApp, size: 24),
                 ),
               ),
             ],
@@ -4506,7 +4506,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         factionCrimesActive = true;
         factionCrimes = Row(
           children: [
-            Icon(MdiIcons.fingerprint),
+            const Icon(MdiIcons.fingerprint),
             const SizedBox(width: 10),
             Flexible(
               child: Text(
@@ -4531,7 +4531,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 },
                 child: Padding(
                   padding: EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size: 18),
+                  child: const Icon(MdiIcons.openInApp, size: 18),
                 ),
               ),
           ],
@@ -4540,7 +4540,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         factionCrimesActive = true;
         factionCrimes = Row(
           children: [
-            Icon(MdiIcons.fingerprint),
+            const Icon(MdiIcons.fingerprint),
             const SizedBox(width: 10),
             Flexible(
               child: Text(
@@ -4559,7 +4559,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 },
                 child: Padding(
                   padding: EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size: 18),
+                  child: const Icon(MdiIcons.openInApp, size: 18),
                 ),
               ),
             GestureDetector(
@@ -4613,7 +4613,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       bankWidget = Row(
         children: <Widget>[
-          Icon(MdiIcons.bankOutline),
+          const Icon(MdiIcons.bankOutline),
           const SizedBox(width: 10),
           Flexible(
             child: RichText(
@@ -4673,7 +4673,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
         educationWidget = Row(
           children: <Widget>[
-            Icon(MdiIcons.schoolOutline),
+            const Icon(MdiIcons.schoolOutline),
             const SizedBox(width: 10),
             Flexible(
               child: RichText(
@@ -4710,7 +4710,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           educationActive = true;
           educationWidget = Row(
             children: <Widget>[
-              Icon(MdiIcons.schoolOutline),
+              const Icon(MdiIcons.schoolOutline),
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
@@ -4746,7 +4746,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       donatorWidget = Row(
         children: <Widget>[
-          Icon(MdiIcons.starOutline),
+          const Icon(MdiIcons.starOutline),
           const SizedBox(width: 10),
           Flexible(
             child: Text(
@@ -7580,7 +7580,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             },
             child: Padding(
               padding: const EdgeInsets.only(left: 5),
-              child: Icon(MdiIcons.openInApp, size: 18),
+              child: const Icon(MdiIcons.openInApp, size: 18),
             ),
           ),
         ],

@@ -11,7 +11,7 @@ import 'package:flutter_font_icons/flutter_font_icons.dart';
 // Package imports:
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 // Project imports:
@@ -130,7 +130,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   GestureDetector(
                     child: Row(
                       children: [
-                        Icon(MdiIcons.cctv),
+                        const Icon(MdiIcons.cctv),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
@@ -277,7 +277,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                           padding: const EdgeInsets.only(right: 5),
                           child: Transform.rotate(
                             angle: 90 * math.pi / 180,
-                            child: Icon(MdiIcons.glassStange, color: Colors.red),
+                            child: const Icon(MdiIcons.glassStange, color: Colors.red),
                           ),
                         ),
                         onTap: () {
@@ -497,7 +497,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                     width: 25,
                     child: Transform.rotate(
                       angle: 90 * math.pi / 180,
-                      child: Icon(MdiIcons.glassStange, color: Colors.red),
+                      child: const Icon(MdiIcons.glassStange, color: Colors.red),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -872,7 +872,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                         width: 28,
                         child: Transform.rotate(
                           angle: 90 * math.pi / 180,
-                          child: Icon(MdiIcons.glassStange, color: Colors.red),
+                          child: const Icon(MdiIcons.glassStange, color: Colors.red),
                         ),
                       ),
                     ),

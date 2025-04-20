@@ -7,7 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
@@ -369,7 +369,7 @@ class TargetsPageState extends State<TargetsPage> {
               if (_yataButtonEnabled!) {
                 if (_yataButtonInProgress) {
                   return IconButton(
-                    icon: Icon(MdiIcons.alphaYCircleOutline),
+                    icon: const Icon(MdiIcons.alphaYCircleOutline),
                     onPressed: () async {
                       setState(() {
                         _yataButtonInProgress = false;

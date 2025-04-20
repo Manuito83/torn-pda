@@ -6,7 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -495,7 +495,7 @@ class StakeoutsController extends GetxController {
       final bool landedNow = tornProfile.status!.state != "Traveling";
       if (!alertStakeout.landedLast && landedNow) {
         alerts.add("${alertStakeout.name} has landed!");
-        icons.add(Icon(MdiIcons.airplaneLanding, color: Colors.blue));
+        icons.add(const Icon(MdiIcons.airplaneLanding, color: Colors.blue));
       }
     }
 
@@ -503,7 +503,7 @@ class StakeoutsController extends GetxController {
       final bool onlineNow = tornProfile.lastAction!.status == "Online";
       if (!alertStakeout.onlineLast && onlineNow) {
         alerts.add("${alertStakeout.name} is online!");
-        icons.add(Icon(MdiIcons.circle, color: Colors.green));
+        icons.add(const Icon(MdiIcons.circle, color: Colors.green));
       }
     }
 
@@ -515,7 +515,7 @@ class StakeoutsController extends GetxController {
           Container(
             child: Transform.rotate(
               angle: 90 * math.pi / 180,
-              child: Icon(MdiIcons.glassStange, color: Colors.red),
+              child: const Icon(MdiIcons.glassStange, color: Colors.red),
             ),
           ),
         );
@@ -614,7 +614,7 @@ class CustomWidgetState extends State<CustomWidget> {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget>[
                 IconButton(
-                  icon: Icon(MdiIcons.cctv),
+                  icon: const Icon(MdiIcons.cctv),
                   onPressed: () async {
                     final s = Get.find<StakeoutsController>();
                     s.callbackBrowser('https://www.torn.com/profiles.php?XID=${widget.stakeoutId}');

@@ -7,7 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -448,7 +448,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               children: [
                 Flexible(child: const Text("Manage scripts")),
                 IconButton(
-                  icon: Icon(MdiIcons.script),
+                  icon: const Icon(MdiIcons.script),
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -841,7 +841,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               children: [
                 Flexible(child: const Text("Navigation exceptions for locked tabs")),
                 ElevatedButton(
-                  child: Icon(MdiIcons.lockRemoveOutline),
+                  child: const Icon(MdiIcons.lockRemoveOutline),
                   onPressed: () async {
                     Navigator.of(context).push(
                       MaterialPageRoute(

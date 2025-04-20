@@ -14,7 +14,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -1840,7 +1840,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   Widget _arrivalTime() {
     return Row(
       children: [
-        Icon(MdiIcons.airplaneLanding, size: 12),
+        const Icon(MdiIcons.airplaneLanding, size: 12),
         const SizedBox(width: 2),
         if (_flyingToThisCountry)
           if (_landedInWidgetCountry)

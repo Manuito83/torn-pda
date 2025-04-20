@@ -6,7 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
@@ -329,7 +329,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           })
                     else if (script.updateStatus == UserScriptUpdateStatus.error)
                       GestureDetector(
-                          child: Icon(MdiIcons.earthRemove, color: Colors.red, size: 20),
+                          child: const Icon(MdiIcons.earthRemove, color: Colors.red, size: 20),
                           onTap: () async {
                             BotToast.showText(
                               text: "An error occurred while checking for updates. Please try again later.",
@@ -355,7 +355,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                               ))
                     else
                       GestureDetector(
-                        child: Icon(MdiIcons.helpCircle, color: Colors.blue, size: 20),
+                        child: const Icon(MdiIcons.helpCircle, color: Colors.blue, size: 20),
                         onTap: () async {
                           BotToast.showText(
                             text: "The update status of this script could not be determined.",

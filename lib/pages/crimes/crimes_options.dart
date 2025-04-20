@@ -3,7 +3,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
@@ -226,7 +226,7 @@ class CrimesOptionsState extends State<CrimesOptions> {
               padding: const EdgeInsets.fromLTRB(20, 15, 20, 20),
               child: Row(
                 children: <Widget>[
-                  Icon(MdiIcons.fingerprint),
+                  const Icon(MdiIcons.fingerprint),
                   const SizedBox(width: 10),
                   Text('$catName'),
                   const SizedBox(width: 10),

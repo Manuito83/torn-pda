@@ -3,7 +3,7 @@ import 'dart:developer';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -185,7 +185,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               children: [
                 Row(
                   children: [
-                    Icon(MdiIcons.earth, size: 14),
+                    const Icon(MdiIcons.earth, size: 14),
                     SizedBox(width: 4),
                     const Text("Remote load/update"),
                   ],
@@ -206,7 +206,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               children: [
                 Row(
                   children: [
-                    Icon(MdiIcons.lightningBoltOutline, size: 16),
+                    const Icon(MdiIcons.lightningBoltOutline, size: 16),
                     SizedBox(width: 4),
                     const Text("Injection time"),
                   ],
@@ -332,14 +332,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                 Container(
                     width: 20,
                     child: GestureDetector(
-                      child: Icon(MdiIcons.arrowLeft),
+                      child: const Icon(MdiIcons.arrowLeft),
                       onTap: () {
                         _tabController.animateTo(0);
                       },
                     )),
                 Row(
                   children: [
-                    Icon(MdiIcons.earth),
+                    const Icon(MdiIcons.earth),
                     const SizedBox(width: 6),
                     Text(widget.editExisting ? "Remote script update" : "Remote script load"),
                   ],

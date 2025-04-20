@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/trades/awh_out.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_receipt.dart';
@@ -827,7 +827,7 @@ class TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.home, size: 18, color: Colors.white),
+            const Icon(MdiIcons.home, size: 18, color: Colors.white),
             const SizedBox(width: 5),
             Text(
               propertyName,
@@ -872,7 +872,7 @@ class TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
+            const Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
             const SizedBox(width: 5),
             Text(
               shareName,

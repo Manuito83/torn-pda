@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 
 // Project imports:
@@ -47,12 +47,12 @@ class MarketDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(MdiIcons.basketOutline, size: 22),
+                  const Icon(MdiIcons.basketOutline, size: 22),
                   const SizedBox(width: 6),
                   Text("MARKET"),
                   const SizedBox(width: 6),
                   GestureDetector(
-                    child: Icon(MdiIcons.openInApp, size: 18),
+                    child: const Icon(MdiIcons.openInApp, size: 18),
                     onTap: () {
                       Navigator.of(context).pop();
                       openTapCallback();

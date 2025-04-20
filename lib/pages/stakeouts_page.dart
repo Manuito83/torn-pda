@@ -6,7 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/drawer.dart';
@@ -209,7 +209,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
       ),
       actions: <Widget>[
         IconButton(
-          icon: Icon(MdiIcons.cameraPlusOutline),
+          icon: const Icon(MdiIcons.cameraPlusOutline),
           color: _s.stakeouts.length >= 15 ? Colors.grey : Colors.white,
           onPressed: () {
             if (_s.stakeouts.length >= 15) {

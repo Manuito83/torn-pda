@@ -5,7 +5,7 @@ import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_xlider/flutter_xlider.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/jail/jail_record_dialog.dart';
@@ -563,7 +563,7 @@ class JailWidgetState extends State<JailWidget> {
               ),
             ),
             GestureDetector(
-              child: Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
+              child: const Icon(MdiIcons.alarmPanelOutline, color: Colors.white70, size: 21),
               onTap: () {
                 showDialog<void>(
                   context: context,

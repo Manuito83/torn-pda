@@ -22,7 +22,7 @@ import 'package:get/get.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';

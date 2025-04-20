@@ -1,6 +1,6 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -185,7 +185,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                       ),
                     ),
                     Tab(
-                      icon: Icon(MdiIcons.compareHorizontal, color: Colors.white),
+                      icon: const Icon(MdiIcons.compareHorizontal, color: Colors.white),
                     ),
                     if (widget.tscStatsPayload != null &&
                         !_disableTSCcalledBack &&

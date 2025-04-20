@@ -79,7 +79,7 @@ dependencies:
   ## flutter pub run import_sorter:main
   import_sorter: 4.6.0
   intl: 0.20.1
-  material_design_icons_flutter: 7.0.7296 ## Breaking changes in minor versions
+  flutter_material_design_icons: 1.1.7447
   path_provider: 2.1.5
   percent_indicator: 4.2.3
   provider: 6.1.2

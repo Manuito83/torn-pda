@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
@@ -1749,9 +1749,9 @@ class WebViewProvider extends ChangeNotifier {
 
     // Find some icons manually first, as they might trigger errors with shortcuts
     if (tabList[i].isChainingBrowser) {
-      return Icon(MdiIcons.linkVariant, color: Colors.red);
+      return const Icon(MdiIcons.linkVariant, color: Colors.red);
     } else if (url.contains("sid=attack&user2ID=2225097")) {
-      return Icon(MdiIcons.pistol, color: Colors.pink);
+      return const Icon(MdiIcons.pistol, color: Colors.pink);
     } else if (url.contains("sid=attack&user2ID=")) {
       return Icon(Icons.person, color: iconColor);
     } else if (url.contains("profiles.php?XID=2225097")) {

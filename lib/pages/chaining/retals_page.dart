@@ -4,8 +4,8 @@ import 'dart:async';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/retal_model.dart';

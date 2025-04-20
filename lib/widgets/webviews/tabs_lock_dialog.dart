@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
@@ -97,7 +97,7 @@ class TabsLockDialog extends StatelessWidget {
                   child: SizedBox(
                     height: 28,
                     width: 28,
-                    child: Icon(MdiIcons.lock),
+                    child: const Icon(MdiIcons.lock),
                   ),
                 ),
               ),

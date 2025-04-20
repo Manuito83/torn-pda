@@ -20,7 +20,7 @@ import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -1907,21 +1907,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case 1:
         return const Icon(Icons.local_airport);
       case 2:
-        return Icon(MdiIcons.linkVariant);
+        return const Icon(MdiIcons.linkVariant);
       case 3:
-        return Icon(MdiIcons.knifeMilitary);
+        return const Icon(MdiIcons.knifeMilitary);
       case 4:
         return const Icon(Icons.people);
       case 5:
-        return Icon(MdiIcons.cctv);
+        return const Icon(MdiIcons.cctv);
       case 6:
-        return Icon(MdiIcons.trophy);
+        return const Icon(MdiIcons.trophy);
       case 7:
-        return Icon(MdiIcons.packageVariantClosed);
+        return const Icon(MdiIcons.packageVariantClosed);
       case 8:
         return const Icon(MaterialCommunityIcons.sword_cross);
       case 9:
-        return Icon(MdiIcons.bankTransfer);
+        return const Icon(MdiIcons.bankTransfer);
       // Case 10 is Wiki, which is a widget with its own icon
       case 11:
         return const Icon(Icons.notifications_active);
@@ -2385,7 +2385,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                       child: SizedBox(
                         height: 34,
                         width: 34,
-                        child: Icon(MdiIcons.chartLine, color: Colors.green),
+                        child: const Icon(MdiIcons.chartLine, color: Colors.green),
                       ),
                     ),
                   ),

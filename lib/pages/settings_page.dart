@@ -16,7 +16,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
@@ -356,7 +356,7 @@ class SettingsPageState extends State<SettingsPage> {
               children: [
                 const Text("Advanced browser settings"),
                 IconButton(
-                  icon: Icon(MdiIcons.web),
+                  icon: const Icon(MdiIcons.web),
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
@@ -1008,7 +1008,7 @@ class SettingsPageState extends State<SettingsPage> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(right: 5),
-                        child: Icon(MdiIcons.accountMultipleOutline, size: 18),
+                        child: const Icon(MdiIcons.accountMultipleOutline, size: 18),
                       ),
                       Text(
                         "${s.spiesSource == SpiesSource.yata ? 'YATA' : 'Torn Stats'} database: ${s.spiesSource == SpiesSource.yata ? s.yataSpies.length : s.tornStatsSpies.spies.length} spies",
@@ -1021,7 +1021,7 @@ class SettingsPageState extends State<SettingsPage> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(right: 5),
-                        child: Icon(MdiIcons.clockOutline, size: 18),
+                        child: const Icon(MdiIcons.clockOutline, size: 18),
                       ),
                       Text(lastUpdated, style: TextStyle(color: spiesUpdateColor)),
                     ],
@@ -1042,7 +1042,7 @@ class SettingsPageState extends State<SettingsPage> {
             children: [
               Flexible(child: const Text("Manage spies")),
               IconButton(
-                icon: Icon(MdiIcons.incognito),
+                icon: const Icon(MdiIcons.incognito),
                 onPressed: () {
                   showDialog(
                     barrierDismissible: false,

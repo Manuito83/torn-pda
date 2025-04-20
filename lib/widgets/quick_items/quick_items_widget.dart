@@ -6,7 +6,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 // Package imports:
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';

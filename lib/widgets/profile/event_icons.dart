@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class EventIcons extends StatelessWidget {

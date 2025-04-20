@@ -5,7 +5,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/main.dart';
@@ -736,7 +736,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                                 statusP.statusColorIsShown ? 12 : 0,
                                               ),
                                               child: _webViewProvider.currentUiMode == UiMode.window
-                                                  ? Icon(MdiIcons.dotsHorizontal)
+                                                  ? const Icon(MdiIcons.dotsHorizontal)
                                                   : Icon(
                                                       MdiIcons.dotsHorizontalCircleOutline,
                                                       color: Colors.orange[800],

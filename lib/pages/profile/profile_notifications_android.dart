@@ -3,7 +3,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -297,7 +297,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
                       },
                     ),
                     GestureDetector(
-                      child: Icon(MdiIcons.alarmPanelOutline, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,
@@ -353,7 +353,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
                       },
                     ),
                     GestureDetector(
-                      child: Icon(MdiIcons.alarmPanelOutline, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,

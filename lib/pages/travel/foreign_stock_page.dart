@@ -10,7 +10,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -378,7 +378,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           },
         ),
         IconButton(
-          icon: Icon(MdiIcons.eyeRemoveOutline),
+          icon: const Icon(MdiIcons.eyeRemoveOutline),
           onPressed: _hiddenStocks.isEmpty
               ? null
               : () {
