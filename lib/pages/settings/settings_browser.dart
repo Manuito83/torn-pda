@@ -3020,26 +3020,42 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Flexible(child: Text("Center text field when editing")),
+                  // TODO
                   Switch(
-                    value: _settingsProvider.browserCenterEditingTextField,
-                    onChanged: (value) {
-                      setState(() {
-                        _settingsProvider.browserCenterEditingTextField = value;
-                      });
-                    },
+                    value: _settingsProvider.browserCenterEditingTextField &&
+                        _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed,
+                    onChanged: !_settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _settingsProvider.browserCenterEditingTextField = value;
+                            });
+                          },
                     activeTrackColor: Colors.lightGreenAccent,
                     activeColor: Colors.green,
+                    inactiveThumbColor:
+                        !_settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed ? Colors.grey[800] : null,
                   ),
                 ],
               ),
-              Text(
-                "Automatically scrolls to keep the text field visible when editing.",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 12,
-                  fontStyle: FontStyle.italic,
+              if (_settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed)
+                Text(
+                  "Automatically scrolls to keep the text field visible when editing.",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
+              else
+                Text(
+                  "This option is temporarily disabled from Torn PDA and can't be changed right now",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
-              ),
             ],
           ),
         ),

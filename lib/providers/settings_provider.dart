@@ -142,6 +142,13 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _browserCenterEditingTextFieldRemoteConfigAllowed = true;
+  bool get browserCenterEditingTextFieldRemoteConfigAllowed => _browserCenterEditingTextFieldRemoteConfigAllowed;
+  set browserCenterEditingTextFieldRemoteConfigAllowed(bool value) {
+    _browserCenterEditingTextFieldRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {

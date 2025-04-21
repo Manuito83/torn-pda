@@ -1449,7 +1449,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           onLoadStop: (c, uri) async {
             if (!mounted) return;
 
-            if (_settingsProvider.browserCenterEditingTextField) {
+            if (_settingsProvider.browserCenterEditingTextField &&
+                // We also need to allow this from the Firebase Remote Config just
+                // in case it interferes with other HTML elements
+                _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed) {
               c.evaluateJavascript(source: '''
                 window.addEventListener('focusin', (event) => {
                 // Only proceed if it's an <input> element

@@ -322,10 +322,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Remote Config settings
     if (!Platform.isWindows) {
-      remoteConfig.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(minutes: 1),
-        minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
-      ));
+      remoteConfig.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(minutes: 30),
+          minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
+        ),
+      );
 
       // Remote Config defaults
       remoteConfig.setDefaults(const {
@@ -335,6 +337,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "tornexchange_enabled": true,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
+        "browser_center_editing_text_field_allowed": true,
         // Revives
         "revive_hela": "1 million or 1 Xanax",
         "revive_revive": "1 million or 1 Xanax",
@@ -352,6 +355,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
         _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+        _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
+            remoteConfig.getBool("browser_center_editing_text_field_allowed");
         // Revives
         _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
         _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
@@ -372,6 +377,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
           _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
           _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+          _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
+              remoteConfig.getBool("browser_center_editing_text_field_allowed");
           // Revives
           _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
           _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
