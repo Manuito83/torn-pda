@@ -103,7 +103,7 @@ class AwardCardPinState extends State<AwardCardPin> {
                         }
                       : null,
                   child: _pinActive
-                      ? Icon(
+                      ? const Icon(
                           MdiIcons.pin,
                           color: Colors.green,
                           size: 20,

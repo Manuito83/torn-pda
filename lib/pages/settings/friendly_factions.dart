@@ -213,7 +213,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('Friendly factions', style: TextStyle(color: Colors.white)),

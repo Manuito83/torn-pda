@@ -745,7 +745,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  RangeValues _travelEnergyRangeWarningThreshold = RangeValues(10, 100);
+  RangeValues _travelEnergyRangeWarningThreshold = const RangeValues(10, 100);
   RangeValues get travelEnergyRangeWarningThreshold => _travelEnergyRangeWarningThreshold;
   set travelEnergyRangeWarningThreshold(RangeValues range) {
     _travelEnergyRangeWarningThreshold = range;

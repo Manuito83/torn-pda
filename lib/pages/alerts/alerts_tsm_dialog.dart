@@ -47,10 +47,10 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
               child: _isTestingNotification
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
@@ -58,7 +58,7 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
                         strokeWidth: 2,
                       ),
                     )
-                  : Text("Test Notification"),
+                  : const Text("Test Notification"),
               onPressed: _isTestingNotification
                   ? null
                   : () async {
@@ -136,10 +136,10 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: ElevatedButton(
               child: _isResetting
-                  ? SizedBox(
+                  ? const SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
@@ -147,7 +147,7 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
                         strokeWidth: 2,
                       ),
                     )
-                  : Text("Soft Reset"),
+                  : const Text("Soft Reset"),
               onPressed: _isResetting
                   ? null
                   : () async {

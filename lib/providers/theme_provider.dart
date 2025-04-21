@@ -71,21 +71,21 @@ class ThemeProvider extends ChangeNotifier {
   final _colorMainTextDARK = Colors.grey[50]!;
   final _colorButtonTextDARK = Colors.grey[200]!;
   final _colorNavSelectedDARK = Colors.blueGrey[600]!;
-  final _colorStatusBarDARK = Color.fromARGB(255, 37, 37, 37);
+  final _colorStatusBarDARK = const Color.fromARGB(255, 37, 37, 37);
   // Cards
   final _colorCardDARK = Colors.grey[800]!;
   final _surfaceTintCardDARK = Colors.grey[800]!;
 
   // COLORS ##EXTRA DARK##
   final _canvasBackgroundExtraDARK = Colors.black;
-  final _colorBackgroundExtraDARK = Color(0xFF0C0C0C);
+  final _colorBackgroundExtraDARK = const Color(0xFF0C0C0C);
   final _colorMainTextExtraDARK = Colors.grey[50]!;
   final _colorButtonTextExtraDARK = Colors.grey[200]!;
   final _colorNavSelectedExtraDARK = Colors.blueGrey[800]!;
-  final _colorStatusBarExtraDARK = Color(0xFF0C0C0C);
+  final _colorStatusBarExtraDARK = const Color(0xFF0C0C0C);
   // Cards
-  final _colorCardExtraDARK = Color.fromARGB(255, 14, 14, 14);
-  final _surfaceTintCardExtraDARK = Color.fromARGB(255, 14, 14, 14);
+  final _colorCardExtraDARK = const Color.fromARGB(255, 14, 14, 14);
+  final _surfaceTintCardExtraDARK = const Color.fromARGB(255, 14, 14, 14);
 
   void _getColors() {
     switch (_currentTheme) {

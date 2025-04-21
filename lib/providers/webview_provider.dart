@@ -1745,7 +1745,7 @@ class WebViewProvider extends ChangeNotifier {
     final themeProvider = context.read<ThemeProvider>();
     Color iconColor = themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white;
 
-    Widget boxWidget = ImageIcon(AssetImage('images/icons/pda_icon.png'), color: iconColor);
+    Widget boxWidget = ImageIcon(const AssetImage('images/icons/pda_icon.png'), color: iconColor);
 
     // Find some icons manually first, as they might trigger errors with shortcuts
     if (tabList[i].isChainingBrowser) {
@@ -1755,15 +1755,15 @@ class WebViewProvider extends ChangeNotifier {
     } else if (url.contains("sid=attack&user2ID=")) {
       return Icon(Icons.person, color: iconColor);
     } else if (url.contains("profiles.php?XID=2225097")) {
-      return Icon(Icons.person, color: Colors.pink);
+      return const Icon(Icons.person, color: Colors.pink);
     } else if (url.contains("profiles.php")) {
       return Icon(Icons.person, color: iconColor);
     } else if (url.contains("companies.php") || url.contains("joblist.php")) {
-      return ImageIcon(AssetImage('images/icons/home/job.png'), color: iconColor);
+      return ImageIcon(const AssetImage('images/icons/home/job.png'), color: iconColor);
     } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
-      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
+      return const ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
     } else if (url.contains("https://www.torn.com/forums.php")) {
-      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: iconColor);
+      return ImageIcon(const AssetImage('images/icons/home/forums.png'), color: iconColor);
     } else if (url.contains("yata.yt")) {
       return Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("jailview.php")) {
@@ -1789,7 +1789,7 @@ class WebViewProvider extends ChangeNotifier {
     } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
       return Image.asset('images/icons/home/crimes.png', color: iconColor);
     } else if (url.contains("index.php")) {
-      return ImageIcon(AssetImage('images/icons/home/home.png'), color: iconColor);
+      return ImageIcon(const AssetImage('images/icons/home/home.png'), color: iconColor);
     } else if (!url.contains("torn.com")) {
       return Icon(Icons.public, size: 22, color: iconColor);
     }

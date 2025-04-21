@@ -171,6 +171,6 @@ class _ProfileCheckNotesState extends State<ProfileCheckNotes> {
       );
     }
 
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 }

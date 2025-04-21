@@ -149,7 +149,7 @@ class _TradeReceiptRowState extends State<TradeReceiptRow> {
           child: IconButton(
             padding: EdgeInsets.zero,
             iconSize: 23,
-            icon: Icon(
+            icon: const Icon(
               MdiIcons.webCheck,
               size: 23,
               color: ttColor,

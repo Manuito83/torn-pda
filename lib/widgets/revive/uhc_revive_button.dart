@@ -231,7 +231,7 @@ openUhcReviveDialog(BuildContext c, ThemeProvider themeProvider, OwnProfileExten
                                 if (value == "200") {
                                   resultString = "Request received by UHC!\n\n"
                                       "Please pay your reviver "
-                                      "${revivePrice}!";
+                                      "$revivePrice!";
                                   resultColor = Colors.green[800];
                                 } else if (value == "error") {
                                   resultString = "There was an error contacting UHC, try again later"

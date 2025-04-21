@@ -148,7 +148,7 @@ class FriendDetailsPageState extends State<FriendDetailsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Text('${widget.friend!.name}'),
       leading: IconButton(

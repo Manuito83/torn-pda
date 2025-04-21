@@ -19,13 +19,13 @@ class BugsAnnouncementDialog extends StatelessWidget {
               //color: _themeProvider.mainText,
             ),
           ),
-          Flexible(child: const Text("Recent bugs reported with third-party user scripts")),
+          const Flexible(child: Text("Recent bugs reported with third-party user scripts")),
         ],
       ),
-      content: SingleChildScrollView(
+      content: const SingleChildScrollView(
         child: Column(
           children: [
-            const Text(
+            Text(
               "Over the past few months, we've received several reports regarding issues within the app "
               "(such as the Crimes page not loading, app crashes, general instability, etc.). "
               "After investigating alongside many of you, we've found that in the vast majority of cases, "
@@ -42,7 +42,7 @@ class BugsAnnouncementDialog extends StatelessWidget {
               "to report the problem, as we are unable to provide further support for third-party code.",
               style: TextStyle(fontSize: 14),
             ),
-            const SizedBox(height: 15),
+            SizedBox(height: 15),
           ],
         ),
       ),

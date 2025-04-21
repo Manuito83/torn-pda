@@ -94,10 +94,10 @@ class TabsLockDialog extends StatelessWidget {
                 child: CircleAvatar(
                   backgroundColor: themeProvider.mainText,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 28,
                     width: 28,
-                    child: const Icon(MdiIcons.lock),
+                    child: Icon(MdiIcons.lock),
                   ),
                 ),
               ),

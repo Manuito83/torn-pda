@@ -49,7 +49,7 @@ class MarketDialog extends StatelessWidget {
                 children: [
                   const Icon(MdiIcons.basketOutline, size: 22),
                   const SizedBox(width: 6),
-                  Text("MARKET"),
+                  const Text("MARKET"),
                   const SizedBox(width: 6),
                   GestureDetector(
                     child: const Icon(MdiIcons.openInApp, size: 18),

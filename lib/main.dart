@@ -243,7 +243,7 @@ Future<void> main() async {
   if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
     // Handle tap
     await Prefs().setBringBrowserForwardOnStart(true);
-    Future.delayed(Duration(seconds: 3)).then((value) {
+    Future.delayed(const Duration(seconds: 3)).then((value) {
       handleNotificationTap(notificationAppLaunchDetails!.notificationResponse);
     });
   }
@@ -290,7 +290,7 @@ Future<void> main() async {
   // iOS settings for AudioPlayer are managed through the controller
   AudioPlayer.global.setAudioContext(
     AudioContext(
-      android: AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
+      android: const AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
     ),
   );
 

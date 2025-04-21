@@ -30,8 +30,8 @@ class PdaBrowserIcon extends StatelessWidget {
         children: [
           Consumer<ChainStatusProvider>(
             builder: (context, provider, child) {
-              if (provider.statusColorWidgetEnabled) return StatusColorCounter();
-              return SizedBox.shrink();
+              if (provider.statusColorWidgetEnabled) return const StatusColorCounter();
+              return const SizedBox.shrink();
             },
           ),
           GestureDetector(

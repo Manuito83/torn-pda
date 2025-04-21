@@ -143,10 +143,10 @@ class EnergyNerveTriggerDialog extends StatelessWidget {
               child: CircleAvatar(
                 backgroundColor: themeProvider.secondBackground,
                 radius: 22,
-                child: SizedBox(
+                child: const SizedBox(
                   height: 34,
                   width: 34,
-                  child: const Icon(MdiIcons.alarmPanelOutline),
+                  child: Icon(MdiIcons.alarmPanelOutline),
                 ),
               ),
             ),

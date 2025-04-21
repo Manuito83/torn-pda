@@ -328,8 +328,8 @@ class WarCardState extends State<WarCard> {
                               contentPadding: const EdgeInsets.all(10),
                             );
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 10),
+                          child: const Padding(
+                            padding: EdgeInsets.only(right: 10),
                             child: Image(
                               image: AssetImage('images/icons/status/icon13.png'),
                               width: 18,
@@ -682,7 +682,7 @@ class WarCardState extends State<WarCard> {
           ),
           // If stats are not available, show a refresh button to get the user profile and be able to perform the
           // stats comparison and then give option to open the stats dialog
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: () {
               _updateThisMember();
@@ -1183,7 +1183,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       } else {
         _redStatusTicker?.cancel();
         lifeText = "OUT";
-        hospitalJailWarning = Icon(
+        hospitalJailWarning = const Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,
@@ -1249,7 +1249,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       }
     }
 
-    Widget statusUntilNotification = SizedBox.shrink();
+    Widget statusUntilNotification = const SizedBox.shrink();
     if (_member.status?.until != null && (_member.status?.until != 0 || true)) {
       final int currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final int untilSeconds = _member.status!.until! - currentTime;

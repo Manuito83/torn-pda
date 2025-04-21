@@ -55,7 +55,7 @@ class AwardCardState extends State<AwardCard> {
                   color: Colors.white,
                   backgroundColor: Colors.black.withOpacity(0.2),
                   shadows: [
-                    Shadow(
+                    const Shadow(
                       offset: Offset(2.0, 2.0),
                       blurRadius: 2.0,
                       color: Colors.black,
@@ -177,12 +177,12 @@ class AwardCardState extends State<AwardCard> {
                       : null,
                   child: _pinActive
                       ? _pinProvider.pinnedNames.contains(award.name)
-                          ? Icon(
+                          ? const Icon(
                               MdiIcons.pin,
                               color: Colors.green,
                               size: 20,
                             )
-                          : Icon(
+                          : const Icon(
                               MdiIcons.pinOutline,
                               size: 20,
                             )

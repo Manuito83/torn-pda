@@ -42,19 +42,19 @@ extension TabsWipeTimeRangeExtension on TabsWipeTimeRange {
       case TabsWipeTimeRange.any:
         return Duration.zero;
       case TabsWipeTimeRange.oneDay:
-        return Duration(days: 1);
+        return const Duration(days: 1);
       case TabsWipeTimeRange.twoDays:
-        return Duration(days: 2);
+        return const Duration(days: 2);
       case TabsWipeTimeRange.threeDays:
-        return Duration(days: 3);
+        return const Duration(days: 3);
       case TabsWipeTimeRange.fiveDays:
-        return Duration(days: 5);
+        return const Duration(days: 5);
       case TabsWipeTimeRange.sevenDays:
-        return Duration(days: 7);
+        return const Duration(days: 7);
       case TabsWipeTimeRange.fifteenDays:
-        return Duration(days: 15);
+        return const Duration(days: 15);
       case TabsWipeTimeRange.oneMonth:
-        return Duration(days: 30);
+        return const Duration(days: 30);
     }
   }
 }
@@ -195,10 +195,10 @@ class TabsWipeDialogState extends State<TabsWipeDialog> {
                 child: CircleAvatar(
                   backgroundColor: themeProvider.mainText,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 28,
                     width: 28,
-                    child: const Icon(MdiIcons.tabRemove),
+                    child: Icon(MdiIcons.tabRemove),
                   ),
                 ),
               ),

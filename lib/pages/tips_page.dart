@@ -281,7 +281,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
@@ -300,7 +300,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       title: const Text('Torn PDA - Tips', style: TextStyle(color: Colors.white)),
@@ -866,7 +866,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                 final isRestricted = snapshot.data!;
                 return Column(
                   children: [
-                    Text(
+                    const Text(
                       "Please be aware that the home screen widget has been built taking battery consumption into "
                       "consideration. It fetches the API and updates the layout once every few minutes, trying to minimize the "
                       "use of background tasks.\n\n"
@@ -1394,7 +1394,7 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                     ),
                     TextSpan(
                       text: "Android's Torn PDA app settings",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         color: Colors.blue,
                         fontSize: 13,

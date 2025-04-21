@@ -184,13 +184,13 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
                         color: _spyExists ? Colors.white : Colors.grey[800],
                       ),
                     ),
-                    Tab(
-                      icon: const Icon(MdiIcons.compareHorizontal, color: Colors.white),
+                    const Tab(
+                      icon: Icon(MdiIcons.compareHorizontal, color: Colors.white),
                     ),
                     if (widget.tscStatsPayload != null &&
                         !_disableTSCcalledBack &&
                         _settingsProvider.tscEnabledStatusRemoteConfig)
-                      Tab(
+                      const Tab(
                         child: Text(
                           "T S C",
                           style: TextStyle(

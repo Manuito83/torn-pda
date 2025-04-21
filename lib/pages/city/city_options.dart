@@ -136,7 +136,7 @@ class CityOptionsState extends State<CityOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("City Finder", style: TextStyle(color: Colors.white)),
       leading: IconButton(

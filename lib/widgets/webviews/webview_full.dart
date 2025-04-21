@@ -470,7 +470,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   void dispose() {
     try {
       WidgetsBinding.instance.removeObserver(this);
-
       _findController.dispose();
       _findFocus.dispose();
 
@@ -480,17 +479,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       _quickItemsFactionController.dispose();
       _ocNnbController.dispose();
 
-      _pullToRefreshController?.dispose();
-
       _scrollControllerBugsReport.dispose();
 
       webViewController?.dispose();
 
       super.dispose();
-    } catch (e) {
+    } catch (e, t) {
       if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at WebviewFull dispose");
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", null);
-      logToUser("PDA Crash at WebviewFull dispose: $e");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", t);
+      logToUser("PDA Crash at WebviewFull dispose: $e, $t");
     }
   }
 
@@ -1611,7 +1608,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                 // the webView to freeze for a bit
                 if (_tradesOnResourceTriggerTime != null &&
-                    DateTime.now().difference(_tradesOnResourceTriggerTime!).inSeconds < 2) return;
+                    DateTime.now().difference(_tradesOnResourceTriggerTime!).inSeconds < 2) {
+                  return;
+                }
                 _tradesOnResourceTriggerTime = DateTime.now();
 
                 _tradesTriggered = true;
@@ -1631,7 +1630,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 // We only allow this to trigger once, otherwise it wants to load dozens of times and causes
                 // the webView to freeze for a bit
                 if (_vaultOnResourceTriggerTime != null &&
-                    DateTime.now().difference(_vaultOnResourceTriggerTime!).inSeconds < 2) return;
+                    DateTime.now().difference(_vaultOnResourceTriggerTime!).inSeconds < 2) {
+                  return;
+                }
                 _vaultOnResourceTriggerTime = DateTime.now();
 
                 if (!_vaultTriggered) {
@@ -1810,30 +1811,30 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               context: context,
               builder: (context) {
                 return AlertDialog(
-                  title: Text('Authentication Required'),
+                  title: const Text('Authentication Required'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TextField(
                         controller: usernameController,
-                        decoration: InputDecoration(labelText: 'User'),
+                        decoration: const InputDecoration(labelText: 'User'),
                       ),
                       TextField(
                         controller: passwordController,
-                        decoration: InputDecoration(labelText: 'Password'),
+                        decoration: const InputDecoration(labelText: 'Password'),
                         obscureText: true,
                       ),
                     ],
                   ),
                   actions: [
                     TextButton(
-                      child: Text('Cancel'),
+                      child: const Text('Cancel'),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
                     ),
                     TextButton(
-                      child: Text('Send'),
+                      child: const Text('Send'),
                       onPressed: () {
                         proceed = true;
                         Navigator.of(context).pop();
@@ -1948,18 +1949,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 color: Colors.transparent,
                 child: Column(
                   children: [
-                    Icon(Icons.lock, color: Colors.red),
-                    SizedBox(height: 30),
+                    const Icon(Icons.lock, color: Colors.red),
+                    const SizedBox(height: 30),
                     GestureDetector(
                       behavior: HitTestBehavior.opaque,
                       child: Container(
-                        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           borderRadius: BorderRadius.circular(4.0),
                           border: Border.all(color: Colors.blue),
                         ),
-                        child: Text(
+                        child: const Text(
                           "Override!",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -1971,7 +1972,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                         toastification.dismissAll();
                         _forceAllowWhenLocked = true;
                         webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri.uri(incomingUrl)));
-                        Future.delayed(Duration(seconds: 2), () {
+                        Future.delayed(const Duration(seconds: 2), () {
                           _forceAllowWhenLocked = false;
                         });
                       },
@@ -1979,8 +1980,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                   ],
                 ),
               ),
-              autoCloseDuration: Duration(seconds: 3),
-              animationDuration: Duration(milliseconds: 0),
+              autoCloseDuration: const Duration(seconds: 3),
+              animationDuration: const Duration(milliseconds: 0),
               showProgressBar: false,
               style: ToastificationStyle.simple,
               borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
@@ -2180,7 +2181,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
       final newDoc = parse(await webViewController!.getHtml());
       if (newDoc.querySelectorAll("[class*='logInWrap_']").isEmpty ||
-          newDoc.body!.innerHtml.contains("failures from your IP address")) return;
+          newDoc.body!.innerHtml.contains("failures from your IP address")) {
+        return;
+      }
 
       final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
         context: context,
@@ -2495,12 +2498,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                                   _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
                               ? Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       MdiIcons.text,
                                       size: 14,
                                       color: Colors.lime,
                                     ),
-                                    SizedBox(width: 6),
+                                    const SizedBox(width: 6),
                                     Text(
                                       _webViewProvider.tabList[_webViewProvider.currentTab].customName,
                                       overflow: TextOverflow.fade,
@@ -4431,7 +4434,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Image.asset('images/icons/map/gym.png', width: 24),
-                        SizedBox(width: 20),
+                        const SizedBox(width: 20),
                         Flexible(
                           child: Text(
                             'Energy is too high '
@@ -4476,7 +4479,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Image.asset('images/icons/home/crimes.png', width: 24, color: Colors.red),
-                        SizedBox(width: 20),
+                        const SizedBox(width: 20),
                         Flexible(
                           child: Text(
                             'Nerve is too high '
@@ -4521,7 +4524,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Image.asset('images/icons/heart.png', width: 24, color: Colors.blue),
-                        SizedBox(width: 20),
+                        const SizedBox(width: 20),
                         Flexible(
                           child: Text(
                             'Life is too high '
@@ -4543,7 +4546,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       if (stats.faction?.factionId != 0)
                         Row(
                           children: [
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             GestureDetector(
                               child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
                               onTap: () {
@@ -4577,8 +4580,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Image.asset('images/icons/cooldowns/drug5.png', width: 24, color: Colors.grey),
-                        SizedBox(width: 20),
-                        Flexible(
+                        const SizedBox(width: 20),
+                        const Flexible(
                           child: Text(
                             'No drugs cooldown!',
                           ),
@@ -4598,7 +4601,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       if (stats.faction?.factionId != 0)
                         Row(
                           children: [
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             GestureDetector(
                               child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
                               onTap: () {
@@ -4632,8 +4635,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Image.asset('images/icons/cooldowns/booster5.png', width: 24, color: Colors.grey),
-                        SizedBox(width: 20),
-                        Flexible(
+                        const SizedBox(width: 20),
+                        const Flexible(
                           child: Text(
                             'No booster cooldown!',
                           ),
@@ -4653,7 +4656,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                       if (stats.faction?.factionId != 0)
                         Row(
                           children: [
-                            SizedBox(width: 10),
+                            const SizedBox(width: 10),
                             GestureDetector(
                               child: Image.asset('images/icons/faction.png', width: 20, color: _themeProvider.mainText),
                               onTap: () {
@@ -4687,8 +4690,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Icon(Icons.money, size: 24, color: Colors.green),
-                        SizedBox(width: 20),
+                        const Icon(Icons.money, size: 24, color: Colors.green),
+                        const SizedBox(width: 20),
                         Flexible(
                           child: Text(
                             'Low on cash! (< $cash)',
@@ -4734,11 +4737,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 margin: const EdgeInsets.all(8),
                 child: Column(
                   children: [
-                    Row(
+                    const Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
-                          child: const Text(
+                          child: Text(
                             'This could be a waste!',
                             textAlign: TextAlign.center,
                             style: TextStyle(
@@ -4748,15 +4751,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                         ),
                       ],
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     ...warnRows,
                     if (warnRows.isNotEmpty && cooldownRows.isNotEmpty)
-                      SizedBox(
+                      const SizedBox(
                         width: 50,
                         child: Divider(),
                       ),
                     ...cooldownRows,
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisSize: MainAxisSize.max,
@@ -4774,7 +4777,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                                   style: TextStyle(color: _themeProvider.mainText, fontSize: 10),
                                 ),
                                 style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12.0),
                                     side: BorderSide(color: _themeProvider.mainText, width: 1.0),
@@ -4796,7 +4799,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                                   style: TextStyle(color: _themeProvider.mainText, fontSize: 10),
                                 ),
                                 style: TextButton.styleFrom(
-                                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12.0),
                                     side: BorderSide(color: _themeProvider.mainText, width: 1.0),
@@ -5455,7 +5458,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             fontSize: 14,
             color: Colors.white,
           ),
-          duration: Duration(seconds: 5),
+          duration: const Duration(seconds: 5),
           contentColor: Colors.blue[800]!,
           contentPadding: const EdgeInsets.all(10),
         );
@@ -5498,7 +5501,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             fontSize: 14,
             color: Colors.white,
           ),
-          duration: Duration(seconds: 5),
+          duration: const Duration(seconds: 5),
           contentColor: Colors.blue[800]!,
           contentPadding: const EdgeInsets.all(10),
         );
@@ -5531,7 +5534,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4),
         child: GestureDetector(
-          child: Icon(MdiIcons.linkVariant),
+          child: const Icon(MdiIcons.linkVariant),
           onTap: () {
             _chainWidgetController.expanded
                 ? _chainWidgetController.expanded = false
@@ -5572,7 +5575,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           child: InkWell(
             customBorder: const CircleBorder(),
             splashColor: Colors.orange,
-            child: Icon(MdiIcons.playPause, color: Colors.white),
+            child: const Icon(MdiIcons.playPause, color: Colors.white),
             onTap: _nextButtonPressed ? null : nextChainAttack,
             onLongPress: () => _webViewProvider.cancelChainingBrowser(),
           ),
@@ -5583,7 +5586,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
   Widget _endAttackButton() {
     return IconButton(
-      icon: Icon(MdiIcons.stop, color: Colors.white),
+      icon: const Icon(MdiIcons.stop, color: Colors.white),
       onPressed: () {
         _webViewProvider.cancelChainingBrowser();
       },
@@ -5957,7 +5960,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           MdiIcons.notebookOutline,
                           color: Colors.white,
                           size: 16,
@@ -6134,7 +6137,7 @@ class DownloadProgressToastState extends State<DownloadProgressToast> {
       type: MaterialType.transparency,
       child: Container(
         width: screenWidth,
-        padding: EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
+        padding: const EdgeInsets.fromLTRB(8.0, 4.0, 8.0, 4.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(10),
           color: Colors.grey[700],
@@ -6145,30 +6148,30 @@ class DownloadProgressToastState extends State<DownloadProgressToast> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               Text(
                 widget.fileName,
-                style: TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               LinearProgressIndicator(
                 value: last / 100,
                 backgroundColor: Colors.grey[300],
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
                 minHeight: 10,
                 borderRadius: BorderRadius.circular(10),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    child: Text("Hide", style: TextStyle(color: Colors.white)),
+                    child: const Text("Hide", style: TextStyle(color: Colors.white)),
                     onPressed: hideToast,
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   TextButton(
-                    child: Text("Cancel", style: TextStyle(color: Colors.white)),
+                    child: const Text("Cancel", style: TextStyle(color: Colors.white)),
                     onPressed: cancelDownload,
                   ),
                 ],

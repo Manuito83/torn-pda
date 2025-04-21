@@ -130,7 +130,7 @@ class ItemCardState extends State<ItemCard> {
                                         "Value: \$${decimalFormat.format(widget.item.marketValue)}",
                                         style: const TextStyle(fontSize: 10),
                                       ),
-                                      SizedBox(width: 5),
+                                      const SizedBox(width: 5),
                                       if (widget.item.sellPrice != null && widget.item.sellPrice! > 0)
                                         Text(
                                           "(Sell @ \$${decimalFormat.format(widget.item.sellPrice)})",
@@ -412,15 +412,15 @@ class ItemCardState extends State<ItemCard> {
               ],
             )
           else if (!_isTradeable)
-            Text(
+            const Text(
               "non-tradeable",
               style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
             ),
           Center(child: description),
           Center(child: effect),
           Center(child: requirement),
-          Center(child: weaponType),
-          Center(child: coverage),
+          const Center(child: weaponType),
+          const Center(child: coverage),
         ],
       );
     }

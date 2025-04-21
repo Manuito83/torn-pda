@@ -40,10 +40,10 @@ class _YataStatsDialogState extends State<YataStatsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
+                  padding: EdgeInsets.only(bottom: 20),
                   child: Text(
                     "YATA STATS ESTIMATE",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -58,16 +58,16 @@ class _YataStatsDialogState extends State<YataStatsDialog> {
                   if (snapshot.data is YataStatsResponse) {
                     return _mainYataResponseWidget(snapshot.data as YataStatsResponse);
                   }
-                  return Text("Error fetching from YATA");
+                  return const Text("Error fetching from YATA");
                 }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 100),
+                return const Padding(
+                  padding: EdgeInsets.only(top: 100),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Text("Fetching from YATA"),
                       Padding(
-                        padding: const EdgeInsets.only(top: 20),
+                        padding: EdgeInsets.only(top: 20),
                         child: Center(child: CircularProgressIndicator()),
                       ),
                     ],
@@ -83,7 +83,7 @@ class _YataStatsDialogState extends State<YataStatsDialog> {
 
   Widget _mainYataResponseWidget(YataStatsResponse yataResponse) {
     if (yataResponse.success) {
-      if (yataResponse.data == null) return Text("Error: missing data!");
+      if (yataResponse.data == null) return const Text("Error: missing data!");
 
       YataStatsData? statsData = yataResponse.data!.data[widget.yataStatsPayload.targetId.toString()];
       if (statsData != null) {
@@ -94,35 +94,35 @@ class _YataStatsDialogState extends State<YataStatsDialog> {
           children: [
             Row(
               children: [
-                Text("Total: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text("Total: ", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text(statsData.total != null ? formatBigNumbers(statsData.total!) : 'unknown'),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
-                Text("Score: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text("Score: ", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text(statsData.score != null ? formatBigNumbers(statsData.score!) : 'unknown'),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
-                Text("Type: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text("Type: ", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text(statsData.type ?? 'unknown'),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
-                Text("Skewness: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text("Skewness: ", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text("${statsData.skewness ?? 'unknown'}"),
               ],
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Row(
               children: [
-                Text("Updated: ", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text("Updated: ", style: TextStyle(fontWeight: FontWeight.bold)),
                 Text(ts),
               ],
             ),
@@ -134,7 +134,7 @@ class _YataStatsDialogState extends State<YataStatsDialog> {
         return Center(
           child: Text(
             yataResponse.error!.error!,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.red,
             ),
           ),
@@ -142,7 +142,7 @@ class _YataStatsDialogState extends State<YataStatsDialog> {
       }
     }
 
-    return Center(
+    return const Center(
       child: Text(
         "Error: missing data!",
         style: TextStyle(

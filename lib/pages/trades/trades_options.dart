@@ -111,12 +111,12 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 15),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                                const SizedBox(height: 15),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 40),
                                   child: Divider(),
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 15),
                                   child: Row(
@@ -151,12 +151,12 @@ class TradesOptionsState extends State<TradesOptions> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(height: 15),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 40),
+                                const SizedBox(height: 15),
+                                const Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 40),
                                   child: Divider(),
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 Padding(
                                   padding: const EdgeInsets.fromLTRB(10, 0, 15, 0),
                                   child: Row(
@@ -164,17 +164,17 @@ class TradesOptionsState extends State<TradesOptions> {
                                     children: <Widget>[
                                       Row(
                                         children: [
-                                          SizedBox(width: 8),
-                                          Image(
+                                          const SizedBox(width: 8),
+                                          const Image(
                                             image: AssetImage('images/icons/tornexchange_logo.png'),
                                             width: 25,
                                             fit: BoxFit.fill,
                                           ),
-                                          SizedBox(width: 10),
+                                          const SizedBox(width: 10),
                                           if (_settingsProvider.tornExchangeEnabledStatusRemoteConfig)
-                                            Text("Torn Exchange")
+                                            const Text("Torn Exchange")
                                           else
-                                            Column(
+                                            const Column(
                                               children: [
                                                 Text(
                                                   "Torn Exchange has been disabled temporarily",
@@ -213,7 +213,7 @@ class TradesOptionsState extends State<TradesOptions> {
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Flexible(
+                                            const Flexible(
                                               child: Text("Show detailed profits"),
                                             ),
                                             tornExchangeProfitSwitch(),
@@ -261,7 +261,7 @@ class TradesOptionsState extends State<TradesOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Trade Calculator", style: TextStyle(color: Colors.white)),
       leading: IconButton(
@@ -292,7 +292,7 @@ class TradesOptionsState extends State<TradesOptions> {
 
   Switch tornExchangeSwitch() {
     return Switch(
-      activeColor: Color(0xffd186cf),
+      activeColor: const Color(0xffd186cf),
       activeTrackColor: Colors.pink,
       value: _tornExchangeEnabled,
       onChanged: _tradeCalculatorEnabled
@@ -308,7 +308,7 @@ class TradesOptionsState extends State<TradesOptions> {
 
   Switch tornExchangeProfitSwitch() {
     return Switch(
-      activeColor: Color(0xffd186cf),
+      activeColor: const Color(0xffd186cf),
       activeTrackColor: Colors.pink,
       value: _tornExchangeProfitEnabled,
       onChanged: _tradeCalculatorEnabled

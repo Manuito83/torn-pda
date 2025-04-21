@@ -55,8 +55,8 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 30),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 30),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -76,14 +76,14 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
                   if (_serverError.isNotEmpty) {
                     return Column(
                       children: [
-                        Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
-                        Text(_serverError, style: TextStyle(color: Colors.red)),
+                        const Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
+                        Text(_serverError, style: const TextStyle(color: Colors.red)),
                       ],
                     );
                   }
 
                   if (_serverPrefs.isEmpty) {
-                    return Column(
+                    return const Column(
                       children: [
                         Text("No online backup found!"),
                       ],
@@ -101,15 +101,15 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
                     ),
                   );
                 }
-                return Flexible(
+                return const Flexible(
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const SizedBox(height: 40),
-                        const Text("Fetching server info..."),
-                        const SizedBox(height: 25),
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        Text("Fetching server info..."),
+                        SizedBox(height: 25),
+                        CircularProgressIndicator(),
+                        SizedBox(height: 40),
                       ],
                     ),
                   ),
@@ -134,7 +134,7 @@ class BackupRestoreDialogState extends State<BackupRestoreDialog> with TickerPro
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text("Close"),
+                    child: const Text("Close"),
                   ),
                 ],
               ),

@@ -53,10 +53,10 @@ class DottedBorderPainter extends CustomPainter {
       ..style = PaintingStyle.stroke;
 
     // Draw four sides of dashed border
-    _drawDashedLine(canvas, Offset(0, 0), Offset(size.width, 0), paint);
+    _drawDashedLine(canvas, const Offset(0, 0), Offset(size.width, 0), paint);
     _drawDashedLine(canvas, Offset(size.width, 0), Offset(size.width, size.height), paint);
     _drawDashedLine(canvas, Offset(0, size.height), Offset(size.width, size.height), paint);
-    _drawDashedLine(canvas, Offset(0, 0), Offset(0, size.height), paint);
+    _drawDashedLine(canvas, const Offset(0, 0), Offset(0, size.height), paint);
   }
 
   void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {

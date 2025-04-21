@@ -360,7 +360,7 @@ class VaultWidgetState extends State<VaultWidget> {
     }
 
     return GestureDetector(
-      child: Padding(
+      child: const Padding(
         padding: EdgeInsets.only(right: 5),
         child: SizedBox(
           height: 20,

@@ -34,7 +34,7 @@ class ResponsiveTextState extends State<ResponsiveText> {
         );
 
         do {
-          final effectiveTextStyle = (widget.style ?? TextStyle()).copyWith(fontSize: fontSize);
+          final effectiveTextStyle = (widget.style ?? const TextStyle()).copyWith(fontSize: fontSize);
           textPainter.text = TextSpan(text: widget.text, style: effectiveTextStyle);
           textPainter.layout(maxWidth: constraints.maxWidth);
 
@@ -47,7 +47,7 @@ class ResponsiveTextState extends State<ResponsiveText> {
 
         return Text(
           widget.text,
-          style: (widget.style ?? TextStyle()).copyWith(fontSize: fontSize),
+          style: (widget.style ?? const TextStyle()).copyWith(fontSize: fontSize),
           maxLines: widget.maxLines,
           textAlign: widget.textAlign,
           overflow: TextOverflow.ellipsis,

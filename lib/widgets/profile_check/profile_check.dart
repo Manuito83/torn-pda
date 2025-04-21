@@ -328,7 +328,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
 
         if (_isOwnPlayer) {
-          _playerOrFactionWidget = Row(
+          _playerOrFactionWidget = const Row(
             children: [
               Icon(
                 MdiIcons.heart,
@@ -490,7 +490,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     MdiIcons.cash100,
                     color: Colors.green,
                     size: 17,

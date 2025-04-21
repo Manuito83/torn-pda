@@ -207,7 +207,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.okayEnabled)
                       GestureDetector(
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.checkBold,
@@ -247,7 +247,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.landedEnabled)
                       GestureDetector(
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.airplaneLanding,
@@ -260,7 +260,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.onlineEnabled)
                       GestureDetector(
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.circle,
@@ -315,7 +315,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       child: IconButton(
                         padding: const EdgeInsets.all(0),
                         iconSize: 20,
-                        icon: Icon(
+                        icon: const Icon(
                           MdiIcons.notebookEditOutline,
                           size: 18,
                         ),
@@ -355,7 +355,7 @@ class StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -437,7 +437,7 @@ class StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -464,7 +464,7 @@ class StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,

@@ -44,7 +44,7 @@ class EditTabDialogState extends State<EditTabDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Custom tab name'),
+      title: const Text('Custom tab name'),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -52,7 +52,7 @@ class EditTabDialogState extends State<EditTabDialog> {
             children: [
               Expanded(
                 child: TextFormField(
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 12,
                     //color: _themeProvider!.mainText,
                   ),
@@ -71,7 +71,7 @@ class EditTabDialogState extends State<EditTabDialog> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.delete),
+                icon: const Icon(Icons.delete),
                 onPressed: () {
                   setState(() {
                     _customNameController.clear();
@@ -80,9 +80,9 @@ class EditTabDialogState extends State<EditTabDialog> {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           SwitchListTile(
-            title: Text(
+            title: const Text(
               'Show in page title',
               style: TextStyle(fontSize: 13),
             ),
@@ -94,7 +94,7 @@ class EditTabDialogState extends State<EditTabDialog> {
             },
           ),
           SwitchListTile(
-            title: Text(
+            title: const Text(
               'Show in tab',
               style: TextStyle(fontSize: 13),
             ),
@@ -113,11 +113,11 @@ class EditTabDialogState extends State<EditTabDialog> {
             _clearFields();
             _saveChanges();
           },
-          child: Text('Clear'),
+          child: const Text('Clear'),
         ),
         ElevatedButton(
           onPressed: _saveChanges,
-          child: Text('Save'),
+          child: const Text('Save'),
         ),
       ],
     );

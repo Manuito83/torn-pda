@@ -176,7 +176,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: widget.isFaction
           ? const Text("Quick faction items", style: TextStyle(color: Colors.white))

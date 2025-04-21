@@ -100,7 +100,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     for (int i = 0; i < sections.length; i++) {
       if (i > 0) {
         finalSections.add(
-          Column(
+          const Column(
             children: [
               SizedBox(height: 20),
               Divider(),
@@ -172,7 +172,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                               controller: _searchController,
                               decoration: InputDecoration(
                                 hintText: 'Search browser settings',
-                                prefixIcon: Icon(Icons.search),
+                                prefixIcon: const Icon(Icons.search),
                                 suffixIcon: _searchController.text.isNotEmpty
                                     ? IconButton(
                                         icon: const Icon(Icons.clear),
@@ -192,7 +192,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                               },
                             ),
                           ),
-                          SizedBox(height: 15),
+                          const SizedBox(height: 15),
                           ...buildFilteredSections(),
                           const SizedBox(height: 40),
                         ],
@@ -223,7 +223,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Browser style")),
+                  const Flexible(child: Text("Browser style")),
                   _browserStyleDropdown(),
                 ],
               ),
@@ -254,7 +254,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Tabs below navigation bar")),
+                    const Flexible(child: Text("Tabs below navigation bar")),
                     Switch(
                       value: _webViewProvider.browserBottomBarStylePlaceTabsAtBottom,
                       onChanged: (value) {
@@ -290,7 +290,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Show load bar")),
+              const Flexible(child: Text("Show load bar")),
               Switch(
                 value: _settingsProvider.loadBarBrowser,
                 onChanged: (value) {
@@ -316,7 +316,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Refresh method")),
+                  const Flexible(child: Text("Refresh method")),
                   _refreshMethodDropdown(),
                 ],
               ),
@@ -347,7 +347,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Show navigation arrows")),
+                    const Flexible(child: Text("Show navigation arrows")),
                     _navArrowsDropdown(),
                   ],
                 ),
@@ -388,7 +388,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Enable custom user scripts")),
+                  const Flexible(child: Text("Enable custom user scripts")),
                   Switch(
                     value: _userScriptsProvider.userScriptsEnabled,
                     onChanged: (value) {
@@ -422,7 +422,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Notify for Script Updates")),
+                const Flexible(child: Text("Notify for Script Updates")),
                 Switch(
                   value: _userScriptsProvider.userScriptsNotifyUpdates,
                   onChanged: (value) {
@@ -446,7 +446,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Manage scripts")),
+                const Flexible(child: Text("Manage scripts")),
                 IconButton(
                   icon: const Icon(MdiIcons.script),
                   onPressed: () {
@@ -496,7 +496,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Use tabs in browser")),
+              const Flexible(child: Text("Use tabs in browser")),
               Switch(
                 value: _settingsProvider.useTabsFullBrowser,
                 onChanged: (value) {
@@ -526,7 +526,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Automatically change to new tab from link")),
+                    const Flexible(child: Text("Automatically change to new tab from link")),
                     Switch(
                       value: _webViewProvider.automaticChangeToNewTabFromURL,
                       onChanged: (value) {
@@ -564,7 +564,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Remove unused tabs")),
+                    const Flexible(child: Text("Remove unused tabs")),
                     Switch(
                       value: _webViewProvider.removeUnusedTabs,
                       onChanged: (enabled) {
@@ -596,11 +596,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Flexible(
+                            const Flexible(
                               child: Row(
                                 children: [
                                   Icon(Icons.keyboard_arrow_right_outlined),
-                                  Flexible(child: const Text("Include locked tabs")),
+                                  Flexible(child: Text("Include locked tabs")),
                                 ],
                               ),
                             ),
@@ -621,11 +621,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Flexible(
+                            const Flexible(
                               child: Row(
                                 children: [
                                   Icon(Icons.keyboard_arrow_right_outlined),
-                                  Flexible(child: const Text("Inactive for")),
+                                  Flexible(child: Text("Inactive for")),
                                 ],
                               ),
                             ),
@@ -666,7 +666,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Only load tabs when used")),
+                    const Flexible(child: Text("Only load tabs when used")),
                     Switch(
                       value: _webViewProvider.onlyLoadTabsWhenUsed,
                       onChanged: (value) {
@@ -700,7 +700,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Allow hiding tabs")),
+                    const Flexible(child: Text("Allow hiding tabs")),
                     Switch(
                       value: _settingsProvider.useTabsHideFeature,
                       onChanged: (value) {
@@ -737,16 +737,16 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: const Text("Select hide bar color"),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text("Select hide bar color"),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Color(_settingsProvider.tabsHideBarColor).withAlpha(255),
                     foregroundColor: Colors.white,
                   ),
-                  child: Icon(Icons.palette),
+                  child: const Icon(Icons.palette),
                   onPressed: () => _showColorPickerTabs(context),
                 ),
               ],
@@ -772,7 +772,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Show tab lock warnings")),
+                    const Flexible(child: Text("Show tab lock warnings")),
                     Switch(
                       value: _settingsProvider.showTabLockWarnings,
                       onChanged: (value) {
@@ -802,7 +802,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Full lock navigation opens a new tab")),
+                    const Flexible(child: Text("Full lock navigation opens a new tab")),
                     Switch(
                       value: _settingsProvider.fullLockNavigationAttemptOpensNewTab,
                       onChanged: (value) {
@@ -839,7 +839,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Navigation exceptions for locked tabs")),
+                const Flexible(child: Text("Navigation exceptions for locked tabs")),
                 ElevatedButton(
                   child: const Icon(MdiIcons.lockRemoveOutline),
                   onPressed: () async {
@@ -877,7 +877,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Enabled")),
+                  const Flexible(child: Text("Enabled")),
                   Switch(
                     value: _webViewProvider.fabEnabled,
                     onChanged: (value) {
@@ -915,7 +915,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Expand direction")),
+                    const Flexible(child: Text("Expand direction")),
                     _fabDirectionDropdown(),
                   ],
                 ),
@@ -946,7 +946,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Only in fullscreen")),
+                    const Flexible(child: Text("Only in fullscreen")),
                     Switch(
                       value: _webViewProvider.fabOnlyFullScreen,
                       onChanged: (value) {
@@ -980,7 +980,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Number of buttons")),
+                    const Flexible(child: Text("Number of buttons")),
                     Row(
                       children: [
                         Text(_webViewProvider.fabButtonCount.toString()),
@@ -1060,7 +1060,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("FAB Double tap action")),
+                const Flexible(child: Text("FAB Double tap action")),
                 DropdownButton<WebviewFabAction>(
                   value: _webViewProvider.fabDoubleTapAction,
                   items: FabSettings.actions.map((action) {
@@ -1095,7 +1095,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("FAB Triple tap action")),
+                const Flexible(child: Text("FAB Triple tap action")),
                 DropdownButton<WebviewFabAction>(
                   value: _webViewProvider.fabTripleTapAction,
                   items: FabSettings.actions.map((action) {
@@ -1142,7 +1142,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Download action")),
+                  const Flexible(child: Text("Download action")),
                   _downloadsDropdown(),
                 ],
               ),
@@ -1192,7 +1192,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Full screen removes widgets")),
+                  const Flexible(child: Text("Full screen removes widgets")),
                   Switch(
                     value: _settingsProvider.fullScreenRemovesWidgets,
                     onChanged: (value) {
@@ -1224,7 +1224,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Full screen removes chat")),
+                  const Flexible(child: Text("Full screen removes chat")),
                   Switch(
                     value: _settingsProvider.fullScreenRemovesChat,
                     onChanged: (value) {
@@ -1256,7 +1256,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Add reload button to tab bar")),
+                  const Flexible(child: Text("Add reload button to tab bar")),
                   Switch(
                     value: _settingsProvider.fullScreenExtraReloadButton,
                     onChanged: (value) {
@@ -1288,7 +1288,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Add close button to tab bar")),
+                  const Flexible(child: Text("Add close button to tab bar")),
                   Switch(
                     value: _settingsProvider.fullScreenExtraCloseButton,
                     onChanged: (value) {
@@ -1313,11 +1313,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         label: "FULL SCREEN POSITIONING",
         searchText: _searchText,
         filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+        child: const Padding(
+          padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [const Text("FULL SCREEN POSITIONING", style: TextStyle(fontSize: 10))],
+            children: [Text("FULL SCREEN POSITIONING", style: TextStyle(fontSize: 10))],
           ),
         ),
       ),
@@ -1332,7 +1332,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Full screen extends to top")),
+                  const Flexible(child: Text("Full screen extends to top")),
                   Switch(
                     value: _settingsProvider.fullScreenOverNotch,
                     onChanged: (value) {
@@ -1364,7 +1364,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Full screen extends to bottom")),
+                  const Flexible(child: Text("Full screen extends to bottom")),
                   Switch(
                     value: _settingsProvider.fullScreenOverBottom,
                     onChanged: (value) {
@@ -1396,7 +1396,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Full screen extends to sides")),
+                  const Flexible(child: Text("Full screen extends to sides")),
                   Switch(
                     value: _settingsProvider.fullScreenOverSides,
                     onChanged: (value) {
@@ -1421,11 +1421,11 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         label: "FULL SCREEN INTERACTION",
         searchText: _searchText,
         filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 30, 20, 10),
+        child: const Padding(
+          padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [const Text("FULL SCREEN INTERACTION", style: TextStyle(fontSize: 10))],
+            children: [Text("FULL SCREEN INTERACTION", style: TextStyle(fontSize: 10))],
           ),
         ),
       ),
@@ -1440,7 +1440,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Short tap opens full screen")),
+                  const Flexible(child: Text("Short tap opens full screen")),
                   Switch(
                     value: _settingsProvider.fullScreenByShortTap,
                     onChanged: (value) {
@@ -1472,7 +1472,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Long tap opens full screen")),
+                  const Flexible(child: Text("Long tap opens full screen")),
                   Switch(
                     value: _settingsProvider.fullScreenByLongTap,
                     onChanged: (value) {
@@ -1504,7 +1504,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Short/long tap affect PDA icon")),
+                  const Flexible(child: Text("Short/long tap affect PDA icon")),
                   Switch(
                     value: _settingsProvider.fullScreenIncludesPDAButtonTap,
                     onChanged: (value) {
@@ -1536,7 +1536,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Notifications open full screen")),
+                  const Flexible(child: Text("Notifications open full screen")),
                   Switch(
                     value: _settingsProvider.fullScreenByNotificationTap,
                     onChanged: (value) {
@@ -1568,7 +1568,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Deep links open full screen")),
+                  const Flexible(child: Text("Deep links open full screen")),
                   Switch(
                     value: _settingsProvider.fullScreenByDeepLinkTap,
                     onChanged: (value) {
@@ -1600,7 +1600,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Quick items open full screen")),
+                  const Flexible(child: Text("Quick items open full screen")),
                   Switch(
                     value: _settingsProvider.fullScreenByQuickItemTap,
                     onChanged: (value) {
@@ -1632,12 +1632,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(
+                  const Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
-                        const Text("Short tap opens full screen"),
+                        Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                        Text("Short tap opens full screen"),
                       ],
                     ),
                   ),
@@ -1672,12 +1672,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(
+                  const Flexible(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
-                        const Text("Long tap opens full screen"),
+                        Text("[CHAINING BROWSER]", style: TextStyle(fontSize: 11)),
+                        Text("Long tap opens full screen"),
                       ],
                     ),
                   ),
@@ -1878,7 +1878,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Remove airplane")),
+                  const Flexible(child: Text("Remove airplane")),
                   Switch(
                     value: _settingsProvider.removeAirplane,
                     onChanged: (value) {
@@ -1960,7 +1960,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Warn about chains")),
+                  const Flexible(child: Text("Warn about chains")),
                   Switch(
                     value: _settingsProvider.warnAboutChains,
                     onChanged: (value) {
@@ -1992,7 +1992,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Warn about stacking")),
+                  const Flexible(child: Text("Warn about stacking")),
                   Switch(
                     value: _settingsProvider.warnAboutExcessEnergy,
                     onChanged: (value) {
@@ -2444,7 +2444,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Extra player information")),
+                  const Flexible(child: Text("Extra player information")),
                   Switch(
                     value: _settingsProvider.extraPlayerInformation,
                     onChanged: (value) {
@@ -2481,7 +2481,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Friendly factions")),
+                    const Flexible(child: Text("Friendly factions")),
                     IconButton(
                       icon: const Icon(Icons.keyboard_arrow_right_outlined),
                       onPressed: () {
@@ -2518,7 +2518,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Show player notes")),
+                    const Flexible(child: Text("Show player notes")),
                     Switch(
                       value: _settingsProvider.notesWidgetEnabledProfile,
                       onChanged: (value) {
@@ -2555,7 +2555,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Show networth")),
+                    const Flexible(child: Text("Show networth")),
                     Switch(
                       value: _settingsProvider.extraPlayerNetworth,
                       onChanged: (value) {
@@ -2591,7 +2591,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Mini-profile name tap opens new tab")),
+                  const Flexible(child: Text("Mini-profile name tap opens new tab")),
                   Switch(
                     value: _settingsProvider.hitInMiniProfileOpensNewTab,
                     onChanged: (value) {
@@ -2628,12 +2628,12 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(
+                    const Flexible(
                       child: Row(
                         children: [
                           Icon(Icons.arrow_forward_ios_outlined, size: 16),
                           SizedBox(width: 5),
-                          Flexible(child: const Text("Automatically change to new tab")),
+                          Flexible(child: Text("Automatically change to new tab")),
                         ],
                       ),
                     ),
@@ -2731,7 +2731,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Cache enabled")),
+                  const Flexible(child: Text("Cache enabled")),
                   Switch(
                     value: Platform.isWindows
                         ? true
@@ -2920,7 +2920,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Zoom in/out pinch gestures")),
+                const Flexible(child: Text("Zoom in/out pinch gestures")),
                 Switch(
                   value: _settingsProvider.iosBrowserPinch,
                   onChanged: (value) {
@@ -2947,7 +2947,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Disallow overscroll")),
+                    const Flexible(child: Text("Disallow overscroll")),
                     Switch(
                       value: _settingsProvider.iosDisallowOverscroll,
                       onChanged: (value) {
@@ -2983,7 +2983,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Reverse navigation swipe")),
+                  const Flexible(child: Text("Reverse navigation swipe")),
                   Switch(
                     value: _settingsProvider.browserReverseNavitagtionSwipe,
                     onChanged: (value) {
@@ -3019,7 +3019,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Center text field when editing")),
+                  const Flexible(child: Text("Center text field when editing")),
                   Switch(
                     value: _settingsProvider.browserCenterEditingTextField,
                     onChanged: (value) {
@@ -3213,7 +3213,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
@@ -3227,7 +3227,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               _goBack();
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
     );

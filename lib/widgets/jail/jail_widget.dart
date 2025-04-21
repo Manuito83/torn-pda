@@ -122,17 +122,17 @@ class JailWidgetState extends State<JailWidget> {
                     width: 80,
                     child: Column(
                       children: [
-                        Text(
+                        const Text(
                           'JAIL',
                           style: TextStyle(color: Colors.orange, fontSize: 12),
                         ),
-                        Text(
+                        const Text(
                           '(tap to expand)',
                           style: TextStyle(color: Colors.orange, fontSize: 9),
                         ),
                         Text(
                           _jailModel.filtersEnabled ? '' : 'FILTERS DISABLED',
-                          style: TextStyle(color: Colors.red, fontSize: 9),
+                          style: const TextStyle(color: Colors.red, fontSize: 9),
                         ),
                       ],
                     ),

@@ -166,7 +166,7 @@ List<InlineSpan> _parseBoldText(String text, FontWeight fontWeight) {
 
     // Add bold text
     String boldText = match.group(1) ?? '';
-    spans.add(TextSpan(text: boldText, style: TextStyle(fontWeight: FontWeight.bold)));
+    spans.add(TextSpan(text: boldText, style: const TextStyle(fontWeight: FontWeight.bold)));
 
     currentIndex = matchEnd;
   }

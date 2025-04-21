@@ -53,7 +53,7 @@ class StakeoutsInfoDialogState extends State<StakeoutsInfoDialog> {
                         style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
-                      Text.rich(
+                      const Text.rich(
                         TextSpan(
                           text:
                               "The Stakeouts section allows you configure specific alerts for players of your choice.\n\n"

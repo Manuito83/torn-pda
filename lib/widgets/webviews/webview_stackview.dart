@@ -206,7 +206,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                         ? Stack(
                             children: [
                               buildMainContent(),
-                              shouldShowFab ? WebviewFab() : SizedBox.shrink(),
+                              shouldShowFab ? const WebviewFab() : const SizedBox.shrink(),
                             ],
                           )
                         : Container(
@@ -310,7 +310,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                 "There was an error loading the content: $e"
                 "\n\nPlease reset your browser cache in Settings / Advanced Browser Settings and try again"
                 "\n\nIf it reoccurs, you might have to force close the app and relaunch",
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.amber,
                 ),
               ),
@@ -429,7 +429,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
   }
 
   Widget _bottomNavBar(BuildContext _) {
-    if (_webViewProvider.tabList.isEmpty) return SizedBox.shrink();
+    if (_webViewProvider.tabList.isEmpty) return const SizedBox.shrink();
     final bool isManuito = _webViewProvider.tabList[0].currentUrl!.contains("sid=attack&user2ID=2225097") ||
         _webViewProvider.tabList[0].currentUrl!.contains("profiles.php?XID=2225097") ||
         _webViewProvider.tabList[0].currentUrl!.contains("https://www.torn.com/forums.php#/"
@@ -541,7 +541,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
           Container(
             height: 38,
             width: 38,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Colors.transparent,
               boxShadow: [
                 BoxShadow(
@@ -714,7 +714,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                 showDialog<void>(
                                   context: context,
                                   builder: (BuildContext context) {
-                                    return WebviewShortcutsDialog(fromShortcut: true);
+                                    return const WebviewShortcutsDialog(fromShortcut: true);
                                   },
                                 );
                               },
@@ -743,8 +743,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                                     ),
                                             ),
                                             if (statusP.statusColorIsShown && statusP.statusColorWidgetEnabled)
-                                              Padding(
-                                                padding: const EdgeInsets.only(top: 22.0),
+                                              const Padding(
+                                                padding: EdgeInsets.only(top: 22.0),
                                                 child: StatusColorCounter(),
                                               ),
                                           ],
@@ -798,7 +798,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                     showDialog<void>(
                                       context: context,
                                       builder: (BuildContext context) {
-                                        return WebviewShortcutsDialog(fromShortcut: true);
+                                        return const WebviewShortcutsDialog(fromShortcut: true);
                                       },
                                     );
                                   },

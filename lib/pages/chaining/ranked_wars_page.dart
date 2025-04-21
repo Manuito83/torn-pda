@@ -313,7 +313,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
 
   AppBar buildAppBarSuccess(BuildContext _) {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
@@ -363,7 +363,7 @@ class RankedWarsPageState extends State<RankedWarsPage> {
 
   AppBar buildAppBarError(BuildContext _) {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Ranked Wars", style: TextStyle(color: Colors.white)),

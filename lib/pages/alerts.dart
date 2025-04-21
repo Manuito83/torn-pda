@@ -226,7 +226,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           padding: const EdgeInsets.fromLTRB(25, 0, 8, 10),
                           child: Row(
                             children: [
-                              Icon(Icons.keyboard_arrow_right_outlined),
+                              const Icon(Icons.keyboard_arrow_right_outlined),
                               Flexible(
                                 child: CheckboxListTile(
                                   checkColor: Colors.white,
@@ -999,9 +999,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   checkColor: Colors.white,
                                   activeColor: Colors.blueGrey,
                                   value: sendbird.sendBirdNotificationsEnabled,
-                                  title: Row(
+                                  title: const Row(
                                     children: [
-                                      const Padding(
+                                      Padding(
                                         padding: EdgeInsets.only(right: 5),
                                         child: Text(
                                           "Torn chat messages",
@@ -1030,10 +1030,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Row(
+                                      const Row(
                                         children: [
                                           Icon(Icons.keyboard_arrow_right_outlined),
-                                          const Padding(
+                                          Padding(
                                             padding: EdgeInsets.only(left: 17),
                                             child: Text(
                                               "Do not disturb",
@@ -1046,7 +1046,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                         ],
                                       ),
                                       GestureDetector(
-                                        child: Icon(Icons.more_time_outlined),
+                                        child: const Icon(Icons.more_time_outlined),
                                         onTap: () {
                                           showDialog(
                                             context: context,
@@ -1068,14 +1068,14 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
                                       Flexible(
                                         child: CheckboxListTile(
                                           dense: true,
                                           checkColor: Colors.white,
                                           activeColor: Colors.red[900],
                                           value: sendbird.excludeFactionMessages,
-                                          title: Row(
+                                          title: const Row(
                                             children: [
                                               Text(
                                                 "Exclude faction messages",
@@ -1106,14 +1106,14 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                   padding: const EdgeInsets.only(left: 30, right: 8),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.keyboard_arrow_right_outlined),
+                                      const Icon(Icons.keyboard_arrow_right_outlined),
                                       Flexible(
                                         child: CheckboxListTile(
                                           dense: true,
                                           checkColor: Colors.white,
                                           activeColor: Colors.red[900],
                                           value: sendbird.excludeCompanyMessages,
-                                          title: Row(
+                                          title: const Row(
                                             children: [
                                               Text(
                                                 "Exclude company messages",
@@ -1188,12 +1188,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Flexible(
+          const Flexible(
             child: Row(
               children: [
                 Icon(Icons.keyboard_arrow_right_outlined),
                 Flexible(
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: Text(
                       "Notification tap opens",
@@ -1280,12 +1280,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Flexible(
+          const Flexible(
             child: Row(
               children: [
                 Icon(Icons.keyboard_arrow_right_outlined),
                 Flexible(
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: Text(
                       "Notification tap opens",
@@ -1359,12 +1359,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Flexible(
+          const Flexible(
             child: Row(
               children: [
                 Icon(Icons.keyboard_arrow_right_outlined),
                 Flexible(
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: Text(
                       "Notification tap opens",
@@ -1438,12 +1438,12 @@ class AlertsSettingsState extends State<AlertsSettings> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Flexible(
+          const Flexible(
             child: Row(
               children: [
                 Icon(Icons.keyboard_arrow_right_outlined),
                 Flexible(
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: Text(
                       "Notification tap opens",
@@ -1513,7 +1513,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Alerts', style: TextStyle(color: Colors.white)),
       leading: IconButton(
@@ -1602,7 +1602,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           fontSize: 18,
         ),
       ),
-      content: SingleChildScrollView(
+      content: const SingleChildScrollView(
         child: Column(
           children: [
             Padding(
@@ -1743,7 +1743,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
         thumbVisibility: true,
         child: SingleChildScrollView(
           controller: _scrollControllerRetalsNotification,
-          child: Padding(
+          child: const Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1786,7 +1786,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
         thumbVisibility: true,
         child: SingleChildScrollView(
           controller: _scrollControllerRetalsDonor,
-          child: Padding(
+          child: const Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

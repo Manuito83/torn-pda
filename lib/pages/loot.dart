@@ -190,7 +190,7 @@ class LootPageState extends State<LootPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Loot', style: TextStyle(color: Colors.white)),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
@@ -209,7 +209,7 @@ class LootPageState extends State<LootPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -236,7 +236,7 @@ class LootPageState extends State<LootPage> {
           const SizedBox.shrink(),
         if (_apiSuccess)
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               MdiIcons.timerSandEmpty,
             ),
             onPressed: () {

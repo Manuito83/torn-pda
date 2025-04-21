@@ -53,7 +53,7 @@ class BazaarStatusCard extends StatelessWidget {
           Text(" ($bazaarPendingString)"),
           const SizedBox(width: 8),
           GestureDetector(
-            child: Icon(
+            child: const Icon(
               MdiIcons.storefrontOutline,
               size: 20,
             ),

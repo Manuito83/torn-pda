@@ -109,7 +109,7 @@ class TravelOptionsWindowsState extends State<TravelOptionsWindows> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Travel notification", style: TextStyle(color: Colors.white)),
       leading: IconButton(

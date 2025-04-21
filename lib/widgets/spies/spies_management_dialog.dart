@@ -29,14 +29,14 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      contentPadding: EdgeInsets.all(0),
+      contentPadding: const EdgeInsets.all(0),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
       elevation: 0.0,
       backgroundColor: Colors.transparent,
       content: FutureBuilder(
-        future: Future.delayed(Duration(milliseconds: 500)),
+        future: Future.delayed(const Duration(milliseconds: 500)),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_fetchActive) {
@@ -99,14 +99,14 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
+          const Text(
             "SPIES MANAGEMENT",
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Row(
             children: [
-              Text(
+              const Text(
                 "Provider: ",
                 style: TextStyle(
                   fontSize: 12,
@@ -129,8 +129,8 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                         : _spyController.spiesSource = SpiesSource.yata;
                   });
                 },
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 15, right: 15),
+                child: const Padding(
+                  padding: EdgeInsets.only(left: 15, right: 15),
                   child: SizedBox(
                     height: 30,
                     width: 30,
@@ -157,7 +157,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               ),
             ],
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             lastUpdated,
             style: TextStyle(
@@ -165,7 +165,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               color: spiesUpdateColor,
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Center(
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -175,8 +175,8 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                   color: Colors.blueGrey,
                 ),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4),
                 child: Text("Update!"),
               ),
               onPressed: () async {
@@ -227,7 +227,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               },
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Flexible(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
@@ -286,7 +286,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text("Updating ${_spyController.spiesSource == SpiesSource.yata ? "YATA" : "Torn Stats"}..."),
-                  Text(
+                  const Text(
                     "(time limit is 2 minutes)",
                     style: TextStyle(
                       fontSize: 14,
@@ -295,8 +295,8 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                 ],
               ),
             ),
-          Padding(
-            padding: const EdgeInsets.all(30),
+          const Padding(
+            padding: EdgeInsets.all(30),
             child: Center(child: CircularProgressIndicator()),
           ),
           Row(
@@ -345,12 +345,12 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
           ),
         ],
       ),
-      child: Column(
+      child: const Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsets.all(30),
+            padding: EdgeInsets.all(30),
             child: Center(child: CircularProgressIndicator()),
           ),
         ],
@@ -376,22 +376,22 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                   children: [
                     Text(
                       spy.targetName!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           "STR: ${spy.strength == -1 ? '??' : formatBigNumbers(spy.strength!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
                         Text(spy.strength != -1 ? _spyController.statsOld(spy.strengthTimestamp) : "",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                             )),
                       ],
@@ -401,12 +401,12 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                       children: [
                         Text(
                           "DEF: ${spy.defense == -1 ? '??' : formatBigNumbers(spy.defense!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
                         Text(spy.defense != -1 ? _spyController.statsOld(spy.defenseTimestamp) : "",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                             )),
                       ],
@@ -416,12 +416,12 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                       children: [
                         Text(
                           "SPD: ${spy.speed == -1 ? '??' : formatBigNumbers(spy.speed!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
                         Text(spy.speed != -1 ? _spyController.statsOld(spy.speedTimestamp) : "",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                             )),
                       ],
@@ -431,28 +431,28 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                       children: [
                         Text(
                           "DEX: ${spy.dexterity == -1 ? '??' : formatBigNumbers(spy.dexterity!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
                         Text(spy.dexterity != -1 ? _spyController.statsOld(spy.dexterityTimestamp) : "",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                             )),
                       ],
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           "TOTAL: ${spy.total == -1 ? '??' : formatBigNumbers(spy.total!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
                         Text(spy.total != -1 ? _spyController.statsOld(spy.totalTimestamp) : "",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                             )),
                       ],
@@ -477,17 +477,17 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                   children: [
                     Text(
                       spy.playerName!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           "STR: ${spy.strength == -1 ? '??' : formatBigNumbers(spy.strength!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
@@ -498,7 +498,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                       children: [
                         Text(
                           "DEF: ${spy.defense == -1 ? '??' : formatBigNumbers(spy.defense!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
@@ -509,7 +509,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                       children: [
                         Text(
                           "SPD: ${spy.speed == -1 ? '??' : formatBigNumbers(spy.speed!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
@@ -520,24 +520,24 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                       children: [
                         Text(
                           "DEX: ${spy.dexterity == -1 ? '??' : formatBigNumbers(spy.dexterity!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 5),
+                    const SizedBox(height: 5),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           "TOTAL: ${spy.total == -1 ? '??' : formatBigNumbers(spy.total!)}",
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 11,
                           ),
                         ),
                         Text(spy.total != -1 ? _spyController.statsOld(spy.timestamp) : "",
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 11,
                             )),
                       ],
@@ -555,11 +555,11 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
         children: [
           Text(
             "Found ${spiesCards.length} spies",
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12,
             ),
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Flexible(
             child: Scrollbar(
               controller: _scrollController,
@@ -580,8 +580,8 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
         ],
       );
     } catch (e) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 20),
+      return const Padding(
+        padding: EdgeInsets.only(top: 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

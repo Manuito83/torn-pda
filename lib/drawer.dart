@@ -156,7 +156,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   int notId = 900;
 
   // Platform channel with MainActivity.java
-  MethodChannel? platformAndroid = Platform.isAndroid ? MethodChannel('tornpda.channel') : null;
+  MethodChannel? platformAndroid = Platform.isAndroid ? const MethodChannel('tornpda.channel') : null;
 
   // Intent receiver subscription
   StreamSubscription? _intentListenerSub;
@@ -1808,7 +1808,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           if (settingsProvider.showWikiInDrawer) {
             drawerOptions.add(WikiMenu(themeProvider: _themeProvider!));
           } else {
-            drawerOptions.add(SizedBox.shrink());
+            drawerOptions.add(const SizedBox.shrink());
           }
 
           continue;
@@ -2179,7 +2179,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AppwidgetExplanationDialog();
+        return const AppwidgetExplanationDialog();
       },
     );
   }
@@ -2230,7 +2230,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           context: context,
           barrierDismissible: false,
           builder: (context) {
-            return BugsAnnouncementDialog();
+            return const BugsAnnouncementDialog();
           },
         );
 
@@ -2382,10 +2382,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
-                        child: const Icon(MdiIcons.chartLine, color: Colors.green),
+                        child: Icon(MdiIcons.chartLine, color: Colors.green),
                       ),
                     ),
                   ),

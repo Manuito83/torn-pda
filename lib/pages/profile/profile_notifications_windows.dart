@@ -136,7 +136,7 @@ class ProfileNotificationsWindowsState extends State<ProfileNotificationsWindows
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Notification options", style: TextStyle(color: Colors.white)),
       leading: IconButton(

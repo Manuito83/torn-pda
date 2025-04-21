@@ -15,7 +15,7 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Share stats'),
+      title: const Text('Share stats'),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -24,21 +24,21 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
               onPressed: () {
                 _w.shareStats(context);
               },
-              child: Text("Share"),
+              child: const Text("Share"),
             ),
             ElevatedButton(
               onPressed: () {
                 _w.generateCSV(context);
               },
-              child: Text("Generate CSV"),
+              child: const Text("Generate CSV"),
             ),
-            Padding(
-              padding: const EdgeInsets.all(5.0),
+            const Padding(
+              padding: EdgeInsets.all(5.0),
               child: Divider(),
             ),
-            Text("OPTIONS", style: TextStyle(fontSize: 10)),
+            const Text("OPTIONS", style: TextStyle(fontSize: 10)),
             SwitchListTile(
-              title: Text(
+              title: const Text(
                 'Include hidden targets',
                 style: TextStyle(fontSize: 13),
               ),
@@ -50,7 +50,7 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
               },
             ),
             SwitchListTile(
-              title: Text(
+              title: const Text(
                 'Show only totals',
                 style: TextStyle(fontSize: 13),
               ),
@@ -62,7 +62,7 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
               },
             ),
             SwitchListTile(
-              title: Text(
+              title: const Text(
                 'Show estimates if spied stats are not available',
                 style: TextStyle(fontSize: 13),
               ),
@@ -74,7 +74,7 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
               },
             ),
             SwitchListTile(
-              title: Text(
+              title: const Text(
                 'Include targets with no stats available',
                 style: TextStyle(fontSize: 13),
               ),
@@ -93,7 +93,7 @@ class ShareStatsDialogState extends State<ShareStatsDialog> {
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: Text('Close'),
+          child: const Text('Close'),
         ),
       ],
     );

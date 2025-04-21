@@ -92,10 +92,10 @@ class FullScreenExplanationDialog extends StatelessWidget {
                 child: CircleAvatar(
                   backgroundColor: themeProvider.mainText,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 28,
                     width: 28,
-                    child: const Icon(MdiIcons.fullscreen),
+                    child: Icon(MdiIcons.fullscreen),
                   ),
                 ),
               ),

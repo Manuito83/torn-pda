@@ -29,7 +29,7 @@ class DiscreetInfoState extends State<DiscreetInfo> {
         thumbVisibility: true,
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: Padding(
+          child: const Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
               children: [

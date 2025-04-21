@@ -183,15 +183,15 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Icon(MdiIcons.earth, size: 14),
+                    Icon(MdiIcons.earth, size: 14),
                     SizedBox(width: 4),
-                    const Text("Remote load/update"),
+                    Text("Remote load/update"),
                   ],
                 ),
                 ElevatedButton(
-                  child: Text("Configure"),
+                  child: const Text("Configure"),
                   onPressed: () {
                     _tabController.animateTo(1);
                   },
@@ -204,11 +204,11 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Icon(MdiIcons.lightningBoltOutline, size: 16),
+                    Icon(MdiIcons.lightningBoltOutline, size: 16),
                     SizedBox(width: 4),
-                    const Text("Injection time"),
+                    Text("Injection time"),
                   ],
                 ),
                 ToggleSwitch(
@@ -404,7 +404,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                       } finally {
                         if (!widget.editExisting) {
                           BotToast.showText(
-                            align: Alignment(0, 0),
+                            align: const Alignment(0, 0),
                             clickClose: true,
                             text: message ?? (success ? "Success" : "An unknown error occurred"),
                             textStyle: const TextStyle(
@@ -419,7 +419,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           if (!success) {
                             log("An error occured in script ${widget.editScript!.name}: $message");
                             BotToast.showText(
-                              align: Alignment(0, 0),
+                              align: const Alignment(0, 0),
                               clickClose: true,
                               text: message ?? "An unknown error occurred",
                               textStyle: const TextStyle(
@@ -443,7 +443,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                                       : "No newer version found";
                               log(finalMessage);
                               BotToast.showText(
-                                align: Alignment(0, 0),
+                                align: const Alignment(0, 0),
                                 clickClose: true,
                                 text: finalMessage,
                                 textStyle: const TextStyle(
@@ -457,7 +457,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                             } catch (e) {
                               log("An error occured in script ${widget.editScript!.name}: $e");
                               BotToast.showText(
-                                align: Alignment(0, 0),
+                                align: const Alignment(0, 0),
                                 clickClose: true,
                                 text: "An unknown error occurred whilst parsing the remote script.",
                                 textStyle: const TextStyle(
@@ -490,7 +490,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     }),
                 Container(width: 20),
                 ElevatedButton(
-                  child: Text("Clear"),
+                  child: const Text("Clear"),
                   onPressed: _remoteUrlController.text.isEmpty
                       ? null
                       : () {
@@ -511,9 +511,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("Fetching script..."),
+                      const Text("Fetching script..."),
                       Container(height: 20),
-                      CircularProgressIndicator(),
+                      const CircularProgressIndicator(),
                     ],
                   ),
                 )
@@ -533,8 +533,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                         decoration: InputDecoration(
                           isDense: true,
                           counterText: "",
-                          border: OutlineInputBorder(),
-                          label: _remoteSourceController.text.isEmpty ? Center(child: Text("Remote source")) : null,
+                          border: const OutlineInputBorder(),
+                          label: _remoteSourceController.text.isEmpty ? const Center(child: Text("Remote source")) : null,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -561,7 +561,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           _userScriptsProvider
                               .addUserScriptFromURL(_remoteUrlController.text.trim())
                               .then((r) => BotToast.showText(
-                                    align: Alignment(0, 0),
+                                    align: const Alignment(0, 0),
                                     clickClose: true,
                                     text: r.success ? "Script successfully added!" : "Error: ${r.message}",
                                     textStyle: const TextStyle(
@@ -582,7 +582,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                               true,
                               true);
                           BotToast.showText(
-                            align: Alignment(0, 0),
+                            align: const Alignment(0, 0),
                             clickClose: true,
                             text: couldParseHeader
                                 ? "Script successfully updated!"
@@ -650,7 +650,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             ));
           } else {
             BotToast.showText(
-              align: Alignment(0, 0),
+              align: const Alignment(0, 0),
               clickClose: true,
               text: "Error: $e",
               textStyle: const TextStyle(

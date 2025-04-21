@@ -238,7 +238,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Flexible(
+                      const Flexible(
                         child: Text(
                           "Preferred data provider",
                           style: TextStyle(

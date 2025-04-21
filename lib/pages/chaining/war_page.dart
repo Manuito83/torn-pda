@@ -388,12 +388,12 @@ class WarPageState extends State<WarPage> {
         animate: true,
         animationDuration: 500,
         customIcons: [
-          Icon(
+          const Icon(
             MdiIcons.check,
             size: 12,
             color: Colors.green,
           ),
-          Icon(
+          const Icon(
             MdiIcons.hospital,
             size: 12,
             color: Colors.red,
@@ -460,7 +460,7 @@ class WarPageState extends State<WarPage> {
         animate: true,
         animationDuration: 500,
         customIcons: [
-          Icon(
+          const Icon(
             MdiIcons.mapMarker,
             size: 12,
           ),
@@ -534,11 +534,11 @@ class WarPageState extends State<WarPage> {
         animate: true,
         animationDuration: 500,
         customIcons: [
-          Icon(
+          const Icon(
             MdiIcons.airplane,
             size: 12,
           ),
-          Icon(
+          const Icon(
             MdiIcons.airplaneOff,
             size: 12,
           ),
@@ -623,7 +623,7 @@ class WarPageState extends State<WarPage> {
 
   AppBar buildAppBar(BuildContext _) {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("War", style: TextStyle(color: Colors.white)),
@@ -643,7 +643,7 @@ class WarPageState extends State<WarPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -904,7 +904,7 @@ class WarPageState extends State<WarPage> {
                           children: [
                             Row(
                               children: [
-                                Text("Manage Spies"),
+                                const Text("Manage Spies"),
                                 const SizedBox(width: 8),
                                 SizedBox(
                                   height: 25,
@@ -1659,18 +1659,18 @@ class WarTargetsListState extends State<WarTargetsList> {
 
     // Count pinned members to add separator
     final pinnedMembersCount = filteredCards.where((member) => member.memberModel.pinned).length;
-    Widget separator = Row(
+    Widget separator = const Row(
       children: [
         Flexible(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 30),
+            padding: EdgeInsets.symmetric(vertical: 5, horizontal: 30),
             child: Divider(color: Colors.grey),
           ),
         ),
         Text("UNPINNED", style: TextStyle(fontSize: 12, color: Colors.grey)),
         Flexible(
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 30),
+            padding: EdgeInsets.symmetric(vertical: 5, horizontal: 30),
             child: Divider(color: Colors.grey),
           ),
         ),

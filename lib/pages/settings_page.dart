@@ -151,7 +151,7 @@ class SettingsPageState extends State<SettingsPage> {
     for (int i = 0; i < sections.length; i++) {
       if (i > 0) {
         finalSections.add(
-          Column(
+          const Column(
             children: [
               SizedBox(height: 20),
               Divider(),
@@ -183,7 +183,7 @@ class SettingsPageState extends State<SettingsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('Settings', style: TextStyle(color: Colors.white)),
@@ -203,7 +203,7 @@ class SettingsPageState extends State<SettingsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
     );
@@ -276,7 +276,7 @@ class SettingsPageState extends State<SettingsPage> {
                           controller: _searchController,
                           decoration: InputDecoration(
                             hintText: 'Search settings',
-                            prefixIcon: Icon(Icons.search),
+                            prefixIcon: const Icon(Icons.search),
                             suffixIcon: _searchController.text.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(Icons.clear),
@@ -296,7 +296,7 @@ class SettingsPageState extends State<SettingsPage> {
                           },
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       ...buildFilteredSections(),
                       const SizedBox(height: 50),
                     ],
@@ -325,7 +325,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Flexible(child: const Text("Web browser")),
+                  const Flexible(child: Text("Web browser")),
                   IconButton(
                     icon: const Icon(Icons.info_outline),
                     onPressed: () {
@@ -490,7 +490,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Time format")),
+              const Flexible(child: Text("Time format")),
               Flexible(child: _timeFormatDropdown()),
             ],
           ),
@@ -504,7 +504,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Time zone")),
+              const Flexible(child: Text("Time zone")),
               Flexible(flex: 2, child: _timeZoneDropdown()),
             ],
           ),
@@ -518,7 +518,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Show date in clock")),
+              const Flexible(child: Text("Show date in clock")),
               Flexible(flex: 2, child: _dateInClockDropdown()),
             ],
           ),
@@ -548,7 +548,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Seconds in clock")),
+              const Flexible(child: Text("Seconds in clock")),
               Flexible(flex: 2, child: _secondsInClockDropdown()),
             ],
           ),
@@ -562,7 +562,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Highlight events")),
+              const Flexible(child: Text("Highlight events")),
               Switch(
                 value: _settingsProvider.tctClockHighlightsEvents,
                 onChanged: (value) {
@@ -803,7 +803,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Dark mode")),
+              const Flexible(child: Text("Dark mode")),
               Switch(
                 value: _settingsProvider.appwidgetDarkMode,
                 onChanged: (value) {
@@ -827,7 +827,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Remove shortcuts from short layout")),
+              const Flexible(child: Text("Remove shortcuts from short layout")),
               Switch(
                 value: _settingsProvider.appwidgetRemoveShortcutsOneRowLayout,
                 onChanged: (value) {
@@ -863,7 +863,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Show wallet money")),
+              const Flexible(child: Text("Show wallet money")),
               Switch(
                 value: _settingsProvider.appwidgetMoneyEnabled,
                 onChanged: (value) {
@@ -903,7 +903,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Cooldown tap launches browser")),
+              const Flexible(child: Text("Cooldown tap launches browser")),
               Switch(
                 value: _settingsProvider.appwidgetCooldownTapOpenBrowser,
                 onChanged: (value) {
@@ -955,7 +955,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Spies source")),
+              const Flexible(child: Text("Spies source")),
               Flexible(flex: 2, child: _spiesSourceDropdown()),
             ],
           ),
@@ -1006,9 +1006,9 @@ class SettingsPageState extends State<SettingsPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: const Icon(MdiIcons.accountMultipleOutline, size: 18),
+                      const Padding(
+                        padding: EdgeInsets.only(right: 5),
+                        child: Icon(MdiIcons.accountMultipleOutline, size: 18),
                       ),
                       Text(
                         "${s.spiesSource == SpiesSource.yata ? 'YATA' : 'Torn Stats'} database: ${s.spiesSource == SpiesSource.yata ? s.yataSpies.length : s.tornStatsSpies.spies.length} spies",
@@ -1019,9 +1019,9 @@ class SettingsPageState extends State<SettingsPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: const Icon(MdiIcons.clockOutline, size: 18),
+                      const Padding(
+                        padding: EdgeInsets.only(right: 5),
+                        child: Icon(MdiIcons.clockOutline, size: 18),
                       ),
                       Text(lastUpdated, style: TextStyle(color: spiesUpdateColor)),
                     ],
@@ -1040,7 +1040,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Manage spies")),
+              const Flexible(child: Text("Manage spies")),
               IconButton(
                 icon: const Icon(MdiIcons.incognito),
                 onPressed: () {
@@ -1066,7 +1066,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Allow mixed sources")),
+              const Flexible(child: Text("Allow mixed sources")),
               Switch(
                 value: _spyController.allowMixedSpiesSources,
                 onChanged: (enabled) {
@@ -1101,7 +1101,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Delete spies")),
+              const Flexible(child: Text("Delete spies")),
               ElevatedButton(
                 child: const Icon(Icons.delete_outlined),
                 onPressed: () async {
@@ -1159,7 +1159,7 @@ class SettingsPageState extends State<SettingsPage> {
                     Flexible(
                       child: Row(
                         children: [
-                          Flexible(child: const Text("Use Torn Spies Central")),
+                          const Flexible(child: Text("Use Torn Spies Central")),
                           const SizedBox(width: 8),
                           GestureDetector(
                             child: const Icon(Icons.info_outline, size: 18),
@@ -1253,10 +1253,10 @@ class SettingsPageState extends State<SettingsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(
+                    const Flexible(
                       child: Row(
                         children: [
-                          Flexible(child: const Text("Use YATA stats estimates")),
+                          Flexible(child: Text("Use YATA stats estimates")),
                         ],
                       ),
                     ),
@@ -1323,7 +1323,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Nerve bar source")),
+              const Flexible(child: Text("Nerve bar source")),
               Flexible(flex: 2, child: _naturalNerveBarSourceDropdown()),
             ],
           ),
@@ -1353,9 +1353,9 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(
+              const Flexible(
                 child: Row(
-                  children: [Flexible(child: const Text("Organized Crimes v2 in use"))],
+                  children: [Flexible(child: Text("Organized Crimes v2 in use"))],
                 ),
               ),
               Switch(
@@ -1462,7 +1462,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Allow auto rotation")),
+                  const Flexible(child: Text("Allow auto rotation")),
                   Switch(
                     value: _settingsProvider.allowScreenRotation,
                     onChanged: (value) {
@@ -1498,7 +1498,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Split screen")),
+                  const Flexible(child: Text("Split screen")),
                   Flexible(flex: 2, child: _splitScreenDropdown()),
                 ],
               ),
@@ -1525,7 +1525,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Split reverts to")),
+                  const Flexible(child: Text("Split reverts to")),
                   Flexible(flex: 2, child: _splitScreenRevertionDropdown()),
                 ],
               ),
@@ -1576,7 +1576,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Use Material theme")),
+              const Flexible(child: Text("Use Material theme")),
               Switch(
                 value: _themeProvider.useMaterial3,
                 onChanged: (enabled) async {
@@ -1597,7 +1597,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Sync app with device theme")),
+              const Flexible(child: Text("Sync app with device theme")),
               Switch(
                 value: _settingsProvider.syncDeviceTheme,
                 onChanged: (enabled) async {
@@ -1628,7 +1628,7 @@ class SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Flexible(child: const Text("Sync app and web themes")),
+              const Flexible(child: Text("Sync app and web themes")),
               Switch(
                 value: _settingsProvider.syncTornWebTheme,
                 onChanged: (enabled) async {
@@ -1655,7 +1655,7 @@ class SettingsPageState extends State<SettingsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Dark theme equivalent")),
+                    const Flexible(child: Text("Dark theme equivalent")),
                     Flexible(flex: 2, child: _themeToSyncDropdown()),
                   ],
                 ),
@@ -1682,7 +1682,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Accesible text colors")),
+                  const Flexible(child: Text("Accesible text colors")),
                   Switch(
                     value: _themeProvider.accesibilityNoTextColors,
                     onChanged: (enabled) async {
@@ -1726,7 +1726,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Dynamic app icons")),
+                  const Flexible(child: Text("Dynamic app icons")),
                   Switch(
                     value: !_settingsProvider.dynamicAppIconEnabledRemoteConfig
                         ? false
@@ -1784,7 +1784,7 @@ class SettingsPageState extends State<SettingsPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Flexible(child: const Text("Override icon")),
+                    const Flexible(child: Text("Override icon")),
                     Flexible(child: _manualAppIconDropdown()),
                   ],
                 ),
@@ -2027,7 +2027,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Display API call rate")),
+                  const Flexible(child: Text("Display API call rate")),
                   Switch(
                     value: _apiController.showApiRateInDrawer.value,
                     onChanged: (enabled) async {
@@ -2063,7 +2063,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Warn max. call rate")),
+                  const Flexible(child: Text("Warn max. call rate")),
                   Switch(
                     value: _apiController.showApiMaxCallWarning,
                     onChanged: (enabled) async {
@@ -2099,7 +2099,7 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(child: const Text("Delay API calls")),
+                  const Flexible(child: Text("Delay API calls")),
                   Switch(
                     value: _apiController.delayCalls,
                     onChanged: (enabled) async {
@@ -2172,7 +2172,7 @@ class SettingsPageState extends State<SettingsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Upload settings")),
+                const Flexible(child: Text("Upload settings")),
                 ElevatedButton(
                   child: const Icon(Icons.upload),
                   onPressed: _userProfile == null
@@ -2215,7 +2215,7 @@ class SettingsPageState extends State<SettingsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Restore settings")),
+                const Flexible(child: Text("Restore settings")),
                 ElevatedButton(
                   child: const Icon(Icons.download),
                   onPressed: _userProfile == null
@@ -2258,7 +2258,7 @@ class SettingsPageState extends State<SettingsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Share settings")),
+                const Flexible(child: Text("Share settings")),
                 ElevatedButton(
                   child: const Icon(Icons.share),
                   onPressed: _userProfile == null
@@ -2304,7 +2304,7 @@ class SettingsPageState extends State<SettingsPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(child: const Text("Clear backup")),
+                const Flexible(child: Text("Clear backup")),
                 ElevatedButton(
                   child: const Icon(Icons.delete_outline),
                   onPressed: _userProfile == null
@@ -3672,12 +3672,12 @@ class SettingsPageState extends State<SettingsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: <Widget>[
-          Flexible(
+          const Flexible(
             child: Row(
               children: [
                 Icon(Icons.keyboard_arrow_right_outlined),
                 Flexible(
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.only(left: 10),
                     child: Text(
                       "Cooldown tap opens",
@@ -3782,7 +3782,7 @@ Widget buildSectionWithRows({
     }
   }
 
-  if (visibleWidgets.isEmpty) return SizedBox.shrink();
+  if (visibleWidgets.isEmpty) return const SizedBox.shrink();
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,

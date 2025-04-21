@@ -51,7 +51,7 @@ class ChatHighlightAddWordsDialogState extends State<ChatHighlightAddWordsDialog
                           controller: _addChatHighlightTextController,
                           style: const TextStyle(fontSize: 14),
                           maxLength: 30,
-                          decoration: InputDecoration(hintText: "Enter a word to highlight"),
+                          decoration: const InputDecoration(hintText: "Enter a word to highlight"),
                           validator: (s) {
                             if (s is! String || s.trim().isEmpty) {
                               return 'Please enter a valid word';
@@ -81,7 +81,7 @@ class ChatHighlightAddWordsDialogState extends State<ChatHighlightAddWordsDialog
                       )
                     ],
                   ),
-                  margin: EdgeInsets.only(right: 10),
+                  margin: const EdgeInsets.only(right: 10),
                 ),
                 SingleChildScrollView(
                   child: Column(
@@ -89,7 +89,7 @@ class ChatHighlightAddWordsDialogState extends State<ChatHighlightAddWordsDialog
                         .map(
                           (s) => Card(
                             child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 2, horizontal: 10),
+                              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 10),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [

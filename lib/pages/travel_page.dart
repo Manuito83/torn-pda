@@ -195,7 +195,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
@@ -213,7 +213,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       title: const Text('Travel', style: TextStyle(color: Colors.white)),

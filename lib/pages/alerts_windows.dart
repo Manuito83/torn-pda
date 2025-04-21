@@ -76,9 +76,9 @@ class AlertsSettingsWindowsState extends State<AlertsSettingsWindows> {
                           checkColor: Colors.white,
                           activeColor: Colors.blueGrey,
                           value: sendbird.sendBirdNotificationsEnabled,
-                          title: Row(
+                          title: const Row(
                             children: [
-                              const Padding(
+                              Padding(
                                 padding: EdgeInsets.only(right: 5),
                                 child: Text(
                                   "Torn chat messages",
@@ -107,10 +107,10 @@ class AlertsSettingsWindowsState extends State<AlertsSettingsWindows> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
+                              const Row(
                                 children: [
                                   Icon(Icons.keyboard_arrow_right_outlined),
-                                  const Padding(
+                                  Padding(
                                     padding: EdgeInsets.only(left: 10),
                                     child: Text(
                                       "Do not disturb",
@@ -123,7 +123,7 @@ class AlertsSettingsWindowsState extends State<AlertsSettingsWindows> {
                                 ],
                               ),
                               GestureDetector(
-                                child: Icon(Icons.more_time_outlined),
+                                child: const Icon(Icons.more_time_outlined),
                                 onTap: () {
                                   showDialog(
                                     context: context,
@@ -150,7 +150,7 @@ class AlertsSettingsWindowsState extends State<AlertsSettingsWindows> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Alerts', style: TextStyle(color: Colors.white)),
       leading: IconButton(

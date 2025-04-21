@@ -196,7 +196,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsP!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: Platform.isWindows
@@ -224,12 +224,12 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: [
         GestureDetector(
-          child: Icon(
+          child: const Icon(
             MdiIcons.openInApp,
           ),
           onTap: () {

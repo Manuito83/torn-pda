@@ -1016,7 +1016,7 @@ showSendbirdNotification(String sender, String message, String channelUrl, {bool
     color: Colors.green,
     styleInformation: BigTextStyleInformation(message),
     actions: <AndroidNotificationAction>[
-      AndroidNotificationAction(
+      const AndroidNotificationAction(
         'sb_reply_action',
         'Reply',
         showsUserInterface: true,

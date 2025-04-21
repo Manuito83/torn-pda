@@ -2385,7 +2385,7 @@ class ChangeLogState extends State<ChangeLog> {
     return Padding(
       padding: const EdgeInsets.only(left: 5),
       child: GestureDetector(
-        child: Icon(Icons.info_outline),
+        child: const Icon(Icons.info_outline),
         onTap: () {
           toastification.show(
             closeOnClick: true,
@@ -2398,12 +2398,12 @@ class ChangeLogState extends State<ChangeLog> {
               ),
             ),
             autoCloseDuration: feat.secondsToShow == null ? null : Duration(seconds: feat.secondsToShow!),
-            animationDuration: Duration(milliseconds: 200),
+            animationDuration: const Duration(milliseconds: 200),
             showProgressBar: false,
             style: ToastificationStyle.flat,
             closeButtonShowType:
                 feat.closeButton || feat.secondsToShow == null ? CloseButtonShowType.always : CloseButtonShowType.none,
-            icon: Icon(Icons.info_outline),
+            icon: const Icon(Icons.info_outline),
             borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
           );
         },

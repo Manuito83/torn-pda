@@ -48,7 +48,7 @@ class MarketStatusCard extends StatelessWidget {
           Text(" ($marketPendingString)"),
           const SizedBox(width: 8),
           GestureDetector(
-            child: Icon(
+            child: const Icon(
               MdiIcons.basketOutline,
               size: 20,
             ),

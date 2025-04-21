@@ -104,9 +104,9 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     ).formatHourWithDaysElapsed();
 
     final readyTextSpan = hasExpired
-        ? TextSpan(
+        ? const TextSpan(
             text: 'ready to start',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               color: Colors.green,
               fontWeight: FontWeight.bold,
@@ -115,9 +115,9 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
         : TextSpan(
             children: [
               if (missingSlots > 0)
-                TextSpan(
+                const TextSpan(
                   text: 'incomplete, ',
-                  style: const TextStyle(fontSize: 14, color: Colors.red),
+                  style: TextStyle(fontSize: 14, color: Colors.red),
                 ),
               TextSpan(
                 text: missingSlots > 0 ? 'earliest possible start at ' : 'planned to start at ',

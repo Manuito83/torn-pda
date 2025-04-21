@@ -159,7 +159,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                           textAlign: TextAlign.center,
                         ),
                         IconButton(
-                          icon: Icon(
+                          icon: const Icon(
                             MdiIcons.cameraPlusOutline,
                             size: 30,
                           ),
@@ -184,7 +184,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
 
   AppBar buildAppBar(BuildContext _) {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stakeouts", style: TextStyle(color: Colors.white)),
@@ -204,7 +204,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -383,7 +383,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                     ),
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   left: 16,
                   right: 16,
                   child: CircleAvatar(

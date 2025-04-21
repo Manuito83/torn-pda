@@ -253,7 +253,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                   children: [
                     if (script.updateStatus == UserScriptUpdateStatus.noRemote)
                       GestureDetector(
-                        child: Icon(
+                        child: const Icon(
                           MdiIcons.alphaC,
                           color: Colors.grey,
                           size: 20,
@@ -343,7 +343,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           })
                     else if (script.updateStatus == UserScriptUpdateStatus.updating)
                       GestureDetector(
-                          child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
+                          child: const SizedBox(width: 20, height: 20, child: CircularProgressIndicator()),
                           onTap: () async => BotToast.showText(
                                 text: "Checking for updates...",
                                 textStyle: const TextStyle(
@@ -411,7 +411,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
       title: const Text('User scripts', style: TextStyle(color: Colors.white)),
@@ -424,12 +424,12 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon() else Container(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon() else Container(),
         ],
       ),
       actions: [
         IconButton(
-          icon: Icon(
+          icon: const Icon(
             MdiIcons.backupRestore,
           ),
           onPressed: () async {

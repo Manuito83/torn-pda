@@ -320,8 +320,8 @@ class TargetCardState extends State<TargetCard> {
                               contentPadding: const EdgeInsets.all(10),
                             );
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 10),
+                          child: const Padding(
+                            padding: EdgeInsets.only(right: 10),
                             child: Image(
                               image: AssetImage('images/icons/status/icon13.png'),
                               width: 18,
@@ -588,7 +588,7 @@ class TargetCardState extends State<TargetCard> {
       } else {
         _lifeTicker?.cancel();
         lifeText = "OUT";
-        hospitalWarning = Icon(
+        hospitalWarning = const Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,

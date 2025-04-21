@@ -346,7 +346,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       title: const Text("Foreign Stock", style: TextStyle(color: Colors.white)),
       leading: IconButton(
@@ -444,7 +444,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
-                    child: Icon(
+                    child: const Icon(
                       MdiIcons.filterVariant,
                       size: 30,
                     ),
@@ -772,13 +772,13 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       );
     }
 
-    Widget providerIcon = SizedBox.shrink();
+    Widget providerIcon = const SizedBox.shrink();
     if (_yataSuccess) {
       providerIcon = GestureDetector(
         child: Column(
           children: [
-            Text("PROVIDER", style: TextStyle(fontSize: 10)),
-            SizedBox(height: 4),
+            const Text("PROVIDER", style: TextStyle(fontSize: 10)),
+            const SizedBox(height: 4),
             Image.asset('images/icons/yata_logo.png', height: 36),
           ],
         ),
@@ -800,8 +800,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       providerIcon = GestureDetector(
         child: Column(
           children: [
-            Text("PROVIDER", style: TextStyle(fontSize: 10)),
-            SizedBox(height: 4),
+            const Text("PROVIDER", style: TextStyle(fontSize: 10)),
+            const SizedBox(height: 4),
             Container(
               width: 32,
               height: 32,

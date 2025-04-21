@@ -126,9 +126,9 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
-                              const Icon(MdiIcons.fencing, size: 20),
+                              Icon(MdiIcons.fencing, size: 20),
                               SizedBox(width: 5),
                               Flexible(
                                 child: Text(

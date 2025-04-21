@@ -168,8 +168,8 @@ class EstimatedStatsDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 20),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 20),
               child: Text(
                 "TRAINING COMPARISON",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
