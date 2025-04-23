@@ -47,6 +47,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/settings/api_auth_widget.dart';
+import 'package:torn_pda/widgets/settings/api_error_history_dialog.dart';
 import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_delete_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup/backup_restore_dialog.dart';
@@ -407,37 +408,33 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Use Profile section shortcuts"),
-              Switch(
-                value: _settingsProvider.shortcutsEnabledProfile,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.shortcutsEnabledProfile = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Use Profile section shortcuts"),
+                  Switch(
+                    value: _settingsProvider.shortcutsEnabledProfile,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.shortcutsEnabledProfile = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                'Enable configurable shortcuts in the Profile section to quickly access your favorite sections in Torn',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Shortcuts description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Enable configurable shortcuts in the Profile section to quickly access your favorite sections in Torn',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -515,28 +512,24 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Show date in clock")),
-              Flexible(flex: 2, child: _dateInClockDropdown()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show date in clock")),
+                  Flexible(flex: 2, child: _dateInClockDropdown()),
+                ],
+              ),
+              Text(
+                'Add an extra row for the date wherever the TCT clock is shown. You can also specify the desired format (day/month or month/day)',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Date in clock description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Add an extra row for the date wherever the TCT clock is shown. You can also specify the desired format (day/month or month/day)',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -559,37 +552,33 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Highlight events")),
-              Switch(
-                value: _settingsProvider.tctClockHighlightsEvents,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.tctClockHighlightsEvents = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Highlight events")),
+                  Switch(
+                    value: _settingsProvider.tctClockHighlightsEvents,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.tctClockHighlightsEvents = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                'If enabled, the TCT Clock will be highlighted whenever there is an event or competition active in Torn',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Highlight events description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'If enabled, the TCT Clock will be highlighted whenever there is an event or competition active in Torn',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -645,35 +634,30 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, right: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Flexible(child: Text("Remove notifications on launch")),
-                Switch(
-                  value: _removeNotificationsLaunch,
-                  onChanged: (value) {
-                    _settingsProvider.changeRemoveNotificationsOnLaunch = value;
-                    setState(() {
-                      _removeNotificationsLaunch = value;
-                    });
-                  },
-                  activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Remove notifications on launch")),
+                    Switch(
+                      value: _removeNotificationsLaunch,
+                      onChanged: (value) {
+                        _settingsProvider.changeRemoveNotificationsOnLaunch = value;
+                        setState(() {
+                          _removeNotificationsLaunch = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
                 ),
+                Text(
+                  'This will remove all Torn PDA notifications from your notifications bar when you launch the app. Deactivate it if you prefer to clear them manually.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                )
               ],
-            ),
-          ),
-        ),
-      if (Platform.isAndroid)
-        SearchableRow(
-          label: "Remove notifications description",
-          searchText: _searchText,
-          filterable: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'This will remove all Torn PDA notifications from your notifications bar when you launch the app. Deactivate it if you prefer to clear them manually.',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
             ),
           ),
         ),
@@ -683,25 +667,20 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Flexible(child: Text("Alerts vibration")),
-                Flexible(flex: 2, child: _vibrationDropdown()),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Alerts vibration")),
+                    Flexible(flex: 2, child: _vibrationDropdown()),
+                  ],
+                ),
+                Text(
+                  'This vibration applies to automatic alerts while the app is active or in the background.',
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                ),
               ],
-            ),
-          ),
-        ),
-      if (Platform.isAndroid)
-        SearchableRow(
-          label: "Alerts vibration description",
-          searchText: _searchText,
-          filterable: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              'This vibration applies to automatic alerts while the app is active or in the background.',
-              style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
             ),
           ),
         ),
@@ -736,52 +715,47 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Text("Manual alarm vibration"),
-                Switch(
-                  value: _manualAlarmVibration,
-                  onChanged: (value) {
-                    setState(() {
-                      _manualAlarmVibration = value;
-                    });
-                    Prefs().setManualAlarmVibration(value);
-                  },
-                  activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
-                ),
-              ],
-            ),
-          ),
-        ),
-      if (Platform.isAndroid)
-        SearchableRow(
-          label: "Manual alarm info",
-          searchText: _searchText,
-          filterable: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: RichText(
-              text: TextSpan(
-                text:
-                    'Applies to manually activated alarms in all sections (Travel, Loot, Profile, etc.). Some Android clock apps have issues with multiple timers or distinguishing between sound and vibration. If you experience issues, consider installing ',
-                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-                children: <TextSpan>[
-                  TextSpan(
-                    text: "Google's Clock application",
-                    style: const TextStyle(color: Colors.blue),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () async {
-                        const AndroidIntent intent = AndroidIntent(
-                          action: 'action_view',
-                          data: 'https://play.google.com/store/apps/details?id=com.google.android.deskclock',
-                        );
-                        await intent.launch();
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text("Manual alarm vibration"),
+                    Switch(
+                      value: _manualAlarmVibration,
+                      onChanged: (value) {
+                        setState(() {
+                          _manualAlarmVibration = value;
+                        });
+                        Prefs().setManualAlarmVibration(value);
                       },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeColor: Colors.green,
+                    ),
+                  ],
+                ),
+                RichText(
+                  text: TextSpan(
+                    text:
+                        'Applies to manually activated alarms in all sections (Travel, Loot, Profile, etc.). Some Android clock apps have issues with multiple timers or distinguishing between sound and vibration. If you experience issues, consider installing ',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: "Google's Clock application",
+                        style: const TextStyle(color: Colors.blue),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const AndroidIntent intent = AndroidIntent(
+                              action: 'action_view',
+                              data: 'https://play.google.com/store/apps/details?id=com.google.android.deskclock',
+                            );
+                            await intent.launch();
+                          },
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                )
+              ],
             ),
           ),
         ),
@@ -824,34 +798,30 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Remove shortcuts from short layout")),
-              Switch(
-                value: _settingsProvider.appwidgetRemoveShortcutsOneRowLayout,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.appwidgetRemoveShortcutsOneRowLayout = value;
-                    HomeWidget.saveWidgetData<bool>('removeShortcutsOneRowLayout', value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Remove shortcuts from short layout")),
+                  Switch(
+                    value: _settingsProvider.appwidgetRemoveShortcutsOneRowLayout,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.appwidgetRemoveShortcutsOneRowLayout = value;
+                        HomeWidget.saveWidgetData<bool>('removeShortcutsOneRowLayout', value);
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                'By default, the short, one-row layout accommodates a couple of shortcuts by sacrificing chaining information and moving the reload icon to the top. Enabling this option removes shortcuts to free up space for the chaining bar',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Remove shortcuts description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'By default, the short, one-row layout accommodates a couple of shortcuts by sacrificing chaining information and moving the reload icon to the top. Enabling this option removes shortcuts to free up space for the chaining bar',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -860,37 +830,29 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Show wallet money")),
-              Switch(
-                value: _settingsProvider.appwidgetMoneyEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.appwidgetMoneyEnabled = value;
-                    HomeWidget.saveWidgetData<bool>('money_enabled', value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show wallet money")),
+                  Switch(
+                    value: _settingsProvider.appwidgetMoneyEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.appwidgetMoneyEnabled = value;
+                        HomeWidget.saveWidgetData<bool>('money_enabled', value);
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Wallet money description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            children: [
               Text(
                 'This is only applicable for the tall widget layout',
                 style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-              ),
+              )
             ],
           ),
         ),
@@ -900,34 +862,30 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Cooldown tap launches browser")),
-              Switch(
-                value: _settingsProvider.appwidgetCooldownTapOpenBrowser,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.appwidgetCooldownTapOpenBrowser = value;
-                    HomeWidget.saveWidgetData<bool>('cooldown_tap_opens_browser', value);
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Cooldown tap launches browser")),
+                  Switch(
+                    value: _settingsProvider.appwidgetCooldownTapOpenBrowser,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.appwidgetCooldownTapOpenBrowser = value;
+                        HomeWidget.saveWidgetData<bool>('cooldown_tap_opens_browser', value);
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'If enabled, a tap on any cooldown icon will launch the app and browser to your personal or faction items. Otherwise, the remaining cooldown time is displayed. NOTE: you may need to try a couple of times after switching for the widget to update properly.',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
               ),
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Cooldown tap launches browser description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'If enabled, a tap on any cooldown icon will launch the app and browser to your personal or faction items. Otherwise, the remaining cooldown time is displayed. NOTE: you may need to try a couple of times after switching for the widget to update properly.',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -952,31 +910,26 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Spies source")),
-              Flexible(flex: 2, child: _spiesSourceDropdown()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Spies source")),
+                  Flexible(flex: 2, child: _spiesSourceDropdown()),
+                ],
+              ),
+              Text(
+                'Choose the source of spied stats. This affects the stats shown when you visit a profile in the browser, as well as those shown in the War section (Chaining)',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
           ),
         ),
       ),
       SearchableRow(
-        label: "Spies source description",
+        label: "Spies",
         searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Choose the source of spied stats. This affects the stats shown when you visit a profile in the browser, as well as those shown in the War section (Chaining)',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Spies info",
-        searchText: _searchText,
-        filterable: false,
         child: GetBuilder<SpiesController>(
           builder: (s) {
             String lastUpdated = "Never updated";
@@ -1063,33 +1016,29 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Allow mixed sources")),
-              Switch(
-                value: _spyController.allowMixedSpiesSources,
-                onChanged: (enabled) {
-                  setState(() {
-                    _spyController.allowMixedSpiesSources = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Allow mixed sources")),
+                  Switch(
+                    value: _spyController.allowMixedSpiesSources,
+                    onChanged: (enabled) {
+                      setState(() {
+                        _spyController.allowMixedSpiesSources = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                "Whilst enabled, if a target's spy info cannot be found in the preferred source, it will also be taken from the other source if available. Switching sources preserves info unless the new source also contains a spy for the target.",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Allow mixed sources description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Whilst enabled, if a target's spy info cannot be found in the preferred source, it will also be taken from the other source if available. Switching sources preserves info unless the new source also contains a spy for the target.",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -1098,36 +1047,32 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Delete spies")),
-              ElevatedButton(
-                child: const Icon(Icons.delete_outlined),
-                onPressed: () async {
-                  _spyController.deleteSpies();
-                  BotToast.showText(
-                    text: "Spies deleted!",
-                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                    contentColor: Colors.blue,
-                    duration: const Duration(seconds: 1),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Delete spies")),
+                  ElevatedButton(
+                    child: const Icon(Icons.delete_outlined),
+                    onPressed: () async {
+                      _spyController.deleteSpies();
+                      BotToast.showText(
+                        text: "Spies deleted!",
+                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                        contentColor: Colors.blue,
+                        duration: const Duration(seconds: 1),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    },
+                  ),
+                ],
               ),
+              Text(
+                'Deletes all spies information from the local database if you prefer not to use spies info or if there is an issue with the downloaded stats.',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Delete spies description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Deletes all spies information from the local database if you prefer not to use spies info or if there is an issue with the downloaded stats.',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -1221,9 +1166,8 @@ class SettingsPageState extends State<SettingsPage> {
     } else {
       rows.add(
         SearchableRow(
-          label: "TSC temporarily deactivated",
+          label: "Use Torn Spies Central",
           searchText: _searchText,
-          filterable: false,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
             child: Text(
@@ -1288,9 +1232,8 @@ class SettingsPageState extends State<SettingsPage> {
     } else {
       rows.add(
         SearchableRow(
-          label: "YATA stats temporarily deactivated",
+          label: "Use YATA stats estimates",
           searchText: _searchText,
-          filterable: false,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
             child: Text(
@@ -1320,28 +1263,24 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Nerve bar source")),
-              Flexible(flex: 2, child: _naturalNerveBarSourceDropdown()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Nerve bar source")),
+                  Flexible(flex: 2, child: _naturalNerveBarSourceDropdown()),
+                ],
+              ),
+              Text(
+                'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each member of your faction available to plan an organized crime',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Nerve bar source description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Choose the source of the Natural Nerve Bar (NNB) that will be shown for each member of your faction available to plan an organized crime',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -1350,41 +1289,37 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(
-                child: Row(
-                  children: [Flexible(child: Text("Organized Crimes v2 in use"))],
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(
+                    child: Row(
+                      children: [Flexible(child: Text("Organized Crimes v2 in use"))],
+                    ),
+                  ),
+                  Switch(
+                    value: _settingsProvider.playerInOCv2,
+                    onChanged: (enabled) async {
+                      setState(() {
+                        _settingsProvider.playerInOCv2 = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'Torn PDA will try to identify if your faction has changed to OC v2. If you would like to remain in OC v1 (e.g.: if you join an OC1 faction), revert back by using this toggle',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
                 ),
-              ),
-              Switch(
-                value: _settingsProvider.playerInOCv2,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _settingsProvider.playerInOCv2 = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
-              ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Organized Crimes v2 description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Torn PDA will try to identify if your faction has changed to OC v2. If you would like to remain in OC v1 (e.g.: if you join an OC1 faction), revert back by using this toggle',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -1404,39 +1339,35 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Choose reviving providers"),
-              IconButton(
-                icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                onPressed: () {
-                  showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return RevivingServicesDialog();
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Choose reviving providers"),
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                    onPressed: () {
+                      showDialog(
+                        useRootNavigator: false,
+                        context: context,
+                        builder: (BuildContext context) {
+                          return RevivingServicesDialog();
+                        },
+                      );
                     },
-                  );
-                },
+                  ),
+                ],
+              ),
+              Text(
+                "Choose which reviving services you might want to use. If enabled, when you are in hospital you'll have the option to call one of their revivers from several places (e.g., Profile and Chaining sections).",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Reviving services description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Choose which reviving services you might want to use. If enabled, when you are in hospital you'll have the option to call one of their revivers from several places (e.g., Profile and Chaining sections).",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -1825,33 +1756,29 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Show status color counter")),
-              Switch(
-                value: context.read<ChainStatusProvider>().statusColorWidgetEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    context.read<ChainStatusProvider>().statusColorWidgetEnabled = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show status color counter")),
+                  Switch(
+                    value: context.read<ChainStatusProvider>().statusColorWidgetEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        context.read<ChainStatusProvider>().statusColorWidgetEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                'Shows a player status counter attached to the Torn PDA icon in the main app sections and in the browser three-dotted icon, whenever the player is hospitalised, jailed or traveling',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Status color counter description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Shows a player status counter attached to the Torn PDA icon in the main app sections and in the browser three-dotted icon, whenever the player is hospitalised, jailed or traveling',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -1860,24 +1787,20 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("App bar position")),
-              Flexible(flex: 2, child: _appBarPositionDropdown()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("App bar position")),
+                  Flexible(flex: 2, child: _appBarPositionDropdown()),
+                ],
+              ),
+              Text(
+                'Note: this will affect other quick access items such as the quick crimes bar in the browser',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "App bar position description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Note: this will affect other quick access items such as the quick crimes bar in the browser',
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -1900,24 +1823,20 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Back button exits app")),
-              Flexible(child: _backButtonAppExitDropdown()),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Back button exits app")),
+                  Flexible(child: _backButtonAppExitDropdown()),
+                ],
+              ),
+              Text(
+                "This will only have effect on certain devices, depending on your configuration. Dictates how to proceed when the app detects a back button press or swipe that would otherwise close the app. Note: in the browser, the back button always triggers backwards navigation",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Back button description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "This will only have effect on certain devices, depending on your configuration. Dictates how to proceed when the app detects a back button press or swipe that would otherwise close the app. Note: in the browser, the back button always triggers backwards navigation",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -1926,33 +1845,29 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Show Wiki")),
-              Switch(
-                value: _settingsProvider.showWikiInDrawer,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.showWikiInDrawer = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show Wiki")),
+                  Switch(
+                    value: _settingsProvider.showWikiInDrawer,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.showWikiInDrawer = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                "If enabled, you will have quick access to the Torn wiki from the app drawer menu",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Wiki description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "If enabled, you will have quick access to the Torn wiki from the app drawer menu",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -1972,37 +1887,33 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Alternative API keys"),
-              IconButton(
-                icon: const Icon(Icons.keyboard_arrow_right_outlined),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) => const AlternativeKeysPage(),
-                    ),
-                  );
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Alternative API keys"),
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_right_outlined),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) => const AlternativeKeysPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
+              Text(
+                "Use this section to configure alternative API keys for the external partners that Torn PDA connects with. CAUTION: ensure these other keys are working correctly, as Torn PDA is unable to check for errors and certain sections may stop working",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Alternative API keys description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "Use this section to configure alternative API keys for the external partners that Torn PDA connects with. CAUTION: ensure these other keys are working correctly, as Torn PDA is unable to check for errors and certain sections may stop working",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -2137,9 +2048,8 @@ class SettingsPageState extends State<SettingsPage> {
     List<SearchableRow> rows = [
       if (!_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
         SearchableRow(
-          label: "Backup disabled",
+          label: "Backup",
           searchText: _searchText,
-          filterable: false,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
             child: Row(
@@ -2169,41 +2079,37 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Flexible(child: Text("Upload settings")),
-                ElevatedButton(
-                  child: const Icon(Icons.upload),
-                  onPressed: _userProfile == null
-                      ? null
-                      : () {
-                          showDialog(
-                            useRootNavigator: false,
-                            context: context,
-                            builder: (BuildContext context) {
-                              return BackupSaveDialog(userProfile: _userProfile!);
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Upload settings")),
+                    ElevatedButton(
+                      child: const Icon(Icons.upload),
+                      onPressed: _userProfile == null
+                          ? null
+                          : () {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupSaveDialog(userProfile: _userProfile!);
+                                },
+                              );
                             },
-                          );
-                        },
+                    ),
+                  ],
                 ),
+                Text(
+                  "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so that you can later restore them if needed or share them across different devices",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
               ],
-            ),
-          ),
-        ),
-        SearchableRow(
-          label: "Upload settings description",
-          searchText: _searchText,
-          filterable: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              "This will allow you to backup your main app settings (e.g.: scripts, shortcuts, etc.) locally so that you can later restore them if needed or share them across different devices",
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
             ),
           ),
         ),
@@ -2212,41 +2118,37 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Flexible(child: Text("Restore settings")),
-                ElevatedButton(
-                  child: const Icon(Icons.download),
-                  onPressed: _userProfile == null
-                      ? null
-                      : () {
-                          showDialog(
-                            useRootNavigator: false,
-                            context: context,
-                            builder: (BuildContext context) {
-                              return BackupRestoreDialog(userProfile: _userProfile!);
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Restore settings")),
+                    ElevatedButton(
+                      child: const Icon(Icons.download),
+                      onPressed: _userProfile == null
+                          ? null
+                          : () {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupRestoreDialog(userProfile: _userProfile!);
+                                },
+                              );
                             },
-                          );
-                        },
+                    ),
+                  ],
                 ),
+                Text(
+                  "This will download your saved settings and restore them in the app. Please be aware that this will overwrite your current preferences",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
               ],
-            ),
-          ),
-        ),
-        SearchableRow(
-          label: "Restore settings description",
-          searchText: _searchText,
-          filterable: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              "This will download your saved settings and restore them in the app. Please be aware that this will overwrite your current preferences",
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
             ),
           ),
         ),
@@ -2255,44 +2157,40 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Flexible(child: Text("Share settings")),
-                ElevatedButton(
-                  child: const Icon(Icons.share),
-                  onPressed: _userProfile == null
-                      ? null
-                      : () {
-                          showDialog(
-                            useRootNavigator: false,
-                            context: context,
-                            builder: (BuildContext context) {
-                              return BackupShareDialog(
-                                userProfile: _userProfile!,
-                                themeProvider: _themeProvider,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Share settings")),
+                    ElevatedButton(
+                      child: const Icon(Icons.share),
+                      onPressed: _userProfile == null
+                          ? null
+                          : () {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupShareDialog(
+                                    userProfile: _userProfile!,
+                                    themeProvider: _themeProvider,
+                                  );
+                                },
                               );
                             },
-                          );
-                        },
+                    ),
+                  ],
                 ),
+                Text(
+                  "This will allow you to share your settings and receive settings from other players using the player ID and a password",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
               ],
-            ),
-          ),
-        ),
-        SearchableRow(
-          label: "Share settings description",
-          searchText: _searchText,
-          filterable: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              "This will allow you to share your settings and receive settings from other players using the player ID and a password",
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
             ),
           ),
         ),
@@ -2301,41 +2199,37 @@ class SettingsPageState extends State<SettingsPage> {
           searchText: _searchText,
           child: Padding(
             padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Column(
               children: [
-                const Flexible(child: Text("Clear backup")),
-                ElevatedButton(
-                  child: const Icon(Icons.delete_outline),
-                  onPressed: _userProfile == null
-                      ? null
-                      : () async {
-                          showDialog(
-                            useRootNavigator: false,
-                            context: context,
-                            builder: (BuildContext context) {
-                              return BackupDeleteDialog(userProfile: _userProfile!);
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Clear backup")),
+                    ElevatedButton(
+                      child: const Icon(Icons.delete_outline),
+                      onPressed: _userProfile == null
+                          ? null
+                          : () async {
+                              showDialog(
+                                useRootNavigator: false,
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return BackupDeleteDialog(userProfile: _userProfile!);
+                                },
+                              );
                             },
-                          );
-                        },
+                    ),
+                  ],
+                ),
+                Text(
+                  "In case there is an issue with your online backup when restoring or if you simply want to clear it, this will delete the online saved data",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
               ],
-            ),
-          ),
-        ),
-        SearchableRow(
-          label: "Clear backup description",
-          searchText: _searchText,
-          filterable: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              "In case there is an issue with your online backup when restoring or if you simply want to clear it, this will delete the online saved data",
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-                fontStyle: FontStyle.italic,
-              ),
             ),
           ),
         ),
@@ -2355,62 +2249,93 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Test API")),
-              ElevatedButton(
-                child: const Text("PING"),
-                onPressed: () async {
-                  BotToast.showText(
-                    text: "Please wait...",
-                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                    contentColor: Colors.blue,
-                    duration: const Duration(seconds: 1),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                  final ping = Ping('api.torn.com', count: 4);
-                  ping.stream.listen((event) {
-                    if (event.summary != null || event.error != null) {
-                      String message = "";
-                      if (event.error != null) {
-                        message = "CONNECTION PROBLEM\n\n${event.error}";
-                      } else {
-                        if (event.summary!.transmitted == event.summary!.received) {
-                          message = "SUCCESS\n\n${event.summary}";
-                        } else {
-                          message = "CONNECTION PROBLEM\n\n${event.summary}";
-                        }
-                      }
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Test API")),
+                  ElevatedButton(
+                    child: const Text("PING"),
+                    onPressed: () async {
                       BotToast.showText(
-                        clickClose: true,
-                        text: message,
+                        text: "Please wait...",
                         textStyle: const TextStyle(fontSize: 14, color: Colors.white),
                         contentColor: Colors.blue,
-                        duration: const Duration(seconds: 10),
+                        duration: const Duration(seconds: 1),
                         contentPadding: const EdgeInsets.all(10),
                       );
-                    }
-                  });
-                },
+                      final ping = Ping('api.torn.com', count: 4);
+                      ping.stream.listen((event) {
+                        if (event.summary != null || event.error != null) {
+                          String message = "";
+                          if (event.error != null) {
+                            message = "CONNECTION PROBLEM\n\n${event.error}";
+                          } else {
+                            if (event.summary!.transmitted == event.summary!.received) {
+                              message = "SUCCESS\n\n${event.summary}";
+                            } else {
+                              message = "CONNECTION PROBLEM\n\n${event.summary}";
+                            }
+                          }
+                          BotToast.showText(
+                            clickClose: true,
+                            text: message,
+                            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                            contentColor: Colors.blue,
+                            duration: const Duration(seconds: 10),
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                        }
+                      });
+                    },
+                  ),
+                ],
               ),
+              Text(
+                "In case you are facing connection problems, this will ping Torn's API and show whether it is reachable from your device. If it isn't, it might be due to your DNS servers (try switching from WiFi to mobile data).",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
           ),
         ),
       ),
       SearchableRow(
-        label: "Test API description",
+        label: "API Error Log",
         searchText: _searchText,
-        filterable: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "In case you are facing connection problems, this will ping Torn's API and show whether it is reachable from your device. If it isn't, it might be due to your DNS servers (try switching from WiFi to mobile data).",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("API Error Log")),
+                  ElevatedButton.icon(
+                    label: const Text("View"),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (_) => ApiErrorDialog(),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Text(
+                "If you ever need to inspect recent API failures (v1 or v2), open the error history here.",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -2419,37 +2344,33 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Enable debug messages")),
-              Switch(
-                value: _settingsProvider.debugMessages,
-                onChanged: (enabled) async {
-                  setState(() {
-                    _settingsProvider.debugMessages = enabled;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Enable debug messages")),
+                  Switch(
+                    value: _settingsProvider.debugMessages,
+                    onChanged: (enabled) async {
+                      setState(() {
+                        _settingsProvider.debugMessages = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                'Enable specific debug messages for app failure testing. This is an advanced feature that may generate extra error messages; do not use unless requested.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Debug messages description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Enable specific debug messages for app failure testing. This is an advanced feature that may generate extra error messages; do not use unless requested.',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),
@@ -2458,33 +2379,29 @@ class SettingsPageState extends State<SettingsPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Flexible(child: Text("Reset tutorials")),
-              ElevatedButton(
-                child: const Text("CLEAR"),
-                onPressed: () async {
-                  _settingsProvider.clearShowCases();
-                },
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Reset tutorials")),
+                  ElevatedButton(
+                    child: const Text("CLEAR"),
+                    onPressed: () async {
+                      _settingsProvider.clearShowCases();
+                    },
+                  ),
+                ],
               ),
+              Text(
+                "This will clear all the app's tutorial pop-ups so you can review them again. Note that some tutorials (e.g., those in the browser) require an app restart to fully reset.",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Reset tutorials description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            "This will clear all the app's tutorial pop-ups so you can review them again. Note that some tutorials (e.g., those in the browser) require an app restart to fully reset.",
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),

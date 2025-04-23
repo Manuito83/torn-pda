@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.5 - Build 515 - 21/04/2025
+    // v3.7.5 - Build 516 - 23/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.5'
@@ -59,6 +59,13 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Main settings section is now searchable",
           "Browser should now center fields correctly when the keyboard is shown",
+          ComplexFeature(
+            "Added API error log for troubleshooting",
+            explanation: "Torn PDA will record the latest 30 API errors for each session.\n\n"
+                "This is useful for troubleshooting issues with the API, normally upon request "
+                "from Torn PDA developers.\n\n"
+                "It can be found in Settings, under the Troubleshooting section.",
+          ),
           "Fixed Torn Exchange profit calculation",
           "Fixed quick items response text in faction armory",
         ],

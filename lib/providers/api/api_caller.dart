@@ -61,6 +61,21 @@ class ApiCallerController extends GetxController {
     update();
   }
 
+  /// Records a new error, keeping only the latest 30 entries
+  final RxList<ApiErrorEntry> apiErrors = <ApiErrorEntry>[].obs;
+  void recordApiError(Object error, String trace, String apiVersion) {
+    final entry = ApiErrorEntry(
+      timestamp: DateTime.now().toUtc(),
+      message: error.toString(),
+      trace: trace,
+      apiVersion: apiVersion,
+    );
+    apiErrors.add(entry);
+    while (apiErrors.length > 30) {
+      apiErrors.removeAt(0);
+    }
+  }
+
   @override
   Future<void> onInit() async {
     super.onInit();
@@ -130,10 +145,11 @@ class ApiCallerController extends GetxController {
         if (apiCall == null) {
           throw ArgumentError("For API V2, 'apiCall' must be provided.");
         }
-        return await _launchApiCall_v2(
+        dynamic apiV2Response = await _launchApiCall_v2(
           apiSelection_v2: apiSelection_v2,
           apiCall: apiCall,
         );
+        return apiV2Response;
       } else if (apiSelection != null) {
         // API V1
         return await _launchApiCall_v1(
@@ -385,7 +401,7 @@ class ApiCallerController extends GetxController {
       dynamic jsonResponse;
       try {
         jsonResponse = json.decode(response.body);
-      } catch (e) {
+      } catch (e, trace) {
         log("API REPLY ERROR [$e]");
         // Analytics limits at 100 chars
         final String platform = Platform.isAndroid ? "a" : "i";
@@ -403,6 +419,8 @@ class ApiCallerController extends GetxController {
               "if there are issues with the API directly in Torn, by visiting https://api.torn.com and trying "
               "a request with your API key";
         }
+
+        recordApiError(e, trace.toString(), "V1");
         return ApiError(
           // We limit to a bit more here (it might get shown to the user)
           pdaErrorDetails: "API REPLY ERROR\n[Reply: ${error.length > 300 ? error.substring(0, 300) : error}]",
@@ -414,6 +432,8 @@ class ApiCallerController extends GetxController {
         if (jsonResponse['error'] != null) {
           final code = jsonResponse['error']['code'];
           final tornReason = jsonResponse['error']['error'];
+
+          recordApiError("Torn Error Code: $code", tornReason, "V1");
           return ApiError(errorId: code, tornErrorDetails: tornReason);
         }
         // Otherwise, return a good json response
@@ -434,6 +454,8 @@ class ApiCallerController extends GetxController {
         if (response.body.contains('"code":')) {
           errorParsed = int.tryParse(response.body.split('"code":')[1].split(",")[0]);
         }
+
+        recordApiError("HTTP Error Code: ${response.statusCode}", e.length > 300 ? e.substring(0, 300) : e, "V1");
         return ApiError(
           errorId: errorParsed ?? 0,
           // We limit to a bit more here (it might get shown to the user)
@@ -441,6 +463,7 @@ class ApiCallerController extends GetxController {
         );
       }
     } on TimeoutException catch (_) {
+      recordApiError("Torn Timed Out", "Connection Timed Out", "V1");
       return ApiError(errorId: 100);
     } catch (e) {
       // ERROR HANDLING 3: exception from http call
@@ -457,6 +480,8 @@ class ApiCallerController extends GetxController {
       );
 
       final String error = e.toString();
+
+      recordApiError("HTTP Connection Crash", error.length > 300 ? error.substring(0, 300) : error, "V1");
       return ApiError(
         // We limit to a bit more here (it might get shown to the user)
         pdaErrorDetails: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : error}]",
@@ -510,16 +535,19 @@ class ApiCallerController extends GetxController {
 
       return response.body;
     } catch (e, trace) {
-      throw _handleError_v2(e, statusCode, trace);
+      return _handleError_v2(e, statusCode, trace);
     }
   }
 
   // TODO: Probably needs to be completed with more use cases as in API V1
   _handleError_v2(dynamic e, int? statusCode, StackTrace? trace) {
     if (e is TimeoutException) {
+      log("TORN API v2 TIMED OUT: $e, trace: $trace");
+
+      recordApiError("Torn Timed Out: $e", trace.toString(), "V2");
       return ApiError(errorId: 100);
     } else if (e is ApiError) {
-      log("TORN API ERROR: [${e.tornErrorDetails}], trace: $trace");
+      log("TORN API v2 ERROR: [${e.tornErrorDetails}], trace: $trace");
       analytics?.logEvent(
         name: 'api_status_error',
         parameters: {
@@ -527,12 +555,15 @@ class ApiCallerController extends GetxController {
           'response_body': e.tornErrorDetails,
         },
       );
+
+      recordApiError("Torn Api Error: ${e.errorId}",
+          e.toString().length > 300 ? e.toString().substring(0, 300) : e.toString(), "V2");
       return ApiError(
         errorId: e.errorId,
         pdaErrorDetails: "TORN API ERROR\n[${e.toString().length > 300 ? e.toString().substring(0, 300) : e}]",
       );
     } else {
-      log("API CALL ERROR: [$e], trace: $trace");
+      log("API v2 PDA CALL ERROR: [$e], trace: $trace");
       // Analytics limits at 100 chars
       final String platform = Platform.isAndroid ? "a" : "i";
       final String versionError = "$appVersion$platform: $e";
@@ -544,6 +575,9 @@ class ApiCallerController extends GetxController {
       );
 
       final String error = e.toString();
+
+      recordApiError(
+          "HTTP Connection Crash: ${e.errorId}", error.length > 300 ? error.substring(0, 300) : error.toString(), "V2");
       return ApiError(
         // We limit to a bit more here (it might get shown to the user)
         pdaErrorDetails: "API CALL ERROR\n[${error.length > 300 ? error.substring(0, 300) : error}]",

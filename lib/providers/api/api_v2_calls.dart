@@ -51,6 +51,7 @@ class ApiCallsV2 {
       },
     );
 
+    if (apiResponse is ApiError) return null;
     try {
       final ownProfileMisc = OwnProfileMisc.fromJson(apiResponse as Map<String, dynamic>);
       return ownProfileMisc;
@@ -73,6 +74,7 @@ class ApiCallsV2 {
       },
     );
 
+    if (apiResponse is ApiError) return null;
     try {
       final otherProfile = OtherProfileModel.fromJson(apiResponse as Map<String, dynamic>);
       return otherProfile;

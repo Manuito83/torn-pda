@@ -1824,7 +1824,18 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Flexible(child: Text("Select words to highlight")),
+                const Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Select words to highlight"),
+                      Text(
+                        "(ONLY CHAT v2.0)",
+                        style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
+                ),
                 ElevatedButton(
                   child: const Icon(Icons.drive_file_rename_outline_sharp),
                   onPressed: () => _showHighlightSelectorChat(context),
@@ -1837,13 +1848,23 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         SearchableRow(
           label: "Select highlight color",
           searchText: _searchText,
-          filterable: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Flexible(child: Text("Select highlight color")),
+                const Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text("Select highlight color"),
+                      Text(
+                        "(ONLY CHAT v2.0)",
+                        style: TextStyle(fontSize: 10, fontStyle: FontStyle.italic),
+                      ),
+                    ],
+                  ),
+                ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _highlightColor.withAlpha(255),
@@ -2145,33 +2166,29 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Nerve excess warning"),
-              Switch(
-                value: _settingsProvider.travelNerveExcessWarning,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.travelNerveExcessWarning = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Nerve excess warning"),
+                  Switch(
+                    value: _settingsProvider.travelNerveExcessWarning,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.travelNerveExcessWarning = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                "Warns when your Nerve Bar exceeds a certain threshold to avoid waste.",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Nerve excess warning description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Text(
-            "Warns when your Nerve Bar exceeds a certain threshold to avoid waste.",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -2220,33 +2237,29 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Life excess warning"),
-              Switch(
-                value: _settingsProvider.travelLifeExcessWarning,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.travelLifeExcessWarning = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Life excess warning"),
+                  Switch(
+                    value: _settingsProvider.travelLifeExcessWarning,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.travelLifeExcessWarning = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                "Warns when your Life Bar exceeds a certain threshold to avoid waste.",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Life excess warning description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Text(
-            "Warns when your Life Bar exceeds a certain threshold to avoid waste.",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -2317,7 +2330,6 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         SearchableRow(
           label: "Minimum cash",
           searchText: _searchText,
-          filterable: false,
           child: Padding(
             padding: const EdgeInsets.only(left: 50, right: 10, bottom: 15),
             child: Form(
@@ -2358,33 +2370,29 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Drug cooldown warning"),
-              Switch(
-                value: _settingsProvider.travelDrugCooldownWarning,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.travelDrugCooldownWarning = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Drug cooldown warning"),
+                  Switch(
+                    value: _settingsProvider.travelDrugCooldownWarning,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.travelDrugCooldownWarning = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                "If enabled, you'll get a warning when you access the Travel Agency with no drug cooldown time, just in case you forgot",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Drug cooldown warning description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Text(
-            "If enabled, you'll get a warning when you access the Travel Agency with no drug cooldown time, just in case you forgot",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -2393,33 +2401,29 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Booster cooldown warning"),
-              Switch(
-                value: _settingsProvider.travelBoosterCooldownWarning,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.travelBoosterCooldownWarning = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Booster cooldown warning"),
+                  Switch(
+                    value: _settingsProvider.travelBoosterCooldownWarning,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.travelBoosterCooldownWarning = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                "If enabled, you'll get a warning when you access the Travel Agency with no booster cooldown time, just in case you forgot",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Booster cooldown warning description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15),
-          child: Text(
-            "If enabled, you'll get a warning when you access the Travel Agency with no booster cooldown time, just in case you forgot",
-            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
           ),
         ),
       ),
@@ -2676,37 +2680,33 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Column(
             children: [
-              const Text("Allow links preview"),
-              Switch(
-                value: _settingsProvider.iosAllowLinkPreview,
-                onChanged: (value) {
-                  setState(() {
-                    _settingsProvider.changeIosAllowLinkPreview = value;
-                  });
-                },
-                activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Allow links preview"),
+                  Switch(
+                    value: _settingsProvider.iosAllowLinkPreview,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.changeIosAllowLinkPreview = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
               ),
+              Text(
+                'Allow browser to open an iOS native preview window when long-pressing a link (only iOS 9+)',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
             ],
-          ),
-        ),
-      ),
-      SearchableRow(
-        label: "Allow links preview description",
-        searchText: _searchText,
-        filterable: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            'Allow browser to open an iOS native preview window when long-pressing a link (only iOS 9+)',
-            style: TextStyle(
-              color: Colors.grey[600],
-              fontSize: 12,
-              fontStyle: FontStyle.italic,
-            ),
           ),
         ),
       ),

@@ -144,3 +144,17 @@ class ApiCallRequest {
           "You must provide either an API V1 or API V2 configuration, but not both",
         );
 }
+
+class ApiErrorEntry {
+  final DateTime timestamp;
+  final String message;
+  final String trace;
+  final String apiVersion; // "V1" or "V2"
+
+  ApiErrorEntry({
+    required this.timestamp,
+    required this.message,
+    required this.trace,
+    required this.apiVersion,
+  });
+}
