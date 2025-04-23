@@ -59,7 +59,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Main settings section is now searchable",
           "Browser should now center fields correctly when the keyboard is shown",
-          "Fixed Torn Exchange profit calculation"
+          "Fixed Torn Exchange profit calculation",
+          "Fixed quick items response text in faction armory",
         ],
     );
 
