@@ -3464,133 +3464,166 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool strengthModified = false;
     Color strengthColor = Colors.white;
     int strengthModifier = 0;
-    double strengthModifiedTotal = _miscModel!.strength!.toDouble();
+    double strengthModifiedTotal = 0;
     String strengthString = '';
-    for (final strengthMod in _miscModel!.strengthInfo!) {
-      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      final matches = strRaw.allMatches(strengthMod);
-      if (matches.isNotEmpty) {
-        strengthModified = true;
-        for (final match in matches) {
-          final change = match.group(2);
-          if (match.group(1) == '-') {
-            strengthModifier -= int.parse(change!);
-          } else if (match.group(1) == '+') {
-            strengthModifier += int.parse(change!);
+    if (_miscModel!.strengthInfo != null && _miscModel!.strength != null) {
+      strengthModifiedTotal = _miscModel!.strength!.toDouble();
+      for (final strengthMod in _miscModel!.strengthInfo!) {
+        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+        final matches = strRaw.allMatches(strengthMod);
+        if (matches.isNotEmpty) {
+          strengthModified = true;
+          for (final match in matches) {
+            final change = match.group(2);
+            if (match.group(1) == '-') {
+              strengthModifier -= int.parse(change!);
+            } else if (match.group(1) == '+') {
+              strengthModifier += int.parse(change!);
+            }
           }
         }
       }
-    }
-    if (strengthModified) {
-      strengthModifiedTotal += strengthModifiedTotal * strengthModifier / 100;
-      if (strengthModifier < 0) {
-        strengthString = "($strengthModifier%)";
-        strengthColor = _themeProvider!.getTextColor(Colors.red);
-      } else {
-        strengthString = "(+$strengthModifier%)";
-        strengthColor = _themeProvider!.getTextColor(Colors.green);
+      if (strengthModified) {
+        strengthModifiedTotal += strengthModifiedTotal * strengthModifier / 100;
+        if (strengthModifier < 0) {
+          strengthString = "($strengthModifier%)";
+          strengthColor = _themeProvider!.getTextColor(Colors.red);
+        } else {
+          strengthString = "(+$strengthModifier%)";
+          strengthColor = _themeProvider!.getTextColor(Colors.green);
+        }
       }
+    } else {
+      strengthString = 'error';
+      strengthColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Defense modifiers
     bool defenseModified = false;
     Color defenseColor = Colors.white;
     int defenseModifier = 0;
-    double defenseModifiedTotal = _miscModel!.defense!.toDouble();
+    double defenseModifiedTotal = 0;
     String defenseString = '';
-    for (final defenseMod in _miscModel!.defenseInfo!) {
-      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      final matches = strRaw.allMatches(defenseMod);
-      if (matches.isNotEmpty) {
-        defenseModified = true;
-        for (final match in matches) {
-          final change = match.group(2);
-          if (match.group(1) == '-') {
-            defenseModifier -= int.parse(change!);
-          } else if (match.group(1) == '+') {
-            defenseModifier += int.parse(change!);
+    if (_miscModel!.defenseInfo != null && _miscModel!.defense != null) {
+      defenseModifiedTotal = _miscModel!.defense!.toDouble();
+      for (final defenseMod in _miscModel!.defenseInfo!) {
+        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+        final matches = strRaw.allMatches(defenseMod);
+        if (matches.isNotEmpty) {
+          defenseModified = true;
+          for (final match in matches) {
+            final change = match.group(2);
+            if (match.group(1) == '-') {
+              defenseModifier -= int.parse(change!);
+            } else if (match.group(1) == '+') {
+              defenseModifier += int.parse(change!);
+            }
           }
         }
       }
-    }
-    if (defenseModified) {
-      defenseModifiedTotal += defenseModifiedTotal * defenseModifier / 100;
-      if (defenseModifier < 0) {
-        defenseString = "($defenseModifier%)";
-        defenseColor = _themeProvider!.getTextColor(Colors.red);
-      } else {
-        defenseString = "(+$defenseModifier%)";
-        defenseColor = _themeProvider!.getTextColor(Colors.green);
+      if (defenseModified) {
+        defenseModifiedTotal += defenseModifiedTotal * defenseModifier / 100;
+        if (defenseModifier < 0) {
+          defenseString = "($defenseModifier%)";
+          defenseColor = _themeProvider!.getTextColor(Colors.red);
+        } else {
+          defenseString = "(+$defenseModifier%)";
+          defenseColor = _themeProvider!.getTextColor(Colors.green);
+        }
       }
+    } else {
+      defenseString = 'error';
+      defenseColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Speed modifiers
     bool speedModified = false;
     Color speedColor = Colors.white;
     int speedModifier = 0;
-    double speedModifiedTotal = _miscModel!.speed!.toDouble();
+    double speedModifiedTotal = 0;
     String speedString = '';
-    for (final speedMod in _miscModel!.speedInfo!) {
-      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      final matches = strRaw.allMatches(speedMod);
-      if (matches.isNotEmpty) {
-        speedModified = true;
-        for (final match in matches) {
-          final change = match.group(2);
-          if (match.group(1) == '-') {
-            speedModifier -= int.parse(change!);
-          } else if (match.group(1) == '+') {
-            speedModifier += int.parse(change!);
+    if (_miscModel!.speedInfo != null && _miscModel!.speed != null) {
+      speedModifiedTotal = _miscModel!.speed!.toDouble();
+      for (final speedMod in _miscModel!.speedInfo!) {
+        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+        final matches = strRaw.allMatches(speedMod);
+        if (matches.isNotEmpty) {
+          speedModified = true;
+          for (final match in matches) {
+            final change = match.group(2);
+            if (match.group(1) == '-') {
+              speedModifier -= int.parse(change!);
+            } else if (match.group(1) == '+') {
+              speedModifier += int.parse(change!);
+            }
           }
         }
       }
-    }
-    if (speedModified) {
-      speedModifiedTotal += speedModifiedTotal * speedModifier / 100;
-      if (speedModifier < 0) {
-        speedString = "($speedModifier%)";
-        speedColor = _themeProvider!.getTextColor(Colors.red);
-      } else {
-        speedString = "(+$speedModifier%)";
-        speedColor = _themeProvider!.getTextColor(Colors.green);
+      if (speedModified) {
+        speedModifiedTotal += speedModifiedTotal * speedModifier / 100;
+        if (speedModifier < 0) {
+          speedString = "($speedModifier%)";
+          speedColor = _themeProvider!.getTextColor(Colors.red);
+        } else {
+          speedString = "(+$speedModifier%)";
+          speedColor = _themeProvider!.getTextColor(Colors.green);
+        }
       }
+    } else {
+      speedString = 'error';
+      speedColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Dex modifiers
     bool dexModified = false;
     Color dexColor = Colors.white;
     int dexModifier = 0;
-    double dexModifiedTotal = _miscModel!.dexterity!.toDouble();
+    double dexModifiedTotal = 0;
     String dexString = '';
-    for (final dexMod in _miscModel!.dexterityInfo!) {
-      final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-      final matches = strRaw.allMatches(dexMod);
-      if (matches.isNotEmpty) {
-        dexModified = true;
-        for (final match in matches) {
-          final change = match.group(2);
-          if (match.group(1) == '-') {
-            dexModifier -= int.parse(change!);
-          } else if (match.group(1) == '+') {
-            dexModifier += int.parse(change!);
+    if (_miscModel!.dexterityInfo != null && _miscModel!.dexterity != null) {
+      dexModifiedTotal = _miscModel!.dexterity!.toDouble();
+      for (final dexMod in _miscModel!.dexterityInfo!) {
+        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
+        final matches = strRaw.allMatches(dexMod);
+        if (matches.isNotEmpty) {
+          dexModified = true;
+          for (final match in matches) {
+            final change = match.group(2);
+            if (match.group(1) == '-') {
+              dexModifier -= int.parse(change!);
+            } else if (match.group(1) == '+') {
+              dexModifier += int.parse(change!);
+            }
           }
         }
       }
-    }
-    if (dexModified) {
-      dexModifiedTotal += dexModifiedTotal * dexModifier / 100;
-      if (dexModifier < 0) {
-        dexString = "($dexModifier%)";
-        dexColor = _themeProvider!.getTextColor(Colors.red);
-      } else {
-        dexString = "(+$dexModifier%)";
-        dexColor = _themeProvider!.getTextColor(Colors.green);
+      if (dexModified) {
+        dexModifiedTotal += dexModifiedTotal * dexModifier / 100;
+        if (dexModifier < 0) {
+          dexString = "($dexModifier%)";
+          dexColor = _themeProvider!.getTextColor(Colors.red);
+        } else {
+          dexString = "(+$dexModifier%)";
+          dexColor = _themeProvider!.getTextColor(Colors.green);
+        }
       }
+    } else {
+      dexString = 'error';
+      dexColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     final double totalEffective = strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal;
 
-    final int totalEffectiveModifier = ((totalEffective - _miscModel!.total!) * 100 / _miscModel!.total!).round();
+    int? totalEffectiveModifier;
+    if (_miscModel!.total != null) {
+      totalEffectiveModifier = ((totalEffective - _miscModel!.total!) * 100 / _miscModel!.total!).round();
+    }
+
+    String formatStatsPercent(int? stat, int? total) {
+      if (total == null || total <= 0) return 'error';
+      final pct = decimalFormat.format(stat! * 100 / total);
+      return ' ($pct%)';
+    }
 
     // SKILLS
     bool skillsExist = false;
@@ -3715,7 +3748,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
                       ),
                     ),
-                    if (totalEffectiveModifier < 0)
+                    if (totalEffectiveModifier == null)
+                      Text(
+                        'error',
+                        style: TextStyle(
+                          color: _themeProvider!.getTextColor(Colors.red),
+                        ),
+                      )
+                    else if (totalEffectiveModifier < 0)
                       Text(
                         ' ($totalEffectiveModifier%)',
                         style: TextStyle(
@@ -3960,52 +4000,40 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     children: [
                       Row(
                         children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Strength: '),
-                          ),
+                          const SizedBox(width: 80, child: Text('Strength: ')),
                           SelectableText(decimalFormat.format(_miscModel!.strength)),
                           Text(
-                            " (${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)",
+                            formatStatsPercent(_miscModel!.strength, _miscModel!.total),
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
                       Row(
                         children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Defense: '),
-                          ),
+                          const SizedBox(width: 80, child: Text('Defense: ')),
                           SelectableText(decimalFormat.format(_miscModel!.defense)),
                           Text(
-                            " (${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)",
+                            formatStatsPercent(_miscModel!.defense, _miscModel!.total),
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
                       Row(
                         children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Speed: '),
-                          ),
+                          const SizedBox(width: 80, child: Text('Speed: ')),
                           SelectableText(decimalFormat.format(_miscModel!.speed)),
                           Text(
-                            " (${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)",
+                            formatStatsPercent(_miscModel!.speed, _miscModel!.total),
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
                       Row(
                         children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Dexterity: '),
-                          ),
+                          const SizedBox(width: 80, child: Text('Dexterity: ')),
                           SelectableText(decimalFormat.format(_miscModel!.dexterity)),
                           Text(
-                            " (${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)",
+                            formatStatsPercent(_miscModel!.dexterity, _miscModel!.total),
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],
@@ -4588,62 +4616,64 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // BANK
     Widget bankWidget = const SizedBox.shrink();
-    if (_miscModel!.cityBank!.timeLeft! > 0) {
-      showMisc = true;
-      bankActive = true;
-      final moneyFormat = NumberFormat("#,##0", "en_US");
-      final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.cityBank!.timeLeft!));
-      final timeDifference = timeExpiry.difference(DateTime.now());
-      Color? expiryColor = _themeProvider!.getTextColor(Colors.orange[800]);
-      String expiryString;
-      if (timeDifference.inHours < 1) {
-        expiryString = 'less than an hour';
-      } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-        expiryString = 'about an hour';
-      } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-        expiryString = '${timeDifference.inHours} hours';
-      } else if (timeDifference.inDays == 1) {
-        expiryString = '1 day and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
-        expiryColor = _themeProvider!.mainText;
-      } else {
-        expiryString =
-            '${timeDifference.inDays} days and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
-        expiryColor = _themeProvider!.mainText;
-      }
+    if (_miscModel!.cityBank != null && _miscModel!.cityBank?.timeLeft != null) {
+      if (_miscModel!.cityBank!.timeLeft! > 0) {
+        showMisc = true;
+        bankActive = true;
+        final moneyFormat = NumberFormat("#,##0", "en_US");
+        final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.cityBank!.timeLeft!));
+        final timeDifference = timeExpiry.difference(DateTime.now());
+        Color? expiryColor = _themeProvider!.getTextColor(Colors.orange[800]);
+        String expiryString;
+        if (timeDifference.inHours < 1) {
+          expiryString = 'less than an hour';
+        } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+          expiryString = 'about an hour';
+        } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+          expiryString = '${timeDifference.inHours} hours';
+        } else if (timeDifference.inDays == 1) {
+          expiryString = '1 day and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
+          expiryColor = _themeProvider!.mainText;
+        } else {
+          expiryString =
+              '${timeDifference.inDays} days and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
+          expiryColor = _themeProvider!.mainText;
+        }
 
-      bankWidget = Row(
-        children: <Widget>[
-          const Icon(MdiIcons.bankOutline),
-          const SizedBox(width: 10),
-          Flexible(
-            child: RichText(
-              text: TextSpan(
-                text: "Your bank investment of ",
-                style: DefaultTextStyle.of(context).style,
-                children: <TextSpan>[
-                  TextSpan(
-                    text: "\$${moneyFormat.format(_miscModel!.cityBank!.amount)}",
-                    style: TextStyle(
-                      color: _themeProvider!.getTextColor(Colors.green),
+        bankWidget = Row(
+          children: <Widget>[
+            const Icon(MdiIcons.bankOutline),
+            const SizedBox(width: 10),
+            Flexible(
+              child: RichText(
+                text: TextSpan(
+                  text: "Your bank investment of ",
+                  style: DefaultTextStyle.of(context).style,
+                  children: <TextSpan>[
+                    TextSpan(
+                      text: "\$${moneyFormat.format(_miscModel!.cityBank!.amount)}",
+                      style: TextStyle(
+                        color: _themeProvider!.getTextColor(Colors.green),
+                      ),
                     ),
-                  ),
-                  const TextSpan(text: " will expire in "),
-                  TextSpan(
-                    text: expiryString,
-                    style: TextStyle(color: expiryColor),
-                  ),
-                ],
+                    const TextSpan(text: " will expire in "),
+                    TextSpan(
+                      text: expiryString,
+                      style: TextStyle(color: expiryColor),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          )
-        ],
-      );
+            )
+          ],
+        );
+      }
     }
 
     // EDUCATION
     Widget educationWidget = const SizedBox.shrink();
     if (_tornEducationModel is TornEducationModel) {
-      if (_miscModel!.educationTimeleft! > 0) {
+      if ((_miscModel?.educationTimeleft ?? 0) > 0) {
         showMisc = true;
         educationActive = true;
         final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.educationTimeleft!));
@@ -4705,7 +4735,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       else {
         // If the number of courses studied and available are not the same, we have forgotten
         // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
-        if (_miscModel!.educationCompleted!.length < _tornEducationModel!.education.length - 1) {
+        if (_miscModel!.educationCompleted.length < _tornEducationModel!.education.length - 1) {
           showMisc = true;
           educationActive = true;
           educationWidget = Row(
@@ -4869,7 +4899,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       Widget pointsPrice = const SizedBox.shrink();
-      if (v.key == "points" && _miscModel != null && _miscModel!.points! > 0) {
+      if (v.key == "points" && _miscModel != null && (_miscModel?.points ?? 0) > 0) {
         String price = formatBigNumbers(((v.value!.round()) / _miscModel!.points!).round());
 
         pointsPrice = Text(
@@ -5082,11 +5112,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // 1.- Try first with API V2
       miscApiResponse = await ApiCallsV2.getUserProfileMisc_v2();
-
-      // 2.- Try to fall back to API V1
-      if (miscApiResponse is! OwnProfileMisc) {
-        miscApiResponse = await ApiCallsV1.getOwnProfileMisc();
-      }
 
       if (miscApiResponse is! OwnProfileMisc) {
         return;
@@ -6316,6 +6341,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var playerString = "${_user!.name} [${_user!.playerId}]";
 
     String getBattle() {
+      if (_miscModel!.total == null ||
+          _miscModel!.strength == null ||
+          _miscModel!.defense == null ||
+          _miscModel!.speed == null ||
+          _miscModel!.dexterity == null) {
+        return "No battle stats available";
+      }
       var battleString = "\n\nBATTLE STATS";
       battleString += '\nStrength: ${decimalFormat.format(_miscModel!.strength)} '
           '(${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)';
@@ -7202,89 +7234,83 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _jobPoints() {
-    try {
-      int? currentPoints = 0;
-      bool unemployed = false;
+    final userJob = _user?.job;
+    final jobData = _miscModel?.jobpoints;
+    final companyJobPoints = jobData?.companies;
+    final personalJobPoints = jobData?.jobs;
 
-      if (_user!.job!.companyId == 0) {
-        if (_user!.job!.job == "None") {
-          unemployed = true;
-        }
-
-        switch (_user!.job!.job!.toLowerCase()) {
-          case "army":
-            currentPoints = _miscModel!.jobpoints!.jobs!.army;
-          case "medical":
-            currentPoints = _miscModel!.jobpoints!.jobs!.medical;
-          case "casino":
-            currentPoints = _miscModel!.jobpoints!.jobs!.casino;
-          case "education":
-            currentPoints = _miscModel!.jobpoints!.jobs!.education;
-          case "law":
-            currentPoints = _miscModel!.jobpoints!.jobs!.law;
-          case "grocer":
-            currentPoints = _miscModel!.jobpoints!.jobs!.grocer;
-        }
-      } else {
-        _miscModel!.jobpoints!.companies!.forEach((type, details) {
-          if (type == _user!.job!.companyType.toString()) {
-            currentPoints = details.jobpoints;
-          }
-        });
-      }
-
-      String headerString = "${currentPoints ?? '0'} job point${currentPoints == 1 ? '' : 's'}";
-      if (unemployed) {
-        headerString = "Unemployed";
-      }
-
-      _sharedJobPoints = headerString;
-
-      return Row(
-        children: [
-          GestureDetector(
-            onLongPress: () {
-              _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: false);
-            },
-            onTap: () async {
-              _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: true);
-            },
-            child: Icon(
-              Icons.work,
-              color: Colors.brown[300],
-              size: 23,
-            ),
-          ),
-          const SizedBox(width: 6),
-          SelectableText(headerString),
-          const SizedBox(width: 10),
-          GestureDetector(
-            onTap: () async {
-              return showDialog(
-                useRootNavigator: false,
-                context: context,
-                barrierDismissible: true,
-                builder: (BuildContext context) {
-                  return JobPointsDialog(
-                    currentType: _user!.job!.companyType,
-                    currentPoints: currentPoints,
-                    jobpoints: _miscModel!.jobpoints,
-                    job: _user!.job,
-                    unemployed: unemployed,
-                  );
-                },
-              );
-            },
-            child: const Icon(
-              Icons.info_outline,
-              size: 20,
-            ),
-          ),
-        ],
-      );
-    } catch (e) {
+    if (userJob == null || personalJobPoints == null || companyJobPoints == null) {
       return const SizedBox.shrink();
     }
+
+    int currentPoints = 0;
+    bool unemployed = false;
+
+    if (userJob.companyId == 0) {
+      if (userJob.job?.toLowerCase() == 'none') {
+        unemployed = true;
+      } else {
+        switch (userJob.job!.toLowerCase()) {
+          case 'army':
+            currentPoints = personalJobPoints.army ?? 0;
+            break;
+          case 'medical':
+            currentPoints = personalJobPoints.medical ?? 0;
+            break;
+          case 'casino':
+            currentPoints = personalJobPoints.casino ?? 0;
+            break;
+          case 'education':
+            currentPoints = personalJobPoints.education ?? 0;
+            break;
+          case 'law':
+            currentPoints = personalJobPoints.law ?? 0;
+            break;
+          case 'grocer':
+            currentPoints = personalJobPoints.grocer ?? 0;
+            break;
+          default:
+            currentPoints = 0;
+        }
+      }
+    } else {
+      final companyKey = userJob.companyType.toString();
+      currentPoints = companyJobPoints[companyKey]?.jobpoints ?? 0;
+    }
+
+    final headerString = unemployed ? 'Unemployed' : '$currentPoints job point${currentPoints == 1 ? '' : 's'}';
+
+    _sharedJobPoints = headerString;
+
+    return Row(
+      children: [
+        GestureDetector(
+          onLongPress: () {
+            _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: false);
+          },
+          onTap: () => _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: true),
+          child: Icon(Icons.work, color: Colors.brown[300], size: 23),
+        ),
+        const SizedBox(width: 6),
+        SelectableText(headerString),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: () => showDialog(
+            useRootNavigator: false,
+            context: context,
+            barrierDismissible: true,
+            builder: (_) => JobPointsDialog(
+              currentType: userJob.companyType,
+              currentPoints: currentPoints,
+              jobpoints: jobData,
+              job: userJob,
+              unemployed: unemployed,
+            ),
+          ),
+          child: const Icon(Icons.info_outline, size: 20),
+        ),
+      ],
+    );
   }
 
   Widget _companyAddictionWidget() {
@@ -7501,16 +7527,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   Future<void> _fetchAndUpdateProperties(OwnProfileMisc miscApiResponse) async {
     final thisRented = <String, Map<String, String>>{};
-    final propertyModel = miscApiResponse.properties!;
+    final propertyModel = miscApiResponse.properties;
 
     final keys = [];
     final details = [];
-    propertyModel.forEach((key, value) {
-      if (value.status == "Currently being rented") {
-        keys.add(key);
-        details.add(value);
-      }
-    });
+    if (propertyModel != null) {
+      propertyModel.forEach((key, value) {
+        if (value.status == "Currently being rented") {
+          keys.add(key);
+          details.add(value);
+        }
+      });
+    }
 
     int number = 0;
     await Future.forEach(keys, (dynamic element) async {
