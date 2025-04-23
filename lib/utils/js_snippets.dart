@@ -733,7 +733,7 @@ String quickItemsJS({required String item, bool faction = false, bool? eRefill =
             if (response.success === false) {
               resultBox.innerHTML = response.message;
             } else {
-              resultBox.innerHTML = response.text;
+              resultBox.innerHTML = response.message;
             }
           },
           onerror: function(e) {
