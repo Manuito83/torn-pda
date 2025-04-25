@@ -432,8 +432,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               ? CacheMode.LOAD_DEFAULT
               : CacheMode.LOAD_NO_CACHE,
       safeBrowsingEnabled: false,
-      //useHybridComposition: true,
-      supportMultipleWindows: true,
+      // [supportMultipleWindows]:
+      // If enabled on iOS, it will trigger onCreateWindow but also browse
+      // in the current tab. Android will only trigger onCreateWindow.
+      supportMultipleWindows: Platform.isAndroid,
       initialScale: _settingsProvider.androidBrowserScale,
       useWideViewPort: false,
       allowsLinkPreview: _settingsProvider.iosAllowLinkPreview,
@@ -1366,7 +1368,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             } else {
               // Creates a completely new webview with the URL (instead of a webview window)
               _openNewTabFromWindowRequest(request.request.url.toString().replaceAll("http:", "https:"));
-              return false;
+              return true;
             }
             return true;
           },
