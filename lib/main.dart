@@ -64,14 +64,15 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/shared_prefs_backup.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.7.5';
-const String androidCompilation = '516';
-const String iosCompilation = '516';
+const String androidCompilation = '518';
+const String iosCompilation = '518';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -150,6 +151,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  // Check for a pending local backup and import it
+  await PrefsBackupService.importIfScheduled();
 
   // START ## Force splash screen to stay on until we get essential start-up data
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);

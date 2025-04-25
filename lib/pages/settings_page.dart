@@ -25,6 +25,7 @@ import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/utils/settings/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -136,7 +137,8 @@ class SettingsPageState extends State<SettingsPage> {
       _miscSection(),
       _externalPartnersSection(),
       _apiRateSection(),
-      _saveSettingsSection(),
+      _saveSettingsOnlineSection(),
+      _saveSettingsLocalSection(),
       _troubleshootingSection(),
     ];
 
@@ -2044,7 +2046,7 @@ class SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _saveSettingsSection() {
+  Widget _saveSettingsOnlineSection() {
     List<SearchableRow> rows = [
       if (!_settingsProvider.backupPrefsEnabledStatusRemoteConfig)
         SearchableRow(
@@ -2237,6 +2239,25 @@ class SettingsPageState extends State<SettingsPage> {
     ];
     return buildSectionWithRows(
       title: "ONLINE BACKUP",
+      rows: rows,
+      searchText: _searchText,
+    );
+  }
+
+  Widget _saveSettingsLocalSection() {
+    List<SearchableRow> rows = [
+      SearchableRow(
+        label: "Save settings locally",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: PrefsBackupWidget(),
+        ),
+      ),
+    ];
+
+    return buildSectionWithRows(
+      title: "LOCAL BACKUP",
       rows: rows,
       searchText: _searchText,
     );

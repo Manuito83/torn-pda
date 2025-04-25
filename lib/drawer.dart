@@ -67,6 +67,7 @@ import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/settings/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
@@ -74,6 +75,7 @@ import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
+import 'package:uri_to_file/uri_to_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 bool routeWithDrawer = true;
@@ -638,6 +640,33 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _deepLinkHandle(String? link, {bool error = false}) async {
+    if (((link ?? "").contains("file://") || (link ?? "").contains("content://"))) {
+      try {
+        final uri = Uri.parse(link!);
+        if (Platform.isIOS) {
+          final bytes = await File(uri.toFilePath()).readAsBytes();
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => PreferencesImportDialog(bytes: bytes),
+          );
+          return;
+        } else if (Platform.isAndroid) {
+          final file = await toFile(uri.toString());
+          final bytes = await file.readAsBytes();
+
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => PreferencesImportDialog(bytes: bytes),
+          );
+          return;
+        }
+      } catch (e) {
+        log("Error reading file: $e");
+      }
+    }
+
     try {
       bool showError = false;
       String? url = link;
