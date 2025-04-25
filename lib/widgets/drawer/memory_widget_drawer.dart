@@ -1,15 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/memory_info.dart';
 
-class MemoryBarWidget extends StatefulWidget {
-  const MemoryBarWidget({super.key});
+class MemoryBarWidgetDrawer extends StatefulWidget {
+  const MemoryBarWidgetDrawer({super.key});
   @override
-  MemoryBarWidgetState createState() => MemoryBarWidgetState();
+  MemoryBarWidgetDrawerState createState() => MemoryBarWidgetDrawerState();
 }
 
-class MemoryBarWidgetState extends State<MemoryBarWidget> {
+class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
   Timer? _timer;
   Map<String, int>? _appMem;
   Map<String, int>? _devMem;
@@ -18,8 +20,16 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
   @override
   void initState() {
     super.initState();
-    _fetchAll();
-    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _fetchAll());
+    final initialProvider = Provider.of<WebViewProvider>(context, listen: false);
+    if (!initialProvider.browserShowInForeground) {
+      _fetchAll();
+    }
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
+      final prov = Provider.of<WebViewProvider>(context, listen: false);
+      if (!prov.browserShowInForeground) {
+        _fetchAll();
+      }
+    });
   }
 
   Future<void> _fetchAll() async {
@@ -73,12 +83,14 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
     }
 
     final bool isAndroid = Platform.isAndroid;
-    final int a1 = isAndroid ? (_appMem!['dalvikPss'] ?? 0) : (_appMem!['resident'] ?? 0);
-    final int a2 = isAndroid ? (_appMem!['nativePss'] ?? 0) : (_appMem!['compressed'] ?? 0);
-    final int a3 = isAndroid ? (_appMem!['otherPss'] ?? 0) : (_appMem!['external'] ?? 0);
-    final int aT = isAndroid ? (_appMem!['totalPss'] ?? (a1 + a2 + a3)) : (_appMem!['total'] ?? (a1 + a2 + a3));
+    final int flutterM = isAndroid ? (_appMem!['dalvikPss'] ?? 0) : (_appMem!['resident'] ?? 0);
+    final int nativeM = isAndroid ? (_appMem!['nativePss'] ?? 0) : (_appMem!['compressed'] ?? 0);
+    final int graphicsM = isAndroid ? (_appMem!['otherPss'] ?? 0) : (_appMem!['external'] ?? 0);
+    final int totalM = isAndroid
+        ? (_appMem!['totalPss'] ?? (flutterM + nativeM + graphicsM))
+        : (_appMem!['total'] ?? (flutterM + nativeM + graphicsM));
 
-    final int deviceTotal = _devMem!['totalMem'] ?? aT;
+    final int deviceTotal = _devMem!['totalMem'] ?? totalM;
     final int deviceFree = _devMem!['availMem'] ?? 0;
 
     double safeFraction(int used, int total) {
@@ -88,14 +100,14 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
     }
 
     int flexOf(double f) => (f * 1000).round().clamp(0, 1000);
-    final dFlex = flexOf(safeFraction(a1, deviceTotal));
-    final nFlex = flexOf(safeFraction(a2, deviceTotal));
-    final sFlex = flexOf(safeFraction(a3, deviceTotal));
+    final dFlex = flexOf(safeFraction(flutterM, deviceTotal));
+    final nFlex = flexOf(safeFraction(nativeM, deviceTotal));
+    final sFlex = flexOf(safeFraction(graphicsM, deviceTotal));
     final freeFlex = flexOf(safeFraction(deviceFree, deviceTotal));
     final usedSum = dFlex + nFlex + sFlex;
     final remFlex = (1000 - usedSum - freeFlex).clamp(0, 1000);
 
-    final String usedStr = MemoryInfo.formatBytes(aT);
+    final String usedStr = MemoryInfo.formatBytes(totalM);
     final String totalStr = MemoryInfo.formatBytes(deviceTotal);
 
     const blue = Colors.blue;
@@ -152,7 +164,7 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
                   legendDot(blue),
                   Flexible(
                     child: Text(
-                      'Flutter: ${MemoryInfo.formatBytes(a1)}',
+                      'Flutter: ${MemoryInfo.formatBytes(flutterM)}',
                       style: const TextStyle(fontSize: 12),
                       softWrap: true,
                     ),
@@ -163,7 +175,7 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
                   legendDot(orange),
                   Flexible(
                     child: Text(
-                      'Native: ${MemoryInfo.formatBytes(a2)}',
+                      'Native: ${MemoryInfo.formatBytes(nativeM)}',
                       style: const TextStyle(fontSize: 12),
                       softWrap: true,
                     ),
@@ -180,7 +192,7 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
                   legendDot(darkGreen),
                   Flexible(
                     child: Text(
-                      'Graphics: ${MemoryInfo.formatBytes(a3)}',
+                      'Graphics: ${MemoryInfo.formatBytes(graphicsM)}',
                       style: const TextStyle(fontSize: 12),
                       softWrap: true,
                       textAlign: TextAlign.end,

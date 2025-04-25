@@ -421,6 +421,7 @@ class Prefs {
 
   // Memory
   final String _kShowMemoryInDrawer = "pda_showMemoryInDrawer";
+  final String _kShowMemoryInWebview = "pda_showMemoryInWebview";
 
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
@@ -4055,6 +4056,18 @@ class Prefs {
   Future<bool> setShowMemoryInDrawer(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowMemoryInDrawer, value);
+  }
+
+  // ---
+
+  Future<bool> getShowMemoryInWebview() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowMemoryInWebview) ?? false;
+  }
+
+  Future<bool> setShowMemoryInWebview(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowMemoryInWebview, value);
   }
 
   /// ----------------------------

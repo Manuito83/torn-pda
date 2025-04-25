@@ -2266,7 +2266,7 @@ class SettingsPageState extends State<SettingsPage> {
   Widget _troubleshootingSection() {
     List<SearchableRow> rows = [
       SearchableRow(
-        label: "Show memory in menu",
+        label: "Memory menu",
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
@@ -2275,7 +2275,15 @@ class SettingsPageState extends State<SettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Flexible(child: Text("Show memory in menu")),
+                  const Flexible(
+                    child: Row(
+                      children: [
+                        Icon(Icons.memory),
+                        SizedBox(width: 5),
+                        Flexible(child: Text("Show memory in drawer menu")),
+                      ],
+                    ),
+                  ),
                   Switch(
                     value: _settingsProvider.showMemoryInDrawer,
                     onChanged: (enabled) async {
@@ -2290,6 +2298,49 @@ class SettingsPageState extends State<SettingsPage> {
               ),
               Text(
                 'This will show a small memory usage bar on below the Torn PDA\'s logo in the main drawer menu, with real-time count of the app\'s memory usage',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Memory browser",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(
+                    child: Row(
+                      children: [
+                        Icon(Icons.memory),
+                        SizedBox(width: 5),
+                        Flexible(child: Text("Show memory in browser")),
+                      ],
+                    ),
+                  ),
+                  Switch(
+                    value: _settingsProvider.showMemoryInWebview,
+                    onChanged: (enabled) async {
+                      setState(() {
+                        _settingsProvider.showMemoryInWebview = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "This will show an icon in the browser's appbar with which you can toggle real-time information of the app's memory usage where the page title normally goes",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,

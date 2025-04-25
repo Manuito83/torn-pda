@@ -70,7 +70,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/settings/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
-import 'package:torn_pda/widgets/drawer/memory_bar_widget.dart';
+import 'package:torn_pda/widgets/drawer/memory_widget_drawer.dart';
 import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
@@ -1659,7 +1659,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             showMemory
                 ? const Padding(
                     padding: EdgeInsets.all(8.0),
-                    child: MemoryBarWidget(),
+                    child: MemoryBarWidgetDrawer(),
                   )
                 : const SizedBox.shrink(),
             const Flexible(

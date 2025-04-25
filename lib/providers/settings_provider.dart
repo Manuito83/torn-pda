@@ -1182,6 +1182,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _showMemoryInWebview = false;
+  bool get showMemoryInWebview => _showMemoryInWebview;
+  set showMemoryInWebview(bool value) {
+    if (_showMemoryInWebview == value) return;
+    _showMemoryInWebview = value;
+    Prefs().setShowMemoryInWebview(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1413,6 +1422,7 @@ class SettingsProvider extends ChangeNotifier {
     await WebviewConfig().generateUserAgentForUser();
 
     _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
+    _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
     notifyListeners();
   }

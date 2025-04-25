@@ -84,6 +84,7 @@ import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/widgets/webviews/memory_widget_browser.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_terminal.dart';
@@ -350,6 +351,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   final GlobalKey _showCaseTradeOptions = GlobalKey();
 
   final _scrollControllerBugsReport = ScrollController();
+
+  bool _showMemoryWidget = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -2404,6 +2407,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
         _userProvider!.basic?.faction?.factionId != 0;
 
+    // Leading width calculation
+    final bool hasBackIcon = !(_backButtonPopsContext && _webViewProvider.webViewSplitActive);
+    final bool hasMemoryIcon = _settingsProvider.showMemoryInWebview;
+    final int iconCount = (hasBackIcon ? 1 : 0) + (hasMemoryIcon ? 1 : 0);
+
     return CustomAppBar(
       onHorizontalDragEnd: (DragEndDetails details) {
         _goBackOrForward(details);
@@ -2427,37 +2435,54 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         elevation: _settingsProvider.appBarTop ? 2 : 0,
         primary: !_webViewProvider.webViewSplitActive,
         systemOverlayStyle: SystemUiOverlayStyle.light,
-        leading: _backButtonPopsContext && _webViewProvider.webViewSplitActive
-            ? null
-            : IconButton(
-                icon: _backButtonPopsContext
-                    ? const Icon(Icons.close, color: Colors.white)
-                    : const Icon(Icons.arrow_back_ios, color: Colors.white),
-                onPressed: () async {
-                  // Normal behavior is just to pop and go to previous page
-                  if (_backButtonPopsContext) {
-                    _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                    if (mounted) {
-                      if (!_webViewProvider.webViewSplitActive) {
-                        _webViewProvider.browserShowInForeground = false;
-                      }
+        leadingWidth: iconCount * 40,
+        leading: Row(
+          children: [
+            if (hasBackIcon)
+              Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: GestureDetector(
+                  child: _backButtonPopsContext
+                      ? const Icon(Icons.close, color: Colors.white)
+                      : const Icon(Icons.arrow_back_ios, color: Colors.white),
+                  onTap: () async {
+                    // Normal behavior is just to pop and go to previous page
+                    if (_backButtonPopsContext) {
+                      _webViewProvider.setCurrentUiMode(UiMode.window, context);
+                      if (mounted) {
+                        if (!_webViewProvider.webViewSplitActive) {
+                          _webViewProvider.browserShowInForeground = false;
+                        }
 
-                      _checkIfTargetsAttackedAndRevertChaining();
-                    }
-                  } else {
-                    // But we can change and go back to previous page in certain
-                    // situations (e.g. when going for the vault while trading)
-                    final backPossible = await webViewController!.canGoBack();
-                    if (backPossible) {
-                      webViewController!.goBack();
+                        _checkIfTargetsAttackedAndRevertChaining();
+                      }
                     } else {
-                      if (!mounted) return;
-                      Navigator.pop(context);
+                      // But we can change and go back to previous page in certain
+                      // situations (e.g. when going for the vault while trading)
+                      final backPossible = await webViewController!.canGoBack();
+                      if (backPossible) {
+                        webViewController!.goBack();
+                      } else {
+                        if (!mounted) return;
+                        Navigator.pop(context);
+                      }
+                      _backButtonPopsContext = true;
                     }
-                    _backButtonPopsContext = true;
-                  }
-                },
+                  },
+                ),
               ),
+            if (hasMemoryIcon)
+              Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: GestureDetector(
+                  child: Icon(Icons.memory, color: _showMemoryWidget ? Colors.amber : null),
+                  onTap: () {
+                    _toggleMemoryWidget();
+                  },
+                ),
+              ),
+          ],
+        ),
         title: GestureDetector(
           onTap: () {
             openUrlDialog();
@@ -2480,77 +2505,89 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               child: Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  Flexible(
-                    child: DottedBorder(
-                      padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
-                      dashPattern: assistPossible ? const [1, 1] : const [1, 4],
-                      color: assistPossible ? Colors.orange : Colors.white70,
-                      child: ClipRRect(
-                        child: Showcase(
-                          key: _showCaseTitleBar,
-                          title: 'Options menu',
-                          description: '\nTap the page title to open a menu with additional options, '
-                              'including faction attack assists calls!\n\n'
-                              'Swipe left/right to browse back/forward\n\n'
-                              'Swipe down/up to hide or show your tab bar!',
-                          targetPadding: const EdgeInsets.all(10),
-                          disableMovingAnimation: true,
-                          textColor: _themeProvider.mainText,
-                          tooltipBackgroundColor: _themeProvider.secondBackground,
-                          descTextStyle: const TextStyle(fontSize: 13),
-                          tooltipPadding: const EdgeInsets.all(20),
-                          child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
-                                  _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
-                              ? Row(
-                                  children: [
-                                    const Icon(
-                                      MdiIcons.text,
-                                      size: 14,
-                                      color: Colors.lime,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      _webViewProvider.tabList[_webViewProvider.currentTab].customName,
-                                      overflow: TextOverflow.fade,
-                                      style: const TextStyle(
-                                          fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    if (assistPossible)
-                                      Flexible(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            const Text(
-                                              "ASSIST",
-                                              overflow: TextOverflow.fade,
-                                              style: TextStyle(fontSize: 9, color: Colors.orange),
-                                            ),
-                                            Text(
-                                              _pageTitle!,
-                                              overflow: TextOverflow.fade,
-                                              style: const TextStyle(fontSize: 14, color: Colors.white),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    else
-                                      Flexible(
-                                        child: Text(
-                                          _pageTitle!,
-                                          overflow: TextOverflow.fade,
-                                          style: const TextStyle(fontSize: 16, color: Colors.white),
-                                        ),
+                  if (_showMemoryWidget)
+                    Expanded(
+                      child: DottedBorder(
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 2),
+                          child: MemoryWidgetBrowser(),
+                        ),
+                        dashPattern: assistPossible ? const [1, 1] : const [1, 4],
+                        color: assistPossible ? Colors.orange : Colors.white70,
+                      ),
+                    )
+                  else
+                    Flexible(
+                      child: DottedBorder(
+                        padding: assistPossible ? const EdgeInsets.all(3) : const EdgeInsets.all(6),
+                        dashPattern: assistPossible ? const [1, 1] : const [1, 4],
+                        color: assistPossible ? Colors.orange : Colors.white70,
+                        child: ClipRRect(
+                          child: Showcase(
+                            key: _showCaseTitleBar,
+                            title: 'Options menu',
+                            description: '\nTap the page title to open a menu with additional options, '
+                                'including faction attack assists calls!\n\n'
+                                'Swipe left/right to browse back/forward\n\n'
+                                'Swipe down/up to hide or show your tab bar!',
+                            targetPadding: const EdgeInsets.all(10),
+                            disableMovingAnimation: true,
+                            textColor: _themeProvider.mainText,
+                            tooltipBackgroundColor: _themeProvider.secondBackground,
+                            descTextStyle: const TextStyle(fontSize: 13),
+                            tooltipPadding: const EdgeInsets.all(20),
+                            child: _webViewProvider.tabList[_webViewProvider.currentTab].customName.isNotEmpty &&
+                                    _webViewProvider.tabList[_webViewProvider.currentTab].customNameInTitle
+                                ? Row(
+                                    children: [
+                                      const Icon(
+                                        MdiIcons.text,
+                                        size: 14,
+                                        color: Colors.lime,
                                       ),
-                                  ],
-                                ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _webViewProvider.tabList[_webViewProvider.currentTab].customName,
+                                        overflow: TextOverflow.fade,
+                                        style: const TextStyle(
+                                            fontSize: 14, color: Colors.white, fontStyle: FontStyle.italic),
+                                      ),
+                                    ],
+                                  )
+                                : Row(
+                                    children: [
+                                      if (assistPossible)
+                                        Flexible(
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const Text(
+                                                "ASSIST",
+                                                overflow: TextOverflow.fade,
+                                                style: TextStyle(fontSize: 9, color: Colors.orange),
+                                              ),
+                                              Text(
+                                                _pageTitle!,
+                                                overflow: TextOverflow.fade,
+                                                style: const TextStyle(fontSize: 14, color: Colors.white),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else
+                                        Flexible(
+                                          child: Text(
+                                            _pageTitle!,
+                                            overflow: TextOverflow.fade,
+                                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
                   if ((_settingsProvider.browserShowNavArrowsAppbar == "narrow" && constraints.maxWidth > 200) ||
                       (_settingsProvider.browserShowNavArrowsAppbar == "wide" && constraints.maxWidth > 400))
                     Padding(
@@ -2619,6 +2656,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               ],
       ),
     );
+  }
+
+  void _toggleMemoryWidget() {
+    _showMemoryWidget = !_showMemoryWidget;
+    setState(() {});
   }
 
   Widget _reloadIcon() {

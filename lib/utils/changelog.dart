@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.5 - Build 518 - 24/04/2025
+    // v3.7.5 - Build 519 - 24/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.5'
@@ -61,7 +61,7 @@ class ChangeLogState extends State<ChangeLog> {
           "All Torn PDA settings can now be exported and imported locally",
           "Browser should now center fields correctly when the keyboard is shown",
           ComplexFeature(
-            "Added memory usage widget to main drawer menu",
+            "Added memory usage widget to main drawer menu and browser appbar",
             explanation: "Enable it in Settings, under the Troubleshooting section.\n\n"
                 "This widget is intended to help you understand how different configurations (e.g.: "
                 "browser tabs, scripts, etc.) affect Torn PDA's memory usage.\n\n"

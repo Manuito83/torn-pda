@@ -37,8 +37,8 @@ class MemoryInfo {
   }
 
   /// Format bytes as "X MB" (no decimals).
-  static String formatBytes(int bytes) {
+  static String formatBytes(int bytes, {bool includeUnits = true}) {
     final mb = bytes ~/ (1024 * 1024);
-    return '$mb MB';
+    return '$mb ${includeUnits ? "MB" : ""}';
   }
 }
