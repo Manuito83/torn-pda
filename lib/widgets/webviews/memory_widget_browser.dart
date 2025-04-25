@@ -93,7 +93,6 @@ class MemoryWidgetBrowserState extends State<MemoryWidgetBrowser> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // sólo la primera fila se “scale-down” si es necesario
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -110,25 +109,24 @@ class MemoryWidgetBrowserState extends State<MemoryWidgetBrowser> {
             ),
           ),
           const SizedBox(height: 2),
-          // las métricas “fluyen” a nuevas filas cuando no caben
           OverflowBar(
             spacing: 4,
             overflowAlignment: OverflowBarAlignment.start,
             children: [
               Text(
-                'Flu:${MemoryInfo.formatBytes(flutterM)}',
+                'Flt:${MemoryInfo.formatBytes(flutterM)}',
                 style: const TextStyle(fontSize: 10),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
               Text(
-                'Gra:${MemoryInfo.formatBytes(graphicsM)}',
+                'Gph:${MemoryInfo.formatBytes(graphicsM)}',
                 style: const TextStyle(fontSize: 10),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
               ),
               Text(
-                'Nat:${MemoryInfo.formatBytes(nativeM)}',
+                'Ntv:${MemoryInfo.formatBytes(nativeM)}',
                 style: const TextStyle(fontSize: 10),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
