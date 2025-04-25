@@ -2266,6 +2266,41 @@ class SettingsPageState extends State<SettingsPage> {
   Widget _troubleshootingSection() {
     List<SearchableRow> rows = [
       SearchableRow(
+        label: "Show memory in menu",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show memory in menu")),
+                  Switch(
+                    value: _settingsProvider.showMemoryInDrawer,
+                    onChanged: (enabled) async {
+                      setState(() {
+                        _settingsProvider.showMemoryInDrawer = enabled;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'This will show a small memory usage bar on below the Torn PDA\'s logo in the main drawer menu, with real-time count of the app\'s memory usage',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
         label: "Test API",
         searchText: _searchText,
         child: Padding(

@@ -1173,6 +1173,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _showMemoryInDrawer = false;
+  bool get showMemoryInDrawer => _showMemoryInDrawer;
+  set showMemoryInDrawer(bool value) {
+    if (_showMemoryInDrawer == value) return;
+    _showMemoryInDrawer = value;
+    Prefs().setShowMemoryInDrawer(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1402,6 +1411,8 @@ class SettingsProvider extends ChangeNotifier {
     _showWikiInDrawer = await Prefs().getShowWikiInDrawer();
 
     await WebviewConfig().generateUserAgentForUser();
+
+    _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
 
     notifyListeners();
   }

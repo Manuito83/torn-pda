@@ -61,6 +61,13 @@ class ChangeLogState extends State<ChangeLog> {
           "All Torn PDA settings can now be exported and imported locally",
           "Browser should now center fields correctly when the keyboard is shown",
           ComplexFeature(
+            "Added memory usage widget to main drawer menu",
+            explanation: "Enable it in Settings, under the Troubleshooting section.\n\n"
+                "This widget is intended to help you understand how different configurations (e.g.: "
+                "browser tabs, scripts, etc.) affect Torn PDA's memory usage.\n\n"
+                "Be aware that memory usage information might not be accurate in some devices.",
+          ),
+          ComplexFeature(
             "Added API error log for troubleshooting",
             explanation: "Torn PDA will record the latest 30 API errors for each session.\n\n"
                 "This is useful for troubleshooting issues with the API, normally upon request "

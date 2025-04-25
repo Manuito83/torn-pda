@@ -419,6 +419,9 @@ class Prefs {
   final String _kDelayApiCalls = "pda_delayApiCalls";
   final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
 
+  // Memory
+  final String _kShowMemoryInDrawer = "pda_showMemoryInDrawer";
+
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
   final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
@@ -4039,6 +4042,19 @@ class Prefs {
   Future<bool> setShowApiMaxCallWarning(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowApiMaxCallWarning, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Memory
+  /// ----------------------------
+  Future<bool> getShowMemoryInDrawer() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowMemoryInDrawer) ?? false;
+  }
+
+  Future<bool> setShowMemoryInDrawer(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowMemoryInDrawer, value);
   }
 
   /// ----------------------------

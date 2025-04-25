@@ -18,8 +18,14 @@ import android.window.SplashScreenView;
 import androidx.core.view.WindowCompat;
 import android.appwidget.AppWidgetManager;
 import android.os.PowerManager;
+import android.app.ActivityManager;
+import android.os.Debug;
+import java.util.Map;
+import java.util.HashMap;
+import android.app.ActivityManager.MemoryInfo;
 
 public class MainActivity extends FlutterActivity {
+
     private static final String CHANNEL = "tornpda.channel";
 
     @Override
@@ -49,22 +55,75 @@ public class MainActivity extends FlutterActivity {
         // Setups a method channel for the Flutter part
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL)
                 .setMethodCallHandler((call, result) -> {
-                    if (call.method.equals("cancelNotifications")) {
-                        cancelNotifications();
-                    } else if (call.method.equals("deleteNotificationChannels")) {
-                        deleteNotificationChannels();
-                    } else if (call.method.equals("widgetCount")) {
-                        AppWidgetManager lala = AppWidgetManager.getInstance(this);
-                        ComponentName name = new ComponentName(this, HomeWidgetTornPda.class);
-                        result.success(lala.getAppWidgetIds(name));
-                    } else if (call.method.equals("checkBatteryOptimization")) {
-                        boolean isRestricted = isBatteryOptimizationRestricted();
-                        result.success(isRestricted);
-                    } else if (call.method.equals("openBatterySettings")) {
-                        openBatterySettings();
-                        result.success(null);
-                    } else {
-                        result.notImplemented();
+                    switch (call.method) {
+                        case "cancelNotifications":
+                            cancelNotifications();
+                            result.success(null);
+                            break;
+
+                        case "deleteNotificationChannels":
+                            deleteNotificationChannels();
+                            result.success(null);
+                            break;
+
+                        case "widgetCount":
+                            AppWidgetManager awm = AppWidgetManager.getInstance(this);
+                            ComponentName name = new ComponentName(this, HomeWidgetTornPda.class);
+                            int[] ids = awm.getAppWidgetIds(name);
+                            result.success(ids);
+                            break;
+
+                        case "checkBatteryOptimization":
+                            boolean isRestricted = isBatteryOptimizationRestricted();
+                            result.success(isRestricted);
+                            break;
+
+                        case "openBatterySettings":
+                            openBatterySettings();
+                            result.success(null);
+                            break;
+
+                        case "getMemoryInfoDetailed":
+                            // Gather per-process memory info broken down by type
+                            Debug.MemoryInfo mi = new Debug.MemoryInfo();
+                            Debug.getMemoryInfo(mi);
+
+                            Map<String, Long> memMap = new HashMap<>();
+                            memMap.put("dalvikPss", mi.dalvikPss * 1024L);
+                            memMap.put("nativePss", mi.nativePss * 1024L);
+                            memMap.put("otherPss", mi.otherPss * 1024L);
+                            memMap.put("totalPss", mi.getTotalPss() * 1024L);
+
+                            result.success(memMap);
+                            break;
+
+                        case "getDeviceMemoryInfo":
+                            try {
+                                ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+                                if (am == null) {
+                                    throw new IllegalStateException("ActivityManager is null");
+                                }
+
+                                android.app.ActivityManager.MemoryInfo sysMem = new android.app.ActivityManager.MemoryInfo();
+                                am.getMemoryInfo(sysMem);
+
+                                Map<String, Long> devMap = new HashMap<>();
+                                devMap.put("totalMem", sysMem.totalMem);
+                                devMap.put("availMem", sysMem.availMem);
+
+                                result.success(devMap);
+
+                            } catch (Exception e) {
+                                result.error(
+                                        "UNAVAILABLE",
+                                        "Failed to get device memory info: " + e.getMessage(),
+                                        null
+                                );
+                            }
+                            break;
+
+                        default:
+                            result.notImplemented();
                     }
                 });
     }
