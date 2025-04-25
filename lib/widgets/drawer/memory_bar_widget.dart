@@ -152,7 +152,7 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
                   legendDot(blue),
                   Flexible(
                     child: Text(
-                      'Dart VM: ${MemoryInfo.formatBytes(a1)}',
+                      'Flutter: ${MemoryInfo.formatBytes(a1)}',
                       style: const TextStyle(fontSize: 12),
                       softWrap: true,
                     ),
@@ -163,7 +163,7 @@ class MemoryBarWidgetState extends State<MemoryBarWidget> {
                   legendDot(orange),
                   Flexible(
                     child: Text(
-                      'Native Heap: ${MemoryInfo.formatBytes(a2)}',
+                      'Native: ${MemoryInfo.formatBytes(a2)}',
                       style: const TextStyle(fontSize: 12),
                       softWrap: true,
                     ),
