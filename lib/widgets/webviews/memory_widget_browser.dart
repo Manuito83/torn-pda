@@ -57,13 +57,9 @@ class MemoryWidgetBrowserState extends State<MemoryWidgetBrowser> {
     if (_hasError) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0),
-        child: Text(
-          'MemErr',
-          style: TextStyle(fontSize: 12, color: Colors.red),
-        ),
+        child: Text('MemErr', style: TextStyle(fontSize: 12, color: Colors.red)),
       );
     }
-
     if (_appMem == null || _devMem == null) {
       return const Padding(
         padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -76,16 +72,41 @@ class MemoryWidgetBrowserState extends State<MemoryWidgetBrowser> {
     }
 
     final bool isAndroid = Platform.isAndroid;
-    final int flutterM = isAndroid ? (_appMem!['dalvikPss'] ?? 0) : (_appMem!['resident'] ?? 0);
-    final int nativeM = isAndroid ? (_appMem!['nativePss'] ?? 0) : (_appMem!['compressed'] ?? 0);
-    final int graphicsM = isAndroid ? (_appMem!['otherPss'] ?? 0) : (_appMem!['external'] ?? 0);
-    final int used = isAndroid
-        ? (_appMem!['totalPss'] ?? (flutterM + nativeM + graphicsM))
-        : (_appMem!['total'] ?? (flutterM + nativeM + graphicsM));
-    final int total = _devMem!['totalMem'] ?? used;
 
-    final String usedStr = MemoryInfo.formatBytes(used, includeUnits: false);
-    final String totalStr = MemoryInfo.formatBytes(total);
+    final int seg1 = isAndroid ? (_appMem!['dalvikPss'] ?? 0) : (_appMem!['private'] ?? 0);
+    final int seg2 = isAndroid ? (_appMem!['nativePss'] ?? 0) : (_appMem!['compressed'] ?? 0);
+    final int seg3 = isAndroid ? (_appMem!['otherPss'] ?? 0) : (_appMem!['external'] ?? 0);
+    final int usedM =
+        isAndroid ? (_appMem!['totalPss'] ?? (seg1 + seg2 + seg3)) : (_appMem!['total'] ?? (seg1 + seg2 + seg3));
+
+    final int deviceTotal = _devMem!['totalMem'] ?? _devMem!['total'] ?? 0;
+
+    String fmtTotal(int bytes) {
+      final mb = bytes / (1024 * 1024);
+      if (mb >= 1024) {
+        final gb = mb / 1024;
+        return '${gb.toStringAsFixed(1)} GB';
+      }
+      return '${mb.toStringAsFixed(0)} MB';
+    }
+
+    final String totalStr = deviceTotal > 0 ? fmtTotal(deviceTotal) : '?';
+
+    String fmtUsed(int bytes) {
+      final mb = bytes / (1024 * 1024);
+      if (mb >= 1024) {
+        final gb = mb / 1024;
+        return gb.toStringAsFixed(1);
+      }
+      bool showMB = totalStr.contains('GB');
+      return '${mb.toStringAsFixed(0)}${showMB ? ' MB' : ''}';
+    }
+
+    final String usedStr = fmtUsed(usedM);
+
+    final String l1 = isAndroid ? 'F' : 'P';
+    final String l2 = isAndroid ? 'N' : 'C';
+    final String l3 = isAndroid ? 'G' : 'E';
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -101,10 +122,7 @@ class MemoryWidgetBrowserState extends State<MemoryWidgetBrowser> {
               children: [
                 const Icon(Icons.memory, size: 16),
                 const SizedBox(width: 4),
-                Text(
-                  '$usedStr / $totalStr',
-                  style: const TextStyle(fontSize: 12),
-                ),
+                Text('$usedStr / $totalStr', style: const TextStyle(fontSize: 12)),
               ],
             ),
           ),
@@ -113,24 +131,9 @@ class MemoryWidgetBrowserState extends State<MemoryWidgetBrowser> {
             spacing: 4,
             overflowAlignment: OverflowBarAlignment.start,
             children: [
-              Text(
-                'Flt:${MemoryInfo.formatBytes(flutterM)}',
-                style: const TextStyle(fontSize: 10),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              Text(
-                'Gph:${MemoryInfo.formatBytes(graphicsM)}',
-                style: const TextStyle(fontSize: 10),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-              Text(
-                'Ntv:${MemoryInfo.formatBytes(nativeM)}',
-                style: const TextStyle(fontSize: 10),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
+              Text('$l1:${fmtTotal(seg1)}', style: const TextStyle(fontSize: 10)),
+              Text('$l3:${fmtTotal(seg3)}', style: const TextStyle(fontSize: 10)),
+              Text('$l2:${fmtTotal(seg2)}', style: const TextStyle(fontSize: 10)),
             ],
           ),
         ],

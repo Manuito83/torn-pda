@@ -1657,7 +1657,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               },
             ),
             showMemory
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.all(8.0),
                     child: MemoryBarWidgetDrawer(),
                   )

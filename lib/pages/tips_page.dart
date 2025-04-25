@@ -185,7 +185,6 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(

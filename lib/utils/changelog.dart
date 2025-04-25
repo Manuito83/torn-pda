@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.5 - Build 523 - 25/04/2025
+    // v3.7.5 - Build 524 - 25/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.5'
@@ -74,6 +74,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "from Torn PDA developers.\n\n"
                 "It can be found in Settings, under the Troubleshooting section.",
           ),
+          "Split discreet notifications toggle into local (Settings section) and Alerts",
           "Fixed Torn Exchange profit calculation",
           "Fixed quick items response text in faction armory",
         ],

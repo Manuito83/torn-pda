@@ -2436,53 +2436,55 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         primary: !_webViewProvider.webViewSplitActive,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         leadingWidth: iconCount * 40,
-        leading: Row(
-          children: [
-            if (hasBackIcon)
-              Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: GestureDetector(
-                  child: _backButtonPopsContext
-                      ? const Icon(Icons.close, color: Colors.white)
-                      : const Icon(Icons.arrow_back_ios, color: Colors.white),
-                  onTap: () async {
-                    // Normal behavior is just to pop and go to previous page
-                    if (_backButtonPopsContext) {
-                      _webViewProvider.setCurrentUiMode(UiMode.window, context);
-                      if (mounted) {
-                        if (!_webViewProvider.webViewSplitActive) {
-                          _webViewProvider.browserShowInForeground = false;
-                        }
+        leading: !hasBackIcon && !hasMemoryIcon
+            ? null
+            : Row(
+                children: [
+                  if (hasBackIcon)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: GestureDetector(
+                        child: _backButtonPopsContext
+                            ? const Icon(Icons.close, color: Colors.white)
+                            : const Icon(Icons.arrow_back_ios, color: Colors.white),
+                        onTap: () async {
+                          // Normal behavior is just to pop and go to previous page
+                          if (_backButtonPopsContext) {
+                            _webViewProvider.setCurrentUiMode(UiMode.window, context);
+                            if (mounted) {
+                              if (!_webViewProvider.webViewSplitActive) {
+                                _webViewProvider.browserShowInForeground = false;
+                              }
 
-                        _checkIfTargetsAttackedAndRevertChaining();
-                      }
-                    } else {
-                      // But we can change and go back to previous page in certain
-                      // situations (e.g. when going for the vault while trading)
-                      final backPossible = await webViewController!.canGoBack();
-                      if (backPossible) {
-                        webViewController!.goBack();
-                      } else {
-                        if (!mounted) return;
-                        Navigator.pop(context);
-                      }
-                      _backButtonPopsContext = true;
-                    }
-                  },
-                ),
+                              _checkIfTargetsAttackedAndRevertChaining();
+                            }
+                          } else {
+                            // But we can change and go back to previous page in certain
+                            // situations (e.g. when going for the vault while trading)
+                            final backPossible = await webViewController!.canGoBack();
+                            if (backPossible) {
+                              webViewController!.goBack();
+                            } else {
+                              if (!mounted) return;
+                              Navigator.pop(context);
+                            }
+                            _backButtonPopsContext = true;
+                          }
+                        },
+                      ),
+                    ),
+                  if (hasMemoryIcon)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 15),
+                      child: GestureDetector(
+                        child: Icon(Icons.memory, color: _showMemoryWidget ? Colors.amber : null),
+                        onTap: () {
+                          _toggleMemoryWidget();
+                        },
+                      ),
+                    ),
+                ],
               ),
-            if (hasMemoryIcon)
-              Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: GestureDetector(
-                  child: Icon(Icons.memory, color: _showMemoryWidget ? Colors.amber : null),
-                  onTap: () {
-                    _toggleMemoryWidget();
-                  },
-                ),
-              ),
-          ],
-        ),
         title: GestureDetector(
           onTap: () {
             openUrlDialog();

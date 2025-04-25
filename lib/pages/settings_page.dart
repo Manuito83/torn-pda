@@ -228,7 +228,6 @@ class SettingsPageState extends State<SettingsPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -595,32 +594,37 @@ class SettingsPageState extends State<SettingsPage> {
   Widget _notificationsSection() {
     List<SearchableRow> rows = [
       SearchableRow(
-        label: "Discreet notifications",
+        label: "Discreet local notifications",
         searchText: _searchText,
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Flexible(child: Text("Discreet notifications")),
-              IconButton(
-                icon: const Icon(Icons.info_outline),
-                onPressed: () {
-                  showDialog(
-                    useRootNavigator: false,
-                    context: context,
-                    builder: (BuildContext context) {
-                      return DiscreetInfo();
-                    },
-                  );
-                },
+              Flexible(
+                child: Row(
+                  children: [
+                    const Text("Discreet local notifications"),
+                    IconButton(
+                      icon: const Icon(Icons.info_outline),
+                      onPressed: () {
+                        showDialog(
+                          useRootNavigator: false,
+                          context: context,
+                          builder: (BuildContext context) {
+                            return DiscreetInfo();
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
               Switch(
                 value: _settingsProvider.discreetNotifications,
                 onChanged: (value) {
                   setState(() {
                     _settingsProvider.discreetNotifications = value;
-                    FirestoreHelper().toggleDiscreet(value);
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
@@ -2249,8 +2253,8 @@ class SettingsPageState extends State<SettingsPage> {
       SearchableRow(
         label: "Save settings locally",
         searchText: _searchText,
-        child: Padding(
-          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+        child: const Padding(
+          padding: EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
           child: PrefsBackupWidget(),
         ),
       ),
@@ -2346,7 +2350,19 @@ class SettingsPageState extends State<SettingsPage> {
                   fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
-              )
+              ),
+              if (_webViewProvider.bottomBarStyleEnabled)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text(
+                    "NOTE: this option only works in the 'default' browser style. If have currently selected a different style!",
+                    style: TextStyle(
+                      color: _themeProvider.getTextColor(Colors.red),
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

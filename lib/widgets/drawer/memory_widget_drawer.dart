@@ -7,6 +7,7 @@ import 'package:torn_pda/utils/memory_info.dart';
 
 class MemoryBarWidgetDrawer extends StatefulWidget {
   const MemoryBarWidgetDrawer({super.key});
+
   @override
   MemoryBarWidgetDrawerState createState() => MemoryBarWidgetDrawerState();
 }
@@ -21,12 +22,12 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
   void initState() {
     super.initState();
     final initialProvider = Provider.of<WebViewProvider>(context, listen: false);
-    if (!initialProvider.browserShowInForeground) {
+    if (!initialProvider.browserShowInForeground || initialProvider.webViewSplitActive) {
       _fetchAll();
     }
     _timer = Timer.periodic(const Duration(seconds: 10), (_) {
       final prov = Provider.of<WebViewProvider>(context, listen: false);
-      if (!prov.browserShowInForeground) {
+      if (!prov.browserShowInForeground || prov.webViewSplitActive) {
         _fetchAll();
       }
     });
@@ -38,13 +39,9 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
     if (!mounted) return;
 
     setState(() {
-      if (appInfo == null || devInfo == null) {
-        _memError = true;
-      } else {
-        _memError = false;
-        _appMem = appInfo;
-        _devMem = devInfo;
-      }
+      _memError = appInfo == null || devInfo == null;
+      _appMem = appInfo;
+      _devMem = devInfo;
     });
   }
 
@@ -52,6 +49,12 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
   void dispose() {
     _timer?.cancel();
     super.dispose();
+  }
+
+  String _fmt(int bytes) {
+    final mb = bytes / (1024 * 1024);
+    if (mb >= 1024) return '${(mb / 1024).toStringAsFixed(1)} GB';
+    return '${mb.toStringAsFixed(0)} MB';
   }
 
   @override
@@ -62,14 +65,8 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
         child: Center(
           child: Column(
             children: [
-              Text(
-                'MEMORY USAGE',
-                style: TextStyle(fontSize: 12, color: Colors.red),
-              ),
-              Text(
-                'Error: unable to fetch memory info',
-                style: TextStyle(fontSize: 12, color: Colors.red),
-              ),
+              Text('MEMORY USAGE', style: TextStyle(fontSize: 12, color: Colors.red)),
+              Text('Error: unable to fetch memory info', style: TextStyle(fontSize: 12, color: Colors.red)),
             ],
           ),
         ),
@@ -83,43 +80,45 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
     }
 
     final bool isAndroid = Platform.isAndroid;
-    final int flutterM = isAndroid ? (_appMem!['dalvikPss'] ?? 0) : (_appMem!['resident'] ?? 0);
-    final int nativeM = isAndroid ? (_appMem!['nativePss'] ?? 0) : (_appMem!['compressed'] ?? 0);
-    final int graphicsM = isAndroid ? (_appMem!['otherPss'] ?? 0) : (_appMem!['external'] ?? 0);
-    final int totalM = isAndroid
-        ? (_appMem!['totalPss'] ?? (flutterM + nativeM + graphicsM))
-        : (_appMem!['total'] ?? (flutterM + nativeM + graphicsM));
-
-    final int deviceTotal = _devMem!['totalMem'] ?? totalM;
+    late final int seg1M, seg2M, seg3M;
+    late final String seg1Name, seg2Name, seg3Name;
+    if (isAndroid) {
+      seg1M = _appMem!['dalvikPss'] ?? 0;
+      seg2M = _appMem!['nativePss'] ?? 0;
+      seg3M = _appMem!['otherPss'] ?? 0;
+      seg1Name = 'Flutter';
+      seg2Name = 'Native';
+      seg3Name = 'Graphics';
+    } else {
+      seg1M = _appMem!['private'] ?? 0;
+      seg2M = _appMem!['compressed'] ?? 0;
+      seg3M = _appMem!['external'] ?? 0;
+      seg1Name = 'Private';
+      seg2Name = 'Compr.';
+      seg3Name = 'External';
+    }
+    final int usedM =
+        isAndroid ? (_appMem!['totalPss'] ?? (seg1M + seg2M + seg3M)) : (_appMem!['total'] ?? (seg1M + seg2M + seg3M));
+    final int deviceTotal = _devMem!['totalMem'] ?? _devMem!['total'] ?? 0;
     final int deviceFree = _devMem!['availMem'] ?? 0;
 
-    double safeFraction(int used, int total) {
-      if (total <= 0) return 0;
-      final f = used / total;
-      return f.isFinite ? f.clamp(0.0, 1.0) : 0;
-    }
-
-    int flexOf(double f) => (f * 1000).round().clamp(0, 1000);
-    final dFlex = flexOf(safeFraction(flutterM, deviceTotal));
-    final nFlex = flexOf(safeFraction(nativeM, deviceTotal));
-    final sFlex = flexOf(safeFraction(graphicsM, deviceTotal));
-    final freeFlex = flexOf(safeFraction(deviceFree, deviceTotal));
-    final usedSum = dFlex + nFlex + sFlex;
-    final remFlex = (1000 - usedSum - freeFlex).clamp(0, 1000);
-
-    final String usedStr = MemoryInfo.formatBytes(totalM);
-    final String totalStr = MemoryInfo.formatBytes(deviceTotal);
+    double ratio(int part, int whole) => whole > 0 ? (part / whole).clamp(0, 1) : 0;
+    int flex(double r) => (r * 1000).round();
+    final int f1 = flex(ratio(seg1M, deviceTotal));
+    final int f2 = flex(ratio(seg2M, deviceTotal));
+    final int f3 = flex(ratio(seg3M, deviceTotal));
+    final int fFree = flex(ratio(deviceFree, deviceTotal));
+    final int fRem = (1000 - f1 - f2 - f3 - fFree).clamp(0, 1000);
 
     const blue = Colors.blue;
     const orange = Colors.orange;
-    const darkGreen = Colors.green;
+    const green = Colors.green;
     const purple = Colors.purple;
-
-    Widget legendDot(Color color) => Container(
+    Widget dot(Color c) => Container(
           width: 8,
           height: 8,
           margin: const EdgeInsets.only(right: 4),
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(color: c, shape: BoxShape.circle),
         );
 
     return Column(
@@ -132,17 +131,17 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text('USED', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-              Text(usedStr, style: const TextStyle(fontSize: 12)),
+              Text(_fmt(usedM), style: const TextStyle(fontSize: 12)),
             ],
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Row(children: [
-              if (dFlex > 0) Expanded(flex: dFlex, child: Container(color: blue, height: 6)),
-              if (nFlex > 0) Expanded(flex: nFlex, child: Container(color: orange, height: 6)),
-              if (sFlex > 0) Expanded(flex: sFlex, child: Container(color: darkGreen, height: 6)),
-              if (remFlex > 0) Expanded(flex: remFlex, child: Container(color: Colors.black12, height: 6)),
-              if (freeFlex > 0) Expanded(flex: freeFlex, child: Container(color: purple, height: 6)),
+              if (f1 > 0) Expanded(flex: f1, child: Container(color: blue, height: 6)),
+              if (f2 > 0) Expanded(flex: f2, child: Container(color: orange, height: 6)),
+              if (f3 > 0) Expanded(flex: f3, child: Container(color: green, height: 6)),
+              if (fRem > 0) Expanded(flex: fRem, child: Container(color: Colors.black12, height: 6)),
+              if (fFree > 0) Expanded(flex: fFree, child: Container(color: purple, height: 6)),
             ]),
           ),
           const SizedBox(width: 8),
@@ -150,7 +149,7 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const Text('TOTAL', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
-              Text(totalStr, style: const TextStyle(fontSize: 12)),
+              Text(deviceTotal > 0 ? _fmt(deviceTotal) : '—', style: const TextStyle(fontSize: 12)),
             ],
           ),
         ]),
@@ -161,25 +160,13 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(children: [
-                  legendDot(blue),
-                  Flexible(
-                    child: Text(
-                      'Flutter: ${MemoryInfo.formatBytes(flutterM)}',
-                      style: const TextStyle(fontSize: 12),
-                      softWrap: true,
-                    ),
-                  ),
+                  dot(blue),
+                  Flexible(child: Text('$seg1Name: ${_fmt(seg1M)}', style: const TextStyle(fontSize: 12)))
                 ]),
                 const SizedBox(height: 4),
                 Row(children: [
-                  legendDot(orange),
-                  Flexible(
-                    child: Text(
-                      'Native: ${MemoryInfo.formatBytes(nativeM)}',
-                      style: const TextStyle(fontSize: 12),
-                      softWrap: true,
-                    ),
-                  ),
+                  dot(orange),
+                  Flexible(child: Text('$seg2Name: ${_fmt(seg2M)}', style: const TextStyle(fontSize: 12)))
                 ]),
               ],
             ),
@@ -189,27 +176,17 @@ class MemoryBarWidgetDrawerState extends State<MemoryBarWidgetDrawer> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                  legendDot(darkGreen),
+                  dot(green),
                   Flexible(
-                    child: Text(
-                      'Graphics: ${MemoryInfo.formatBytes(graphicsM)}',
-                      style: const TextStyle(fontSize: 12),
-                      softWrap: true,
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
+                      child: Text('$seg3Name: ${_fmt(seg3M)}',
+                          style: const TextStyle(fontSize: 12), textAlign: TextAlign.end))
                 ]),
                 const SizedBox(height: 4),
                 Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                  legendDot(purple),
+                  dot(purple),
                   Flexible(
-                    child: Text(
-                      'Free: ${MemoryInfo.formatBytes(deviceFree)}',
-                      style: const TextStyle(fontSize: 12),
-                      softWrap: true,
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
+                      child: Text('Free: ${_fmt(deviceFree)}',
+                          style: const TextStyle(fontSize: 12), textAlign: TextAlign.end))
                 ]),
               ],
             ),

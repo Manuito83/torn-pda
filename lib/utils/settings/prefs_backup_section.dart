@@ -58,6 +58,26 @@ class PrefsBackupWidget extends StatelessWidget {
                     const SizedBox(height: 16),
                   ],
                 ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Column(
+                  children: [
+                    Text(
+                      '\nIMPORTANT: certain settting will not be restored. This applies fundamentally to the following:\n\n'
+                      '  - Alerts (automatic notifications)\n'
+                      '  - Native login credentials\n\n'
+                      'Make sure to reconfigure them manually after restoring the settings.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: ctx.read<ThemeProvider>().getTextColor(Colors.red),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
           ],
         ),
@@ -106,7 +126,6 @@ class PrefsBackupWidget extends StatelessWidget {
                       color: warnColor,
                     ),
                   ),
-                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -114,9 +133,12 @@ class PrefsBackupWidget extends StatelessWidget {
         ),
         content: TextField(
           controller: keyCtl,
-          autofocus: true,
           maxLength: 15,
-          decoration: const InputDecoration(labelText: 'Encryption key'),
+          decoration: const InputDecoration(
+            labelText: 'Encryption key',
+            floatingLabelBehavior: FloatingLabelBehavior.always,
+          ),
+          style: const TextStyle(fontSize: 15),
         ),
         actions: [
           Padding(
@@ -129,6 +151,7 @@ class PrefsBackupWidget extends StatelessWidget {
                   icon: const Icon(Icons.save),
                   label: const Text('Local Save'),
                 ),
+                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.pop(_, 'other'),
                   icon: const Icon(Icons.share),

@@ -181,7 +181,6 @@ class WarPageState extends State<WarPage> {
         return Scaffold(
           backgroundColor: _themeProvider!.canvas,
           drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-          endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
           appBar: _settingsProvider!.appBarTop ? buildAppBar(_) : null,
           bottomNavigationBar: !_settingsProvider!.appBarTop
               ? SizedBox(

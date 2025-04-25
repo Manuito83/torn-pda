@@ -38,93 +38,85 @@ import Darwin                  // for host_statistics64
         }
         
         memoryChannel.setMethodCallHandler { call, result in
-            // Wrap everything in do-catch to prevent uncaught errors from crashing the app
+            // Prevent uncaught errors from crashing the app
             do {
                 switch call.method {
-                case "getMemoryInfoDetailed":
-                    // English comment: retrieve process memory breakdown via TASK_VM_INFO
-                    var info = task_vm_info_data_t()
-                    var count = mach_msg_type_number_t(
-                        MemoryLayout<task_vm_info_data_t>.stride
-                        / MemoryLayout<integer_t>.stride
-                    )
-                    let kr = withUnsafeMutablePointer(to: &info) {
-                        $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                            task_info(
-                                mach_task_self_,
-                                task_flavor_t(TASK_VM_INFO),
-                                $0,
-                                &count
-                            )
+                    case "getMemoryInfoDetailed":
+                        var info = task_vm_info_data_t()
+                        var count = mach_msg_type_number_t(
+                            MemoryLayout<task_vm_info_data_t>.stride
+                            / MemoryLayout<integer_t>.stride
+                        )
+                        let kr = withUnsafeMutablePointer(to: &info) {
+                            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                                task_info(mach_task_self_, task_flavor_t(TASK_VM_INFO), $0, &count)
+                            }
                         }
-                    }
-                    guard kr == KERN_SUCCESS else {
-                        throw NSError(domain: NSPOSIXErrorDomain, code: Int(kr), userInfo: nil)
-                    }
-
-                    let resident   = Int(info.phys_footprint)
-                    let compressed = Int(info.internal)
-                    let external   = resident - compressed
-                    let total      = resident
-
-                    result([
-                        "resident"  : resident,
-                        "compressed": compressed,
-                        "external"  : external,
-                        "total"     : total
-                    ])
-
-                case "getDeviceMemoryInfo":
-                    // English comment: retrieve total and available device memory
-                    // 1) total RAM via sysctl
-                    var size: UInt64 = 0
-                    var sizeOfSize = MemoryLayout<UInt64>.stride
-                    let sysctlResult = sysctlbyname("hw.memsize", &size, &sizeOfSize, nil, 0)
-                    guard sysctlResult == 0 else {
-                        throw NSError(domain: NSPOSIXErrorDomain, code: Int(sysctlResult), userInfo: nil)
-                    }
-                    let totalMem = Int(size)
-
-                    // 2) free + inactive pages via host_statistics64
-                    var vmStats = vm_statistics64_data_t()
-                    var count2 = mach_msg_type_number_t(
-                        MemoryLayout<vm_statistics64_data_t>.stride
-                        / MemoryLayout<integer_t>.stride
-                    )
-                    let hostPort = mach_host_self()
-                    let kr2 = withUnsafeMutablePointer(to: &vmStats) {
-                        $0.withMemoryRebound(to: integer_t.self, capacity: Int(count2)) {
-                            host_statistics64(
-                                hostPort,
-                                HOST_VM_INFO64,
-                                $0,
-                                &count2
-                            )
+                        guard kr == KERN_SUCCESS else {
+                            throw NSError(domain: NSPOSIXErrorDomain, code: Int(kr), userInfo: nil)
                         }
-                    }
-                    guard kr2 == KERN_SUCCESS else {
-                        throw NSError(domain: NSPOSIXErrorDomain, code: Int(kr2), userInfo: nil)
+
+                        let resident     = Int(info.phys_footprint)   // bytes
+                        let compressed   = Int(info.compressed)       // bytes
+                        let external     = Int(info.external)         // bytes
+                        let privateBytes = max(0, resident - compressed - external)
+
+                        result([
+                            "private":    privateBytes,
+                            "compressed": compressed,
+                            "external":   external,
+                            "total":      resident
+                        ])
+
+                    case "getDeviceMemoryInfo":
+                        // Total RAM via sysctl
+                        var size: UInt64 = 0
+                        var sizeOfSize = MemoryLayout<UInt64>.stride
+                        let sysctlResult = sysctlbyname("hw.memsize", &size, &sizeOfSize, nil, 0)
+                        guard sysctlResult == 0 else {
+                            throw NSError(domain: NSPOSIXErrorDomain, code: Int(sysctlResult), userInfo: nil)
+                        }
+                        let totalMem = Int(size)
+
+                        // Free + inactive pages via host_statistics64
+                        var vmStats = vm_statistics64_data_t()
+                        var count2 = mach_msg_type_number_t(
+                            MemoryLayout<vm_statistics64_data_t>.stride
+                            / MemoryLayout<integer_t>.stride
+                        )
+                        let hostPort = mach_host_self()
+                        let kr2 = withUnsafeMutablePointer(to: &vmStats) {
+                            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count2)) {
+                                host_statistics64(
+                                    hostPort,
+                                    HOST_VM_INFO64,
+                                    $0,
+                                    &count2
+                                )
+                            }
+                        }
+                        guard kr2 == KERN_SUCCESS else {
+                            throw NSError(domain: NSPOSIXErrorDomain, code: Int(kr2), userInfo: nil)
+                        }
+
+                        let pageSize = Int(vm_kernel_page_size)
+                        var freePages = Int(vmStats.free_count) + Int(vmStats.inactive_count)
+                        // Include speculative pages on iOS 13+
+                        if #available(iOS 13.0, *) {
+                            freePages += Int(vmStats.speculative_count)
+                        }
+                        let freeMem = freePages * pageSize
+
+                        result([
+                            "totalMem": totalMem,
+                            "availMem": freeMem
+                        ])
+
+                    default:
+                        result(FlutterMethodNotImplemented)
                     }
 
-                    let pageSize = Int(vm_kernel_page_size)
-                    var freePages = Int(vmStats.free_count) + Int(vmStats.inactive_count)
-                    // English comment: include speculative pages on iOS 13+
-                    if #available(iOS 13.0, *) {
-                        freePages += Int(vmStats.speculative_count)
-                    }
-                    let freeMem = freePages * pageSize
-
-                    result([
-                        "totalMem": totalMem,
-                        "availMem": freeMem
-                    ])
-
-                default:
-                    // English comment: method not implemented
-                    result(FlutterMethodNotImplemented)
-                }
             } catch {
-                // English comment: catch all errors and return a FlutterError to Dart
                 result(FlutterError(
                     code:    "METHOD_CHANNEL_ERROR",
                     message: "Unexpected error: \(error.localizedDescription)",

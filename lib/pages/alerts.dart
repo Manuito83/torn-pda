@@ -18,6 +18,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
 import 'package:torn_pda/widgets/alerts/refills_requested_dialog.dart';
@@ -107,6 +108,45 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           "earlier than with manual notifications; also, notifications might be delayed "
                           "due to network status or device throttling.",
                           style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(22, 5, 8, 0),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Row(
+                                children: [
+                                  const Text("Discreet alerts"),
+                                  IconButton(
+                                    icon: const Icon(Icons.info_outline),
+                                    onPressed: () {
+                                      showDialog(
+                                        useRootNavigator: false,
+                                        context: context,
+                                        builder: (BuildContext context) {
+                                          return DiscreetInfo();
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _firebaseUserModel!.discreet,
+                              onChanged: (value) {
+                                setState(() {
+                                  setState(() {
+                                    _firebaseUserModel?.discreet = value;
+                                  });
+                                  FirestoreHelper().toggleDiscreet(value);
+                                });
+                              },
+                              activeTrackColor: Colors.lightGreenAccent,
+                              activeColor: Colors.green,
+                            ),
+                          ],
                         ),
                       ),
                       Padding(

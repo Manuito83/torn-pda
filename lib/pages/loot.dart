@@ -116,6 +116,8 @@ class LootPageState extends State<LootPage> {
     return Scaffold(
       backgroundColor: _themeProvider!.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
+      endDrawer: const Drawer(),
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
