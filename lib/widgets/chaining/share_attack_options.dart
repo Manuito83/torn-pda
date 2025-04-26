@@ -94,7 +94,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
   String _buildShareText() {
     final buffer = StringBuffer();
     buffer.writeln('Attack: ${widget.member.name} [${widget.member.memberId}]');
-    if (includeEstimates) buffer.writeln('Estimated: $estStats');
+    if (includeEstimates && estStats.isNotEmpty && estStats != "unk") buffer.writeln('Estimated: $estStats');
     if (includeSpied && spiedText != null) buffer.writeln(spiedText);
     if (includeTsc && tscDetails != null) buffer.writeln(tscDetails);
     buffer.writeln('URL: $attackUrl');
@@ -147,31 +147,42 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Card(
-                          color: Colors.grey[200],
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Estimated: $estStats',
-                              style: const TextStyle(fontSize: 14),
+                  if ((estStats.isEmpty || estStats == "unk") && spiedText == null && tscDetails == null)
+                    const Text(
+                      "There's no estimated stats, nor spied stats, nor TSC stats available. "
+                      "You will only be able to share the player name, ID and attack URL.",
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.red,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  if (estStats != "unk" || estStats.isEmpty)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Card(
+                            color: Colors.grey[200],
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                'Estimated: $estStats',
+                                style: const TextStyle(fontSize: 14),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      Checkbox(
-                        value: includeEstimates,
-                        onChanged: (v) {
-                          setState(() {
-                            includeEstimates = v!;
-                          });
-                          _saveShareOption('estimates', includeEstimates);
-                        },
-                      ),
-                    ],
-                  ),
+                        Checkbox(
+                          value: includeEstimates,
+                          onChanged: (v) {
+                            setState(() {
+                              includeEstimates = v!;
+                            });
+                            _saveShareOption('estimates', includeEstimates);
+                          },
+                        ),
+                      ],
+                    ),
                   if (spiedText != null)
                     Row(
                       children: [
