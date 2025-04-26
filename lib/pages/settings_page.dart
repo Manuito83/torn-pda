@@ -3489,9 +3489,7 @@ class SettingsPageState extends State<SettingsPage> {
 
             // Sendbird notifications
             final sbController = Get.find<SendbirdController>();
-            if (sbController.sendBirdNotificationsEnabled) {
-              sbController.register();
-            }
+            sbController.register();
           } else {
             log("Windows: skipping Firestore sign up!");
           }

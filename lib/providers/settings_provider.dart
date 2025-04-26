@@ -547,6 +547,14 @@ class SettingsProvider extends ChangeNotifier {
   }
   */
 
+  List<String> _shareAttackOptions = [];
+  List<String> get shareOptions => _shareAttackOptions;
+  set shareOptions(List<String> value) {
+    _shareAttackOptions = value;
+    Prefs().setShareAttackOptions(_shareAttackOptions);
+    notifyListeners();
+  }
+
   // Torn Spies Central
   // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
   //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
@@ -1274,6 +1282,8 @@ class SettingsProvider extends ChangeNotifier {
     _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
+
+    _shareAttackOptions = await Prefs().getShareAttackOptions();
 
     _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
     _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();

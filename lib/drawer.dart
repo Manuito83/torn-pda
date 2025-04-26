@@ -399,10 +399,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _preferencesCompleter.future.whenComplete(() async {
       // Sendbird notifications
       final sbController = Get.find<SendbirdController>();
-      if (sbController.sendBirdNotificationsEnabled) {
-        // After app install, this will trigger an invalid playerId until the user loads the API
-        await sbController.register();
-      }
+      // After app install, this will trigger an invalid playerId until the user loads the API
+      await sbController.register();
     });
 
     // Should bring browser forward?
@@ -1043,6 +1041,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             }
 
             if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+              message["body"] = message["body"].replaceAll("(tap to get a comparison with you)", "");
               int? begin = message["body"].indexOf("\n- Xanax");
               int? last = message["body"].length;
               message["body"] = message["body"].replaceRange(begin, last, "");
@@ -1391,6 +1390,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               }
 
               if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+                assistBody[1] = assistBody[1].replaceAll("(tap to get a comparison with you)", "");
                 final int begin = assistBody[1].indexOf("\n- Xanax");
                 final int last = assistBody[1].length;
                 assistBody[1] = assistBody[1].replaceRange(begin, last, "");
@@ -1657,7 +1657,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               },
             ),
             showMemory
-                ? Padding(
+                ? const Padding(
                     padding: EdgeInsets.all(8.0),
                     child: MemoryBarWidgetDrawer(),
                   )

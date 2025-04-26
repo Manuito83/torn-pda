@@ -22,7 +22,6 @@ class SendbirdController extends GetxController {
 
   bool webviewInForeground = false;
 
-  // Variables para almacenar la configuración actual
   bool doNotDisturbEnabled = false;
   TimeOfDay startTime = const TimeOfDay(hour: 0, minute: 0);
   TimeOfDay endTime = const TimeOfDay(hour: 0, minute: 0);
@@ -113,7 +112,7 @@ class SendbirdController extends GetxController {
           throw ("Invalid player ID, can't connect to Sendbird!");
         }
 
-        // Get a new session token if ours is older than  7 days
+        // Get a new session token if ours is older than 7 days
         String? sendBirdSessionToken;
         final tokenAge = await _calculateStoredSendbirdTokenAge();
         if (tokenAge < const Duration(days: 7)) {

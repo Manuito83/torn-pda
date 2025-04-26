@@ -222,6 +222,7 @@ class Prefs {
   final String _kJobAddictionValue = "pda_jobAddiction";
   final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
+  final String _kShareAttackOptions = "pda_shareAttackOptions";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
   final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
 
@@ -1730,6 +1731,17 @@ class Prefs {
   Future<bool> setProfileStatsEnabled(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kProfileStatsEnabled, value);
+  }
+
+  // *************
+  Future<List<String>> getShareAttackOptions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kShareAttackOptions) ?? <String>[];
+  }
+
+  Future<bool> setShareAttackOptions(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kShareAttackOptions, value);
   }
 
   // *************

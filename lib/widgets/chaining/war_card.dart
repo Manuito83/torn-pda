@@ -21,6 +21,7 @@ import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -337,6 +338,21 @@ class WarCardState extends State<WarCard> {
                             ),
                           ),
                         ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => ShareAttackDialog(member: _member),
+                            );
+                          },
+                          child: const Icon(
+                            Icons.share,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Text(

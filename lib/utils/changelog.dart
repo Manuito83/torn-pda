@@ -51,7 +51,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.7.5 - Build 524 - 25/04/2025
+    // v3.7.5 - Build 525 - 26/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.5'
@@ -59,6 +59,14 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Main settings section is now searchable",
           "All Torn PDA settings can now be exported and imported locally",
+          ComplexFeature(
+            "Added share attack information functionality for war targets",
+            explanation: "You can now share (copy or send to your faction chat) the attack information "
+                "of any of your war targets.\n\n"
+                "This includes the target's name, stats (estimated but also spied and TSC when available), "
+                "together with the attack URL\n\n"
+                "Look for the share icon in the target's card, bottom right corner",
+          ),
           "Browser should now center fields correctly when the keyboard is shown",
           ComplexFeature(
             "Added memory usage widget to main drawer menu and browser appbar",
