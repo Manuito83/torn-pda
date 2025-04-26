@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/external/tsc_comm.dart';
@@ -25,6 +26,7 @@ class ShareAttackDialog extends StatefulWidget {
 
 class ShareAttackDialogState extends State<ShareAttackDialog> {
   late final SettingsProvider _settingsProvider;
+  late final ThemeProvider _themeProvider;
 
   bool includeEstimates = false;
   bool includeSpied = false;
@@ -35,10 +37,12 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
   late String estStats;
   String? spiedText;
   String? tscDetails;
+  String tscError = "";
 
   @override
   void initState() {
     super.initState();
+    _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     includeEstimates = _settingsProvider.shareOptions.contains('estimates');
     includeSpied = _settingsProvider.shareOptions.contains('spies');
@@ -63,6 +67,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
       final response = await TSCComm.checkIfUserExists(
         targetId: id,
         ownApiKey: apiKey,
+        timeout: 4,
       );
       if (response.success) {
         final data = int.tryParse(response.spy?.estimate?.stats ?? '');
@@ -75,6 +80,8 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
               : '${diff.inDays ~/ 30} month${diff.inDays ~/ 30 == 1 ? '' : 's'} ago';
           tscDetails = 'TSC: ${formatBigNumbers(data)} ($text)';
         }
+      } else {
+        tscError = "TSC details could not be retrieved: ${response.message}";
       }
     }
 
@@ -119,6 +126,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
     );
     return AlertDialog(
       title: const Text('Share attack details'),
+      backgroundColor: _themeProvider.canvas,
       content: isLoading
           ? const Column(
               mainAxisSize: MainAxisSize.min,
@@ -148,12 +156,12 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                   ),
                   const SizedBox(height: 16),
                   if ((estStats.isEmpty || estStats == "unk") && spiedText == null && tscDetails == null)
-                    const Text(
+                    Text(
                       "There's no estimated stats, nor spied stats, nor TSC stats available. "
                       "You will only be able to share the player name, ID and attack URL.",
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.red,
+                        color: _themeProvider.getTextColor(Colors.red),
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -167,7 +175,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
                                 'Estimated: $estStats',
-                                style: const TextStyle(fontSize: 14),
+                                style: const TextStyle(fontSize: 14, color: Colors.black),
                               ),
                             ),
                           ),
@@ -193,7 +201,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
                                 spiedText!,
-                                style: const TextStyle(fontSize: 14),
+                                style: const TextStyle(fontSize: 14, color: Colors.black),
                               ),
                             ),
                           ),
@@ -209,6 +217,18 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                         ),
                       ],
                     ),
+                  if (tscError.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 15, 55, 8),
+                      child: Text(
+                        tscError,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: _themeProvider.getTextColor(Colors.red),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
                   if (tscDetails != null)
                     Row(
                       children: [
@@ -219,7 +239,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
                                 tscDetails!,
-                                style: const TextStyle(fontSize: 14),
+                                style: const TextStyle(fontSize: 14, color: Colors.black),
                               ),
                             ),
                           ),
