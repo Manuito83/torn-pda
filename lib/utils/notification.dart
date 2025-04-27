@@ -943,6 +943,12 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
 
 showSendbirdNotification(String sender, String message, String channelUrl, {bool fromBackground = false}) async {
   // Note: with the app on the background we can't access providers, so take Prefs()
+
+  // We might have Sendbird notifications disabled, but we are nontheless registered
+  // so that we can send messages (e.g.: from the Chaining attack share dialog)
+  final sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
+  if (!sendBirdNotificationsEnabled) return;
+
   String ownName = "";
   bool excludeFaction = false;
   bool excludeCompany = false;

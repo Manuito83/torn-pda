@@ -55,7 +55,7 @@ class ChangeLogState extends State<ChangeLog> {
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.5'
-        ..date = '30 APR 2025'
+        ..date = '10 MAY 2025'
         ..features = [
           "Main settings section is now searchable",
           "All Torn PDA settings can now be exported and imported locally",

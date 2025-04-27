@@ -28,38 +28,38 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
   late final SettingsProvider _settingsProvider;
   late final ThemeProvider _themeProvider;
 
-  bool includeEstimates = false;
-  bool includeSpied = false;
-  bool includeTsc = false;
-  bool isLoading = true;
+  bool _includeEstimates = false;
+  bool _includeSpied = false;
+  bool _includeTsc = false;
+  bool _isLoading = true;
 
-  late String attackUrl;
-  late String estStats;
-  String? spiedText;
-  String? tscDetails;
-  String tscError = "";
+  late String _attackUrl;
+  late String _estStats;
+  String? _spiedText;
+  String? _tscDetails;
+  String _tscError = "";
 
   @override
   void initState() {
     super.initState();
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    includeEstimates = _settingsProvider.shareOptions.contains('estimates');
-    includeSpied = _settingsProvider.shareOptions.contains('spies');
-    includeTsc = _settingsProvider.shareOptions.contains('tsc');
+    _includeEstimates = _settingsProvider.shareOptions.contains('estimates');
+    _includeSpied = _settingsProvider.shareOptions.contains('spies');
+    _includeTsc = _settingsProvider.shareOptions.contains('tsc');
     _prepareData();
   }
 
   Future<void> _prepareData() async {
     final id = widget.member.memberId.toString();
-    attackUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$id';
-    estStats = widget.member.statsEstimated ?? '';
+    _attackUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=$id';
+    _estStats = widget.member.statsEstimated ?? '';
 
     if (widget.member.statsExactTotalKnown != -1 && widget.member.statsExactTotalUpdated != null) {
       final exact = formatBigNumbers(widget.member.statsExactTotalKnown!);
       final updatedTs = DateTime.fromMillisecondsSinceEpoch(widget.member.statsExactTotalUpdated! * 1000);
       final months = DateTime.now().difference(updatedTs).inDays ~/ 30;
-      spiedText = 'Spied: $exact ($months month${months == 1 ? '' : 's'} ago)';
+      _spiedText = 'Spied: $exact ($months month${months == 1 ? '' : 's'} ago)';
     }
 
     if (_settingsProvider.tscEnabledStatus != 0 && _settingsProvider.tscEnabledStatusRemoteConfig) {
@@ -69,42 +69,52 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
         ownApiKey: apiKey,
         timeout: 4,
       );
+
       if (response.success) {
-        final data = int.tryParse(response.spy?.estimate?.stats ?? '');
-        final dateStr = response.spy?.statInterval?.lastUpdated;
-        final last = DateTime.tryParse(dateStr ?? '');
-        if (data != null && last != null) {
-          final diff = DateTime.now().difference(last);
-          final text = diff.inDays < 31
-              ? '${diff.inDays} day${diff.inDays == 1 ? '' : 's'} ago'
-              : '${diff.inDays ~/ 30} month${diff.inDays ~/ 30 == 1 ? '' : 's'} ago';
-          tscDetails = 'TSC: ${formatBigNumbers(data)} ($text)';
+        _tscDetails = "TSC:";
+        final tscEstimate = int.tryParse(response.spy?.estimate?.stats ?? '');
+        final tscIntervalMin = int.tryParse(response.spy?.statInterval?.min ?? '');
+        final tscIntervalMax = int.tryParse(response.spy?.statInterval?.max ?? '');
+        final tscDate = response.spy?.statInterval?.lastUpdated;
+        final tscDateTime = DateTime.tryParse(tscDate ?? '');
+
+        if (tscEstimate != null) {
+          _tscDetails = "$_tscDetails Est ${formatBigNumbers(tscEstimate)}";
+        }
+
+        if (tscIntervalMin != null && tscIntervalMax != null && tscDateTime != null) {
+          final dateDiff = DateTime.now().difference(tscDateTime);
+          final dateDiffText = dateDiff.inDays < 31
+              ? '${dateDiff.inDays} day${dateDiff.inDays == 1 ? '' : 's'} ago'
+              : '${dateDiff.inDays ~/ 30} month${dateDiff.inDays ~/ 30 == 1 ? '' : 's'} ago';
+          _tscDetails = "$_tscDetails, Spy Range ${formatBigNumbers(tscIntervalMin)}"
+              " - ${formatBigNumbers(tscIntervalMax)} ($dateDiffText)";
         }
       } else {
-        tscError = "TSC details could not be retrieved: ${response.message}";
+        _tscError = "TSC details could not be retrieved: ${response.message}";
       }
     }
 
     setState(() {
-      isLoading = false;
+      _isLoading = false;
     });
   }
 
   void _saveSettings() {
     final opts = <String>[];
-    if (includeEstimates) opts.add('estimates');
-    if (includeSpied) opts.add('spies');
-    if (includeTsc) opts.add('tsc');
+    if (_includeEstimates) opts.add('estimates');
+    if (_includeSpied) opts.add('spies');
+    if (_includeTsc) opts.add('tsc');
     _settingsProvider.shareOptions = opts;
   }
 
   String _buildShareText() {
     final buffer = StringBuffer();
-    buffer.writeln('Attack: ${widget.member.name} [${widget.member.memberId}]');
-    if (includeEstimates && estStats.isNotEmpty && estStats != "unk") buffer.writeln('Estimated: $estStats');
-    if (includeSpied && spiedText != null) buffer.writeln(spiedText);
-    if (includeTsc && tscDetails != null) buffer.writeln(tscDetails);
-    buffer.writeln('URL: $attackUrl');
+    buffer.writeln('Target: ${widget.member.name} [${widget.member.memberId}]');
+    if (_includeEstimates && _estStats.isNotEmpty && _estStats != "unk") buffer.writeln('Estimated: $_estStats');
+    if (_includeSpied && _spiedText != null) buffer.writeln(_spiedText);
+    if (_includeTsc && _tscDetails != null) buffer.writeln(_tscDetails);
+    buffer.writeln('URL: $_attackUrl');
     return buffer.toString();
   }
 
@@ -127,7 +137,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
     return AlertDialog(
       title: const Text('Share attack details'),
       backgroundColor: _themeProvider.canvas,
-      content: isLoading
+      content: _isLoading
           ? const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -151,11 +161,11 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                   const SizedBox(height: 16),
                   const Divider(),
                   Text(
-                    'Attack: ${widget.member.name} [${widget.member.memberId}]',
+                    'Target: ${widget.member.name} [${widget.member.memberId}]',
                     style: const TextStyle(fontSize: 14),
                   ),
                   const SizedBox(height: 16),
-                  if ((estStats.isEmpty || estStats == "unk") && spiedText == null && tscDetails == null)
+                  if ((_estStats.isEmpty || _estStats == "unk") && _spiedText == null && _tscDetails == null)
                     Text(
                       "There's no estimated stats, nor spied stats, nor TSC stats available. "
                       "You will only be able to share the player name, ID and attack URL.",
@@ -165,7 +175,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                         fontStyle: FontStyle.italic,
                       ),
                     ),
-                  if (estStats != "unk" || estStats.isEmpty)
+                  if (_estStats != "unk" || _estStats.isEmpty)
                     Row(
                       children: [
                         Expanded(
@@ -174,24 +184,24 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                'Estimated: $estStats',
+                                'Estimated: $_estStats',
                                 style: const TextStyle(fontSize: 14, color: Colors.black),
                               ),
                             ),
                           ),
                         ),
                         Checkbox(
-                          value: includeEstimates,
+                          value: _includeEstimates,
                           onChanged: (v) {
                             setState(() {
-                              includeEstimates = v!;
+                              _includeEstimates = v!;
                             });
-                            _saveShareOption('estimates', includeEstimates);
+                            _saveShareOption('estimates', _includeEstimates);
                           },
                         ),
                       ],
                     ),
-                  if (spiedText != null)
+                  if (_spiedText != null)
                     Row(
                       children: [
                         Expanded(
@@ -200,28 +210,28 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                spiedText!,
+                                _spiedText!,
                                 style: const TextStyle(fontSize: 14, color: Colors.black),
                               ),
                             ),
                           ),
                         ),
                         Checkbox(
-                          value: includeSpied,
+                          value: _includeSpied,
                           onChanged: (v) {
                             setState(() {
-                              includeSpied = v!;
+                              _includeSpied = v!;
                             });
-                            _saveShareOption('spies', includeEstimates);
+                            _saveShareOption('spies', _includeSpied);
                           },
                         ),
                       ],
                     ),
-                  if (tscError.isNotEmpty)
+                  if (_tscError.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(8, 15, 55, 8),
                       child: Text(
-                        tscError,
+                        _tscError,
                         style: TextStyle(
                           fontSize: 13,
                           color: _themeProvider.getTextColor(Colors.red),
@@ -229,7 +239,7 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                         ),
                       ),
                     ),
-                  if (tscDetails != null)
+                  if (_tscDetails != null)
                     Row(
                       children: [
                         Expanded(
@@ -238,19 +248,19 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Text(
-                                tscDetails!,
+                                _tscDetails!,
                                 style: const TextStyle(fontSize: 14, color: Colors.black),
                               ),
                             ),
                           ),
                         ),
                         Checkbox(
-                          value: includeTsc,
+                          value: _includeTsc,
                           onChanged: (v) {
                             setState(() {
-                              includeTsc = v!;
+                              _includeTsc = v!;
                             });
-                            _saveShareOption('tsc', includeEstimates);
+                            _saveShareOption('tsc', _includeTsc);
                           },
                         ),
                       ],

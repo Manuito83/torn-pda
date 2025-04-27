@@ -328,7 +328,6 @@ class SendbirdChannelHandler extends BaseChannelHandler {
   void onMessageReceived(BaseChannel channel, BaseMessage message) {
     SendbirdController sb = Get.find<SendbirdController>();
     if (sb.webviewInForeground) return;
-    if (!sb.sendBirdNotificationsEnabled) return;
 
     log('Message received in channel ${channel.channelUrl}: ${message.message}');
     showSendbirdNotification(message.sender?.nickname ?? "Chat", message.message, channel.channelUrl);
