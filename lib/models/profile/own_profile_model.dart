@@ -402,22 +402,22 @@ class Event {
 
 class TornMessage {
   TornMessage({
-    this.timestamp,
-    this.id,
+    required this.timestamp,
+    required this.id,
     this.name,
-    this.type,
-    this.title,
-    this.seen,
-    this.read,
+    required this.type,
+    required this.title,
+    required this.seen,
+    required this.read,
   });
 
-  int? timestamp;
-  int? id;
+  int timestamp;
+  int id;
   String? name;
-  String? type;
+  String type;
   dynamic title;
-  int? seen;
-  int? read;
+  int seen;
+  int read;
 
   factory TornMessage.fromJson(Map<String, dynamic> json) => TornMessage(
         timestamp: json["timestamp"],

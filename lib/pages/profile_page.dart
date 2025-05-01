@@ -3108,7 +3108,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // create a map in a new variable. Otherwise, we return an empty Card.
     var messages = <String, TornMessage>{};
     if (_user!.messages.length > 0) {
-      messages = Map.from(_user!.messages).map((k, v) => MapEntry<String, TornMessage>(k, TornMessage.fromJson(v)));
+      _user!.messages.forEach((key, rawJson) {
+        try {
+          messages[key] = TornMessage.fromJson(rawJson);
+        } catch (e) {
+          messages[key] = TornMessage(
+            timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            id: 0,
+            type: '',
+            title: 'Error parsing message',
+            seen: 1,
+            read: 1,
+          );
+        }
+      });
     } else {
       return const Card(
         child: Row(
@@ -3176,7 +3189,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       final String title = msg.title;
-      final Widget insideIcon = _messagesInsideIconCases(msg.type!);
+      final Widget insideIcon = _messagesInsideIconCases(msg.type);
 
       IndicatorStyle iconBubble;
       iconBubble = IndicatorStyle(
@@ -3195,7 +3208,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
 
-      final messageTime = DateTime.fromMillisecondsSinceEpoch(msg.timestamp! * 1000);
+      final messageTime = DateTime.fromMillisecondsSinceEpoch(msg.timestamp * 1000);
 
       final messageRow = TimelineTile(
         isFirst: loopCount == 1 ? true : false,
@@ -3214,7 +3227,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        msg.name ?? "Torn Staff", // Torn staff might send messages with null sender!
+                        msg.name ?? "Torn", // Torn staff might send messages with null sender!
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
@@ -3318,7 +3331,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     var unreadTotalString = '';
-    final lastMessageDate = DateTime.fromMillisecondsSinceEpoch(messages.values.last.timestamp! * 1000);
+    final lastMessageDate = DateTime.fromMillisecondsSinceEpoch(messages.values.last.timestamp * 1000);
     if (unreadTotalCount == 0) {
       unreadTotalString = 'No unread messages '
           '(since ${_occurrenceTimeFormatted(lastMessageDate)})';
