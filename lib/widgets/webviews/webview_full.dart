@@ -1458,18 +1458,27 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 // We also need to allow this from the Firebase Remote Config just
                 // in case it interferes with other HTML elements
                 _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed) {
-              c.evaluateJavascript(source: '''
-                window.addEventListener('focusin', (event) => {
-                // Only proceed if it's an <input> element
-                // (otherwise, e.g. attacks buttons will trigger this)
-                const target = event.target;
-                if (target.tagName === 'INPUT') {
-                  setTimeout(() => {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }, 300);
-                }
-              });
-            ''');
+              c.evaluateJavascript(
+                source: '''
+                    window.addEventListener('focusin', (event) => {
+                      const target = event.target;
+
+                      // Check if the target is an <input> element
+                      const isInput = target.tagName === 'INPUT';
+
+                      // Avoid checkboxes (e.g.: when selecting messages)
+                      const isCheckbox = target.className.includes('checkbox');
+
+                      const shouldScroll = isInput && !isCheckbox;
+
+                      if (shouldScroll) {
+                        setTimeout(() => {
+                          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 300);
+                      }
+                    });
+                  ''',
+              );
             }
 
             _firstLoadCompleted = true;
