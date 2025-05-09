@@ -941,6 +941,7 @@ Future assessExactAlarmsPermissionsAndroid(BuildContext context, SettingsProvide
   }
 }
 
+@pragma("vm:entry-point")
 showSendbirdNotification(String sender, String message, String channelUrl, {bool fromBackground = false}) async {
   // Note: with the app on the background we can't access providers, so take Prefs()
 

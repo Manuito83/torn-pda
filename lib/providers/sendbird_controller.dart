@@ -325,7 +325,10 @@ class SendbirdController extends GetxController {
 
 class SendbirdChannelHandler extends BaseChannelHandler {
   @override
-  void onMessageReceived(BaseChannel channel, BaseMessage message) {
+  void onMessageReceived(BaseChannel channel, BaseMessage message) async {
+    final sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
+    if (!sendBirdNotificationsEnabled) return;
+
     SendbirdController sb = Get.find<SendbirdController>();
     if (sb.webviewInForeground) return;
 
