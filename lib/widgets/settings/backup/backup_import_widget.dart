@@ -47,7 +47,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      Text("Available parameters"),
+      const Text("Available parameters"),
       if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.shortcuts))
         Column(
           children: [
@@ -57,14 +57,14 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
       if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.userscripts))
         Column(
           children: [
-            Divider(),
+            const Divider(),
             _userscriptsMain(),
           ],
         ),
       if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.targets))
         Column(
           children: [
-            Divider(),
+            const Divider(),
             _targetsMain(),
           ],
         ),
@@ -81,7 +81,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
               activeColor: Colors.blueGrey,
               value: _selectedItems.contains("shortcuts"),
               title: const Text("Shorcuts"),
-              subtitle: Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
+              subtitle: const Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
               onChanged: (value) {
                 final bool shouldEnable = !_selectedItems.contains("shortcuts");
                 setState(() {
@@ -97,7 +97,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 GestureDetector(
-                  child: Icon(Icons.info_outline),
+                  child: const Icon(Icons.info_outline),
                   onTap: () {
                     BotToast.showText(
                       text: "If enabled, your shorcuts will be erased and a new list will be built "
@@ -114,13 +114,13 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                     );
                   },
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 const Flexible(
                   child: Text(
                     "Overwrite existing",
                   ),
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 Switch(
                   value: _overwritteShortcuts,
                   onChanged: (value) async {
@@ -149,7 +149,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
             activeColor: Colors.blueGrey,
             value: _selectedItems.contains("userscripts"),
             title: const Text("User scripts"),
-            subtitle: Text("Scripts list", style: TextStyle(fontSize: 12)),
+            subtitle: const Text("Scripts list", style: TextStyle(fontSize: 12)),
             onChanged: (value) {
               if (widget.fromShareDialog && value == true) {
                 BotToast.showText(
@@ -180,7 +180,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 GestureDetector(
-                  child: Icon(Icons.info_outline),
+                  child: const Icon(Icons.info_outline),
                   onTap: () {
                     BotToast.showText(
                       text: "If enabled, your user scripts will be erased and a new list will be built "
@@ -197,13 +197,13 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                     );
                   },
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 const Flexible(
                   child: Text(
                     "Overwrite existing",
                   ),
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 Switch(
                   value: _overwritteUserscripts,
                   onChanged: (value) async {
@@ -232,7 +232,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
             activeColor: Colors.blueGrey,
             value: _selectedItems.contains("targets"),
             title: const Text("Targets"),
-            subtitle: Text("Targets list and notes", style: TextStyle(fontSize: 12)),
+            subtitle: const Text("Targets list and notes", style: TextStyle(fontSize: 12)),
             onChanged: (value) {
               final bool shouldEnable = !_selectedItems.contains("targets");
               setState(() {
@@ -249,7 +249,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 GestureDetector(
-                  child: Icon(Icons.info_outline),
+                  child: const Icon(Icons.info_outline),
                   onTap: () {
                     BotToast.showText(
                       text: "If enabled, your targets will be erased and a new list will be built "
@@ -266,13 +266,13 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                     );
                   },
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 const Flexible(
                   child: Text(
                     "Overwrite existing",
                   ),
                 ),
-                SizedBox(width: 15),
+                const SizedBox(width: 15),
                 Switch(
                   value: _overwritteTargets,
                   onChanged: (value) async {

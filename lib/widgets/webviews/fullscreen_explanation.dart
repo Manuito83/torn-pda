@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
@@ -92,7 +92,7 @@ class FullScreenExplanationDialog extends StatelessWidget {
                 child: CircleAvatar(
                   backgroundColor: themeProvider.mainText,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 28,
                     width: 28,
                     child: Icon(MdiIcons.fullscreen),

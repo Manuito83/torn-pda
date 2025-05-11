@@ -172,7 +172,7 @@ class TctClockState extends State<TctClock> {
         borderSide: BorderSide(color: Colors.orange.shade800, width: 2),
         closeButtonShowType: CloseButtonShowType.none,
         closeOnClick: true,
-        autoCloseDuration: Duration(seconds: 5),
+        autoCloseDuration: const Duration(seconds: 5),
         showProgressBar: false,
         alignment: Alignment.bottomCenter,
         title: Text(

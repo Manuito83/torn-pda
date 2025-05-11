@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/trades/awh_out.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_receipt.dart';
@@ -105,7 +105,7 @@ class TradesWidgetState extends State<TradesWidget> {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text(
+                          const Text(
                             'TORN EXCHANGE',
                             style: TextStyle(
                               fontSize: 10,
@@ -264,7 +264,7 @@ class TradesWidgetState extends State<TradesWidget> {
       }
     } else {
       total += _tradesProv.container.rightMoney;
-      for (final item in _tradesProv.container.rightItems) {
+      for (final item in _tradesProv.container.rightOriginalItemsBeforeTornExchange) {
         total += item.totalBuyPrice;
       }
       for (final share in _tradesProv.container.rightShares) {
@@ -282,16 +282,16 @@ class TradesWidgetState extends State<TradesWidget> {
       if (!hasProperty) {
         return const SizedBox.shrink();
       } else {
-        return Row(
+        return const Row(
           children: [
-            const SizedBox(width: 5),
-            const Text('(+', style: TextStyle(color: Colors.white)),
+            SizedBox(width: 5),
+            Text('(+', style: TextStyle(color: Colors.white)),
             Icon(
               MdiIcons.home,
               color: Colors.white,
               size: 14,
             ),
-            const Text(')', style: TextStyle(color: Colors.white)),
+            Text(')', style: TextStyle(color: Colors.white)),
           ],
         );
       }
@@ -373,12 +373,12 @@ class TradesWidgetState extends State<TradesWidget> {
         );
       } else {
         // Do out best to parse the Torn Exchange total money and add money formatting
-        String tornExchangeTotal = "";
-        int? tornExchangeTotalMoney = int.tryParse(_tradesProv.container.tornExchangeTotalMoney);
-        if (tornExchangeTotalMoney != null) {
-          tornExchangeTotal = _moneyFormat.format(tornExchangeTotalMoney);
+        String tornExchangeTotalString = "";
+        int tornExchangeTotalMoney = int.tryParse(_tradesProv.container.tornExchangeTotalMoney) ?? -1;
+        if (tornExchangeTotalMoney != -1) {
+          tornExchangeTotalString = _moneyFormat.format(tornExchangeTotalMoney);
         } else {
-          tornExchangeTotal = _tradesProv.container.tornExchangeTotalMoney;
+          tornExchangeTotalString = _tradesProv.container.tornExchangeTotalMoney;
         }
 
         String tornExchangeProfit = "";
@@ -420,26 +420,39 @@ class TradesWidgetState extends State<TradesWidget> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Flexible(
-                  child: Text(
-                    '\$$tornExchangeTotal',
-                    textAlign: TextAlign.end,
-                    style: TextStyle(
-                      color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        'LIST',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                            color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 8),
+                      ),
+                      Text(
+                        '\$$tornExchangeTotalString',
+                        textAlign: TextAlign.end,
+                        style: TextStyle(
+                          color: itemsNotConfiguredInTornExchange ? Colors.orange : ttColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 5),
             if (itemsNotConfiguredInTornExchange)
-              Column(
+              const Column(
                 children: [
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Icon(Icons.warning_amber_outlined, size: 16, color: Colors.orange),
-                      const SizedBox(width: 5),
+                      SizedBox(width: 5),
                       Flexible(
                         child: Text(
                           'EXPAND TO SEE\nMISSING ITEMS',
@@ -452,7 +465,7 @@ class TradesWidgetState extends State<TradesWidget> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 5),
+                  SizedBox(height: 5),
                 ],
               ),
             Row(
@@ -462,8 +475,8 @@ class TradesWidgetState extends State<TradesWidget> {
                   child: Text(
                     '\$${_moneyFormat.format(total)} market price',
                     textAlign: TextAlign.end,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: total <= tornExchangeTotalMoney ? Colors.orange : Colors.green,
                       fontSize: 12,
                       fontStyle: FontStyle.italic,
                     ),
@@ -474,7 +487,7 @@ class TradesWidgetState extends State<TradesWidget> {
             const SizedBox(height: 5),
             if (_tornExchangeProfitActive)
               if (itemsNotConfiguredInTornExchange)
-                Row(
+                const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Flexible(
@@ -499,7 +512,7 @@ class TradesWidgetState extends State<TradesWidget> {
                       child: Text(
                         '\$$tornExchangeProfit profit (TE)',
                         textAlign: TextAlign.end,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
@@ -511,7 +524,7 @@ class TradesWidgetState extends State<TradesWidget> {
                         '\$${_moneyFormat.format(total - int.parse(_tradesProv.container.tornExchangeTotalMoney))} '
                         'profit (market)',
                         textAlign: TextAlign.end,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
@@ -562,9 +575,18 @@ class TradesWidgetState extends State<TradesWidget> {
     if (_tornExchangeActive && side == 'right' && (!_tradesProv.container.tornExchangeServerError)) {
       final tornExchangeItems = _tradesProv.container.tornExchangeItems;
 
+      int tornExchangeListedItems = 0;
       for (final tornExchangeProduct in tornExchangeItems) {
         if (tornExchangeProduct.price == 0) {
           continue;
+        }
+
+        if (tornExchangeListedItems == 0) {
+          items.add(const Padding(
+            padding: EdgeInsets.only(bottom: 6),
+            child: Text('LISTED ITEMS', style: TextStyle(color: ttColor, fontSize: 8, fontWeight: FontWeight.bold)),
+          ));
+          tornExchangeListedItems = 1;
         }
 
         String itemName = tornExchangeProduct.name;
@@ -633,7 +655,7 @@ class TradesWidgetState extends State<TradesWidget> {
                       child: Text(
                         '$tornExchangeItemProfit profit (TE)',
                         textAlign: TextAlign.end,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontStyle: FontStyle.italic,
@@ -645,7 +667,7 @@ class TradesWidgetState extends State<TradesWidget> {
                         child: Text(
                           '$marketItemProfit profit (market)',
                           textAlign: TextAlign.end,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,
                             fontStyle: FontStyle.italic,
@@ -805,7 +827,7 @@ class TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.home, size: 18, color: Colors.white),
+            const Icon(MdiIcons.home, size: 18, color: Colors.white),
             const SizedBox(width: 5),
             Text(
               propertyName,
@@ -850,7 +872,7 @@ class TradesWidgetState extends State<TradesWidget> {
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
+            const Icon(MdiIcons.chartTimelineVariant, size: 18, color: Colors.white),
             const SizedBox(width: 5),
             Text(
               shareName,

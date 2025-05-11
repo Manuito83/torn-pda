@@ -14,7 +14,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
@@ -461,7 +461,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                       if (widget.foreignStock.quantity == 0)
                         Row(
                           children: [
-                            Flexible(
+                            const Flexible(
                               child: Text(
                                 "Next restock might happen at: ",
                                 style: TextStyle(fontSize: 12),
@@ -565,7 +565,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             }
 
             return Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Text(
                 errorMessage,
                 style: TextStyle(
@@ -1123,7 +1123,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     } else {
       affected.add(
         Padding(
-          padding: EdgeInsets.only(left: 5),
+          padding: const EdgeInsets.only(left: 5),
           child: Text(
             "- Energy OK",
             style: TextStyle(
@@ -1158,7 +1158,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     } else {
       affected.add(
         Padding(
-          padding: EdgeInsets.only(left: 5),
+          padding: const EdgeInsets.only(left: 5),
           child: Text(
             "- Nerve OK",
             style: TextStyle(
@@ -1193,7 +1193,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     } else {
       affected.add(
         Padding(
-          padding: EdgeInsets.only(left: 5),
+          padding: const EdgeInsets.only(left: 5),
           child: Text(
             "- Drug cooldown OK",
             style: TextStyle(
@@ -1228,7 +1228,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     } else {
       affected.add(
         Padding(
-          padding: EdgeInsets.only(left: 5),
+          padding: const EdgeInsets.only(left: 5),
           child: Text(
             "- Medical cooldown OK",
             style: TextStyle(
@@ -1263,7 +1263,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     } else {
       affected.add(
         Padding(
-          padding: EdgeInsets.only(left: 5),
+          padding: const EdgeInsets.only(left: 5),
           child: Text(
             "- Booster cooldown OK",
             style: TextStyle(
@@ -1278,7 +1278,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     if (!anyAffectation) {
       affected.add(
         Padding(
-          padding: EdgeInsets.only(left: 5),
+          padding: const EdgeInsets.only(left: 5),
           child: Text(
             "No affectation",
             style: TextStyle(
@@ -1428,7 +1428,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       if (!anyDelayedAffectation) {
         affected.add(
           Padding(
-            padding: EdgeInsets.only(left: 5),
+            padding: const EdgeInsets.only(left: 5),
             child: Text(
               "No affectation",
               style: TextStyle(
@@ -1484,7 +1484,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       // Find the latest timestamp
       int latestTimestamp = _periodicMap.keys.last * 1000;
       // Calculate the timestamp 12 hours before the latest timestamp
-      DateTime cutoff = DateTime.fromMillisecondsSinceEpoch(latestTimestamp).subtract(Duration(hours: 12));
+      DateTime cutoff = DateTime.fromMillisecondsSinceEpoch(latestTimestamp).subtract(const Duration(hours: 12));
       int cutoffMillis = cutoff.millisecondsSinceEpoch;
 
       // Ensure that the filtering results in fewer entries than the original map
@@ -1563,12 +1563,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
       ),
       titlesData: FlTitlesData(
         show: true,
-        topTitles: AxisTitles(
+        topTitles: const AxisTitles(
           sideTitles: SideTitles(
             showTitles: false,
           ),
         ),
-        rightTitles: AxisTitles(
+        rightTitles: const AxisTitles(
           sideTitles: SideTitles(
             showTitles: false,
           ),
@@ -1663,7 +1663,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           gradient: LinearGradient(colors: gradientColors),
           barWidth: 1.5,
           isStrokeCapRound: true,
-          dotData: FlDotData(
+          dotData: const FlDotData(
             show: false,
           ),
         ),
@@ -1840,7 +1840,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   Widget _arrivalTime() {
     return Row(
       children: [
-        Icon(MdiIcons.airplaneLanding, size: 12),
+        const Icon(MdiIcons.airplaneLanding, size: 12),
         const SizedBox(width: 2),
         if (_flyingToThisCountry)
           if (_landedInWidgetCountry)
@@ -2072,7 +2072,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(

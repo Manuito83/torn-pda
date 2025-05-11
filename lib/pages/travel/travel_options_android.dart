@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 
@@ -111,7 +111,7 @@ class TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Travel notification", style: TextStyle(color: Colors.white)),
       leading: IconButton(
@@ -122,7 +122,7 @@ class TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
       ),
       actions: [
         IconButton(
-          icon: Icon(MdiIcons.commentTextOutline),
+          icon: const Icon(MdiIcons.commentTextOutline),
           onPressed: () {
             _showNotificationTextDialog();
           },

@@ -723,7 +723,7 @@ String quickItemsJS({required String item, bool faction = false, bool? eRefill =
           type: 'POST',
           data: step,
           oncomplete: function(resp) {
-            console.log(resp.responseText);
+            //console.log(resp.responseText);
             
             var response = JSON.parse(resp.responseText);
             var topBox = document.querySelector('.content-title');
@@ -733,7 +733,7 @@ String quickItemsJS({required String item, bool faction = false, bool? eRefill =
             if (response.success === false) {
               resultBox.innerHTML = response.message;
             } else {
-              resultBox.innerHTML = response.text;
+              resultBox.innerHTML = response.message;
             }
           },
           onerror: function(e) {

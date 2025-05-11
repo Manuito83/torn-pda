@@ -64,7 +64,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
               if (mounted) Navigator.pop(context);
             },
       child: _restoreInProcess
-          ? SizedBox(height: 20, width: 20, child: const CircularProgressIndicator())
+          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator())
           : const Text("Restore", style: TextStyle(color: Colors.green)),
     );
   }

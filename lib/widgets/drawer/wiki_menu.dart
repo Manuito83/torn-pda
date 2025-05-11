@@ -116,8 +116,8 @@ class _WikiMenuState extends State<WikiMenu> {
         expanded: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: const [
+            const Row(
+              children: [
                 Padding(
                   padding: EdgeInsets.only(top: 14, bottom: 14),
                   child: Text(

@@ -4,19 +4,25 @@
 
 import 'dart:convert';
 
-OwnProfileMisc ownProfileMiscFromJson(String str) => OwnProfileMisc.fromJson(json.decode(str));
+OwnProfileMisc ownProfileMiscFromJsonV2(String rawJson) => OwnProfileMisc.fromJson(
+      json.decode(rawJson) as Map<String, dynamic>,
+    );
 
 String ownProfileMiscToJson(OwnProfileMisc data) => json.encode(data.toJson());
 
 class OwnProfileMisc {
+  // ── v2 new fields -------──────────────
+  final List<int> educationCompleted;
+  final int? educationCurrent;
+  final int? educationTimeleft;
+
+  // ── common fields ─────────────────────
   int? points;
   int? caymanBank;
   int? vaultAmount;
   int? companyFunds;
   int? dailyNetworth;
   int? moneyOnhand;
-  int? educationCurrent;
-  int? educationTimeleft;
   int? manualLabor;
   int? intelligence;
   int? endurance;
@@ -46,7 +52,6 @@ class OwnProfileMisc {
   String? cardSkimming;
   int? playerId;
   CityBank? cityBank;
-  List<int>? educationCompleted;
   List<String>? strengthInfo;
   List<String>? defenseInfo;
   List<String>? speedInfo;
@@ -66,6 +71,7 @@ class OwnProfileMisc {
     this.moneyOnhand,
     this.educationCurrent,
     this.educationTimeleft,
+    required this.educationCompleted,
     this.manualLabor,
     this.intelligence,
     this.endurance,
@@ -95,7 +101,6 @@ class OwnProfileMisc {
     this.cardSkimming,
     this.playerId,
     this.cityBank,
-    this.educationCompleted,
     this.strengthInfo,
     this.defenseInfo,
     this.speedInfo,
@@ -107,58 +112,140 @@ class OwnProfileMisc {
     this.metadata,
   });
 
-  factory OwnProfileMisc.fromJson(Map<String, dynamic> json) => OwnProfileMisc(
-        points: json["points"],
-        caymanBank: json["cayman_bank"],
-        vaultAmount: json["vault_amount"],
-        companyFunds: json["company_funds"],
-        dailyNetworth: json["daily_networth"],
-        moneyOnhand: json["money_onhand"],
-        educationCurrent: json["education_current"],
-        educationTimeleft: json["education_timeleft"],
-        manualLabor: json["manual_labor"],
-        intelligence: json["intelligence"],
-        endurance: json["endurance"],
-        strength: json["strength"],
-        speed: json["speed"],
-        dexterity: json["dexterity"],
-        defense: json["defense"],
-        total: json["total"],
-        strengthModifier: json["strength_modifier"],
-        defenseModifier: json["defense_modifier"],
-        speedModifier: json["speed_modifier"],
-        dexterityModifier: json["dexterity_modifier"],
-        searchForCash: json["search_for_cash"],
-        forgery: json["forgery"],
-        bootlegging: json["bootlegging"],
-        reviving: json["reviving"],
-        graffiti: json["graffiti"],
-        hunting: json["hunting"],
-        burglary: json["burglary"],
-        shoplifting: json["shoplifting"],
-        cracking: json["cracking"],
-        pickpocketing: json["pickpocketing"],
-        racing: json["racing"],
-        scamming: json["scamming"],
-        disposal: json["disposal"],
-        hustling: json["hustling"],
-        cardSkimming: json["card_skimming"],
-        playerId: json["player_id"],
-        cityBank: json["city_bank"] == null ? null : CityBank.fromJson(json["city_bank"]),
-        educationCompleted:
-            json["education_completed"] == null ? [] : List<int>.from(json["education_completed"]!.map((x) => x)),
-        strengthInfo: json["strength_info"] == null ? [] : List<String>.from(json["strength_info"]!.map((x) => x)),
-        defenseInfo: json["defense_info"] == null ? [] : List<String>.from(json["defense_info"]!.map((x) => x)),
-        speedInfo: json["speed_info"] == null ? [] : List<String>.from(json["speed_info"]!.map((x) => x)),
-        dexterityInfo: json["dexterity_info"] == null ? [] : List<String>.from(json["dexterity_info"]!.map((x) => x)),
-        jobpoints: json["jobpoints"] == null ? null : Jobpoints.fromJson(json["jobpoints"]),
-        properties: Map.from(json["properties"]!).map((k, v) => MapEntry<String, Property>(k, Property.fromJson(v))),
-        bazaar: json["bazaar"] == null ? [] : List<Bazaar>.from(json["bazaar"]!.map((x) => Bazaar.fromJson(x))),
-        itemmarket: json["itemmarket"] == null
-            ? []
-            : List<Itemmarket>.from(json["itemmarket"]!.map((x) => Itemmarket.fromJson(x))),
-        metadata: json["_metadata"] == null ? null : Metadata.fromJson(json["_metadata"]),
-      );
+  factory OwnProfileMisc.fromJson(Map<String, dynamic> json) {
+    // ─────────────────────────────────────────────────────────────────────────
+    // 1. V2 similar to V1
+    // ─────────────────────────────────────────────────────────────────────────
+    final points = json["points"];
+    final caymanBank = json["cayman_bank"];
+    final vaultAmount = json["vault_amount"];
+    final companyFunds = json["company_funds"];
+    final dailyNetworth = json["daily_networth"];
+    final moneyOnhand = json["money_onhand"];
+
+    final manualLabor = json["manual_labor"];
+    final intelligence = json["intelligence"];
+    final endurance = json["endurance"];
+    final strength = json["strength"];
+    final speed = json["speed"];
+    final dexterity = json["dexterity"];
+    final defense = json["defense"];
+    final total = json["total"];
+    final strengthModifier = json["strength_modifier"];
+    final defenseModifier = json["defense_modifier"];
+    final speedModifier = json["speed_modifier"];
+    final dexterityModifier = json["dexterity_modifier"];
+
+    final searchForCash = json["search_for_cash"];
+    final forgery = json["forgery"];
+    final bootlegging = json["bootlegging"];
+    final reviving = json["reviving"];
+    final graffiti = json["graffiti"];
+    final hunting = json["hunting"];
+    final burglary = json["burglary"];
+    final shoplifting = json["shoplifting"];
+    final cracking = json["cracking"];
+    final pickpocketing = json["pickpocketing"];
+    final racing = json["racing"];
+    final scamming = json["scamming"];
+    final disposal = json["disposal"];
+    final hustling = json["hustling"];
+    final cardSkimming = json["card_skimming"];
+
+    final playerId = json["player_id"];
+    final cityBank = json["city_bank"] == null ? null : CityBank.fromJson(json["city_bank"]);
+    final strengthInfo = json["strength_info"] == null ? <String>[] : List<String>.from(json["strength_info"]);
+    final defenseInfo = json["defense_info"] == null ? <String>[] : List<String>.from(json["defense_info"]);
+    final speedInfo = json["speed_info"] == null ? <String>[] : List<String>.from(json["speed_info"]);
+    final dexterityInfo = json["dexterity_info"] == null ? <String>[] : List<String>.from(json["dexterity_info"]);
+    final jobpoints = json["jobpoints"] == null ? null : Jobpoints.fromJson(json["jobpoints"]);
+    final properties = json["properties"] == null
+        ? <String, Property>{}
+        : Map.from(json["properties"]).map((k, v) => MapEntry<String, Property>(k, Property.fromJson(v)));
+    final bazaar =
+        json["bazaar"] == null ? <Bazaar>[] : List<Bazaar>.from(json["bazaar"].map((x) => Bazaar.fromJson(x)));
+    final itemmarket = json["itemmarket"] == null
+        ? <Itemmarket>[]
+        : List<Itemmarket>.from(json["itemmarket"].map((x) => Itemmarket.fromJson(x)));
+    final metadata = json["_metadata"] == null ? null : Metadata.fromJson(json["_metadata"]);
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 2. V2 adapted: education
+    // ─────────────────────────────────────────────────────────────────────────
+    late final List<int> educationCompleted;
+    late final int? educationCurrent;
+    late final int? educationTimeleft;
+
+    final edu = json["education"] as Map<String, dynamic>;
+    educationCompleted = List<int>.from((edu['complete'] ?? []) as List);
+
+    if (edu["current"] != null) {
+      final current = edu["current"] as Map<String, dynamic>;
+      educationCurrent = current["id"] as int?;
+      final untilEpoch = current["until"] as int?;
+      educationTimeleft = untilEpoch == null
+          ? null
+          : (DateTime.fromMillisecondsSinceEpoch(untilEpoch * 1000).difference(DateTime.now()).inSeconds)
+              .clamp(0, double.infinity)
+              .toInt();
+    } else {
+      educationCurrent = null;
+      educationTimeleft = null;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // 3. Return fully-populated domain object
+    // ─────────────────────────────────────────────────────────────────────────
+    return OwnProfileMisc(
+      points: points,
+      caymanBank: caymanBank,
+      vaultAmount: vaultAmount,
+      companyFunds: companyFunds,
+      dailyNetworth: dailyNetworth,
+      moneyOnhand: moneyOnhand,
+      educationCurrent: educationCurrent,
+      educationTimeleft: educationTimeleft,
+      manualLabor: manualLabor,
+      intelligence: intelligence,
+      endurance: endurance,
+      strength: strength,
+      speed: speed,
+      dexterity: dexterity,
+      defense: defense,
+      total: total,
+      strengthModifier: strengthModifier,
+      defenseModifier: defenseModifier,
+      speedModifier: speedModifier,
+      dexterityModifier: dexterityModifier,
+      searchForCash: searchForCash,
+      forgery: forgery,
+      bootlegging: bootlegging,
+      reviving: reviving,
+      graffiti: graffiti,
+      hunting: hunting,
+      burglary: burglary,
+      shoplifting: shoplifting,
+      cracking: cracking,
+      pickpocketing: pickpocketing,
+      racing: racing,
+      scamming: scamming,
+      disposal: disposal,
+      hustling: hustling,
+      cardSkimming: cardSkimming,
+      playerId: playerId,
+      cityBank: cityBank,
+      educationCompleted: educationCompleted,
+      strengthInfo: strengthInfo,
+      defenseInfo: defenseInfo,
+      speedInfo: speedInfo,
+      dexterityInfo: dexterityInfo,
+      jobpoints: jobpoints,
+      properties: properties,
+      bazaar: bazaar,
+      itemmarket: itemmarket,
+      metadata: metadata,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "points": points,
@@ -198,7 +285,7 @@ class OwnProfileMisc {
         "card_skimming": cardSkimming,
         "player_id": playerId,
         "city_bank": cityBank?.toJson(),
-        "education_completed": educationCompleted == null ? [] : List<dynamic>.from(educationCompleted!.map((x) => x)),
+        "education_completed": List<dynamic>.from(educationCompleted.map((x) => x)),
         "strength_info": strengthInfo == null ? [] : List<dynamic>.from(strengthInfo!.map((x) => x)),
         "defense_info": defenseInfo == null ? [] : List<dynamic>.from(defenseInfo!.map((x) => x)),
         "speed_info": speedInfo == null ? [] : List<dynamic>.from(speedInfo!.map((x) => x)),

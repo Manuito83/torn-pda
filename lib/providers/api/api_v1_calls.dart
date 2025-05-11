@@ -21,7 +21,6 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/perks/user_perks_model.dart';
 import 'package:torn_pda/models/profile/basic_profile_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/models/property_model.dart';
@@ -147,24 +146,6 @@ class ApiCallsV1 {
     if (apiResult is! ApiError) {
       try {
         return OwnPersonalStatsModel.fromJson(apiResult as Map<String, dynamic>);
-      } catch (e, trace) {
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
-      }
-    } else {
-      return apiResult;
-    }
-  }
-
-  static Future<dynamic> getOwnProfileMisc() async {
-    dynamic apiResult;
-    final apiCaller = Get.find<ApiCallerController>();
-    await apiCaller.enqueueApiCall(apiSelection: ApiSelection_v1.ownMisc).then((value) {
-      apiResult = value;
-    });
-    if (apiResult is! ApiError) {
-      try {
-        return OwnProfileMisc.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");

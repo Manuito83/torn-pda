@@ -23,11 +23,11 @@ class AudioController extends GetxController {
     _audioPlayer.play(
       AssetSource(file),
       // https://github.com/ryanheise/just_audio/issues/941
-      position: Duration(milliseconds: 10),
+      position: const Duration(milliseconds: 10),
     );
 
     if (Platform.isIOS) {
-      Future.delayed(Duration(seconds: 2)).then((value) {
+      Future.delayed(const Duration(seconds: 2)).then((value) {
         _audioPlayer.setAudioContext(AudioContext(
           iOS: AudioContextIOS(
             category: AVAudioSessionCategory.playback,

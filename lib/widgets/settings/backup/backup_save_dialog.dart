@@ -51,8 +51,8 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 30),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 30),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -72,8 +72,8 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
                   if (_serverError.isNotEmpty) {
                     return Column(
                       children: [
-                        Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
-                        Text(_serverError, style: TextStyle(color: Colors.red)),
+                        const Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
+                        Text(_serverError, style: const TextStyle(color: Colors.red)),
                       ],
                     );
                   }
@@ -93,15 +93,15 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
                     ),
                   );
                 }
-                return Flexible(
+                return const Flexible(
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const SizedBox(height: 40),
-                        const Text("Fetching server info..."),
-                        const SizedBox(height: 25),
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        Text("Fetching server info..."),
+                        SizedBox(height: 25),
+                        CircularProgressIndicator(),
+                        SizedBox(height: 40),
                       ],
                     ),
                   ),
@@ -120,14 +120,14 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
                         Navigator.pop(context);
                       },
                       child: _uploadInProgress
-                          ? Container(height: 20, width: 20, child: CircularProgressIndicator())
-                          : Text("Save", style: TextStyle(color: Colors.green)),
+                          ? Container(height: 20, width: 20, child: const CircularProgressIndicator())
+                          : const Text("Save", style: TextStyle(color: Colors.green)),
                     ),
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text("Close"),
+                    child: const Text("Close"),
                   ),
                 ],
               ),
@@ -149,7 +149,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Scripts list", style: TextStyle(fontSize: 12)),
+            const Text("Scripts list", style: TextStyle(fontSize: 12)),
             BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.userscripts)
                 ? _addExistingSubtitle()
                 : Container(),
@@ -177,7 +177,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
+            const Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
             BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.shortcuts)
                 ? _addExistingSubtitle()
                 : Container(),
@@ -203,7 +203,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Targets list and notes", style: TextStyle(fontSize: 12)),
+            const Text("Targets list and notes", style: TextStyle(fontSize: 12)),
             BackupPrefsGroups.assessIncoming(_serverPrefs, BackupPrefs.targets) ? _addExistingSubtitle() : Container(),
           ],
         ),
@@ -217,7 +217,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
   }
 
   Text _addExistingSubtitle() {
-    return Text(
+    return const Text(
       "EXISTING SAVE (OVERWRITE)",
       style: TextStyle(fontSize: 11, color: Colors.red),
     );

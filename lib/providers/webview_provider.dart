@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
@@ -499,7 +499,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   /// [recallLastSession] should be used to open a browser session where we left it last time
-  Future initialiseMain({
+  Future<void> initialiseMain({
     required String? initUrl,
     required BuildContext context,
     bool recallLastSession = false,
@@ -507,10 +507,11 @@ class WebViewProvider extends ChangeNotifier {
     ChainingPayload? chainingPayload,
     bool restoreSessionCookie = false,
   }) async {
+    // Restore session cookie if requested
     if (restoreSessionCookie) {
       try {
         final String sessionCookie = await Prefs().getWebViewSessionCookie();
-        if (sessionCookie != "") {
+        if (sessionCookie.isNotEmpty) {
           final cm = CookieManager.instance();
 
           final allCookies = await cm.getCookies(url: WebUri("https://www.torn.com"));
@@ -535,6 +536,7 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
 
+    // Load user preferences
     _bottomBarStyleEnabled = await Prefs().getBrowserBottomBarStyleEnabled();
     _bottomBarStyleType = await Prefs().getBrowserBottomBarStyleType();
     _browserBottomBarStylePlaceTabsAtBottom = await Prefs().getBrowserBottomBarStylePlaceTabsAtBottom();
@@ -545,11 +547,10 @@ class WebViewProvider extends ChangeNotifier {
     _useTabIcons = await Prefs().getUseTabsIcons();
     _hideTabs = await Prefs().getHideTabs();
 
-    // If we are sharing the downloads, we need to clear the files in the cache folder (although theoretically the OS
-    // should do this for us), as the user might not have access to the cache folder and can't free up space
+    // Clear temporary downloads if sharing is enabled
     await _clearTemporaryDownloadedFiles(context);
 
-    // Add the main opener
+    // Add the main opener tab, restoring last session if requested
     String? url = initUrl;
     if (recallLastSession) {
       final String savedJson = await Prefs().getWebViewMainTab();
@@ -577,6 +578,7 @@ class WebViewProvider extends ChangeNotifier {
         chainingPayload: chainingPayload,
       );
     }
+
     _currentTab = 0;
   }
 
@@ -662,6 +664,8 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
+  // TODO: old references to [windowId] can theoretically be removed since we are no longer using the windowId to open new tabs
+  //       (as we now use the [_openNewTabFromWindowRequest] method in WebViewFull and avoid creating new windows)
   Future addTab({
     GlobalKey? tabKey,
     int? windowId,
@@ -1548,6 +1552,8 @@ class WebViewProvider extends ChangeNotifier {
     }
     _lastBrowserOpenedTime = DateTime.now();
 
+    final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+
     final UiMode uiMode = _decideBrowserScreenMode(tapType: browserTapType, context: context);
     setCurrentUiMode(uiMode, context);
 
@@ -1557,7 +1563,6 @@ class WebViewProvider extends ChangeNotifier {
 
       String? authUrl = await _assessNativeAuth(inputUrl: url, context: context);
 
-      final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
       w.stackView = WebViewStackView(
         initUrl: authUrl,
         recallLastSession: recallLastSession,
@@ -1740,25 +1745,25 @@ class WebViewProvider extends ChangeNotifier {
     final themeProvider = context.read<ThemeProvider>();
     Color iconColor = themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white;
 
-    Widget boxWidget = ImageIcon(AssetImage('images/icons/pda_icon.png'), color: iconColor);
+    Widget boxWidget = ImageIcon(const AssetImage('images/icons/pda_icon.png'), color: iconColor);
 
     // Find some icons manually first, as they might trigger errors with shortcuts
     if (tabList[i].isChainingBrowser) {
-      return Icon(MdiIcons.linkVariant, color: Colors.red);
+      return const Icon(MdiIcons.linkVariant, color: Colors.red);
     } else if (url.contains("sid=attack&user2ID=2225097")) {
-      return Icon(MdiIcons.pistol, color: Colors.pink);
+      return const Icon(MdiIcons.pistol, color: Colors.pink);
     } else if (url.contains("sid=attack&user2ID=")) {
       return Icon(Icons.person, color: iconColor);
     } else if (url.contains("profiles.php?XID=2225097")) {
-      return Icon(Icons.person, color: Colors.pink);
+      return const Icon(Icons.person, color: Colors.pink);
     } else if (url.contains("profiles.php")) {
       return Icon(Icons.person, color: iconColor);
     } else if (url.contains("companies.php") || url.contains("joblist.php")) {
-      return ImageIcon(AssetImage('images/icons/home/job.png'), color: iconColor);
+      return ImageIcon(const AssetImage('images/icons/home/job.png'), color: iconColor);
     } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
-      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
+      return const ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
     } else if (url.contains("https://www.torn.com/forums.php")) {
-      return ImageIcon(AssetImage('images/icons/home/forums.png'), color: iconColor);
+      return ImageIcon(const AssetImage('images/icons/home/forums.png'), color: iconColor);
     } else if (url.contains("yata.yt")) {
       return Image.asset('images/icons/yata_logo.png');
     } else if (url.contains("jailview.php")) {
@@ -1784,7 +1789,7 @@ class WebViewProvider extends ChangeNotifier {
     } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
       return Image.asset('images/icons/home/crimes.png', color: iconColor);
     } else if (url.contains("index.php")) {
-      return ImageIcon(AssetImage('images/icons/home/home.png'), color: iconColor);
+      return ImageIcon(const AssetImage('images/icons/home/home.png'), color: iconColor);
     } else if (!url.contains("torn.com")) {
       return Icon(Icons.public, size: 22, color: iconColor);
     }

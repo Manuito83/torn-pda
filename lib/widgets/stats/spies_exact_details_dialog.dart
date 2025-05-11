@@ -76,7 +76,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
                   spiesPayload.spyController.statsOld(spiesPayload.strengthUpdate),
                   style: TextStyle(fontSize: 10, color: strUpdateColor),
                 )
-              : SizedBox.shrink(),
+              : const SizedBox.shrink(),
         ],
       );
     }
@@ -118,7 +118,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
                   spiesPayload.spyController.statsOld(spiesPayload.speedUpdate),
                   style: TextStyle(fontSize: 10, color: spdUpdateColor),
                 )
-              : SizedBox.shrink(),
+              : const SizedBox.shrink(),
         ],
       );
     }
@@ -160,7 +160,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
                   spiesPayload.spyController.statsOld(spiesPayload.defenseUpdate),
                   style: TextStyle(fontSize: 10, color: defUpdateColor),
                 )
-              : SizedBox.shrink(),
+              : const SizedBox.shrink(),
         ],
       );
     }
@@ -202,7 +202,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
                   spiesPayload.spyController.statsOld(spiesPayload.dexterityUpdate),
                   style: TextStyle(fontSize: 10, color: dexUpdateColor),
                 )
-              : SizedBox.shrink(),
+              : const SizedBox.shrink(),
         ],
       );
     }
@@ -244,7 +244,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
                   spiesPayload.spyController.statsOld(spiesPayload.totalUpdate),
                   style: TextStyle(fontSize: 10, color: totalUpdateColor),
                 )
-              : SizedBox.shrink(),
+              : const SizedBox.shrink(),
         ],
       );
     }
@@ -267,7 +267,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
             ),
           ),
           if (spiesPayload.spySource != spiesPayload.spyController.spiesSource)
-            Text(
+            const Text(
               "(mixed source)",
               style: TextStyle(fontSize: 12),
             ),
@@ -284,8 +284,8 @@ class SpiesExactDetailsDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(bottom: 20),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 20),
                 child: Text(
                   "SPIED STATS",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -303,7 +303,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
                 padding: const EdgeInsets.all(4),
                 child: Row(
                   children: [
-                    Text(
+                    const Text(
                       "Last spy: ",
                       style: TextStyle(fontSize: 12),
                     ),

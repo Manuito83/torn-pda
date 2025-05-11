@@ -118,6 +118,7 @@ class Prefs {
   final String _kIosBrowserPinch = "pda_iosBrowserPinch";
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
+  final String _kBrowserCenterEditingTextField = "pda_browserCenterEditingTextField";
 
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -221,6 +222,7 @@ class Prefs {
   final String _kJobAddictionValue = "pda_jobAddiction";
   final String _kJobAddictionNextCallTime = "pda_jobAddictionLastRetrieved";
   final String _kProfileStatsEnabled = "pda_profileStatsEnabled";
+  final String _kShareAttackOptions = "pda_shareAttackOptions";
   final String _kTSCEnabledStatus = "pda_tscEnabledStatus";
   final String _kYataStatsEnabledStatus = "pda_yataStatsEnabledStatus";
 
@@ -417,6 +419,10 @@ class Prefs {
   final String _kShowApiRateInDrawer = "pda_showApiRateInDrawer";
   final String _kDelayApiCalls = "pda_delayApiCalls";
   final String _kShowApiMaxCallWarning = "pda_showMaxCallWarning";
+
+  // Memory
+  final String _kShowMemoryInDrawer = "pda_showMemoryInDrawer";
+  final String _kShowMemoryInWebview = "pda_showMemoryInWebview";
 
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
@@ -1392,6 +1398,16 @@ class Prefs {
     return prefs.setBool(_kBrowserReverseNavigationSwipe, value);
   }
 
+  Future<bool> getBrowserCenterEditingTextField() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kBrowserCenterEditingTextField) ?? true;
+  }
+
+  Future<bool> setBrowserCenterEditingTextField(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kBrowserCenterEditingTextField, value);
+  }
+
   /// ----------------------------
   /// Methods for test browser
   /// ----------------------------
@@ -1715,6 +1731,17 @@ class Prefs {
   Future<bool> setProfileStatsEnabled(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kProfileStatsEnabled, value);
+  }
+
+  // *************
+  Future<List<String>> getShareAttackOptions() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_kShareAttackOptions) ?? <String>[];
+  }
+
+  Future<bool> setShareAttackOptions(List<String> value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setStringList(_kShareAttackOptions, value);
   }
 
   // *************
@@ -4028,6 +4055,31 @@ class Prefs {
   Future<bool> setShowApiMaxCallWarning(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowApiMaxCallWarning, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Memory
+  /// ----------------------------
+  Future<bool> getShowMemoryInDrawer() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowMemoryInDrawer) ?? false;
+  }
+
+  Future<bool> setShowMemoryInDrawer(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowMemoryInDrawer, value);
+  }
+
+  // ---
+
+  Future<bool> getShowMemoryInWebview() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kShowMemoryInWebview) ?? false;
+  }
+
+  Future<bool> setShowMemoryInWebview(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kShowMemoryInWebview, value);
   }
 
   /// ----------------------------

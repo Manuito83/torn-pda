@@ -71,8 +71,8 @@ class _StatsChartState extends State<StatsChart> {
               const Text('STATS', style: TextStyle(fontSize: 8)),
               const SizedBox(width: 5),
               _statsUpdating
-                  ? SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Icon(Icons.refresh, size: 14),
+                  ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.refresh, size: 14),
             ],
           ),
           onTap: () async {
@@ -123,7 +123,7 @@ class _StatsChartState extends State<StatsChart> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Image.asset('images/icons/tornstats_logo.png', width: 24),
-                        SizedBox(width: 20),
+                        const SizedBox(width: 20),
                         Flexible(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,7 +138,7 @@ class _StatsChartState extends State<StatsChart> {
                               const SizedBox(height: 8),
                               Text(
                                 message,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.white,
                                 ),
                               ),
@@ -165,10 +165,10 @@ class _StatsChartState extends State<StatsChart> {
                                         ),
                                       ),
                                       style: TextButton.styleFrom(
-                                        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(12.0),
-                                          side: BorderSide(color: Colors.white, width: 2.0),
+                                          side: const BorderSide(color: Colors.white, width: 2.0),
                                         ),
                                       ),
                                     ),
@@ -195,7 +195,7 @@ class _StatsChartState extends State<StatsChart> {
                                                 ),
                                                 padding: const EdgeInsets.all(16),
                                                 margin: const EdgeInsets.all(8),
-                                                child: Row(
+                                                child: const Row(
                                                   crossAxisAlignment: CrossAxisAlignment.center,
                                                   children: [
                                                     Icon(Icons.copy),
@@ -204,7 +204,7 @@ class _StatsChartState extends State<StatsChart> {
                                                       child: Column(
                                                         crossAxisAlignment: CrossAxisAlignment.start,
                                                         children: [
-                                                          const Text(
+                                                          Text(
                                                             'Copied to clipboard!',
                                                             style: TextStyle(
                                                               color: Colors.white,
@@ -225,13 +225,13 @@ class _StatsChartState extends State<StatsChart> {
                                           _statsUpdating = false;
                                         });
                                       },
-                                      child: Icon(Icons.copy, color: Colors.white),
+                                      child: const Icon(Icons.copy, color: Colors.white),
                                     ),
                                   GestureDetector(
                                     onTap: () {
                                       toastification.dismiss(holder);
                                     },
-                                    child: Icon(Icons.cancel, color: Colors.white),
+                                    child: const Icon(Icons.cancel, color: Colors.white),
                                   ),
                                 ],
                               ),
@@ -330,7 +330,7 @@ class _StatsChartState extends State<StatsChart> {
           isCurved: false,
           barWidth: 2,
           color: Colors.blue,
-          dotData: FlDotData(
+          dotData: const FlDotData(
             show: false,
           ),
         ),
@@ -339,7 +339,7 @@ class _StatsChartState extends State<StatsChart> {
           isCurved: false,
           barWidth: 2,
           color: Colors.orange,
-          dotData: FlDotData(
+          dotData: const FlDotData(
             show: false,
           ),
         ),
@@ -348,7 +348,7 @@ class _StatsChartState extends State<StatsChart> {
           isCurved: false,
           barWidth: 2,
           color: Colors.red,
-          dotData: FlDotData(
+          dotData: const FlDotData(
             show: false,
           ),
         ),
@@ -357,7 +357,7 @@ class _StatsChartState extends State<StatsChart> {
           isCurved: false,
           barWidth: 2,
           color: Colors.green,
-          dotData: FlDotData(
+          dotData: const FlDotData(
             show: false,
           ),
         ),
@@ -366,7 +366,7 @@ class _StatsChartState extends State<StatsChart> {
         show: true,
         drawVerticalLine: false,
         getDrawingHorizontalLine: (value) {
-          return FlLine(
+          return const FlLine(
             strokeWidth: 0.2,
             color: Colors.grey,
           );
@@ -478,10 +478,10 @@ class _StatsChartState extends State<StatsChart> {
             },
           ),
         ),
-        topTitles: AxisTitles(
+        topTitles: const AxisTitles(
           sideTitles: SideTitles(showTitles: false),
         ),
-        rightTitles: AxisTitles(
+        rightTitles: const AxisTitles(
           sideTitles: SideTitles(showTitles: false),
         ),
       ),
@@ -501,7 +501,7 @@ class _StatsChartState extends State<StatsChart> {
           value: value,
           title: '${percent.toStringAsFixed(0)}%',
           radius: 50,
-          titleStyle: TextStyle(color: Colors.black),
+          titleStyle: const TextStyle(color: Colors.black),
         ),
       );
     });

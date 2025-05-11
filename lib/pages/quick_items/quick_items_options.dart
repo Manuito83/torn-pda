@@ -4,7 +4,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
@@ -176,7 +176,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: widget.isFaction
           ? const Text("Quick faction items", style: TextStyle(color: Colors.white))

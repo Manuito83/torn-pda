@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
 // Package imports:
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/drawer.dart';
@@ -112,7 +112,6 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
     return Scaffold(
       backgroundColor: _themeProvider!.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
       appBar: _settingsProvider!.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider!.appBarTop
           ? SizedBox(
@@ -223,7 +222,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
       leading: Row(
@@ -241,7 +240,7 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       title: const Text('Items', style: TextStyle(color: Colors.white)),

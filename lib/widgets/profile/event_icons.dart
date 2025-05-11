@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
 class EventIcons extends StatelessWidget {
@@ -68,7 +68,7 @@ class EventIcons extends StatelessWidget {
         size: 20,
       );
     } else if (message.contains('A stock dividend from') || message.contains('Stock dividends from')) {
-      insideIcon = Icon(
+      insideIcon = const Icon(
         Icons.monetization_on,
         color: Colors.green,
         size: 20,
@@ -124,7 +124,7 @@ class EventIcons extends StatelessWidget {
         message.contains('withdraw your check from the bank') ||
         message.contains('Your bank investment has ended') ||
         message.contains('You were given \$')) {
-      insideIcon = Icon(
+      insideIcon = const Icon(
         MdiIcons.cash100,
         color: Colors.green,
         size: 20,
@@ -188,7 +188,7 @@ class EventIcons extends StatelessWidget {
         size: 20,
       );
     } else if (message.contains('from your bazaar for')) {
-      insideIcon = Icon(
+      insideIcon = const Icon(
         MdiIcons.store,
         color: Colors.green,
         size: 20,
@@ -203,7 +203,7 @@ class EventIcons extends StatelessWidget {
         size: 20,
       );
     } else if (message.contains('ranked up from')) {
-      insideIcon = Icon(
+      insideIcon = const Icon(
         MdiIcons.trendingUp,
         color: Colors.green,
         size: 20,
@@ -215,7 +215,7 @@ class EventIcons extends StatelessWidget {
         size: 20,
       );
     } else if (message.contains('ranked war')) {
-      insideIcon = Icon(
+      insideIcon = const Icon(
         MdiIcons.swordCross,
         color: Colors.brown,
         size: 20,

@@ -1,7 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/models/trades/torn_exchange/torn_exchange_receipt.dart';
 import 'package:torn_pda/utils/external/torn_exchange_comm.dart';
 
@@ -149,7 +149,7 @@ class _TradeReceiptRowState extends State<TradeReceiptRow> {
           child: IconButton(
             padding: EdgeInsets.zero,
             iconSize: 23,
-            icon: Icon(
+            icon: const Icon(
               MdiIcons.webCheck,
               size: 23,
               color: ttColor,

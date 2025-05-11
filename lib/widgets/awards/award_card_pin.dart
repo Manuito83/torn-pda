@@ -3,7 +3,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/awards/awards_model.dart';
@@ -103,7 +103,7 @@ class AwardCardPinState extends State<AwardCardPin> {
                         }
                       : null,
                   child: _pinActive
-                      ? Icon(
+                      ? const Icon(
                           MdiIcons.pin,
                           color: Colors.green,
                           size: 20,

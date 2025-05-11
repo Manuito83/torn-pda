@@ -316,7 +316,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
             case "United Kingdom":
                 view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_uk);
                 break;
-            case "Cayman":
+            case "Cayman Islands":
                 view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_cayman);
                 break;
             case "South Africa":
@@ -335,6 +335,7 @@ public class HomeWidgetTornPda extends HomeWidgetProvider {
                 view.setImageViewResource(R.id.widget_status_extra_icon_main, R.drawable.flag_canada);
                 break;
             default:
+                view.setImageViewResource(R.id.widget_status_extra_icon_main, 0);
                 view.setViewVisibility(R.id.widget_status_extra_icon_main, View.GONE);
                 break;
         }

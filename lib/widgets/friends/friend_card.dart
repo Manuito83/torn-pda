@@ -7,7 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';

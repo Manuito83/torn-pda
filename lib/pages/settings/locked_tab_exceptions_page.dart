@@ -29,7 +29,7 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Locked Tabs Exceptions'),
+        title: const Text('Locked Tabs Exceptions'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -37,44 +37,44 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 "By adding URL pairs, you can allow navigation between both in a locked tab. Note: the browser will "
                 "look for matching patterns between URLs (e.g., if you just input 'item' in both, browsing between URLs "
                 "containing 'item' will be allowed). You can be as specific or as general as you prefer.",
                 style: TextStyle(fontSize: 12),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Toggle Browser"),
-                  SizedBox(width: 10),
+                  const Text("Toggle Browser"),
+                  const SizedBox(width: 10),
                   PdaBrowserIcon(color: context.read<ThemeProvider>().mainText),
                 ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               TextField(
                 controller: _urlController1,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   isDense: true,
                   border: OutlineInputBorder(),
                   labelText: 'URL 1',
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               TextField(
                 controller: _urlController2,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   isDense: true,
                   border: OutlineInputBorder(),
                   labelText: 'URL 2',
                 ),
               ),
               if (_errorMessage != null) ...[
-                SizedBox(height: 10),
-                Text(_errorMessage!, style: TextStyle(color: Colors.red)),
+                const SizedBox(height: 10),
+                Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
               ],
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -97,19 +97,19 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
                     _urlController2.clear();
                   });
                 },
-                child: Text('Add Exception'),
+                child: const Text('Add Exception'),
               ),
-              SizedBox(height: 20),
-              Divider(),
-              SizedBox(height: 10),
-              Text(
+              const SizedBox(height: 20),
+              const Divider(),
+              const SizedBox(height: 10),
+              const Text(
                 "EXCEPTIONS",
                 style: TextStyle(fontSize: 11),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               ListView.builder(
                 shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
+                physics: const NeverScrollableScrollPhysics(),
                 itemCount: widget.settingsProvider.lockedTabsNavigationExceptions.length,
                 itemBuilder: (context, index) {
                   var pair = widget.settingsProvider.lockedTabsNavigationExceptions[index];
@@ -122,25 +122,25 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('URL 1', style: TextStyle(fontWeight: FontWeight.bold)),
-                              SizedBox(height: 4),
-                              Text(pair[0], style: TextStyle(color: Colors.blueAccent, fontSize: 12)),
+                              const Text('URL 1', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(pair[0], style: const TextStyle(color: Colors.blueAccent, fontSize: 12)),
                             ],
                           ),
                         ),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('URL 2', style: TextStyle(fontWeight: FontWeight.bold)),
-                              SizedBox(height: 4),
-                              Text(pair[1], style: TextStyle(color: Colors.blueAccent, fontSize: 12)),
+                              const Text('URL 2', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(pair[1], style: const TextStyle(color: Colors.blueAccent, fontSize: 12)),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {
                             setState(() {
                               widget.settingsProvider.removeLockedTabNavigationException(index);

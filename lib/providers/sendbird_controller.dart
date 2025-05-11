@@ -22,10 +22,9 @@ class SendbirdController extends GetxController {
 
   bool webviewInForeground = false;
 
-  // Variables para almacenar la configuración actual
   bool doNotDisturbEnabled = false;
-  TimeOfDay startTime = TimeOfDay(hour: 0, minute: 0);
-  TimeOfDay endTime = TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay startTime = const TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay endTime = const TimeOfDay(hour: 0, minute: 0);
   String timeZoneName = DateTime.now().timeZoneName;
 
   bool _excludeFactionMessages = false;
@@ -56,7 +55,7 @@ class SendbirdController extends GetxController {
         toastification.show(
           closeOnClick: true,
           alignment: Alignment.bottomCenter,
-          title: Text(
+          title: const Text(
             "There was an error activating chat notifications!",
             maxLines: 2,
           ),
@@ -113,10 +112,10 @@ class SendbirdController extends GetxController {
           throw ("Invalid player ID, can't connect to Sendbird!");
         }
 
-        // Get a new session token if ours is older than  7 days
+        // Get a new session token if ours is older than 7 days
         String? sendBirdSessionToken;
         final tokenAge = await _calculateStoredSendbirdTokenAge();
-        if (tokenAge < Duration(days: 7)) {
+        if (tokenAge < const Duration(days: 7)) {
           sendBirdSessionToken = await Prefs().getSendbirdSessionToken();
           log("Using saved Sendbird session token (days: ${tokenAge.inDays})");
         } else {
@@ -326,10 +325,12 @@ class SendbirdController extends GetxController {
 
 class SendbirdChannelHandler extends BaseChannelHandler {
   @override
-  void onMessageReceived(BaseChannel channel, BaseMessage message) {
+  void onMessageReceived(BaseChannel channel, BaseMessage message) async {
+    final sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
+    if (!sendBirdNotificationsEnabled) return;
+
     SendbirdController sb = Get.find<SendbirdController>();
     if (sb.webviewInForeground) return;
-    if (!sb.sendBirdNotificationsEnabled) return;
 
     log('Message received in channel ${channel.channelUrl}: ${message.message}');
     showSendbirdNotification(message.sender?.nickname ?? "Chat", message.message, channel.channelUrl);

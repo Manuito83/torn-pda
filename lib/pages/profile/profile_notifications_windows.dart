@@ -3,7 +3,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -136,7 +136,7 @@ class ProfileNotificationsWindowsState extends State<ProfileNotificationsWindows
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Notification options", style: TextStyle(color: Colors.white)),
       leading: IconButton(
@@ -219,7 +219,7 @@ class ProfileNotificationsWindowsState extends State<ProfileNotificationsWindows
                       },
                     ),
                     GestureDetector(
-                      child: Icon(MdiIcons.alarmPanelOutline, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,
@@ -275,7 +275,7 @@ class ProfileNotificationsWindowsState extends State<ProfileNotificationsWindows
                       },
                     ),
                     GestureDetector(
-                      child: Icon(MdiIcons.alarmPanelOutline, size: 21),
+                      child: const Icon(MdiIcons.alarmPanelOutline, size: 21),
                       onTap: () {
                         showDialog<void>(
                           context: context,

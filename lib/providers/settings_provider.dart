@@ -134,6 +134,21 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _browserCenterEditingTextField = true;
+  bool get browserCenterEditingTextField => _browserCenterEditingTextField;
+  set browserCenterEditingTextField(bool value) {
+    _browserCenterEditingTextField = value;
+    Prefs().setBrowserCenterEditingTextField(_browserCenterEditingTextField);
+    notifyListeners();
+  }
+
+  bool _browserCenterEditingTextFieldRemoteConfigAllowed = true;
+  bool get browserCenterEditingTextFieldRemoteConfigAllowed => _browserCenterEditingTextFieldRemoteConfigAllowed;
+  set browserCenterEditingTextFieldRemoteConfigAllowed(bool value) {
+    _browserCenterEditingTextFieldRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   var _disableTravelSection = false;
   bool get disableTravelSection => _disableTravelSection;
   set changeDisableTravelSection(bool disable) {
@@ -532,6 +547,14 @@ class SettingsProvider extends ChangeNotifier {
   }
   */
 
+  List<String> _shareAttackOptions = [];
+  List<String> get shareOptions => _shareAttackOptions;
+  set shareOptions(List<String> value) {
+    _shareAttackOptions = value;
+    Prefs().setShareAttackOptions(_shareAttackOptions);
+    notifyListeners();
+  }
+
   // Torn Spies Central
   // -1 == never used (will be shown in the stats dialog, as a reminder to the user that they can enable it)
   //       (if the user enables/disables it in the dialog, any subsequent change must be done from Settings)
@@ -737,7 +760,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  RangeValues _travelEnergyRangeWarningThreshold = RangeValues(10, 100);
+  RangeValues _travelEnergyRangeWarningThreshold = const RangeValues(10, 100);
   RangeValues get travelEnergyRangeWarningThreshold => _travelEnergyRangeWarningThreshold;
   set travelEnergyRangeWarningThreshold(RangeValues range) {
     _travelEnergyRangeWarningThreshold = range;
@@ -1158,6 +1181,24 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _showMemoryInDrawer = false;
+  bool get showMemoryInDrawer => _showMemoryInDrawer;
+  set showMemoryInDrawer(bool value) {
+    if (_showMemoryInDrawer == value) return;
+    _showMemoryInDrawer = value;
+    Prefs().setShowMemoryInDrawer(value);
+    notifyListeners();
+  }
+
+  bool _showMemoryInWebview = false;
+  bool get showMemoryInWebview => _showMemoryInWebview;
+  set showMemoryInWebview(bool value) {
+    if (_showMemoryInWebview == value) return;
+    _showMemoryInWebview = value;
+    Prefs().setShowMemoryInWebview(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1183,6 +1224,7 @@ class SettingsProvider extends ChangeNotifier {
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
     _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();
     _browserReverseNavigationSwipe = await Prefs().getBrowserReverseNavigationSwipe();
+    _browserCenterEditingTextField = await Prefs().getBrowserCenterEditingTextField();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
 
@@ -1240,6 +1282,8 @@ class SettingsProvider extends ChangeNotifier {
     _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
+
+    _shareAttackOptions = await Prefs().getShareAttackOptions();
 
     _tscEnabledStatus = await Prefs().getTSCEnabledStatus();
     _yataStatsEnabledStatus = await Prefs().getYataStatsEnabledStatus();
@@ -1386,6 +1430,9 @@ class SettingsProvider extends ChangeNotifier {
     _showWikiInDrawer = await Prefs().getShowWikiInDrawer();
 
     await WebviewConfig().generateUserAgentForUser();
+
+    _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
+    _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
     notifyListeners();
   }

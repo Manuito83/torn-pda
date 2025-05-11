@@ -16,8 +16,8 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
   final SendbirdController sbController = Get.find<SendbirdController>();
 
   bool _enabled = false;
-  TimeOfDay _startTime = TimeOfDay(hour: 0, minute: 0);
-  TimeOfDay _endTime = TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay _startTime = const TimeOfDay(hour: 0, minute: 0);
+  TimeOfDay _endTime = const TimeOfDay(hour: 0, minute: 0);
   String _timezone = '';
   late Future<bool> _settingsFuture;
 
@@ -30,12 +30,12 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text('Do Not Disturb'),
+      title: const Text('Do Not Disturb'),
       content: FutureBuilder<bool>(
         future: _settingsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Column(
+            return const Column(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -48,8 +48,8 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
               ],
             );
           } else if (snapshot.hasError || snapshot.data == false) {
-            return Padding(
-              padding: const EdgeInsets.all(30),
+            return const Padding(
+              padding: EdgeInsets.all(30),
               child: Text(
                 "Failed to load settings from the server.\n\nPlease try again later.",
                 style: TextStyle(color: Colors.red, fontSize: 12),
@@ -61,14 +61,14 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
+                  const Text(
                     "Here you can specify the time intervals where you don't want to be notified about "
                     "chat messages.\n\nPlease note that this setting DOES NOT apply to chat messages received while the app "
                     "is in the foreground.\n",
                     style: TextStyle(fontSize: 12),
                   ),
                   SwitchListTile(
-                    title: Text('Enable'),
+                    title: const Text('Enable'),
                     value: _enabled,
                     onChanged: (bool value) {
                       setState(() {
@@ -77,19 +77,19 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
                     },
                   ),
                   ListTile(
-                    title: Text('Start time'),
+                    title: const Text('Start time'),
                     subtitle: Text(_startTime.format(context)),
                     onTap: _enabled ? () => _selectStartTime(context) : null,
                     enabled: _enabled,
                   ),
                   ListTile(
-                    title: Text('End time'),
+                    title: const Text('End time'),
                     subtitle: Text(_endTime.format(context)),
                     onTap: _enabled ? () => _selectEndTime(context) : null,
                     enabled: _enabled,
                   ),
                   ListTile(
-                    title: Text('Timezone'),
+                    title: const Text('Timezone'),
                     subtitle: Text(_timezone),
                   ),
                 ],
@@ -100,7 +100,7 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
       ),
       actions: [
         TextButton(
-          child: Text('Cancel'),
+          child: const Text('Cancel'),
           onPressed: () {
             Navigator.of(context).pop();
           },
@@ -111,7 +111,7 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
             final isEnabled =
                 snapshot.connectionState == ConnectionState.done && snapshot.hasData && snapshot.data == true;
             return ElevatedButton(
-              child: Text('Save'),
+              child: const Text('Save'),
               onPressed: isEnabled ? _saveSettings : null,
             );
           },
@@ -206,8 +206,8 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
               child: Theme(
                 data: ThemeData.from(
                   colorScheme: context.read<ThemeProvider>().currentTheme == AppTheme.light
-                      ? ColorScheme.light()
-                      : ColorScheme.dark(),
+                      ? const ColorScheme.light()
+                      : const ColorScheme.dark(),
                 ),
                 child: child!,
               ));
@@ -311,8 +311,8 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
               child: Theme(
                 data: ThemeData.from(
                   colorScheme: context.read<ThemeProvider>().currentTheme == AppTheme.light
-                      ? ColorScheme.light()
-                      : ColorScheme.dark(),
+                      ? const ColorScheme.light()
+                      : const ColorScheme.dark(),
                 ),
                 child: child!,
               ));
@@ -353,7 +353,7 @@ class SendbirdDoNotDisturbDialogState extends State<SendbirdDoNotDisturbDialog> 
       Navigator.of(context).pop();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Failed to save settings. Please try again.'),
           backgroundColor: Colors.red,
         ),

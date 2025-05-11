@@ -41,7 +41,7 @@ class _TSCInfoDialogState extends State<TSCInfoDialog> {
         child: SingleChildScrollView(
           controller: _scrollController,
           child: Padding(
-            padding: EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -86,7 +86,7 @@ class _TSCInfoDialogState extends State<TSCInfoDialog> {
                               );
                         },
                     ),
-                    EasyRichTextPattern(
+                    const EasyRichTextPattern(
                       targetString: 'IMPORTANT',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,

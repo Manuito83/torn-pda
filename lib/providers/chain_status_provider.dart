@@ -202,7 +202,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
     // Activate timers
     _tickerCallOnlyStatusColorApi?.cancel();
-    _tickerCallOnlyStatusColorApi = Timer.periodic(Duration(seconds: 20), (Timer t) {
+    _tickerCallOnlyStatusColorApi = Timer.periodic(const Duration(seconds: 20), (Timer t) {
       // Only call if main widget calls are not active
       getEnergyAndStatus();
     });
@@ -220,7 +220,7 @@ class ChainStatusProvider extends ChangeNotifier {
     // Activate timers
     _tickerCallFullChainApi?.cancel();
     _tickerDecreaseCount?.cancel();
-    _tickerCallFullChainApi = Timer.periodic(Duration(seconds: 10), (Timer t) => _getAllStatus());
+    _tickerCallFullChainApi = Timer.periodic(const Duration(seconds: 10), (Timer t) => _getAllStatus());
     _tickerDecreaseCount = Timer.periodic(
       const Duration(seconds: 1),
       (Timer t) {

@@ -1,20 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="LaunchTheme" parent="Theme.SplashScreen.IconBackground">
-        // Set the splash screen background, animated icon, and animation duration.
+    <style name="LaunchTheme"
+        parent="Theme.SplashScreen.IconBackground">
+
+        <!-- hide the native title bar -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+
+        <!-- Set the splash screen background, animated icon, and animation duration. -->
         <item name="windowSplashScreenBackground">@color/main_background</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/main_background</item>
 
-        // Use windowSplashScreenAnimatedIcon to add either a drawable or an
-        // animated drawable. One of these is required.
+        <!-- Use windowSplashScreenAnimatedIcon to add either a drawable or an
+        animated drawable. One of these is required. -->
         <item name="windowSplashScreenAnimatedIcon">@drawable/splashscreen_icon</item>
         <item name="windowSplashScreenAnimationDuration">500</item>
 
-        // Set the theme of the Activity that directly follows your splash screen.
+        <!-- Set the theme of the Activity that directly follows your splash screen. -->
         <item name="postSplashScreenTheme">@style/NormalTheme</item>
     </style>
 
-    <style name="NormalTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="NormalTheme"
+        parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="android:windowBackground">@color/main_background</item>
         <!--
         When targeting Android 15

@@ -70,7 +70,6 @@ class FriendsPageState extends State<FriendsPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -188,7 +187,7 @@ class FriendsPageState extends State<FriendsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: _appBarText,
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
@@ -207,7 +206,7 @@ class FriendsPageState extends State<FriendsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[

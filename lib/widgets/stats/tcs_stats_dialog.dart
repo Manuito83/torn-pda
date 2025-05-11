@@ -53,10 +53,10 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const Row(
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 20),
+                  padding: EdgeInsets.only(bottom: 20),
                   child: Text(
                     "TORN SPIES CENTRAL",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -81,7 +81,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                           children: [
                             Text(
                               tsc.message,
-                              style: TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
+                              style: const TextStyle(color: Colors.red, fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                             if (tsc.code == 3)
                               Padding(
@@ -210,9 +210,9 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                                     tscDetailsFetched = _fetchDetails();
                                   });
                                 },
-                                child: Text(" Enable "),
+                                child: const Text(" Enable "),
                               ),
-                              SizedBox(width: 30),
+                              const SizedBox(width: 30),
                               TextButton(
                                 style: TextButton.styleFrom(
                                   shape: RoundedRectangleBorder(
@@ -228,7 +228,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                                   tscPreEnabled = false;
                                   widget.callBackToDisableTSCtab();
                                 },
-                                child: Text(" Disable "),
+                                child: const Text(" Disable "),
                               ),
                             ],
                           ),
@@ -236,16 +236,16 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                       ],
                     );
                   }
-                  return Text("Error fetching from TSC");
+                  return const Text("Error fetching from TSC");
                 }
-                return Padding(
-                  padding: const EdgeInsets.only(top: 100),
+                return const Padding(
+                  padding: EdgeInsets.only(top: 100),
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     children: [
                       Text("Fetching from TSC"),
                       Padding(
-                        padding: const EdgeInsets.only(top: 20),
+                        padding: EdgeInsets.only(top: 20),
                         child: Center(child: CircularProgressIndicator()),
                       ),
                     ],
@@ -336,7 +336,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Text(
                   "SPIED STAT RANGE",
                   style: TextStyle(fontWeight: FontWeight.bold, color: Colors.pink[700], fontSize: 16),
@@ -345,7 +345,7 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                   padding: const EdgeInsets.only(left: 20, top: 10),
                   child: Text(
                     "$minString - $maxString",
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
                     ),
@@ -356,13 +356,13 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                     padding: const EdgeInsets.only(left: 20, top: 10),
                     child: Row(
                       children: [
-                        Text(
+                        const Text(
                           "Battle Score: ",
                           style: TextStyle(fontSize: 15),
                         ),
                         Text(
                           bsString,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
@@ -375,13 +375,13 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                     padding: const EdgeInsets.only(left: 20, top: 10),
                     child: Row(
                       children: [
-                        Text(
+                        const Text(
                           "Fair Fight: ",
                           style: TextStyle(fontSize: 15),
                         ),
                         Text(
                           ff,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
@@ -393,13 +393,13 @@ class _TSCStatsDialogState extends State<TSCStatsDialog> {
                   padding: const EdgeInsets.only(left: 20, top: 10),
                   child: Row(
                     children: [
-                      Text(
+                      const Text(
                         "Date spied: ",
                         style: TextStyle(fontSize: 15),
                       ),
                       Text(
                         dateString,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 15,
                         ),

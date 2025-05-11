@@ -6,7 +6,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/drawer.dart';
@@ -68,7 +68,6 @@ class StakeoutsPageState extends State<StakeoutsPage> {
         return Scaffold(
           backgroundColor: _themeProvider.canvas,
           drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-          endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar(_) : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -159,7 +158,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                           textAlign: TextAlign.center,
                         ),
                         IconButton(
-                          icon: Icon(
+                          icon: const Icon(
                             MdiIcons.cameraPlusOutline,
                             size: 30,
                           ),
@@ -184,7 +183,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
 
   AppBar buildAppBar(BuildContext _) {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Stakeouts", style: TextStyle(color: Colors.white)),
@@ -204,12 +203,12 @@ class StakeoutsPageState extends State<StakeoutsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
         IconButton(
-          icon: Icon(MdiIcons.cameraPlusOutline),
+          icon: const Icon(MdiIcons.cameraPlusOutline),
           color: _s.stakeouts.length >= 15 ? Colors.grey : Colors.white,
           onPressed: () {
             if (_s.stakeouts.length >= 15) {
@@ -383,7 +382,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                     ),
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   left: 16,
                   right: 16,
                   child: CircleAvatar(

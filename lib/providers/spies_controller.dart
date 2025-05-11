@@ -98,6 +98,8 @@ class SpiesController extends GetxController {
   }
 
   Future _restoreSpies() async {
+    _allowMixedSpiesSources = await Prefs().getAllowMixedSpiesSources();
+
     String source = await Prefs().getSpiesSource();
     source == "yata" ? spiesSource = SpiesSource.yata : spiesSource = SpiesSource.tornStats;
 

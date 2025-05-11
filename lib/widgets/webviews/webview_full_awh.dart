@@ -191,7 +191,7 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
           icon: const Icon(Icons.close),
           onPressed: () async {
             // Try to avoid errors when closing on iOS
-            await Future.delayed(Duration(milliseconds: 100));
+            await Future.delayed(const Duration(milliseconds: 100));
             if (!mounted) return;
             Navigator.pop(context);
           },

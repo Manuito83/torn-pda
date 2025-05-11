@@ -8,7 +8,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
@@ -328,7 +328,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         }
 
         if (_isOwnPlayer) {
-          _playerOrFactionWidget = Row(
+          _playerOrFactionWidget = const Row(
             children: [
               Icon(
                 MdiIcons.heart,
@@ -490,7 +490,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               padding: const EdgeInsets.fromLTRB(15, 4, 15, 4),
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     MdiIcons.cash100,
                     color: Colors.green,
                     size: 17,

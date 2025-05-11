@@ -259,7 +259,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // TARGET
-            if (Platform.isWindows) SizedBox(height: 6),
+            if (Platform.isWindows) const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -281,7 +281,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // STAKEOUT
-            if (Platform.isWindows) SizedBox(height: 6),
+            if (Platform.isWindows) const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -303,7 +303,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // PANIC
-            if (Platform.isWindows) SizedBox(height: 6),
+            if (Platform.isWindows) const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -325,7 +325,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
               ],
             ),
             // FACTION
-            if (Platform.isWindows) SizedBox(height: 6),
+            if (Platform.isWindows) const SizedBox(height: 6),
             if (widget.factionId != null && widget.factionId != 0)
               GetBuilder<WarController>(
                 builder: (w) {

@@ -488,8 +488,8 @@ class _ExpandableFabState extends State<ExpandableFab>
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 1),
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(7),
+              child: const Padding(
+                padding: EdgeInsets.all(7),
                 child: Icon(
                   Icons.close,
                   color: Colors.white,
@@ -515,13 +515,13 @@ class _ExpandableFabState extends State<ExpandableFab>
 
     if (_webviewProvider.fabDirection == "center") {
       startAngle = 270 - (fanAngle / 2); // Positioned upwards
-      shiftOffset = Offset(0, 20);
+      shiftOffset = const Offset(0, 20);
     } else if (_webviewProvider.fabDirection == "right") {
       startAngle = 0 - (fanAngle / 2); // Positioned to the right
-      shiftOffset = Offset(-30, 0);
+      shiftOffset = const Offset(-30, 0);
     } else {
       startAngle = 180 - (fanAngle / 2); // Positioned to the left
-      shiftOffset = Offset(30, 0);
+      shiftOffset = const Offset(30, 0);
     }
 
     final step = fanAngle / (count - 1);

@@ -89,7 +89,7 @@ class StatusColorCounterState extends State<StatusColorCounter> {
                     child: Text(
                       showNew ? newText : _formattedUntil ?? "",
                       softWrap: false,
-                      style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
                     ),
                   ),
                 ),
@@ -99,7 +99,7 @@ class StatusColorCounterState extends State<StatusColorCounter> {
   }
 
   void _startTimer() {
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       // Make sure that we are updating from the provider whenever the browser is open
       String currentSource = context.read<ChainStatusProvider>().statusUpdateSource;
       bool browserOnTop = context.read<WebViewProvider>().browserShowInForeground;

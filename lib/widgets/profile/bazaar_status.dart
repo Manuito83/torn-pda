@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/utils/travel/profit_formatter.dart';
 import 'package:torn_pda/widgets/profile/bazaar_dialog.dart';
@@ -53,7 +53,7 @@ class BazaarStatusCard extends StatelessWidget {
           Text(" ($bazaarPendingString)"),
           const SizedBox(width: 8),
           GestureDetector(
-            child: Icon(
+            child: const Icon(
               MdiIcons.storefrontOutline,
               size: 20,
             ),

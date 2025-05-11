@@ -12,7 +12,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
@@ -21,6 +21,7 @@ import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -328,8 +329,8 @@ class WarCardState extends State<WarCard> {
                               contentPadding: const EdgeInsets.all(10),
                             );
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 10),
+                          child: const Padding(
+                            padding: EdgeInsets.only(right: 10),
                             child: Image(
                               image: AssetImage('images/icons/status/icon13.png'),
                               width: 18,
@@ -337,6 +338,21 @@ class WarCardState extends State<WarCard> {
                             ),
                           ),
                         ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                        child: GestureDetector(
+                          onTap: () {
+                            showDialog(
+                              context: context,
+                              builder: (_) => ShareAttackDialog(member: _member),
+                            );
+                          },
+                          child: const Icon(
+                            Icons.share,
+                            size: 18,
+                          ),
+                        ),
+                      ),
                       Padding(
                         padding: const EdgeInsets.only(right: 2),
                         child: Text(
@@ -682,7 +698,7 @@ class WarCardState extends State<WarCard> {
           ),
           // If stats are not available, show a refresh button to get the user profile and be able to perform the
           // stats comparison and then give option to open the stats dialog
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           GestureDetector(
             onTap: () {
               _updateThisMember();
@@ -1183,7 +1199,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       } else {
         _redStatusTicker?.cancel();
         lifeText = "OUT";
-        hospitalJailWarning = Icon(
+        hospitalJailWarning = const Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,
@@ -1249,7 +1265,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
       }
     }
 
-    Widget statusUntilNotification = SizedBox.shrink();
+    Widget statusUntilNotification = const SizedBox.shrink();
     if (_member.status?.until != null && (_member.status?.until != 0 || true)) {
       final int currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
       final int untilSeconds = _member.status!.until! - currentTime;

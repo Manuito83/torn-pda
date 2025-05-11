@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -196,7 +196,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsP!.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: Platform.isWindows
@@ -224,12 +224,12 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: [
         GestureDetector(
-          child: Icon(
+          child: const Icon(
             MdiIcons.openInApp,
           ),
           onTap: () {

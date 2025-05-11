@@ -279,7 +279,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Import & Export", style: TextStyle(color: Colors.white)),
     );

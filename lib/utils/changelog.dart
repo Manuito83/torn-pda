@@ -51,6 +51,44 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.8.0 - Build 531 - 09/05/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.8.0'
+        ..date = '12 MAY 2025'
+        ..features = [
+          "Main settings section is now searchable",
+          "All Torn PDA settings can now be exported and imported locally",
+          ComplexFeature(
+            "Added share attack information functionality for war targets",
+            explanation: "You can now share (copy or send to your faction chat) the attack information "
+                "of any of your war targets.\n\n"
+                "This includes the target's name, stats (estimated but also spied and TSC when available), "
+                "together with the attack URL\n\n"
+                "Look for the share icon in the target's card, bottom right corner",
+          ),
+          "Browser should now center fields correctly when the keyboard is shown",
+          ComplexFeature(
+            "Added memory usage widget to main drawer menu and browser appbar",
+            explanation: "Enable it in Settings, under the Troubleshooting section.\n\n"
+                "This widget is intended to help you understand how different configurations (e.g.: "
+                "browser tabs, scripts, etc.) affect Torn PDA's memory usage.\n\n"
+                "Be aware that memory usage information might not be accurate in some devices.",
+          ),
+          ComplexFeature(
+            "Added API error log for troubleshooting",
+            explanation: "Torn PDA will record the latest 30 API errors for each session.\n\n"
+                "This is useful for troubleshooting issues with the API, normally upon request "
+                "from Torn PDA developers.\n\n"
+                "It can be found in Settings, under the Troubleshooting section.",
+          ),
+          "Split discreet notifications toggle into local (Settings section) and Alerts",
+          "Improved app memory handling",
+          "Fixed Torn Exchange profit calculation",
+          "Fixed quick items response text in faction armory",
+        ],
+    );
+
     // v3.7.4 - Build 511 - 012/04/2025
     itemList.add(
       ChangeLogItem()
@@ -2373,7 +2411,7 @@ class ChangeLogState extends State<ChangeLog> {
     return Padding(
       padding: const EdgeInsets.only(left: 5),
       child: GestureDetector(
-        child: Icon(Icons.info_outline),
+        child: const Icon(Icons.info_outline),
         onTap: () {
           toastification.show(
             closeOnClick: true,
@@ -2386,12 +2424,12 @@ class ChangeLogState extends State<ChangeLog> {
               ),
             ),
             autoCloseDuration: feat.secondsToShow == null ? null : Duration(seconds: feat.secondsToShow!),
-            animationDuration: Duration(milliseconds: 200),
+            animationDuration: const Duration(milliseconds: 200),
             showProgressBar: false,
             style: ToastificationStyle.flat,
             closeButtonShowType:
                 feat.closeButton || feat.secondsToShow == null ? CloseButtonShowType.always : CloseButtonShowType.none,
-            icon: Icon(Icons.info_outline),
+            icon: const Icon(Icons.info_outline),
             borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
           );
         },

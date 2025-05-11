@@ -4,8 +4,8 @@ import 'dart:async';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/retal_model.dart';
@@ -85,7 +85,6 @@ class RetalsPageState extends State<RetalsPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar(context) : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -189,7 +188,7 @@ class RetalsPageState extends State<RetalsPage> {
 
   AppBar buildAppBar(BuildContext _) {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: const Text("Retaliation", style: TextStyle(color: Colors.white)),
@@ -209,7 +208,7 @@ class RetalsPageState extends State<RetalsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -308,7 +307,7 @@ class RetalsPageState extends State<RetalsPage> {
                           children: [
                             Row(
                               children: [
-                                Text("Manage Spies"),
+                                const Text("Manage Spies"),
                                 const SizedBox(width: 8),
                                 SizedBox(
                                   height: 25,
@@ -369,7 +368,7 @@ class RetalsPageState extends State<RetalsPage> {
         thumbVisibility: true,
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: Padding(
+          child: const Padding(
             padding: EdgeInsets.only(right: 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

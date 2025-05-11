@@ -15,7 +15,7 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text("Important! External browser and default Torn links"),
+      title: const Text("Important! External browser and default Torn links"),
       content: Container(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -43,11 +43,11 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
                       await AppSettings.openAppSettings();
                     },
                 ),
-                EasyRichTextPattern(
+                const EasyRichTextPattern(
                   targetString: 'open supported links',
                   style: TextStyle(fontStyle: FontStyle.italic),
                 ),
-                EasyRichTextPattern(
+                const EasyRichTextPattern(
                   targetString: 'open by default',
                   style: TextStyle(fontStyle: FontStyle.italic),
                 ),
@@ -58,7 +58,7 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
       ),
       actions: [
         TextButton(
-          child: Text(
+          child: const Text(
             "Open app\nsettings",
             textAlign: TextAlign.center,
           ),
@@ -68,7 +68,7 @@ class AppLinksBrowserDialogState extends State<AppLinksBrowserDialog> {
           },
         ),
         TextButton(
-          child: Text("Disregard"),
+          child: const Text("Disregard"),
           onPressed: () async {
             Navigator.of(context).pop();
           },

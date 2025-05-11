@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
@@ -126,7 +126,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
                           ),
-                          child: Row(
+                          child: const Row(
                             children: [
                               Icon(MdiIcons.fencing, size: 20),
                               SizedBox(width: 5),
@@ -318,11 +318,16 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                         ),
                         onPressed: () {
                           Navigator.of(context).pop();
-                          widget.inAppWebview!.loadUrl(
-                            urlRequest: URLRequest(
-                              url: WebUri("https://www.torn.com"),
-                            ),
-                          );
+                          if (widget.inAppWebview != null) {
+                            widget.inAppWebview!.loadUrl(
+                              urlRequest: URLRequest(
+                                url: WebUri("https://www.torn.com"),
+                              ),
+                            );
+                          }
+                          if (widget.stockWebView != null) {
+                            widget.stockWebView!.loadRequest(Uri.parse("https://www.torn.com"));
+                          }
                         },
                       ),
                     ),
@@ -498,7 +503,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.minus),
+                                    child: const Icon(MdiIcons.minus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         final InAppWebViewSettings newOptions =
@@ -520,7 +525,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.refresh),
+                                    child: const Icon(MdiIcons.refresh),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         final InAppWebViewSettings newOptions =
@@ -536,7 +541,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                 Padding(
                                   padding: const EdgeInsets.only(top: 5),
                                   child: ElevatedButton(
-                                    child: Icon(MdiIcons.plus),
+                                    child: const Icon(MdiIcons.plus),
                                     onPressed: () async {
                                       if (Platform.isAndroid) {
                                         final InAppWebViewSettings newSettings =
@@ -654,7 +659,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
           ),
         );
       } else {
-        widget.stockWebView!.loadRequest(Uri.parse(_customURLController.text));
+        widget.stockWebView!.loadRequest(Uri.parse(url));
       }
 
       _customURLController.text = "";

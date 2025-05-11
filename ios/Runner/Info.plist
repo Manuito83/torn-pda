@@ -1,169 +1,219 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>FlutterDeepLinkingEnabled</key>
-	<false/>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>Torn PDA</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(MARKETING_VERSION)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>tornpda.com</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>tornpda</string>
-			</array>
-		</dict>
-	</array>
-	<key>CFBundleVersion</key>
-	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>torn.com</key>
+		<key>FlutterDeepLinkingEnabled</key>
+		<false />
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true />
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>Torn PDA</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(MARKETING_VERSION)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleURLTypes</key>
+		<array>
 			<dict>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSTemporaryExceptionMinimumTLSVersion</key>
-				<string>TLSv1.1</string>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>tornpda.com</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>tornpda</string>
+				</array>
+			</dict>
+		</array>
+		<key>CFBundleVersion</key>
+		<string>$(CURRENT_PROJECT_VERSION)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true />
+		<key>LSSupportsOpeningDocumentsInPlace</key>
+		<true />
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSExceptionDomains</key>
+			<dict>
+				<key>torn.com</key>
+				<dict>
+					<key>NSIncludesSubdomains</key>
+					<true />
+					<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+					<true />
+					<key>NSTemporaryExceptionMinimumTLSVersion</key>
+					<string>TLSv1.1</string>
+				</dict>
 			</dict>
 		</dict>
+
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>Allows Torn PDA to save images to your library (only write permission)</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Allows Torn PDA to access your photo library for importing images</string>
+
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true />
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
+		<key>UIFileSharingEnabled</key>
+		<true />
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UISupportedInterfaceOrientations~ipad</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>UIViewControllerBasedStatusBarAppearance</key>
+		<false />
+		<key>io.flutter.embedded_views_preview</key>
+		<true />
+		<key>CFBundleIcons</key>
+		<dict>
+			<!-- Default app icon -->
+			<key>CFBundlePrimaryIcon</key>
+			<dict>
+				<key>CFBundleIconFiles</key>
+				<array>
+					<string>AppIcon</string>
+				</array>
+				<key>UIPrerenderedIcon</key>
+				<false />
+			</dict>
+			<key>CFBundleAlternateIcons</key>
+			<dict>
+				<!-- Alternate icon for Halloween -->
+				<key>AppIconHalloween</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIconHalloween</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false />
+				</dict>
+				<!-- Alternate icon for Halloween -->
+				<key>AppIconChristmas</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIconChristmas</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false />
+				</dict>
+				<!-- Alternate icon for Awareness Week -->
+				<key>AppIconAwareness</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIconAwareness</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false />
+				</dict>
+				<!-- Alternate icon for St Valentine -->
+				<key>AppIconStValentine</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIconStValentine</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false />
+				</dict>
+				<!-- Alternate icon for St Valentine -->
+				<key>AppIconStPatrick</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIconStPatrick</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false />
+				</dict>
+				<!-- Alternate icon for St Valentine -->
+				<key>AppIconEaster</key>
+				<dict>
+					<key>CFBundleIconFiles</key>
+					<array>
+						<string>AppIconEaster</string>
+					</array>
+					<key>UIPrerenderedIcon</key>
+					<false />
+				</dict>
+			</dict>
+		</dict>
+
+		<!-- Register PDA backup files as a document type  -->
+		<key>CFBundleDocumentTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>PDA Backup File</string>
+
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>com.manuito.tornpda.pda</string>
+				</array>
+
+				<key>LSHandlerRank</key>
+				<string>Owner</string>
+
+				<key>CFBundleTypeRole</key>
+				<string>Viewer</string>
+			</dict>
+		</array>
+
+		<!-- Custom UTI and map to .pda extension -->
+		<key>UTExportedTypeDeclarations</key>
+		<array>
+			<dict>
+				<key>UTTypeIdentifier</key>
+				<string>com.manuito.tornpda.pda</string>
+
+				<key>UTTypeDescription</key>
+				<string>PDA Backup File</string>
+
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.data</string>
+				</array>
+
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<string>pda</string>
+					<key>public.mime-type</key>
+					<string>application/octet-stream</string>
+				</dict>
+			</dict>
+		</array>
+
 	</dict>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Allows Torn PDA to save images to your library (only write permission)</string>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>remote-notification</string>
-	</array>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
-	<key>io.flutter.embedded_views_preview</key>
-	<true/>
-	<key>CFBundleIcons</key>
-    <dict>
-        <!-- Default app icon -->
-        <key>CFBundlePrimaryIcon</key>
-        <dict>
-            <key>CFBundleIconFiles</key>
-            <array>
-                <string>AppIcon</string>
-            </array>
-            <key>UIPrerenderedIcon</key>
-            <false/>
-        </dict>
-        <key>CFBundleAlternateIcons</key>
-        <dict>
-            <!-- Alternate icon for Halloween -->
-            <key>AppIconHalloween</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>AppIconHalloween</string> 
-                </array>
-                <key>UIPrerenderedIcon</key>
-                <false/>
-            </dict>
-            <!-- Alternate icon for Halloween -->
-            <key>AppIconChristmas</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>AppIconChristmas</string>
-                </array>
-                <key>UIPrerenderedIcon</key>
-                <false/>
-            </dict>
-			<!-- Alternate icon for Awareness Week -->
-            <key>AppIconAwareness</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>AppIconAwareness</string>
-                </array>
-                <key>UIPrerenderedIcon</key>
-                <false/>
-            </dict>
-			<!-- Alternate icon for St Valentine -->
-            <key>AppIconStValentine</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>AppIconStValentine</string>
-                </array>
-                <key>UIPrerenderedIcon</key>
-                <false/>
-            </dict>
-			<!-- Alternate icon for St Valentine -->
-            <key>AppIconStPatrick</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>AppIconStPatrick</string>
-                </array>
-                <key>UIPrerenderedIcon</key>
-                <false/>
-            </dict>
-			<!-- Alternate icon for St Valentine -->
-            <key>AppIconEaster</key>
-            <dict>
-                <key>CFBundleIconFiles</key>
-                <array>
-                    <string>AppIconEaster</string>
-                </array>
-                <key>UIPrerenderedIcon</key>
-                <false/>
-            </dict>
-        </dict>
-    </dict>
-</dict>
 </plist>

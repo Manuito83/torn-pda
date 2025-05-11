@@ -41,7 +41,7 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
+            const Padding(
               padding: EdgeInsets.only(bottom: 30),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -66,35 +66,35 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
                         if (_serverError.isNotEmpty)
                           Column(
                             children: [
-                              Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
-                              Text(_serverError, style: TextStyle(color: Colors.red)),
+                              const Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
+                              Text(_serverError, style: const TextStyle(color: Colors.red)),
                             ],
                           )
                         else if (_serverPrefs.isNotEmpty)
-                          Text("This will delete your online backup, are you sure?")
+                          const Text("This will delete your online backup, are you sure?")
                         else
-                          Text("You don't have a backup to delete!"),
+                          const Text("You don't have a backup to delete!"),
                       ],
                     ),
                   );
                 }
 
-                return Flexible(
+                return const Flexible(
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const SizedBox(height: 40),
-                        const Text("Fetching server info..."),
-                        const SizedBox(height: 25),
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 40),
+                        SizedBox(height: 40),
+                        Text("Fetching server info..."),
+                        SizedBox(height: 25),
+                        CircularProgressIndicator(),
+                        SizedBox(height: 40),
                       ],
                     ),
                   ),
                 );
               },
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -152,7 +152,7 @@ class BackupDeleteDialogState extends State<BackupDeleteDialog> {
                     Navigator.of(context).pop();
                   },
                 ),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
               ],
             ),
           ],

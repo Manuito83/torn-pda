@@ -39,25 +39,25 @@ void pdaWidget_backgroundUpdate() {
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_3',
         'wm_backgroundUpdate_3',
-        initialDelay: Duration(minutes: 3),
+        initialDelay: const Duration(minutes: 3),
       );
 
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_6',
         'wm_backgroundUpdate_6',
-        initialDelay: Duration(minutes: 6),
+        initialDelay: const Duration(minutes: 6),
       );
 
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_9',
         'wm_backgroundUpdate_9',
-        initialDelay: Duration(minutes: 9),
+        initialDelay: const Duration(minutes: 9),
       );
 
       await Workmanager().registerOneOffTask(
         'pdaWidget_background_12',
         'wm_backgroundUpdate_12',
-        initialDelay: Duration(minutes: 12),
+        initialDelay: const Duration(minutes: 12),
       );
     } else if (taskName.contains("wm_backgroundUpdate_")) {
       // If it is a one-off task, only update
@@ -99,7 +99,7 @@ Future<void> pdaWidget_fetchData() async {
         if (user.errorId == 100) {
           // Retry in case of timeout
           log("Widget timed out, retrying once after 5 seconds");
-          await Future.delayed(Duration(seconds: 5));
+          await Future.delayed(const Duration(seconds: 5));
         }
       }
 

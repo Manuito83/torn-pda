@@ -3,7 +3,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 
 // Project imports:
@@ -90,7 +90,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                                             text: "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
                                                 "${r.failed} script${r.failed == 1 ? "" : "s"} failed.\n"
                                                 "${r.removed} script${r.removed == 1 ? "" : "s"} removed.",
-                                            textStyle: TextStyle(
+                                            textStyle: const TextStyle(
                                               color: Colors.white,
                                             ),
                                           ))
@@ -121,7 +121,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                 child: CircleAvatar(
                   backgroundColor: _themeProvider.secondBackground,
                   radius: 22,
-                  child: SizedBox(
+                  child: const SizedBox(
                     height: 34,
                     width: 34,
                     child: Icon(MdiIcons.backupRestore),

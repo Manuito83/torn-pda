@@ -10,7 +10,11 @@ import 'package:torn_pda/models/chaining/tsc/tsc_response_model.dart';
 import 'package:torn_pda/utils/env/env.dart';
 
 class TSCComm {
-  static Future<TscResponse> checkIfUserExists({required String targetId, required String ownApiKey}) async {
+  static Future<TscResponse> checkIfUserExists({
+    required String targetId,
+    required String ownApiKey,
+    int timeout = 20,
+  }) async {
     late TscResponse tscModel;
     http.Response? response;
 
@@ -33,7 +37,7 @@ class TSCComm {
             headers: headers,
             body: body,
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(Duration(seconds: timeout));
 
       if (response.statusCode == 200) {
         tscModel = tscResponseFromJson(response.body);

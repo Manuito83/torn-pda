@@ -20,7 +20,7 @@ import 'package:app_badge_plus/app_badge_plus.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:quick_actions/quick_actions.dart';
@@ -67,13 +67,16 @@ import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/settings/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
+import 'package:torn_pda/widgets/drawer/memory_widget_drawer.dart';
 import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
+import 'package:uri_to_file/uri_to_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 bool routeWithDrawer = true;
@@ -156,7 +159,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   int notId = 900;
 
   // Platform channel with MainActivity.java
-  MethodChannel? platformAndroid = Platform.isAndroid ? MethodChannel('tornpda.channel') : null;
+  MethodChannel? platformAndroid = Platform.isAndroid ? const MethodChannel('tornpda.channel') : null;
 
   // Intent receiver subscription
   StreamSubscription? _intentListenerSub;
@@ -322,10 +325,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Remote Config settings
     if (!Platform.isWindows) {
-      remoteConfig.setConfigSettings(RemoteConfigSettings(
-        fetchTimeout: const Duration(minutes: 1),
-        minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
-      ));
+      remoteConfig.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(minutes: 30),
+          minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
+        ),
+      );
 
       // Remote Config defaults
       remoteConfig.setDefaults(const {
@@ -335,6 +340,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "tornexchange_enabled": true,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
+        "browser_center_editing_text_field_allowed": true,
         // Revives
         "revive_hela": "1 million or 1 Xanax",
         "revive_revive": "1 million or 1 Xanax",
@@ -352,6 +358,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
         _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
         _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+        _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
+            remoteConfig.getBool("browser_center_editing_text_field_allowed");
         // Revives
         _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
         _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
@@ -372,6 +380,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
           _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
           _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+          _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
+              remoteConfig.getBool("browser_center_editing_text_field_allowed");
           // Revives
           _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
           _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
@@ -389,10 +399,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _preferencesCompleter.future.whenComplete(() async {
       // Sendbird notifications
       final sbController = Get.find<SendbirdController>();
-      if (sbController.sendBirdNotificationsEnabled) {
-        // After app install, this will trigger an invalid playerId until the user loads the API
-        await sbController.register();
-      }
+      // After app install, this will trigger an invalid playerId until the user loads the API
+      await sbController.register();
     });
 
     // Should bring browser forward?
@@ -631,6 +639,33 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _deepLinkHandle(String? link, {bool error = false}) async {
+    if (((link ?? "").contains("file://") || (link ?? "").contains("content://"))) {
+      try {
+        final uri = Uri.parse(link!);
+        if (Platform.isIOS) {
+          final bytes = await File(uri.toFilePath()).readAsBytes();
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => PreferencesImportDialog(bytes: bytes),
+          );
+          return;
+        } else if (Platform.isAndroid) {
+          final file = await toFile(uri.toString());
+          final bytes = await file.readAsBytes();
+
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => PreferencesImportDialog(bytes: bytes),
+          );
+          return;
+        }
+      } catch (e) {
+        log("Error reading file: $e");
+      }
+    }
+
     try {
       bool showError = false;
       String? url = link;
@@ -1006,6 +1041,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             }
 
             if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+              message["body"] = message["body"].replaceAll("(tap to get a comparison with you)", "");
               int? begin = message["body"].indexOf("\n- Xanax");
               int? last = message["body"].length;
               message["body"] = message["body"].replaceRange(begin, last, "");
@@ -1354,6 +1390,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               }
 
               if (xanaxString.isNotEmpty && refillsString.isNotEmpty && drinksString.isNotEmpty) {
+                assistBody[1] = assistBody[1].replaceAll("(tap to get a comparison with you)", "");
                 final int begin = assistBody[1].indexOf("\n- Xanax");
                 final int last = assistBody[1].length;
                 assistBody[1] = assistBody[1].replaceRange(begin, last, "");
@@ -1545,8 +1582,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Widget _getDrawerHeader() {
+    final showMemory = context.watch<SettingsProvider>().showMemoryInDrawer;
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+    final baseHeight = isPortrait ? 280.0 : 250.0;
     return SizedBox(
-      height: MediaQuery.orientationOf(context) == Orientation.portrait ? 280 : 250,
+      height: baseHeight + (showMemory ? 80.0 : 0.0),
       child: DrawerHeader(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -1616,6 +1656,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                 }
               },
             ),
+            showMemory
+                ? const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: MemoryBarWidgetDrawer(),
+                  )
+                : const SizedBox.shrink(),
             const Flexible(
               child: Image(
                 image: AssetImage('images/icons/torn_pda.png'),
@@ -1808,7 +1854,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           if (settingsProvider.showWikiInDrawer) {
             drawerOptions.add(WikiMenu(themeProvider: _themeProvider!));
           } else {
-            drawerOptions.add(SizedBox.shrink());
+            drawerOptions.add(const SizedBox.shrink());
           }
 
           continue;
@@ -1907,21 +1953,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       case 1:
         return const Icon(Icons.local_airport);
       case 2:
-        return Icon(MdiIcons.linkVariant);
+        return const Icon(MdiIcons.linkVariant);
       case 3:
-        return Icon(MdiIcons.knifeMilitary);
+        return const Icon(MdiIcons.knifeMilitary);
       case 4:
         return const Icon(Icons.people);
       case 5:
-        return Icon(MdiIcons.cctv);
+        return const Icon(MdiIcons.cctv);
       case 6:
-        return Icon(MdiIcons.trophy);
+        return const Icon(MdiIcons.trophy);
       case 7:
-        return Icon(MdiIcons.packageVariantClosed);
+        return const Icon(MdiIcons.packageVariantClosed);
       case 8:
         return const Icon(MaterialCommunityIcons.sword_cross);
       case 9:
-        return Icon(MdiIcons.bankTransfer);
+        return const Icon(MdiIcons.bankTransfer);
       // Case 10 is Wiki, which is a widget with its own icon
       case 11:
         return const Icon(Icons.notifications_active);
@@ -2179,7 +2225,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AppwidgetExplanationDialog();
+        return const AppwidgetExplanationDialog();
       },
     );
   }
@@ -2230,7 +2276,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           context: context,
           barrierDismissible: false,
           builder: (context) {
-            return BugsAnnouncementDialog();
+            return const BugsAnnouncementDialog();
           },
         );
 
@@ -2382,7 +2428,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(MdiIcons.chartLine, color: Colors.green),

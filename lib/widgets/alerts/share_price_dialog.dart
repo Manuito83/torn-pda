@@ -3,7 +3,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stockmarket/stockmarket_model.dart';
 // Project imports:
@@ -232,7 +232,7 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: _inputCashGain ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
+                          icon: _inputCashGain ? const Icon(MdiIcons.percent) : const Icon(MdiIcons.cash),
                           onPressed: () {
                             setState(() {
                               _inputCashGain = !_inputCashGain;
@@ -388,7 +388,7 @@ class SharePriceDialogState extends State<SharePriceDialog> {
                           ),
                         ),
                         IconButton(
-                          icon: _inputCashLoss ? Icon(MdiIcons.percent) : Icon(MdiIcons.cash),
+                          icon: _inputCashLoss ? const Icon(MdiIcons.percent) : const Icon(MdiIcons.cash),
                           onPressed: () {
                             setState(() {
                               _inputCashLoss = !_inputCashLoss;

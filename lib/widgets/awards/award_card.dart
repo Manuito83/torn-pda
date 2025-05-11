@@ -3,7 +3,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/awards/awards_model.dart';
@@ -55,7 +55,7 @@ class AwardCardState extends State<AwardCard> {
                   color: Colors.white,
                   backgroundColor: Colors.black.withOpacity(0.2),
                   shadows: [
-                    Shadow(
+                    const Shadow(
                       offset: Offset(2.0, 2.0),
                       blurRadius: 2.0,
                       color: Colors.black,
@@ -177,12 +177,12 @@ class AwardCardState extends State<AwardCard> {
                       : null,
                   child: _pinActive
                       ? _pinProvider.pinnedNames.contains(award.name)
-                          ? Icon(
+                          ? const Icon(
                               MdiIcons.pin,
                               color: Colors.green,
                               size: 20,
                             )
-                          : Icon(
+                          : const Icon(
                               MdiIcons.pinOutline,
                               size: 20,
                             )

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -130,7 +130,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                               maxFontSize: 11,
                                               minFontSize: 8,
                                               textAlign: TextAlign.center,
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 height: 0.9,
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -191,7 +191,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                   color: (_themeProvider.currentTheme == AppTheme.extraDark ||
                                           _themeProvider.currentTheme == AppTheme.dark)
                                       ? Colors.lime[100]
-                                      : Color.fromARGB(255, 107, 97, 2),
+                                      : const Color.fromARGB(255, 107, 97, 2),
                                   size: 9,
                                 ),
                               ),
@@ -239,7 +239,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
-                                title: Column(
+                                title: const Column(
                                   children: [
                                     Icon(
                                       Icons.lock,
@@ -249,8 +249,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                     Text("Positional Lock"),
                                   ],
                                 ),
-                                autoCloseDuration: Duration(milliseconds: 1500),
-                                animationDuration: Duration(milliseconds: 0),
+                                autoCloseDuration: const Duration(milliseconds: 1500),
+                                animationDuration: const Duration(milliseconds: 0),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
                                 borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
@@ -285,12 +285,12 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                       Icons.lock,
                                       color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red,
                                     ),
-                                    SizedBox(height: 10),
+                                    const SizedBox(height: 10),
                                     Text(_webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock"),
                                   ],
                                 ),
-                                autoCloseDuration: Duration(milliseconds: 1500),
-                                animationDuration: Duration(milliseconds: 0),
+                                autoCloseDuration: const Duration(milliseconds: 1500),
+                                animationDuration: const Duration(milliseconds: 0),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
                                 borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
@@ -311,7 +311,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               : null,
                           boxShadow: _webViewProvider!.tabList[i].isLocked && !_webViewProvider!.tabList[i].isLockFull
                               ? [
-                                  BoxShadow(color: Colors.orange, blurRadius: 4),
+                                  const BoxShadow(color: Colors.orange, blurRadius: 4),
                                 ]
                               : null,
                         ),
@@ -342,7 +342,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                           iconColor: _webViewProvider!.tabList[i].customName.isNotEmpty ? Colors.lime : null,
                           boxShadow: _webViewProvider!.tabList[i].customName.isNotEmpty
                               ? [
-                                  BoxShadow(color: Colors.lime, blurRadius: 4),
+                                  const BoxShadow(color: Colors.lime, blurRadius: 4),
                                 ]
                               : null,
                         ),
@@ -441,8 +441,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                         ? Colors.red
                         : Colors.orange,
                   ),
-                  SizedBox(height: 10),
-                  Text(
+                  const SizedBox(height: 10),
+                  const Text(
                     "A locked tab cannot be exchanged with an unlocked one!",
                     maxLines: 5,
                     textAlign: TextAlign.center,
@@ -450,8 +450,8 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                 ],
               ),
             ),
-            autoCloseDuration: Duration(seconds: 3),
-            animationDuration: Duration(milliseconds: 0),
+            autoCloseDuration: const Duration(seconds: 3),
+            animationDuration: const Duration(milliseconds: 0),
             type: ToastificationType.info,
             style: ToastificationStyle.simple,
             borderSide: BorderSide(width: 1, color: Colors.grey[700]!),

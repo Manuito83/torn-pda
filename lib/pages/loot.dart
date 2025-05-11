@@ -14,7 +14,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/drawer.dart';
@@ -116,6 +116,8 @@ class LootPageState extends State<LootPage> {
     return Scaffold(
       backgroundColor: _themeProvider!.canvas,
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
+      drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
+      endDrawer: const Drawer(),
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
               height: AppBar().preferredSize.height,
@@ -190,7 +192,7 @@ class LootPageState extends State<LootPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('Loot', style: TextStyle(color: Colors.white)),
       leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
@@ -209,7 +211,7 @@ class LootPageState extends State<LootPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -236,7 +238,7 @@ class LootPageState extends State<LootPage> {
           const SizedBox.shrink(),
         if (_apiSuccess)
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               MdiIcons.timerSandEmpty,
             ),
             onPressed: () {

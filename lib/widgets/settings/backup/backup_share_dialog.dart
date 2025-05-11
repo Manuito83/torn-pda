@@ -102,7 +102,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                     padding: const EdgeInsets.only(bottom: 30),
                     child: Column(
                       children: [
-                        Row(
+                        const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
@@ -124,7 +124,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.settings_outlined, color: widget.themeProvider.mainText),
-                                  SizedBox(width: 10),
+                                  const SizedBox(width: 10),
                                   Text("CONFIGURE",
                                       style: TextStyle(color: widget.themeProvider.mainText, fontSize: 12)),
                                 ],
@@ -135,7 +135,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(Icons.download, color: widget.themeProvider.mainText),
-                                  SizedBox(width: 10),
+                                  const SizedBox(width: 10),
                                   Text("IMPORT", style: TextStyle(color: widget.themeProvider.mainText, fontSize: 12)),
                                 ],
                               ),
@@ -149,15 +149,15 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                     future: _serverPrefsFetched,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Flexible(
+                        return const Flexible(
                           child: SingleChildScrollView(
                             child: Column(
                               children: [
-                                const SizedBox(height: 40),
-                                const Text("Fetching server info..."),
-                                const SizedBox(height: 25),
-                                const CircularProgressIndicator(),
-                                const SizedBox(height: 40),
+                                SizedBox(height: 40),
+                                Text("Fetching server info..."),
+                                SizedBox(height: 25),
+                                CircularProgressIndicator(),
+                                SizedBox(height: 40),
                               ],
                             ),
                           ),
@@ -167,8 +167,8 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                       if (_serverError.isNotEmpty) {
                         return Column(
                           children: [
-                            Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
-                            Text(_serverError, style: TextStyle(color: Colors.red)),
+                            const Text("SERVER ERROR", style: TextStyle(color: Colors.red)),
+                            Text(_serverError, style: const TextStyle(color: Colors.red)),
                           ],
                         );
                       }
@@ -180,7 +180,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                           child: DefaultTabController(
                             length: 2,
                             child: TabBarView(
-                              physics: NeverScrollableScrollPhysics(),
+                              physics: const NeverScrollableScrollPhysics(),
                               controller: _tabController,
                               children: [
                                 // LEFT TAB
@@ -258,7 +258,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                                 ? Container(
                                     height: 20,
                                     width: 20,
-                                    child: CircularProgressIndicator(),
+                                    child: const CircularProgressIndicator(),
                                   )
                                 : const Text("Save"),
                           ),
@@ -292,7 +292,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                             }
                             Navigator.pop(context);
                           },
-                          child: Text("Close"),
+                          child: const Text("Close"),
                         ),
                       ],
                     ),
@@ -322,7 +322,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                 fontStyle: FontStyle.italic,
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             Form(
               key: _importIdFormKey,
               child: TextFormField(
@@ -330,11 +330,11 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                 style: const TextStyle(fontSize: 14),
                 controller: _importIdController,
                 maxLength: 10,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   isDense: true,
                   errorMaxLines: 2,
                   counterText: "",
-                  border: const OutlineInputBorder(),
+                  border: OutlineInputBorder(),
                   labelText: 'User ID',
                 ),
                 validator: (value) {
@@ -350,7 +350,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                 },
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Form(
               key: _importPasswordFormKey,
               child: TextFormField(
@@ -388,7 +388,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                 },
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -455,7 +455,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
               fontStyle: FontStyle.italic,
             ),
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Form(
             key: _ownSharePasswordFormKey,
             child: TextFormField(
@@ -541,7 +541,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
               },
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             "CAUTION: select a password that you will share with other users with whom you want to share "
             "your settings. Ensure this is NOT your game password or API key.",
@@ -551,8 +551,8 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
               fontStyle: FontStyle.italic,
             ),
           ),
-          SizedBox(height: 20),
-          Text("Select what you want to share:"),
+          const SizedBox(height: 20),
+          const Text("Select what you want to share:"),
           Text(
             "This will be applicable only if you have any settings saved in the server",
             style: TextStyle(
@@ -579,7 +579,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
       activeColor: Colors.blueGrey,
       value: _ownSelectedItems.contains("shortcuts"),
       title: const Text("Shortcuts", style: TextStyle(fontSize: 14)),
-      subtitle: Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
+      subtitle: const Text("Shortcuts list and settings", style: TextStyle(fontSize: 12)),
       onChanged: (value) {
         setState(() {
           _ownSelectedItems.contains("shortcuts")
@@ -597,7 +597,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
       activeColor: Colors.blueGrey,
       value: _ownSelectedItems.contains("userscripts"),
       title: const Text("User scripts", style: TextStyle(fontSize: 14)),
-      subtitle: Text("Scripts list", style: TextStyle(fontSize: 12)),
+      subtitle: const Text("Scripts list", style: TextStyle(fontSize: 12)),
       onChanged: (value) {
         if (value == true) {
           BotToast.showText(
@@ -629,7 +629,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
       activeColor: Colors.blueGrey,
       value: _ownSelectedItems.contains("targets"),
       title: const Text("Targets", style: TextStyle(fontSize: 14)),
-      subtitle: Text("Targets list and notes", style: TextStyle(fontSize: 12)),
+      subtitle: const Text("Targets list and notes", style: TextStyle(fontSize: 12)),
       onChanged: (value) {
         setState(() {
           _ownSelectedItems.contains("targets")

@@ -8,7 +8,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/retal_model.dart';
@@ -566,7 +566,7 @@ class RetalCardState extends State<RetalCard> {
       } else {
         _lifeTicker?.cancel();
         lifeText = "OUT";
-        hospitalWarning = Icon(
+        hospitalWarning = const Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,

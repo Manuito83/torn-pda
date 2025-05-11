@@ -182,7 +182,7 @@ class MemberDetailsPageState extends State<MemberDetailsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),

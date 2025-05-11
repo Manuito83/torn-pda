@@ -7,7 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
@@ -140,7 +140,6 @@ class TargetsPageState extends State<TargetsPage> {
     return Scaffold(
       backgroundColor: _themeProvider.canvas,
       drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-      endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
       appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
       bottomNavigationBar: !_settingsProvider.appBarTop
           ? SizedBox(
@@ -276,7 +275,7 @@ class TargetsPageState extends State<TargetsPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       title: _appBarText,
@@ -296,7 +295,7 @@ class TargetsPageState extends State<TargetsPage> {
               }
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) PdaBrowserIcon(),
+          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
         ],
       ),
       actions: <Widget>[
@@ -369,7 +368,7 @@ class TargetsPageState extends State<TargetsPage> {
               if (_yataButtonEnabled!) {
                 if (_yataButtonInProgress) {
                   return IconButton(
-                    icon: Icon(MdiIcons.alphaYCircleOutline),
+                    icon: const Icon(MdiIcons.alphaYCircleOutline),
                     onPressed: () async {
                       setState(() {
                         _yataButtonInProgress = false;

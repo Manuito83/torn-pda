@@ -31,7 +31,6 @@ class Education {
   int moneyCost;
   int tier;
   int duration;
-  Results results;
   List<dynamic> prerequisites;
 
   Education({
@@ -41,7 +40,6 @@ class Education {
     required this.moneyCost,
     required this.tier,
     required this.duration,
-    required this.results,
     required this.prerequisites,
   });
 
@@ -52,7 +50,6 @@ class Education {
         moneyCost: json["money_cost"],
         tier: json["tier"],
         duration: json["duration"],
-        results: Results.fromJson(json["results"]),
         prerequisites: List<dynamic>.from(json["prerequisites"].map((x) => x)),
       );
 
@@ -63,35 +60,6 @@ class Education {
         "money_cost": moneyCost,
         "tier": tier,
         "duration": duration,
-        "results": results.toJson(),
         "prerequisites": List<dynamic>.from(prerequisites.map((x) => x)),
-      };
-}
-
-class Results {
-  List<String>? intelligence;
-  List<String>? endurance;
-  List<String>? perk;
-  List<String>? manualLabor;
-
-  Results({
-    this.intelligence,
-    this.endurance,
-    this.perk,
-    this.manualLabor,
-  });
-
-  factory Results.fromJson(Map<String, dynamic> json) => Results(
-        intelligence: json["intelligence"] == null ? [] : List<String>.from(json["intelligence"]!.map((x) => x)),
-        endurance: json["endurance"] == null ? [] : List<String>.from(json["endurance"]!.map((x) => x)),
-        perk: json["perk"] == null ? [] : List<String>.from(json["perk"]!.map((x) => x)),
-        manualLabor: json["manual_labor"] == null ? [] : List<String>.from(json["manual_labor"]!.map((x) => x)),
-      );
-
-  Map<String, dynamic> toJson() => {
-        "intelligence": intelligence == null ? [] : List<dynamic>.from(intelligence!.map((x) => x)),
-        "endurance": endurance == null ? [] : List<dynamic>.from(endurance!.map((x) => x)),
-        "perk": perk == null ? [] : List<dynamic>.from(perk!.map((x) => x)),
-        "manual_labor": manualLabor == null ? [] : List<dynamic>.from(manualLabor!.map((x) => x)),
       };
 }

@@ -10,7 +10,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
@@ -346,7 +346,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
       title: const Text("Foreign Stock", style: TextStyle(color: Colors.white)),
       leading: IconButton(
@@ -378,7 +378,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           },
         ),
         IconButton(
-          icon: Icon(MdiIcons.eyeRemoveOutline),
+          icon: const Icon(MdiIcons.eyeRemoveOutline),
           onPressed: _hiddenStocks.isEmpty
               ? null
               : () {
@@ -444,7 +444,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: GestureDetector(
-                    child: Icon(
+                    child: const Icon(
                       MdiIcons.filterVariant,
                       size: 30,
                     ),
@@ -772,13 +772,13 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       );
     }
 
-    Widget providerIcon = SizedBox.shrink();
+    Widget providerIcon = const SizedBox.shrink();
     if (_yataSuccess) {
       providerIcon = GestureDetector(
         child: Column(
           children: [
-            Text("PROVIDER", style: TextStyle(fontSize: 10)),
-            SizedBox(height: 4),
+            const Text("PROVIDER", style: TextStyle(fontSize: 10)),
+            const SizedBox(height: 4),
             Image.asset('images/icons/yata_logo.png', height: 36),
           ],
         ),
@@ -800,8 +800,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       providerIcon = GestureDetector(
         child: Column(
           children: [
-            Text("PROVIDER", style: TextStyle(fontSize: 10)),
-            SizedBox(height: 4),
+            const Text("PROVIDER", style: TextStyle(fontSize: 10)),
+            const SizedBox(height: 4),
             Container(
               width: 32,
               height: 32,

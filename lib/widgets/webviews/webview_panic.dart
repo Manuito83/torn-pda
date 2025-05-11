@@ -8,7 +8,7 @@ import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
 // Project imports:
@@ -119,10 +119,10 @@ class WebViewPanicState extends State<WebViewPanic> {
       ..setBackgroundColor(const Color(0x00000000))
       ..setUserAgent(
         Platform.isAndroid
-            ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
-                "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
-            : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
+            ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 "
+                "Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
+            : "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
+                "CriOS/132.0.6834.100 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
       )
       ..addJavaScriptChannel(
         'loadoutChangeHandler',
@@ -408,7 +408,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       hideChatIcon = Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.chatOutline),
+          child: const Icon(MdiIcons.chatOutline),
           onTap: () async {
             _webViewController!.runJavaScript(removeChatJS());
             Prefs().setChatRemovalActive(true);
@@ -442,7 +442,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.refresh),
+          child: const Icon(MdiIcons.refresh),
           onTap: () async {
             await _webViewController!.reload();
 
@@ -465,7 +465,7 @@ class WebViewPanicState extends State<WebViewPanic> {
       Padding(
         padding: const EdgeInsets.only(left: 15),
         child: GestureDetector(
-          child: Icon(MdiIcons.linkVariant),
+          child: const Icon(MdiIcons.linkVariant),
           onTap: () {
             _chainWidgetController.expanded
                 ? _chainWidgetController.expanded = false
@@ -842,7 +842,7 @@ class WebViewPanicState extends State<WebViewPanic> {
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           MdiIcons.notebookOutline,
                           color: Colors.white,
                           size: 16,

@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -51,7 +51,7 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     if (ocDynamic == null) {
       return Row(
         children: [
-          Icon(MdiIcons.fingerprint),
+          const Icon(MdiIcons.fingerprint),
           const SizedBox(width: 10),
           Flexible(
             child: RichText(
@@ -104,9 +104,9 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     ).formatHourWithDaysElapsed();
 
     final readyTextSpan = hasExpired
-        ? TextSpan(
+        ? const TextSpan(
             text: 'ready to start',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               color: Colors.green,
               fontWeight: FontWeight.bold,
@@ -115,9 +115,9 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
         : TextSpan(
             children: [
               if (missingSlots > 0)
-                TextSpan(
+                const TextSpan(
                   text: 'incomplete, ',
-                  style: const TextStyle(fontSize: 14, color: Colors.red),
+                  style: TextStyle(fontSize: 14, color: Colors.red),
                 ),
               TextSpan(
                 text: missingSlots > 0 ? 'earliest possible start at ' : 'planned to start at ',
@@ -172,7 +172,7 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
 
     return Row(
       children: [
-        Icon(MdiIcons.fingerprint),
+        const Icon(MdiIcons.fingerprint),
         const SizedBox(width: 10),
         Flexible(child: RichText(text: messageTextSpan)),
       ],

@@ -2,7 +2,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
@@ -109,7 +109,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text("Chain Watcher", style: TextStyle(color: Colors.white)),
       leading: IconButton(
@@ -306,7 +306,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
             Row(
               children: [
                 const Text("API failure check"),
-                SizedBox(width: 10),
+                const SizedBox(width: 10),
                 GestureDetector(
                   child: Icon(
                     Icons.volume_up,
@@ -1133,7 +1133,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                     child: CircleAvatar(
                       backgroundColor: _themeProvider!.secondBackground,
                       radius: 22,
-                      child: SizedBox(
+                      child: const SizedBox(
                         height: 34,
                         width: 34,
                         child: Icon(MdiIcons.alphaPCircleOutline),

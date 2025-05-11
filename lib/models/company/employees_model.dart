@@ -57,9 +57,15 @@ class CompanyEmployee {
         name: json["name"],
         position: json["position"],
         daysInCompany: json["days_in_company"],
-        manualLabor: json["manual_labor"],
-        intelligence: json["intelligence"],
-        endurance: json["endurance"],
+        manualLabor: json["manual_labor"] is int
+            ? json["manual_labor"]
+            : (json["manual_labor"] is String ? int.tryParse(json["manual_labor"]) ?? 0 : 0),
+        intelligence: json["intelligence"] is int
+            ? json["intelligence"]
+            : (json["intelligence"] is String ? int.tryParse(json["intelligence"]) ?? 0 : 0),
+        endurance: json["endurance"] is int
+            ? json["endurance"]
+            : (json["endurance"] is String ? int.tryParse(json["endurance"]) ?? 0 : 0),
         effectiveness: Effectiveness.fromJson(json["effectiveness"]),
         lastAction: LastAction.fromJson(json["last_action"]),
         status: Status.fromJson(json["status"]),

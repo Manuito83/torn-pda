@@ -20,9 +20,9 @@ class AlarmPermissionsDialogState extends State<AlarmPermissionsDialog> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: true);
     return AlertDialog(
-      title: Text("Exact Alarm Permissions"),
+      title: const Text("Exact Alarm Permissions"),
       content: Container(
-        child: Column(
+        child: const Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
@@ -39,7 +39,7 @@ class AlarmPermissionsDialogState extends State<AlarmPermissionsDialog> {
       ),
       actions: [
         TextButton(
-          child: Text(
+          child: const Text(
             "Notification\nsettings",
             textAlign: TextAlign.center,
           ),
@@ -50,7 +50,7 @@ class AlarmPermissionsDialogState extends State<AlarmPermissionsDialog> {
           },
         ),
         TextButton(
-          child: Text(
+          child: const Text(
             "Remind me\nnext time",
             textAlign: TextAlign.center,
           ),
@@ -60,7 +60,7 @@ class AlarmPermissionsDialogState extends State<AlarmPermissionsDialog> {
           },
         ),
         TextButton(
-          child: Text("Disregard"),
+          child: const Text("Disregard"),
           onPressed: () async {
             _settingsProvider.exactPermissionDialogShownAndroid = 2;
             Navigator.of(context).pop();

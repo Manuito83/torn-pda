@@ -60,7 +60,6 @@ class YataTargetsDistributionState extends State<YataTargetsDistribution> {
         child: Scaffold(
           backgroundColor: _themeProvider.canvas,
           drawer: !_webViewProvider.splitScreenAndBrowserLeft() ? const Drawer() : null,
-          endDrawer: !_webViewProvider.splitScreenAndBrowserLeft() ? null : const Drawer(),
           appBar: _settingsProvider.appBarTop ? buildAppBar() : null,
           bottomNavigationBar: !_settingsProvider.appBarTop
               ? SizedBox(
@@ -148,7 +147,7 @@ class YataTargetsDistributionState extends State<YataTargetsDistribution> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: const Text('YATA targets', style: TextStyle(color: Colors.white)),
       leading: IconButton(

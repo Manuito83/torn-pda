@@ -113,7 +113,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
 
   AppBar buildAppBar() {
     return AppBar(
-      iconTheme: IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       title: Row(
         children: [
@@ -205,17 +205,17 @@ class AwardsGraphsState extends State<AwardsGraphs> {
       ),
       titlesData: FlTitlesData(
         show: true,
-        topTitles: AxisTitles(
+        topTitles: const AxisTitles(
           sideTitles: SideTitles(
             showTitles: false,
           ),
         ),
-        bottomTitles: AxisTitles(
+        bottomTitles: const AxisTitles(
           sideTitles: SideTitles(
             showTitles: false,
           ),
         ),
-        rightTitles: AxisTitles(
+        rightTitles: const AxisTitles(
           sideTitles: SideTitles(
             showTitles: false,
           ),

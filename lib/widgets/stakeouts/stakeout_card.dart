@@ -11,7 +11,7 @@ import 'package:flutter_font_icons/flutter_font_icons.dart';
 // Package imports:
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:get/get.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 // Project imports:
@@ -130,7 +130,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   GestureDetector(
                     child: Row(
                       children: [
-                        Icon(MdiIcons.cctv),
+                        const Icon(MdiIcons.cctv),
                         const Padding(
                           padding: EdgeInsets.symmetric(horizontal: 5),
                         ),
@@ -207,7 +207,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.okayEnabled)
                       GestureDetector(
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.checkBold,
@@ -247,7 +247,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.landedEnabled)
                       GestureDetector(
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.airplaneLanding,
@@ -260,7 +260,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       ),
                     if (_stakeout!.onlineEnabled)
                       GestureDetector(
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Icon(
                             MdiIcons.circle,
@@ -277,7 +277,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                           padding: const EdgeInsets.only(right: 5),
                           child: Transform.rotate(
                             angle: 90 * math.pi / 180,
-                            child: Icon(MdiIcons.glassStange, color: Colors.red),
+                            child: const Icon(MdiIcons.glassStange, color: Colors.red),
                           ),
                         ),
                         onTap: () {
@@ -315,7 +315,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                       child: IconButton(
                         padding: const EdgeInsets.all(0),
                         iconSize: 20,
-                        icon: Icon(
+                        icon: const Icon(
                           MdiIcons.notebookEditOutline,
                           size: 18,
                         ),
@@ -355,7 +355,7 @@ class StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -437,7 +437,7 @@ class StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -464,7 +464,7 @@ class StakeoutCardState extends State<StakeoutCard> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              Row(
+              const Row(
                 children: [
                   SizedBox(
                     width: 25,
@@ -497,7 +497,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                     width: 25,
                     child: Transform.rotate(
                       angle: 90 * math.pi / 180,
-                      child: Icon(MdiIcons.glassStange, color: Colors.red),
+                      child: const Icon(MdiIcons.glassStange, color: Colors.red),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -872,7 +872,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                         width: 28,
                         child: Transform.rotate(
                           angle: 90 * math.pi / 180,
-                          child: Icon(MdiIcons.glassStange, color: Colors.red),
+                          child: const Icon(MdiIcons.glassStange, color: Colors.red),
                         ),
                       ),
                     ),

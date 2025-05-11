@@ -6,7 +6,7 @@ import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 // Project imports:
@@ -135,7 +135,7 @@ class TargetCardState extends State<TargetCard> {
                               children: [
                                 if (_target!.status!.state!.contains("Federal") ||
                                     _target!.status!.state!.contains("Fallen"))
-                                  Icon(MdiIcons.graveStone, size: 18)
+                                  const Icon(MdiIcons.graveStone, size: 18)
                                 else
                                   _attackIcon(),
                                 const Padding(
@@ -320,8 +320,8 @@ class TargetCardState extends State<TargetCard> {
                               contentPadding: const EdgeInsets.all(10),
                             );
                           },
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 10),
+                          child: const Padding(
+                            padding: EdgeInsets.only(right: 10),
                             child: Image(
                               image: AssetImage('images/icons/status/icon13.png'),
                               width: 18,
@@ -588,7 +588,7 @@ class TargetCardState extends State<TargetCard> {
       } else {
         _lifeTicker?.cancel();
         lifeText = "OUT";
-        hospitalWarning = Icon(
+        hospitalWarning = const Icon(
           MdiIcons.bandage,
           size: 20,
           color: Colors.green,
