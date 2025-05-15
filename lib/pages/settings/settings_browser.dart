@@ -709,6 +709,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                         if (!value) {
                           Prefs().setHideTabs(false);
+                          _webViewProvider.hideTabs = false;
                         }
                       },
                       activeTrackColor: Colors.lightGreenAccent,
