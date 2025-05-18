@@ -57,6 +57,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.8.1'
         ..date = '01 JUN 2025'
         ..features = [
+          "Fixed chat notifications showing when disabled",
           "Fixed other reported issues",
         ],
     );

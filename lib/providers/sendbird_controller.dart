@@ -48,6 +48,7 @@ class SendbirdController extends GetxController {
   sendBirdNotificationsToggle({required bool enabled}) async {
     if (enabled) {
       bool success = await register();
+      success = await sendbirdRegisterFCMToken();
       if (success) {
         await Prefs().setSendbirdNotificationsEnabled(true);
         _sendBirdNotificationsEnabled = true;
@@ -125,7 +126,12 @@ class SendbirdController extends GetxController {
 
         if (sendBirdSessionToken != null) {
           await connect(playerId, sendBirdSessionToken);
-          await sendbirdRegisterFCMToken();
+
+          // Only register FCM token if notifications are enabled
+          // (we use Sendbird also to share chaining attacks)
+          if (_sendBirdNotificationsEnabled) {
+            await sendbirdRegisterFCMToken();
+          }
 
           // Add a user event handler with a unique identifier
           SendbirdChat.addChannelHandler(
