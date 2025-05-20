@@ -69,14 +69,14 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     final slots = organizedCrime['slots'] as List<dynamic>? ?? [];
 
     final playerSlot = slots.firstWhereOrNull(
-      (slot) => slot['user_id'] == widget.playerId,
+      (slot) => slot['user']['id'] == widget.playerId,
     );
 
     if (playerSlot == null) {
       return const SizedBox.shrink();
     }
 
-    int missingSlots = slots.where((slot) => slot['user_id'] == null).length;
+    int missingSlots = slots.where((slot) => slot['user']['id'] == null).length;
     int readyTimestamp = organizedCrime['ready_at'] as int;
     DateTime planningDateTime = DateTime.fromMillisecondsSinceEpoch(readyTimestamp * 1000);
 
@@ -89,12 +89,14 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     final remaining = planningDateTime.difference(now);
 
     Color countdownColor = themeProvider.mainText;
-    if (remaining.inHours < 8) {
-      countdownColor = Colors.red;
-    } else if (remaining.inHours < 12) {
-      countdownColor = Colors.orange[700]!;
-    } else if (remaining.inHours < 24) {
-      countdownColor = Colors.blue[700]!;
+    if (!themeProvider.accesibilityNoTextColors) {
+      if (remaining.inHours < 8) {
+        countdownColor = Colors.red;
+      } else if (remaining.inHours < 12) {
+        countdownColor = themeProvider.currentTheme == AppTheme.light ? Colors.orange[800]! : Colors.orange[600]!;
+      } else if (remaining.inHours < 24) {
+        countdownColor = themeProvider.currentTheme == AppTheme.light ? Colors.blue[700]! : Colors.blue[200]!;
+      }
     }
 
     final formattedTime = TimeFormatter(
@@ -139,7 +141,7 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
       final itemRequirement = playerSlot['item_requirement'] as Map<String, dynamic>;
       final bool isAvailable = itemRequirement['is_available'] as bool? ?? false;
       final itemStatus = isAvailable ? 'Item provided' : 'Item missing';
-      final itemStatusColor = isAvailable ? Colors.green : Colors.red;
+      final itemStatusColor = isAvailable ? themeProvider.getTextColor(Colors.green) : Colors.red;
       final itemFontWeight = isAvailable ? FontWeight.normal : FontWeight.bold;
 
       itemRequirementTextSpan = TextSpan(
