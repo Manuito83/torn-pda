@@ -861,6 +861,7 @@ Future configureNotificationChannels({String? mod = ""}) async {
     AndroidNotificationChannel(
       'Torn chat ${modifier.channelIdModifier} s',
       'Torn chat ${modifier.channelIdModifier} s',
+      groupId: "sendbird",
       description: 'Torn chat notifications',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('keyboard'),
