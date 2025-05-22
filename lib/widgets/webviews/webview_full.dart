@@ -1362,15 +1362,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           },
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
+            final String url = request.request.url.toString().replaceAll("http:", "https:");
 
             // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
             // to open a window, a new tab is created but we can't see it and looks like a glitch)
             if (!_settingsProvider.useTabsFullBrowser) {
-              final String url = request.request.url.toString().replaceAll("http:", "https:");
               _loadUrl(url);
             } else {
-              // Creates a completely new webview with the URL (instead of a webview window)
-              _openNewTabFromWindowRequest(request.request.url.toString().replaceAll("http:", "https:"));
+              // We will do our best to open the URL in a new full webview (instead of a window),
+              // to ensure that we can use the same features as in the main webview. Otherwise we face
+              // issues when removing userscripts, for example.
+
+              // But there are certain cases where the URL comes as 'null' (like when trying to
+              // perform a Google Login with Android in Torn, or when a script tries to create a new window
+
+              // If that's the case, we'll allow to open a new window by passing the windowId
+              // to the _openNewTabFromWindowRequest method, instead of the usual 'null' if the URL is valid
+
+              dynamic windowId;
+              if (request.request.url == null) {
+                windowId = request.windowId;
+              }
+
+              _openNewTabFromWindowRequest(url, windowId);
               return true;
             }
             return true;
@@ -1909,8 +1923,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     );
   }
 
-  _openNewTabFromWindowRequest(String url) {
-    _webViewProvider.addTab(url: url);
+  _openNewTabFromWindowRequest(String url, int? windowId) {
+    _webViewProvider.addTab(url: url, windowId: windowId);
     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
   }
 
