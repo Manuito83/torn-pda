@@ -48,7 +48,7 @@ class SendbirdController extends GetxController {
   sendBirdNotificationsToggle({required bool enabled}) async {
     if (enabled) {
       bool success = await register();
-      success = await sendbirdRegisterFCMToken();
+      success = await sendbirdRegisterFCMTokenAndChannel();
       if (success) {
         await Prefs().setSendbirdNotificationsEnabled(true);
         _sendBirdNotificationsEnabled = true;
@@ -63,7 +63,7 @@ class SendbirdController extends GetxController {
         );
       }
     } else {
-      await sendbirdUnregisterFCMToken();
+      await sendbirdUnregisterFCMTokenAndChannel();
       await Prefs().setSendbirdNotificationsEnabled(false);
       _sendBirdNotificationsEnabled = false;
     }
@@ -130,7 +130,9 @@ class SendbirdController extends GetxController {
           // Only register FCM token if notifications are enabled
           // (we use Sendbird also to share chaining attacks)
           if (_sendBirdNotificationsEnabled) {
-            await sendbirdRegisterFCMToken();
+            await sendbirdRegisterFCMTokenAndChannel();
+          } else {
+            await sendbirdUnregisterFCMTokenAndChannel();
           }
 
           // Add a user event handler with a unique identifier
@@ -188,7 +190,7 @@ class SendbirdController extends GetxController {
     return null;
   }
 
-  Future<bool> sendbirdRegisterFCMToken() async {
+  Future<bool> sendbirdRegisterFCMTokenAndChannel() async {
     try {
       // Get the push token based on platform
       String? fcmToken = await _getFCMToken();
@@ -208,6 +210,10 @@ class SendbirdController extends GetxController {
       } else {
         logToUser("Failed to register push token with Sendbird: [Status != completed]");
       }
+
+      // Add channel
+      createSendBirdNotificationsChannel();
+
       return true;
     } catch (e) {
       logToUser("Failed to register push token with Sendbird: $e");
@@ -215,7 +221,7 @@ class SendbirdController extends GetxController {
     return false;
   }
 
-  Future<void> sendbirdUnregisterFCMToken() async {
+  Future<void> sendbirdUnregisterFCMTokenAndChannel() async {
     try {
       // Get the push token based on platform
       String? fcmToken = await _getFCMToken();
@@ -225,6 +231,10 @@ class SendbirdController extends GetxController {
         token: fcmToken,
         type: Platform.isAndroid ? PushTokenType.fcm : PushTokenType.apns,
       );
+
+      // Unregister the push token with Sendbird and delete channel
+      removeSendBirdNotificationsChannel();
+
       log("Sendbird push notifications disabled and token removed");
     } catch (e) {
       logToUser("Failed to unregister Sendbird push token: $e");

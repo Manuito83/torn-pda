@@ -1,5 +1,6 @@
 // Dart imports:
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -857,6 +858,8 @@ Future configureNotificationChannels({String? mod = ""}) async {
     ),
   );
 
+  // Handled in SendbirdController
+  /*
   channels.add(
     AndroidNotificationChannel(
       'Torn chat ${modifier.channelIdModifier} s',
@@ -870,6 +873,7 @@ Future configureNotificationChannels({String? mod = ""}) async {
       ledColor: const Color.fromARGB(255, 255, 0, 0),
     ),
   );
+  */
 
   channels.add(
     AndroidNotificationChannel(
@@ -1080,6 +1084,56 @@ void handleNotificationTap(NotificationResponse? notificationResponse) {
       String channelUrl = decodedJson['channelUrl'];
       SendbirdController sb = Get.find<SendbirdController>();
       sb.sendMessage(channelUrl: channelUrl, message: notificationResponse.input!);
+    }
+  }
+}
+
+void createSendBirdNotificationsChannel() async {
+  if (!Platform.isAndroid) return;
+
+  final androidImpl =
+      flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+
+  const sendbirdGroup = AndroidNotificationChannelGroup(
+    'sendbird',
+    'Torn chat',
+    description: 'Torn chat notifications',
+  );
+
+  await androidImpl?.createNotificationChannelGroup(sendbirdGroup);
+
+  final modifier = await getNotificationChannelsModifiers();
+  final channel = AndroidNotificationChannel(
+    'Torn chat ${modifier.channelIdModifier} s',
+    'Torn chat ${modifier.channelIdModifier} s',
+    description: 'Torn chat notifications',
+    groupId: 'sendbird',
+    importance: Importance.max,
+    sound: const RawResourceAndroidNotificationSound('keyboard'),
+    vibrationPattern: modifier.vibrationPattern,
+    enableLights: true,
+    ledColor: const Color.fromARGB(255, 255, 0, 0),
+  );
+
+  await androidImpl?.createNotificationChannel(channel);
+}
+
+void removeSendBirdNotificationsChannel() async {
+  if (!Platform.isAndroid) return;
+
+  final modifier = await getNotificationChannelsModifiers();
+  final channels = await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.getNotificationChannels();
+
+  if (channels != null && channels.isNotEmpty) {
+    for (var channel in channels) {
+      if (channel.id == "Torn chat ${modifier.channelIdModifier} s") {
+        await flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+            ?.deleteNotificationChannel(channel.id);
+        log("Sendbird push notifications channel deleted");
+      }
     }
   }
 }

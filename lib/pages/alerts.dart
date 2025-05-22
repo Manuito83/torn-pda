@@ -51,6 +51,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
   final _scrollControllerRetalsNotification = ScrollController();
   final _scrollControllerRetalsDonor = ScrollController();
 
+  bool _togglingSendbirdNotifications = false;
+
   @override
   void initState() {
     super.initState();
@@ -1034,23 +1036,11 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           return Column(
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
-                                child: CheckboxListTile(
-                                  checkColor: Colors.white,
-                                  activeColor: Colors.blueGrey,
-                                  value: sendbird.sendBirdNotificationsEnabled,
-                                  title: const Row(
-                                    children: [
-                                      Padding(
-                                        padding: EdgeInsets.only(right: 5),
-                                        child: Text(
-                                          "Torn chat messages",
-                                          style: TextStyle(
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                                padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
+                                child: ListTile(
+                                  title: const Text(
+                                    "Torn chat messages",
+                                    style: TextStyle(fontSize: 15),
                                   ),
                                   subtitle: const Text(
                                     "Enable notifications for TORN chat messages",
@@ -1059,9 +1049,31 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       fontStyle: FontStyle.italic,
                                     ),
                                   ),
-                                  onChanged: (enabled) async {
-                                    sendbird.sendBirdNotificationsToggle(enabled: enabled!);
-                                  },
+                                  trailing: _togglingSendbirdNotifications
+                                      ? const Padding(
+                                          padding: EdgeInsets.only(right: 14.0),
+                                          child: SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        )
+                                      : Checkbox(
+                                          value: sendbird.sendBirdNotificationsEnabled,
+                                          activeColor: Colors.blueGrey,
+                                          checkColor: Colors.white,
+                                          onChanged: (enabled) async {
+                                            setState(() {
+                                              _togglingSendbirdNotifications = true;
+                                            });
+                                            await sendbird.sendBirdNotificationsToggle(enabled: enabled!);
+                                            setState(() {
+                                              _togglingSendbirdNotifications = false;
+                                            });
+                                          },
+                                        ),
                                 ),
                               ),
                               if (sendbird.sendBirdNotificationsEnabled)
