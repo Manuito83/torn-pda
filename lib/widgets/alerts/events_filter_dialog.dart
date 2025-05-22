@@ -323,6 +323,32 @@ class EventsFilterDialogState extends State<EventsFilterDialog> {
                 ],
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Text("Property rental"),
+                  Switch(
+                    value: _firebaseUserModel!.eventsFilter.contains('rental'),
+                    onChanged: (value) {
+                      if (value) {
+                        setState(() {
+                          FirestoreHelper().addToEventsFilter('rental');
+                        });
+                      } else {
+                        setState(() {
+                          FirestoreHelper().removeFromEventsFilter('rental');
+                        });
+                      }
+                    },
+                    activeTrackColor: Colors.redAccent[100],
+                    activeColor: Colors.red,
+                    inactiveThumbColor: Colors.green[100],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

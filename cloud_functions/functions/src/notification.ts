@@ -930,6 +930,16 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
             }
           }
 
+          if (filters.includes('rental')) {
+            if (newEventsDescriptions[i].includes('extension offer on the rental of your') ||
+              newEventsDescriptions[i].includes('finished renting your') ||
+              newEventsDescriptions[i].includes('started renting your')) {
+              newEventsDescriptions.splice(i--, 1);
+              newGeneralEvents--;
+              continue;
+            }
+          }
+
         }
       }
 
