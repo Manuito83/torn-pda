@@ -134,7 +134,7 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
 
     final String ocName = organizedCrime['name'] as String? ?? 'OC';
     final String position = playerSlot['position'] as String? ?? '';
-    final int successChance = playerSlot['success_chance'] as int? ?? 0;
+    final int successChance = playerSlot['checkpoint_pass_rate'] as int? ?? 0;
 
     TextSpan? itemRequirementTextSpan;
     if (playerSlot['item_requirement'] != null) {
