@@ -76,7 +76,7 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
       return const SizedBox.shrink();
     }
 
-    int missingSlots = slots.where((slot) => slot['user']['id'] == null).length;
+    int missingSlots = slots.where((slot) => slot['user'] == null).length;
     int readyTimestamp = organizedCrime['ready_at'] as int;
     DateTime planningDateTime = DateTime.fromMillisecondsSinceEpoch(readyTimestamp * 1000);
 
