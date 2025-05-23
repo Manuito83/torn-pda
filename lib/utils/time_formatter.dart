@@ -136,4 +136,52 @@ class TimeFormatter {
 
     return _monthDayFormatted;
   }
+
+  String get formatHourWithDate {
+    late DateTime timeZonedTime;
+    String? hourFormatted;
+    String? zoneId;
+
+    switch (timeZoneSetting) {
+      case TimeZoneSetting.localTime:
+        timeZonedTime = inputTime!.toLocal();
+        zoneId = 'LT';
+        break;
+      case TimeZoneSetting.tornTime:
+        timeZonedTime = inputTime!.toUtc();
+        zoneId = 'TCT';
+        break;
+    }
+
+    switch (timeFormatSetting) {
+      case TimeFormatSetting.h24:
+        final formatter = DateFormat('HH:mm');
+        hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+        break;
+      case TimeFormatSetting.h12:
+        final formatter = DateFormat('hh:mm a');
+        hourFormatted = '${formatter.format(timeZonedTime)} $zoneId';
+        break;
+    }
+    return hourFormatted;
+  }
+
+  String? get formatDayMonth {
+    late DateTime timeZonedTime;
+    switch (timeZoneSetting) {
+      case TimeZoneSetting.localTime:
+        timeZonedTime = inputTime!.toLocal();
+      case TimeZoneSetting.tornTime:
+        timeZonedTime = inputTime!.toUtc();
+    }
+
+    final formatter = DateFormat('dd MMM');
+    return formatter.format(timeZonedTime);
+  }
+
+  String get formatHourAndDayMonth {
+    final hourPart = formatHourWithDate;
+    final dayMonthPart = formatDayMonth;
+    return '$hourPart, $dayMonthPart';
+  }
 }

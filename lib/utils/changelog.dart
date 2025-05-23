@@ -57,11 +57,12 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.8.1'
         ..date = '01 JUN 2025'
         ..features = [
-          "The global ranked war list is now searchable and can be sorted",
+          "Global ranked war list is now searchable and can be sorted",
+          "Added war date to the war widget in Profile",
           if (Platform.isAndroid) "Fixed Google login issues",
           "Fixed OC information not showing in Profile",
           "Fixed chat notifications showing when disabled",
-          "Moved Settings search functionality to appbar",
+          "Moved settings search functionality to appbar",
           "Fixed other reported issues",
         ],
     );
