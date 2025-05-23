@@ -176,6 +176,7 @@ class UserScriptsProvider extends ChangeNotifier {
     bool isExample = false,
     List<String>? matches,
     String? customApiKey,
+    bool? customApiKeyCandidate,
   }) {
     final newScript = UserScriptModel(
       name: name,
@@ -189,6 +190,7 @@ class UserScriptsProvider extends ChangeNotifier {
       url: url,
       isExample: isExample,
       customApiKey: customApiKey ?? "",
+      customApiKeyCandidate: customApiKeyCandidate ?? false,
     );
     userScriptList.add(newScript);
 
@@ -209,6 +211,7 @@ class UserScriptsProvider extends ChangeNotifier {
     bool changedSource,
     bool isFromRemote,
     String? customApiKey,
+    bool? customApiKeyCandidate,
   ) {
     List<String>? matches;
     bool couldParseHeader = true;
@@ -222,6 +225,7 @@ class UserScriptsProvider extends ChangeNotifier {
         time: time,
         source: source,
         customApiKey: customApiKey ?? "",
+        customApiKeyCandidate: customApiKeyCandidate ?? false,
         matches: matches,
         updateStatus: isFromRemote
             ? UserScriptUpdateStatus.upToDate
@@ -354,6 +358,11 @@ class UserScriptsProvider extends ChangeNotifier {
               final String name = decodedModel.name.toLowerCase();
               if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
 
+              bool customApiKeyCandidate = false;
+              if (decodedModel.source.contains("###PDA-APIKEY###")) {
+                customApiKeyCandidate = true;
+              }
+
               addUserScript(
                 decodedModel.name,
                 decodedModel.time,
@@ -366,6 +375,7 @@ class UserScriptsProvider extends ChangeNotifier {
                 allScriptFirstLoad: true,
                 isExample: decodedModel.isExample,
                 customApiKey: decodedModel.customApiKey,
+                customApiKeyCandidate: customApiKeyCandidate,
               );
             } catch (e, trace) {
               if (!Platform.isWindows) {

@@ -675,6 +675,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
                             if (!widget.editExisting) {
                               _fetchedRemoteModel!.customApiKey = _customApiKey;
+                              _fetchedRemoteModel!.customApiKeyCandidate = _isCurrentScriptCandidateForCustomApiKey;
                               _userScriptsProvider.addUserScriptByModel(_fetchedRemoteModel!);
                               BotToast.showText(
                                 align: const Alignment(0, 0),
@@ -694,6 +695,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                                 true, // source changed (it's from remote)
                                 true, // isFromRemote
                                 _customApiKey,
+                                _isCurrentScriptCandidateForCustomApiKey,
                               );
                               BotToast.showText(
                                 align: const Alignment(0, 0),
@@ -729,12 +731,11 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       final inputTime = _originalTime;
       final inputSource = _addSourceController.text;
 
-      final bool isCandidate = inputSource.contains(pdaKeyWord);
+      _isCurrentScriptCandidateForCustomApiKey = inputSource.contains(pdaKeyWord);
 
-      if (isCandidate && _mainTabFirstSavePress && _customApiKey.isEmpty) {
+      if (_isCurrentScriptCandidateForCustomApiKey && _mainTabFirstSavePress && _customApiKey.isEmpty) {
         setState(() {
           _mainTabFirstSavePress = false;
-          _isCurrentScriptCandidateForCustomApiKey = true;
           _showCustomApiKeyButton = true;
         });
         _saveScriptWithoutApiKeyWarning();
@@ -743,13 +744,17 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
       Navigator.of(context).pop();
 
-      _addNameController.text = _addSourceController.text = '';
-
       if (!widget.editExisting) {
         try {
           final metaMap = UserScriptModel.parseHeader(inputSource);
-          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(metaMap,
-              name: inputName, source: inputSource, time: inputTime, customApiKey: _customApiKey));
+          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(
+            metaMap,
+            name: inputName,
+            source: inputSource,
+            time: inputTime,
+            customApiKey: _customApiKey,
+            customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
+          ));
         } on Exception catch (e) {
           if (e.toString().contains("No header found")) {
             BotToast.showText(
@@ -769,6 +774,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               updateStatus: UserScriptUpdateStatus.noRemote,
               isExample: false,
               customApiKey: _customApiKey,
+              customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
             ));
           } else {
             BotToast.showText(
@@ -799,6 +805,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
           sourcedChanged,
           false,
           _customApiKey,
+          _isCurrentScriptCandidateForCustomApiKey,
         );
         if (!couldParseHeader) {
           BotToast.showText(

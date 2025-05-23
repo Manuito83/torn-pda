@@ -71,8 +71,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.1';
-const String androidCompilation = '534';
-const String iosCompilation = '534';
+const String androidCompilation = '535';
+const String iosCompilation = '535';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]

@@ -251,27 +251,36 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 Row(
                   children: [
-                    if (script.customApiKey.isNotEmpty)
+                    if (script.customApiKeyCandidate)
                       Padding(
                         padding: const EdgeInsets.only(right: 10),
                         child: GestureDetector(
-                          child: const Icon(
+                          child: Icon(
                             Icons.key,
-                            color: Colors.green,
+                            color: script.customApiKey.isNotEmpty ? Colors.green : Colors.orangeAccent,
                             size: 20,
                           ),
                           onTap: () async {
+                            String message = "This script does not have a dedicated API key.\n\n"
+                                "It will use the default Torn PDA API key.\n\n"
+                                "If you want to use a dedicated API key, please edit the script and add it there.";
+
+                            if (script.customApiKey.isNotEmpty) {
+                              message = "This script  has a dedicated API key:\n\n"
+                                  "${script.customApiKey}\n\n"
+                                  "This key will be used instead of the default Torn PDA API key.";
+                            }
+
                             BotToast.showText(
-                              text: 'This script incorporates a dedicated API key:\n\n'
-                                  '${script.customApiKey}\n\n'
-                                  'This key will be used instead of the default Torn PDA API key.',
+                              text: message,
                               textStyle: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
                               ),
                               contentColor: Colors.grey[800]!,
                               contentPadding: const EdgeInsets.all(10),
-                              duration: const Duration(seconds: 5),
+                              clickClose: true,
+                              duration: const Duration(seconds: 10),
                             );
                           },
                         ),

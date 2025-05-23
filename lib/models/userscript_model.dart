@@ -34,6 +34,7 @@ class UserScriptModel {
     this.updateStatus = UserScriptUpdateStatus.noRemote,
     required this.isExample,
     this.customApiKey = "",
+    this.customApiKeyCandidate = false,
   });
 
   bool enabled;
@@ -47,6 +48,7 @@ class UserScriptModel {
   UserScriptUpdateStatus updateStatus;
   bool isExample;
   String customApiKey;
+  bool customApiKeyCandidate;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     // First check if is old model
@@ -89,20 +91,20 @@ class UserScriptModel {
         updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
         customApiKey: json["customApiKey"] ?? "",
+        customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
       );
     }
   }
 
-  factory UserScriptModel.fromMetaMap(
-    Map<String, dynamic> metaMap, {
-    String? url,
-    UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
-    bool? isExample,
-    String? name,
-    String? source,
-    UserScriptTime? time,
-    String? customApiKey,
-  }) {
+  factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
+      {String? url,
+      UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
+      bool? isExample,
+      String? name,
+      String? source,
+      UserScriptTime? time,
+      String? customApiKey,
+      bool? customApiKeyCandidate}) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }
@@ -120,6 +122,7 @@ class UserScriptModel {
       time: time ?? (metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end),
       isExample: isExample ?? false,
       customApiKey: customApiKey ?? "",
+      customApiKeyCandidate: customApiKeyCandidate ?? false,
     );
   }
 
@@ -178,6 +181,7 @@ class UserScriptModel {
         "isExample": isExample,
         "time": time == UserScriptTime.start ? "start" : "end",
         "customApiKey": customApiKey,
+        "customApiKeyCandidate": customApiKeyCandidate,
       };
 
   static Map<String, dynamic> parseHeader(String source) {
@@ -229,6 +233,7 @@ class UserScriptModel {
     UserScriptTime? time,
     String? url,
     String? customApiKey,
+    bool? customApiKeyCandidate,
     required UserScriptUpdateStatus updateStatus,
   }) {
     if (source != null) {
@@ -277,6 +282,7 @@ class UserScriptModel {
     }
     this.updateStatus = updateStatus;
     this.customApiKey = customApiKey ?? "";
+    this.customApiKeyCandidate = customApiKeyCandidate ?? false;
   }
 
   Future<UserScriptUpdateStatus> checkUpdateStatus() async {
