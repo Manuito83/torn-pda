@@ -67,7 +67,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   ];
 
   // SEARCH #######
+  bool _isSearching = false;
   String _searchText = '';
+  final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
   List<Widget> buildFilteredSections() {
     List<Widget> sections = [
@@ -165,33 +167,6 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     child: SingleChildScrollView(
                       child: Column(
                         children: [
-                          // SEARCH BOX
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: TextField(
-                              controller: _searchController,
-                              decoration: InputDecoration(
-                                hintText: 'Search browser settings',
-                                prefixIcon: const Icon(Icons.search),
-                                suffixIcon: _searchController.text.isNotEmpty
-                                    ? IconButton(
-                                        icon: const Icon(Icons.clear),
-                                        onPressed: () {
-                                          _searchController.clear();
-                                          setState(() {
-                                            _searchText = '';
-                                          });
-                                        },
-                                      )
-                                    : null,
-                              ),
-                              onChanged: (text) {
-                                setState(() {
-                                  _searchText = text;
-                                });
-                              },
-                            ),
-                          ),
                           const SizedBox(height: 15),
                           ...buildFilteredSections(),
                           const SizedBox(height: 40),
@@ -3234,19 +3209,76 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       systemOverlayStyle: SystemUiOverlayStyle.light,
       toolbarHeight: 50,
-      title: const Text('Browser settings', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
-      leading: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              _goBack();
-            },
-          ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
-        ],
-      ),
+      leadingWidth: _isSearching ? 56 : (_webViewProvider.webViewSplitActive ? 50 : 88),
+      leading: !_isSearching
+          ? Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () {
+                    _goBack();
+                  },
+                ),
+                if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+              ],
+            )
+          : IconButton(
+              icon: const Icon(Icons.cancel_outlined),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                  _searchText = '';
+                  FocusScope.of(context).unfocus();
+                });
+              },
+            ),
+      title: _isSearching
+          ? Padding(
+              padding: const EdgeInsets.only(left: 20.0),
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                decoration: const InputDecoration(
+                  hintText: 'Search browser settings...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+                onChanged: (text) {
+                  setState(() {
+                    _searchText = text;
+                  });
+                },
+              ),
+            )
+          : const Text('Browser Settings', style: TextStyle(color: Colors.white)),
+      actions: _isSearching
+          ? [
+              if (_searchController.text.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchText = '';
+                    });
+                  },
+                ),
+            ]
+          : [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = true;
+                  });
+                  Future.delayed(const Duration(milliseconds: 50), () {
+                    FocusScope.of(context).requestFocus(_searchFocusNode);
+                  });
+                },
+              ),
+            ],
     );
   }
 

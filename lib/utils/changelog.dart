@@ -61,6 +61,7 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isAndroid) "Fixed Google login issues",
           "Fixed OC information not showing in Profile",
           "Fixed chat notifications showing when disabled",
+          "Moved Settings search functionality to appbar",
           "Fixed other reported issues",
         ],
     );
