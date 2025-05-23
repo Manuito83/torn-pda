@@ -1169,7 +1169,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1281,7 +1281,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1536,14 +1536,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.end,
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (final script in scriptsToAdd) {
-                await webViewController!.evaluateJavascript(
-                  source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
-                );
+                await webViewController!.evaluateJavascript(source: script.source);
               }
 
               // DEBUG
@@ -4326,7 +4324,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (Platform.isAndroid || Platform.isWindows) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: webViewController!.getUrl().toString(),
-        apiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
       await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -5175,7 +5173,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
-        apiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
       await webViewController?.addUserScripts(userScripts: scriptsToAdd);

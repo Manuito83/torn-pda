@@ -22,17 +22,19 @@ enum UserScriptUpdateStatus {
 }
 
 class UserScriptModel {
-  UserScriptModel(
-      {this.enabled = true,
-      this.matches = const ["*"],
-      required this.name,
-      this.version = "0.0.0",
-      this.edited = false,
-      required this.source,
-      this.time = UserScriptTime.end,
-      this.url,
-      this.updateStatus = UserScriptUpdateStatus.noRemote,
-      required this.isExample});
+  UserScriptModel({
+    this.enabled = true,
+    this.matches = const ["*"],
+    required this.name,
+    this.version = "0.0.0",
+    this.edited = false,
+    required this.source,
+    this.time = UserScriptTime.end,
+    this.url,
+    this.updateStatus = UserScriptUpdateStatus.noRemote,
+    required this.isExample,
+    this.customApiKey = "",
+  });
 
   bool enabled;
   List<String> matches;
@@ -44,6 +46,7 @@ class UserScriptModel {
   String? url;
   UserScriptUpdateStatus updateStatus;
   bool isExample;
+  String customApiKey;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     // First check if is old model
@@ -85,17 +88,21 @@ class UserScriptModel {
         url: json["url"],
         updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
+        customApiKey: json["customApiKey"] ?? "",
       );
     }
   }
 
-  factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
-      {String? url,
-      UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
-      bool? isExample,
-      String? name,
-      String? source,
-      UserScriptTime? time}) {
+  factory UserScriptModel.fromMetaMap(
+    Map<String, dynamic> metaMap, {
+    String? url,
+    UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
+    bool? isExample,
+    String? name,
+    String? source,
+    UserScriptTime? time,
+    String? customApiKey,
+  }) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }
@@ -112,6 +119,7 @@ class UserScriptModel {
       updateStatus: updateStatus,
       time: time ?? (metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end),
       isExample: isExample ?? false,
+      customApiKey: customApiKey ?? "",
     );
   }
 
@@ -169,6 +177,7 @@ class UserScriptModel {
         "updateStatus": updateStatus.name,
         "isExample": isExample,
         "time": time == UserScriptTime.start ? "start" : "end",
+        "customApiKey": customApiKey,
       };
 
   static Map<String, dynamic> parseHeader(String source) {
@@ -219,6 +228,7 @@ class UserScriptModel {
     String? source,
     UserScriptTime? time,
     String? url,
+    String? customApiKey,
     required UserScriptUpdateStatus updateStatus,
   }) {
     if (source != null) {
@@ -266,6 +276,7 @@ class UserScriptModel {
       this.url = url;
     }
     this.updateStatus = updateStatus;
+    this.customApiKey = customApiKey ?? "";
   }
 
   Future<UserScriptUpdateStatus> checkUpdateStatus() async {

@@ -251,23 +251,49 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 Row(
                   children: [
+                    if (script.customApiKey.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                          child: const Icon(
+                            Icons.key,
+                            color: Colors.green,
+                            size: 20,
+                          ),
+                          onTap: () async {
+                            BotToast.showText(
+                              text: 'This script incorporates a dedicated API key:\n\n'
+                                  '${script.customApiKey}\n\n'
+                                  'This key will be used instead of the default Torn PDA API key.',
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[800]!,
+                              contentPadding: const EdgeInsets.all(10),
+                              duration: const Duration(seconds: 5),
+                            );
+                          },
+                        ),
+                      ),
                     if (script.updateStatus == UserScriptUpdateStatus.noRemote)
                       GestureDetector(
                         child: const Icon(
-                          MdiIcons.alphaC,
+                          MdiIcons.tagEdit,
                           color: Colors.grey,
                           size: 20,
                         ),
                         onTap: () async {
                           BotToast.showText(
-                            text:
-                                'This is a custom script without an update URL. It will not be updated automatically.',
+                            text: 'This is a custom script without an update URL.\n\n'
+                                'It will not be updated automatically.',
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                             ),
                             contentColor: Colors.grey[800]!,
                             contentPadding: const EdgeInsets.all(10),
+                            duration: const Duration(seconds: 5),
                           );
                         },
                       )
@@ -280,8 +306,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           ),
                           onTap: () async {
                             BotToast.showText(
-                              text:
-                                  "This is a${script.isExample ? "n example" : ""} script that you have edited, so it will not update. Reset changes to enable updates again.",
+                              text: "This is a${script.isExample ? "n example" : ""} script that you have edited, "
+                                  "so it will not update. Reset changes to enable updates again.",
                               textStyle: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,

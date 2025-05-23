@@ -91,18 +91,35 @@ class UserScriptsProvider extends ChangeNotifier {
 
   UnmodifiableListView<UserScript> getCondSources({
     required String url,
-    required String apiKey,
+    required String pdaApiKey,
     required UserScriptTime time,
   }) {
-    if (!_userScriptsEnabled) {
-      return UnmodifiableListView(const <UserScript>[]);
-    } else {
-      return UnmodifiableListView(_userScriptList.where((s) => s.shouldInject(url, time)).map((s) => UserScript(
-            groupName: s.name,
-            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-            source: adaptSource(s.source, apiKey),
-          )));
+    if (_userScriptsEnabled) {
+      try {
+        return UnmodifiableListView(
+          _userScriptList.where((s) => s.shouldInject(url, time)).map(
+            (s) {
+              return UserScript(
+                groupName: s.name,
+                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                // If the script is a custom API key script, we need to replace the API key
+                source: adaptSource(
+                  source: s.source,
+                  scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
+                ),
+              );
+            },
+          ),
+        );
+      } catch (e, trace) {
+        if (!Platform.isWindows) {
+          FirebaseCrashlytics.instance.log("PDA error at userscripts getCondSources. Error: $e");
+        }
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+        logToUser("PDA error at userscripts getCondSources. Error: $e");
+      }
     }
+    return UnmodifiableListView(const <UserScript>[]);
   }
 
   List<String> getScriptsToRemove({
@@ -115,8 +132,8 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
-  String adaptSource(String source, String apiKey) {
-    final String withApiKey = source.replaceAll("###PDA-APIKEY###", apiKey);
+  String adaptSource({required String source, required String scriptFinalApiKey}) {
+    final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
     String anonFunction = "(function() {$withApiKey}());";
     anonFunction = anonFunction.replaceAll('“', '"');
     anonFunction = anonFunction.replaceAll('”', '"');
@@ -158,6 +175,7 @@ class UserScriptsProvider extends ChangeNotifier {
     allScriptFirstLoad = false,
     bool isExample = false,
     List<String>? matches,
+    String? customApiKey,
   }) {
     final newScript = UserScriptModel(
       name: name,
@@ -170,6 +188,7 @@ class UserScriptsProvider extends ChangeNotifier {
       updateStatus: updateStatus,
       url: url,
       isExample: isExample,
+      customApiKey: customApiKey ?? "",
     );
     userScriptList.add(newScript);
 
@@ -189,6 +208,7 @@ class UserScriptsProvider extends ChangeNotifier {
     String source,
     bool changedSource,
     bool isFromRemote,
+    String? customApiKey,
   ) {
     List<String>? matches;
     bool couldParseHeader = true;
@@ -201,6 +221,7 @@ class UserScriptsProvider extends ChangeNotifier {
         name: name,
         time: time,
         source: source,
+        customApiKey: customApiKey ?? "",
         matches: matches,
         updateStatus: isFromRemote
             ? UserScriptUpdateStatus.upToDate
@@ -344,6 +365,7 @@ class UserScriptsProvider extends ChangeNotifier {
                 updateStatus: decodedModel.updateStatus,
                 allScriptFirstLoad: true,
                 isExample: decodedModel.isExample,
+                customApiKey: decodedModel.customApiKey,
               );
             } catch (e, trace) {
               if (!Platform.isWindows) {

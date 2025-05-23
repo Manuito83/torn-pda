@@ -2,6 +2,7 @@
 import 'dart:developer';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
@@ -13,6 +14,7 @@ import 'package:toggle_switch/toggle_switch.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
+import 'package:torn_pda/widgets/webviews/webview_simple_dialog.dart';
 
 class UserScriptsAddDialog extends StatefulWidget {
   final bool editExisting;
@@ -27,6 +29,8 @@ class UserScriptsAddDialog extends StatefulWidget {
 }
 
 class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerProviderStateMixin {
+  final pdaKeyWord = "###PDA-APIKEY###";
+
   double hPad = 15;
   double vPad = 20;
   double frame = 10;
@@ -35,6 +39,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
   final _addSourceController = TextEditingController();
   final _nameFormKey = GlobalKey<FormState>();
   final _sourceFormKey = GlobalKey<FormState>();
+
+  // Custom API Key handling
+  bool _mainTabFirstSavePress = true;
+  bool _remoteTabFirstLoadOrSavePress = true;
+  bool _showCustomApiKeyButton = false;
+  String _customApiKey = "";
+  bool _isCurrentScriptCandidateForCustomApiKey = false;
+  UserScriptModel? _fetchedRemoteModel;
 
   // Remote source handlingt
   final _remoteUrlController = TextEditingController();
@@ -74,6 +86,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
           _originalSource = script.source;
           _originalName = script.name;
           _originalTime = script.time;
+          _customApiKey = script.customApiKey;
+          _isCurrentScriptCandidateForCustomApiKey = script.source.contains(pdaKeyWord);
+          _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
 
           _remoteNameController.text = script.name;
           _remoteUrlController.text = script.url ?? "";
@@ -83,14 +98,33 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       _remoteUrlController.text = widget.defaultUrl!;
     }
 
+    // Listen to source changes on the main tab
+    _addSourceController.addListener(_onMainTabSourceChanged);
+
     // Listen to changes so that "clear" button becomes active when there is text in the URL field
     _remoteUrlController.addListener(() {
       setState(() {});
     });
   }
 
+  void _onMainTabSourceChanged() {
+    // Only main tab
+    if (_tabController.index == 0) {
+      final pdaLogicFound = _addSourceController.text.contains(pdaKeyWord);
+
+      // Update state if the candidate status changes or needs to be corrected
+      if (pdaLogicFound != _isCurrentScriptCandidateForCustomApiKey || pdaLogicFound != _showCustomApiKeyButton) {
+        setState(() {
+          _isCurrentScriptCandidateForCustomApiKey = pdaLogicFound;
+          _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
+        });
+      }
+    }
+  }
+
   @override
   Future dispose() async {
+    _addSourceController.removeListener(_onMainTabSourceChanged);
     _addNameController.dispose();
     _addSourceController.dispose();
     _remoteUrlController.dispose();
@@ -277,7 +311,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                               fontSize: 14,
                               color: Colors.white,
                             ),
-                            contentColor: Colors.orange[700]!,
+                            contentColor: Colors.orange[800]!,
                             duration: const Duration(seconds: 4),
                             contentPadding: const EdgeInsets.all(10));
                         return null;
@@ -294,30 +328,82 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.only(right: 20),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  child: Text(widget.editExisting ? "Save" : "Add"),
-                  onPressed: () async {
-                    await _addPressed(context);
-                  },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (_showCustomApiKeyButton) _customApiKeyButton() else const SizedBox(),
+              Padding(
+                padding: const EdgeInsets.only(right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      child: Text(widget.editExisting ? "Save" : "Add"),
+                      onPressed: () async {
+                        await _addPressed(context);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      child: const Text("Cancel"),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                  ],
                 ),
-                TextButton(
-                  child: const Text("Cancel"),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    _addNameController.text = '';
-                  },
-                ),
-              ],
-            ),
+              )
+            ],
           )
         ],
       ),
     );
+  }
+
+  Future<void> _showCustomApiKeyDialog() async {
+    final TextEditingController apiKeyController = TextEditingController(text: _customApiKey);
+    final result = await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Custom API Key'),
+          content: TextField(
+            controller: apiKeyController,
+            decoration: const InputDecoration(hintText: "Custom script API key"),
+            autofocus: true,
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Save'),
+              onPressed: () {
+                Navigator.of(context).pop(apiKeyController.text);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    if (result != null) {
+      setState(() {
+        _customApiKey = result;
+        // If a key is set, we don't need to confirm the save action
+        if (_tabController.index == 0) {
+          _mainTabFirstSavePress = false;
+        } else {
+          _remoteTabFirstLoadOrSavePress = false;
+        }
+
+        // Update the API key button visibility
+        _showCustomApiKeyButton = true;
+      });
+    }
   }
 
   Widget _remoteLoadTab() {
@@ -329,7 +415,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
+                SizedBox(
                     width: 20,
                     child: GestureDetector(
                       child: const Icon(MdiIcons.arrowLeft),
@@ -344,9 +430,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     Text(widget.editExisting ? "Remote script update" : "Remote script load"),
                   ],
                 ),
-                Container(
-                  width: 20,
-                ),
+                const SizedBox(width: 20),
               ],
             ),
           ),
@@ -383,7 +467,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                 ElevatedButton(
                     child: Text(widget.editExisting ? "Check for Update" : "Fetch"),
                     onPressed: () async {
-                      if (_remoteUrlController.text.isEmpty) {
+                      if (!_remoteUrlKey.currentState!.validate()) {
                         return;
                       }
                       bool success = false;
@@ -402,69 +486,79 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                         log(e.toString());
                         message = "Fetch error: $e";
                       } finally {
+                        bool fetchWasSuccessful = success && resultModel != null;
+                        bool newRemoteSourceIsCandidate = false;
+
+                        if (fetchWasSuccessful) {
+                          _fetchedRemoteModel = resultModel;
+                          _remoteSourceController.text = resultModel.source;
+                          _remoteNameController.text = resultModel.name;
+                          _remoteRunTimeController.text = resultModel.time.name;
+                          newRemoteSourceIsCandidate = resultModel.source.contains(pdaKeyWord);
+
+                          if (mounted) {
+                            setState(() {
+                              _isCurrentScriptCandidateForCustomApiKey = newRemoteSourceIsCandidate;
+                              _showCustomApiKeyButton = newRemoteSourceIsCandidate;
+                              _remoteTabFirstLoadOrSavePress = true;
+                            });
+                          }
+                        }
+
                         if (!widget.editExisting) {
+                          // New remote script
                           BotToast.showText(
                             align: const Alignment(0, 0),
                             clickClose: true,
-                            text: message ?? (success ? "Success" : "An unknown error occurred"),
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: success ? Colors.green : Colors.orange[700]!,
+                            text: message ??
+                                (fetchWasSuccessful
+                                    ? "Fetch successful. Review and Load."
+                                    : "An unknown error occurred during fetch."),
+                            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                            contentColor: fetchWasSuccessful ? Colors.green : Colors.orange[800]!,
                             duration: const Duration(seconds: 4),
                             contentPadding: const EdgeInsets.all(10),
                           );
                         } else {
-                          if (!success) {
-                            log("An error occured in script ${widget.editScript!.name}: $message");
+                          // Editing existing script
+                          if (!fetchWasSuccessful) {
+                            log("An error occurred while checking for update for script ${widget.editScript!.name}: $message");
                             BotToast.showText(
                               align: const Alignment(0, 0),
                               clickClose: true,
-                              text: message ?? "An unknown error occurred",
-                              textStyle: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.white,
-                              ),
-                              contentColor: Colors.orange[700]!,
+                              text: message ?? "An unknown error occurred while checking for update.",
+                              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                              contentColor: Colors.orange[800]!,
                               duration: const Duration(seconds: 4),
                               contentPadding: const EdgeInsets.all(10),
                             );
-                            widget.editScript!.updateStatus = UserScriptUpdateStatus.error;
                           } else {
                             try {
-                              final String newVersion = resultModel!.version;
+                              final String newVersion = resultModel.version;
                               final String oldVersion = widget.editScript!.version;
-                              final bool isOlderVersion = UserScriptModel.isNewerVersion(newVersion, oldVersion);
-                              final String finalMessage = !success
-                                  ? (message ?? "An unknown error occurred")
-                                  : isOlderVersion
-                                      ? "Newer version found: $newVersion\nPlease review changes and save!"
-                                      : "No newer version found";
+                              final bool isNewerVersionAvailable =
+                                  UserScriptModel.isNewerVersion(newVersion, oldVersion);
+                              final String finalMessage = isNewerVersionAvailable
+                                  ? "Newer version found: $newVersion\nPlease review changes and save!"
+                                  : "No newer version found. Current: $oldVersion";
                               log(finalMessage);
                               BotToast.showText(
                                 align: const Alignment(0, 0),
                                 clickClose: true,
                                 text: finalMessage,
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: success && isOlderVersion ? Colors.green : Colors.orange[700]!,
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: isNewerVersionAvailable ? Colors.green : Colors.orange[800]!,
                                 duration: const Duration(seconds: 4),
                                 contentPadding: const EdgeInsets.all(10),
                               );
                             } catch (e) {
-                              log("An error occured in script ${widget.editScript!.name}: $e");
+                              log("An error occurred processing remote data for script ${widget.editScript!.name}: $e");
                               BotToast.showText(
                                 align: const Alignment(0, 0),
                                 clickClose: true,
                                 text: "An unknown error occurred whilst parsing the remote script.",
-                                textStyle: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.white,
-                                ),
-                                contentColor: Colors.orange[700]!,
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: Colors.orange[800]!,
                                 duration: const Duration(seconds: 4),
                                 contentPadding: const EdgeInsets.all(10),
                               );
@@ -472,23 +566,12 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           }
                         }
 
-                        setState(() {
-                          if (success) {
-                            model = resultModel!;
-                            _remoteSourceController.text = resultModel.source;
-                            _remoteNameController.text = resultModel.name;
-                            final String text = resultModel.time.name;
-                            _remoteRunTimeController.text = text;
-                          } else {
-                            _remoteSourceController.clear();
-                            _remoteNameController.clear();
-                            _remoteRunTimeController.clear();
-                          }
-                          _remoteSourceFetching = false;
-                        });
+                        if (mounted) {
+                          setState(() => _remoteSourceFetching = false);
+                        }
                       }
                     }),
-                Container(width: 20),
+                const SizedBox(width: 20),
                 ElevatedButton(
                   child: const Text("Clear"),
                   onPressed: _remoteUrlController.text.isEmpty
@@ -499,6 +582,20 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                             _remoteSourceController.clear();
                             _remoteNameController.clear();
                             _remoteRunTimeController.clear();
+                            _fetchedRemoteModel = null;
+                            _remoteTabFirstLoadOrSavePress = true;
+
+                            if (widget.editExisting && widget.editScript != null) {
+                              // If editing, candidate status based on the source currently in the main tab editor
+                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(pdaKeyWord);
+                              _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
+                              // Allow main tab to prompt again if needed by resetting its first save press flag
+                              _mainTabFirstSavePress = true;
+                            } else {
+                              // If we were adding a new script, the main tab's source determines candidate status
+                              _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(pdaKeyWord);
+                              _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
+                            }
                           });
                         },
                 ),
@@ -506,14 +603,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             ),
           ),
           _remoteSourceFetching
-              ? Expanded(
+              ? const Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.max,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Fetching script..."),
-                      Container(height: 20),
-                      const CircularProgressIndicator(),
+                      Text("Fetching script..."),
+                      SizedBox(height: 20),
+                      CircularProgressIndicator(),
                     ],
                   ),
                 )
@@ -534,7 +631,8 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           isDense: true,
                           counterText: "",
                           border: const OutlineInputBorder(),
-                          label: _remoteSourceController.text.isEmpty ? const Center(child: Text("Remote source")) : null,
+                          label:
+                              _remoteSourceController.text.isEmpty ? const Center(child: Text("Remote source")) : null,
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
@@ -547,94 +645,117 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                     ),
                   ),
                 ),
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              ElevatedButton(
-                child: Text(widget.editExisting ? "Save" : "Load"),
-                onPressed: _remoteNameController.text.isEmpty ||
-                        _remoteSourceController.text.isEmpty ||
-                        _remoteRunTimeController.text.isEmpty
-                    ? null
-                    : () {
-                        if (!widget.editExisting) {
-                          _userScriptsProvider
-                              .addUserScriptFromURL(_remoteUrlController.text.trim())
-                              .then((r) => BotToast.showText(
-                                    align: const Alignment(0, 0),
-                                    clickClose: true,
-                                    text: r.success ? "Script successfully added!" : "Error: ${r.message}",
-                                    textStyle: const TextStyle(
-                                      fontSize: 14,
-                                      color: Colors.white,
-                                    ),
-                                    contentColor: r.success ? Colors.green : Colors.orange[700]!,
-                                    duration: const Duration(seconds: 4),
-                                    contentPadding: const EdgeInsets.all(10),
-                                  ))
-                              .then(Navigator.of(context).pop);
-                        } else {
-                          final bool couldParseHeader = _userScriptsProvider.updateUserScript(
-                              widget.editScript!,
-                              _remoteNameController.text,
-                              UserScriptTime.values.byName(_remoteRunTimeController.text),
-                              _remoteSourceController.text,
-                              true,
-                              true);
-                          BotToast.showText(
-                            align: const Alignment(0, 0),
-                            clickClose: true,
-                            text: couldParseHeader
-                                ? "Script successfully updated!"
-                                : "Could not parse the header, the script will inject on all pages.",
-                            textStyle: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white,
-                            ),
-                            contentColor: couldParseHeader ? Colors.green : Colors.orange[700]!,
-                            duration: const Duration(seconds: 4),
-                            contentPadding: const EdgeInsets.all(10),
-                          );
-                          Navigator.of(context).pop();
-                        }
-                      },
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              if (_showCustomApiKeyButton) _customApiKeyButton() else const SizedBox(),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                  ElevatedButton(
+                    child: Text(widget.editExisting ? "Update" : "Load"),
+                    onPressed: _remoteNameController.text.isEmpty ||
+                            _remoteSourceController.text.isEmpty ||
+                            _remoteRunTimeController.text.isEmpty ||
+                            _fetchedRemoteModel == null
+                        ? null
+                        : () async {
+                            if (_isCurrentScriptCandidateForCustomApiKey &&
+                                _remoteTabFirstLoadOrSavePress &&
+                                _customApiKey.isEmpty) {
+                              setState(() {
+                                _remoteTabFirstLoadOrSavePress = false;
+                                _showCustomApiKeyButton = true;
+                              });
+                              _saveScriptWithoutApiKeyWarning();
+                              return;
+                            }
+
+                            Navigator.of(context).pop();
+
+                            if (!widget.editExisting) {
+                              _fetchedRemoteModel!.customApiKey = _customApiKey;
+                              _userScriptsProvider.addUserScriptByModel(_fetchedRemoteModel!);
+                              BotToast.showText(
+                                align: const Alignment(0, 0),
+                                clickClose: true,
+                                text: "Script successfully added!",
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: Colors.green,
+                                duration: const Duration(seconds: 4),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            } else {
+                              final bool couldParseHeader = _userScriptsProvider.updateUserScript(
+                                widget.editScript!,
+                                _fetchedRemoteModel!.name,
+                                _fetchedRemoteModel!.time,
+                                _fetchedRemoteModel!.source,
+                                true, // source changed (it's from remote)
+                                true, // isFromRemote
+                                _customApiKey,
+                              );
+                              BotToast.showText(
+                                align: const Alignment(0, 0),
+                                clickClose: true,
+                                text: couldParseHeader
+                                    ? "Script successfully updated!"
+                                    : "Could not parse the header, the script will inject on all pages.",
+                                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                contentColor: couldParseHeader ? Colors.green : Colors.orange[800]!,
+                                duration: const Duration(seconds: 4),
+                                contentPadding: const EdgeInsets.all(10),
+                              );
+                            }
+                            _remoteTabFirstLoadOrSavePress = true;
+                            _customApiKey = "";
+                            _isCurrentScriptCandidateForCustomApiKey = false;
+                            _showCustomApiKeyButton = false;
+                            _fetchedRemoteModel = null;
+                          },
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(child: const Text("Cancel"), onPressed: Navigator.of(context).pop)
+                ]),
               ),
-              Container(width: 20),
-              ElevatedButton(child: const Text("Cancel"), onPressed: Navigator.of(context).pop)
-            ]),
+            ],
           )
         ]));
   }
 
   Future<void> _addPressed(BuildContext context) async {
     if (_nameFormKey.currentState!.validate() && _sourceFormKey.currentState!.validate()) {
-      // Get rid of dialog first, so that it can't
-      // be pressed twice
-
-      Navigator.of(context).pop();
-
-      // Copy controller's text ot local variable
-      // early and delete the global, so that text
-      // does not appear again in case of failure
       final inputName = _addNameController.text;
       final inputTime = _originalTime;
       final inputSource = _addSourceController.text;
+
+      final bool isCandidate = inputSource.contains(pdaKeyWord);
+
+      if (isCandidate && _mainTabFirstSavePress && _customApiKey.isEmpty) {
+        setState(() {
+          _mainTabFirstSavePress = false;
+          _isCurrentScriptCandidateForCustomApiKey = true;
+          _showCustomApiKeyButton = true;
+        });
+        _saveScriptWithoutApiKeyWarning();
+        return;
+      }
+
+      Navigator.of(context).pop();
+
       _addNameController.text = _addSourceController.text = '';
 
       if (!widget.editExisting) {
         try {
           final metaMap = UserScriptModel.parseHeader(inputSource);
-          _userScriptsProvider.addUserScriptByModel(
-              UserScriptModel.fromMetaMap(metaMap, name: inputName, source: inputSource, time: inputTime));
+          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(metaMap,
+              name: inputName, source: inputSource, time: inputTime, customApiKey: _customApiKey));
         } on Exception catch (e) {
           if (e.toString().contains("No header found")) {
             BotToast.showText(
                 text: "No header was found in the script, it will be injected in all pages!",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.orange[700]!,
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                contentColor: Colors.orange[800]!,
                 duration: const Duration(seconds: 4),
                 contentPadding: const EdgeInsets.all(10));
             _userScriptsProvider.addUserScriptByModel(UserScriptModel(
@@ -647,24 +768,21 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               time: inputTime,
               updateStatus: UserScriptUpdateStatus.noRemote,
               isExample: false,
+              customApiKey: _customApiKey,
             ));
           } else {
             BotToast.showText(
               align: const Alignment(0, 0),
               clickClose: true,
-              text: "Error: $e",
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.orange[700]!,
+              text: "Error parsing script: $e",
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.orange[800]!,
               duration: const Duration(seconds: 4),
               contentPadding: const EdgeInsets.all(10),
             );
           }
         }
       } else {
-        // Flag the script as edited if we've changed something now or in the past
         var sourcedChanged = true;
         if (!widget.editScript!.edited &&
             inputSource == _originalSource &&
@@ -674,20 +792,136 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         }
 
         bool couldParseHeader = _userScriptsProvider.updateUserScript(
-            widget.editScript!, inputName, inputTime, inputSource, sourcedChanged, false);
+          widget.editScript!,
+          inputName,
+          inputTime,
+          inputSource,
+          sourcedChanged,
+          false,
+          _customApiKey,
+        );
         if (!couldParseHeader) {
           BotToast.showText(
             text: "Could not parse the header, the script will inject on all pages.",
-            textStyle: const TextStyle(
-              fontSize: 14,
-              color: Colors.white,
-            ),
-            contentColor: Colors.orange[700]!,
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+            contentColor: Colors.orange[800]!,
             duration: const Duration(seconds: 4),
             contentPadding: const EdgeInsets.all(10),
           );
         }
       }
+      _mainTabFirstSavePress = true;
+      _customApiKey = "";
+      _isCurrentScriptCandidateForCustomApiKey = false;
+      _showCustomApiKeyButton = false;
     }
+  }
+
+  void _saveScriptWithoutApiKeyWarning() {
+    BotToast.showText(
+      text: "This script uses an API key.\n\nUnless you specify a custom one for it, "
+          "your Torn PDA API key will be used!"
+          "\n\nPress 'Set API Key' to configure or "
+          "'${widget.editExisting ? "Save Update" : "Load Script"}' again to proceed without one.",
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.orange[800]!,
+      duration: const Duration(seconds: 10),
+      contentPadding: const EdgeInsets.all(10),
+      align: const Alignment(0, 0),
+      clickClose: true,
+    );
+  }
+
+  Row _customApiKeyButton() {
+    return Row(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 10.0, bottom: 5.0),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _customApiKey.isEmpty ? Colors.yellow : Colors.green,
+              foregroundColor: Colors.black,
+            ),
+            onPressed: _showCustomApiKeyDialog,
+            child: Text(_customApiKey.isEmpty ? "Set API Key" : "Edit API Key"),
+          ),
+        ),
+        const SizedBox(width: 8),
+        GestureDetector(
+          onTap: () async {
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              builder: (BuildContext dialogContext) {
+                const String apiUrl = "https://www.torn.com/api.html";
+                return AlertDialog(
+                  title: const Text("About Custom API Keys"),
+                  content: SingleChildScrollView(
+                    child: ListBody(
+                      children: <Widget>[
+                        const Text(
+                          "This script uses a special keyword that "
+                          "tells Torn PDA that it needs an API Key to function.",
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "If you don't provide an alternative API key for this script, "
+                          "Torn PDA will pass its own main application API Key.",
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          "Usually, this is not an issue.\n\n"
+                          "However, it's a good security practice to create different API keys with specific, "
+                          "limited permissions based on the script's needs. "
+                          "\n\nThis can help prevent unintentional information leaks or protect your game "
+                          "details if a script developer were to act maliciously or if the script had a vulnerability.",
+                        ),
+                        const SizedBox(height: 10),
+                        RichText(
+                          text: TextSpan(
+                            children: <TextSpan>[
+                              const TextSpan(
+                                style: TextStyle(
+                                  fontSize: 16,
+                                ),
+                                text:
+                                    "You can find more information about Torn API key rules, permission levels, and what data they can access on the official Torn API documentation page:\n\n",
+                              ),
+                              TextSpan(
+                                  text: apiUrl,
+                                  style: TextStyle(
+                                    color: _themeProvider.mainText,
+                                    decoration: TextDecoration.underline,
+                                    fontSize: 16,
+                                  ),
+                                  recognizer: TapGestureRecognizer()
+                                    ..onTap = () {
+                                      openWebViewSimpleDialog(context: context, initUrl: apiUrl);
+                                    }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text("Close"),
+                      onPressed: () {
+                        Navigator.of(dialogContext).pop();
+                      },
+                    ),
+                  ],
+                );
+              },
+            );
+          },
+          child: const Icon(
+            Icons.info_outline,
+            size: 20,
+          ),
+        )
+      ],
+    );
   }
 }

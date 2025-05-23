@@ -57,6 +57,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.8.1'
         ..date = '01 JUN 2025'
         ..features = [
+          "Userscripts now support individual custom API keys",
           "Global ranked war list is now searchable and can be sorted",
           "Added war date to the war widget in Profile",
           if (Platform.isAndroid) "Fixed Google login issues",
