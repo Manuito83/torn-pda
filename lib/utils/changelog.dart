@@ -51,12 +51,13 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.1 - Build 533 - 15/05/2025
+    // v3.8.1 - Build 534 - 15/05/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.1'
         ..date = '01 JUN 2025'
         ..features = [
+          "The global ranked war list is now searchable and can be sorted",
           if (Platform.isAndroid) "Fixed Google login issues",
           "Fixed OC information not showing in Profile",
           "Fixed chat notifications showing when disabled",

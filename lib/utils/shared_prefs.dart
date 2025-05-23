@@ -38,6 +38,7 @@ class Prefs {
   final String _kTravelingFilterInWars = "pda_travelingFilterStatusInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
+  final String _kRankedWarSortPerTab = "pda_rankedWarSortPerTab";
   final String _kYataSpies = "pda_yataSpies";
   final String _kYataSpiesTime = "pda_yataSpiesTime";
   final String _kTornStatsSpies = "pda_tornStatsSpies";
@@ -696,6 +697,16 @@ class Prefs {
   Future<bool> setWarMembersSort(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kWarMembersSort, value);
+  }
+
+  Future<String> getRankerWarSortPerTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kRankedWarSortPerTab) ?? 'active#progressDes-upcoming#timeAsc-finished#timeAsc';
+  }
+
+  Future<bool> setRankerWarSortPerTab(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kRankedWarSortPerTab, value);
   }
 
   Future<List<String>> getYataSpies() async {
