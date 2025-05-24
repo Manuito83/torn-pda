@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -23,6 +23,16 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		1749F0132DE1B829008EAB69 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		9705A1C41CF9048500538489 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -38,6 +48,10 @@
 /* Begin PBXFileReference section */
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
+		1749EFFE2DE1B828008EAB69 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		1749F0002DE1B828008EAB69 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		1749F0192DE1B90C008EAB69 /* PDAWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = PDAWidgetExtension.entitlements; sourceTree = "<group>"; };
+		1749F0262DE1C396008EAB69 /* PDAWidgetExtension copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "PDAWidgetExtension copy-Info.plist"; path = "/Users/manuito/source/torn-pda/ios/PDAWidgetExtension copy-Info.plist"; sourceTree = "<absolute>"; };
 		176E1F582CCBD5DD00DD41A5 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		2B43D4230A34E2972FE0591D /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		2F289379CB62BB25C6D51128 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
@@ -62,6 +76,10 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FA586AA32B10F20E002D1F8C /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		1749F0022DE1B828008EAB69 /* PDAWidget */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PDAWidget; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		97C146EB1CF9000F007C117D /* Frameworks */ = {
@@ -90,6 +108,8 @@
 			children = (
 				FA586AA32B10F20E002D1F8C /* libsqlite3.tbd */,
 				366C2162DDDD0BFA909BA5E1 /* Pods_Runner.framework */,
+				1749EFFE2DE1B828008EAB69 /* WidgetKit.framework */,
+				1749F0002DE1B828008EAB69 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -108,15 +128,18 @@
 		97C146E51CF9000F007C117D = {
 			isa = PBXGroup;
 			children = (
+				1749F0192DE1B90C008EAB69 /* PDAWidgetExtension.entitlements */,
 				3213EB7527258275006C1C26 /* sword_clash.aiff */,
 				32CA1C412C371F140099E06D /* car_start.aiff */,
 				32018E2026A492CB007D71C3 /* slow_spring_board.aiff */,
 				32018DF426A491BB007D71C3 /* aircraft_seatbelt.aiff */,
 				9740EEB11CF90186004384FC /* Flutter */,
 				97C146F01CF9000F007C117D /* Runner */,
+				1749F0022DE1B828008EAB69 /* PDAWidget */,
 				97C146EF1CF9000F007C117D /* Products */,
 				0774D295BE5E2390343C1BAC /* Pods */,
 				2E9B3E165190713786DD9226 /* Frameworks */,
+				1749F0262DE1C396008EAB69 /* PDAWidgetExtension copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -171,6 +194,7 @@
 				B40C78D1686E5E72E3D91839 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */,
 				31FF9A23A28667037033CDDD /* [CP] Embed Pods Frameworks */,
 				7CC74DF9173F6DD506B24584 /* [CP] Copy Pods Resources */,
+				1749F0132DE1B829008EAB69 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
@@ -187,6 +211,7 @@
 		97C146E61CF9000F007C117D /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1630;
 				LastUpgradeCheck = 1510;
 				ORGANIZATIONNAME = "The Chromium Authors";
 				TargetAttributes = {
