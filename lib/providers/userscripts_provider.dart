@@ -13,6 +13,7 @@ import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/providers/userscripts_apis_provider.dart';
 import 'package:torn_pda/utils/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
@@ -94,32 +95,26 @@ class UserScriptsProvider extends ChangeNotifier {
     required String pdaApiKey,
     required UserScriptTime time,
   }) {
-    if (_userScriptsEnabled) {
-      try {
-        return UnmodifiableListView(
-          _userScriptList.where((s) => s.shouldInject(url, time)).map(
-            (s) {
-              return UserScript(
-                groupName: s.name,
-                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                // If the script is a custom API key script, we need to replace the API key
-                source: adaptSource(
-                  source: s.source,
-                  scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
-                ),
-              );
-            },
-          ),
-        );
-      } catch (e, trace) {
-        if (!Platform.isWindows) {
-          FirebaseCrashlytics.instance.log("PDA error at userscripts getCondSources. Error: $e");
-        }
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-        logToUser("PDA error at userscripts getCondSources. Error: $e");
-      }
+    if (!_userScriptsEnabled) {
+      return UnmodifiableListView(const <UserScript>[]);
     }
-    return UnmodifiableListView(const <UserScript>[]);
+
+    return UnmodifiableListView(
+      _userScriptList.where((s) => s.shouldInject(url, time))
+        .map((s) {
+          return UserScript(
+            groupName: s.name,
+            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+            // If the script is a custom API key script, we need to replace the API key
+            source: await adaptSource(
+              source: s.source,
+              scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
+              grants: s.grants,
+            ),
+          );
+        },
+      ),
+    );
   }
 
   List<String> getScriptsToRemove({
@@ -128,23 +123,46 @@ class UserScriptsProvider extends ChangeNotifier {
     if (!_userScriptsEnabled) {
       return const <String>[];
     } else {
-      return _userScriptList.where((s) => !s.shouldInject(url)).map((s) => s.name).toList();
+      return _userScriptList
+          .where((s) => !s.shouldInject(url))
+          .map((s) => s.name)
+          .toList();
     }
   }
 
-  String adaptSource({required String source, required String scriptFinalApiKey}) {
+  Future<String> adaptSource({
+    required String source, 
+    required String scriptFinalApiKey, 
+    required List<String>? grants
+  }) async {
     final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
-    String anonFunction = "(function() {$withApiKey}());";
+    var apis = await UserscriptApisProvider.apis;
+
+    // default includes the GM object and other stuff that always appears
+    String grantInjections = apis["default"] ?? "";
+    
+    // each item that can be granted is checked and injected
+    for (final api in apis.entries) {
+      if (grants?.contains(api.key) ?? false) {
+        grantInjections += api.value;
+      }
+    }
+    String anonFunction = "(function() {$grantInjections;$withApiKey}());";
     anonFunction = anonFunction.replaceAll('“', '"');
     anonFunction = anonFunction.replaceAll('”', '"');
     return anonFunction;
   }
 
-  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
+  Future<({bool success, String? message})> addUserScriptFromURL(String url,
+      {bool? isExample}) async {
     final response = await UserScriptModel.fromURL(url, isExample: isExample);
     if (response.success && response.model != null) {
-      if (_userScriptList.any((script) => script.name == response.model!.name)) {
-        return (success: false, message: "Script with same name already exists");
+      if (_userScriptList
+          .any((script) => script.name == response.model!.name)) {
+        return (
+          success: false,
+          message: "Script with same name already exists"
+        );
       }
       userScriptList.add(response.model!);
       _sort();
@@ -177,6 +195,7 @@ class UserScriptsProvider extends ChangeNotifier {
     List<String>? matches,
     String? customApiKey,
     bool? customApiKeyCandidate,
+    List<String>? grants,
   }) {
     final newScript = UserScriptModel(
       name: name,
@@ -191,6 +210,7 @@ class UserScriptsProvider extends ChangeNotifier {
       isExample: isExample,
       customApiKey: customApiKey ?? "",
       customApiKeyCandidate: customApiKeyCandidate ?? false,
+      grants: grants ?? const [],
     );
     userScriptList.add(newScript);
 
@@ -213,25 +233,22 @@ class UserScriptsProvider extends ChangeNotifier {
     String? customApiKey,
     bool? customApiKeyCandidate,
   ) {
-    List<String>? matches;
     bool couldParseHeader = true;
-    try {
-      matches = UserScriptModel.tryGetMatches(source);
-    } catch (e) {
-      matches ??= const ["*"];
-    }
-    userScriptList.firstWhere((script) => script.name == editedModel.name).update(
-        name: name,
-        time: time,
-        source: source,
-        customApiKey: customApiKey ?? "",
-        customApiKeyCandidate: customApiKeyCandidate ?? false,
-        matches: matches,
-        updateStatus: isFromRemote
-            ? UserScriptUpdateStatus.upToDate
-            : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
-                ? UserScriptUpdateStatus.noRemote
-                : UserScriptUpdateStatus.localModified);
+    List<String>? matches = UserScriptModel.tryGetMatches(source);
+    List<String>? grants = UserScriptModel.tryGetGrants(source);
+    userScriptList
+        .firstWhere((script) => script.name == editedModel.name)
+        .update(
+            name: name,
+            time: time,
+            source: source,
+            matches: matches,
+            grants: grants,
+            updateStatus: isFromRemote
+                ? UserScriptUpdateStatus.upToDate
+                : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
+                    ? UserScriptUpdateStatus.noRemote
+                    : UserScriptUpdateStatus.localModified);
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
     return couldParseHeader;
@@ -306,13 +323,17 @@ class UserScriptsProvider extends ChangeNotifier {
           updateStatus: decodedModel.updateStatus,
           url: decodedModel.url,
           matches: decodedModel.matches,
+          grants: decodedModel.grants,
         );
       } catch (e, trace) {
         if (!Platform.isWindows) {
-          FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+          FirebaseCrashlytics.instance.log(
+              "PDA error at adding server userscript. Error: $e. Stack: $trace");
         }
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-        logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
+        if (!Platform.isWindows)
+          FirebaseCrashlytics.instance.recordError(e, trace);
+        logToUser(
+            "PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
     _sort();
@@ -326,7 +347,8 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void _sort() {
-    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _userScriptList
+        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   void changeScriptsFirstTime(bool value) {
@@ -356,7 +378,8 @@ class UserScriptsProvider extends ChangeNotifier {
               // Check if the script with the same name already exists in the list
               // (user-reported bug)
               final String name = decodedModel.name.toLowerCase();
-              if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
+              if (_userScriptList
+                  .any((script) => script.name.toLowerCase() == name)) continue;
 
               bool customApiKeyCandidate = false;
               if (decodedModel.source.contains("###PDA-APIKEY###")) {
@@ -379,10 +402,13 @@ class UserScriptsProvider extends ChangeNotifier {
               );
             } catch (e, trace) {
               if (!Platform.isWindows) {
-                FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
+                FirebaseCrashlytics.instance.log(
+                    "PDA error at adding one userscript. Error: $e. Stack: $trace");
               }
-              if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-              logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
+              if (!Platform.isWindows)
+                FirebaseCrashlytics.instance.recordError(e, trace);
+              logToUser(
+                  "PDA error at adding one userscript. Error: $e. Stack: $trace");
             }
           }
         }
@@ -395,9 +421,11 @@ class UserScriptsProvider extends ChangeNotifier {
     } catch (e, trace) {
       // Pass (scripts will be empty)
       if (!Platform.isWindows) {
-        FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.log(
+            "PDA error at userscripts first load. Error: $e. Stack: $trace");
       }
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+      if (!Platform.isWindows)
+        FirebaseCrashlytics.instance.recordError(e, trace);
       logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
     }
   }
@@ -406,7 +434,8 @@ class UserScriptsProvider extends ChangeNotifier {
     int updates = 0;
     await Future.wait<void>(_userScriptList.map((s) {
       // Only check for updates on relevant scripts
-      if (s.updateStatus == UserScriptUpdateStatus.localModified || s.updateStatus == UserScriptUpdateStatus.noRemote) {
+      if (s.updateStatus == UserScriptUpdateStatus.localModified ||
+          s.updateStatus == UserScriptUpdateStatus.noRemote) {
         return Future.value();
       }
       // Ensure script has a valid URL
@@ -436,7 +465,8 @@ class UserScriptsProvider extends ChangeNotifier {
     userScriptList.removeWhere((s) => s.isExample);
     await Future.wait(defaultScriptUrls.map((url) => url == null
         ? Future.value()
-        : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
+        : addUserScriptFromURL(url, isExample: true)
+            .then((r) => r.success ? added++ : failed++)));
     return (
       added: added,
       failed: failed,
