@@ -69,7 +69,12 @@ class OrganizedCrimeWidgetState extends State<OrganizedCrimeWidget> {
     final slots = organizedCrime['slots'] as List<dynamic>? ?? [];
 
     final playerSlot = slots.firstWhereOrNull(
-      (slot) => slot['user']['id'] == widget.playerId,
+      (slot) {
+        if (slot['user'] == null || slot['user']['id'] == null) {
+          return false;
+        }
+        return slot['user']['id'] == widget.playerId;
+      },
     );
 
     if (playerSlot == null) {
