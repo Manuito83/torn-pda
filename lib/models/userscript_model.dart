@@ -22,20 +22,21 @@ enum UserScriptUpdateStatus {
 }
 
 class UserScriptModel {
-  UserScriptModel(
-      {this.enabled = true,
-      this.matches = const ["*"],
-      required this.name,
-      this.version = "0.0.0",
-      this.edited = false,
-      required this.source,
-      this.time = UserScriptTime.end,
-      this.url,
-      this.updateStatus = UserScriptUpdateStatus.noRemote,
-      required this.isExample,
-      this.customApiKey = "",
-      this.customApiKeyCandidate = false,
-      this.grants = const []});
+  UserScriptModel({
+    this.enabled = true,
+    this.matches = const ["*"],
+    required this.name,
+    this.version = "0.0.0",
+    this.edited = false,
+    required this.source,
+    this.time = UserScriptTime.end,
+    this.url,
+    this.updateStatus = UserScriptUpdateStatus.noRemote,
+    required this.isExample,
+    this.customApiKey = "",
+    this.customApiKeyCandidate = false,
+    this.grants = const [],
+  });
 
   bool enabled;
   List<String> matches;
@@ -68,18 +69,18 @@ class UserScriptModel {
       final updateStatus =
           UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? (url is String ? "upToDate" : "noRemote"));
       return UserScriptModel(
-          enabled: enabled,
-          matches: matches,
-          name: name,
-          version: version,
-          edited: edited,
-          source: source,
-          time: time,
-          url: url,
-          updateStatus: updateStatus,
-          isExample: isExample,
-          grants: <String>[] // Old model does not have grants
-          );
+        enabled: enabled,
+        matches: matches,
+        name: name,
+        version: version,
+        edited: edited,
+        source: source,
+        time: time,
+        url: url,
+        updateStatus: updateStatus,
+        isExample: isExample,
+        grants: <String>[], // Old model does not have grants
+      );
     } else {
       return UserScriptModel(
         enabled: json["enabled"],
@@ -99,15 +100,17 @@ class UserScriptModel {
     }
   }
 
-  factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
-      {String? url,
-      UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
-      bool? isExample,
-      String? name,
-      String? source,
-      UserScriptTime? time,
-      String? customApiKey,
-      bool? customApiKeyCandidate}) {
+  factory UserScriptModel.fromMetaMap(
+    Map<String, dynamic> metaMap, {
+    String? url,
+    UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
+    bool? isExample,
+    String? name,
+    String? source,
+    UserScriptTime? time,
+    String? customApiKey,
+    bool? customApiKeyCandidate,
+  }) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }

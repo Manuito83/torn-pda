@@ -101,8 +101,8 @@ class UserScriptsProvider extends ChangeNotifier {
 
     try {
       return UnmodifiableListView(
-        _userScriptList.where((s) => s.shouldInject(url, time))
-          .map((s) {
+        _userScriptList.where((s) => s.shouldInject(url, time)).map(
+          (s) {
             return UserScript(
               groupName: s.name,
               injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
@@ -133,24 +133,17 @@ class UserScriptsProvider extends ChangeNotifier {
     if (!_userScriptsEnabled) {
       return const <String>[];
     } else {
-      return _userScriptList
-          .where((s) => !s.shouldInject(url))
-          .map((s) => s.name)
-          .toList();
+      return _userScriptList.where((s) => !s.shouldInject(url)).map((s) => s.name).toList();
     }
   }
 
-  String adaptSource({
-    required String source, 
-    required String scriptFinalApiKey, 
-    required List<String>? grants
-  }) {
+  String adaptSource({required String source, required String scriptFinalApiKey, required List<String>? grants}) {
     final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
     var apis = UserscriptApisProvider.apis;
 
     // default includes the GM object and other stuff that always appears
     String grantInjections = apis["default"] ?? "";
-    
+
     // each item that can be granted is checked and injected
     for (final api in apis.entries) {
       if (grants?.contains(api.key) ?? false) {
@@ -163,16 +156,11 @@ class UserScriptsProvider extends ChangeNotifier {
     return anonFunction;
   }
 
-  Future<({bool success, String? message})> addUserScriptFromURL(String url,
-      {bool? isExample}) async {
+  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
     final response = await UserScriptModel.fromURL(url, isExample: isExample);
     if (response.success && response.model != null) {
-      if (_userScriptList
-          .any((script) => script.name == response.model!.name)) {
-        return (
-          success: false,
-          message: "Script with same name already exists"
-        );
+      if (_userScriptList.any((script) => script.name == response.model!.name)) {
+        return (success: false, message: "Script with same name already exists");
       }
       userScriptList.add(response.model!);
       _sort();
@@ -246,19 +234,17 @@ class UserScriptsProvider extends ChangeNotifier {
     bool couldParseHeader = true;
     List<String>? matches = UserScriptModel.tryGetMatches(source);
     List<String>? grants = UserScriptModel.tryGetGrants(source);
-    userScriptList
-        .firstWhere((script) => script.name == editedModel.name)
-        .update(
-            name: name,
-            time: time,
-            source: source,
-            matches: matches,
-            grants: grants,
-            updateStatus: isFromRemote
-                ? UserScriptUpdateStatus.upToDate
-                : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
-                    ? UserScriptUpdateStatus.noRemote
-                    : UserScriptUpdateStatus.localModified);
+    userScriptList.firstWhere((script) => script.name == editedModel.name).update(
+        name: name,
+        time: time,
+        source: source,
+        matches: matches,
+        grants: grants,
+        updateStatus: isFromRemote
+            ? UserScriptUpdateStatus.upToDate
+            : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
+                ? UserScriptUpdateStatus.noRemote
+                : UserScriptUpdateStatus.localModified);
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
     return couldParseHeader;
@@ -337,13 +323,10 @@ class UserScriptsProvider extends ChangeNotifier {
         );
       } catch (e, trace) {
         if (!Platform.isWindows) {
-          FirebaseCrashlytics.instance.log(
-              "PDA error at adding server userscript. Error: $e. Stack: $trace");
-        }
-        if (!Platform.isWindows)
+          FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
           FirebaseCrashlytics.instance.recordError(e, trace);
-        logToUser(
-            "PDA error at adding server userscript. Error: $e. Stack: $trace");
+        }
+        logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
     _sort();
@@ -357,8 +340,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void _sort() {
-    _userScriptList
-        .sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+    _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
   void changeScriptsFirstTime(bool value) {
@@ -388,8 +370,7 @@ class UserScriptsProvider extends ChangeNotifier {
               // Check if the script with the same name already exists in the list
               // (user-reported bug)
               final String name = decodedModel.name.toLowerCase();
-              if (_userScriptList
-                  .any((script) => script.name.toLowerCase() == name)) continue;
+              if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
 
               bool customApiKeyCandidate = false;
               if (decodedModel.source.contains("###PDA-APIKEY###")) {
@@ -412,13 +393,10 @@ class UserScriptsProvider extends ChangeNotifier {
               );
             } catch (e, trace) {
               if (!Platform.isWindows) {
-                FirebaseCrashlytics.instance.log(
-                    "PDA error at adding one userscript. Error: $e. Stack: $trace");
-              }
-              if (!Platform.isWindows)
+                FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
                 FirebaseCrashlytics.instance.recordError(e, trace);
-              logToUser(
-                  "PDA error at adding one userscript. Error: $e. Stack: $trace");
+              }
+              logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
             }
           }
         }
@@ -431,11 +409,9 @@ class UserScriptsProvider extends ChangeNotifier {
     } catch (e, trace) {
       // Pass (scripts will be empty)
       if (!Platform.isWindows) {
-        FirebaseCrashlytics.instance.log(
-            "PDA error at userscripts first load. Error: $e. Stack: $trace");
-      }
-      if (!Platform.isWindows)
+        FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
         FirebaseCrashlytics.instance.recordError(e, trace);
+      }
       logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
     }
   }
@@ -444,8 +420,7 @@ class UserScriptsProvider extends ChangeNotifier {
     int updates = 0;
     await Future.wait<void>(_userScriptList.map((s) {
       // Only check for updates on relevant scripts
-      if (s.updateStatus == UserScriptUpdateStatus.localModified ||
-          s.updateStatus == UserScriptUpdateStatus.noRemote) {
+      if (s.updateStatus == UserScriptUpdateStatus.localModified || s.updateStatus == UserScriptUpdateStatus.noRemote) {
         return Future.value();
       }
       // Ensure script has a valid URL
@@ -475,8 +450,7 @@ class UserScriptsProvider extends ChangeNotifier {
     userScriptList.removeWhere((s) => s.isExample);
     await Future.wait(defaultScriptUrls.map((url) => url == null
         ? Future.value()
-        : addUserScriptFromURL(url, isExample: true)
-            .then((r) => r.success ? added++ : failed++)));
+        : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
     return (
       added: added,
       failed: failed,
