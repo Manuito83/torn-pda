@@ -3,9 +3,16 @@ import 'dart:convert';
 import 'package:flutter/services.dart' show rootBundle;
 
 class UserscriptApisProvider {
-  static final Future<Map<String, String>> _apis = _getApisMap(_getApis());
+  static Map<String, String> _apis = {};
 
-  static Future<Map<String, String>> get apis async {
+  /// Initializes the provider by loading the API scripts from the assets.
+  /// Returns a [Future] if someone wants to check for errors.
+  static Future<Map<String, String>> initialize() async {
+    _apis = await _getApisMap(_getApis());
+    return _apis;
+  }
+
+  static Map<String, String> get apis {
     return _apis;
   }
 

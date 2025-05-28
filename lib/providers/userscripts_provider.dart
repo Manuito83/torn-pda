@@ -99,22 +99,32 @@ class UserScriptsProvider extends ChangeNotifier {
       return UnmodifiableListView(const <UserScript>[]);
     }
 
-    return UnmodifiableListView(
-      _userScriptList.where((s) => s.shouldInject(url, time))
-        .map((s) {
-          return UserScript(
-            groupName: s.name,
-            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-            // If the script is a custom API key script, we need to replace the API key
-            source: await adaptSource(
-              source: s.source,
-              scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
-              grants: s.grants,
-            ),
-          );
-        },
-      ),
-    );
+    try {
+      return UnmodifiableListView(
+        _userScriptList.where((s) => s.shouldInject(url, time))
+          .map((s) {
+            return UserScript(
+              groupName: s.name,
+              injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+              // If the script is a custom API key script, we need to replace the API key
+              source: adaptSource(
+                source: s.source,
+                scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
+                grants: s.grants,
+              ),
+            );
+          },
+        ),
+      );
+    } catch (e, trace) {
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error at userscripts getCondSources. Error: $e");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+      logToUser("PDA error at userscripts getCondSources. Error: $e");
+    }
+
+    return UnmodifiableListView(const <UserScript>[]);
   }
 
   List<String> getScriptsToRemove({
@@ -130,13 +140,13 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
-  Future<String> adaptSource({
+  String adaptSource({
     required String source, 
     required String scriptFinalApiKey, 
     required List<String>? grants
-  }) async {
+  }) {
     final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
-    var apis = await UserscriptApisProvider.apis;
+    var apis = UserscriptApisProvider.apis;
 
     // default includes the GM object and other stuff that always appears
     String grantInjections = apis["default"] ?? "";

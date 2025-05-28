@@ -55,6 +55,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/userscripts_apis_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -158,6 +159,7 @@ Future<void> main() async {
   // START ## Force splash screen to stay on until we get essential start-up data
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await _shouldSyncDeviceTheme(widgetsBinding);
+  await UserscriptApisProvider.initialize();
   FlutterNativeSplash.remove();
   // END ## Release splash screen
 

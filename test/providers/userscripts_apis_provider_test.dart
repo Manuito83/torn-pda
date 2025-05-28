@@ -4,7 +4,8 @@ import 'package:torn_pda/providers/userscripts_apis_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  var result = await UserscriptApisProvider.apis;
+  await UserscriptApisProvider.initialize();
+  var result = UserscriptApisProvider.apis;
   test('Returns a Map', () async {
     expect(result, isA<Map<String, String>>());
   });

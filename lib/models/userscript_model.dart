@@ -6,11 +6,9 @@
 import 'dart:convert';
 import "package:http/http.dart" as http;
 
-UserScriptModel userScriptModelFromJson(String str) =>
-    UserScriptModel.fromJson(json.decode(str));
+UserScriptModel userScriptModelFromJson(String str) => UserScriptModel.fromJson(json.decode(str));
 
-String userScriptModelToJson(UserScriptModel data) =>
-    json.encode(data.toJson());
+String userScriptModelToJson(UserScriptModel data) => json.encode(data.toJson());
 
 enum UserScriptTime { start, end }
 
@@ -37,8 +35,7 @@ class UserScriptModel {
       required this.isExample,
       this.customApiKey = "",
       this.customApiKeyCandidate = false,
-      this.grants = const []
-  });
+      this.grants = const []});
 
   bool enabled;
   List<String> matches;
@@ -59,58 +56,45 @@ class UserScriptModel {
     if (json["exampleCode"] is int) {
       final bool enabled = json["enabled"] is bool ? json["enabled"] : true;
       final String source = json["source"] is String ? json["source"] : "";
-      final List<String> matches = json["urls"] is List<dynamic>
-          ? json["urls"].cast<String>()
-          : tryGetMatches(source);
+      final List<String> matches = json["urls"] is List<dynamic> ? json["urls"].cast<String>() : tryGetMatches(source);
       final String name = json["name"] is String ? json["name"] : "Unknown";
-      final String version = json["version"] is String
-          ? json["version"]
-          : tryGetVersion(source) ?? "0.0.0";
+      final String version = json["version"] is String ? json["version"] : tryGetVersion(source) ?? "0.0.0";
       final bool edited = json["edited"] is bool ? json["edited"] : false;
-      final UserScriptTime time =
-          json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end;
-      final bool isExample =
-          json["isExample"] ?? (json["exampleCode"] ?? 0) > 0;
+      final UserScriptTime time = json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end;
+      final bool isExample = json["isExample"] ?? (json["exampleCode"] ?? 0) > 0;
       final url = json["url"] is String
           ? json["url"]
-          : tryGetUrl(json["source"]) ??
-              (isExample ? exampleScriptURLs[json["exampleCode"] - 1] : null);
-      final updateStatus = UserScriptUpdateStatus.values.byName(
-          json["updateStatus"] ?? (url is String ? "upToDate" : "noRemote"));
+          : tryGetUrl(json["source"]) ?? (isExample ? exampleScriptURLs[json["exampleCode"] - 1] : null);
+      final updateStatus =
+          UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? (url is String ? "upToDate" : "noRemote"));
       return UserScriptModel(
-        enabled: enabled,
-        matches: matches,
-        name: name,
-        version: version,
-        edited: edited,
-        source: source,
-        time: time,
-        url: url,
-        updateStatus: updateStatus,
-        isExample: isExample,
-        grants: <String>[] // Old model does not have grants
-      );
+          enabled: enabled,
+          matches: matches,
+          name: name,
+          version: version,
+          edited: edited,
+          source: source,
+          time: time,
+          url: url,
+          updateStatus: updateStatus,
+          isExample: isExample,
+          grants: <String>[] // Old model does not have grants
+          );
     } else {
       return UserScriptModel(
         enabled: json["enabled"],
-        matches: json["matches"] is List<dynamic>
-            ? json["matches"].cast<String>()
-            : const ["*"],
+        matches: json["matches"] is List<dynamic> ? json["matches"].cast<String>() : const ["*"],
         name: json["name"],
         version: json["version"],
         edited: json["edited"],
         source: json["source"],
-        time:
-            json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end,
+        time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end,
         url: json["url"],
-        updateStatus: UserScriptUpdateStatus.values
-            .byName(json["updateStatus"] ?? "noRemote"),
+        updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
         customApiKey: json["customApiKey"] ?? "",
         customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
-        grants: json["grants"] is List<dynamic>
-            ? json["grants"].cast<String>()
-            : const [],
+        grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : const [],
       );
     }
   }
@@ -138,10 +122,7 @@ class UserScriptModel {
       matches: metaMap["matches"] ?? ["*"],
       url: url ?? metaMap["downloadURL"],
       updateStatus: updateStatus,
-      time: time ??
-          (metaMap["injectionTime"] == "document-start"
-              ? UserScriptTime.start
-              : UserScriptTime.end),
+      time: time ?? (metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end),
       isExample: isExample ?? false,
       customApiKey: customApiKey ?? "",
       customApiKeyCandidate: customApiKeyCandidate ?? false,
@@ -149,8 +130,7 @@ class UserScriptModel {
     );
   }
 
-  static Future<({bool success, String message, UserScriptModel? model})>
-      fromURL(String url, {bool? isExample}) async {
+  static Future<({bool success, String message, UserScriptModel? model})> fromURL(String url, {bool? isExample}) async {
     try {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
@@ -159,9 +139,7 @@ class UserScriptModel {
           success: true,
           message: "Success",
           model: UserScriptModel.fromMetaMap(metaMap,
-              url: url,
-              updateStatus: UserScriptUpdateStatus.upToDate,
-              isExample: isExample ?? false),
+              url: url, updateStatus: UserScriptUpdateStatus.upToDate, isExample: isExample ?? false),
         );
       } else {
         return (
@@ -188,8 +166,7 @@ class UserScriptModel {
     final List<String> version1List = version1.split(".");
     final List<String> version2List = version2.split(".");
     for (int i = 0; i < version1List.length; i++) {
-      if (version2List.length <= i ||
-          int.parse(version1List[i]) > int.parse(version2List[i])) {
+      if (version2List.length <= i || int.parse(version1List[i]) > int.parse(version2List[i])) {
         return true;
       }
     }
@@ -214,16 +191,14 @@ class UserScriptModel {
 
   static Map<String, dynamic> parseHeader(String source) {
     // Thanks to [ViolentMonkey](https://github.com/violentmonkey/violentmonkey) for the following two regexes
-    String? meta = RegExp(
-            r"((?:^|\n)\s*\/\/\x20==UserScript==)([\s\S]*?\n)\s*\/\/\x20==\/UserScript==|$")
-        .stringMatch(source);
+    String? meta =
+        RegExp(r"((?:^|\n)\s*\/\/\x20==UserScript==)([\s\S]*?\n)\s*\/\/\x20==\/UserScript==|$").stringMatch(source);
     if (meta == null || meta.isEmpty) {
       throw Exception("No header found in userscript.");
     }
-    Iterable<RegExpMatch> metaMatches =
-        RegExp(r"^(?:^|\n)\s*\/\/\x20(@\S+)(.*)$", multiLine: true)
-            .allMatches(meta);
+    Iterable<RegExpMatch> metaMatches = RegExp(r"^(?:^|\n)\s*\/\/\x20(@\S+)(.*)$", multiLine: true).allMatches(meta);
     Map<String, dynamic> metaMap = {"@match": <String>[], "@grant": <String>[]};
+    bool foundNoneGrant = false;
     for (final match in metaMatches) {
       if (match.groupCount < 2) {
         continue;
@@ -235,6 +210,8 @@ class UserScriptModel {
         metaMap["@match"].add(match.group(2)!.trim());
       } else if (match.group(1)?.toLowerCase() == "@grant") {
         if (match.group(2)?.trim() == "none") {
+          // see note below (after the loop) on this behavior
+          foundNoneGrant = true;
           continue;
         }
         metaMap["@grant"].add(match.group(2)!.trim());
@@ -242,6 +219,14 @@ class UserScriptModel {
         metaMap[match.group(1)!.trim().toLowerCase()] = match.group(2)!.trim();
       }
     }
+
+    if (foundNoneGrant) {
+      // per https://wiki.greasespot.net/@grant
+      // > If you specify none and something else, none takes precedence. This can be confusing.
+      // > Check for a none to remove if you're adding APIs you intend to use.
+      metaMap["@grant"] = <String>[];
+    }
+
     return {
       "name": metaMap["@name"],
       "version": metaMap["@version"],
@@ -258,8 +243,7 @@ class UserScriptModel {
   shouldInject(String url, [UserScriptTime? time]) =>
       enabled &&
       (this.time == time || time == null) &&
-      matches.any(
-          (match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
+      matches.any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));
 
   void update({
     bool? enabled,
@@ -292,9 +276,7 @@ class UserScriptModel {
           this.name = metaMap["name"];
         }
         if (metaMap["injectionTime"] != null) {
-          this.time = metaMap["injectionTime"] == "document-start"
-              ? UserScriptTime.start
-              : UserScriptTime.end;
+          this.time = metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end;
         }
         if (metaMap["downloadURL"] != null) {
           this.url = metaMap["downloadURL"];
