@@ -37,6 +37,7 @@ import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/models/chaining/bars_model.dart' as barsModel;
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
@@ -5077,13 +5078,29 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
 
           if (apiResponse.status != null && apiResponse.travel != null) {
+            // Signal that we are updating from the profile page
             _chainProvider.statusUpdateSource = "profile";
-            _chainProvider.updatePlayerStatusColor(
-              apiResponse.status!.color!,
-              apiResponse.status!.state!,
-              apiResponse.status!.until!,
-              apiResponse.travel!.timestamp!,
-            );
+
+            // We need to adapt Status and Travel models to the BarsModel
+            barsModel.Status chainStatusModel = barsModel.Status()
+              ..color = apiResponse.status!.color
+              ..description = apiResponse.status!.description
+              ..details = apiResponse.status!.details
+              ..state = apiResponse.status!.state
+              ..until = apiResponse.status!.until;
+
+            barsModel.Travel chainTravelModel = barsModel.Travel()
+              ..departed = apiResponse.travel!.departed
+              ..destination = apiResponse.travel!.destination
+              ..departed = apiResponse.travel!.departed
+              ..timeLeft = apiResponse.travel!.timeLeft
+              ..timestamp = apiResponse.travel!.timestamp;
+
+            barsModel.BarsStatusCooldownsModel externalStatusModel = barsModel.BarsStatusCooldownsModel()
+              ..status = chainStatusModel
+              ..travel = chainTravelModel;
+
+            _chainProvider.getOrSetStatus(externalStatusModel: externalStatusModel);
           }
 
           _checkIfNotificationsAreCurrent();

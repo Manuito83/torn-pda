@@ -62,6 +62,8 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_travel.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
@@ -309,7 +311,16 @@ Future<void> main() async {
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
         ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
-        ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
+
+        ChangeNotifierProvider<ChainStatusProvider>(
+          create: (context) {
+            final provider = ChainStatusProvider();
+            provider.initialiseProvider();
+            return provider;
+          },
+          lazy: false,
+        ),
+
         ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
         ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
@@ -319,10 +330,26 @@ Future<void> main() async {
         ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
         ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider()),
         ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
+
         // Native login
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
         ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
+
         // ------------
+        //Live Activities
+        ChangeNotifierProvider<LiveActivityBridgeService>(
+          create: (context) {
+            final bridge = LiveActivityBridgeService();
+            bridge.initializeHandler();
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (Platform.isIOS) {
+                bridge.checkExistingActivities();
+              }
+            });
+            return bridge;
+          },
+          lazy: false,
+        ),
       ],
       child: MyApp(),
     ),
@@ -337,6 +364,9 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
+
+  late LiveActivityBridgeService _liveActivityBridgeService;
+  late TravelLiveActivityHandler _travelLiveActivityHandler;
 
   late Future _mainBrowserPreferencesLoaded;
 
@@ -355,6 +385,31 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Es importante obtener los providers aquí DESPUÉS de que el contexto esté disponible
+    // y los providers hayan sido creados por MultiProvider.
+    // Usamos addPostFrameCallback para asegurar que MultiProvider haya terminado.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        // Comprueba si el widget todavía está en el árbol
+        // Obtener instancias de los providers
+        final chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
+        _liveActivityBridgeService = Provider.of<LiveActivityBridgeService>(context, listen: false);
+
+        // Inicializar el handler de Live Activity
+        // El constructor de TravelLiveActivityHandler llama a su _initialize()
+        _travelLiveActivityHandler = TravelLiveActivityHandler(
+          chainStatusProvider: chainStatusProvider,
+          bridgeService: _liveActivityBridgeService,
+        );
+
+        // Llama a checkExistingActivities aquí, después de que todo esté configurado
+        if (Platform.isIOS) {
+          _liveActivityBridgeService.checkExistingActivities();
+        }
+        debugPrint("MyAppState: Live Activity services initialized.");
+      }
+    });
 
     _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
 
@@ -395,6 +450,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _travelLiveActivityHandler.dispose();
     super.dispose();
   }
 

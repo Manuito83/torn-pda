@@ -231,8 +231,8 @@ class ChainWidgetState extends State<ChainWidget> {
                     future: _finishedGettingBars,
                     builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                       if (snapshot.connectionState == ConnectionState.done) {
-                        if (_chainStatusProvider.barsModel is BarsStatusCooldownsModel) {
-                          final bars = _chainStatusProvider.barsModel;
+                        if (_chainStatusProvider.barsAndStatusModel is BarsStatusCooldownsModel) {
+                          final bars = _chainStatusProvider.barsAndStatusModel;
                           return Column(
                             children: <Widget>[
                               LinearPercentIndicator(
@@ -244,13 +244,13 @@ class ChainWidgetState extends State<ChainWidget> {
                                 backgroundColor: Colors.green[100],
                                 progressColor: Colors.green,
                                 center: Text(
-                                  'E: ${bars.energy.current}/${bars.energy.maximum}',
+                                  'E: ${bars!.energy!.current!}/${bars.energy!.maximum!}',
                                   style: const TextStyle(color: Colors.black),
                                 ),
                                 // Take drugs into account
-                                percent: (bars.energy.current / bars.energy.maximum) > 1.0
+                                percent: (bars.energy!.current! / bars.energy!.maximum!) > 1.0
                                     ? 1.0
-                                    : bars.energy.current / bars.energy.maximum,
+                                    : bars.energy!.current! / bars.energy!.maximum!,
                               ),
                               const Padding(
                                 padding: EdgeInsets.symmetric(vertical: 2),
@@ -263,7 +263,7 @@ class ChainWidgetState extends State<ChainWidget> {
                                 lineHeight: 3,
                                 backgroundColor: Colors.green[100],
                                 progressColor: Colors.green,
-                                percent: 1 - bars.energy.ticktime / bars.energy.interval as double,
+                                percent: 1 - bars.energy!.ticktime! / bars.energy!.interval!,
                               ),
                             ],
                           );
