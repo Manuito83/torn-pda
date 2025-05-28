@@ -238,6 +238,8 @@ class UserScriptsProvider extends ChangeNotifier {
         name: name,
         time: time,
         source: source,
+        customApiKey: customApiKey ?? "",
+        customApiKeyCandidate: customApiKeyCandidate ?? false,
         matches: matches,
         grants: grants,
         updateStatus: isFromRemote
