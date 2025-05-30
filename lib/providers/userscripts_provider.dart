@@ -13,6 +13,7 @@ import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
+import 'package:torn_pda/providers/userscripts_apis_provider.dart';
 import 'package:torn_pda/utils/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
@@ -94,31 +95,35 @@ class UserScriptsProvider extends ChangeNotifier {
     required String pdaApiKey,
     required UserScriptTime time,
   }) {
-    if (_userScriptsEnabled) {
-      try {
-        return UnmodifiableListView(
-          _userScriptList.where((s) => s.shouldInject(url, time)).map(
-            (s) {
-              return UserScript(
-                groupName: s.name,
-                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-                // If the script is a custom API key script, we need to replace the API key
-                source: adaptSource(
-                  source: s.source,
-                  scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
-                ),
-              );
-            },
-          ),
-        );
-      } catch (e, trace) {
-        if (!Platform.isWindows) {
-          FirebaseCrashlytics.instance.log("PDA error at userscripts getCondSources. Error: $e");
-        }
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-        logToUser("PDA error at userscripts getCondSources. Error: $e");
-      }
+    if (!_userScriptsEnabled) {
+      return UnmodifiableListView(const <UserScript>[]);
     }
+
+    try {
+      return UnmodifiableListView(
+        _userScriptList.where((s) => s.shouldInject(url, time)).map(
+          (s) {
+            return UserScript(
+              groupName: s.name,
+              injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+              // If the script is a custom API key script, we need to replace the API key
+              source: adaptSource(
+                source: s.source,
+                scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
+                grants: s.grants,
+              ),
+            );
+          },
+        ),
+      );
+    } catch (e, trace) {
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error at userscripts getCondSources. Error: $e");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+      logToUser("PDA error at userscripts getCondSources. Error: $e");
+    }
+
     return UnmodifiableListView(const <UserScript>[]);
   }
 
@@ -132,9 +137,20 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
-  String adaptSource({required String source, required String scriptFinalApiKey}) {
+  String adaptSource({required String source, required String scriptFinalApiKey, required List<String>? grants}) {
     final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
-    String anonFunction = "(function() {$withApiKey}());";
+    var apis = UserscriptApisProvider.apis;
+
+    // default includes the GM object and other stuff that always appears
+    String grantInjections = apis["default"] ?? "";
+
+    // each item that can be granted is checked and injected
+    for (final api in apis.entries) {
+      if (grants?.contains(api.key) ?? false) {
+        grantInjections += api.value;
+      }
+    }
+    String anonFunction = "(function() {$grantInjections;$withApiKey}());";
     anonFunction = anonFunction.replaceAll('“', '"');
     anonFunction = anonFunction.replaceAll('”', '"');
     return anonFunction;
@@ -177,6 +193,7 @@ class UserScriptsProvider extends ChangeNotifier {
     List<String>? matches,
     String? customApiKey,
     bool? customApiKeyCandidate,
+    List<String>? grants,
   }) {
     final newScript = UserScriptModel(
       name: name,
@@ -191,6 +208,7 @@ class UserScriptsProvider extends ChangeNotifier {
       isExample: isExample,
       customApiKey: customApiKey ?? "",
       customApiKeyCandidate: customApiKeyCandidate ?? false,
+      grants: grants ?? const [],
     );
     userScriptList.add(newScript);
 
@@ -213,13 +231,9 @@ class UserScriptsProvider extends ChangeNotifier {
     String? customApiKey,
     bool? customApiKeyCandidate,
   ) {
-    List<String>? matches;
     bool couldParseHeader = true;
-    try {
-      matches = UserScriptModel.tryGetMatches(source);
-    } catch (e) {
-      matches ??= const ["*"];
-    }
+    List<String>? matches = UserScriptModel.tryGetMatches(source);
+    List<String>? grants = UserScriptModel.tryGetGrants(source);
     userScriptList.firstWhere((script) => script.name == editedModel.name).update(
         name: name,
         time: time,
@@ -227,6 +241,7 @@ class UserScriptsProvider extends ChangeNotifier {
         customApiKey: customApiKey ?? "",
         customApiKeyCandidate: customApiKeyCandidate ?? false,
         matches: matches,
+        grants: grants,
         updateStatus: isFromRemote
             ? UserScriptUpdateStatus.upToDate
             : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
@@ -306,12 +321,13 @@ class UserScriptsProvider extends ChangeNotifier {
           updateStatus: decodedModel.updateStatus,
           url: decodedModel.url,
           matches: decodedModel.matches,
+          grants: decodedModel.grants,
         );
       } catch (e, trace) {
         if (!Platform.isWindows) {
           FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+          FirebaseCrashlytics.instance.recordError(e, trace);
         }
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
@@ -380,8 +396,8 @@ class UserScriptsProvider extends ChangeNotifier {
             } catch (e, trace) {
               if (!Platform.isWindows) {
                 FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
+                FirebaseCrashlytics.instance.recordError(e, trace);
               }
-              if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
               logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
             }
           }
@@ -396,8 +412,8 @@ class UserScriptsProvider extends ChangeNotifier {
       // Pass (scripts will be empty)
       if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.recordError(e, trace);
       }
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
       logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
     }
   }

@@ -35,6 +35,7 @@ class UserScriptModel {
     required this.isExample,
     this.customApiKey = "",
     this.customApiKeyCandidate = false,
+    this.grants = const [],
   });
 
   bool enabled;
@@ -49,6 +50,7 @@ class UserScriptModel {
   bool isExample;
   String customApiKey;
   bool customApiKeyCandidate;
+  List<String> grants;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     // First check if is old model
@@ -77,6 +79,7 @@ class UserScriptModel {
         url: url,
         updateStatus: updateStatus,
         isExample: isExample,
+        grants: <String>[], // Old model does not have grants
       );
     } else {
       return UserScriptModel(
@@ -92,19 +95,22 @@ class UserScriptModel {
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
         customApiKey: json["customApiKey"] ?? "",
         customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
+        grants: json["grants"] is List<dynamic> ? json["grants"].cast<String>() : const [],
       );
     }
   }
 
-  factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
-      {String? url,
-      UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
-      bool? isExample,
-      String? name,
-      String? source,
-      UserScriptTime? time,
-      String? customApiKey,
-      bool? customApiKeyCandidate}) {
+  factory UserScriptModel.fromMetaMap(
+    Map<String, dynamic> metaMap, {
+    String? url,
+    UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
+    bool? isExample,
+    String? name,
+    String? source,
+    UserScriptTime? time,
+    String? customApiKey,
+    bool? customApiKeyCandidate,
+  }) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }
@@ -123,6 +129,7 @@ class UserScriptModel {
       isExample: isExample ?? false,
       customApiKey: customApiKey ?? "",
       customApiKeyCandidate: customApiKeyCandidate ?? false,
+      grants: metaMap["grant"] ?? <String>[],
     );
   }
 
@@ -179,6 +186,7 @@ class UserScriptModel {
         "url": url,
         "updateStatus": updateStatus.name,
         "isExample": isExample,
+        "grants": grants,
         "time": time == UserScriptTime.start ? "start" : "end",
         "customApiKey": customApiKey,
         "customApiKeyCandidate": customApiKeyCandidate,
@@ -192,7 +200,8 @@ class UserScriptModel {
       throw Exception("No header found in userscript.");
     }
     Iterable<RegExpMatch> metaMatches = RegExp(r"^(?:^|\n)\s*\/\/\x20(@\S+)(.*)$", multiLine: true).allMatches(meta);
-    Map<String, dynamic> metaMap = {"@match": <String>[]};
+    Map<String, dynamic> metaMap = {"@match": <String>[], "@grant": <String>[]};
+    bool foundNoneGrant = false;
     for (final match in metaMatches) {
       if (match.groupCount < 2) {
         continue;
@@ -202,10 +211,25 @@ class UserScriptModel {
       }
       if (match.group(1)?.toLowerCase() == "@match") {
         metaMap["@match"].add(match.group(2)!.trim());
+      } else if (match.group(1)?.toLowerCase() == "@grant") {
+        if (match.group(2)?.trim() == "none") {
+          // see note below (after the loop) on this behavior
+          foundNoneGrant = true;
+          continue;
+        }
+        metaMap["@grant"].add(match.group(2)!.trim());
       } else {
         metaMap[match.group(1)!.trim().toLowerCase()] = match.group(2)!.trim();
       }
     }
+
+    if (foundNoneGrant) {
+      // per https://wiki.greasespot.net/@grant
+      // > If you specify none and something else, none takes precedence. This can be confusing.
+      // > Check for a none to remove if you're adding APIs you intend to use.
+      metaMap["@grant"] = <String>[];
+    }
+
     return {
       "name": metaMap["@name"],
       "version": metaMap["@version"],
@@ -214,6 +238,7 @@ class UserScriptModel {
       "injectionTime": metaMap["@run-at"] ?? "document-end",
       "downloadURL": metaMap["@downloadurl"],
       "updateURL": metaMap["@updateurl"],
+      "grant": metaMap["@grant"],
       "source": source,
     };
   }
@@ -234,6 +259,7 @@ class UserScriptModel {
     String? url,
     String? customApiKey,
     bool? customApiKeyCandidate,
+    List<String>? grants,
     required UserScriptUpdateStatus updateStatus,
   }) {
     if (source != null) {
@@ -245,6 +271,9 @@ class UserScriptModel {
         }
         if (metaMap["matches"] != null) {
           this.matches = metaMap["matches"];
+        }
+        if (metaMap["grant"] != null) {
+          this.grants = metaMap["grant"];
         }
         if (metaMap["name"] != null) {
           this.name = metaMap["name"];
@@ -316,6 +345,15 @@ class UserScriptModel {
       return metaMap["matches"] ?? const ["*"];
     } catch (e) {
       return const ["*"];
+    }
+  }
+
+  static List<String> tryGetGrants(String source) {
+    try {
+      final metaMap = UserScriptModel.parseHeader(source);
+      return metaMap["grant"] ?? <String>[];
+    } catch (e) {
+      return const [];
     }
   }
 
