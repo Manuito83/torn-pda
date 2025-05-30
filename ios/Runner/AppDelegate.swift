@@ -11,6 +11,21 @@ import UserNotifications  // for UNUserNotificationCenter
 
   var iconChannel: FlutterMethodChannel!
   var memoryChannel: FlutterMethodChannel!
+  var liveActivityChannel: FlutterMethodChannel!
+
+  lazy var liveActivityManagerHolder: Any? = {
+    if #available(iOS 16.2, *) {
+      let manager = LiveActivityManager()
+      return manager
+    } else {
+      return nil
+    }
+  }()
+
+  @available(iOS 16.2, *)
+  private var typedLiveActivityManager: LiveActivityManager? {
+    return liveActivityManagerHolder as? LiveActivityManager
+  }
 
   override func application(
     _ application: UIApplication,
@@ -70,14 +85,12 @@ import UserNotifications  // for UNUserNotificationCenter
           let compressed = Int(info.compressed)
           let external = Int(info.external)
           let privateBytes = max(0, resident - compressed - external)
-
           result([
             "private": privateBytes,
             "compressed": compressed,
             "external": external,
             "total": resident,
           ])
-
         case "getDeviceMemoryInfo":
           var size: UInt64 = 0
           var sizeOfSize = MemoryLayout<UInt64>.stride
@@ -107,7 +120,6 @@ import UserNotifications  // for UNUserNotificationCenter
           guard kr2 == KERN_SUCCESS else {
             throw NSError(domain: NSPOSIXErrorDomain, code: Int(kr2), userInfo: nil)
           }
-
           let pageSize = Int(vm_kernel_page_size)
           var freePages = Int(vmStats.free_count) + Int(vmStats.inactive_count)
           // Include speculative pages on iOS 13+
@@ -124,7 +136,6 @@ import UserNotifications  // for UNUserNotificationCenter
         default:
           result(FlutterMethodNotImplemented)
         }
-
       } catch {
         result(
           FlutterError(
@@ -168,7 +179,8 @@ import UserNotifications  // for UNUserNotificationCenter
             let currentServerTimestamp = currentArgs["currentServerTimestamp"] as? Int,
             let vehicleAssetName = currentArgs["vehicleAssetName"] as? String,
             let activityStateTitle = currentArgs["activityStateTitle"] as? String,
-            let showProgressBar = currentArgs["showProgressBar"] as? Bool
+            let showProgressBar = currentArgs["showProgressBar"] as? Bool,
+            let hasArrived = currentArgs["hasArrived"] as? Bool
           else {
             result(
               FlutterError(
@@ -193,7 +205,8 @@ import UserNotifications  // for UNUserNotificationCenter
                 vehicleAssetName: vehicleAssetName,
                 earliestReturnTimestamp: earliestReturnTimestamp,
                 activityStateTitle: activityStateTitle,
-                showProgressBar: showProgressBar
+                showProgressBar: showProgressBar,
+                hasArrived: hasArrived
               )
               result(nil)
             } catch {
@@ -209,7 +222,6 @@ import UserNotifications  // for UNUserNotificationCenter
               )
             }
           }
-
         case "updateTravelActivity":
           guard let currentArgs = args,
             let currentDestinationDisplayName = currentArgs["currentDestinationDisplayName"]
@@ -222,7 +234,8 @@ import UserNotifications  // for UNUserNotificationCenter
             let currentServerTimestamp = currentArgs["currentServerTimestamp"] as? Int,
             let vehicleAssetName = currentArgs["vehicleAssetName"] as? String,
             let activityStateTitle = currentArgs["activityStateTitle"] as? String,
-            let showProgressBar = currentArgs["showProgressBar"] as? Bool
+            let showProgressBar = currentArgs["showProgressBar"] as? Bool,
+            let hasArrived = currentArgs["hasArrived"] as? Bool
           else {
             result(
               FlutterError(
@@ -247,7 +260,8 @@ import UserNotifications  // for UNUserNotificationCenter
                 vehicleAssetName: vehicleAssetName,
                 earliestReturnTimestamp: earliestReturnTimestamp,
                 activityStateTitle: activityStateTitle,
-                showProgressBar: showProgressBar
+                showProgressBar: showProgressBar,
+                hasArrived: hasArrived
               )
               result(nil)
             } catch {
@@ -263,13 +277,11 @@ import UserNotifications  // for UNUserNotificationCenter
               )
             }
           }
-
         case "endTravelActivity":
           Task {
             await manager.endCurrentTravelActivity()
             result(nil)
           }
-
         case "checkExistingActivities":
           manager.checkAndAdoptExistingActivities()
           result(nil)
@@ -291,40 +303,7 @@ import UserNotifications  // for UNUserNotificationCenter
         )
       }
     }
-
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
-  }
-
-  // MARK: - Properties (Live Activities)
-  var liveActivityChannel: FlutterMethodChannel!
-
-  lazy var liveActivityManagerHolder: Any? = {
-    if #available(iOS 16.2, *) {
-      let manager = LiveActivityManager()
-      manager.onNewActivityPushToken = { [weak self] token in
-        guard let self = self, let channel = self.liveActivityChannel else {
-          print(
-            "AppDelegate: Self or liveActivityChannel deallocated/not initialized when trying to send token."
-          )
-          return
-        }
-        print(
-          "AppDelegate: New Live Activity Push Token received (on background thread): \(token ?? "nil")"
-        )
-        DispatchQueue.main.async {
-          print("AppDelegate: Sending token to Flutter on main thread.")
-          channel.invokeMethod("liveActivityTokenUpdated", arguments: token)
-        }
-      }
-      return manager
-    } else {
-      return nil
-    }
-  }()
-
-  @available(iOS 16.2, *)
-  private var typedLiveActivityManager: LiveActivityManager? {
-    return liveActivityManagerHolder as? LiveActivityManager
   }
 
   // MARK: - Application Lifecycle (Live Activities)
@@ -332,105 +311,6 @@ import UserNotifications  // for UNUserNotificationCenter
     super.applicationDidBecomeActive(application)
     if #available(iOS 16.2, *) {
       self.typedLiveActivityManager?.checkAndAdoptExistingActivities()
-    }
-  }
-
-  // MARK: - Remote Notifications (Live Activities)
-  override func application(
-    _ application: UIApplication,
-    didReceiveRemoteNotification userInfo: [AnyHashable: Any],
-    fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void
-  ) {
-    print("AppDelegate: Received remote notification: \(userInfo)")
-
-    if #available(iOS 16.2, *) {
-      if let aps = userInfo["aps"] as? [String: AnyObject],
-        let event = aps["event"] as? String,
-        event == "update" || event == "end",
-        aps["timestamp"] as? Int != nil
-      {
-        print("AppDelegate: System-handled Live Activity push received. Event: \(event).")
-        completionHandler(.newData)
-        return
-      }
-
-      guard let manager = self.typedLiveActivityManager else {
-        print("AppDelegate: LiveActivityManager not available for app-driven LA update.")
-        completionHandler(.noData)
-        return
-      }
-
-      if let liveEvent = userInfo["event"] as? String {
-        guard let destinationFromPush = userInfo["destination"] as? String,
-          let arrivalTimeFromPush = userInfo["arrivalTime"] as? Int,
-          let departureTimeFromPush = userInfo["departureTime"] as? Int,
-          let currentServerTimeFromPush = userInfo["currentServerTime"] as? Int
-        else {
-          print("AppDelegate: Custom app-driven Live Activity push missing required data.")
-          completionHandler(.failed)
-          return
-        }
-        print("AppDelegate: Processing custom app-driven Live Activity event: \(liveEvent)")
-
-        let defaultOriginDisplayName = "Torn"
-        let defaultOriginFlagAsset = "torn_ball.png"
-        let defaultVehicleAssetName = "plane_right.png"
-        let defaultActivityStateTitle = "Traveling to"
-        let destinationFlagAsset =
-          "ball_\(destinationFromPush.lowercased().replacingOccurrences(of: " ", with: "-")).png"
-
-        Task {
-          do {
-            switch liveEvent {
-            case "start":
-              try await manager.startTravelActivity(
-                currentDestinationDisplayName: destinationFromPush,
-                currentDestinationFlagAsset: destinationFlagAsset,
-                originDisplayName: defaultOriginDisplayName,
-                originFlagAsset: defaultOriginFlagAsset,
-                arrivalTimeTimestamp: arrivalTimeFromPush,
-                departureTimeTimestamp: departureTimeFromPush,
-                currentServerTimestamp: currentServerTimeFromPush,
-                vehicleAssetName: defaultVehicleAssetName,
-                earliestReturnTimestamp: userInfo["earliestReturnTimestamp"] as? Int,
-                activityStateTitle: defaultActivityStateTitle,
-                showProgressBar: userInfo["showProgressBar"] as? Bool ?? true
-              )
-            case "update":
-              try await manager.updateTravelActivity(
-                currentDestinationDisplayName: destinationFromPush,
-                currentDestinationFlagAsset: destinationFlagAsset,
-                originDisplayName: userInfo["originDisplayName"] as? String
-                  ?? defaultOriginDisplayName,
-                originFlagAsset: userInfo["originFlagAsset"] as? String ?? defaultOriginFlagAsset,
-                arrivalTimeTimestamp: arrivalTimeFromPush,
-                departureTimeTimestamp: departureTimeFromPush,
-                currentServerTimestamp: currentServerTimeFromPush,
-                vehicleAssetName: userInfo["vehicleAssetName"] as? String
-                  ?? defaultVehicleAssetName,
-                earliestReturnTimestamp: userInfo["earliestReturnTimestamp"] as? Int,
-                activityStateTitle: userInfo["activityStateTitle"] as? String
-                  ?? defaultActivityStateTitle,
-                showProgressBar: userInfo["showProgressBar"] as? Bool ?? true
-              )
-            case "end":
-              await manager.endCurrentTravelActivity()
-            default:
-              print("AppDelegate: Unknown custom app-driven Live Activity event: \(liveEvent)")
-            }
-            completionHandler(.newData)
-          } catch {
-            print("AppDelegate: Error processing custom app-driven LiveActivity push: \(error)")
-            completionHandler(.failed)
-          }
-        }
-      } else {
-        print("AppDelegate: Remote notification not a recognized Live Activity push format.")
-        completionHandler(.noData)
-      }
-    } else {
-      print("AppDelegate: Received remote notification, Live Activities not supported.")
-      completionHandler(.noData)
     }
   }
 
@@ -445,12 +325,10 @@ import UserNotifications  // for UNUserNotificationCenter
 
     // Get the current icon name
     let currentIconName = UIApplication.shared.alternateIconName
-
     if currentIconName == iconName {
       result(nil)  // Icon is already set, no need to change it
       return
     }
-
     UIApplication.shared.setAlternateIconName(iconName) { (error) in
       if let error = error {
         result(
@@ -461,29 +339,6 @@ import UserNotifications  // for UNUserNotificationCenter
       }
     }
   }
-
-  // MARK: - UNUserNotificationCenterDelegate (Enhanced, considered part of new structure if explicit)
-  @available(iOS 10.0, *)
-  override func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    willPresent notification: UNNotification,
-    withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-  ) {
-    let userInfo = notification.request.content.userInfo
-    print("AppDelegate: Foreground notification received: \(userInfo)")
-    completionHandler([.alert, .sound, .badge])
-  }
-
-  @available(iOS 10.0, *)
-  override func userNotificationCenter(
-    _ center: UNUserNotificationCenter,
-    didReceive response: UNNotificationResponse,
-    withCompletionHandler completionHandler: @escaping () -> Void
-  ) {
-    let userInfo = response.notification.request.content.userInfo
-    print("AppDelegate: User interacted with notification: \(userInfo)")
-    completionHandler()
-  }
 }
 
 // MARK: - FlutterViewController Press Event Handling (Existing Functionality)
@@ -491,11 +346,9 @@ extension FlutterViewController {
   open override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
     super.pressesBegan(presses, with: event)
   }
-
   open override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
     super.pressesEnded(presses, with: event)
   }
-
   open override func pressesCancelled(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
     super.pressesCancelled(presses, with: event)
   }

@@ -36,15 +36,16 @@ class LiveActivityManager {
     }
   }
 
-  // MARK: - Public API
-
+  // MARK: - START ACTIVITY
   func startTravelActivity(
     currentDestinationDisplayName: String, currentDestinationFlagAsset: String,
     originDisplayName: String, originFlagAsset: String,
     arrivalTimeTimestamp: Int, departureTimeTimestamp: Int, currentServerTimestamp: Int,
     vehicleAssetName: String, earliestReturnTimestamp: Int?,
     activityStateTitle: String, showProgressBar: Bool,
-    autoDismissDelayInSeconds: TimeInterval = 5 * 60
+    hasArrived: Bool,
+    defaultStaleOffsetEnRoute: TimeInterval = 2 * 60,
+    staleOffsetArrived: TimeInterval = 10 * 60
   ) async throws {
     // First, check if Live Activities are enabled by the user in system settings.
     guard ActivityAuthorizationInfo().areActivitiesEnabled else {
@@ -76,18 +77,26 @@ class LiveActivityManager {
       earliestReturnTimestamp: earliestReturnTimestamp,
       activityStateTitle: activityStateTitle,
       showProgressBar: showProgressBar,
-      hasArrived: false
+      hasArrived: hasArrived
     )
 
-    // Calculate the date when the activity will be considered stale and can be dismissed by the system.
-    let arrivalDate = Date(timeIntervalSince1970: TimeInterval(arrivalTimeTimestamp))
-    let staleDateForDismissal = arrivalDate.addingTimeInterval(autoDismissDelayInSeconds)
+    let staleDateForDismissal: Date
+    let relevanceScore: Double
+
+    if hasArrived {
+      staleDateForDismissal = Date().addingTimeInterval(staleOffsetArrived)
+      relevanceScore = 50.0
+    } else {
+      let arrivalDate = Date(timeIntervalSince1970: TimeInterval(arrivalTimeTimestamp))
+      staleDateForDismissal = arrivalDate.addingTimeInterval(defaultStaleOffsetEnRoute)
+      relevanceScore = 100.0
+    }
 
     // Prepare the full activity content, including state, stale date, and relevance score.
     let activityContent = ActivityContent(
       state: initialState,
       staleDate: staleDateForDismissal,
-      relevanceScore: 100.0  // High score for active/important activities.
+      relevanceScore: relevanceScore
     )
 
     do {
@@ -95,11 +104,14 @@ class LiveActivityManager {
       let activity = try Activity<TravelActivityAttributes>.request(
         attributes: attributes,
         content: activityContent,
-        pushType: .token  // Indicate that this activity will receive updates via push tokens.
+        pushType: .token // Indicate that this activity will receive updates via push tokens.
       )
       // If successful, store the new activity and start observing its state and token changes.
       self.currentActivity = activity
       observeActivity(activity: activity)
+      print(
+        "LiveActivityManager: Started LA. hasArrived=\(hasArrived), staleDate=\(staleDateForDismissal)"
+      )
     } catch {
       // If the request fails, ensure the push token state is clean and propagate the error.
       self.activityPushToken = nil
@@ -108,13 +120,16 @@ class LiveActivityManager {
     }
   }
 
+  // MARK: - UPDATE ACTIVITY
   func updateTravelActivity(
     currentDestinationDisplayName: String, currentDestinationFlagAsset: String,
     originDisplayName: String, originFlagAsset: String,
     arrivalTimeTimestamp: Int, departureTimeTimestamp: Int, currentServerTimestamp: Int,
     vehicleAssetName: String, earliestReturnTimestamp: Int?,
     activityStateTitle: String, showProgressBar: Bool,
-    autoDismissDelayInSeconds: TimeInterval = 5 * 60
+    hasArrived: Bool,
+    defaultStaleOffsetEnRoute: TimeInterval = 2 * 60,
+    staleOffsetArrived: TimeInterval = 10 * 60
   ) async throws {
     // Ensure there is an active activity managed by this instance to update.
     // Cannot update an activity that doesn't exist or was already dismissed by the user.
@@ -136,30 +151,36 @@ class LiveActivityManager {
       currentServerTimestamp: currentServerTimestamp,
       vehicleAssetName: vehicleAssetName,
       earliestReturnTimestamp: earliestReturnTimestamp,
-      activityStateTitle: hasArrived ? "Arrived at" : activityStateTitle,
-      showProgressBar: hasArrived ? false : showProgressBar,
+      activityStateTitle: activityStateTitle,
+      showProgressBar: showProgressBar,
       hasArrived: hasArrived
     )
 
-    // Recalculate the stale date for the update.
-    let arrivalDate = Date(timeIntervalSince1970: TimeInterval(arrivalTimeTimestamp))
-    let staleDateForDismissal = arrivalDate.addingTimeInterval(autoDismissDelayInSeconds)
-    // Prepare the updated activity content.
+    let staleDateForDismissal: Date
+    let relevanceScore: Double
+
+    if hasArrived {
+      staleDateForDismissal = Date().addingTimeInterval(staleOffsetArrived)
+      relevanceScore = 50.0
+    } else {
+      let arrivalDate = Date(timeIntervalSince1970: TimeInterval(arrivalTimeTimestamp))
+      staleDateForDismissal = arrivalDate.addingTimeInterval(defaultStaleOffsetEnRoute)
+      relevanceScore = 100.0
+    }
+
     let updatedActivityContent = ActivityContent(
       state: newState,
       staleDate: staleDateForDismissal,
-      relevanceScore: hasArrived ? 50.0 : 100.0  // Reduce relevance if arrived.
+      relevanceScore: relevanceScore
     )
 
-    do {
-      // Attempt to update the Live Activity with the new content.
-      await activityToUpdate.update(updatedActivityContent)
-    } catch {
-      // If the update fails, propagate a specific error.
-      throw LiveActivityError.updateFailed(error.localizedDescription)
-    }
+    
+    // Update the Live Activity with the new content.
+    await activityToUpdate.update(updatedActivityContent)
+    print("LiveActivityManager: Updated LA. hasArrived=\(hasArrived), staleDate=\(staleDateForDismissal)")
   }
 
+  // MARK: - END ACTIVITY
   func endCurrentTravelActivity() async {
     // Ensure there is a currently managed activity to end.
     guard let activityToEnd = currentActivity else {
@@ -209,6 +230,8 @@ class LiveActivityManager {
           if self.currentActivity?.id == systemActivity.id {
             self.currentActivity = nil
           }
+        case .stale:
+            await systemActivity.end(nil, dismissalPolicy: .immediate)
         @unknown default:
           // Unknown state
           break

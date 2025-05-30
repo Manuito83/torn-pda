@@ -315,7 +315,7 @@ struct LockScreenLiveActivityView: View {
 
             if let returnDate = earliestReturnDateLS {
               VStack(alignment: HorizontalAlignment.center, spacing: 2) {
-                Text("EARLIEST\nRETURN")
+                Text("EARLIEST RETURN")
                   .multilineTextAlignment(.center)
                   .font(.system(size: 9))
                   .foregroundColor(.white.opacity(0.7))

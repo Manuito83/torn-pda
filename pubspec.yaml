@@ -76,7 +76,6 @@ dependencies:
   http: 1.2.2
   json_annotation: 4.9.0 # Used by swagger_dart_code_generator
   lints: 5.1.0
-  live_activities: 2.3.2
   ## flutter pub run import_sorter:main
   import_sorter: 4.6.0
   intl: 0.20.1

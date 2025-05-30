@@ -1,12 +1,15 @@
-// lib/services/live_activity_bridge_service.dart
 import 'dart:async';
 import 'dart:developer';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 
-class LiveActivityBridgeService extends ChangeNotifier {
+class LiveActivityBridgeController extends GetxController {
   static const MethodChannel _channel = MethodChannel('com.tornpda.liveactivity');
 
+  // Stores the most recent push token received from the native side for the current Live Activity
+  // This token is specific to an active Live Activity instance and would be used if sending
+  // remote push notifications (e.g., for 'end' or 'update' events) directly to APNs for this LA
+  // Currently, this token is stored locally in the bridge service but not actively sent to a backend
   String? _currentActivityPushToken;
   String? get currentActivityPushToken => _currentActivityPushToken;
 
@@ -24,12 +27,6 @@ class LiveActivityBridgeService extends ChangeNotifier {
     log("LiveActivityBridgeService: Received call from native: ${call.method}");
     if (call.method == "liveActivityTokenUpdated") {
       _currentActivityPushToken = call.arguments as String?;
-      log("LiveActivityBridgeService: Received Push Token: $_currentActivityPushToken");
-      notifyListeners();
-
-      if (_currentActivityPushToken != null) {
-        // TODO
-      }
     }
   }
 
@@ -41,9 +38,8 @@ class LiveActivityBridgeService extends ChangeNotifier {
       initializeHandler();
     }
     try {
-      log("LiveActivityBridgeService: Invoking startTravelActivity with args: $arguments");
       await _channel.invokeMethod('startTravelActivity', arguments);
-      log("LiveActivityBridgeService: startTravelActivity method invoked.");
+      log("LiveActivityBridgeService: Invoking startTravelActivity with args: $arguments");
     } on PlatformException catch (e) {
       log("LiveActivityBridgeService: PlatformException during start/update: ${e.message} - Details: ${e.details}");
     } catch (e) {
@@ -54,12 +50,7 @@ class LiveActivityBridgeService extends ChangeNotifier {
   Future<void> endActivity() async {
     if (!_isInitialized) initializeHandler();
     try {
-      log("LiveActivityBridgeService: Invoking endTravelActivity.");
       await _channel.invokeMethod('endTravelActivity');
-      if (_currentActivityPushToken != null) {
-        _currentActivityPushToken = null;
-        notifyListeners();
-      }
       log("LiveActivityBridgeService: endTravelActivity method invoked.");
     } on PlatformException catch (e) {
       log("LiveActivityBridgeService: PlatformException ending activity: ${e.message} - Details: ${e.details}");

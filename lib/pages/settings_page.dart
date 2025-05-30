@@ -30,7 +30,7 @@ import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -1804,10 +1804,10 @@ class SettingsPageState extends State<SettingsPage> {
                 children: [
                   const Flexible(child: Text("Show status color counter")),
                   Switch(
-                    value: context.read<ChainStatusProvider>().statusColorWidgetEnabled,
+                    value: Get.find<ChainStatusController>().statusColorWidgetEnabled,
                     onChanged: (value) {
                       setState(() {
-                        context.read<ChainStatusProvider>().statusColorWidgetEnabled = value;
+                        Get.find<ChainStatusController>().statusColorWidgetEnabled = value;
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,

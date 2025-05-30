@@ -1,4 +1,6 @@
 // Package imports:
+import 'dart:io';
+
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -18,6 +20,8 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/alerts/events_filter_dialog.dart';
 import 'package:torn_pda/widgets/alerts/loot_npc_dialog.dart';
@@ -102,8 +106,18 @@ class AlertsSettingsState extends State<AlertsSettings> {
                   controller: _scrollController,
                   child: Column(
                     children: [
+                      if (Platform.isIOS && kSdkIos >= 16.2) _liveActivities(),
+                      // Create alerts title if we are also showing live activities at the top
+                      if (Platform.isIOS && kSdkIos >= 16.2)
+                        const Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            "ALERTS",
+                            style: TextStyle(fontSize: 9),
+                          ),
+                        ),
                       const Padding(
-                        padding: EdgeInsets.all(20),
+                        padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
                         child: Text(
                           "Alerts are automatic notifications that you only "
                           "need to activate once. However, you will normally be notified "
@@ -1323,6 +1337,57 @@ class AlertsSettingsState extends State<AlertsSettings> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _liveActivities() {
+    return Column(
+      children: [
+        const Padding(
+          padding: EdgeInsets.all(20),
+          child: Text(
+            "LIVE ACTIVITIES",
+            style: TextStyle(fontSize: 9),
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+          child: Text(
+            "Live activities will only start if you have the Torn PDA app open in the foreground when they take place."
+            "You'll see them in the lock screen and the dynamic island (if supported)",
+            style: TextStyle(fontSize: 12),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
+          child: CheckboxListTile(
+            checkColor: Colors.white,
+            activeColor: Colors.blueGrey,
+            value: _settingsProvider.iosLiveActivitiesTravelEnabled,
+            title: const Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Travel"),
+                Text("Live Activity", style: TextStyle(fontSize: 10)),
+              ],
+            ),
+            onChanged: (enabled) async {
+              if (enabled == null) return;
+              setState(() {
+                _settingsProvider.iosLiveActivitiesTravelEnabled = enabled;
+              });
+
+              if (enabled) {
+                await Get.find<LiveActivityTravelController>().activate();
+                Get.find<LiveActivityBridgeController>().initializeHandler();
+              } else {
+                Get.find<LiveActivityTravelController>().deactivate();
+              }
+            },
+          ),
+        ),
+        const Divider(),
+      ],
     );
   }
 

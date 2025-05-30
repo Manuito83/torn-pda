@@ -57,6 +57,17 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.8.1'
         ..date = '01 JUN 2025'
         ..features = [
+          if (Platform.isIOS)
+            ComplexFeature(
+              "Added live activity support for traveling",
+              explanation: "Only available for iOS 16.2 and above\n\n"
+                  "See Alerts / Live Activities\n\n"
+                  "This feature allows you to track your travel in real-time, "
+                  "providing updates on your journey directly on your device's lock screen or dynamic island.\n\n"
+                  "IMPORTANT: for the time being, live activities will only activate if travel starts or takes place "
+                  "at some point while with Torn PDA in the foreground.\n\n"
+                  "Please note that this is a beta feature and may not work as expected in all cases (any feedback is appreciated).",
+            ),
           "Userscripts now support individual custom API keys",
           "Global ranked war list is now searchable and can be sorted",
           "Added war date to the war widget in Profile",

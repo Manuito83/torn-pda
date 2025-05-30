@@ -46,7 +46,7 @@ import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -327,7 +327,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
   final _chainWidgetController = ExpandableController();
   final _chainWidgetKey = GlobalKey();
-  late ChainStatusProvider _chainStatusProvider;
+  ChainStatusController _chainStatusProvider = Get.find<ChainStatusController>();
   late TargetsProvider _targetsProvider;
   WarController? _w;
   int _attackNumber = 0;
@@ -388,7 +388,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       _pageTitle = title;
       // Decide if voluntarily skipping first target (always when it's a panic target)
       _assessFirstTargetsOnLaunch();
-      _chainStatusProvider = context.read<ChainStatusProvider>();
       if (_chainStatusProvider.watcherActive) {
         _chainWidgetController.expanded = true;
       }
@@ -5096,7 +5095,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     _w ??= Get.find<WarController>();
     String? title = chainingPayload.attackNameList[0];
     _pageTitle = title;
-    _chainStatusProvider = context.read<ChainStatusProvider>();
+    _chainStatusProvider = Get.find<ChainStatusController>();
     if (_chainStatusProvider.watcherActive) {
       _chainWidgetController.expanded = true;
     }

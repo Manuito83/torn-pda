@@ -7,12 +7,13 @@ import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:get/get.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/pages/chaining/target_details_page.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -42,7 +43,7 @@ class TargetCardState extends State<TargetCard> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late UserDetailsProvider _userProvider;
-  late ChainStatusProvider _chainProvider;
+  final _chainProvider = Get.find<ChainStatusController>();
   late WebViewProvider _webViewProvider;
 
   Timer? _updatedTicker;
@@ -57,7 +58,6 @@ class TargetCardState extends State<TargetCard> {
     super.initState();
     _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
-    _chainProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);

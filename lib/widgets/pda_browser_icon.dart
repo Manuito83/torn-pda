@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/widgets/status_color_counter.dart';
@@ -28,8 +29,8 @@ class PdaBrowserIcon extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Consumer<ChainStatusProvider>(
-            builder: (context, provider, child) {
+          GetBuilder<ChainStatusController>(
+            builder: (provider) {
               if (provider.statusColorWidgetEnabled) return const StatusColorCounter();
               return const SizedBox.shrink();
             },
@@ -49,7 +50,7 @@ class PdaBrowserIcon extends StatelessWidget {
 
               // When the browser opens, the player color status update needs to occur directly from the provider
               // as other sections action as source (e.g.: Profile) might have stopped their calls
-              context.read<ChainStatusProvider>().statusUpdateSource = "provider";
+              Get.find<ChainStatusController>().statusUpdateSource = "provider";
             },
             onLongPress: () {
               context.read<WebViewProvider>().pdaIconActivation(
@@ -58,7 +59,7 @@ class PdaBrowserIcon extends StatelessWidget {
                     context: context,
                   );
 
-              context.read<ChainStatusProvider>().statusUpdateSource = "provider";
+              Get.find<ChainStatusController>().statusUpdateSource = "provider";
             },
           ),
         ],

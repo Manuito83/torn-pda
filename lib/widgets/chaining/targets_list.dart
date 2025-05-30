@@ -3,6 +3,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:get/get.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
@@ -10,7 +11,7 @@ import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/widgets/chaining/target_card.dart';
 
@@ -25,13 +26,12 @@ class TargetsList extends StatefulWidget {
 
 class TargetsListState extends State<TargetsList> {
   late TargetsProvider _targetsProvider;
-  late ChainStatusProvider _chainStatusProvider;
+  final _chainStatusProvider = Get.find<ChainStatusController>();
 
   @override
   void initState() {
     super.initState();
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
   }
 
   @override

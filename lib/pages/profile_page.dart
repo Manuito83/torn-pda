@@ -44,7 +44,7 @@ import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -153,7 +153,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
   UserDetailsProvider? _userProv;
-  late ChainStatusProvider _chainProvider;
+  final _chainController = Get.find<ChainStatusController>();
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
   final UserController _u = Get.find<UserController>();
@@ -323,7 +323,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
-    _chainProvider = context.read<ChainStatusProvider>();
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -380,7 +379,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _chainProvider.statusUpdateSource = "provider";
+    _chainController.statusUpdateSource = "provider";
     _tickerCallApi?.cancel();
     _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -5045,8 +5044,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Otherwise, call the API
     dynamic chain;
 
-    if (_chainProvider.chainModel is ChainModel) {
-      chain = _chainProvider.chainModel;
+    if (_chainController.chainModel is ChainModel) {
+      chain = _chainController.chainModel;
     } else {
       chain = await ApiCallsV1.getChainStatus();
     }
@@ -5079,7 +5078,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
           if (apiResponse.status != null && apiResponse.travel != null) {
             // Signal that we are updating from the profile page
-            _chainProvider.statusUpdateSource = "profile";
+            _chainController.statusUpdateSource = "profile";
 
             // We need to adapt Status and Travel models to the BarsModel
             barsModel.Status chainStatusModel = barsModel.Status()
@@ -5100,7 +5099,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ..status = chainStatusModel
               ..travel = chainTravelModel;
 
-            _chainProvider.getOrSetStatus(externalStatusModel: externalStatusModel);
+            _chainController.getOrSetStatus(externalStatusModel: externalStatusModel);
           }
 
           _checkIfNotificationsAreCurrent();

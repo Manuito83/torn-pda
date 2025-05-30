@@ -42,7 +42,21 @@ enum PlayerStatusColor {
   travel,
 }
 
-class ChainStatusProvider extends ChangeNotifier {
+// In use, for example, for travel live activities
+class StatusObservable {
+  final PlayerStatusColor statusColor;
+  final BarsStatusCooldownsModel? barsAndStatusModel;
+
+  StatusObservable({
+    required this.statusColor,
+    this.barsAndStatusModel,
+  });
+}
+
+class ChainStatusController extends GetxController {
+  // MARK: - General status for observers
+  final Rx<StatusObservable?> laStatusInputData = Rx<StatusObservable?>(null);
+
   // MARK: - Player Status Color & Timers
   // ### PLAYER STATUS COLOR AND TIMERS
   bool _statusColorWidgetEnabled = true;
@@ -50,7 +64,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set statusColorWidgetEnabled(bool value) {
     _statusColorWidgetEnabled = value;
     Prefs().setStatusColorWidgetEnabled(value);
-    notifyListeners();
+    update();
   }
 
   // [true] whenever there's a special status condition that needs to be shown
@@ -58,7 +72,7 @@ class ChainStatusProvider extends ChangeNotifier {
   bool get statusColorIsShown => _statusColorIsShown;
   set statusColorIsShown(bool value) {
     _statusColorIsShown = value;
-    notifyListeners();
+    update();
   }
 
   PlayerStatusColor statusColorCurrent = PlayerStatusColor.ok;
@@ -90,7 +104,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set changeSoundEnabled(bool value) {
     _soundEnabled = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool _vibrationEnabled = true;
@@ -102,7 +116,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set changeVibrationEnabled(bool value) {
     _vibrationEnabled = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool _notificationsEnabled = true;
@@ -114,7 +128,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set changeNotificationsEnabled(bool value) {
     _notificationsEnabled = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool initialised = false;
@@ -256,7 +270,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
     Get.find<AudioController>().play(file: '../sounds/alerts/tick.wav');
 
-    notifyListeners();
+    update();
   }
 
   deactivateWatcher() {
@@ -265,35 +279,35 @@ class ChainStatusProvider extends ChangeNotifier {
     _chainWatcherDefcon = WatchDefcon.off;
     _disableWakelock();
     //_audioCache.play('../sounds/alerts/tick.wav');
-    notifyListeners();
+    update();
   }
 
   // MARK: - Panic Mode Control
   void activatePanicMode() {
     _panicModeActive = true;
-    notifyListeners();
+    update();
   }
 
   void deactivatePanicMode() {
     _panicModeActive = false;
-    notifyListeners();
+    update();
   }
 
   void addPanicTarget(PanicTargetModel target) {
     panicTargets.add(target);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
   void removePanicTarget(PanicTargetModel target) {
     panicTargets.removeWhere((element) => element.id == target.id);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
   void removePanicTargetById(int id) {
     panicTargets.removeWhere((element) => element.id == id);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -305,7 +319,7 @@ class ChainStatusProvider extends ChangeNotifier {
     final oldItem = panicTargets[oldIndex];
     panicTargets.removeAt(oldIndex);
     panicTargets.insert(newIndex, oldItem);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -321,7 +335,7 @@ class ChainStatusProvider extends ChangeNotifier {
       timeOutSec = '0$timeOutSec';
     }
     _currentChainTimeString = '$timeOutMin:$timeOutSec';
-    notifyListeners();
+    update();
   }
 
   void _refreshCooldownClock(int secondsRemaining) {
@@ -339,7 +353,7 @@ class ChainStatusProvider extends ChangeNotifier {
       timeOutSec = '0$timeOutSec';
     }
     _currentChainTimeString = '$timeOutHours:$timeOutMin:$timeOutSec';
-    notifyListeners();
+    update();
   }
 
   void _decreaseTimer() {
@@ -424,17 +438,22 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     // Update status color
-    if (myBars is BarsStatusCooldownsModel) {
-      _barsAndStatusModel = myBars;
-      updatePlayerStatusColor(
-        myBars.status!.color!,
-        myBars.status!.state!,
-        myBars.status!.until!,
-        myBars.travel!.timestamp!,
-      );
-    }
+    if (myBars is! BarsStatusCooldownsModel) return;
 
-    notifyListeners();
+    _barsAndStatusModel = myBars;
+    updatePlayerStatusColor(
+      myBars.status!.color!,
+      myBars.status!.state!,
+      myBars.status!.until!,
+      myBars.travel!.timestamp!,
+    );
+
+    laStatusInputData.value = StatusObservable(
+      statusColor: statusColorCurrent,
+      barsAndStatusModel: _barsAndStatusModel,
+    );
+
+    update();
   }
 
   void updatePlayerStatusColor(String color, String state, int stateUntil, int travelTimestamp) {
@@ -552,7 +571,7 @@ class ChainStatusProvider extends ChangeNotifier {
         _modelError = true;
       }
     }
-    notifyListeners();
+    update();
   }
 
   // MARK: - Chain Watcher Defcon Logic
@@ -580,11 +599,11 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_panicModeActive && _apiFailurePanic) {
             _tryLaunchPanicAttack();
           }
-          notifyListeners();
+          update();
           return;
         } else if (_chainWatcherDefcon == WatchDefcon.apiFail && _watcherActive) {
           _borderColor == Colors.transparent ? _borderColor = Colors.purple[600]! : _borderColor = Colors.transparent;
-          notifyListeners();
+          update();
           return;
         }
       }
@@ -593,7 +612,7 @@ class ChainStatusProvider extends ChangeNotifier {
           (_chainWatcherDefcon == WatchDefcon.apiFail && !_apiFailureAlert)) {
         _chainWatcherDefcon = WatchDefcon.off;
         _borderColor = Colors.transparent;
-        notifyListeners();
+        update();
       }
       return;
     }
@@ -603,7 +622,7 @@ class ChainStatusProvider extends ChangeNotifier {
       if (_chainWatcherDefcon != WatchDefcon.cooldown) {
         _chainWatcherDefcon = WatchDefcon.cooldown;
         _borderColor = Colors.lightBlue[300]!;
-        notifyListeners();
+        update();
       }
       return;
     }
@@ -714,7 +733,7 @@ class ChainStatusProvider extends ChangeNotifier {
       _chainWatcherDefcon = WatchDefcon.green1;
       _borderColor = Colors.green;
     }
-    notifyListeners();
+    update();
   }
 
   // MARK: - Panic Attack WebView
@@ -879,18 +898,18 @@ class ChainStatusProvider extends ChangeNotifier {
 
   void enablePanicMode() {
     _panicModeEnabled = true;
-    notifyListeners();
+    update();
   }
 
   void disablePanicMode() {
     _panicModeActive = false;
     _panicModeEnabled = false;
-    notifyListeners();
+    update();
   }
 
   void setPanicValue(double value) {
     _panicValue = value;
-    notifyListeners();
+    update();
   }
 
   // MARK: - API Failure Settings
@@ -902,7 +921,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set apiFailureAlert(bool value) {
     _apiFailureAlert = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool _apiFailurePanic = true;
@@ -910,7 +929,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set apiFailurePanic(bool value) {
     _apiFailurePanic = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   // MARK: - Defcon Alert Configuration Properties
@@ -1011,7 +1030,7 @@ class ChainStatusProvider extends ChangeNotifier {
     _red2Max = 30;
     _red2Min = 0;
     _panicValue = 40;
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -1213,7 +1232,7 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
     }
 
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -1570,7 +1589,7 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.apiFail:
         break;
     }
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -1759,7 +1778,7 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
     }
 
-    notifyListeners();
+    update();
     _saveSettings();
   }
 

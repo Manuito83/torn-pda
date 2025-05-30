@@ -11,6 +11,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 // Useful for functions debugging
 import 'package:dart_ping_ios/dart_ping_ios.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -37,7 +38,7 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
@@ -63,7 +64,7 @@ import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
-import 'package:torn_pda/utils/live_activities/live_activity_travel.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
@@ -100,6 +101,8 @@ bool exactAlarmsPermissionAndroid = false;
 bool syncTheme = false;
 
 Future? mainSettingsLoaded;
+
+double kSdkIos = 0;
 
 class ReceivedNotification {
   ReceivedNotification({
@@ -154,6 +157,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
+  if (Platform.isIOS) {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+    kSdkIos = double.tryParse(iosInfo.systemVersion) ?? 99;
+    log("iOS SDK Version: $kSdkIos");
+  }
+
   // Check for a pending local backup and import it
   await PrefsBackupService.importIfScheduled();
 
@@ -182,6 +192,11 @@ Future<void> main() async {
   Get.put(WarController(), permanent: true);
   Get.put(StakeoutsController(), permanent: true);
   Get.put(PeriodicExecutionController(), permanent: true);
+  Get.put(ChainStatusController(), permanent: true);
+  if (Platform.isIOS && kSdkIos >= 16.2) {
+    Get.put(LiveActivityBridgeController(), permanent: true);
+    Get.put(LiveActivityTravelController(), permanent: true);
+  }
 
   final sb = Get.put(SendbirdController(), permanent: true);
   await sb.init();
@@ -265,7 +280,10 @@ Future<void> main() async {
 
     if (kDebugMode) {
       if (pointFunctionsEmulatorToLocal) {
-        FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+        // NOTE!
+        // We need to use the computer's IP address here, not localhost
+        // and change it also in firebase.json in the functions folder
+        FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('192.168.1.114', 5001);
       }
 
       // Only 'true' intended for debugging, otherwise leave in false
@@ -311,16 +329,6 @@ Future<void> main() async {
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
         ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
-
-        ChangeNotifierProvider<ChainStatusProvider>(
-          create: (context) {
-            final provider = ChainStatusProvider();
-            provider.initialiseProvider();
-            return provider;
-          },
-          lazy: false,
-        ),
-
         ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
         ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
@@ -334,22 +342,6 @@ Future<void> main() async {
         // Native login
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
         ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
-
-        // ------------
-        //Live Activities
-        ChangeNotifierProvider<LiveActivityBridgeService>(
-          create: (context) {
-            final bridge = LiveActivityBridgeService();
-            bridge.initializeHandler();
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (Platform.isIOS) {
-                bridge.checkExistingActivities();
-              }
-            });
-            return bridge;
-          },
-          lazy: false,
-        ),
       ],
       child: MyApp(),
     ),
@@ -364,9 +356,6 @@ class MyApp extends StatefulWidget {
 class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   late ThemeProvider _themeProvider;
   late WebViewProvider _webViewProvider;
-
-  late LiveActivityBridgeService _liveActivityBridgeService;
-  late TravelLiveActivityHandler _travelLiveActivityHandler;
 
   late Future _mainBrowserPreferencesLoaded;
 
@@ -385,31 +374,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-
-    // Es importante obtener los providers aquí DESPUÉS de que el contexto esté disponible
-    // y los providers hayan sido creados por MultiProvider.
-    // Usamos addPostFrameCallback para asegurar que MultiProvider haya terminado.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        // Comprueba si el widget todavía está en el árbol
-        // Obtener instancias de los providers
-        final chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
-        _liveActivityBridgeService = Provider.of<LiveActivityBridgeService>(context, listen: false);
-
-        // Inicializar el handler de Live Activity
-        // El constructor de TravelLiveActivityHandler llama a su _initialize()
-        _travelLiveActivityHandler = TravelLiveActivityHandler(
-          chainStatusProvider: chainStatusProvider,
-          bridgeService: _liveActivityBridgeService,
-        );
-
-        // Llama a checkExistingActivities aquí, después de que todo esté configurado
-        if (Platform.isIOS) {
-          _liveActivityBridgeService.checkExistingActivities();
-        }
-        debugPrint("MyAppState: Live Activity services initialized.");
-      }
-    });
 
     _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
 
@@ -450,7 +414,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _travelLiveActivityHandler.dispose();
     super.dispose();
   }
 
@@ -713,23 +676,24 @@ class AppBorder extends StatefulWidget {
 class AppBorderState extends State<AppBorder> {
   @override
   Widget build(BuildContext context) {
-    final chainStatusProvider = Provider.of<ChainStatusProvider>(context);
-    return IgnorePointer(
-      child: Column(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  width: chainStatusProvider.watcherActive ? 3 : 0,
-                  color: chainStatusProvider.borderColor,
+    return GetBuilder<ChainStatusController>(builder: (chainP) {
+      return IgnorePointer(
+        child: Column(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    width: chainP.watcherActive ? 3 : 0,
+                    color: chainP.borderColor,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
 
