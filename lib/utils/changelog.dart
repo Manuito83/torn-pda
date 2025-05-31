@@ -75,7 +75,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed OC information not showing in Profile",
           "Fixed chat notifications showing when disabled",
           "Moved settings search functionality to appbar",
-          "Fixed other reported issues",
+          "Fixed new browser tab request from user scripts",
         ],
     );
 

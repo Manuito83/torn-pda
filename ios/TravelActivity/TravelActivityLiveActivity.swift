@@ -47,6 +47,29 @@ extension View {
   }
 }
 
+// MARK: - Formatted Remaining Time View
+@available(iOS 16.2, *)
+struct FormattedRemainingTimeView: View {
+  let arrivalDate: Date
+  let isStale: Bool
+
+  @ViewBuilder
+  var body: some View {
+    if isStale || arrivalDate.timeIntervalSinceNow <= 0 {
+      Text("ARRIVED")
+        .font(.caption2)
+        .foregroundColor(.green.opacity(isStale ? 0.7 : 1.0))
+
+    } else {
+      Text(
+        timerInterval: Date()...arrivalDate,
+        countsDown: true,
+        showsHours: arrivalDate.timeIntervalSinceNow >= 3600
+      )
+    }
+  }
+}
+
 // MARK: - Live Activity Widget Configuration
 @available(iOS 16.2, *)
 struct TravelActivityLiveActivity: Widget {
@@ -54,191 +77,15 @@ struct TravelActivityLiveActivity: Widget {
   var body: some WidgetConfiguration {
     ActivityConfiguration(for: TravelActivityAttributes.self) { context in
       // Lock screen
-      LockScreenLiveActivityView(context: context, currentDate: Date())
-        .padding()
-        .activityBackgroundTint(Color.black.opacity(0.7))
-        .activitySystemActionForegroundColor(Color.white)
-    } dynamicIsland: { context in
-      // Dynamic Island
-      let isReturningDI = isReturningToTorn(context: context)
-      let arrivalDateDI = getArrivalDate(context: context)
-      let earliestReturnDateDI = getEarliestReturnDate(context: context)
-      let departureDateDI = getDepartureDate(context: context)
-
-      return DynamicIsland(
-        // Expanded regions
-        expanded: {
-          // Leading: origin or destination flag
-          DynamicIslandExpandedRegion(.leading) {
-            LocationPinViewForDI(
-              flagAsset: isReturningDI
-                ? context.state.currentDestinationFlagAsset
-                : context.state.originFlagAsset,
-              locationName: isReturningDI
-                ? context.state.currentDestinationDisplayName
-                : context.state.originDisplayName
-            )
-          }
-          // Trailing: flipped flag
-          DynamicIslandExpandedRegion(.trailing) {
-            LocationPinViewForDI(
-              flagAsset: isReturningDI
-                ? context.state.originFlagAsset
-                : context.state.currentDestinationFlagAsset,
-              locationName: isReturningDI
-                ? context.state.originDisplayName
-                : context.state.currentDestinationDisplayName
-            )
-          }
-          // Center: vehicle or checkmark
-          DynamicIslandExpandedRegion(.center) {
-            if !context.state.hasArrived {
-              VehicleView(context: context, size: 24)
-            } else {
-              Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-                .font(.title3)
-            }
-          }
-          // Bottom: ETA, Earliest Return, Countdown + flag
-          DynamicIslandExpandedRegion(.bottom) {
-            VStack(alignment: HorizontalAlignment.trailing, spacing: 2) {
-              ProgressView(
-                timerInterval: departureDateDI...arrivalDateDI,
-                countsDown: false,
-                label: { EmptyView() },
-                currentValueLabel: { EmptyView() }
-              )
-              .if(isReturningDI) { $0.scaleEffect(x: -1, y: 1, anchor: .center) }
-              .frame(height: 4)
-              .padding(.vertical, 4)
-
-              HStack(alignment: .bottom, spacing: 8) {
-
-                VStack(alignment: HorizontalAlignment.leading, spacing: 2) {
-                  Text("ETA")
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.7))
-                  Text("\(timeString(from: context.state.arrivalTimeTimestamp))")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                if let returnDate = earliestReturnDateDI {
-                  VStack(alignment: HorizontalAlignment.center, spacing: 2) {
-                    Text("EARLIEST\nRETURN")
-                      .multilineTextAlignment(.center)
-                      .font(.system(size: 9))
-                      .foregroundColor(.white.opacity(0.7))
-                    Text("\(timeString(from: Int(returnDate.timeIntervalSince1970))) LT")
-                      .font(.caption)
-                      .foregroundColor(.white)
-                  }
-                  .frame(maxWidth: .infinity, alignment: .center)
-                } else {
-                  Spacer().frame(maxWidth: .infinity)
-                }
-
-                if !context.state.hasArrived {
-                  VStack(alignment: HorizontalAlignment.trailing, spacing: 2) {
-                    Text("REMAINING")
-                      .font(.caption2)
-                      .foregroundColor(.white.opacity(0.7))
-                    Text(
-                      timerInterval: Date()...arrivalDateDI,
-                      countsDown: true,
-                      showsHours: arrivalDateDI.timeIntervalSinceNow >= 3600
-                    )
-                    .multilineTextAlignment(.trailing)
-                    .font(.caption2)
-                    .foregroundColor(.white)
-                  }
-                  .frame(maxWidth: .infinity, alignment: .center)
-                } else {
-                  Text("Arrived")
-                    .font(.caption2)
-                    .foregroundColor(.green)
-                }
-              }
-              .frame(maxWidth: .infinity)
-              .padding(.horizontal, 10)
-              .padding(.bottom, 4)
-            }
-          }
-        },
-        // Compact regions
-        compactLeading: {
-          if isReturningDI {
-            Image(context.state.currentDestinationFlagAsset)
-              .resizable()
-              .scaledToFit()
-              .frame(width: 20, height: 20)
-          } else {
-            if context.state.hasArrived {
-              Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-            } else {
-              VehicleView(context: context, size: 20)
-                .padding(2)
-            }
-          }
-        },
-        compactTrailing: {
-          if isReturningDI {
-            HStack(spacing: 1) {
-              Text("00:00")
-                .hidden()
-                .overlay(alignment: .leading) {
-                  Text(
-                    timerInterval: Date()...arrivalDateDI,
-                    countsDown: true,
-                    showsHours: arrivalDateDI.timeIntervalSinceNow >= 3600
-                  ).font(.caption)
-                }
-
-              VehicleView(context: context, size: 20)
-                .padding(2)
-            }
-          } else {
-            if context.state.hasArrived {
-              Image(systemName: "checkmark.circle.fill")
-                .foregroundColor(.green)
-            } else {
-              HStack(spacing: 1) {
-                Text("00:00")
-                  .hidden()
-                  .overlay(alignment: .leading) {
-                    Text(
-                      timerInterval: Date()...arrivalDateDI,
-                      countsDown: true,
-                      showsHours: arrivalDateDI.timeIntervalSinceNow >= 3600
-                    ).font(.caption)
-                  }
-
-                Image(context.state.currentDestinationFlagAsset)
-                  .resizable()
-                  .scaledToFit()
-                  .frame(width: 20, height: 20)
-              }
-            }
-          }
-        },
-        // Minimal region
-        minimal: {
-          if context.state.hasArrived {
-            Image(systemName: "checkmark.circle.fill")
-              .foregroundColor(.green)
-          } else {
-            Image(context.state.currentDestinationFlagAsset)
-              .resizable()
-              .scaledToFit()
-              .frame(width: 12, height: 12)
-          }
-        }
+      let effectiveHasArrivedForLockScreen = context.state.hasArrived || context.isStale
+      LockScreenLiveActivityView(
+        context: context,
+        displayAsArrived: effectiveHasArrivedForLockScreen
       )
-      .widgetURL(URL(string: "tornpda://www.torn.com"))
-      .keylineTint(Color.orange)
+      .activityBackgroundTint(Color.black.opacity(0.7))
+      .activitySystemActionForegroundColor(Color.white)
+    } dynamicIsland: { context in
+      dynamicIslandContent(context: context)
     }
   }
 }
@@ -247,7 +94,7 @@ struct TravelActivityLiveActivity: Widget {
 @available(iOS 16.2, *)
 struct LockScreenLiveActivityView: View {
   let context: ActivityViewContext<TravelActivityAttributes>
-  let currentDate: Date
+  let displayAsArrived: Bool
 
   private var isReturningLS: Bool { isReturningToTorn(context: context) }
   private var departureDateLS: Date { getDepartureDate(context: context) }
@@ -257,15 +104,15 @@ struct LockScreenLiveActivityView: View {
   var body: some View {
     VStack(alignment: .center, spacing: 8) {
       Text(
-        context.state.hasArrived
+        displayAsArrived
           ? "\(context.state.activityStateTitle) \(context.state.currentDestinationDisplayName) at \(timeString(from: context.state.arrivalTimeTimestamp))"
           : "\(context.state.activityStateTitle) \(context.state.currentDestinationDisplayName)"
       )
       .font(.headline)
-      .foregroundColor(.white)
+      .foregroundColor(context.isStale ? .white.opacity(0.7) : .white)
       .multilineTextAlignment(.center)
 
-      if !context.state.hasArrived && context.state.showProgressBar {
+      if !displayAsArrived && context.state.showProgressBar {
         HStack(spacing: 0) {
           LocationPinView(
             flagAsset: isReturningLS
@@ -291,15 +138,23 @@ struct LockScreenLiveActivityView: View {
         .padding(.horizontal, 8)
 
         VStack(alignment: HorizontalAlignment.trailing, spacing: 2) {
-          ProgressView(
-            timerInterval: departureDateLS...arrivalDateLS,
-            countsDown: false,
-            label: { EmptyView() },
-            currentValueLabel: { EmptyView() }
-          )
-          .if(isReturningLS) { $0.scaleEffect(x: -1, y: 1, anchor: .center) }
-          .frame(height: 4)
-          .padding(.vertical, 4)
+          if !context.isStale {
+            ProgressView(
+              timerInterval: departureDateLS...arrivalDateLS,
+              countsDown: false,
+              label: { EmptyView() },
+              currentValueLabel: { EmptyView() }
+            )
+            .if(isReturningLS) { $0.scaleEffect(x: -1, y: 1, anchor: .center) }
+            .frame(height: 4)
+            .padding(.vertical, 4)
+          } else {
+            // Stale "progress bar"
+            Rectangle()
+              .frame(height: 4)
+              .foregroundColor(Color.gray.opacity(0.5))
+              .padding(.vertical, 4)
+          }
 
           HStack(alignment: .bottom, spacing: 8) {
 
@@ -312,6 +167,7 @@ struct LockScreenLiveActivityView: View {
                 .foregroundColor(.white)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .opacity(context.isStale ? 0.7 : 1.0)
 
             if let returnDate = earliestReturnDateLS {
               VStack(alignment: HorizontalAlignment.center, spacing: 2) {
@@ -324,39 +180,218 @@ struct LockScreenLiveActivityView: View {
                   .foregroundColor(.white)
               }
               .frame(maxWidth: .infinity, alignment: .center)
+              .opacity(context.isStale ? 0.7 : 1.0)
             } else {
               Spacer().frame(maxWidth: .infinity)
             }
 
-            if !context.state.hasArrived {
+            if !displayAsArrived {
               VStack(alignment: HorizontalAlignment.trailing, spacing: 2) {
                 Text("REMAINING")
                   .font(.caption2)
                   .foregroundColor(.white.opacity(0.7))
-                Text(
-                  timerInterval: Date()...arrivalDateLS,
-                  countsDown: true,
-                  showsHours: arrivalDateLS.timeIntervalSinceNow >= 3600
-                )
-                .multilineTextAlignment(.trailing)
-                .font(.caption2)
-                .foregroundColor(.white)
+                FormattedRemainingTimeView(arrivalDate: arrivalDateLS, isStale: context.isStale)
+                  .multilineTextAlignment(.trailing)
+                  .font(.caption2)
+                  .foregroundColor(.white)
               }
               .frame(maxWidth: .infinity, alignment: .center)
             } else {
               Text("Arrived")
                 .font(.caption2)
-                .foregroundColor(.green)
+                .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
             }
           }
           .frame(maxWidth: .infinity)
           .padding(.horizontal, 10)
           .padding(.vertical, 4)
         }
+      } else if displayAsArrived {
+        Image(systemName: "checkmark.circle.fill")
+          .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
+          .font(.largeTitle)
+          .padding(.top)
       }
     }
-    .padding(.horizontal)
+    .padding()
   }
+}
+
+// MARK: - Dynamic Island Content Helper
+@available(iOS 16.2, *)
+private func dynamicIslandContent(context: ActivityViewContext<TravelActivityAttributes>)
+  -> DynamicIsland
+{
+  let effectiveHasArrivedForDI = context.state.hasArrived || context.isStale
+  let isReturningDI = isReturningToTorn(context: context)
+  let arrivalDateDI = getArrivalDate(context: context)
+  let earliestReturnDateDI = getEarliestReturnDate(context: context)
+  let departureDateDI = getDepartureDate(context: context)
+
+  return DynamicIsland(
+    expanded: {
+      DynamicIslandExpandedRegion(.leading) {
+        LocationPinViewForDI(
+          flagAsset: isReturningDI
+            ? context.state.currentDestinationFlagAsset
+            : context.state.originFlagAsset,
+          locationName: isReturningDI
+            ? context.state.currentDestinationDisplayName
+            : context.state.originDisplayName
+        )
+        .opacity(context.isStale ? 0.7 : 1.0)
+      }
+      DynamicIslandExpandedRegion(.trailing) {
+        LocationPinViewForDI(
+          flagAsset: isReturningDI
+            ? context.state.originFlagAsset
+            : context.state.currentDestinationFlagAsset,
+          locationName: isReturningDI
+            ? context.state.originDisplayName
+            : context.state.currentDestinationDisplayName
+        )
+        .opacity(context.isStale ? 0.7 : 1.0)
+      }
+      DynamicIslandExpandedRegion(.center) {
+        if !effectiveHasArrivedForDI {
+          VehicleView(context: context, size: 24)
+        } else {
+          Image(systemName: "checkmark.circle.fill")
+            .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
+            .font(.title3)
+        }
+      }
+      DynamicIslandExpandedRegion(.bottom) {
+        VStack(alignment: HorizontalAlignment.trailing, spacing: 2) {
+          if !context.isStale {
+            ProgressView(
+              timerInterval: departureDateDI...arrivalDateDI,
+              countsDown: false,
+              label: { EmptyView() },
+              currentValueLabel: { EmptyView() }
+            )
+            .if(isReturningDI) { $0.scaleEffect(x: -1, y: 1, anchor: .center) }
+            .frame(height: 4)
+            .padding(.vertical, 4)
+          } else {
+            Rectangle()
+              .frame(height: 4)
+              .foregroundColor(Color.gray.opacity(0.5))
+              .padding(.vertical, 4)
+          }
+
+          HStack(alignment: .bottom, spacing: 8) {
+            VStack(alignment: HorizontalAlignment.leading, spacing: 2) {
+              Text("ETA")
+                .font(.caption2)
+                .foregroundColor(.white.opacity(context.isStale ? 0.5 : 0.7))
+              Text("\(timeString(from: context.state.arrivalTimeTimestamp))")
+                .font(.caption)
+                .foregroundColor(.white.opacity(context.isStale ? 0.7 : 1.0))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let returnDate = earliestReturnDateDI {
+              VStack(alignment: HorizontalAlignment.center, spacing: 2) {
+                Text("EARLIEST\nRETURN")
+                  .multilineTextAlignment(.center)
+                  .font(.system(size: 9))
+                  .foregroundColor(.white.opacity(context.isStale ? 0.5 : 0.7))
+                Text("\(timeString(from: Int(returnDate.timeIntervalSince1970))) LT")
+                  .font(.caption)
+                  .foregroundColor(.white.opacity(context.isStale ? 0.7 : 1.0))
+              }
+              .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+              Spacer().frame(maxWidth: .infinity)
+            }
+
+            if !effectiveHasArrivedForDI {
+              VStack(alignment: HorizontalAlignment.trailing, spacing: 2) {
+                Text("REMAINING")
+                  .font(.caption2)
+                  .foregroundColor(.white.opacity(context.isStale ? 0.5 : 0.7))
+                FormattedRemainingTimeView(arrivalDate: arrivalDateDI, isStale: context.isStale)
+                  .multilineTextAlignment(.trailing)
+                  .font(.caption2)
+                  .foregroundColor(.white.opacity(context.isStale ? 0.7 : 1.0))
+              }
+              .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+              Text("Arrived")
+                .font(.caption2)
+                .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
+            }
+          }
+          .frame(maxWidth: .infinity)
+          .padding(.horizontal, 10)
+          .padding(.bottom, 4)
+        }
+      }
+    },
+    compactLeading: {
+      if isReturningDI {
+        Image(context.state.currentDestinationFlagAsset)
+          .resizable().scaledToFit().frame(width: 20, height: 20)
+          .opacity(context.isStale ? 0.7 : 1.0)
+      } else {
+        if effectiveHasArrivedForDI {
+          Image(systemName: "checkmark.circle.fill")
+            .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
+        } else {
+          VehicleView(context: context, size: 20).padding(2)
+        }
+      }
+    },
+    compactTrailing: {
+      if isReturningDI {
+        if effectiveHasArrivedForDI {
+          Image(systemName: "checkmark.circle.fill")
+            .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
+        } else {
+          HStack(spacing: 1) {
+            Text("00h00m")
+              .font(.caption)
+              .hidden()
+              .overlay(alignment: .leading) {
+                FormattedRemainingTimeView(arrivalDate: arrivalDateDI, isStale: context.isStale)
+                  .font(.caption)
+              }
+            VehicleView(context: context, size: 20).padding(2)
+          }
+        }
+      } else {
+        if effectiveHasArrivedForDI {
+          Image(systemName: "checkmark.circle.fill")
+            .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
+        } else {
+          HStack(spacing: 1) {
+            Text("00h00m")
+              .font(.caption)
+              .hidden()
+              .overlay(alignment: .leading) {
+                FormattedRemainingTimeView(arrivalDate: arrivalDateDI, isStale: context.isStale)
+                  .font(.caption)
+              }
+            Image(context.state.currentDestinationFlagAsset)
+              .resizable().scaledToFit().frame(width: 20, height: 20)
+          }
+        }
+      }
+    },
+    minimal: {
+      if effectiveHasArrivedForDI {
+        Image(systemName: "checkmark.circle.fill")
+          .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
+      } else {
+        Image(context.state.currentDestinationFlagAsset)
+          .resizable().scaledToFit().frame(width: 12, height: 12)
+          .opacity(context.isStale ? 0.7 : 1.0)
+      }
+    }
+  )
+  .widgetURL(URL(string: "tornpda://www.torn.com"))
+  .keylineTint(context.isStale ? Color.gray : Color.orange)
 }
 
 // MARK: - Supporting Views
