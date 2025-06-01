@@ -20,7 +20,6 @@ class LiveActivityBridgeController extends GetxController {
     _channel.setMethodCallHandler(_handleNativeMethodCalls);
     _isInitialized = true;
     log("LiveActivityBridgeService: Native method call handler initialized.");
-    checkExistingActivities();
   }
 
   Future<void> _handleNativeMethodCalls(MethodCall call) async {
@@ -39,7 +38,7 @@ class LiveActivityBridgeController extends GetxController {
     }
     try {
       await _channel.invokeMethod('startTravelActivity', arguments);
-      log("LiveActivityBridgeService: Invoking startTravelActivity with args: $arguments");
+      //log("LiveActivityBridgeService: Invoking startTravelActivity with args: $arguments");
     } on PlatformException catch (e) {
       log("LiveActivityBridgeService: PlatformException during start/update: ${e.message} - Details: ${e.details}");
     } catch (e) {
@@ -59,14 +58,14 @@ class LiveActivityBridgeController extends GetxController {
     }
   }
 
-  Future<void> checkExistingActivities() async {
+  Future<bool> isAnyActivityActive() async {
     if (!_isInitialized) initializeHandler();
     try {
-      await _channel.invokeMethod('checkExistingActivities');
-    } on PlatformException catch (e) {
-      log("LiveActivityBridgeService: PlatformException checking existing: ${e.message} - Details: ${e.details}");
+      final bool isActive = await _channel.invokeMethod('isAnyTravelActivityActive');
+      return isActive;
     } catch (e) {
-      log("LiveActivityBridgeService: Generic error checking existing: $e");
+      log("LiveActivityBridgeService: Error checking if any activity is active: $e");
+      return false;
     }
   }
 }

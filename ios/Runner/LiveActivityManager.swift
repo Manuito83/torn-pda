@@ -104,7 +104,7 @@ class LiveActivityManager {
       let activity = try Activity<TravelActivityAttributes>.request(
         attributes: attributes,
         content: activityContent,
-        pushType: .token // Indicate that this activity will receive updates via push tokens.
+        pushType: .token  // Indicate that this activity will receive updates via push tokens.
       )
       // If successful, store the new activity and start observing its state and token changes.
       self.currentActivity = activity
@@ -174,10 +174,11 @@ class LiveActivityManager {
       relevanceScore: relevanceScore
     )
 
-    
     // Update the Live Activity with the new content.
     await activityToUpdate.update(updatedActivityContent)
-    print("LiveActivityManager: Updated LA. hasArrived=\(hasArrived), staleDate=\(staleDateForDismissal)")
+    print(
+      "LiveActivityManager: Updated LA. hasArrived=\(hasArrived), staleDate=\(staleDateForDismissal)"
+    )
   }
 
   // MARK: - END ACTIVITY
@@ -231,7 +232,7 @@ class LiveActivityManager {
             self.currentActivity = nil
           }
         case .stale:
-            await systemActivity.end(nil, dismissalPolicy: .immediate)
+          await systemActivity.end(nil, dismissalPolicy: .immediate)
         @unknown default:
           // Unknown state
           break
@@ -272,6 +273,10 @@ class LiveActivityManager {
   }
 
   // MARK: - Private Helpers
+
+  func isAnyTravelActivityActive() -> Bool {
+    return !Activity<TravelActivityAttributes>.activities.isEmpty
+  }
 
   private func endActivityInternal(
     activity: Activity<TravelActivityAttributes>,

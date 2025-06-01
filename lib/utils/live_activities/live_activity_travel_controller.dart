@@ -19,7 +19,6 @@ class LiveActivityTravelController extends GetxController {
   bool _isLALogicallyActive = false;
   String _lastProcessedTravelIdentifier = "";
   bool _hasArrivedNotified = false;
-  Timer? _autoEndTimer;
 
   bool _isMonitoring = false;
   Worker? _statusListenerWorker;
@@ -50,6 +49,16 @@ class LiveActivityTravelController extends GetxController {
 
     _statusListenerWorker = ever(_chainStatusProvider.laStatusInputData, _onStatusDataChanged);
 
+    // Sync LA State
+    _isLALogicallyActive = await _bridgeController.isAnyActivityActive();
+    log("TravelLiveActivityHandler: Initial native LA active state: $_isLALogicallyActive");
+
+    if (!_isLALogicallyActive) {
+      // If there is no active Live Activity, we reset the internal state
+      // If there is, we will let [_processCurrentState] handle it
+      _resetLAStateInternal();
+    }
+
     _isFirstValidProcessingPending = true;
     _processCurrentState(statusData: _chainStatusProvider.laStatusInputData.value);
     log("TravelLiveActivityHandler: Activated and monitoring travel status.");
@@ -63,9 +72,6 @@ class LiveActivityTravelController extends GetxController {
 
     _statusListenerWorker?.dispose();
     _statusListenerWorker = null;
-
-    _autoEndTimer?.cancel();
-    _autoEndTimer = null;
 
     if (_isLALogicallyActive) {
       log("TravelLiveActivityHandler: Deactivating. Ending any active LA via bridge.");
@@ -108,47 +114,37 @@ class LiveActivityTravelController extends GetxController {
     _processCurrentState(statusData: statusData);
   }
 
-  void _processCurrentState({StatusObservable? statusData}) {
+  void _processCurrentState({StatusObservable? statusData}) async {
     if (!_isMonitoring) {
       return;
     }
 
     bool isConsideredFirstValidRun = false;
-
-    final Map<String, dynamic>? apiData = _getCurrentTravelDataFromApi(statusData?.barsAndStatusModel);
+    final apiData = _getCurrentTravelDataFromApi(statusData?.barsAndStatusModel);
 
     if (_isFirstValidProcessingPending) {
       if (apiData != null) {
+        // We have valid API data for the first time this activation cycle
         isConsideredFirstValidRun = true;
         _isFirstValidProcessingPending = false;
+        // log("TravelLiveActivityHandler: First valid data processing run.");
       } else {
-        // log("TravelLiveActivityHandler: Awaiting valid API data for initial processing.");
+        // Still waiting for valid data on the first go, do nothing yet.
         return;
       }
     }
 
-    final PlayerStatusColor? currentStatusColor = statusData?.statusColor;
-    final BarsStatusCooldownsModel? currentModel = statusData?.barsAndStatusModel;
-    final bool traveling = currentStatusColor == PlayerStatusColor.travel;
-    final bool repatriating = _isPlayerStatusHospitalizedAndPotentiallyReturning(currentStatusColor, currentModel);
+    final currentStatusColor = statusData?.statusColor;
+    final currentModel = statusData?.barsAndStatusModel;
+    final traveling = currentStatusColor == PlayerStatusColor.travel;
+    final repatriating = _isPlayerStatusHospitalizedAndPotentiallyReturning(currentStatusColor, currentModel);
 
-    // Log for debugging the input state
-    // log("TravelLiveActivityHandler _processCurrentState - Initial: $isInitialCheck, "
-    //  "Monitoring: $_isMonitoring, StatusColor: ${statusData?.statusColor}, "
-    //  "TravelDest: ${statusData?.barsAndStatusModel?.travel?.destination}, "
-    //  "TravelTS: ${statusData?.barsAndStatusModel?.travel?.timestamp}");
-
-    if (apiData == null ||
-        apiData['destination'] == null ||
-        apiData['arrivalTimestamp'] == null ||
-        apiData['departureTimestamp'] == null) {
-      // If no travel data, but a LA is logically active, end it.
+    if (apiData == null) {
+      // If no travel data from API, end any LA that Dart thinks is active
       if (_isLALogicallyActive) {
-        log("TravelLiveActivityHandler: No API travel data in current StatusObservable or not traveling. Ending any logical LA.");
-        _bridgeController.endActivity();
-        _resetLAState();
-      } else {
-        log("TravelLiveActivityHandler: No API travel data available in current StatusObservable. Skipping LA processing.");
+        log("TravelLiveActivityHandler: No API travel data. Ending active LA (if any).");
+        _bridgeController.endActivity(); // Tell native to end
+        _resetLAStateInternal(); // Reset Dart's logical state
       }
       return;
     }
@@ -156,112 +152,108 @@ class LiveActivityTravelController extends GetxController {
     String travelId = "${apiData['destination']}-${apiData['arrivalTimestamp']}-${apiData['departureTimestamp']}";
     if (repatriating) travelId += "-repat";
 
-    // Cancel any existing auto-end timer (e.g., from a previous "arrived" state)
-    _autoEndTimer?.cancel();
-
     bool shouldStartOrUpdateLA = false;
     Map<String, dynamic>? laArgs;
 
-    final int nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
-    final int arrivalTimestamp = apiData['arrivalTimestamp']!;
-    final bool hasPlayerArrived = nowSeconds >= arrivalTimestamp;
+    final nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+    final arrivalTimestamp = apiData['arrivalTimestamp']!;
+    final hasPlayerArrived = nowSeconds >= arrivalTimestamp;
 
-    // --- Determine if action is needed based on travel status
+    // --- Main logic to determine LA action ---
     if (traveling || repatriating) {
+      // Player is currently traveling or repatriating according to API
       bool isArrivalStale = hasPlayerArrived && (nowSeconds - arrivalTimestamp) > _staleArrivalThresholdSeconds;
 
-      // CASE 0: Initial check, player has ALREADY arrived at the destination,
-      // and no LA is logically active for this past trip.
-      // We also check if the arrival is "stale" (too old to start a new "Arrived" LA for).
+      // CASE 0: First valid processing run, player has arrived, and the arrival is "stale"
       if (isConsideredFirstValidRun && hasPlayerArrived && isArrivalStale) {
-        log("TravelLiveActivityHandler: CASE 0 - Initial valid run, player arrived, arrival is stale. No LA will be started/ended unless one was adopted.");
+        log("TravelLiveActivityHandler: CASE 0 - Initial valid run, player arrived, arrival is stale ($travelId).");
         if (_isLALogicallyActive) {
-          log("TravelLiveActivityHandler: Ending stale LA adopted by native side.");
-          _bridgeController.endActivity();
+          // If Dart thinks an LA is active (likely adopted by Swift and it's for this stale trip), end it
+          log("CASE 0.1: Ending stale LA that was likely adopted by native side.");
           _resetLAState();
         } else {
+          // No LA was active, and we won't start one for this stale arrival
+          // Mark this stale trip as processed by Dart for this session
           _hasArrivedNotified = true;
           _lastProcessedTravelIdentifier = travelId;
           _currentLAArrivalTimestamp = arrivalTimestamp;
+          log("CASE 0.2: No active LA but Dart processed this stale trip already.");
         }
       }
-      // CASE 1: Player has arrived at the destination, and we need to start or update an "Arrived" LA
+      // CASE 1: Player has arrived (and if it's the first valid run, it's not stale), and arrival not yet notified by LA
       else if (hasPlayerArrived && !_hasArrivedNotified) {
         log("TravelLiveActivityHandler: CASE 1 - Arrival detected for ${apiData['destination']}. Preparing 'Arrived' LA.");
         laArgs = _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true);
         shouldStartOrUpdateLA = true;
         _hasArrivedNotified = true;
-        _autoEndTimer = Timer(const Duration(minutes: _arrivedLAAutoEndMinutes), () {
-          if (_isLALogicallyActive && _currentLAArrivalTimestamp == arrivalTimestamp) {
-            log("TravelLiveActivityHandler: Auto-ending 'Arrived' LA.");
-            _bridgeController.endActivity();
-            _resetLAState();
-          }
-        });
       }
-      // CASE 2: Player is en route (not yet arrived).
+      // CASE 2: Player is en route (not yet arrived)
       else if (!hasPlayerArrived) {
-        // Determine if we need to start a new LA or update an existing one.
-        // Conditions to start/update:
-        // 1. `noLogicalLA`: Our Dart logic doesn't think an LA is active for the current trip.
-        // 2. `arrivalTimeMismatch`: The arrival time of the current API trip
-        //    is different from the arrival time of the LA we think is active (implies a new or changed trip).
-        // 3. `initialCheckAndNoNativeToken`: It's the first processing after activation, AND
-        //    the native side reports no push token for its current LA. This could mean
-        //    no LA is active natively, or it's active but without a token.
-        //    This encourages starting a new LA to ensure it's set up correctly, especially if tokens are desired.
-        // 4. `isNewOrDifferentTrip`: Details of the trip (destination, arrival, departure)
-        //    have changed, indicating a completely new trip.
-
+        // Avoid constant calls to native side BUT also restarting LA if user canceled!
         bool isNewOrDifferentTrip = travelId != _lastProcessedTravelIdentifier;
+        // If an LA was adopted (_isLALogicallyActive=true) but Dart's _currentLAArrivalTimestamp is 0 (or different),
+        // this mismatch will trigger an update/replacement
+        bool arrivalTimeMismatch = _isLALogicallyActive && (arrivalTimestamp != _currentLAArrivalTimestamp);
         bool noLogicalLA = !_isLALogicallyActive;
-        bool arrivalTimeMismatch = arrivalTimestamp != _currentLAArrivalTimestamp;
 
-        // This condition helps ensure that on an initial check, if the native side
-        // doesn't report a push token (implying no LA or an LA without a token),
-        // we attempt to start/update it from Dart to ensure proper setup.
-        bool initialCheckAndNoNativeToken =
-            isConsideredFirstValidRun && _bridgeController.currentActivityPushToken == null;
-
-        if (noLogicalLA || arrivalTimeMismatch || initialCheckAndNoNativeToken || isNewOrDifferentTrip) {
-          // log("TravelLiveActivityHandler: CASE 2 - Conditions met to start/update LA for ongoing travel."); // Log opcional
+        // 1. No LA logically active in Dart.
+        // 2. Or, an LA is active, but its arrival time doesn't match the current API data.
+        // 3. Or, an LA is active, but the trip identifier (dest, arrival, dep) has changed.
+        if (noLogicalLA || arrivalTimeMismatch || (_isLALogicallyActive && isNewOrDifferentTrip)) {
+          String logReason =
+              "Reasons: noLogicalLA=$noLogicalLA, arrivalTimeMismatch=$arrivalTimeMismatch, isNewOrDifferentTripWhileActive=${_isLALogicallyActive && isNewOrDifferentTrip}";
+          log("TravelLiveActivityHandler: CASE 2 - Conditions met to start/update LA for ongoing travel. $logReason");
           laArgs = _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: false);
           shouldStartOrUpdateLA = true;
           _hasArrivedNotified = false;
         }
       }
-      // CASE 3: Player has arrived, and we've already processed this "Arrived" state.
-      else if (hasPlayerArrived && _hasArrivedNotified) {
-        // log("TravelLiveActivityHandler: Already arrived and 'Arrived' state processed. LA remains.");
-      }
     } else {
-      // CASE 4: NOT traveling or repatriating according to API data.
+      // CASE 3: Player is NOT traveling or repatriating
       if (_isLALogicallyActive) {
-        log("TravelLiveActivityHandler: CASE 4 - Not traveling. Ending active LA.");
-        _bridgeController.endActivity();
-        _resetLAState();
+        // An LA is active in Dart, but API says player isn't traveling
+        if (_hasArrivedNotified && _currentLAArrivalTimestamp > 0) {
+          // This was an "Arrived" LA
+          // Check if 10 minutes have passed since that arrival
+          int elapsedTimeSinceArrival = nowSeconds - _currentLAArrivalTimestamp;
+          if (elapsedTimeSinceArrival >= (_arrivedLAAutoEndMinutes * 60)) {
+            log("TravelLiveActivityHandler: CASE 3.1 - No longer traveling. 'Arrived' LA was active & 10+ min passed since its arrival. Ending LA.");
+            _resetLAState();
+          }
+        } else {
+          // LA was active but it wasn't an "Arrived" state (e.g., was "En Route" and trip ended/cancelled),
+          // or we don't have its arrival info.
+          log("TravelLiveActivityHandler: CASE 3.2 - No longer traveling. LA was 'En Route' or unknown type. Ending LA immediately.");
+          _resetLAState();
+        }
       }
     }
 
-    // --- Perform the necessary LA changes
+    // --- Perform the LA start/update if decided
     if (shouldStartOrUpdateLA && laArgs != null) {
-      log("TravelLiveActivityHandler: Calling native startActivity with args: $laArgs");
-      // The bridge controller should handle if it's a start or an update internally
-      // based on whether an activity is already active natively for this type.
+      // log("TravelLiveActivityHandler: Calling bridge to start/update LA with args: $laArgs");
       _bridgeController.startActivity(arguments: laArgs);
       _isLALogicallyActive = true;
-      _currentLAArrivalTimestamp = apiData['arrivalTimestamp'];
+      _currentLAArrivalTimestamp = arrivalTimestamp;
       _lastProcessedTravelIdentifier = travelId;
     }
   }
 
-  void _resetLAState() {
+  // Does not end the native Live Activity, just resets the internal state
+  void _resetLAStateInternal({bool calledFromDeactivate = false}) {
+    if (!calledFromDeactivate) {
+      log("TravelLiveActivityHandler: Internal state reset (native LA might still exist).");
+    }
     _isLALogicallyActive = false;
     _currentLAArrivalTimestamp = 0;
-    _lastProcessedTravelIdentifier = "ended_or_reset_${DateTime.now().millisecondsSinceEpoch}";
+    _lastProcessedTravelIdentifier = "internal_reset_${DateTime.now().millisecondsSinceEpoch}";
     _hasArrivedNotified = false;
-    _autoEndTimer?.cancel();
-    _autoEndTimer = null;
+  }
+
+  // Ends the native Live Activity and resets the internal state
+  void _resetLAState() {
+    _bridgeController.endActivity();
+    _resetLAStateInternal(calledFromDeactivate: true);
   }
 
   Map<String, dynamic> _buildArgs({

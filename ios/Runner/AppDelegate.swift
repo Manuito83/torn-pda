@@ -282,9 +282,8 @@ import UserNotifications  // for UNUserNotificationCenter
             await manager.endCurrentTravelActivity()
             result(nil)
           }
-        case "checkExistingActivities":
-          manager.checkAndAdoptExistingActivities()
-          result(nil)
+        case "isAnyTravelActivityActive":
+          result(manager.isAnyTravelActivityActive())
 
         default:
           result(FlutterMethodNotImplemented)

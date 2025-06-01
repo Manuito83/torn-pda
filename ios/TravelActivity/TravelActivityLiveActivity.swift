@@ -105,7 +105,7 @@ struct LockScreenLiveActivityView: View {
     VStack(alignment: .center, spacing: 8) {
       Text(
         displayAsArrived
-          ? "\(context.state.activityStateTitle) \(context.state.currentDestinationDisplayName) at \(timeString(from: context.state.arrivalTimeTimestamp))"
+          ? "Arrived in \(context.state.currentDestinationDisplayName) at \(timeString(from: context.state.arrivalTimeTimestamp))"
           : "\(context.state.activityStateTitle) \(context.state.currentDestinationDisplayName)"
       )
       .font(.headline)
@@ -361,11 +361,8 @@ private func dynamicIslandContent(context: ActivityViewContext<TravelActivityAtt
           }
         }
       } else {
-        if effectiveHasArrivedForDI {
-          Image(systemName: "checkmark.circle.fill")
-            .foregroundColor(context.isStale ? .green.opacity(0.7) : .green)
-        } else {
-          HStack(spacing: 1) {
+        HStack(spacing: 1) {
+          if !effectiveHasArrivedForDI {
             Text("00h00m")
               .font(.caption)
               .hidden()
@@ -373,10 +370,11 @@ private func dynamicIslandContent(context: ActivityViewContext<TravelActivityAtt
                 FormattedRemainingTimeView(arrivalDate: arrivalDateDI, isStale: context.isStale)
                   .font(.caption)
               }
-            Image(context.state.currentDestinationFlagAsset)
-              .resizable().scaledToFit().frame(width: 20, height: 20)
           }
+          Image(context.state.currentDestinationFlagAsset)
+            .resizable().scaledToFit().frame(width: 20, height: 20)
         }
+
       }
     },
     minimal: {
