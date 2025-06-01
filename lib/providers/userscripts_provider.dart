@@ -140,22 +140,6 @@ class UserScriptsProvider extends ChangeNotifier {
     return anonFunction;
   }
 
-  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
-    final response = await UserScriptModel.fromURL(url, isExample: isExample);
-    if (response.success && response.model != null) {
-      if (_userScriptList.any((script) => script.name == response.model!.name)) {
-        return (success: false, message: "Script with same name already exists");
-      }
-      userScriptList.add(response.model!);
-      _sort();
-      _saveUserScriptsListSharedPrefs();
-      notifyListeners();
-      return (success: true, message: null);
-    } else {
-      return (success: false, message: response.message);
-    }
-  }
-
   void addUserScriptByModel(UserScriptModel model) {
     userScriptList.add(model);
     _sort();
@@ -327,6 +311,9 @@ class UserScriptsProvider extends ChangeNotifier {
         logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
+
+    _checkForCustomApiKeyCandidates();
+
     _sort();
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
@@ -370,11 +357,6 @@ class UserScriptsProvider extends ChangeNotifier {
               final String name = decodedModel.name.toLowerCase();
               if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
 
-              bool customApiKeyCandidate = false;
-              if (decodedModel.source.contains("###PDA-APIKEY###")) {
-                customApiKeyCandidate = true;
-              }
-
               addUserScript(
                 decodedModel.name,
                 decodedModel.time,
@@ -387,7 +369,7 @@ class UserScriptsProvider extends ChangeNotifier {
                 allScriptFirstLoad: true,
                 isExample: decodedModel.isExample,
                 customApiKey: decodedModel.customApiKey,
-                customApiKeyCandidate: customApiKeyCandidate,
+                customApiKeyCandidate: decodedModel.customApiKeyCandidate,
               );
             } catch (e, trace) {
               if (!Platform.isWindows) {
@@ -399,6 +381,7 @@ class UserScriptsProvider extends ChangeNotifier {
           }
         }
 
+        _checkForCustomApiKeyCandidates();
         _sort();
         notifyListeners();
         _saveUserScriptsListSharedPrefs();
@@ -411,6 +394,17 @@ class UserScriptsProvider extends ChangeNotifier {
       }
       if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
       logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
+    }
+  }
+
+  /// Flag scripts that are candidates for custom API keys
+  _checkForCustomApiKeyCandidates() {
+    for (final script in _userScriptList) {
+      if (script.source.contains("###PDA-APIKEY###")) {
+        script.customApiKeyCandidate = true;
+      } else {
+        script.customApiKeyCandidate = false;
+      }
     }
   }
 
@@ -449,10 +443,29 @@ class UserScriptsProvider extends ChangeNotifier {
     await Future.wait(defaultScriptUrls.map((url) => url == null
         ? Future.value()
         : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
+
+    _checkForCustomApiKeyCandidates();
+
     return (
       added: added,
       failed: failed,
       removed: initialScriptCount - (userScriptList.length - added),
     );
+  }
+
+  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
+    final response = await UserScriptModel.fromURL(url, isExample: isExample);
+    if (response.success && response.model != null) {
+      if (_userScriptList.any((script) => script.name == response.model!.name)) {
+        return (success: false, message: "Script with same name already exists");
+      }
+      userScriptList.add(response.model!);
+      _sort();
+      _saveUserScriptsListSharedPrefs();
+      notifyListeners();
+      return (success: true, message: null);
+    } else {
+      return (success: false, message: response.message);
+    }
   }
 }
