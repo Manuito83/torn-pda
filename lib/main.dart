@@ -11,6 +11,7 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 // Useful for functions debugging
 import 'package:dart_ping_ios/dart_ping_ios.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -37,7 +38,7 @@ import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/attacks_provider.dart';
 import 'package:torn_pda/providers/audio_controller.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
@@ -62,6 +63,8 @@ import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
@@ -71,8 +74,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.1';
-const String androidCompilation = '535';
-const String iosCompilation = '535';
+const String androidCompilation = '536';
+const String iosCompilation = '536';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -98,6 +101,8 @@ bool exactAlarmsPermissionAndroid = false;
 bool syncTheme = false;
 
 Future? mainSettingsLoaded;
+
+double kSdkIos = 0;
 
 class ReceivedNotification {
   ReceivedNotification({
@@ -152,6 +157,13 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
+  if (Platform.isIOS) {
+    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+    kSdkIos = double.tryParse(iosInfo.systemVersion) ?? 99;
+    log("iOS SDK Version: $kSdkIos");
+  }
+
   // Check for a pending local backup and import it
   await PrefsBackupService.importIfScheduled();
 
@@ -180,6 +192,11 @@ Future<void> main() async {
   Get.put(WarController(), permanent: true);
   Get.put(StakeoutsController(), permanent: true);
   Get.put(PeriodicExecutionController(), permanent: true);
+  Get.put(ChainStatusController(), permanent: true);
+  if (Platform.isIOS && kSdkIos >= 16.2) {
+    Get.put(LiveActivityBridgeController(), permanent: true);
+    Get.put(LiveActivityTravelController(), permanent: true);
+  }
 
   final sb = Get.put(SendbirdController(), permanent: true);
   await sb.init();
@@ -263,7 +280,10 @@ Future<void> main() async {
 
     if (kDebugMode) {
       if (pointFunctionsEmulatorToLocal) {
-        FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('localhost', 5001);
+        // NOTE!
+        // We need to use the computer's IP address here, not localhost
+        // and change it also in firebase.json in the functions folder
+        FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('192.168.1.114', 5001);
       }
 
       // Only 'true' intended for debugging, otherwise leave in false
@@ -309,7 +329,6 @@ Future<void> main() async {
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
         ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
-        ChangeNotifierProvider<ChainStatusProvider>(create: (context) => ChainStatusProvider()),
         ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
         ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
@@ -319,10 +338,10 @@ Future<void> main() async {
         ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
         ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider()),
         ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
+
         // Native login
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
         ChangeNotifierProvider<NativeUserProvider>(create: (context) => NativeUserProvider()),
-        // ------------
       ],
       child: MyApp(),
     ),
@@ -657,23 +676,24 @@ class AppBorder extends StatefulWidget {
 class AppBorderState extends State<AppBorder> {
   @override
   Widget build(BuildContext context) {
-    final chainStatusProvider = Provider.of<ChainStatusProvider>(context);
-    return IgnorePointer(
-      child: Column(
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                  width: chainStatusProvider.watcherActive ? 3 : 0,
-                  color: chainStatusProvider.borderColor,
+    return GetBuilder<ChainStatusController>(builder: (chainP) {
+      return IgnorePointer(
+        child: Column(
+          children: [
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    width: chainP.watcherActive ? 3 : 0,
+                    color: chainP.borderColor,
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
+    });
   }
 }
 

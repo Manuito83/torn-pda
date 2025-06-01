@@ -56,12 +56,10 @@
 				</dict>
 			</dict>
 		</dict>
-
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>Allows Torn PDA to save images to your library (only write permission)</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Allows Torn PDA to access your photo library for importing images</string>
-
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true />
 		<key>UIBackgroundModes</key>
@@ -95,7 +93,6 @@
 		<true />
 		<key>CFBundleIcons</key>
 		<dict>
-			<!-- Default app icon -->
 			<key>CFBundlePrimaryIcon</key>
 			<dict>
 				<key>CFBundleIconFiles</key>
@@ -107,7 +104,6 @@
 			</dict>
 			<key>CFBundleAlternateIcons</key>
 			<dict>
-				<!-- Alternate icon for Halloween -->
 				<key>AppIconHalloween</key>
 				<dict>
 					<key>CFBundleIconFiles</key>
@@ -117,7 +113,6 @@
 					<key>UIPrerenderedIcon</key>
 					<false />
 				</dict>
-				<!-- Alternate icon for Halloween -->
 				<key>AppIconChristmas</key>
 				<dict>
 					<key>CFBundleIconFiles</key>
@@ -127,7 +122,6 @@
 					<key>UIPrerenderedIcon</key>
 					<false />
 				</dict>
-				<!-- Alternate icon for Awareness Week -->
 				<key>AppIconAwareness</key>
 				<dict>
 					<key>CFBundleIconFiles</key>
@@ -137,7 +131,6 @@
 					<key>UIPrerenderedIcon</key>
 					<false />
 				</dict>
-				<!-- Alternate icon for St Valentine -->
 				<key>AppIconStValentine</key>
 				<dict>
 					<key>CFBundleIconFiles</key>
@@ -147,7 +140,6 @@
 					<key>UIPrerenderedIcon</key>
 					<false />
 				</dict>
-				<!-- Alternate icon for St Valentine -->
 				<key>AppIconStPatrick</key>
 				<dict>
 					<key>CFBundleIconFiles</key>
@@ -157,7 +149,6 @@
 					<key>UIPrerenderedIcon</key>
 					<false />
 				</dict>
-				<!-- Alternate icon for St Valentine -->
 				<key>AppIconEaster</key>
 				<dict>
 					<key>CFBundleIconFiles</key>
@@ -169,42 +160,34 @@
 				</dict>
 			</dict>
 		</dict>
-
-		<!-- Register PDA backup files as a document type  -->
 		<key>CFBundleDocumentTypes</key>
 		<array>
 			<dict>
 				<key>CFBundleTypeName</key>
 				<string>PDA Backup File</string>
-
 				<key>LSItemContentTypes</key>
 				<array>
 					<string>com.manuito.tornpda.pda</string>
 				</array>
-
 				<key>LSHandlerRank</key>
 				<string>Owner</string>
-
 				<key>CFBundleTypeRole</key>
 				<string>Viewer</string>
 			</dict>
 		</array>
-
-		<!-- Custom UTI and map to .pda extension -->
+		<key>NSSupportsLiveActivities</key>
+		<true />
 		<key>UTExportedTypeDeclarations</key>
 		<array>
 			<dict>
 				<key>UTTypeIdentifier</key>
 				<string>com.manuito.tornpda.pda</string>
-
 				<key>UTTypeDescription</key>
 				<string>PDA Backup File</string>
-
 				<key>UTTypeConformsTo</key>
 				<array>
 					<string>public.data</string>
 				</array>
-
 				<key>UTTypeTagSpecification</key>
 				<dict>
 					<key>public.filename-extension</key>
@@ -214,6 +197,5 @@
 				</dict>
 			</dict>
 		</array>
-
 	</dict>
 </plist>

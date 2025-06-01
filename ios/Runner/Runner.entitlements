@@ -11,5 +11,9 @@
 		<string>applinks:api.torn.com</string>
 		<string>applinks:wiki.torn.com</string>
 	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.manuito.tornpda</string>
+	</array>
 </dict>
 </plist>

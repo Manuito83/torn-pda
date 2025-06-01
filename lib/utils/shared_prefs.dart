@@ -452,6 +452,9 @@ class Prefs {
   // Drawer menu
   final String _kShowWikiInDrawer = "pda_showWikiInDrawer";
 
+  // Live Activities
+  final String _kIosLiveActivitiesTravelEnabled = "pda_iosLiveActivitiesTravelEnabled";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -4262,5 +4265,19 @@ class Prefs {
   Future<bool> setShowWikiInDrawer(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowWikiInDrawer, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for Live Activities
+  /// -----------------------------------
+
+  Future<bool> getIosLiveActivitiesTravelEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kIosLiveActivitiesTravelEnabled) ?? false;
+  }
+
+  Future<bool> setIosLiveActivitiesTravelEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kIosLiveActivitiesTravelEnabled, value);
   }
 }

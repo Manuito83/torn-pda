@@ -6,10 +6,11 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:showcaseview/showcaseview.dart';
 import 'package:torn_pda/main.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -691,8 +692,8 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                             color: _themeProvider.mainText,
                           ),
                         ),
-                        Consumer<ChainStatusProvider>(
-                          builder: (context, statusP, child) {
+                        GetBuilder<ChainStatusController>(
+                          builder: (statusP) {
                             return CircularMenuFixed(
                               webViewProvider: _webViewProvider,
                               alignment: Alignment.centerLeft,

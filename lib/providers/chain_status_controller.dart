@@ -42,14 +42,29 @@ enum PlayerStatusColor {
   travel,
 }
 
-class ChainStatusProvider extends ChangeNotifier {
+// In use, for example, for travel live activities
+class StatusObservable {
+  final PlayerStatusColor statusColor;
+  final BarsStatusCooldownsModel? barsAndStatusModel;
+
+  StatusObservable({
+    required this.statusColor,
+    this.barsAndStatusModel,
+  });
+}
+
+class ChainStatusController extends GetxController {
+  // MARK: - General status for observers
+  final Rx<StatusObservable?> laStatusInputData = Rx<StatusObservable?>(null);
+
+  // MARK: - Player Status Color & Timers
   // ### PLAYER STATUS COLOR AND TIMERS
   bool _statusColorWidgetEnabled = true;
   bool get statusColorWidgetEnabled => _statusColorWidgetEnabled;
   set statusColorWidgetEnabled(bool value) {
     _statusColorWidgetEnabled = value;
     Prefs().setStatusColorWidgetEnabled(value);
-    notifyListeners();
+    update();
   }
 
   // [true] whenever there's a special status condition that needs to be shown
@@ -57,7 +72,7 @@ class ChainStatusProvider extends ChangeNotifier {
   bool get statusColorIsShown => _statusColorIsShown;
   set statusColorIsShown(bool value) {
     _statusColorIsShown = value;
-    notifyListeners();
+    update();
   }
 
   PlayerStatusColor statusColorCurrent = PlayerStatusColor.ok;
@@ -69,11 +84,11 @@ class ChainStatusProvider extends ChangeNotifier {
   // Avoids more than one request to be started by different widgets
   bool _statusColorRequestsAlreadyStarted = false;
 
-  // We allow other sources (e.g.: Profile page) to update this information to save API calls. We will monitor
-  // who is updating it to save additional calls.
-  String statusUpdateSource = "provider";
-
+  // MARK: - Chain Watcher General Settings
   // ##################################
+  // ### CHAIN WATCHER SETTINGS ######
+
+  String statusUpdateSource = "provider";
 
   final List<PanicTargetModel> _panicTargets = <PanicTargetModel>[];
   List<PanicTargetModel> get panicTargets {
@@ -89,7 +104,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set changeSoundEnabled(bool value) {
     _soundEnabled = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool _vibrationEnabled = true;
@@ -101,7 +116,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set changeVibrationEnabled(bool value) {
     _vibrationEnabled = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool _notificationsEnabled = true;
@@ -113,11 +128,12 @@ class ChainStatusProvider extends ChangeNotifier {
   set changeNotificationsEnabled(bool value) {
     _notificationsEnabled = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool initialised = false;
 
+  // MARK: - Internal State & Models
   int _accumulatedErrors = 0;
 
   ChainModel? _chainModel;
@@ -125,8 +141,8 @@ class ChainStatusProvider extends ChangeNotifier {
     return _chainModel;
   }
 
-  dynamic _barsAndStatusModel;
-  dynamic get barsModel {
+  BarsStatusCooldownsModel? _barsAndStatusModel;
+  BarsStatusCooldownsModel? get barsAndStatusModel {
     return _barsAndStatusModel;
   }
 
@@ -145,6 +161,7 @@ class ChainStatusProvider extends ChangeNotifier {
     return _currentSecondsCounter;
   }
 
+  // MARK: - Watcher & Status Active Flags
   /// Gets the API everywhere for the watcher
   bool _watcherActive = false;
   bool get watcherActive {
@@ -157,6 +174,7 @@ class ChainStatusProvider extends ChangeNotifier {
     return _chainWidgetRequestsActive;
   }
 
+  // MARK: - Defcon State
   WatchDefcon _chainWatcherDefcon = WatchDefcon.off;
   WatchDefcon get chainWatcherDefcon {
     return _chainWatcherDefcon;
@@ -167,6 +185,7 @@ class ChainStatusProvider extends ChangeNotifier {
     return _borderColor;
   }
 
+  // MARK: - Panic Mode State
   bool _panicModeActive = false;
   bool get panicModeActive {
     return _panicModeActive;
@@ -174,6 +193,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
   bool widgetVisible = false;
 
+  // MARK: - Chain State & Timers
   int _lastChainCount = 0;
   bool _wereWeChaining = false;
 
@@ -185,12 +205,14 @@ class ChainStatusProvider extends ChangeNotifier {
   Timer? _tickerCallFullChainApi;
   Timer? _tickerCallOnlyStatusColorApi;
 
+  // MARK: - Initialization
   initialiseProvider() {
     if (!initialised) {
       _loadPreferences();
     }
   }
 
+  // MARK: - API Request Management
   /// Initiate API calls to supply ONLY the status color for players
   Future startStatusColorRequests() async {
     // API calls for color already fullfil the needs of the player status calls
@@ -198,13 +220,13 @@ class ChainStatusProvider extends ChangeNotifier {
     if (_statusColorRequestsAlreadyStarted) return;
     _statusColorRequestsAlreadyStarted = true;
 
-    await getEnergyAndStatus();
+    await getOrSetStatus();
 
     // Activate timers
     _tickerCallOnlyStatusColorApi?.cancel();
     _tickerCallOnlyStatusColorApi = Timer.periodic(const Duration(seconds: 20), (Timer t) {
       // Only call if main widget calls are not active
-      getEnergyAndStatus();
+      getOrSetStatus();
     });
     //log("ChainStatusProvider: activated calls for player status color!");
   }
@@ -215,7 +237,7 @@ class ChainStatusProvider extends ChangeNotifier {
 
     _chainWidgetRequestsActive = true;
     await getChainStatus();
-    await getEnergyAndStatus();
+    await getOrSetStatus();
 
     // Activate timers
     _tickerCallFullChainApi?.cancel();
@@ -241,13 +263,14 @@ class ChainStatusProvider extends ChangeNotifier {
     log("Chain watcher timers deactivated!");
   }
 
+  // MARK: - Watcher Control
   void activateWatcher() {
     _watcherActive = true;
     _enableWakelock();
 
     Get.find<AudioController>().play(file: '../sounds/alerts/tick.wav');
 
-    notifyListeners();
+    update();
   }
 
   deactivateWatcher() {
@@ -256,34 +279,35 @@ class ChainStatusProvider extends ChangeNotifier {
     _chainWatcherDefcon = WatchDefcon.off;
     _disableWakelock();
     //_audioCache.play('../sounds/alerts/tick.wav');
-    notifyListeners();
+    update();
   }
 
+  // MARK: - Panic Mode Control
   void activatePanicMode() {
     _panicModeActive = true;
-    notifyListeners();
+    update();
   }
 
   void deactivatePanicMode() {
     _panicModeActive = false;
-    notifyListeners();
+    update();
   }
 
   void addPanicTarget(PanicTargetModel target) {
     panicTargets.add(target);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
   void removePanicTarget(PanicTargetModel target) {
     panicTargets.removeWhere((element) => element.id == target.id);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
   void removePanicTargetById(int id) {
     panicTargets.removeWhere((element) => element.id == id);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -295,10 +319,11 @@ class ChainStatusProvider extends ChangeNotifier {
     final oldItem = panicTargets[oldIndex];
     panicTargets.removeAt(oldIndex);
     panicTargets.insert(newIndex, oldItem);
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
+  // MARK: - Timer & UI Refresh Logic
   void _refreshChainClock(int secondsRemaining) {
     final Duration timeOut = Duration(seconds: secondsRemaining);
     String timeOutMin = timeOut.inMinutes.remainder(60).toString();
@@ -310,7 +335,7 @@ class ChainStatusProvider extends ChangeNotifier {
       timeOutSec = '0$timeOutSec';
     }
     _currentChainTimeString = '$timeOutMin:$timeOutSec';
-    notifyListeners();
+    update();
   }
 
   void _refreshCooldownClock(int secondsRemaining) {
@@ -328,7 +353,7 @@ class ChainStatusProvider extends ChangeNotifier {
       timeOutSec = '0$timeOutSec';
     }
     _currentChainTimeString = '$timeOutHours:$timeOutMin:$timeOutSec';
-    notifyListeners();
+    update();
   }
 
   void _decreaseTimer() {
@@ -344,6 +369,7 @@ class ChainStatusProvider extends ChangeNotifier {
     }
   }
 
+  // MARK: - Core API Fetching Logic
   Future _getAllStatus() async {
     if (chainModel == null) return;
 
@@ -392,38 +418,42 @@ class ChainStatusProvider extends ChangeNotifier {
     }
 
     getChainStatus();
-    getEnergyAndStatus();
+    getOrSetStatus();
   }
 
-  Future<void> getEnergyAndStatus() async {
+  Future<void> getOrSetStatus({BarsStatusCooldownsModel? externalStatusModel}) async {
     if (!_statusColorWidgetEnabled) {
       statusColorCurrent = PlayerStatusColor.ok;
       statusColorUntil = 0;
     }
 
-    // By checking the last update source, we reduce the API call rate in case another
-    // source (e.g.: Profile page) is helping us to allow the player status in this provider
+    dynamic myBars;
+
+    // If we have an external model, use it
+    // otherwise, fetch the status from the API
     if (statusUpdateSource != "provider") {
-      //log("Player status color: not updating since there is another information source");
-      return;
+      myBars = externalStatusModel;
+    } else {
+      myBars = await ApiCallsV1.getBarsAndPlayerStatus();
     }
-
-    //log("Player status color: updating from provider!");
-
-    final dynamic myBars = await ApiCallsV1.getBarsAndPlayerStatus();
-    _barsAndStatusModel = myBars;
 
     // Update status color
-    if (myBars is BarsStatusCooldownsModel) {
-      updatePlayerStatusColor(
-        myBars.status!.color!,
-        myBars.status!.state!,
-        myBars.status!.until!,
-        myBars.travel!.timestamp!,
-      );
-    }
+    if (myBars is! BarsStatusCooldownsModel) return;
 
-    notifyListeners();
+    _barsAndStatusModel = myBars;
+    updatePlayerStatusColor(
+      myBars.status!.color!,
+      myBars.status!.state!,
+      myBars.status!.until!,
+      myBars.travel!.timestamp!,
+    );
+
+    laStatusInputData.value = StatusObservable(
+      statusColor: statusColorCurrent,
+      barsAndStatusModel: _barsAndStatusModel,
+    );
+
+    update();
   }
 
   void updatePlayerStatusColor(String color, String state, int stateUntil, int travelTimestamp) {
@@ -541,9 +571,10 @@ class ChainStatusProvider extends ChangeNotifier {
         _modelError = true;
       }
     }
-    notifyListeners();
+    update();
   }
 
+  // MARK: - Chain Watcher Defcon Logic
   Future<void> _chainWatchCheck() async {
     // Return if there is an error with the model
     if (_modelError) {
@@ -568,11 +599,11 @@ class ChainStatusProvider extends ChangeNotifier {
           if (_panicModeActive && _apiFailurePanic) {
             _tryLaunchPanicAttack();
           }
-          notifyListeners();
+          update();
           return;
         } else if (_chainWatcherDefcon == WatchDefcon.apiFail && _watcherActive) {
           _borderColor == Colors.transparent ? _borderColor = Colors.purple[600]! : _borderColor = Colors.transparent;
-          notifyListeners();
+          update();
           return;
         }
       }
@@ -581,7 +612,7 @@ class ChainStatusProvider extends ChangeNotifier {
           (_chainWatcherDefcon == WatchDefcon.apiFail && !_apiFailureAlert)) {
         _chainWatcherDefcon = WatchDefcon.off;
         _borderColor = Colors.transparent;
-        notifyListeners();
+        update();
       }
       return;
     }
@@ -591,7 +622,7 @@ class ChainStatusProvider extends ChangeNotifier {
       if (_chainWatcherDefcon != WatchDefcon.cooldown) {
         _chainWatcherDefcon = WatchDefcon.cooldown;
         _borderColor = Colors.lightBlue[300]!;
-        notifyListeners();
+        update();
       }
       return;
     }
@@ -702,9 +733,10 @@ class ChainStatusProvider extends ChangeNotifier {
       _chainWatcherDefcon = WatchDefcon.green1;
       _borderColor = Colors.green;
     }
-    notifyListeners();
+    update();
   }
 
+  // MARK: - Panic Attack WebView
   Future<void> _tryLaunchPanicAttack() async {
     if (panicTargets.isNotEmpty) {
       List<String> attacksIds = <String>[];
@@ -737,6 +769,7 @@ class ChainStatusProvider extends ChangeNotifier {
     }
   }
 
+  // MARK: - Utilities (Vibration, Wakelock)
   _vibrate(int times) async {
     if ((await Vibration.hasVibrator())!) {
       for (var i = 0; i < times; i++) {
@@ -762,6 +795,7 @@ class ChainStatusProvider extends ChangeNotifier {
     });
   }
 
+  // MARK: - Preferences
   _loadPreferences() async {
     initialised = true;
     _soundEnabled = await Prefs().getChainWatcherSound();
@@ -798,6 +832,7 @@ class ChainStatusProvider extends ChangeNotifier {
     _statusColorWidgetEnabled = await Prefs().getStatusColorWidgetEnabled();
   }
 
+  // MARK: - Notifications
   Future<void> showNotification(
     int id,
     String payload,
@@ -845,6 +880,7 @@ class ChainStatusProvider extends ChangeNotifier {
     );
   }
 
+  // MARK: - Panic Mode Settings
   /// ##########################
   /// PANIC MODE SETTINGS
   /// ##########################
@@ -862,20 +898,21 @@ class ChainStatusProvider extends ChangeNotifier {
 
   void enablePanicMode() {
     _panicModeEnabled = true;
-    notifyListeners();
+    update();
   }
 
   void disablePanicMode() {
     _panicModeActive = false;
     _panicModeEnabled = false;
-    notifyListeners();
+    update();
   }
 
   void setPanicValue(double value) {
     _panicValue = value;
-    notifyListeners();
+    update();
   }
 
+  // MARK: - API Failure Settings
   /// ####################
   /// API FAILURE SETTINGS
   /// ####################
@@ -884,7 +921,7 @@ class ChainStatusProvider extends ChangeNotifier {
   set apiFailureAlert(bool value) {
     _apiFailureAlert = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
   bool _apiFailurePanic = true;
@@ -892,9 +929,10 @@ class ChainStatusProvider extends ChangeNotifier {
   set apiFailurePanic(bool value) {
     _apiFailurePanic = value;
     _saveSettings();
-    notifyListeners();
+    update();
   }
 
+  // MARK: - Defcon Alert Configuration Properties
   /// ##########################
   /// STARTS OPTIONS SETUP LOGIC
   /// INCLUDING PARAMETERS!
@@ -992,10 +1030,11 @@ class ChainStatusProvider extends ChangeNotifier {
     _red2Max = 30;
     _red2Min = 0;
     _panicValue = 40;
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
+  // MARK: - Defcon Alert Configuration Logic
   void setDefconRange(WatchDefcon defcon, RangeValues range, {bool consequence = false}) {
     switch (defcon) {
       case WatchDefcon.cooldown:
@@ -1193,7 +1232,7 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
     }
 
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -1550,7 +1589,7 @@ class ChainStatusProvider extends ChangeNotifier {
       case WatchDefcon.apiFail:
         break;
     }
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
@@ -1739,10 +1778,11 @@ class ChainStatusProvider extends ChangeNotifier {
         break;
     }
 
-    notifyListeners();
+    update();
     _saveSettings();
   }
 
+  // MARK: - Defcon Activation/Deactivation Helpers
   bool _checkIfAnyActiveBelow(WatchDefcon defcon) {
     switch (defcon) {
       case WatchDefcon.cooldown:
@@ -1967,6 +2007,7 @@ class ChainStatusProvider extends ChangeNotifier {
     return 0;
   }
 
+  // MARK: - Save Settings
   void _saveSettings() {
     Prefs().setChainWatcherSound(_soundEnabled);
     Prefs().setChainWatcherVibration(_vibrationEnabled);
@@ -2001,6 +2042,7 @@ class ChainStatusProvider extends ChangeNotifier {
     Prefs().setChainWatcherPanicTargets(panicTargetsModel);
   }
 
+  // MARK: - Status Deactivation
   /// Deactivates status when the widget is out of view, the watcher is not being used and we are no longer chaining
   /// Does not apply to cooldown
   void tryToDeactivateStatus() {

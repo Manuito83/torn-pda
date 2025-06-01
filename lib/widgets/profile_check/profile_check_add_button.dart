@@ -11,7 +11,7 @@ import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -42,7 +42,7 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late TargetsProvider _targetsProvider;
-  late ChainStatusProvider _chainStatusProvider;
+  final _chainStatusProvider = Get.find<ChainStatusController>();
 
   // Showcases
   final GlobalKey _showcaseButton = GlobalKey();
@@ -52,7 +52,6 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
     _targetsProvider = Provider.of<TargetsProvider>(context);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context);
 
     bool anyExists = _anyExists();
 
@@ -189,7 +188,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   bool _toggleStakeoutActive = false;
   bool _isStakeout = false;
 
-  late ChainStatusProvider _chainStatusProvider;
+  final _chainStatusProvider = Get.find<ChainStatusController>();
   bool _togglePanicActive = false;
   bool _isPanic = false;
 
@@ -202,7 +201,6 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
   void initState() {
     super.initState();
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
     _updateTargetCondition();
     _updateStakeoutCondition();
     _updatePanicCondition();

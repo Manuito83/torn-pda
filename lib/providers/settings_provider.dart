@@ -1199,6 +1199,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _iosLiveActivitiesTravelEnabled = true;
+  bool get iosLiveActivitiesTravelEnabled => _iosLiveActivitiesTravelEnabled;
+  set iosLiveActivitiesTravelEnabled(bool value) {
+    _iosLiveActivitiesTravelEnabled = value;
+    Prefs().setIosLiveActivitiesTravelEnabled(value);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1433,6 +1441,8 @@ class SettingsProvider extends ChangeNotifier {
 
     _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
+
+    _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivitiesTravelEnabled();
 
     notifyListeners();
   }

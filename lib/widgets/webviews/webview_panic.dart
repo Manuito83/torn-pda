@@ -9,12 +9,13 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_details_provider.dart';
@@ -62,7 +63,7 @@ class WebViewPanicState extends State<WebViewPanic> {
   WebViewController? _webViewController;
 
   UserDetailsProvider? _userProv;
-  late ChainStatusProvider _chainStatusProvider;
+  final _chainStatusProvider = Get.find<ChainStatusController>();
   late SettingsProvider _settingsProvider;
   ThemeProvider? _themeProvider;
 
@@ -106,7 +107,6 @@ class WebViewPanicState extends State<WebViewPanic> {
     _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
     _attackedIds.add(widget.attackIdList[0]);
-    _chainStatusProvider = context.read<ChainStatusProvider>();
     if (_chainStatusProvider.watcherActive) {
       _chainWidgetController.expanded = true;
     }
