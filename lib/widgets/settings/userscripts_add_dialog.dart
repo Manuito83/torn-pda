@@ -17,12 +17,13 @@ import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/widgets/webviews/webview_simple_dialog.dart';
 
 class UserScriptsAddDialog extends StatefulWidget {
-  final bool editExisting;
-  final UserScriptModel? editScript;
+  final bool editingExistingScript;
+  final UserScriptModel? scriptBeingEdited;
   final int defaultPage;
   final String? defaultUrl;
 
-  const UserScriptsAddDialog({required this.editExisting, this.editScript, this.defaultPage = 0, this.defaultUrl});
+  const UserScriptsAddDialog(
+      {required this.editingExistingScript, this.scriptBeingEdited, this.defaultPage = 0, this.defaultUrl});
 
   @override
   UserScriptsAddDialogState createState() => UserScriptsAddDialogState();
@@ -78,9 +79,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
     _tabController = TabController(vsync: this, length: 2);
     _tabController.animateTo(widget.defaultPage);
 
-    if (widget.editExisting) {
+    if (widget.editingExistingScript) {
       for (final script in _userScriptsProvider.userScriptList) {
-        if (script.name == widget.editScript!.name) {
+        if (script.name == widget.scriptBeingEdited!.name) {
           _addNameController.text = script.name;
           _addSourceController.text = script.source;
           _originalSource = script.source;
@@ -169,7 +170,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               children: [
                 const Icon(Icons.code),
                 const SizedBox(width: 6),
-                Text(widget.editExisting ? "Edit existing script" : "Add new script"),
+                Text(widget.editingExistingScript ? "Edit existing script" : "Add new script"),
               ],
             ),
           ),
@@ -195,12 +196,12 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                   }
                   for (final script in _userScriptsProvider.userScriptList) {
                     if (script.name.toLowerCase() == value.toLowerCase()) {
-                      if (!widget.editExisting) {
+                      if (!widget.editingExistingScript) {
                         return "Script name already taken!";
                       } else {
                         // Allow to save same script, but not if it conflicts
                         // with another existing script
-                        if (script.name.toLowerCase() != widget.editScript!.name.toLowerCase()) {
+                        if (script.name.toLowerCase() != widget.scriptBeingEdited!.name.toLowerCase()) {
                           return "Script name already taken!";
                         }
                       }
@@ -338,9 +339,9 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     ElevatedButton(
-                      child: Text(widget.editExisting ? "Save" : "Add"),
+                      child: Text(widget.editingExistingScript ? "Save" : "Add"),
                       onPressed: () async {
-                        await _addPressed(context);
+                        await _addPressedInManualEditTab(context);
                       },
                     ),
                     const SizedBox(width: 8),
@@ -362,30 +363,75 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
   Future<void> _showCustomApiKeyDialog() async {
     final TextEditingController apiKeyController = TextEditingController(text: _customApiKey);
+    bool apiKeyLeakWarningAccepted = false || !widget.editingExistingScript;
+
     final result = await showDialog<String>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Custom API Key'),
-          content: TextField(
-            controller: apiKeyController,
-            decoration: const InputDecoration(hintText: "Custom script API key"),
-            autofocus: true,
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Save'),
-              onPressed: () {
-                Navigator.of(context).pop(apiKeyController.text);
-              },
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Custom API Key'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (widget.editingExistingScript)
+                    Column(
+                      children: [
+                        Text(
+                          "IMPORTANT: be aware that this change MIGHT NOT take "
+                          "effect immediately, particularly if this script was already "
+                          "running before you set the API key.\n\n"
+                          "If that's the case, it's highly recommended to kill and "
+                          "restart the app to ensure the new API key is used "
+                          "and to avoid leaking your Torn PDA API key.",
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: _themeProvider.currentTheme == AppTheme.light
+                                ? _themeProvider.getTextColor(Colors.orange[900])
+                                : _themeProvider.getTextColor(Colors.orange[700]),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton(
+                          onPressed: apiKeyLeakWarningAccepted
+                              ? null
+                              : () {
+                                  setState(() {
+                                    apiKeyLeakWarningAccepted = true;
+                                  });
+                                },
+                          child: const Text("Understood"),
+                        ),
+                        const SizedBox(height: 12),
+                      ],
+                    ),
+                  TextField(
+                    controller: apiKeyController,
+                    enabled: apiKeyLeakWarningAccepted,
+                    decoration: const InputDecoration(hintText: "Custom script API key"),
+                    autofocus: false,
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  child: const Text('Cancel'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+                TextButton(
+                  child: const Text('Save'),
+                  onPressed: apiKeyLeakWarningAccepted
+                      ? () {
+                          Navigator.of(context).pop(apiKeyController.text);
+                        }
+                      : null,
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -427,7 +473,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                   children: [
                     const Icon(MdiIcons.earth),
                     const SizedBox(width: 6),
-                    Text(widget.editExisting ? "Remote script update" : "Remote script load"),
+                    Text(widget.editingExistingScript ? "Remote script update" : "Remote script load"),
                   ],
                 ),
                 const SizedBox(width: 20),
@@ -465,7 +511,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                    child: Text(widget.editExisting ? "Check for Update" : "Fetch"),
+                    child: Text(widget.editingExistingScript ? "Check for Update" : "Fetch"),
                     onPressed: () async {
                       if (!_remoteUrlKey.currentState!.validate()) {
                         return;
@@ -505,7 +551,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           }
                         }
 
-                        if (!widget.editExisting) {
+                        if (!widget.editingExistingScript) {
                           // New remote script
                           BotToast.showText(
                             align: const Alignment(0, 0),
@@ -522,7 +568,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                         } else {
                           // Editing existing script
                           if (!fetchWasSuccessful) {
-                            log("An error occurred while checking for update for script ${widget.editScript!.name}: $message");
+                            log("An error occurred while checking for update for script ${widget.scriptBeingEdited!.name}: $message");
                             BotToast.showText(
                               align: const Alignment(0, 0),
                               clickClose: true,
@@ -535,7 +581,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                           } else {
                             try {
                               final String newVersion = resultModel.version;
-                              final String oldVersion = widget.editScript!.version;
+                              final String oldVersion = widget.scriptBeingEdited!.version;
                               final bool isNewerVersionAvailable =
                                   UserScriptModel.isNewerVersion(newVersion, oldVersion);
                               final String finalMessage = isNewerVersionAvailable
@@ -552,7 +598,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                                 contentPadding: const EdgeInsets.all(10),
                               );
                             } catch (e) {
-                              log("An error occurred processing remote data for script ${widget.editScript!.name}: $e");
+                              log("An error occurred processing remote data for script ${widget.scriptBeingEdited!.name}: $e");
                               BotToast.showText(
                                 align: const Alignment(0, 0),
                                 clickClose: true,
@@ -585,7 +631,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                             _fetchedRemoteModel = null;
                             _remoteTabFirstLoadOrSavePress = true;
 
-                            if (widget.editExisting && widget.editScript != null) {
+                            if (widget.editingExistingScript && widget.scriptBeingEdited != null) {
                               // If editing, candidate status based on the source currently in the main tab editor
                               _isCurrentScriptCandidateForCustomApiKey = _addSourceController.text.contains(pdaKeyWord);
                               _showCustomApiKeyButton = _isCurrentScriptCandidateForCustomApiKey;
@@ -653,7 +699,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                 padding: const EdgeInsets.all(10),
                 child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                   ElevatedButton(
-                    child: Text(widget.editExisting ? "Update" : "Load"),
+                    child: Text(widget.editingExistingScript ? "Update" : "Load"),
                     onPressed: _remoteNameController.text.isEmpty ||
                             _remoteSourceController.text.isEmpty ||
                             _remoteRunTimeController.text.isEmpty ||
@@ -673,7 +719,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
                             Navigator.of(context).pop();
 
-                            if (!widget.editExisting) {
+                            if (!widget.editingExistingScript) {
                               _fetchedRemoteModel!.customApiKey = _customApiKey;
                               _fetchedRemoteModel!.customApiKeyCandidate = _isCurrentScriptCandidateForCustomApiKey;
                               _userScriptsProvider.addUserScriptByModel(_fetchedRemoteModel!);
@@ -688,15 +734,16 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
                               );
                             } else {
                               final bool couldParseHeader = _userScriptsProvider.updateUserScript(
-                                widget.editScript!,
-                                _fetchedRemoteModel!.name,
-                                _fetchedRemoteModel!.time,
-                                _fetchedRemoteModel!.source,
-                                true, // source changed (it's from remote)
-                                true, // isFromRemote
-                                _customApiKey,
-                                _isCurrentScriptCandidateForCustomApiKey,
+                                editedModel: widget.scriptBeingEdited!,
+                                name: _fetchedRemoteModel!.name,
+                                time: _fetchedRemoteModel!.time,
+                                source: _fetchedRemoteModel!.source,
+                                manuallyEdited: false, // remote source is not manually edited
+                                isFromRemote: true, // isFromRemote
+                                customApiKey: _customApiKey,
+                                customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
                               );
+
                               BotToast.showText(
                                 align: const Alignment(0, 0),
                                 clickClose: true,
@@ -725,7 +772,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         ]));
   }
 
-  Future<void> _addPressed(BuildContext context) async {
+  Future<void> _addPressedInManualEditTab(BuildContext context) async {
     if (_nameFormKey.currentState!.validate() && _sourceFormKey.currentState!.validate()) {
       final inputName = _addNameController.text;
       final inputTime = _originalTime;
@@ -744,17 +791,20 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
 
       Navigator.of(context).pop();
 
-      if (!widget.editExisting) {
+      // This is a new script
+      if (!widget.editingExistingScript) {
         try {
           final metaMap = UserScriptModel.parseHeader(inputSource);
-          _userScriptsProvider.addUserScriptByModel(UserScriptModel.fromMetaMap(
-            metaMap,
-            name: inputName,
-            source: inputSource,
-            time: inputTime,
-            customApiKey: _customApiKey,
-            customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
-          ));
+          _userScriptsProvider.addUserScriptByModel(
+            UserScriptModel.fromMetaMap(
+              metaMap,
+              name: inputName,
+              source: inputSource,
+              time: inputTime,
+              customApiKey: _customApiKey,
+              customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
+            ),
+          );
         } on Exception catch (e) {
           if (e.toString().contains("No header found")) {
             BotToast.showText(
@@ -768,7 +818,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
               matches: const ["*"],
               name: inputName,
               version: "0.0.0",
-              edited: true,
+              manuallyEdited: true,
               source: inputSource,
               time: inputTime,
               updateStatus: UserScriptUpdateStatus.noRemote,
@@ -788,9 +838,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
             );
           }
         }
-      } else {
+      }
+      // Editing an existing script
+      else {
         var sourcedChanged = true;
-        if (!widget.editScript!.edited &&
+
+        // If the script has not been manually edited before (note: fetching from remote resets this flag to false),
+        // we check if the source, time, and name are the same as before
+        if (!widget.scriptBeingEdited!.manuallyEdited &&
             inputSource == _originalSource &&
             inputTime == _originalTime &&
             inputName == _originalName) {
@@ -798,14 +853,14 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
         }
 
         bool couldParseHeader = _userScriptsProvider.updateUserScript(
-          widget.editScript!,
-          inputName,
-          inputTime,
-          inputSource,
-          sourcedChanged,
-          false,
-          _customApiKey,
-          _isCurrentScriptCandidateForCustomApiKey,
+          editedModel: widget.scriptBeingEdited!,
+          name: inputName,
+          time: inputTime,
+          source: inputSource,
+          manuallyEdited: sourcedChanged,
+          isFromRemote: false,
+          customApiKey: _customApiKey,
+          customApiKeyCandidate: _isCurrentScriptCandidateForCustomApiKey,
         );
         if (!couldParseHeader) {
           BotToast.showText(
@@ -829,7 +884,7 @@ class UserScriptsAddDialogState extends State<UserScriptsAddDialog> with TickerP
       text: "This script uses an API key.\n\nUnless you specify a custom one for it, "
           "your Torn PDA API key will be used!"
           "\n\nPress 'Set API Key' to configure or "
-          "'${widget.editExisting ? "Save Update" : "Load Script"}' again to proceed without one.",
+          "'${widget.editingExistingScript ? "Save Update" : "Load Script"}' again to proceed without one.",
       textStyle: const TextStyle(fontSize: 14, color: Colors.white),
       contentColor: Colors.orange[800]!,
       duration: const Duration(seconds: 10),

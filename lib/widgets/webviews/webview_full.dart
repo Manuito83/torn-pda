@@ -1328,8 +1328,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 showDialog(
                     context: context,
                     builder: (_) => UserScriptsAddDialog(
-                          editExisting: true,
-                          editScript: existingScript,
+                          editingExistingScript: true,
+                          scriptBeingEdited: existingScript,
                           defaultPage: 1,
                           // No need for default URL as it already exists in the script object
                         ));
@@ -1337,7 +1337,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 message = "UserScript detected, opening dialog...";
                 showDialog(
                     builder: (_) => UserScriptsAddDialog(
-                          editExisting: false,
+                          editingExistingScript: false,
                           defaultUrl: incomingUrl,
                           defaultPage: 1,
                         ),

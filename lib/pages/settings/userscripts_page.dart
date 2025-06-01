@@ -308,11 +308,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                       )
                     else if (script.updateStatus == UserScriptUpdateStatus.localModified)
                       GestureDetector(
-                          child: Icon(
-                            script.isExample ? MdiIcons.lockOff : MdiIcons.earthOff,
-                            color: Colors.orange,
-                            size: 20,
-                          ),
+                          child: script.isExample
+                              ? Image.asset("images/icons/torn_pda_browser.png",
+                                  width: 20, height: 20, color: Colors.orange)
+                              : const Icon(MdiIcons.earthOff, color: Colors.orange, size: 20),
                           onTap: () async {
                             BotToast.showText(
                               text: "This is a${script.isExample ? "n example" : ""} script that you have edited, "
@@ -327,7 +326,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           })
                     else if (script.updateStatus == UserScriptUpdateStatus.upToDate)
                       GestureDetector(
-                          child: Icon(script.isExample ? MdiIcons.lock : MdiIcons.earth, color: Colors.green, size: 20),
+                          child: script.isExample
+                              ? Image.asset("images/icons/torn_pda_browser.png",
+                                  width: 20, height: 20, color: Colors.green)
+                              : const Icon(MdiIcons.earth, color: Colors.green, size: 20),
                           onTap: () async {
                             BotToast.showText(
                               text:
@@ -356,8 +358,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                             );
                             showDialog(
                                 builder: (c) => UserScriptsAddDialog(
-                                      editScript: script,
-                                      editExisting: true,
+                                      scriptBeingEdited: script,
+                                      editingExistingScript: true,
                                       defaultPage: 1,
                                     ),
                                 context: context);
@@ -412,8 +414,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           barrierDismissible: false, // user must tap button!
                           builder: (BuildContext context) {
                             return UserScriptsAddDialog(
-                              editExisting: true,
-                              editScript: script,
+                              editingExistingScript: true,
+                              scriptBeingEdited: script,
                             );
                           },
                         );
@@ -495,7 +497,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       context: _,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return const UserScriptsAddDialog(editExisting: false);
+        return const UserScriptsAddDialog(editingExistingScript: false);
       },
     );
   }

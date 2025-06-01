@@ -169,7 +169,7 @@ class UserScriptsProvider extends ChangeNotifier {
     String source, {
     bool enabled = true,
     String version = "0.0.0",
-    edited = false,
+    manuallyEdited = false,
     String? url,
     UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
     allScriptFirstLoad = false,
@@ -184,7 +184,7 @@ class UserScriptsProvider extends ChangeNotifier {
       source: source,
       enabled: enabled,
       version: version,
-      edited: edited,
+      manuallyEdited: manuallyEdited,
       matches: matches ?? UserScriptModel.tryGetMatches(source),
       updateStatus: updateStatus,
       url: url,
@@ -203,16 +203,16 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   /// Returns a bool indicating if the header could be parsed
-  bool updateUserScript(
-    UserScriptModel editedModel,
-    String name,
-    UserScriptTime time,
-    String source,
-    bool changedSource,
-    bool isFromRemote,
-    String? customApiKey,
-    bool? customApiKeyCandidate,
-  ) {
+  bool updateUserScript({
+    required UserScriptModel editedModel,
+    required String name,
+    required UserScriptTime time,
+    required String source,
+    required bool manuallyEdited,
+    required bool isFromRemote,
+    required String? customApiKey,
+    required bool? customApiKeyCandidate,
+  }) {
     List<String>? matches;
     bool couldParseHeader = true;
     try {
@@ -220,18 +220,30 @@ class UserScriptsProvider extends ChangeNotifier {
     } catch (e) {
       matches ??= const ["*"];
     }
+
     userScriptList.firstWhere((script) => script.name == editedModel.name).update(
-        name: name,
-        time: time,
-        source: source,
-        customApiKey: customApiKey ?? "",
-        customApiKeyCandidate: customApiKeyCandidate ?? false,
-        matches: matches,
-        updateStatus: isFromRemote
-            ? UserScriptUpdateStatus.upToDate
-            : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
-                ? UserScriptUpdateStatus.noRemote
-                : UserScriptUpdateStatus.localModified);
+          name: name,
+          time: time,
+          source: source,
+          manuallyEdited: manuallyEdited,
+          customApiKey: customApiKey ?? "",
+          customApiKeyCandidate: customApiKeyCandidate ?? false,
+          matches: matches,
+          updateStatus: () {
+            // If the script comes from remote
+            if (isFromRemote) return UserScriptUpdateStatus.upToDate;
+            // If the previous status was noRemote, keep it
+            if (editedModel.updateStatus == UserScriptUpdateStatus.noRemote) return UserScriptUpdateStatus.noRemote;
+            // If previous status was upToDate and the script has NOT been edited, keep as upToDate
+            // so that it doesn't show as localModified when we just load an API key, for example,
+            // or just open/close the script without editing it at all
+            if (editedModel.updateStatus == UserScriptUpdateStatus.upToDate && !manuallyEdited) {
+              return UserScriptUpdateStatus.upToDate;
+            }
+            // Otherwise... localModified
+            return UserScriptUpdateStatus.localModified;
+          }(),
+        );
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
     return couldParseHeader;
@@ -300,7 +312,7 @@ class UserScriptsProvider extends ChangeNotifier {
           decodedModel.source,
           enabled: defaultToDisabled ? false : decodedModel.enabled,
           version: decodedModel.version,
-          edited: decodedModel.edited,
+          manuallyEdited: decodedModel.manuallyEdited,
           allScriptFirstLoad: true,
           isExample: decodedModel.isExample,
           updateStatus: decodedModel.updateStatus,
@@ -369,7 +381,7 @@ class UserScriptsProvider extends ChangeNotifier {
                 decodedModel.source,
                 enabled: decodedModel.enabled,
                 version: decodedModel.version,
-                edited: decodedModel.edited,
+                manuallyEdited: decodedModel.manuallyEdited,
                 url: decodedModel.url,
                 updateStatus: decodedModel.updateStatus,
                 allScriptFirstLoad: true,
