@@ -312,14 +312,13 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     }
 
-    _checkForCustomApiKeyCandidates();
-
     _sort();
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
   }
 
   void _saveUserScriptsListSharedPrefs() {
+    _checkForCustomApiKeyCandidates();
     final saveString = json.encode(_userScriptList);
     Prefs().setUserScriptsList(saveString);
   }
@@ -381,7 +380,6 @@ class UserScriptsProvider extends ChangeNotifier {
           }
         }
 
-        _checkForCustomApiKeyCandidates();
         _sort();
         notifyListeners();
         _saveUserScriptsListSharedPrefs();
@@ -399,12 +397,20 @@ class UserScriptsProvider extends ChangeNotifier {
 
   /// Flag scripts that are candidates for custom API keys
   _checkForCustomApiKeyCandidates() {
-    for (final script in _userScriptList) {
-      if (script.source.contains("###PDA-APIKEY###")) {
-        script.customApiKeyCandidate = true;
-      } else {
-        script.customApiKeyCandidate = false;
+    try {
+      for (final script in _userScriptList) {
+        if (script.source.contains("###PDA-APIKEY###")) {
+          script.customApiKeyCandidate = true;
+        } else {
+          script.customApiKeyCandidate = false;
+        }
       }
+    } catch (e, trace) {
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error at checking custom API key candidates. Error: $e. Stack: $trace");
+      }
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+      logToUser("PDA error at checking custom API key candidates. Error: $e. Stack: $trace");
     }
   }
 
