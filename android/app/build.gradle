@@ -16,7 +16,7 @@ if (localPropertiesFile.exists()) {
 
 def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
 if (flutterVersionCode == null) {
-    flutterVersionCode = '537'
+    flutterVersionCode = '538'
 }
 
 def flutterVersionName = localProperties.getProperty('flutter.versionName')
