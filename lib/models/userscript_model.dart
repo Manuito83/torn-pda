@@ -289,9 +289,13 @@ class UserScriptModel {
     if (url != null) {
       this.url = url;
     }
+    if (customApiKey != null) {
+      this.customApiKey = customApiKey;
+    }
+    if (customApiKeyCandidate != null) {
+      this.customApiKeyCandidate = customApiKeyCandidate;
+    }
     this.updateStatus = updateStatus;
-    this.customApiKey = customApiKey ?? "";
-    this.customApiKeyCandidate = customApiKeyCandidate ?? false;
   }
 
   Future<UserScriptUpdateStatus> checkUpdateStatus() async {

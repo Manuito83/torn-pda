@@ -381,7 +381,6 @@ class UserScriptsProvider extends ChangeNotifier {
         }
 
         _sort();
-        notifyListeners();
         _saveUserScriptsListSharedPrefs();
       }
       notifyListeners();
@@ -423,18 +422,21 @@ class UserScriptsProvider extends ChangeNotifier {
       }
       // Ensure script has a valid URL
       if (s.url == null) return Future.value();
+
       s.updateStatus = UserScriptUpdateStatus.updating;
       notifyListeners(); // Notify listeners of the change to show updating, but **do not save this to shared prefs**
+
       return s.checkUpdateStatus().then((updateStatus) {
         if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
-        s.update(updateStatus: updateStatus);
+        s.updateStatus = updateStatus;
         notifyListeners(); // Notify listeners of the change after every row
       }).catchError((e) {
         print(e);
-        s.update(updateStatus: UserScriptUpdateStatus.error);
+        s.updateStatus = UserScriptUpdateStatus.error;
         notifyListeners(); // Notify listeners of the change after every row
       });
     }));
+
     _saveUserScriptsListSharedPrefs(); // Only save once all scripts are updated, so that we don't save the "updating" status
     return updates;
   }
