@@ -1002,11 +1002,13 @@ showSendbirdNotification(String sender, String message, String channelUrl, {bool
 
       // Exclude faction messages
       if (suffix == "(faction)" && excludeFaction) {
+        log("Filtered OUT faction message: $message");
         return;
       }
 
       // Exclude faction messages
       if (suffix == "(company)" && excludeCompany) {
+        log("Filtered OUT company message: $message");
         return;
       }
 

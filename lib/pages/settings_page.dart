@@ -3492,6 +3492,8 @@ class SettingsPageState extends State<SettingsPage> {
           uc.playerId = myProfile.playerId!;
           uc.apiKey = myProfile.userApiKey;
           uc.playerName = myProfile.name!;
+          uc.factionId = myProfile.faction?.factionId ?? 0;
+          uc.companyId = myProfile.job?.companyId ?? 0;
         }
 
         errorPlayerId = uc.playerId;

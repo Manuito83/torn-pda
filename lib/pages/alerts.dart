@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -1047,166 +1048,226 @@ class AlertsSettingsState extends State<AlertsSettings> {
                       GetBuilder(
                         init: SendbirdController(),
                         builder: (sendbird) {
-                          return Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
-                                child: ListTile(
-                                  title: const Text(
-                                    "Torn chat messages",
-                                    style: TextStyle(fontSize: 15),
+                          if ((Platform.isAndroid && sendbird.sendBirdPushAndroidRemoteConfigEnabled) ||
+                              (Platform.isIOS && sendbird.sendBirdPushIOSRemoteConfigEnabled)) {
+                            return Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
+                                  child: ListTile(
+                                    title: const Text(
+                                      "Torn chat messages",
+                                      style: TextStyle(fontSize: 15),
+                                    ),
+                                    subtitle: const Text(
+                                      "Enable notifications for TORN chat messages",
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                    trailing: _togglingSendbirdNotifications
+                                        ? const Padding(
+                                            padding: EdgeInsets.only(right: 14.0),
+                                            child: SizedBox(
+                                              width: 20,
+                                              height: 20,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          )
+                                        : Checkbox(
+                                            value: sendbird.sendBirdNotificationsEnabled,
+                                            activeColor: Colors.blueGrey,
+                                            checkColor: Colors.white,
+                                            onChanged: (enabled) async {
+                                              setState(() {
+                                                _togglingSendbirdNotifications = true;
+                                              });
+                                              await sendbird.sendBirdNotificationsToggle(enabled: enabled!);
+                                              setState(() {
+                                                _togglingSendbirdNotifications = false;
+                                              });
+                                            },
+                                          ),
                                   ),
-                                  subtitle: const Text(
-                                    "Enable notifications for TORN chat messages",
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontStyle: FontStyle.italic,
+                                ),
+                                if (sendbird.sendBirdNotificationsEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 30, right: 32),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Row(
+                                          children: [
+                                            Icon(Icons.keyboard_arrow_right_outlined),
+                                            Padding(
+                                              padding: EdgeInsets.only(left: 17),
+                                              child: Text(
+                                                "Do not disturb",
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontStyle: FontStyle.italic,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        GestureDetector(
+                                          child: const Icon(Icons.more_time_outlined),
+                                          onTap: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                return SendbirdDoNotDisturbDialog();
+                                              },
+                                            );
+                                          },
+                                        )
+                                      ],
                                     ),
                                   ),
-                                  trailing: _togglingSendbirdNotifications
-                                      ? const Padding(
-                                          padding: EdgeInsets.only(right: 14.0),
-                                          child: SizedBox(
-                                            width: 20,
-                                            height: 20,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+                                if (sendbird.sendBirdNotificationsEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      left: 30,
+                                      right: 8,
+                                      top: 12, // Top padding for the first checkbox to compensate for the icon
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.keyboard_arrow_right_outlined),
+                                        Flexible(
+                                          child: CheckboxListTile(
+                                            dense: true,
+                                            checkColor: Colors.white,
+                                            activeColor: Colors.red[900],
+                                            value: sendbird.excludeFactionMessages,
+                                            title: const Row(
+                                              children: [
+                                                Text(
+                                                  "Exclude faction messages",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ),
-                                        )
-                                      : Checkbox(
-                                          value: sendbird.sendBirdNotificationsEnabled,
-                                          activeColor: Colors.blueGrey,
-                                          checkColor: Colors.white,
-                                          onChanged: (enabled) async {
-                                            setState(() {
-                                              _togglingSendbirdNotifications = true;
-                                            });
-                                            await sendbird.sendBirdNotificationsToggle(enabled: enabled!);
-                                            setState(() {
-                                              _togglingSendbirdNotifications = false;
-                                            });
-                                          },
-                                        ),
-                                ),
-                              ),
-                              if (sendbird.sendBirdNotificationsEnabled)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 30, right: 32),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Row(
-                                        children: [
-                                          Icon(Icons.keyboard_arrow_right_outlined),
-                                          Padding(
-                                            padding: EdgeInsets.only(left: 17),
-                                            child: Text(
-                                              "Do not disturb",
-                                              style: TextStyle(
-                                                fontSize: 14,
-                                                fontStyle: FontStyle.italic,
-                                              ),
+                                            subtitle: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  "Faction messages won't be shown",
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                                if (sendbird.excludeFactionMessages)
+                                                  Text(
+                                                      "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
+                                                      "that you use with this player account",
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontStyle: FontStyle.italic,
+                                                        color: _themeProvider!.getTextColor(Colors.orange[900]!),
+                                                      )),
+                                              ],
                                             ),
-                                          ),
-                                        ],
-                                      ),
-                                      GestureDetector(
-                                        child: const Icon(Icons.more_time_outlined),
-                                        onTap: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return SendbirdDoNotDisturbDialog();
+                                            onChanged: (enabled) async {
+                                              sendbird.excludeFactionMessages = enabled!;
                                             },
-                                          );
-                                        },
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              if (sendbird.sendBirdNotificationsEnabled)
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 30,
-                                    right: 8,
-                                    top: 12, // Top padding for the first checkbox to compensate for the icon
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.keyboard_arrow_right_outlined),
-                                      Flexible(
-                                        child: CheckboxListTile(
-                                          dense: true,
-                                          checkColor: Colors.white,
-                                          activeColor: Colors.red[900],
-                                          value: sendbird.excludeFactionMessages,
-                                          title: const Row(
-                                            children: [
-                                              Text(
-                                                "Exclude faction messages",
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontStyle: FontStyle.italic,
-                                                ),
-                                              ),
-                                            ],
                                           ),
-                                          subtitle: const Text(
-                                            "Faction messages won't be shown",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontStyle: FontStyle.italic,
-                                            ),
-                                          ),
-                                          onChanged: (enabled) async {
-                                            sendbird.excludeFactionMessages = enabled!;
-                                          },
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              if (sendbird.sendBirdNotificationsEnabled)
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 30, right: 8),
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.keyboard_arrow_right_outlined),
-                                      Flexible(
-                                        child: CheckboxListTile(
-                                          dense: true,
-                                          checkColor: Colors.white,
-                                          activeColor: Colors.red[900],
-                                          value: sendbird.excludeCompanyMessages,
-                                          title: const Row(
-                                            children: [
-                                              Text(
-                                                "Exclude company messages",
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontStyle: FontStyle.italic,
+                                if (sendbird.sendBirdNotificationsEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 30, right: 8),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.keyboard_arrow_right_outlined),
+                                        Flexible(
+                                          child: CheckboxListTile(
+                                            dense: true,
+                                            checkColor: Colors.white,
+                                            activeColor: Colors.red[900],
+                                            value: sendbird.excludeCompanyMessages,
+                                            title: const Row(
+                                              children: [
+                                                Text(
+                                                  "Exclude company messages",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
                                                 ),
-                                              ),
-                                            ],
-                                          ),
-                                          subtitle: const Text(
-                                            "Company messages won't be shown",
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontStyle: FontStyle.italic,
+                                              ],
                                             ),
+                                            subtitle: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  "Company messages won't be shown",
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                                if (sendbird.excludeCompanyMessages)
+                                                  Text(
+                                                      "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
+                                                      "that you use with this player account",
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontStyle: FontStyle.italic,
+                                                        color: _themeProvider!.getTextColor(Colors.orange[900]!),
+                                                      )),
+                                              ],
+                                            ),
+                                            onChanged: (enabled) async {
+                                              sendbird.excludeCompanyMessages = enabled!;
+                                            },
                                           ),
-                                          onChanged: (enabled) async {
-                                            sendbird.excludeCompanyMessages = enabled!;
-                                          },
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            );
+                          } else {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(8, 5, 4, 0),
+                                  child: ListTile(
+                                    title: const Text(
+                                      "Torn chat messages",
+                                      style: TextStyle(fontSize: 15),
+                                    ),
+                                    subtitle: Text(
+                                        "NOTE: notifications for Torn chat messages are temporarily disabled. "
+                                        "You can find more information in the forums or Discord. Apologies for the inconvenience.",
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontStyle: FontStyle.italic,
+                                          color: _themeProvider!.getTextColor(Colors.orange[900]!),
+                                        )),
+                                    trailing: const Checkbox(
+                                      value: false,
+                                      activeColor: Colors.blueGrey,
+                                      checkColor: Colors.white,
+                                      onChanged: null,
+                                    ),
                                   ),
                                 ),
-                            ],
-                          );
+                              ],
+                            );
+                          }
                         },
                       ),
                       Padding(

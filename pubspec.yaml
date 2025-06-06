@@ -100,7 +100,7 @@ dependencies:
   timezone: 0.10.0
   toastification: 2.3.0
   toggle_switch: 2.3.0
-  upgrader: 11.3.1
+  upgrader: 11.4.0
   uri_to_file: 1.0.0
   url_launcher: 6.3.1
   ## Temporary fix for https://github.com/flutter/flutter/issues/151467

@@ -74,8 +74,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.1';
-const String androidCompilation = '539';
-const String iosCompilation = '539';
+const String androidCompilation = '542';
+const String iosCompilation = '542';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -119,7 +119,7 @@ class ReceivedNotification {
 }
 
 @pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+Future<void> _messagingBackgroundHandler(RemoteMessage message) async {
   try {
     if (message.data["channelId"]?.contains("Alerts stocks") == true) {
       // Reload isolate (as we are reading from background)
@@ -276,7 +276,8 @@ Future<void> main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   if (!Platform.isWindows) {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    // This also handles sendbird!
+    FirebaseMessaging.onBackgroundMessage(_messagingBackgroundHandler);
 
     if (kDebugMode) {
       if (pointFunctionsEmulatorToLocal) {

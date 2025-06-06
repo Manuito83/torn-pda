@@ -16,6 +16,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 
 class SendbirdController extends GetxController {
   bool _initialised = false;
+  bool _connected = false;
 
   String _sendbirdAppId = "";
   String _sendbirdAppToken = "";
@@ -27,20 +28,82 @@ class SendbirdController extends GetxController {
   TimeOfDay endTime = const TimeOfDay(hour: 0, minute: 0);
   String timeZoneName = DateTime.now().timeZoneName;
 
+  final _uc = Get.find<UserController>();
+
   bool _excludeFactionMessages = false;
   bool get excludeFactionMessages => _excludeFactionMessages;
-  set excludeFactionMessages(bool value) {
-    _excludeFactionMessages = value;
-    Prefs().setSendbirdExcludeFactionMessages(value);
+  set excludeFactionMessages(bool exclude) {
+    if (_uc.factionId == 0) {
+      toastification.show(
+        closeOnClick: true,
+        type: ToastificationType.error,
+        alignment: Alignment.bottomCenter,
+        autoCloseDuration: const Duration(seconds: 10),
+        title: const Text(
+          "No faction found!\n\n"
+          "If you just joined one, please reload your API key or relaunch the app and retry",
+          maxLines: 10,
+        ),
+      );
+      _excludeFactionMessages = false;
+      update();
+      return;
+    }
+
+    _excludeFactionMessages = exclude;
+
+    _setChannelPushPreference(exclude: exclude, channelUrl: "faction-${_uc.factionId}");
+    Prefs().setSendbirdExcludeFactionMessages(exclude);
+
     update();
   }
 
   bool _excludeCompanyMessages = false;
   bool get excludeCompanyMessages => _excludeCompanyMessages;
-  set excludeCompanyMessages(bool value) {
-    _excludeCompanyMessages = value;
-    Prefs().setSendbirdExcludeCompanyMessages(value);
+  set excludeCompanyMessages(bool exclude) {
+    if (_uc.companyId == 0) {
+      toastification.show(
+        closeOnClick: true,
+        type: ToastificationType.error,
+        alignment: Alignment.bottomCenter,
+        autoCloseDuration: const Duration(seconds: 10),
+        title: const Text(
+          "No company found!\n\n"
+          "If you just joined one, please reload your API key or relaunch the app and retry",
+          maxLines: 10,
+        ),
+      );
+      _excludeCompanyMessages = false;
+      update();
+      return;
+    }
+
+    _excludeCompanyMessages = exclude;
+
+    _setChannelPushPreference(exclude: exclude, channelUrl: "company-${_uc.companyId}");
+    Prefs().setSendbirdExcludeCompanyMessages(exclude);
+
     update();
+  }
+
+  bool _sendBirdPushAndroidRemoteConfigEnabled = true;
+  bool get sendBirdPushAndroidRemoteConfigEnabled => _sendBirdPushAndroidRemoteConfigEnabled;
+  set sendBirdPushAndroidRemoteConfigEnabled(bool enabled) {
+    _sendBirdPushAndroidRemoteConfigEnabled = enabled;
+    if (!enabled && Platform.isAndroid && _connected) {
+      // Triggers this ASAP, instead of waiting for user to re-register when relaunching app
+      sendbirdUnregisterFCMTokenAndChannel();
+    }
+  }
+
+  bool _sendBirdPushIOSRemoteConfigEnabled = true;
+  bool get sendBirdPushIOSRemoteConfigEnabled => _sendBirdPushIOSRemoteConfigEnabled;
+  set sendBirdPushIOSRemoteConfigEnabled(bool enabled) {
+    _sendBirdPushIOSRemoteConfigEnabled = enabled;
+    if (!enabled && Platform.isIOS && _connected) {
+      // Triggers this ASAP, instead of waiting for user to re-register when relaunching app
+      sendbirdUnregisterFCMTokenAndChannel();
+    }
   }
 
   bool _sendBirdNotificationsEnabled = false;
@@ -108,8 +171,7 @@ class SendbirdController extends GetxController {
   Future register() async {
     try {
       if (_sendbirdAppId.isNotEmpty && _sendbirdAppToken.isNotEmpty) {
-        String playerId = Get.find<UserController>().playerId.toString();
-        if (playerId == "0") {
+        if (_uc.playerId == 0) {
           throw ("Invalid player ID, can't connect to Sendbird!");
         }
 
@@ -120,22 +182,41 @@ class SendbirdController extends GetxController {
           sendBirdSessionToken = await Prefs().getSendbirdSessionToken();
           log("Using saved Sendbird session token (days: ${tokenAge.inDays})");
         } else {
-          sendBirdSessionToken = await sendbirdGetNewUserSessionToken(_sendbirdAppId, _sendbirdAppToken, playerId);
+          sendBirdSessionToken =
+              await sendbirdGetNewUserSessionToken(_sendbirdAppId, _sendbirdAppToken, _uc.playerId.toString());
           log("Getting new Sendbird session token (days: ${tokenAge.inDays})");
         }
 
         if (sendBirdSessionToken != null) {
-          await connect(playerId, sendBirdSessionToken);
+          await connect(_uc.playerId.toString(), sendBirdSessionToken);
 
           // Only register FCM token if notifications are enabled
           // (we use Sendbird also to share chaining attacks)
           if (_sendBirdNotificationsEnabled) {
+            // Remote Config
+            if ((Platform.isAndroid && !_sendBirdPushAndroidRemoteConfigEnabled) ||
+                (Platform.isIOS && !_sendBirdPushIOSRemoteConfigEnabled)) {
+              await sendbirdUnregisterFCMTokenAndChannel();
+              return false;
+            }
+
             await sendbirdRegisterFCMTokenAndChannel();
+
+            // Refresh notification preferences
+            // This might not seem necessary, but it updates across apps, so it will use this installation preferences now
+            if (_uc.factionId != 0) {
+              _setChannelPushPreference(exclude: _excludeFactionMessages, channelUrl: "faction-${_uc.factionId}");
+            }
+
+            if (_uc.companyId != 0) {
+              _setChannelPushPreference(exclude: _excludeCompanyMessages, channelUrl: "company-${_uc.companyId}");
+            }
           } else {
             await sendbirdUnregisterFCMTokenAndChannel();
           }
 
           // Add a user event handler with a unique identifier
+          SendbirdChat.removeChannelHandler('channel_handler');
           SendbirdChat.addChannelHandler(
             'channel_handler',
             SendbirdChannelHandler(),
@@ -171,8 +252,8 @@ class SendbirdController extends GetxController {
 
       if (response.statusCode == 200) {
         logToUser("Sendbird token obtained: ${response.data['token']}");
-        Prefs().setSendbirdSessionToken(response.data['token']);
-        Prefs().setSendbirdTokenTimestamp(DateTime.now().millisecondsSinceEpoch);
+        await Prefs().setSendbirdSessionToken(response.data['token']);
+        await Prefs().setSendbirdTokenTimestamp(DateTime.now().millisecondsSinceEpoch);
         return response.data['token'];
       } else {
         logToUser("Sendbird unexpected response: ${response.statusCode}");
@@ -192,6 +273,12 @@ class SendbirdController extends GetxController {
 
   Future<bool> sendbirdRegisterFCMTokenAndChannel() async {
     try {
+      // Remote Config
+      if ((Platform.isAndroid && !_sendBirdPushAndroidRemoteConfigEnabled) ||
+          (Platform.isIOS && !_sendBirdPushIOSRemoteConfigEnabled)) {
+        return false;
+      }
+
       // Get the push token based on platform
       String? fcmToken = await _getFCMToken();
       if (fcmToken == null || fcmToken.isEmpty) throw ("could not get FCM token");
@@ -232,7 +319,7 @@ class SendbirdController extends GetxController {
         type: Platform.isAndroid ? PushTokenType.fcm : PushTokenType.apns,
       );
 
-      // Unregister the push token with Sendbird and delete channel
+      // Delete channel
       removeSendBirdNotificationsChannel();
 
       log("Sendbird push notifications disabled and token removed");
@@ -266,6 +353,8 @@ class SendbirdController extends GetxController {
       }
 
       await SendbirdChat.connect(playerId, accessToken: sendbirdSessionToken);
+
+      _connected = true;
       log("Connected Sendbird");
     } catch (e) {
       logToUser("Can't connect to Sendbird: $e");
@@ -336,6 +425,58 @@ class SendbirdController extends GetxController {
   Future<String> getLocalTimeZone() async {
     final location = await FlutterTimezone.getLocalTimezone();
     return location;
+  }
+
+  Future<bool> _setChannelPushPreference({
+    required String channelUrl,
+    required bool exclude,
+  }) async {
+    String playerId = Get.find<UserController>().playerId.toString();
+    if (playerId == "0") {
+      throw ("Invalid player ID, can't connect to Sendbird!");
+    }
+
+    final preference = exclude ? "off" : "all";
+
+    final dio = Dio();
+    final url = 'https://api-$_sendbirdAppId.sendbird.com/v3/users/$playerId/push_preference/$channelUrl';
+
+    try {
+      final response = await dio.put(
+        url,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Api-Token': _sendbirdAppToken,
+          },
+        ),
+        data: {
+          "push_trigger_option": preference,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        logToUser("Sendbird API Success: Push preference for user '$playerId' on "
+            "channel '$channelUrl' updated to '$preference'. Response: ${response.data}");
+        return true;
+      } else {
+        logToUser("Sendbird API Error: Unexpected response status ${response.statusCode} "
+            "for user '$playerId' on channel '$channelUrl'. Response: ${response.data}");
+        return false;
+      }
+    } on DioException catch (e) {
+      String errorMessage = "Sendbird API DioException for user '$playerId' "
+          "on channel '$channelUrl': ${e.message}";
+      if (e.response != null) {
+        errorMessage += "\nStatus: ${e.response?.statusCode}\nData: ${e.response?.data}";
+      }
+      logToUser(errorMessage);
+
+      return false;
+    } catch (e) {
+      logToUser("Sendbird API: General error for user '$playerId' on channel '$channelUrl': $e");
+      return false;
+    }
   }
 }
 

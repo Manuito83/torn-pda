@@ -367,12 +367,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
         _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
             remoteConfig.getBool("browser_center_editing_text_field_allowed");
+
         // Revives
         _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
         _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
         _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
         _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
         _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
+
+        // Sendbird
+        final sb = Get.find<SendbirdController>();
+        sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
+        sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
 
         // Dynamic App Icon depends on Remote Config
         if (Platform.isIOS) {
@@ -395,6 +401,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
           _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
           _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
+          // Sendbird
+          sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
+          sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
         });
       });
     }
