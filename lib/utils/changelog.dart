@@ -51,6 +51,34 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.8.1 - Build 542 - 06/06/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.8.1'
+        ..date = '10 JUN 2025'
+        ..features = [
+          if (Platform.isIOS)
+            ComplexFeature(
+              "Added live activity support for traveling",
+              explanation: "Only available for iOS 16.2 and above\n\n"
+                  "See Alerts / Live Activities\n\n"
+                  "This feature allows you to track your travel in real-time, "
+                  "providing updates on your journey directly on your device's lock screen or dynamic island.\n\n"
+                  "IMPORTANT: for the time being, live activities will only activate if travel starts or takes place "
+                  "at some point while with Torn PDA in the foreground.\n\n"
+                  "Please note that this is a beta feature and may not work as expected in all cases (any feedback is appreciated).",
+            ),
+          "Userscripts now support individual custom API keys",
+          "Global ranked war list is now searchable and can be sorted",
+          "Added war date to the war widget in Profile",
+          if (Platform.isAndroid) "Fixed Google login issues",
+          "Fixed OC information not showing in Profile",
+          "Fixed chat notifications showing when disabled",
+          "Moved settings search functionality to appbar",
+          "Fixed new browser tab request from user scripts",
+        ],
+    );
+
     // v3.8.0 - Build 531 - 09/05/2025
     itemList.add(
       ChangeLogItem()

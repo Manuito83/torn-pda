@@ -4,6 +4,8 @@ class UserController extends GetxController {
   String? apiKey = "";
   int playerId = 0;
   String playerName = "";
+  int factionId = 0;
+  int companyId = 0;
 
   // Alternative keys YATA
   bool _alternativeYataKeyEnabled = false;

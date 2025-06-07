@@ -38,6 +38,7 @@ class Prefs {
   final String _kTravelingFilterInWars = "pda_travelingFilterStatusInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
+  final String _kRankedWarSortPerTab = "pda_rankedWarSortPerTab";
   final String _kYataSpies = "pda_yataSpies";
   final String _kYataSpiesTime = "pda_yataSpiesTime";
   final String _kTornStatsSpies = "pda_tornStatsSpies";
@@ -451,6 +452,9 @@ class Prefs {
   // Drawer menu
   final String _kShowWikiInDrawer = "pda_showWikiInDrawer";
 
+  // Live Activities
+  final String _kIosLiveActivitiesTravelEnabled = "pda_iosLiveActivitiesTravelEnabled";
+
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
   /// get a data, the shared preferences instance is empty.
@@ -696,6 +700,16 @@ class Prefs {
   Future<bool> setWarMembersSort(String value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setString(_kWarMembersSort, value);
+  }
+
+  Future<String> getRankerWarSortPerTab() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kRankedWarSortPerTab) ?? 'active#progressDes-upcoming#timeAsc-finished#timeAsc';
+  }
+
+  Future<bool> setRankerWarSortPerTab(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kRankedWarSortPerTab, value);
   }
 
   Future<List<String>> getYataSpies() async {
@@ -4251,5 +4265,19 @@ class Prefs {
   Future<bool> setShowWikiInDrawer(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kShowWikiInDrawer, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for Live Activities
+  /// -----------------------------------
+
+  Future<bool> getIosLiveActivitiesTravelEnabled() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_kIosLiveActivitiesTravelEnabled) ?? false;
+  }
+
+  Future<bool> setIosLiveActivitiesTravelEnabled(bool value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setBool(_kIosLiveActivitiesTravelEnabled, value);
   }
 }

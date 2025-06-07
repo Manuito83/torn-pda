@@ -94,7 +94,7 @@ class RankedWarMiniState extends State<RankedWarMini> {
                     inputTime: dt,
                     timeFormatSetting: settingsProvider.currentTimeFormat,
                     timeZoneSetting: settingsProvider.currentTimeZone,
-                  ).formatHourWithDaysElapsed(includeToday: true),
+                  ).formatHourAndDayMonth,
                   style: const TextStyle(
                     fontSize: 11,
                   ),

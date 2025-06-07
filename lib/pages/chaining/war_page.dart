@@ -23,7 +23,7 @@ import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -1644,13 +1644,7 @@ class WarTargetsList extends StatefulWidget {
 }
 
 class WarTargetsListState extends State<WarTargetsList> {
-  late ChainStatusProvider _chainStatusProvider;
-
-  @override
-  void initState() {
-    super.initState();
-    _chainStatusProvider = Provider.of<ChainStatusProvider>(context, listen: false);
-  }
+  final ChainStatusController _chainStatusProvider = Get.find<ChainStatusController>();
 
   @override
   Widget build(BuildContext context) {

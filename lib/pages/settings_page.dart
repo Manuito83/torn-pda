@@ -30,7 +30,7 @@ import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -118,7 +118,9 @@ class SettingsPageState extends State<SettingsPage> {
   final _apiFormKey = GlobalKey<FormState>();
 
   // SEARCH ##########
+  bool _isSearching = false;
   String _searchText = '';
+  final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
   List<Widget> buildFilteredSections() {
     List<Widget> sections = [
@@ -189,26 +191,83 @@ class SettingsPageState extends State<SettingsPage> {
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider.appBarTop ? 2 : 0,
       toolbarHeight: 50,
-      title: const Text('Settings', style: TextStyle(color: Colors.white)),
-      leadingWidth: _webViewProvider.webViewSplitActive ? 50 : 88,
-      leading: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () {
-              final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
-              if (scaffoldState != null) {
-                if (_webViewProvider.splitScreenAndBrowserLeft()) {
-                  scaffoldState.openEndDrawer();
-                } else {
-                  scaffoldState.openDrawer();
-                }
-              }
-            },
-          ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
-        ],
-      ),
+      leadingWidth: _isSearching ? 56 : (_webViewProvider.webViewSplitActive ? 50 : 88),
+      leading: !_isSearching
+          ? Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.menu),
+                  onPressed: () {
+                    final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
+                    if (scaffoldState != null) {
+                      if (_webViewProvider.splitScreenAndBrowserLeft()) {
+                        scaffoldState.openEndDrawer();
+                      } else {
+                        scaffoldState.openDrawer();
+                      }
+                    }
+                  },
+                ),
+                if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon(),
+              ],
+            )
+          : IconButton(
+              icon: const Icon(Icons.cancel_outlined),
+              onPressed: () {
+                setState(() {
+                  _isSearching = false;
+                  _searchController.clear();
+                  _searchText = '';
+                  FocusScope.of(context).unfocus();
+                });
+              },
+            ),
+      title: _isSearching
+          ? Padding(
+              padding: const EdgeInsets.only(left: 20.0),
+              child: TextField(
+                controller: _searchController,
+                focusNode: _searchFocusNode,
+                decoration: const InputDecoration(
+                  hintText: 'Search settings...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.white70),
+                ),
+                style: const TextStyle(color: Colors.white, fontSize: 18),
+                onChanged: (text) {
+                  setState(() {
+                    _searchText = text;
+                  });
+                },
+              ),
+            )
+          : const Text('Settings', style: TextStyle(color: Colors.white)),
+      actions: _isSearching
+          ? [
+              if (_searchController.text.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.clear),
+                  onPressed: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchText = '';
+                    });
+                  },
+                ),
+            ]
+          : [
+              IconButton(
+                icon: const Icon(Icons.search),
+                onPressed: () {
+                  setState(() {
+                    _isSearching = true;
+                  });
+                  Future.delayed(const Duration(milliseconds: 50), () {
+                    FocusScope.of(context).requestFocus(_searchFocusNode);
+                  });
+                },
+              ),
+            ],
     );
   }
 
@@ -217,6 +276,7 @@ class SettingsPageState extends State<SettingsPage> {
     _ticker?.cancel();
     _expandableController.dispose();
     _apiKeyInputController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -248,56 +308,31 @@ class SettingsPageState extends State<SettingsPage> {
                   child: Column(
                     children: <Widget>[
                       SizedBox(height: _extraMargin),
-                      ApiKeySectionWidget(
-                        apiIsLoading: _apiIsLoading,
-                        userProfile: _userProfile,
-                        apiError: _apiError,
-                        errorReason: _errorReason,
-                        errorDetails: _errorDetails,
-                        formKey: _formKey,
-                        apiFormKey: _apiFormKey,
-                        apiKeyInputController: _apiKeyInputController,
-                        expandableController: _expandableController,
-                        getApiDetails: _getApiDetails,
-                        changeUID: (value) => widget.changeUID(value),
-                        setStateOnParent: () => setState(() {}),
-                        removeUserProvider: () => _userProvider.removeUser(),
-                        changeApiError: (val) => setState(() => _apiError = val),
-                        changeUserProfile: (val) => setState(() => _userProfile = val),
-                      ),
-                      if (_userProfile != null)
+                      if (!_isSearching)
+                        ApiKeySectionWidget(
+                          apiIsLoading: _apiIsLoading,
+                          userProfile: _userProfile,
+                          apiError: _apiError,
+                          errorReason: _errorReason,
+                          errorDetails: _errorDetails,
+                          formKey: _formKey,
+                          apiFormKey: _apiFormKey,
+                          apiKeyInputController: _apiKeyInputController,
+                          expandableController: _expandableController,
+                          getApiDetails: _getApiDetails,
+                          changeUID: (value) => widget.changeUID(value),
+                          setStateOnParent: () => setState(() {}),
+                          removeUserProvider: () => _userProvider.removeUser(),
+                          changeApiError: (val) => setState(() => _apiError = val),
+                          changeUserProfile: (val) => setState(() => _userProfile = val),
+                        ),
+                      if (_userProfile != null && !_isSearching)
                         const Column(
                           children: [
                             NativeLoginWidget(),
                             SizedBox(height: 15),
                           ],
                         ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search settings',
-                            prefixIcon: const Icon(Icons.search),
-                            suffixIcon: _searchController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: () {
-                                      _searchController.clear();
-                                      setState(() {
-                                        _searchText = '';
-                                      });
-                                    },
-                                  )
-                                : null,
-                          ),
-                          onChanged: (text) {
-                            setState(() {
-                              _searchText = text;
-                            });
-                          },
-                        ),
-                      ),
                       const SizedBox(height: 20),
                       ...buildFilteredSections(),
                       const SizedBox(height: 50),
@@ -1769,10 +1804,10 @@ class SettingsPageState extends State<SettingsPage> {
                 children: [
                   const Flexible(child: Text("Show status color counter")),
                   Switch(
-                    value: context.read<ChainStatusProvider>().statusColorWidgetEnabled,
+                    value: Get.find<ChainStatusController>().statusColorWidgetEnabled,
                     onChanged: (value) {
                       setState(() {
-                        context.read<ChainStatusProvider>().statusColorWidgetEnabled = value;
+                        Get.find<ChainStatusController>().statusColorWidgetEnabled = value;
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
@@ -3457,6 +3492,8 @@ class SettingsPageState extends State<SettingsPage> {
           uc.playerId = myProfile.playerId!;
           uc.apiKey = myProfile.userApiKey;
           uc.playerName = myProfile.name!;
+          uc.factionId = myProfile.faction?.factionId ?? 0;
+          uc.companyId = myProfile.job?.companyId ?? 0;
         }
 
         errorPlayerId = uc.playerId;

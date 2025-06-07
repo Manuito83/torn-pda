@@ -22,7 +22,7 @@ dependencies:
     sdk: flutter
   android_intent_plus: 5.2.1
   animations: 2.0.11
-  app_badge_plus: 1.1.6
+  app_badge_plus: 1.2.3
   app_links: 6.3.3
   app_settings: 5.1.1
   audioplayers: 6.1.0
@@ -86,7 +86,7 @@ dependencies:
   pull_to_refresh: 2.0.0
   quick_actions: 1.1.0
   ##receive_intent: 0.2.7
-  receive_intent: 
+  receive_intent:
     git:
       url: https://github.com/Manuito83/receive_intent.git
       ref: master
@@ -100,11 +100,11 @@ dependencies:
   timezone: 0.10.0
   toastification: 2.3.0
   toggle_switch: 2.3.0
-  upgrader: 11.3.1
+  upgrader: 11.4.0
   uri_to_file: 1.0.0
   url_launcher: 6.3.1
   ## Temporary fix for https://github.com/flutter/flutter/issues/151467
-  url_launcher_ios: 6.3.1  ## (delete next version)
+  url_launcher_ios: 6.3.1 ## (delete next version)
   ###########################
   vibration: 2.0.1
   wakelock_plus: 1.2.10
@@ -116,7 +116,7 @@ dependencies:
       path: workmanager
       ref: main
 
-dependency_overrides: 
+dependency_overrides:
   flutter_inappwebview: 6.1.5
   #flutter_inappwebview:
   #  git:
@@ -148,7 +148,7 @@ dev_dependencies:
     sdk: flutter
   json_serializable: ^6.8.0 # Used by swagger_dart_code_generator
   swagger_dart_code_generator: ^3.0.1
-  
+
 flutter_icons:
   android: true
   ios: true

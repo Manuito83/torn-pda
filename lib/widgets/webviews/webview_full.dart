@@ -46,7 +46,7 @@ import 'package:torn_pda/pages/trades/trades_options.dart';
 import 'package:torn_pda/pages/vault/vault_options_page.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -327,7 +327,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
   final _chainWidgetController = ExpandableController();
   final _chainWidgetKey = GlobalKey();
-  late ChainStatusProvider _chainStatusProvider;
+  ChainStatusController _chainStatusProvider = Get.find<ChainStatusController>();
   late TargetsProvider _targetsProvider;
   WarController? _w;
   int _attackNumber = 0;
@@ -388,7 +388,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       _pageTitle = title;
       // Decide if voluntarily skipping first target (always when it's a panic target)
       _assessFirstTargetsOnLaunch();
-      _chainStatusProvider = context.read<ChainStatusProvider>();
       if (_chainStatusProvider.watcherActive) {
         _chainWidgetController.expanded = true;
       }
@@ -1169,7 +1168,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1281,7 +1280,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1329,8 +1328,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 showDialog(
                     context: context,
                     builder: (_) => UserScriptsAddDialog(
-                          editExisting: true,
-                          editScript: existingScript,
+                          editingExistingScript: true,
+                          scriptBeingEdited: existingScript,
                           defaultPage: 1,
                           // No need for default URL as it already exists in the script object
                         ));
@@ -1338,7 +1337,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 message = "UserScript detected, opening dialog...";
                 showDialog(
                     builder: (_) => UserScriptsAddDialog(
-                          editExisting: false,
+                          editingExistingScript: false,
                           defaultUrl: incomingUrl,
                           defaultPage: 1,
                         ),
@@ -1362,15 +1361,29 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           },
           onCreateWindow: (c, request) async {
             if (!mounted) return true;
+            final String url = request.request.url.toString().replaceAll("http:", "https:");
 
             // If we are not using tabs in the current browser, just load the URL (otherwise, if we try
             // to open a window, a new tab is created but we can't see it and looks like a glitch)
             if (!_settingsProvider.useTabsFullBrowser) {
-              final String url = request.request.url.toString().replaceAll("http:", "https:");
               _loadUrl(url);
             } else {
-              // Creates a completely new webview with the URL (instead of a webview window)
-              _openNewTabFromWindowRequest(request.request.url.toString().replaceAll("http:", "https:"));
+              // We will do our best to open the URL in a new full webview (instead of a window),
+              // to ensure that we can use the same features as in the main webview. Otherwise we face
+              // issues when removing userscripts, for example.
+
+              // But there are certain cases where the URL comes as 'null' (like when trying to
+              // perform a Google Login with Android in Torn, or when a script tries to create a new window
+
+              // If that's the case, we'll allow to open a new window by passing the windowId
+              // to the _openNewTabFromWindowRequest method, instead of the usual 'null' if the URL is valid
+
+              dynamic windowId;
+              if (request.request.url == null) {
+                windowId = request.windowId;
+              }
+
+              _openNewTabFromWindowRequest(url, windowId);
               return true;
             }
             return true;
@@ -1522,14 +1535,12 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
                 time: UserScriptTime.end,
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
               for (final script in scriptsToAdd) {
-                await webViewController!.evaluateJavascript(
-                  source: _userScriptsProvider.adaptSource(script.source, _userProvider?.basic?.userApiKey ?? ""),
-                );
+                await webViewController!.evaluateJavascript(source: script.source);
               }
 
               // DEBUG
@@ -1778,7 +1789,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                   !consoleMessage.message.contains("SecurityError: Failed to register a ServiceWorker") &&
                   !consoleMessage.message.contains("Error with Permissions-Policy header") &&
                   !consoleMessage.message.contains("srcset") &&
-                  !consoleMessage.message.contains("Missed ID for Quote saving")) {
+                  !consoleMessage.message.contains("Missed ID for Quote saving") &&
+                  !consoleMessage.message.contains("@firebase/analytics: Failed to fetch this Firebase")) {
                 _terminalProvider.addInstruction(widget.key, consoleMessage.message);
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
@@ -1909,8 +1921,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     );
   }
 
-  _openNewTabFromWindowRequest(String url) {
-    _webViewProvider.addTab(url: url);
+  _openNewTabFromWindowRequest(String url, int? windowId) {
+    _webViewProvider.addTab(url: url, windowId: windowId);
     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
   }
 
@@ -4312,7 +4324,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (Platform.isAndroid || Platform.isWindows) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: webViewController!.getUrl().toString(),
-        apiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
       await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -5084,7 +5096,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     _w ??= Get.find<WarController>();
     String? title = chainingPayload.attackNameList[0];
     _pageTitle = title;
-    _chainStatusProvider = context.read<ChainStatusProvider>();
+    _chainStatusProvider = Get.find<ChainStatusController>();
     if (_chainStatusProvider.watcherActive) {
       _chainWidgetController.expanded = true;
     }
@@ -5161,7 +5173,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
-        apiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
         time: UserScriptTime.start,
       );
       await webViewController?.addUserScripts(userScripts: scriptsToAdd);

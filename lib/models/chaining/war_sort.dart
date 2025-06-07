@@ -76,3 +76,31 @@ class WarSort {
     }
   }
 }
+
+enum RankedWarSortType {
+  progressDes,
+  progressAsc,
+  timeDes,
+  timeAsc,
+}
+
+class RankedWarSort {
+  RankedWarSortType? type;
+  late String description;
+
+  RankedWarSort({this.type}) {
+    switch (type) {
+      case RankedWarSortType.progressDes:
+        description = 'Sort by progress (des)';
+      case RankedWarSortType.progressAsc:
+        description = 'Sort by progress (asc)';
+      case RankedWarSortType.timeDes:
+        description = 'Sort by time (des)';
+      case RankedWarSortType.timeAsc:
+        description = 'Sort by time (asc)';
+      default:
+        description = 'Sort by progress (des)';
+        break;
+    }
+  }
+}

@@ -51,7 +51,7 @@ import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -66,6 +66,8 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/changelog.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/settings/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -236,6 +238,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _preferencesCompleter.complete(_finishedWithPreferences);
     });
 
+    // Live Activities
+    if (Platform.isIOS) {
+      _initialiseLiveActivitiesBridgeService();
+    }
+
     // Deep Linking
     _deepLinksInit();
 
@@ -360,12 +367,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
         _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
             remoteConfig.getBool("browser_center_editing_text_field_allowed");
+
         // Revives
         _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
         _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
         _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
         _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
         _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
+
+        // Sendbird
+        final sb = Get.find<SendbirdController>();
+        sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
+        sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
 
         // Dynamic App Icon depends on Remote Config
         if (Platform.isIOS) {
@@ -388,12 +401,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
           _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
           _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
+          // Sendbird
+          sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
+          sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
         });
       });
     }
 
     // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
-    context.read<ChainStatusProvider>().initialiseProvider();
+    Get.find<ChainStatusController>().initialiseProvider();
 
     // Initialise Sendbird notifications
     _preferencesCompleter.future.whenComplete(() async {
@@ -2513,6 +2529,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _webViewProvider.changeTornTheme(dark: false);
         }
       }
+    });
+  }
+
+  _initialiseLiveActivitiesBridgeService() async {
+    _preferencesCompleter.future.whenComplete(() async {
+      if (!Platform.isIOS) return;
+      if (!_settingsProvider.iosLiveActivitiesTravelEnabled) return;
+
+      if (kSdkIos < 16.2) {
+        // Regardless of user settings, disable Live Activities on iOS versions below 16.2
+        _settingsProvider.iosLiveActivitiesTravelEnabled = false;
+        return;
+      }
+
+      await Get.find<LiveActivityTravelController>().activate();
+      Get.find<LiveActivityBridgeController>().initializeHandler();
     });
   }
 

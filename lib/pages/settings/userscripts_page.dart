@@ -251,37 +251,71 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                 ),
                 Row(
                   children: [
+                    if (script.customApiKeyCandidate)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: GestureDetector(
+                          child: Icon(
+                            Icons.key,
+                            color: script.customApiKey.isNotEmpty ? Colors.green : Colors.orangeAccent,
+                            size: 20,
+                          ),
+                          onTap: () async {
+                            String message = "This script does not have a dedicated API key.\n\n"
+                                "It will use the default Torn PDA API key.\n\n"
+                                "If you want to use a dedicated API key, please edit the script and add it there.";
+
+                            if (script.customApiKey.isNotEmpty) {
+                              message = "This script  has a dedicated API key:\n\n"
+                                  "${script.customApiKey}\n\n"
+                                  "This key will be used instead of the default Torn PDA API key.";
+                            }
+
+                            BotToast.showText(
+                              text: message,
+                              textStyle: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                              ),
+                              contentColor: Colors.grey[800]!,
+                              contentPadding: const EdgeInsets.all(10),
+                              clickClose: true,
+                              duration: const Duration(seconds: 10),
+                            );
+                          },
+                        ),
+                      ),
                     if (script.updateStatus == UserScriptUpdateStatus.noRemote)
                       GestureDetector(
                         child: const Icon(
-                          MdiIcons.alphaC,
+                          MdiIcons.tagEdit,
                           color: Colors.grey,
                           size: 20,
                         ),
                         onTap: () async {
                           BotToast.showText(
-                            text:
-                                'This is a custom script without an update URL. It will not be updated automatically.',
+                            text: 'This is a custom script without an update URL.\n\n'
+                                'It will not be updated automatically.',
                             textStyle: const TextStyle(
                               fontSize: 14,
                               color: Colors.white,
                             ),
                             contentColor: Colors.grey[800]!,
                             contentPadding: const EdgeInsets.all(10),
+                            duration: const Duration(seconds: 5),
                           );
                         },
                       )
                     else if (script.updateStatus == UserScriptUpdateStatus.localModified)
                       GestureDetector(
-                          child: Icon(
-                            script.isExample ? MdiIcons.lockOff : MdiIcons.earthOff,
-                            color: Colors.orange,
-                            size: 20,
-                          ),
+                          child: script.isExample
+                              ? Image.asset("images/icons/torn_pda_browser.png",
+                                  width: 20, height: 20, color: Colors.orange)
+                              : const Icon(MdiIcons.earthOff, color: Colors.orange, size: 20),
                           onTap: () async {
                             BotToast.showText(
-                              text:
-                                  "This is a${script.isExample ? "n example" : ""} script that you have edited, so it will not update. Reset changes to enable updates again.",
+                              text: "This is a${script.isExample ? "n example" : ""} script that you have edited, "
+                                  "so it will not update. Reset changes to enable updates again.",
                               textStyle: const TextStyle(
                                 fontSize: 14,
                                 color: Colors.white,
@@ -292,7 +326,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           })
                     else if (script.updateStatus == UserScriptUpdateStatus.upToDate)
                       GestureDetector(
-                          child: Icon(script.isExample ? MdiIcons.lock : MdiIcons.earth, color: Colors.green, size: 20),
+                          child: script.isExample
+                              ? Image.asset("images/icons/torn_pda_browser.png",
+                                  width: 20, height: 20, color: Colors.green)
+                              : const Icon(MdiIcons.earth, color: Colors.green, size: 20),
                           onTap: () async {
                             BotToast.showText(
                               text:
@@ -321,8 +358,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                             );
                             showDialog(
                                 builder: (c) => UserScriptsAddDialog(
-                                      editScript: script,
-                                      editExisting: true,
+                                      scriptBeingEdited: script,
+                                      editingExistingScript: true,
                                       defaultPage: 1,
                                     ),
                                 context: context);
@@ -377,8 +414,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           barrierDismissible: false, // user must tap button!
                           builder: (BuildContext context) {
                             return UserScriptsAddDialog(
-                              editExisting: true,
-                              editScript: script,
+                              editingExistingScript: true,
+                              scriptBeingEdited: script,
                             );
                           },
                         );
@@ -460,7 +497,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       context: _,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
-        return const UserScriptsAddDialog(editExisting: false);
+        return const UserScriptsAddDialog(editingExistingScript: false);
       },
     );
   }

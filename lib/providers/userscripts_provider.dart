@@ -91,18 +91,35 @@ class UserScriptsProvider extends ChangeNotifier {
 
   UnmodifiableListView<UserScript> getCondSources({
     required String url,
-    required String apiKey,
+    required String pdaApiKey,
     required UserScriptTime time,
   }) {
-    if (!_userScriptsEnabled) {
-      return UnmodifiableListView(const <UserScript>[]);
-    } else {
-      return UnmodifiableListView(_userScriptList.where((s) => s.shouldInject(url, time)).map((s) => UserScript(
-            groupName: s.name,
-            injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
-            source: adaptSource(s.source, apiKey),
-          )));
+    if (_userScriptsEnabled) {
+      try {
+        return UnmodifiableListView(
+          _userScriptList.where((s) => s.shouldInject(url, time)).map(
+            (s) {
+              return UserScript(
+                groupName: s.name,
+                injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+                // If the script is a custom API key script, we need to replace the API key
+                source: adaptSource(
+                  source: s.source,
+                  scriptFinalApiKey: s.customApiKey.isNotEmpty ? s.customApiKey : pdaApiKey,
+                ),
+              );
+            },
+          ),
+        );
+      } catch (e, trace) {
+        if (!Platform.isWindows) {
+          FirebaseCrashlytics.instance.log("PDA error at userscripts getCondSources. Error: $e");
+        }
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+        logToUser("PDA error at userscripts getCondSources. Error: $e");
+      }
     }
+    return UnmodifiableListView(const <UserScript>[]);
   }
 
   List<String> getScriptsToRemove({
@@ -115,28 +132,12 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
-  String adaptSource(String source, String apiKey) {
-    final String withApiKey = source.replaceAll("###PDA-APIKEY###", apiKey);
+  String adaptSource({required String source, required String scriptFinalApiKey}) {
+    final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
     String anonFunction = "(function() {$withApiKey}());";
     anonFunction = anonFunction.replaceAll('“', '"');
     anonFunction = anonFunction.replaceAll('”', '"');
     return anonFunction;
-  }
-
-  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
-    final response = await UserScriptModel.fromURL(url, isExample: isExample);
-    if (response.success && response.model != null) {
-      if (_userScriptList.any((script) => script.name == response.model!.name)) {
-        return (success: false, message: "Script with same name already exists");
-      }
-      userScriptList.add(response.model!);
-      _sort();
-      _saveUserScriptsListSharedPrefs();
-      notifyListeners();
-      return (success: true, message: null);
-    } else {
-      return (success: false, message: response.message);
-    }
   }
 
   void addUserScriptByModel(UserScriptModel model) {
@@ -152,12 +153,14 @@ class UserScriptsProvider extends ChangeNotifier {
     String source, {
     bool enabled = true,
     String version = "0.0.0",
-    edited = false,
+    manuallyEdited = false,
     String? url,
     UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
     allScriptFirstLoad = false,
     bool isExample = false,
     List<String>? matches,
+    String? customApiKey,
+    bool? customApiKeyCandidate,
   }) {
     final newScript = UserScriptModel(
       name: name,
@@ -165,11 +168,13 @@ class UserScriptsProvider extends ChangeNotifier {
       source: source,
       enabled: enabled,
       version: version,
-      edited: edited,
+      manuallyEdited: manuallyEdited,
       matches: matches ?? UserScriptModel.tryGetMatches(source),
       updateStatus: updateStatus,
       url: url,
       isExample: isExample,
+      customApiKey: customApiKey ?? "",
+      customApiKeyCandidate: customApiKeyCandidate ?? false,
     );
     userScriptList.add(newScript);
 
@@ -182,14 +187,16 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   /// Returns a bool indicating if the header could be parsed
-  bool updateUserScript(
-    UserScriptModel editedModel,
-    String name,
-    UserScriptTime time,
-    String source,
-    bool changedSource,
-    bool isFromRemote,
-  ) {
+  bool updateUserScript({
+    required UserScriptModel editedModel,
+    required String name,
+    required UserScriptTime time,
+    required String source,
+    required bool manuallyEdited,
+    required bool isFromRemote,
+    required String? customApiKey,
+    required bool? customApiKeyCandidate,
+  }) {
     List<String>? matches;
     bool couldParseHeader = true;
     try {
@@ -197,16 +204,30 @@ class UserScriptsProvider extends ChangeNotifier {
     } catch (e) {
       matches ??= const ["*"];
     }
+
     userScriptList.firstWhere((script) => script.name == editedModel.name).update(
-        name: name,
-        time: time,
-        source: source,
-        matches: matches,
-        updateStatus: isFromRemote
-            ? UserScriptUpdateStatus.upToDate
-            : editedModel.updateStatus == UserScriptUpdateStatus.noRemote
-                ? UserScriptUpdateStatus.noRemote
-                : UserScriptUpdateStatus.localModified);
+          name: name,
+          time: time,
+          source: source,
+          manuallyEdited: manuallyEdited,
+          customApiKey: customApiKey ?? "",
+          customApiKeyCandidate: customApiKeyCandidate ?? false,
+          matches: matches,
+          updateStatus: () {
+            // If the script comes from remote
+            if (isFromRemote) return UserScriptUpdateStatus.upToDate;
+            // If the previous status was noRemote, keep it
+            if (editedModel.updateStatus == UserScriptUpdateStatus.noRemote) return UserScriptUpdateStatus.noRemote;
+            // If previous status was upToDate and the script has NOT been edited, keep as upToDate
+            // so that it doesn't show as localModified when we just load an API key, for example,
+            // or just open/close the script without editing it at all
+            if (editedModel.updateStatus == UserScriptUpdateStatus.upToDate && !manuallyEdited) {
+              return UserScriptUpdateStatus.upToDate;
+            }
+            // Otherwise... localModified
+            return UserScriptUpdateStatus.localModified;
+          }(),
+        );
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
     return couldParseHeader;
@@ -275,7 +296,7 @@ class UserScriptsProvider extends ChangeNotifier {
           decodedModel.source,
           enabled: defaultToDisabled ? false : decodedModel.enabled,
           version: decodedModel.version,
-          edited: decodedModel.edited,
+          manuallyEdited: decodedModel.manuallyEdited,
           allScriptFirstLoad: true,
           isExample: decodedModel.isExample,
           updateStatus: decodedModel.updateStatus,
@@ -290,12 +311,14 @@ class UserScriptsProvider extends ChangeNotifier {
         logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
+
     _sort();
     notifyListeners();
     _saveUserScriptsListSharedPrefs();
   }
 
   void _saveUserScriptsListSharedPrefs() {
+    _checkForCustomApiKeyCandidates();
     final saveString = json.encode(_userScriptList);
     Prefs().setUserScriptsList(saveString);
   }
@@ -339,11 +362,13 @@ class UserScriptsProvider extends ChangeNotifier {
                 decodedModel.source,
                 enabled: decodedModel.enabled,
                 version: decodedModel.version,
-                edited: decodedModel.edited,
+                manuallyEdited: decodedModel.manuallyEdited,
                 url: decodedModel.url,
                 updateStatus: decodedModel.updateStatus,
                 allScriptFirstLoad: true,
                 isExample: decodedModel.isExample,
+                customApiKey: decodedModel.customApiKey,
+                customApiKeyCandidate: decodedModel.customApiKeyCandidate,
               );
             } catch (e, trace) {
               if (!Platform.isWindows) {
@@ -356,7 +381,6 @@ class UserScriptsProvider extends ChangeNotifier {
         }
 
         _sort();
-        notifyListeners();
         _saveUserScriptsListSharedPrefs();
       }
       notifyListeners();
@@ -370,6 +394,25 @@ class UserScriptsProvider extends ChangeNotifier {
     }
   }
 
+  /// Flag scripts that are candidates for custom API keys
+  _checkForCustomApiKeyCandidates() {
+    try {
+      for (final script in _userScriptList) {
+        if (script.source.contains("###PDA-APIKEY###")) {
+          script.customApiKeyCandidate = true;
+        } else {
+          script.customApiKeyCandidate = false;
+        }
+      }
+    } catch (e, trace) {
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error at checking custom API key candidates. Error: $e. Stack: $trace");
+      }
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+      logToUser("PDA error at checking custom API key candidates. Error: $e. Stack: $trace");
+    }
+  }
+
   Future<int> checkForUpdates() async {
     int updates = 0;
     await Future.wait<void>(_userScriptList.map((s) {
@@ -379,18 +422,21 @@ class UserScriptsProvider extends ChangeNotifier {
       }
       // Ensure script has a valid URL
       if (s.url == null) return Future.value();
+
       s.updateStatus = UserScriptUpdateStatus.updating;
       notifyListeners(); // Notify listeners of the change to show updating, but **do not save this to shared prefs**
+
       return s.checkUpdateStatus().then((updateStatus) {
         if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
-        s.update(updateStatus: updateStatus);
+        s.updateStatus = updateStatus;
         notifyListeners(); // Notify listeners of the change after every row
       }).catchError((e) {
         print(e);
-        s.update(updateStatus: UserScriptUpdateStatus.error);
+        s.updateStatus = UserScriptUpdateStatus.error;
         notifyListeners(); // Notify listeners of the change after every row
       });
     }));
+
     _saveUserScriptsListSharedPrefs(); // Only save once all scripts are updated, so that we don't save the "updating" status
     return updates;
   }
@@ -405,10 +451,29 @@ class UserScriptsProvider extends ChangeNotifier {
     await Future.wait(defaultScriptUrls.map((url) => url == null
         ? Future.value()
         : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
+
+    _checkForCustomApiKeyCandidates();
+
     return (
       added: added,
       failed: failed,
       removed: initialScriptCount - (userScriptList.length - added),
     );
+  }
+
+  Future<({bool success, String? message})> addUserScriptFromURL(String url, {bool? isExample}) async {
+    final response = await UserScriptModel.fromURL(url, isExample: isExample);
+    if (response.success && response.model != null) {
+      if (_userScriptList.any((script) => script.name == response.model!.name)) {
+        return (success: false, message: "Script with same name already exists");
+      }
+      userScriptList.add(response.model!);
+      _sort();
+      _saveUserScriptsListSharedPrefs();
+      notifyListeners();
+      return (success: true, message: null);
+    } else {
+      return (success: false, message: response.message);
+    }
   }
 }

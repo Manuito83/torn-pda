@@ -37,13 +37,14 @@ import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/models/chaining/bars_model.dart' as barsModel;
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -152,7 +153,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
   UserDetailsProvider? _userProv;
-  late ChainStatusProvider _chainProvider;
+  final _chainController = Get.find<ChainStatusController>();
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
   final UserController _u = Get.find<UserController>();
@@ -322,7 +323,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _retrievePendingNotifications();
 
     _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
-    _chainProvider = context.read<ChainStatusProvider>();
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -379,7 +379,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    _chainProvider.statusUpdateSource = "provider";
+    _chainController.statusUpdateSource = "provider";
     _tickerCallApi?.cancel();
     _browserHasClosedSubscription.cancel();
     WidgetsBinding.instance.removeObserver(this);
@@ -5044,8 +5044,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Otherwise, call the API
     dynamic chain;
 
-    if (_chainProvider.chainModel is ChainModel) {
-      chain = _chainProvider.chainModel;
+    if (_chainController.chainModel is ChainModel) {
+      chain = _chainController.chainModel;
     } else {
       chain = await ApiCallsV1.getChainStatus();
     }
@@ -5077,13 +5077,29 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
 
           if (apiResponse.status != null && apiResponse.travel != null) {
-            _chainProvider.statusUpdateSource = "profile";
-            _chainProvider.updatePlayerStatusColor(
-              apiResponse.status!.color!,
-              apiResponse.status!.state!,
-              apiResponse.status!.until!,
-              apiResponse.travel!.timestamp!,
-            );
+            // Signal that we are updating from the profile page
+            _chainController.statusUpdateSource = "profile";
+
+            // We need to adapt Status and Travel models to the BarsModel
+            barsModel.Status chainStatusModel = barsModel.Status()
+              ..color = apiResponse.status!.color
+              ..description = apiResponse.status!.description
+              ..details = apiResponse.status!.details
+              ..state = apiResponse.status!.state
+              ..until = apiResponse.status!.until;
+
+            barsModel.Travel chainTravelModel = barsModel.Travel()
+              ..departed = apiResponse.travel!.departed
+              ..destination = apiResponse.travel!.destination
+              ..departed = apiResponse.travel!.departed
+              ..timeLeft = apiResponse.travel!.timeLeft
+              ..timestamp = apiResponse.travel!.timestamp;
+
+            barsModel.BarsStatusCooldownsModel externalStatusModel = barsModel.BarsStatusCooldownsModel()
+              ..status = chainStatusModel
+              ..travel = chainTravelModel;
+
+            _chainController.getOrSetStatus(externalStatusModel: externalStatusModel);
           }
 
           _checkIfNotificationsAreCurrent();

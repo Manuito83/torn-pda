@@ -22,28 +22,33 @@ enum UserScriptUpdateStatus {
 }
 
 class UserScriptModel {
-  UserScriptModel(
-      {this.enabled = true,
-      this.matches = const ["*"],
-      required this.name,
-      this.version = "0.0.0",
-      this.edited = false,
-      required this.source,
-      this.time = UserScriptTime.end,
-      this.url,
-      this.updateStatus = UserScriptUpdateStatus.noRemote,
-      required this.isExample});
+  UserScriptModel({
+    this.enabled = true,
+    this.matches = const ["*"],
+    required this.name,
+    this.version = "0.0.0",
+    this.manuallyEdited = false,
+    required this.source,
+    this.time = UserScriptTime.end,
+    this.url,
+    this.updateStatus = UserScriptUpdateStatus.noRemote,
+    required this.isExample,
+    this.customApiKey = "",
+    this.customApiKeyCandidate = false,
+  });
 
   bool enabled;
   List<String> matches;
   String name;
   String version;
-  bool edited;
+  bool manuallyEdited;
   String source;
   UserScriptTime time;
   String? url;
   UserScriptUpdateStatus updateStatus;
   bool isExample;
+  String customApiKey;
+  bool customApiKeyCandidate;
 
   factory UserScriptModel.fromJson(Map<String, dynamic> json) {
     // First check if is old model
@@ -66,7 +71,7 @@ class UserScriptModel {
         matches: matches,
         name: name,
         version: version,
-        edited: edited,
+        manuallyEdited: edited,
         source: source,
         time: time,
         url: url,
@@ -79,23 +84,30 @@ class UserScriptModel {
         matches: json["matches"] is List<dynamic> ? json["matches"].cast<String>() : const ["*"],
         name: json["name"],
         version: json["version"],
-        edited: json["edited"],
+        manuallyEdited: json["edited"],
         source: json["source"],
         time: json["time"] == "start" ? UserScriptTime.start : UserScriptTime.end,
         url: json["url"],
         updateStatus: UserScriptUpdateStatus.values.byName(json["updateStatus"] ?? "noRemote"),
         isExample: json["isExample"] ?? (json["exampleCode"] ?? 0) > 0,
+        customApiKey: json["customApiKey"] ?? "",
+        customApiKeyCandidate: json["customApiKeyCandidate"] ?? false,
       );
     }
   }
 
-  factory UserScriptModel.fromMetaMap(Map<String, dynamic> metaMap,
-      {String? url,
-      UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
-      bool? isExample,
-      String? name,
-      String? source,
-      UserScriptTime? time}) {
+  factory UserScriptModel.fromMetaMap(
+    Map<String, dynamic> metaMap, {
+    String? url,
+    UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
+    bool? isExample,
+    String? name,
+    String? source,
+    UserScriptTime? time,
+    String? customApiKey,
+    bool? customApiKeyCandidate,
+    bool? manuallyEdited,
+  }) {
     if (metaMap["name"] == null) {
       throw Exception("No script name found in userscript");
     }
@@ -110,8 +122,11 @@ class UserScriptModel {
       matches: metaMap["matches"] ?? ["*"],
       url: url ?? metaMap["downloadURL"],
       updateStatus: updateStatus,
+      manuallyEdited: manuallyEdited ?? false,
       time: time ?? (metaMap["injectionTime"] == "document-start" ? UserScriptTime.start : UserScriptTime.end),
       isExample: isExample ?? false,
+      customApiKey: customApiKey ?? "",
+      customApiKeyCandidate: customApiKeyCandidate ?? false,
     );
   }
 
@@ -123,8 +138,13 @@ class UserScriptModel {
         return (
           success: true,
           message: "Success",
-          model: UserScriptModel.fromMetaMap(metaMap,
-              url: url, updateStatus: UserScriptUpdateStatus.upToDate, isExample: isExample ?? false),
+          model: UserScriptModel.fromMetaMap(
+            metaMap,
+            url: url,
+            updateStatus: UserScriptUpdateStatus.upToDate,
+            isExample: isExample ?? false,
+            manuallyEdited: false, // Not manually edited if loaded from URL
+          ),
         );
       } else {
         return (
@@ -163,12 +183,14 @@ class UserScriptModel {
         "matches": matches,
         "name": name,
         "version": version,
-        "edited": edited,
+        "edited": manuallyEdited,
         "source": source,
         "url": url,
         "updateStatus": updateStatus.name,
         "isExample": isExample,
         "time": time == UserScriptTime.start ? "start" : "end",
+        "customApiKey": customApiKey,
+        "customApiKeyCandidate": customApiKeyCandidate,
       };
 
   static Map<String, dynamic> parseHeader(String source) {
@@ -215,10 +237,12 @@ class UserScriptModel {
     List<String>? matches,
     String? name,
     String? version,
-    bool? edited,
+    bool? manuallyEdited,
     String? source,
     UserScriptTime? time,
     String? url,
+    String? customApiKey,
+    bool? customApiKeyCandidate,
     required UserScriptUpdateStatus updateStatus,
   }) {
     if (source != null) {
@@ -256,14 +280,20 @@ class UserScriptModel {
     if (version != null) {
       this.version = version;
     }
-    if (edited != null) {
-      this.edited = edited;
+    if (manuallyEdited != null) {
+      this.manuallyEdited = manuallyEdited;
     }
     if (time != null) {
       this.time = time;
     }
     if (url != null) {
       this.url = url;
+    }
+    if (customApiKey != null) {
+      this.customApiKey = customApiKey;
+    }
+    if (customApiKeyCandidate != null) {
+      this.customApiKeyCandidate = customApiKeyCandidate;
     }
     this.updateStatus = updateStatus;
   }

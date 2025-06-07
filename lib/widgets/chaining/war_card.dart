@@ -18,7 +18,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/member_details_page.dart';
-import 'package:torn_pda/providers/chain_status_provider.dart';
+import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
@@ -61,7 +61,7 @@ class WarCardState extends State<WarCard> {
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
   late UserDetailsProvider _userProvider;
-  late ChainStatusProvider _chainProvider;
+  final _chainProvider = Get.find<ChainStatusController>();
   late WebViewProvider _webViewProvider;
 
   Timer? _updatedTicker;
@@ -80,7 +80,6 @@ class WarCardState extends State<WarCard> {
     _updatedTicker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    _chainProvider = Provider.of<ChainStatusProvider>(context, listen: false);
   }
 
   @override
