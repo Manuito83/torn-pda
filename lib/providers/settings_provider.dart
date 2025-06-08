@@ -1200,10 +1200,10 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   bool _iosLiveActivitiesTravelEnabled = true;
-  bool get iosLiveActivitiesTravelEnabled => _iosLiveActivitiesTravelEnabled;
-  set iosLiveActivitiesTravelEnabled(bool value) {
+  bool get iosLiveActivityTravelEnabled => _iosLiveActivitiesTravelEnabled;
+  set iosLiveActivityTravelEnabled(bool value) {
     _iosLiveActivitiesTravelEnabled = value;
-    Prefs().setIosLiveActivitiesTravelEnabled(value);
+    Prefs().setIosLiveActivityTravelEnabled(value);
     notifyListeners();
   }
 
@@ -1442,7 +1442,7 @@ class SettingsProvider extends ChangeNotifier {
     _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
-    _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivitiesTravelEnabled();
+    _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
 
     notifyListeners();
   }

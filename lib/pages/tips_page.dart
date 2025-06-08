@@ -87,9 +87,7 @@ class ComplexExpandableTip extends TipTextBuilder {
 
   @override
   Widget? buildExpandedText() {
-    return _buildExpandedWidgetFn != null
-        ? _buildExpandedWidgetFn!()
-        : const SizedBox(); // Return an empty widget if null
+    return _buildExpandedWidgetFn != null ? _buildExpandedWidgetFn!() : const SizedBox();
   }
 }
 

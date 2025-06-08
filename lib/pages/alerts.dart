@@ -1424,7 +1424,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           child: CheckboxListTile(
             checkColor: Colors.white,
             activeColor: Colors.blueGrey,
-            value: _settingsProvider.iosLiveActivitiesTravelEnabled,
+            value: _settingsProvider.iosLiveActivityTravelEnabled,
             title: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1435,7 +1435,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
             onChanged: (enabled) async {
               if (enabled == null) return;
               setState(() {
-                _settingsProvider.iosLiveActivitiesTravelEnabled = enabled;
+                _settingsProvider.iosLiveActivityTravelEnabled = enabled;
               });
 
               if (enabled) {

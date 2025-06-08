@@ -5,6 +5,7 @@ import 'dart:convert';
 // Package imports:
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class Prefs {
@@ -453,7 +454,7 @@ class Prefs {
   final String _kShowWikiInDrawer = "pda_showWikiInDrawer";
 
   // Live Activities
-  final String _kIosLiveActivitiesTravelEnabled = "pda_iosLiveActivitiesTravelEnabled";
+  final String _kIosLiveActivityTravelEnabled = "pda_iosLiveActivityTravelEnabled";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -4271,13 +4272,13 @@ class Prefs {
   /// Methods for Live Activities
   /// -----------------------------------
 
-  Future<bool> getIosLiveActivitiesTravelEnabled() async {
+  Future<bool> getIosLiveActivityTravelEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kIosLiveActivitiesTravelEnabled) ?? false;
+    return prefs.getBool(_kIosLiveActivityTravelEnabled) ?? kSdkIos >= 16.2 ? true : false;
   }
 
-  Future<bool> setIosLiveActivitiesTravelEnabled(bool value) async {
+  Future<bool> setIosLiveActivityTravelEnabled(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kIosLiveActivitiesTravelEnabled, value);
+    return prefs.setBool(_kIosLiveActivityTravelEnabled, value);
   }
 }

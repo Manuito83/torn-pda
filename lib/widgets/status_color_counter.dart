@@ -75,7 +75,7 @@ class StatusColorCounterState extends State<StatusColorCounter> {
         }
 
         if (_formattedUntil == null) {
-          return Container(); // O SizedBox.shrink() si prefieres que no ocupe espacio
+          return Container();
         }
 
         return SizedBox(
@@ -105,12 +105,19 @@ class StatusColorCounterState extends State<StatusColorCounter> {
 
   void _startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
       // Make sure that we are updating from the provider whenever the browser is open
       String currentSource = Get.find<ChainStatusController>().statusUpdateSource;
       bool browserOnTop = context.read<WebViewProvider>().browserShowInForeground;
       if (browserOnTop && currentSource != "provider") {
         Get.find<ChainStatusController>().statusUpdateSource = "provider";
       }
+
+      bool wasBlinking = _newKnownTimestamp;
 
       // Creates a count so that we can blink the condition (e.g.: "HOSP") whenever it's encountered
       if (_newKnownTimestamp && _newTimeStampCount < 5) {
@@ -121,72 +128,70 @@ class StatusColorCounterState extends State<StatusColorCounter> {
       }
 
       // Updates the timer string in the widget
-      _updateFormattedUntil(_chainStatusProvider.statusColorUntil); // Usar la instancia _chainStatusProvider
+      _updateFormattedUntil(_chainStatusProvider.statusColorUntil);
+      if (mounted && (wasBlinking || _newKnownTimestamp)) {
+        setState(() {
+          // Update for blinks
+        });
+      }
     });
   }
 
   void _updateFormattedUntil(int colorUntil) {
     // Trigger new timestamp blinking letters
     if (colorUntil != _chainStatusProvider.lastWidgetKnownTimeStamp) {
-      // Usar la instancia _chainStatusProvider
       log("New timestamp for status color widget!");
       _newKnownTimestamp = true;
       _newTimeStampCount = 0;
-      _chainStatusProvider.lastWidgetKnownTimeStamp = colorUntil; // Usar la instancia _chainStatusProvider
+      _chainStatusProvider.lastWidgetKnownTimeStamp = colorUntil;
     }
 
     final int currentTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
     final int untilSeconds = colorUntil - currentTime;
 
-    // If time has finished, show "END" for one minute longer
+    String? newFormattedValue;
+
+    // Timer has recently expired (within the last 60 seconds)
     if (untilSeconds <= 0 && untilSeconds > -60) {
-      if (mounted) {
-        setState(() {
-          _formattedUntil = "END";
-        });
-      }
-      return;
-    } else if (untilSeconds < -60) {
-      if (mounted) {
-        setState(() {
-          _formattedUntil = null;
-        });
-      }
-
-      // Ensure we are not just returning an empty widget, but also hiding the widget (to ensure proper padding
-      // measurement) even if no API calls have been performed from the Provider since then
-      // (e.g.: if the app was in the background)
+      newFormattedValue = "END";
+    }
+    // Timer expired more than 60 seconds ago
+    else if (untilSeconds <= -60) {
+      newFormattedValue = null;
       if (_chainStatusProvider.statusColorIsShown) {
-        // Usar la instancia _chainStatusProvider
-        _chainStatusProvider.statusColorIsShown = false; // Usar la instancia _chainStatusProvider
+        _chainStatusProvider.statusColorIsShown = false;
       }
-
-      return;
+    }
+    // Timer is still active (untilSeconds > 0)
+    else {
+      final double days = untilSeconds / (24 * 3600);
+      // Remaining time is one day or more
+      // Formats "2d" or "1.5d
+      if (days >= 1) {
+        final formattedDays = days.toStringAsFixed(1);
+        final formattedDaysWithoutDecimal =
+            formattedDays.endsWith('.0') ? formattedDays.substring(0, formattedDays.length - 2) : formattedDays;
+        newFormattedValue = "${formattedDaysWithoutDecimal}d";
+      }
+      // Remaining time is less than one hour
+      // Formats as "23:45"
+      else if (untilSeconds <= 3599) {
+        final int minutes = untilSeconds ~/ 60;
+        final int seconds = untilSeconds % 60;
+        newFormattedValue = "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+      }
+      // Remaining time is between one hour and less than one day
+      // Formats as "02h30"
+      else {
+        final int hours = untilSeconds ~/ 3600;
+        final int minutes = (untilSeconds % 3600) ~/ 60;
+        newFormattedValue = "${hours.toString().padLeft(2, '0')}h${minutes.toString().padLeft(2, '0')}";
+      }
     }
 
-    final double days = untilSeconds / (24 * 3600);
-    String newFormattedUntil;
-
-    if (days >= 1) {
-      final formattedDays = days.toStringAsFixed(1);
-      final formattedDaysWithoutDecimal =
-          formattedDays.endsWith('.0') ? formattedDays.substring(0, formattedDays.length - 2) : formattedDays;
-      newFormattedUntil = "${formattedDaysWithoutDecimal}d";
-    } else if (untilSeconds <= 3599) {
-      // If less than or equal to 59 minutes and 59 seconds remaining, formar as mm:ss (e.g.: 23:45)
-      final int minutes = untilSeconds ~/ 60;
-      final int seconds = untilSeconds % 60;
-      newFormattedUntil = "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
-    } else {
-      // For durations above 59 minutes and 59 seconds, format as HHhMM (e.g.: 23h22)
-      final int hours = untilSeconds ~/ 3600;
-      final int minutes = (untilSeconds % 3600) ~/ 60;
-      newFormattedUntil = "${hours.toString().padLeft(2, '0')}h${minutes.toString().padLeft(2, '0')}";
-    }
-
-    if (mounted && _formattedUntil != newFormattedUntil) {
+    if (mounted && _formattedUntil != newFormattedValue) {
       setState(() {
-        _formattedUntil = newFormattedUntil;
+        _formattedUntil = newFormattedValue;
       });
     }
   }

@@ -1,9 +1,13 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
+import 'package:torn_pda/main.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 
 class ChangeLogItem {
   String version = "";
@@ -28,6 +32,10 @@ class ComplexFeature {
 }
 
 class ChangeLog extends StatefulWidget {
+  final bool autoTriggered;
+
+  const ChangeLog({super.key, this.autoTriggered = true});
+
   @override
   ChangeLogState createState() => ChangeLogState();
 }
@@ -36,26 +44,68 @@ class ChangeLogState extends State<ChangeLog> {
   final _changeLogItems = <ChangeLogItem, List<dynamic>>{};
   final _scrollController = ScrollController();
 
+  bool _showAllChanges = false;
+  static const int _initialItemsToShow = 3;
+
+  bool _isCloseButtonEnabled = false;
+  int _countdownSeconds = 3;
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
-    _createItems();
+    _initializeItems();
+
+    if (widget.autoTriggered) {
+      _startCountdown();
+    } else {
+      _isCloseButtonEnabled = true;
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _timer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    _initializeItems();
+  }
+
+  void _startCountdown() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_countdownSeconds > 0) {
+        setState(() {
+          _countdownSeconds--;
+        });
+      } else {
+        setState(() {
+          _isCloseButtonEnabled = true;
+        });
+        _timer?.cancel();
+      }
+    });
+  }
+
+  void _initializeItems() {
+    // Clear in case we reassemble
+    _changeLogItems.clear();
+    _createItems();
   }
 
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.1 - Build 542 - 06/06/2025
+    // v3.8.2 - Build 543 - 07/06/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.8.1'
+        ..version = 'Torn PDA v3.8.2'
         ..date = '10 JUN 2025'
+        ..infoString = 'Hotfix for status color counter widget'
         ..features = [
           if (Platform.isIOS)
             ComplexFeature(
@@ -67,6 +117,30 @@ class ChangeLogState extends State<ChangeLog> {
                   "IMPORTANT: for the time being, live activities will only activate if travel starts or takes place "
                   "at some point while with Torn PDA in the foreground.\n\n"
                   "Please note that this is a beta feature and may not work as expected in all cases (any feedback is appreciated).",
+            ),
+          if (Platform.isIOS && kSdkIos >= 16.2)
+            Consumer<SettingsProvider>(
+              builder: (context, settings, child) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 45.0, right: 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Enabled (default)",
+                        style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                      ),
+                      Switch(
+                        value: settings.iosLiveActivityTravelEnabled,
+                        onChanged: (bool value) {
+                          settings.iosLiveActivityTravelEnabled = value;
+                        },
+                        activeColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           "Userscripts now support individual custom API keys",
           "Global ranked war list is now searchable and can be sorted",
@@ -2310,15 +2384,21 @@ class ChangeLogState extends State<ChangeLog> {
               Padding(
                 padding: const EdgeInsets.all(5),
                 child: ElevatedButton(
-                  child: const Text(
-                    'Great!',
-                    style: TextStyle(
+                  onPressed: _isCloseButtonEnabled
+                      ? () {
+                          Navigator.of(context).pop();
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _isCloseButtonEnabled ? null : Colors.grey.shade300,
+                    foregroundColor: _isCloseButtonEnabled ? null : Colors.grey.shade500,
+                  ),
+                  child: Text(
+                    _isCloseButtonEnabled ? 'Great!' : 'Great! ($_countdownSeconds)',
+                    style: const TextStyle(
                       fontSize: 15,
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
                 ),
               ),
             ],
@@ -2340,96 +2420,132 @@ class ChangeLogState extends State<ChangeLog> {
     );
 
     for (final entry in _changeLogItems.entries) {
-      if (itemNumber > 1) {
-        itemList.add(
-          const Padding(
-            padding: EdgeInsets.symmetric(
-              vertical: 24,
-              horizontal: 50,
+      if (_showAllChanges || itemNumber <= _initialItemsToShow) {
+        if (itemNumber > 1) {
+          itemList.add(
+            const Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: 24,
+                horizontal: 50,
+              ),
+              child: Divider(
+                thickness: 1,
+                color: Colors.blueGrey,
+              ),
             ),
-            child: Divider(
-              thickness: 1,
-              color: Colors.blueGrey,
+          );
+        }
+        itemList.add(
+          Padding(
+            padding: const EdgeInsets.only(),
+            child: Text(
+              entry.key.version,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         );
-      }
-      itemList.add(
-        Padding(
-          padding: const EdgeInsets.only(),
-          child: Text(
-            entry.key.version,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      );
-      itemList.add(
-        Padding(
-          padding: const EdgeInsets.only(bottom: 15),
-          child: Text(
-            entry.key.date,
-            style: const TextStyle(
-              fontSize: 11,
-            ),
-          ),
-        ),
-      );
-
-      // Info icon, if there is one
-      if (entry.key.infoString.isNotEmpty) {
         itemList.add(
           Padding(
-            padding: const EdgeInsets.fromLTRB(7, 10, 10, 10),
-            child: Row(
-              children: <Widget>[
-                const Icon(
-                  Icons.info_outline,
-                  color: Colors.blue,
-                ),
-                const Padding(padding: EdgeInsets.only(right: 12)),
-                Flexible(
-                  child: Text(
-                    entry.key.infoString,
+            padding: const EdgeInsets.only(bottom: 15),
+            child: Text(
+              entry.key.date,
+              style: const TextStyle(
+                fontSize: 11,
+              ),
+            ),
+          ),
+        );
+
+        // Info icon, if there is one
+        if (entry.key.infoString.isNotEmpty) {
+          itemList.add(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(7, 10, 10, 10),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.info_outline,
+                    color: Colors.blue,
                   ),
-                ),
-              ],
+                  const Padding(padding: EdgeInsets.only(right: 12)),
+                  Flexible(
+                    child: Text(
+                      entry.key.infoString,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      }
+          );
+        }
 
-      // All other lines
-      for (final feat in entry.value) {
-        String featDescription = feat is ComplexFeature ? feat.text : feat;
-        itemList.add(
-          Padding(
-            padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
-            child: Row(
-              children: <Widget>[
-                _pdaIcon(),
-                const Padding(padding: EdgeInsets.only(right: 12)),
-                Flexible(
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          featDescription,
+        // All other lines
+        for (final feat in entry.value) {
+          // Add other widget (such as enable/disable)
+          if (feat is Widget) {
+            itemList.add(feat);
+            continue;
+          }
+
+          String featDescription = feat is ComplexFeature ? feat.text : feat;
+          itemList.add(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
+              child: Row(
+                children: <Widget>[
+                  _pdaIcon(),
+                  const Padding(padding: EdgeInsets.only(right: 12)),
+                  Flexible(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            featDescription,
+                          ),
                         ),
-                      ),
-                      if (feat is ComplexFeature && feat.explanation != null) _complexFeatureToast(feat),
-                    ],
+                        if (feat is ComplexFeature && feat.explanation != null) _complexFeatureToast(feat),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        );
+          );
+        }
+        itemNumber++;
       }
-      itemNumber++;
+    }
+
+    if (!_showAllChanges && _changeLogItems.length > _initialItemsToShow) {
+      itemList.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 24.0),
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 50.0),
+                child: Divider(thickness: 1, color: Colors.blueGrey),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _showAllChanges = true;
+                  });
+                },
+                child: const Text(
+                  'Show earlier changes...',
+                  style: TextStyle(color: Colors.blue, fontSize: 15),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     return itemList;
   }

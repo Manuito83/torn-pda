@@ -744,9 +744,16 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                                     ),
                                             ),
                                             if (statusP.statusColorIsShown && statusP.statusColorWidgetEnabled)
-                                              const Padding(
-                                                padding: EdgeInsets.only(top: 22.0),
-                                                child: StatusColorCounter(),
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 22.0),
+                                                child: GetBuilder<ChainStatusController>(
+                                                  builder: (provider) {
+                                                    if (provider.statusColorWidgetEnabled) {
+                                                      return const StatusColorCounter();
+                                                    }
+                                                    return const SizedBox.shrink();
+                                                  },
+                                                ),
                                               ),
                                           ],
                                         ),

@@ -2535,11 +2535,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   _initialiseLiveActivitiesBridgeService() async {
     _preferencesCompleter.future.whenComplete(() async {
       if (!Platform.isIOS) return;
-      if (!_settingsProvider.iosLiveActivitiesTravelEnabled) return;
+      if (!_settingsProvider.iosLiveActivityTravelEnabled) return;
 
       if (kSdkIos < 16.2) {
         // Regardless of user settings, disable Live Activities on iOS versions below 16.2
-        _settingsProvider.iosLiveActivitiesTravelEnabled = false;
+        _settingsProvider.iosLiveActivityTravelEnabled = false;
         return;
       }
 
