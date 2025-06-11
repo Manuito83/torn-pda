@@ -20,6 +20,8 @@ import { getUsersStat } from "./torn_api";
 const privateKey = require("../key/torn_key");
 import fetch from "node-fetch";
 
+import { handleTravelLiveActivity } from "./la_travel_checks";
+
 const runtimeOpts512 = {
   timeoutSeconds: 120,
   memory: "512MB" as "512MB",
@@ -70,15 +72,33 @@ export const alertsGroup = {
         const promises: Promise<any>[] = [];
 
         // Get the list of subscribers
-        const response = await admin
+        const alertsUsersQuery = admin
           .firestore()
           .collection("players")
           .where("active", "==", true)
-          .where("alertsEnabled", "==", true)
           .where("platform", "==", "ios")
+          .where("alertsEnabled", "==", true)
           .get();
 
-        const subscribers = response.docs.map((d) => d.data());
+        // Live activities only
+        const laOnlyUsersQuery = admin
+          .firestore()
+          .collection("players")
+          .where("active", "==", true)
+          .where("platform", "==", "ios")
+          .where("alertsEnabled", "==", false)
+          .where("la_travel_push_token", ">", "")
+          .get();
+
+        const [alertsUsersSnapshot, laOnlyUsersSnapshot] = await Promise.all([
+          alertsUsersQuery,
+          laOnlyUsersQuery,
+        ]);
+
+        const alertsUsers = alertsUsersSnapshot.docs.map((d) => d.data());
+        const laOnlyUsers = laOnlyUsersSnapshot.docs.map((d) => d.data());
+
+        const subscribers = [...alertsUsers, ...laOnlyUsers];
         let iOSBlocks = 0;
         for (const key of Array.from(subscribers.keys())) {
           promises.push(
@@ -98,7 +118,7 @@ export const alertsGroup = {
           const millisAfterFinish = Date.now();
           const difference = (millisAfterFinish - millisAtStart) / 1000;
           functions.logger.info(
-            `iOS: ${subscribers.length}. Blocks: ${iOSBlocks}. Time: ${difference}`
+            `Processing ${subscribers.length} iOS users (${alertsUsers.length} with alerts, ${laOnlyUsers.length} with LA only). Time: ${difference}`
           );
           return value;
         });
@@ -255,70 +275,72 @@ export const alertsGroup = {
 //****************************//
 //******* TEST EXPORT* *******//
 //****************************//
+//  See index.ts for details  //
+//****************************//
 export const alertsTestGroup = {
-  checkManuito: functions
+  runForUser: functions
     .region("us-east4")
     .runWith(runtimeOpts512)
-    .pubsub.schedule("*/3 * * * *")
-    .onRun(async () => {
-      const promisesGlobal: Promise<any>[] = [];
+    .https.onCall(async (data, context) => {
+      const userName = data.userName;
 
+      if (!userName) {
+        functions.logger.error("Error: no username");
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "No username"
+        );
+      }
+
+      functions.logger.info(`Test check: ${userName}`);
       const millisAtStart = Date.now();
 
-      // Get stock market
       const stockMarket = await getStockMarket(privateKey.tornKey);
-
-      // Get existing stocks from Realtime DB
-      const firebaseAdmin = require("firebase-admin");
-      const db = firebaseAdmin.database();
+      const db = admin.database();
       const stocksDB = db.ref("stocks/restocks");
       const foreignStocks = {};
-      await stocksDB.once("value", function (snapshot) {
-        snapshot.forEach(function (childSnapshot) {
+      await stocksDB.once("value", (snapshot) => {
+        snapshot.forEach((childSnapshot) => {
           foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
         });
       });
 
-      async function checkManuito() {
-        const promises: Promise<any>[] = [];
+      const response = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("name", "==", userName)
+        .get();
 
-        // Get the list of subscribers
-        const response = await admin
-          .firestore()
-          .collection("players")
-          .where("active", "==", true)
-          .where("alertsEnabled", "==", true)
-          .where("name", "==", "Manuito")
-          .get();
+      const subscribers = response.docs.map((d) => d.data());
 
-        const subscribers = response.docs.map((d) => d.data());
-        let manuitoBlocks = 0;
-        for (const key of Array.from(subscribers.keys())) {
-          promises.push(
-            sendNotificationForProfile(
-              subscribers[key],
-              foreignStocks,
-              stockMarket
-            ).then(function (value) {
-              if (value === "ip-block") {
-                manuitoBlocks++;
-              }
-            })
-          );
-        }
-
-        return Promise.all(promises).then(function (value) {
-          const millisAfterFinish = Date.now();
-          const difference = (millisAfterFinish - millisAtStart) / 1000;
-          functions.logger.info(
-            `Manuito: ${subscribers.length}. Blocks: ${manuitoBlocks}. Time: ${difference}`
-          );
-          return value;
-        });
+      if (subscribers.length === 0) {
+        const message = `No player found with name: ${userName}`;
+        functions.logger.warn(message);
+        return { success: false, message: message };
       }
 
-      promisesGlobal.push(checkManuito());
-      await Promise.all(promisesGlobal);
+      let blocks = 0;
+      const promises: Promise<any>[] = [];
+      for (const subscriber of subscribers) {
+        promises.push(
+          sendNotificationForProfile(subscriber, foreignStocks, stockMarket)
+            .then((value) => {
+              if (value === "ip-block") {
+                blocks++;
+              }
+            })
+        );
+      }
+
+      await Promise.all(promises);
+
+      const millisAfterFinish = Date.now();
+      const difference = (millisAfterFinish - millisAtStart) / 1000;
+      const successMessage = `Test for '${userName}' completed. Users: ${subscribers.length}. Blocked: ${blocks}. Time: ${difference}s`;
+      functions.logger.info(successMessage);
+
+      return { success: true, message: successMessage };
     }),
 };
 
@@ -333,6 +355,11 @@ async function sendNotificationForProfile(
     const userStats: any = await getUsersStat(subscriber.apiKey);
 
     if (!userStats.error) {
+      // Live Activities
+      if (subscriber.la_travel_push_token) {
+        promises.push(handleTravelLiveActivity(userStats, subscriber));
+      }
+
       if (subscriber.energyNotification)
         promises.push(sendEnergyNotification(userStats, subscriber));
       if (subscriber.nerveNotification)

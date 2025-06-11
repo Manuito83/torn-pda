@@ -242,7 +242,7 @@ class LiveActivityTravelController extends GetxController {
   // Does not end the native Live Activity, just resets the internal state
   void _resetLAStateInternal({bool calledFromDeactivate = false}) {
     if (!calledFromDeactivate) {
-      log("TravelLiveActivityHandler: Internal state reset (native LA might still exist).");
+      log("TravelLiveActivityHandler: Internal state reset (native LA might still exist)");
     }
     _isLALogicallyActive = false;
     _currentLAArrivalTimestamp = 0;

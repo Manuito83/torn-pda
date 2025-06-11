@@ -20,7 +20,7 @@ class PeriodicExecutionController extends GetxController {
     bool overwrite = false,
   }) async {
     try {
-// If overwrite is enabled, remove the existing task
+      // If overwrite is enabled, remove the existing task
       if (_tasks.containsKey(taskName) && overwrite) {
         await cancelTask(taskName); // Remove the existing task
       }

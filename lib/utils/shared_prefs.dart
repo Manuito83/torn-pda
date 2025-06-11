@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class Prefs {
@@ -455,6 +456,7 @@ class Prefs {
 
   // Live Activities
   final String _kIosLiveActivityTravelEnabled = "pda_iosLiveActivityTravelEnabled";
+  final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
 
   /// SharedPreferences can be used on background events handlers.
   /// The problem is that the background handler run in a different isolate so, when we try to
@@ -4271,6 +4273,34 @@ class Prefs {
   /// -----------------------------------
   /// Methods for Live Activities
   /// -----------------------------------
+
+  String _getLaPushTokenKey(LiveActivityType activityType) {
+    switch (activityType) {
+      case LiveActivityType.travel:
+        return _kIosLiveActivityTravelPushToken;
+    }
+  }
+
+  Future<void> setLaPushToken({
+    required LiveActivityType activityType,
+    required String? token,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _getLaPushTokenKey(activityType);
+    if (token == null) {
+      await prefs.remove(key);
+    } else {
+      await prefs.setString(key, token);
+    }
+  }
+
+  Future<String?> getLaPushToken({
+    required LiveActivityType activityType,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = _getLaPushTokenKey(activityType);
+    return prefs.getString(key);
+  }
 
   Future<bool> getIosLiveActivityTravelEnabled() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();

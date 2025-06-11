@@ -272,8 +272,34 @@ class LiveActivityManager {
     }
   }
 
-  // MARK: - Private Helpers
+  func getPushToStartToken(for activityType: String) -> String? {
+    guard #available(iOS 17.2, *) else {
+      NSLog("[LA_DEBUG_SWIFT] getPushToStartToken: iOS < 17.2")
+      return nil
+    }
 
+    var tokenData: Data?
+
+    switch activityType {
+    case "travel":
+      tokenData = Activity<TravelActivityAttributes>.pushToStartToken
+    default:
+      NSLog("Unsupported activity type for push-to-start: \(activityType)")
+      return nil
+    }
+
+    guard let data = tokenData else {
+      NSLog("[LA_DEBUG_SWIFT] pushToStartToken for type '\(activityType)' is nil.")
+      return nil
+    }
+
+    let tokenString = data.map { String(format: "%02x", $0) }.joined()
+    NSLog(
+      "[LA_DEBUG_SWIFT] Returning token for type '\(activityType)': \(tokenString.prefix(10))...")
+    return tokenString
+  }
+
+  // MARK: - Private Helpers
   func isAnyTravelActivityActive() -> Bool {
     return !Activity<TravelActivityAttributes>.activities.isEmpty
   }

@@ -171,7 +171,8 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
                           FirebaseUserModel? fb =
                               await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
                           widget.reassignFirebaseUserModelCallback(fb);
-                          await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+                          await FirestoreHelper()
+                              .uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
 
                           if (Platform.isAndroid) {
                             final alertsVibration = await Prefs().getVibrationPattern();

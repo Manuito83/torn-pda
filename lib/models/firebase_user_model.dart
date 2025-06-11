@@ -37,6 +37,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool? retalsNotification = false;
   bool? retalsNotificationDonor = false;
   bool? forumsSubscription = false;
+  String? laTravelPushToken;
 
   FirebaseUserModel();
 
@@ -89,6 +90,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "retalsNotification": retalsNotification,
       "retalsNotificationDonor": retalsNotificationDonor,
       "forumsSubscriptionsNotification": forumsSubscription,
+      "la_travel_push_token": laTravelPushToken,
     };
   }
 
@@ -131,6 +133,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..factionAssistMessage = data["factionAssistMessage"] ?? true
       ..retalsNotification = data["retalsNotification"] ?? false
       ..retalsNotificationDonor = data["retalsNotificationDonor"] ?? false
-      ..forumsSubscription = data["forumsSubscriptionsNotification"] ?? false;
+      ..forumsSubscription = data["forumsSubscriptionsNotification"] ?? false
+      ..laTravelPushToken = data["la_travel_push_token"];
   }
 }
