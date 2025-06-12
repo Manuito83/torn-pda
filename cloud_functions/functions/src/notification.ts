@@ -18,6 +18,10 @@ interface NotificationParams {
   vibration: string;
   sound?: string;
 }
+interface NotificationCheckResult {
+  notification?: NotificationParams; // Optional: If a notification should be sent
+  firestoreUpdate?: { [key: string]: any }; // Optional: Fields to update in Firestore
+}
 
 export async function sendTestNotification(userStats: any, subscriber: any) {
   const promises: Promise<any>[] = [];
@@ -956,8 +960,8 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
 
           if (filters.includes('rental')) {
             if (newEventsDescriptions[i].includes('extension offer on the rental of your') ||
-              newEventsDescriptions[i].includes('finished renting your') ||
-              newEventsDescriptions[i].includes('started renting your')) {
+              newEventsDescriptions[i].includes('finished renting') ||
+              newEventsDescriptions[i].includes('started renting')) {
               newEventsDescriptions.splice(i--, 1);
               newGeneralEvents--;
               continue;
