@@ -18,10 +18,6 @@ interface NotificationParams {
   vibration: string;
   sound?: string;
 }
-interface NotificationCheckResult {
-  notification?: NotificationParams; // Optional: If a notification should be sent
-  firestoreUpdate?: { [key: string]: any }; // Optional: Fields to update in Firestore
-}
 
 export async function sendTestNotification(userStats: any, subscriber: any) {
   const promises: Promise<any>[] = [];
