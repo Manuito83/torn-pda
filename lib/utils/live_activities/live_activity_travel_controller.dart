@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 
 class LiveActivityTravelController extends GetxController {
@@ -236,6 +237,10 @@ class LiveActivityTravelController extends GetxController {
       _isLALogicallyActive = true;
       _currentLAArrivalTimestamp = arrivalTimestamp;
       _lastProcessedTravelIdentifier = travelId;
+
+      // Sync with Firebase so that a Cloud Function won't start for this LA
+      log("Syncing arrival timestamp $arrivalTimestamp with server...");
+      FirestoreHelper().syncLiveActivityTimestamp(arrivalTimestamp);
     }
   }
 

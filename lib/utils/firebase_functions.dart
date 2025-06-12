@@ -294,4 +294,26 @@ class _FirebaseFunctions {
       log("Error calling registerPushToStartToken: $e");
     }
   }
+
+  Future<void> syncLiveActivityTimestamp({
+    required int arrivalTimestamp,
+  }) async {
+    if (!Platform.isIOS) return;
+
+    final String functionName = 'liveActivities-syncActiveLATimestamp';
+
+    Map<String, dynamic> data = {
+      'arrivalTimestamp': arrivalTimestamp,
+    };
+
+    try {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
+      await callable.call(data);
+      log("Successfully synced LA timestamp ($arrivalTimestamp) with server");
+    } catch (e) {
+      log("Error syncing LA timestamp with server: $e");
+    }
+  }
 }

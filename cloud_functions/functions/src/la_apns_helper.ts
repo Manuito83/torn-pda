@@ -11,10 +11,10 @@ const options = {
     keyId: apnsConfig.keyId,
     teamId: apnsConfig.teamId,
   },
-  // TODO: if testing locally with debug device > false!
+  // TODO: if testing locally with debug device > false x 2!
   // but DO NOT DEPLOY AS FALSE!
-  production: true,
-  rejectUnauthorized: true,
+  production: false,
+  rejectUnauthorized: false,
 };
 
 const apnProvider = new apn.Provider(options);

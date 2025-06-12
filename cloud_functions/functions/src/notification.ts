@@ -19,6 +19,30 @@ interface NotificationParams {
   sound?: string;
 }
 
+export async function sendTestNotification(userStats: any, subscriber: any) {
+  const promises: Promise<any>[] = [];
+
+  try {
+
+    promises.push(
+      sendNotificationToUser({
+        token: subscriber.token,
+        title: "Test title",
+        body: "Test body",
+        icon: "notification_energy",
+        color: "#00FF00",
+        channelId: "Alerts energy",
+        vibration: subscriber.vibration,
+        sound: "aircraft_seatbelt.aiff"
+      })
+    );
+  } catch (error) {
+    functions.logger.warn(`ERROR TEST \n${subscriber.uid} \n${error}`);
+  }
+
+  return Promise.all(promises);
+}
+
 export async function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
   const promises: Promise<any>[] = [];

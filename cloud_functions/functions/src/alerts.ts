@@ -1,6 +1,7 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {
+  sendTestNotification,
   sendEnergyNotification,
   sendNerveNotification,
   sendLifeNotification,
@@ -283,6 +284,8 @@ export const alertsTestGroup = {
     .runWith(runtimeOpts512)
     .https.onCall(async (data, context) => {
       const userName = data.userName;
+      const forceTest = data.forceTest || false;
+
 
       if (!userName) {
         functions.logger.error("Error: no username");
@@ -324,7 +327,7 @@ export const alertsTestGroup = {
       const promises: Promise<any>[] = [];
       for (const subscriber of subscribers) {
         promises.push(
-          sendNotificationForProfile(subscriber, foreignStocks, stockMarket)
+          sendNotificationForProfile(subscriber, foreignStocks, stockMarket, forceTest)
             .then((value) => {
               if (value === "ip-block") {
                 blocks++;
@@ -347,7 +350,8 @@ export const alertsTestGroup = {
 async function sendNotificationForProfile(
   subscriber: any,
   foreignStocks: any,
-  stockMarket: any
+  stockMarket: any,
+  forceTest: boolean = false,
 ): Promise<any> {
   const promises: Promise<any>[] = [];
 
@@ -355,6 +359,12 @@ async function sendNotificationForProfile(
     const userStats: any = await getUsersStat(subscriber.apiKey);
 
     if (!userStats.error) {
+
+      // Force test regarless of notification
+      if (forceTest) {
+        promises.push(sendTestNotification(userStats, subscriber));
+      }
+
       // Live Activities
       if (subscriber.la_travel_push_token) {
         promises.push(handleTravelLiveActivity(userStats, subscriber));

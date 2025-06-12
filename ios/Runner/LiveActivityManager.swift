@@ -38,11 +38,17 @@ class LiveActivityManager {
 
   // MARK: - START ACTIVITY
   func startTravelActivity(
-    currentDestinationDisplayName: String, currentDestinationFlagAsset: String,
-    originDisplayName: String, originFlagAsset: String,
-    arrivalTimeTimestamp: Int, departureTimeTimestamp: Int, currentServerTimestamp: Int,
-    vehicleAssetName: String, earliestReturnTimestamp: Int?,
-    activityStateTitle: String, showProgressBar: Bool,
+    currentDestinationDisplayName: String,
+    currentDestinationFlagAsset: String,
+    originDisplayName: String,
+    originFlagAsset: String,
+    arrivalTimeTimestamp: Int,
+    departureTimeTimestamp: Int,
+    currentServerTimestamp: Int,
+    vehicleAssetName: String,
+    earliestReturnTimestamp: Int?,
+    activityStateTitle: String,
+    showProgressBar: Bool,
     hasArrived: Bool,
     defaultStaleOffsetEnRoute: TimeInterval = 2 * 60,
     staleOffsetArrived: TimeInterval = 10 * 60
@@ -55,7 +61,36 @@ class LiveActivityManager {
     // If an activity is already managed by this instance, end it before starting a new one.
     // This ensures we only manage one travel activity at a time.
     if let existingActivity = currentActivity {
-      await endActivityInternal(activity: existingActivity, isBeingReplaced: true)
+      // Compare with the arrivalTimestamp, which is constant
+      let existingArrivalTimestamp = existingActivity.content.state.arrivalTimeTimestamp
+
+      if existingArrivalTimestamp == arrivalTimeTimestamp {
+        NSLog(
+          "[LA_DEBUG_SWIFT] LiveActivityManager: An existing LA for the same trip was found. Updating it (instead of replacing)."
+        )
+        // Pass the same parameters
+        try await self.updateTravelActivity(
+          currentDestinationDisplayName: currentDestinationDisplayName,
+          currentDestinationFlagAsset: currentDestinationFlagAsset,
+          originDisplayName: originDisplayName,
+          originFlagAsset: originFlagAsset,
+          arrivalTimeTimestamp: arrivalTimeTimestamp,
+          departureTimeTimestamp: departureTimeTimestamp,
+          currentServerTimestamp: currentServerTimestamp,
+          vehicleAssetName: vehicleAssetName,
+          earliestReturnTimestamp: earliestReturnTimestamp,
+          activityStateTitle: activityStateTitle,
+          showProgressBar: showProgressBar,
+          hasArrived: hasArrived
+        )
+        return
+      } else {
+        // If it's a different travel, replace the live activity
+        NSLog(
+          "[LA_DEBUG_SWIFT] LiveActivityManager: No existing LA for the same trip was found. Replacing it."
+        )
+        await endActivityInternal(activity: existingActivity, isBeingReplaced: true)
+      }
     }
     // Clear any old push token; the new activity will get a new one.
     self.activityPushToken = nil
@@ -109,8 +144,8 @@ class LiveActivityManager {
       // If successful, store the new activity and start observing its state and token changes.
       self.currentActivity = activity
       observeActivity(activity: activity)
-      print(
-        "LiveActivityManager: Started LA. hasArrived=\(hasArrived), staleDate=\(staleDateForDismissal)"
+      NSLog(
+        "[LA_DEBUG_SWIFT] LiveActivityManager: Started LA. hasArrived=\(hasArrived), staleDate=\(staleDateForDismissal)"
       )
     } catch {
       // If the request fails, ensure the push token state is clean and propagate the error.
@@ -284,7 +319,7 @@ class LiveActivityManager {
     case "travel":
       tokenData = Activity<TravelActivityAttributes>.pushToStartToken
     default:
-      NSLog("Unsupported activity type for push-to-start: \(activityType)")
+      NSLog("[LA_DEBUG_SWIFT] Unsupported activity type for push-to-start: \(activityType)")
       return nil
     }
 

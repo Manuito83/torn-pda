@@ -1,12 +1,6 @@
 import * as admin from "firebase-admin";
 import { alertsGroup } from "./alerts";
-
-// EXAMPLE:
-// curl -X POST http://127.0.0.1:5002/torn-pda-manuito/us-east4/alertsTest-runForUser \
-// -H "Content-Type: application/json" \
-// -d '{"data": {"userName": "Manuito"}}'
 import { alertsTestGroup } from "./alerts";
-
 import { travelGroup } from "./travel_check";
 import { staleGroup } from "./stale_users";
 import { playersGroup } from "./players";
@@ -19,9 +13,6 @@ import { retalsGroup } from "./retals";
 import { prefsBackupGroup } from "./prefs_backup";
 import { troubleshootingGroup } from "./troubleshooting_notification";
 import { forumsGroup } from "./forums";
-
-// Note 1: remember token production true/false if testing LA in la_apns_helper
-// Note 2: LA can be tested directly with liveActivities.sendTestTravelPushToManuito()
 import { liveActivities } from "./la_management";
 
 //import { testGroup } from "./tests";
