@@ -21,7 +21,7 @@ import { getUsersStat } from "./torn_api";
 const privateKey = require("../key/torn_key");
 import fetch from "node-fetch";
 
-import { handleTravelLiveActivity } from "./la_travel_checks";
+import { handleTravelLiveActivity } from "./la_travel_handler";
 
 const runtimeOpts512 = {
   timeoutSeconds: 120,

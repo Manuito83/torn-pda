@@ -13,7 +13,7 @@ import { retalsGroup } from "./retals";
 import { prefsBackupGroup } from "./prefs_backup";
 import { troubleshootingGroup } from "./troubleshooting_notification";
 import { forumsGroup } from "./forums";
-import { liveActivities } from "./la_management";
+import { registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
 
 //import { testGroup } from "./tests";
 //import { helperGroup } from "./helpers";
@@ -39,6 +39,9 @@ export const retals = retalsGroup;
 export const prefsBackup = prefsBackupGroup;
 export const troubleshooting = troubleshootingGroup;
 export const forums = forumsGroup;
-export { liveActivities };
+export const liveActivities = {
+  registerPushToStartToken: registerPushToStartToken,
+  sendTestTravelPushToManuito: sendTestTravelPushToManuito,
+};
 //export const tests = testGroup;
 //export const helper = helperGroup;

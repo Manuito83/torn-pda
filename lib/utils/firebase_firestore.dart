@@ -436,21 +436,4 @@ class FirestoreHelper {
       "la_travel_push_token": FieldValue.delete(),
     });
   }
-
-  Future<void> syncLiveActivityTimestamp(int arrivalTimestamp) async {
-    if (_uid == null) {
-      log("FirestoreHelper: Cannot sync LA timestamp, UID is null");
-      return;
-    }
-
-    try {
-      log("FirestoreHelper: Syncing LA arrival timestamp ($arrivalTimestamp) to Firestore...");
-      await _firestore.collection("players").doc(_uid).update({
-        "la_travel_active_arrival_timestamp": arrivalTimestamp,
-      });
-      log("FirestoreHelper: LA timestamp synced successfully.");
-    } catch (e) {
-      log("FirestoreHelper: Error syncing LA timestamp to Firestore: $e");
-    }
-  }
 }
