@@ -13,8 +13,8 @@ const options = {
   },
   // TODO: if testing locally with debug device > false x 2!
   // but DO NOT DEPLOY AS FALSE!
-  production: false,
-  rejectUnauthorized: false,
+  production: true,
+  rejectUnauthorized: true,
 };
 
 const apnProvider = new apn.Provider(options);
