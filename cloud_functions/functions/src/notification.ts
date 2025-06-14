@@ -4,7 +4,7 @@ import * as functions from "firebase-functions";
 // Using non-ESM string-strip-html@8.5.0
 import { stripHtml } from "string-strip-html";
 
-interface NotificationParams {
+export interface NotificationParams {
   token: string;
   title: string;
   body: string;
@@ -19,33 +19,36 @@ interface NotificationParams {
   sound?: string;
 }
 
-export async function sendTestNotification(userStats: any, subscriber: any) {
-  const promises: Promise<any>[] = [];
+export interface NotificationCheckResult {
+  notification?: NotificationParams; // Optional: If a notification should be sent
+  firestoreUpdate?: { [key: string]: any }; // Optional: Fields to update in Firestore
+}
+
+export function sendTestNotification(userStats: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
 
   try {
 
-    promises.push(
-      sendNotificationToUser({
-        token: subscriber.token,
-        title: "Test title",
-        body: "Test body",
-        icon: "notification_energy",
-        color: "#00FF00",
-        channelId: "Alerts energy",
-        vibration: subscriber.vibration,
-        sound: "aircraft_seatbelt.aiff"
-      })
-    );
+    result.notification = {
+      token: subscriber.token,
+      title: "Test title",
+      body: "Test body",
+      icon: "notification_energy",
+      color: "#00FF00",
+      channelId: "Alerts energy",
+      vibration: subscriber.vibration,
+      sound: "aircraft_seatbelt.aiff"
+    }
   } catch (error) {
     functions.logger.warn(`ERROR TEST \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendEnergyNotification(userStats: any, subscriber: any) {
+export function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   try {
     if (
@@ -60,53 +63,36 @@ export async function sendEnergyNotification(userStats: any, subscriber: any) {
         body = `Full`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_energy",
-          color: "#00FF00",
-          channelId: "Alerts energy",
-          vibration: subscriber.vibration,
-        })
-      );
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            energyLastCheckFull: true,
-          })
-      );
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_energy",
+        color: "#00FF00",
+        channelId: "Alerts energy",
+        vibration: subscriber.vibration,
+      }
+
+      result.firestoreUpdate = { energyLastCheckFull: true };
     }
 
     if (
       energy.current < energy.maximum &&
       (subscriber.energyLastCheckFull === true)
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            energyLastCheckFull: false,
-          })
-      );
+      result.firestoreUpdate = { energyLastCheckFull: false };
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR ENERGY \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendNerveNotification(userStats: any, subscriber: any) {
+export function sendNerveNotification(userStats: any, subscriber: any) {
   const nerve = userStats.nerve;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   try {
     if (
@@ -121,53 +107,40 @@ export async function sendNerveNotification(userStats: any, subscriber: any) {
         body = `Full`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_nerve",
-          color: "#FF0000",
-          channelId: "Alerts nerve",
-          vibration: subscriber.vibration,
-        })
-      );
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            nerveLastCheckFull: true,
-          })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_nerve",
+        color: "#FF0000",
+        channelId: "Alerts nerve",
+        vibration: subscriber.vibration,
+      }
+      result.firestoreUpdate = {
+        nerveLastCheckFull: true,
+      }
     }
 
     if (
       nerve.current < nerve.maximum &&
       (subscriber.nerveLastCheckFull === true)
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            nerveLastCheckFull: false,
-          })
-      );
+      result.firestoreUpdate = {
+        nerveLastCheckFull: false,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR NERVE \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendLifeNotification(userStats: any, subscriber: any) {
+export function sendLifeNotification(userStats: any, subscriber: any) {
   const life = userStats.life;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   try {
     if (
@@ -182,56 +155,43 @@ export async function sendLifeNotification(userStats: any, subscriber: any) {
         body = `Full`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_life",
-          color: "#FF0000",
-          channelId: "Alerts life",
-          vibration: subscriber.vibration,
-        })
-      );
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            lifeLastCheckFull: true,
-          })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_life",
+        color: "#FF0000",
+        channelId: "Alerts life",
+        vibration: subscriber.vibration,
+      }
+      result.firestoreUpdate = {
+        lifeLastCheckFull: true,
+      }
     }
 
     if (
       life.current < life.maximum &&
       (subscriber.lifeLastCheckFull === true)
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            lifeLastCheckFull: false,
-          })
-      );
+      result.firestoreUpdate = {
+        lifeLastCheckFull: false,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR LIFE \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
 // This will log the travel at first opportunity (in case the API cannot be contacted later)
 // when it detects we have a new timestamp and are on the air. Then, the TravelGroup function
 // will sort users and send relevant notifications
-export async function logTravelArrival(userStats: any, subscriber: any) {
+export function logTravelArrival(userStats: any, subscriber: any) {
   const travel = userStats.travel;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   const travelTimeArrival = subscriber.travelTimeArrival || 0;
 
@@ -240,28 +200,22 @@ export async function logTravelArrival(userStats: any, subscriber: any) {
     // We are flying register planned landing time ASAP
     // unless the current arrival was already in the DB
     if (travel.time_left > 0 && travel.timestamp !== travelTimeArrival) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            travelTimeArrival: travel.timestamp,
-            travelTimeNotification: travel.timestamp,
-            travelDestination: travel.destination,
-          })
-      );
+      result.firestoreUpdate = {
+        travelTimeArrival: travel.timestamp,
+        travelTimeNotification: travel.timestamp,
+        travelDestination: travel.destination,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR TRAVEL LOG\n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendHospitalNotification(userStats: any, subscriber: any) {
-  const promises: Promise<any>[] = [];
+export function sendHospitalNotification(userStats: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
 
   const currentDateInMillis = Math.floor(Date.now() / 1000);
 
@@ -278,15 +232,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
     if (
       hospitalTimeToRelease > 240 && hospitalLastStatus !== 'in'
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            hospitalLastStatus: 'in',
-          })
-      );
+      result.firestoreUpdate = {
+        hospitalLastStatus: 'in',
+      }
 
       if (status !== 'Online') {
 
@@ -297,17 +245,16 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           body = `Adm`;
         }
 
-        promises.push(
-          sendNotificationToUser({
-            token: subscriber.token,
-            title,
-            body,
-            icon: 'notification_hospital',
-            color: '#FFFF00',
-            channelId: "Alerts hospital",
-            vibration: subscriber.vibration,
-          })
-        );
+
+        result.notification = {
+          token: subscriber.token,
+          title,
+          body,
+          icon: 'notification_hospital',
+          color: '#FFFF00',
+          channelId: "Alerts hospital",
+          vibration: subscriber.vibration,
+        }
       }
     }
 
@@ -318,15 +265,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
     ) {
 
       // Change last status so that we don't notify more than once
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            hospitalLastStatus: 'notified',
-          })
-      );
+      result.firestoreUpdate = {
+        hospitalLastStatus: 'notified',
+      }
 
       if (status !== 'Online') {
 
@@ -337,17 +278,16 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           body = `End`;
         }
 
-        promises.push(
-          sendNotificationToUser({
-            token: subscriber.token,
-            title,
-            body,
-            icon: 'notification_hospital',
-            color: '#FFFF00',
-            channelId: "Alerts hospital",
-            vibration: subscriber.vibration,
-          })
-        );
+
+        result.notification = {
+          token: subscriber.token,
+          title,
+          body,
+          icon: 'notification_hospital',
+          color: '#FFFF00',
+          channelId: "Alerts hospital",
+          vibration: subscriber.vibration,
+        }
       }
     }
 
@@ -357,15 +297,9 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
       hospitalLastStatus === 'in'
     ) {
 
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            hospitalLastStatus: 'out',
-          })
-      );
+      result.firestoreUpdate = {
+        hospitalLastStatus: 'out',
+      }
 
       if (status !== 'Online') {
 
@@ -376,17 +310,16 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
           body = `Out`;
         }
 
-        promises.push(
-          sendNotificationToUser({
-            token: subscriber.token,
-            title,
-            body,
-            icon: 'notification_hospital',
-            color: '#FFFF00',
-            channelId: "Alerts hospital",
-            vibration: subscriber.vibration,
-          })
-        );
+
+        result.notification = {
+          token: subscriber.token,
+          title,
+          body,
+          icon: 'notification_hospital',
+          color: '#FFFF00',
+          channelId: "Alerts hospital",
+          vibration: subscriber.vibration,
+        }
       }
     }
 
@@ -395,27 +328,21 @@ export async function sendHospitalNotification(userStats: any, subscriber: any) 
       hospitalTimeToRelease === 0 &&
       hospitalLastStatus === 'notified'
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            hospitalLastStatus: 'out',
-          })
-      );
+      result.firestoreUpdate = {
+        hospitalLastStatus: 'out',
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR HOSPITAL \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendDrugsNotification(userStats: any, subscriber: any) {
+export function sendDrugsNotification(userStats: any, subscriber: any) {
   const cooldowns = userStats.cooldowns;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   try {
     if (
@@ -430,53 +357,40 @@ export async function sendDrugsNotification(userStats: any, subscriber: any) {
         body = `Exp`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_drugs",
-          color: "#FF00c3",
-          channelId: "Alerts drugs",
-          vibration: subscriber.vibration,
-        })
-      );
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            drugsInfluence: false,
-          })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_drugs",
+        color: "#FF00c3",
+        channelId: "Alerts drugs",
+        vibration: subscriber.vibration,
+      }
+      result.firestoreUpdate = {
+        drugsInfluence: false,
+      }
     }
 
     if (
       cooldowns.drug > 0 &&
       (subscriber.drugsInfluence === false)
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            drugsInfluence: true,
-          })
-      );
+      result.firestoreUpdate = {
+        drugsInfluence: true,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR DRUGS \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendMedicalNotification(userStats: any, subscriber: any) {
+export function sendMedicalNotification(userStats: any, subscriber: any) {
   const cooldowns = userStats.cooldowns;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   try {
     if (
@@ -491,53 +405,40 @@ export async function sendMedicalNotification(userStats: any, subscriber: any) {
         body = `Exp`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_medical",
-          color: "#FF00c3",
-          channelId: "Alerts medical",
-          vibration: subscriber.vibration,
-        })
-      );
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            medicalInfluence: false,
-          })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_medical",
+        color: "#FF00c3",
+        channelId: "Alerts medical",
+        vibration: subscriber.vibration,
+      }
+      result.firestoreUpdate = {
+        medicalInfluence: false,
+      }
     }
 
     if (
       cooldowns.medical > 0 &&
       (subscriber.medicalInfluence === false)
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            medicalInfluence: true,
-          })
-      );
+      result.firestoreUpdate = {
+        medicalInfluence: true,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR MEDICAL \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendBoosterNotification(userStats: any, subscriber: any) {
+export function sendBoosterNotification(userStats: any, subscriber: any) {
   const cooldowns = userStats.cooldowns;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   try {
     if (
@@ -552,53 +453,40 @@ export async function sendBoosterNotification(userStats: any, subscriber: any) {
         body = `Exp`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_booster",
-          color: "#FF00c3",
-          channelId: "Alerts booster",
-          vibration: subscriber.vibration,
-        })
-      );
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            boosterInfluence: false,
-          })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_booster",
+        color: "#FF00c3",
+        channelId: "Alerts booster",
+        vibration: subscriber.vibration,
+      }
+      result.firestoreUpdate = {
+        boosterInfluence: false,
+      }
     }
 
     if (
       cooldowns.booster > 0 &&
       (subscriber.boosterInfluence === false)
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            boosterInfluence: true,
-          })
-      );
+      result.firestoreUpdate = {
+        boosterInfluence: true,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR BOOSTER \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendRacingNotification(userStats: any, subscriber: any) {
+export function sendRacingNotification(userStats: any, subscriber: any) {
   const icons = userStats.icons;
-  const promises: Promise<any>[] = [];
+  const result: NotificationCheckResult = {};
 
   try {
     if (
@@ -613,52 +501,39 @@ export async function sendRacingNotification(userStats: any, subscriber: any) {
         body = `End`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_racing",
-          color: "#FF9900",
-          channelId: "Alerts racing",
-          vibration: subscriber.vibration,
-        })
-      );
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            racingSent: true,
-          })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_racing",
+        color: "#FF9900",
+        channelId: "Alerts racing",
+        vibration: subscriber.vibration,
+      }
+      result.firestoreUpdate = {
+        racingSent: true,
+      }
     }
 
     if (
       !icons.icon18 &&
       (subscriber.racingSent === true)
     ) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            racingSent: false,
-          })
-      );
+      result.firestoreUpdate = {
+        racingSent: false,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR RACING \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendMessagesNotification(userStats: any, subscriber: any) {
-  const promises: Promise<any>[] = [];
+export function sendMessagesNotification(userStats: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
 
   try {
     let changes = false;
@@ -713,15 +588,9 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
     }
 
     if (changes) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            knownMessages: knownMessages,
-          })
-      );
+      result.firestoreUpdate = {
+        knownMessages: knownMessages,
+      }
     }
 
     if (newMessages > 0) {
@@ -760,29 +629,28 @@ export async function sendMessagesNotification(userStats: any, subscriber: any) 
         body = `${sender}`;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_messages",
-          color: "#7B1FA2",
-          channelId: "Alerts messages",
-          tornMessageId: tornMessageId,
-          vibration: subscriber.vibration,
-        })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_messages",
+        color: "#7B1FA2",
+        channelId: "Alerts messages",
+        tornMessageId: tornMessageId,
+        vibration: subscriber.vibration,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR MESSAGES \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendEventsNotification(userStats: any, subscriber: any) {
-  const promises: Promise<any>[] = [];
+export function sendEventsNotification(userStats: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
 
   try {
     let changes = false;
@@ -813,15 +681,9 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     }
 
     if (changes) {
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            knownEvents: knownEvents,
-          })
-      );
+      result.firestoreUpdate = {
+        knownEvents: knownEvents,
+      }
     }
 
     // We will separate the trades notification from the rest of events
@@ -998,17 +860,16 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           body = ` `;
         }
 
-        promises.push(
-          sendNotificationToUser({
-            token: subscriber.token,
-            title,
-            body,
-            icon: "notification_events",
-            color: "#5B1FA2",
-            channelId: "Alerts events",
-            vibration: subscriber.vibration,
-          })
-        );
+
+        result.notification = {
+          token: subscriber.token,
+          title,
+          body,
+          icon: "notification_events",
+          color: "#5B1FA2",
+          channelId: "Alerts events",
+          vibration: subscriber.vibration,
+        }
       }
 
       if (newTradesEvents > 0) {
@@ -1067,18 +928,17 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
           body = ` `;
         }
 
-        promises.push(
-          sendNotificationToUser({
-            token: subscriber.token,
-            title,
-            body,
-            icon: "notification_trades",
-            color: "#389500",
-            channelId: "Alerts trades",
-            tornTradeId: tradeId,
-            vibration: subscriber.vibration,
-          })
-        );
+
+        result.notification = {
+          token: subscriber.token,
+          title,
+          body,
+          icon: "notification_trades",
+          color: "#389500",
+          channelId: "Alerts trades",
+          tornTradeId: tradeId,
+          vibration: subscriber.vibration,
+        }
       }
 
     }
@@ -1087,23 +947,25 @@ export async function sendEventsNotification(userStats: any, subscriber: any) {
     functions.logger.warn(`ERROR EVENTS \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendForeignRestockNotification(userStats: any, dbStocks: any, subscriber: any) {
-  const promises: Promise<any>[] = [];
+export function sendForeignRestockNotification(userStats: any, dbStocks: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
 
   try {
 
     let updates = 0;
     const stocksUpdated: any[] = [];
 
-    const userStocks = subscriber.restockActiveAlerts;
+    const userStocks = subscriber.restockActiveAlerts || {};
+
     for (const [userCodeName, userTime] of Object.entries(userStocks)) {
 
       /*
+      console.log("User stocks: " + userCodeName + " - " + userStocks[userCodeName]);
       console.log("Stock country: " + dbStocks[userCodeName].country);
-      console.log("User travel or destination: "userStats.travel.destination);
+      console.log("User travel or destination: " + userStats.travel.destination);
       console.log("Only current country alerts: " + subscriber.foreignRestockNotificationOnlyCurrentCountry);
       */
 
@@ -1148,15 +1010,9 @@ export async function sendForeignRestockNotification(userStats: any, dbStocks: a
       const notificationTitle = "Foreign items restocked!";
       const notificationSubtitle = stocksUpdated.join(', ');
 
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            restockActiveAlerts: userStocks,
-          })
-      );
+      result.firestoreUpdate = {
+        restockActiveAlerts: userStocks,
+      }
 
       let title = notificationTitle;
       let body = notificationSubtitle;
@@ -1165,28 +1021,27 @@ export async function sendForeignRestockNotification(userStats: any, dbStocks: a
         body = ` `;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_travel",
-          color: "#389500",
-          channelId: "Alerts restocks",
-          vibration: subscriber.vibration,
-        })
-      );
+
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_travel",
+        color: "#389500",
+        channelId: "Alerts restocks",
+        vibration: subscriber.vibration,
+      }
     }
 
   } catch (error) {
     functions.logger.warn(`ERROR RESTOCKS \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
-export async function sendStockMarketNotification(tornStocks: any, subscriber: any) {
-  const promises: Promise<any>[] = [];
+export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
+  const result: NotificationCheckResult = {};
 
   try {
 
@@ -1254,15 +1109,9 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
         notificationSubtitle = `- ${stocksMarketUpdates.join('\n- ')}`.trim();
       }
 
-      promises.push(
-        admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            stockMarketShares: newUserAlerts,
-          })
-      );
+      result.firestoreUpdate = {
+        stockMarketShares: newUserAlerts,
+      }
 
       let title = notificationTitle;
       let body = notificationSubtitle;
@@ -1271,17 +1120,15 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
         body = ` `;
       }
 
-      promises.push(
-        sendNotificationToUser({
-          token: subscriber.token,
-          title: title,
-          body: body,
-          icon: "notification_stock_market",
-          color: "#389500",
-          channelId: "Alerts stocks",
-          vibration: subscriber.vibration,
-        })
-      );
+      result.notification = {
+        token: subscriber.token,
+        title: title,
+        body: body,
+        icon: "notification_stock_market",
+        color: "#389500",
+        channelId: "Alerts stocks",
+        vibration: subscriber.vibration,
+      }
 
     }
 
@@ -1289,7 +1136,7 @@ export async function sendStockMarketNotification(tornStocks: any, subscriber: a
     functions.logger.warn(`ERROR STOCK MARKET \n${subscriber.uid} \n${error}`);
   }
 
-  return Promise.all(promises);
+  return result;
 }
 
 export async function sendNotificationToUser({
@@ -1366,3 +1213,4 @@ export async function sendNotificationToUser({
   return admin.messaging().send(payload);
 
 }
+

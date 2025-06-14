@@ -15,6 +15,9 @@ import {
   sendEventsNotification,
   sendForeignRestockNotification,
   sendStockMarketNotification,
+  sendNotificationToUser,
+  NotificationParams,
+  NotificationCheckResult,
 } from "./notification";
 import { getUsersStat } from "./torn_api";
 
@@ -123,6 +126,7 @@ export const alertsGroup = {
           );
           return value;
         });
+
       }
 
       promisesGlobal.push(checkIOS());
@@ -353,60 +357,73 @@ async function sendNotificationForProfile(
   stockMarket: any,
   forceTest: boolean = false,
 ): Promise<any> {
-  const promises: Promise<any>[] = [];
+  const notificationsToSend: NotificationParams[] = [];
+  const firestoreUpdates: { [key: string]: any } = {};
+  const allPromises: Promise<any>[] = [];
 
   try {
     const userStats: any = await getUsersStat(subscriber.apiKey);
 
     if (!userStats.error) {
 
-      // Force test regarless of notification
-      if (forceTest) {
-        promises.push(sendTestNotification(userStats, subscriber));
-      }
-
-      // Live Activities
+      // 1. Live Activities: Call handleTravelLiveActivity (it handles its own RTDB writes)
+      // This is a direct async call, independent of other alerts.
       if (subscriber.la_travel_push_token) {
-        promises.push(handleTravelLiveActivity(userStats, subscriber));
+        allPromises.push(handleTravelLiveActivity(userStats, subscriber));
       }
 
-      if (subscriber.energyNotification)
-        promises.push(sendEnergyNotification(userStats, subscriber));
-      if (subscriber.nerveNotification)
-        promises.push(sendNerveNotification(userStats, subscriber));
-      if (subscriber.lifeNotification)
-        promises.push(sendLifeNotification(userStats, subscriber));
-      if (subscriber.travelNotification)
-        promises.push(logTravelArrival(userStats, subscriber));
-      if (subscriber.hospitalNotification)
-        promises.push(sendHospitalNotification(userStats, subscriber));
-      if (subscriber.drugsNotification)
-        promises.push(sendDrugsNotification(userStats, subscriber));
-      if (subscriber.medicalNotification)
-        promises.push(sendMedicalNotification(userStats, subscriber));
-      if (subscriber.boosterNotification)
-        promises.push(sendBoosterNotification(userStats, subscriber));
-      if (subscriber.racingNotification)
-        promises.push(sendRacingNotification(userStats, subscriber));
-      if (subscriber.messagesNotification)
-        promises.push(sendMessagesNotification(userStats, subscriber));
-      if (subscriber.eventsNotification)
-        promises.push(sendEventsNotification(userStats, subscriber));
-      if (subscriber.foreignRestockNotification)
-        promises.push(
-          sendForeignRestockNotification(userStats, foreignStocks, subscriber)
-        );
-      if (subscriber.stockMarketNotification)
-        promises.push(sendStockMarketNotification(stockMarket, subscriber));
+      // 2. Prepare an array to collect results conditionally
+      const checkResults: NotificationCheckResult[] = [];
 
-      await Promise.all(promises);
+      if (subscriber.energyNotification) { checkResults.push(sendEnergyNotification(userStats, subscriber)); }
+      if (subscriber.nerveNotification) { checkResults.push(sendNerveNotification(userStats, subscriber)); }
+      if (subscriber.lifeNotification) { checkResults.push(sendLifeNotification(userStats, subscriber)); }
+      if (subscriber.travelNotification) { checkResults.push(logTravelArrival(userStats, subscriber)); }
+      if (subscriber.hospitalNotification) { checkResults.push(sendHospitalNotification(userStats, subscriber)); }
+      if (subscriber.drugsNotification) { checkResults.push(sendDrugsNotification(userStats, subscriber)); }
+      if (subscriber.medicalNotification) { checkResults.push(sendMedicalNotification(userStats, subscriber)); }
+      if (subscriber.boosterNotification) { checkResults.push(sendBoosterNotification(userStats, subscriber)); }
+      if (subscriber.racingNotification) { checkResults.push(sendRacingNotification(userStats, subscriber)); }
+      if (subscriber.messagesNotification) { checkResults.push(sendMessagesNotification(userStats, subscriber)); }
+      if (subscriber.eventsNotification) { checkResults.push(sendEventsNotification(userStats, subscriber)); }
+      if (subscriber.foreignRestockNotification) { checkResults.push(sendForeignRestockNotification(userStats, foreignStocks, subscriber)); }
+      if (subscriber.stockMarketNotification) { checkResults.push(sendStockMarketNotification(stockMarket, subscriber)); }
+
+      // Get test notifications if necessary
+      if (forceTest) {
+        checkResults.push(sendTestNotification(userStats, subscriber));
+      }
+
+      // 3. Process collected results, both notifications and Firestore updates
+      for (const result of checkResults) {
+        if (result.notification) {
+          notificationsToSend.push(result.notification);
+        }
+        if (result.firestoreUpdate) {
+          Object.assign(firestoreUpdates, result.firestoreUpdate);
+        }
+      }
+
+      // 4. Perform a single Firestore update for this user
+      if (Object.keys(firestoreUpdates).length > 0) {
+        allPromises.push(admin.firestore().collection("players").doc(subscriber.uid).update(firestoreUpdates));
+      }
+
+      // 5. Send all collected notifications in parallel
+      if (notificationsToSend.length > 0) {
+        allPromises.push(...notificationsToSend.map(params => sendNotificationToUser(params)));
+      }
+
+      // 6. Wait for all concurrent operations to complete
+      await Promise.all(allPromises);
+
     } else {
       // Return API errors for certain statistics
       if (userStats.error.error.includes("IP block")) {
         return "ip-block";
       }
     }
-  } catch (e) {
+  } catch (e: any) {
     functions.logger.warn(`ERROR ALERTS \n${subscriber.uid} \n${e}`);
 
     // If users uninstall without removing API Key, this error will trigger
@@ -416,34 +433,20 @@ async function sendNotificationForProfile(
       if (subscriber.tokenErrors !== undefined) {
         const errors = subscriber.tokenErrors + 1;
         if (errors >= 10) {
-          await admin
-            .firestore()
-            .collection("players")
-            .doc(subscriber.uid)
-            .update({
-              active: false,
-              tokenErrors: errors,
-            });
+          await admin.firestore().collection("players").doc(subscriber.uid).update({
+            active: false,
+            tokenErrors: errors,
+          });
           functions.logger.warn(
             `Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid} after ${errors} token errors`
           );
         } else {
-          await admin
-            .firestore()
-            .collection("players")
-            .doc(subscriber.uid)
-            .update({
-              tokenErrors: errors,
-            });
+          await admin.firestore().collection("players").doc(subscriber.uid).update({
+            tokenErrors: errors,
+          });
         }
       } else {
-        await admin
-          .firestore()
-          .collection("players")
-          .doc(subscriber.uid)
-          .update({
-            tokenErrors: 1,
-          });
+        await admin.firestore().collection("players").doc(subscriber.uid).update({ tokenErrors: 1 });
       }
     }
   }
