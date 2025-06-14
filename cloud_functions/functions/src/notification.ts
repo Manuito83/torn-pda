@@ -24,28 +24,6 @@ export interface NotificationCheckResult {
   firestoreUpdate?: { [key: string]: any }; // Optional: Fields to update in Firestore
 }
 
-export function sendTestNotification(userStats: any, subscriber: any) {
-  const result: NotificationCheckResult = {};
-
-  try {
-
-    result.notification = {
-      token: subscriber.token,
-      title: "Test title",
-      body: "Test body",
-      icon: "notification_energy",
-      color: "#00FF00",
-      channelId: "Alerts energy",
-      vibration: subscriber.vibration,
-      sound: "aircraft_seatbelt.aiff"
-    }
-  } catch (error) {
-    functions.logger.warn(`ERROR TEST \n${subscriber.uid} \n${error}`);
-  }
-
-  return result;
-}
-
 export function sendEnergyNotification(userStats: any, subscriber: any) {
   const energy = userStats.energy;
   const result: NotificationCheckResult = {};

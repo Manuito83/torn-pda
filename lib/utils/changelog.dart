@@ -100,7 +100,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.2 - Build 547 - 13/06/2025
+    // v3.8.2 - Build 548 - 13/06/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.2'
@@ -144,7 +144,8 @@ class ChangeLogState extends State<ChangeLog> {
                 );
               },
             ),
-          "Added accesibility (talkback) improvements in the Profile section",
+          "Added accessibility (talkback) improvements in the Profile section",
+          "Fixed issues with API key in YATA stats dialog",
           "Fixed status color counter widget not updating properly",
           "Fixed hospital notifications for war targets not working in some devices",
         ],

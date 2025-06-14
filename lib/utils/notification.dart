@@ -206,6 +206,12 @@ Future showNotificationBoth(Map payload, int notId) async {
     channelId = 'Alerts test';
     channelName = 'Alerts test';
     channelDescription = 'Alerts troubleshooting notification';
+  } else if (channel.contains("Alerts information")) {
+    notificationIcon = "notification_icon";
+    notificationColor = Colors.grey;
+    channelId = 'Alerts information';
+    channelName = 'Alerts information';
+    channelDescription = 'Information messages';
   } else if (channel.contains("sendbird")) {
     channelId = "Torn chat";
     channelName = "Torn chat";
@@ -895,6 +901,19 @@ Future configureNotificationChannels({String? mod = ""}) async {
       description: 'Manual notifications from browser',
       importance: Importance.max,
       sound: const RawResourceAndroidNotificationSound('slow_spring_board'),
+      vibrationPattern: modifier.vibrationPattern,
+      enableLights: true,
+      ledColor: const Color.fromARGB(255, 255, 0, 0),
+    ),
+  );
+
+  channels.add(
+    AndroidNotificationChannel(
+      'Alerts information ${modifier.channelIdModifier} s',
+      'Alerts information ${modifier.channelIdModifier} s',
+      description: 'Information messages',
+      importance: Importance.max,
+      sound: const RawResourceAndroidNotificationSound('aircraft_seatbelt'),
       vibrationPattern: modifier.vibrationPattern,
       enableLights: true,
       ledColor: const Color.fromARGB(255, 255, 0, 0),

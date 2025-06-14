@@ -1,7 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import {
-  sendTestNotification,
   sendEnergyNotification,
   sendNerveNotification,
   sendLifeNotification,
@@ -277,80 +276,6 @@ export const alertsGroup = {
     }),
 };
 
-//****************************//
-//******* TEST EXPORT* *******//
-//****************************//
-//  See index.ts for details  //
-//****************************//
-export const alertsTestGroup = {
-  runForUser: functions
-    .region("us-east4")
-    .runWith(runtimeOpts512)
-    .https.onCall(async (data, context) => {
-      const userName = data.userName;
-      const forceTest = data.forceTest || false;
-
-
-      if (!userName) {
-        functions.logger.error("Error: no username");
-        throw new functions.https.HttpsError(
-          "invalid-argument",
-          "No username"
-        );
-      }
-
-      functions.logger.info(`Test check: ${userName}`);
-      const millisAtStart = Date.now();
-
-      const stockMarket = await getStockMarket(privateKey.tornKey);
-      const db = admin.database();
-      const stocksDB = db.ref("stocks/restocks");
-      const foreignStocks = {};
-      await stocksDB.once("value", (snapshot) => {
-        snapshot.forEach((childSnapshot) => {
-          foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
-        });
-      });
-
-      const response = await admin
-        .firestore()
-        .collection("players")
-        .where("active", "==", true)
-        .where("name", "==", userName)
-        .get();
-
-      const subscribers = response.docs.map((d) => d.data());
-
-      if (subscribers.length === 0) {
-        const message = `No player found with name: ${userName}`;
-        functions.logger.warn(message);
-        return { success: false, message: message };
-      }
-
-      let blocks = 0;
-      const promises: Promise<any>[] = [];
-      for (const subscriber of subscribers) {
-        promises.push(
-          sendNotificationForProfile(subscriber, foreignStocks, stockMarket, forceTest)
-            .then((value) => {
-              if (value === "ip-block") {
-                blocks++;
-              }
-            })
-        );
-      }
-
-      await Promise.all(promises);
-
-      const millisAfterFinish = Date.now();
-      const difference = (millisAfterFinish - millisAtStart) / 1000;
-      const successMessage = `Test for '${userName}' completed. Users: ${subscribers.length}. Blocked: ${blocks}. Time: ${difference}s`;
-      functions.logger.info(successMessage);
-
-      return { success: true, message: successMessage };
-    }),
-};
-
 async function sendNotificationForProfile(
   subscriber: any,
   foreignStocks: any,
@@ -388,11 +313,6 @@ async function sendNotificationForProfile(
       if (subscriber.eventsNotification) { checkResults.push(sendEventsNotification(userStats, subscriber)); }
       if (subscriber.foreignRestockNotification) { checkResults.push(sendForeignRestockNotification(userStats, foreignStocks, subscriber)); }
       if (subscriber.stockMarketNotification) { checkResults.push(sendStockMarketNotification(stockMarket, subscriber)); }
-
-      // Get test notifications if necessary
-      if (forceTest) {
-        checkResults.push(sendTestNotification(userStats, subscriber));
-      }
 
       // 3. Process collected results, both notifications and Firestore updates
       for (const result of checkResults) {
@@ -451,3 +371,198 @@ async function sendNotificationForProfile(
     }
   }
 }
+
+//****************************//
+//******* TEST GROUP *********//
+//****************************//
+export const alertsTestGroup = {
+  /**
+   * Runs a full alert check for a specific user
+   * Default to Manuito
+   */
+  runForUser: functions
+    .region("us-east4")
+    .runWith(runtimeOpts512)
+    .https.onCall(async (data, context) => {
+      const userName = data.userName || "Manuito";
+
+      if (!userName) {
+        throw new functions.https.HttpsError("invalid-argument", "No username provided.");
+      }
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
+      }
+
+      functions.logger.info(`Running full alert check for: ${userName}`);
+      const millisAtStart = Date.now();
+
+      const stockMarket = await getStockMarket(privateKey.tornKey);
+      const db = admin.database();
+      const stocksDB = db.ref("stocks/restocks");
+      const foreignStocks = {};
+      await stocksDB.once("value", (snapshot) => {
+        snapshot.forEach(function (childSnapshot) {
+          foreignStocks[childSnapshot.val().codeName] = childSnapshot.val();
+        });
+      });
+
+      const response = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .where("name", "==", userName)
+        .get();
+
+      const subscribers = response.docs.map((d) => d.data());
+
+      if (subscribers.length === 0) {
+        const message = `No player found with name: ${userName}`;
+        functions.logger.warn(message);
+        return { success: false, message: message };
+      }
+
+      let blocks = 0;
+      for (const subscriber of subscribers) {
+        const result = await sendNotificationForProfile(subscriber, foreignStocks, stockMarket);
+        if (result === "ip-block") { blocks++; }
+      }
+
+      const millisAfterFinish = Date.now();
+      const difference = (millisAfterFinish - millisAtStart) / 1000;
+      const successMessage = `Full alert check for '${userName}' completed. Users: ${subscribers.length}. Blocks: ${blocks}. Time: ${difference}s`;
+      functions.logger.info(successMessage);
+
+      return { success: true, message: successMessage, blocks: blocks };
+    }),
+
+  /**
+   * Sends a specific test notification to a user
+   * Default to 'Manuito
+   */
+  sendTestNotification: functions
+    .region("us-east4")
+    .runWith(runtimeOpts512)
+    .https.onCall(async (data, context) => {
+      const userName = data.userName || "Manuito";
+
+      if (!userName) {
+        throw new functions.https.HttpsError("invalid-argument", "No username provided.");
+      }
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
+      }
+
+      functions.logger.info(`Sending hardcoded test notification to ${userName}.`);
+
+      const userDoc = await admin.firestore().collection("players").where("name", "==", userName).get();
+      if (userDoc.empty) {
+        throw new functions.https.HttpsError("not-found", `User '${userName}' not found.`);
+      }
+      const subscriber = userDoc.docs[0].data();
+      const token = subscriber.token;
+      const vibration = subscriber.vibration || "";
+
+      if (!token || token === "windows") {
+        throw new functions.https.HttpsError("failed-precondition", `User '${userName}' has no valid FCM token.`);
+      }
+
+      const defaultTestParams: NotificationParams = {
+        token: token,
+        title: "Test title",
+        body: "Test body",
+        icon: "notification_energy",
+        color: "#00FF00",
+        channelId: "Alerts energy",
+        vibration: vibration,
+        sound: "aircraft_seatbelt.aiff",
+      };
+
+      try {
+        await sendNotificationToUser(defaultTestParams);
+        functions.logger.info(`Successfully sent hardcoded test notification to ${userName}.`);
+        return { success: true, message: `Test notification sent.` };
+      } catch (error: any) {
+        functions.logger.error(`Failed to send test notification to ${userName}:`, error);
+        throw new functions.https.HttpsError("internal", `Failed to send notification: ${error.message}`);
+      }
+    }),
+
+  /**
+   * Sends a mass notification to all active players
+   * Ignores user's alertsEnabled preference
+   */
+  sendMassNotification: functions
+    .region("us-east4")
+    .runWith(runtimeOpts1024)
+    .https.onCall(async (data, context) => {
+
+      // ####### WARNING!! ########
+      const active = false;
+      if (!active) {
+        functions.logger.warn("MASS NOTIFICATION NOT ACTIVE!!!!");
+        return null;
+      }
+
+      const defaultContentParams = {
+        title: "TORN PDA INFO",
+        body: "TEST",
+        icon: "notification_icon",
+        color: "#00FF00",
+        channelId: "Alerts information",
+        sound: "aircraft_seatbelt.aiff",
+      };
+
+      if (!context.auth) {
+        throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
+      }
+
+      functions.logger.info(`Sending mass notification: "${defaultContentParams.title}" - "${defaultContentParams.body}"`);
+
+      // Query all active players
+      const activePlayersSnapshot = await admin
+        .firestore()
+        .collection("players")
+        .where("active", "==", true)
+        .get();
+
+      const notificationsPromises: Promise<any>[] = [];
+      let sentCount = 0;
+      let failedCount = 0;
+
+      // Iterate through each active player
+      for (const doc of activePlayersSnapshot.docs) {
+        const subscriber = doc.data();
+        const token = subscriber.token;
+        const vibration = subscriber.vibration || "";
+
+        if (token && token !== "windows") {
+          const userNotificationParams: NotificationParams = {
+            token: token,
+            title: defaultContentParams.title,
+            body: defaultContentParams.body,
+            icon: defaultContentParams.icon,
+            color: defaultContentParams.color,
+            channelId: defaultContentParams.channelId,
+            vibration: vibration,
+            sound: defaultContentParams.sound,
+          };
+
+          notificationsPromises.push(
+            sendNotificationToUser(userNotificationParams)
+              .then(() => {
+                sentCount++;
+              }).catch((e: any) => {
+                functions.logger.warn(`Failed to send mass notification to ${doc.id}: ${e.message}`);
+                failedCount++;
+              })
+          );
+        }
+      }
+
+      // Wait for all individual notification sends to complete
+      await Promise.all(notificationsPromises);
+
+      functions.logger.info(`Mass notification completed. Sent: ${sentCount}, Failed: ${failedCount}.`);
+      return { success: true, message: `Mass notification sent. Sent: ${sentCount}, Failed: ${failedCount}.` };
+    }),
+};

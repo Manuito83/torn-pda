@@ -15,7 +15,6 @@ import { troubleshootingGroup } from "./troubleshooting_notification";
 import { forumsGroup } from "./forums";
 import { registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
 
-//import { testGroup } from "./tests";
 //import { helperGroup } from "./helpers";
 
 const serviceAccount = require("../key/serviceAccountKey.json");
@@ -43,5 +42,5 @@ export const liveActivities = {
   registerPushToStartToken: registerPushToStartToken,
   sendTestTravelPushToManuito: sendTestTravelPushToManuito,
 };
-//export const tests = testGroup;
+
 //export const helper = helperGroup;
