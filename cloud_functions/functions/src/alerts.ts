@@ -437,7 +437,7 @@ export const alertsTestGroup = {
 
   /**
    * Sends a specific test notification to a user
-   * Default to 'Manuito
+   * Default to Manuito
    */
   sendTestNotification: functions
     .region("us-east4")
@@ -518,7 +518,7 @@ export const alertsTestGroup = {
 
       functions.logger.info(`Sending mass notification: "${defaultContentParams.title}" - "${defaultContentParams.body}"`);
 
-      // Query all active players
+      // Query all active players, even if alerts not enabled
       const activePlayersSnapshot = await admin
         .firestore()
         .collection("players")
@@ -529,7 +529,6 @@ export const alertsTestGroup = {
       let sentCount = 0;
       let failedCount = 0;
 
-      // Iterate through each active player
       for (const doc of activePlayersSnapshot.docs) {
         const subscriber = doc.data();
         const token = subscriber.token;
@@ -559,7 +558,6 @@ export const alertsTestGroup = {
         }
       }
 
-      // Wait for all individual notification sends to complete
       await Promise.all(notificationsPromises);
 
       functions.logger.info(`Mass notification completed. Sent: ${sentCount}, Failed: ${failedCount}.`);
