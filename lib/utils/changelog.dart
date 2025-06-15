@@ -146,7 +146,7 @@ class ChangeLogState extends State<ChangeLog> {
             ),
           "Added accessibility (talkback) improvements in the Profile section",
           ComplexFeature(
-            "Added browser handler to open external device applications (see details)",
+            "Added browser handler to open other device applications (see details)",
             explanation: "The new handler allows web content / user scripts to launch external applications "
                 "(like Discord) by passing a URL from JavaScript to the native side of the app\n\n"
                 "Please visit the ./docs section in Github for more information.",
