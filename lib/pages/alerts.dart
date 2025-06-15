@@ -1401,6 +1401,17 @@ class AlertsSettingsState extends State<AlertsSettings> {
   }
 
   Widget _liveActivities() {
+    String laHeader =
+        "Live activities will only start if you have Torn PDA open in the foreground when they take place. "
+        "You'll see them in the lock screen and the dynamic island (if supported)";
+
+    if (kSdkIos >= 17.2) {
+      laHeader =
+          "Live activities will start immediately if you have Torn PDA open in the foreground, or after a few minutes "
+          "when it's in the background or completely closed.\n\n"
+          "They'll show in the lock screen and dynamic island.";
+    }
+
     return Column(
       children: [
         const Padding(
@@ -1410,13 +1421,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
             style: TextStyle(fontSize: 9),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
-          child: Text(
-            "Live activities will only start if you have the Torn PDA app open in the foreground when they take place."
-            "You'll see them in the lock screen and the dynamic island (if supported)",
-            style: TextStyle(fontSize: 12),
-          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+          child: Text(laHeader, style: const TextStyle(fontSize: 12)),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
