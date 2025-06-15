@@ -1108,6 +1108,40 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                     ],
                   ),
                 ),
+                const SizedBox(height: 50),
+                const Text(
+                  "OTHER HANDLERS AND FEATURES (ADVANCED)",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                Text.rich(
+                  TextSpan(
+                    text: "Please be aware that there are other handlers available for you to use.\n\n"
+                        "For further information, you can visit our Discord server or the GitHub docs "
+                        "for developers:\n\n",
+                    style: const TextStyle(
+                      fontSize: 13,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: "Torn PDA developers docs",
+                        style: const TextStyle(
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () async {
+                            const String url = "https://github.com/Manuito83/torn-pda/blob/develop/docs/README.md";
+                            await context.read<WebViewProvider>().openBrowserPreference(
+                                  context: context,
+                                  url: url,
+                                  browserTapType: BrowserTapType.short,
+                                );
+                          },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 50),
               ],
             ),
           ),

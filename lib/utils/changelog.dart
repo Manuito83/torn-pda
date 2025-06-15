@@ -100,7 +100,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.2 - Build 548 - 13/06/2025
+    // v3.8.2 - Build 549 - 15/06/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.2'
@@ -145,6 +145,12 @@ class ChangeLogState extends State<ChangeLog> {
               },
             ),
           "Added accessibility (talkback) improvements in the Profile section",
+          ComplexFeature(
+            "Added browser handler to open external device applications (see details)",
+            explanation: "The new handler allows web content / user scripts to launch external applications "
+                "(like Discord) by passing a URL from JavaScript to the native side of the app\n\n"
+                "Please visit the ./docs section in Github for more information.",
+          ),
           "Fixed issues with API key in YATA stats dialog",
           "Fixed status color counter widget not updating properly",
           "Fixed hospital notifications for war targets not working in some devices",
