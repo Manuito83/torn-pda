@@ -1414,7 +1414,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
         const Padding(
           padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
           child: Text(
-            "Live activities will only start if you have the Torn PDA app open in the foreground when they take place."
+            "Live activities will only start if you have the Torn PDA app open in the foreground when they take place. "
             "You'll see them in the lock screen and the dynamic island (if supported)",
             style: TextStyle(fontSize: 12),
           ),
