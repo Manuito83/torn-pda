@@ -52,27 +52,30 @@ class BazaarStatusCard extends StatelessWidget {
           Text(bazaarNumber),
           Text(" ($bazaarPendingString)"),
           const SizedBox(width: 8),
-          GestureDetector(
-            child: const Icon(
-              MdiIcons.storefrontOutline,
-              size: 20,
+          Semantics(
+            label: 'Open bazaar dialog',
+            child: GestureDetector(
+              child: const Icon(
+                MdiIcons.storefrontOutline,
+                size: 20,
+              ),
+              onTap: () {
+                showDialog<void>(
+                  useRootNavigator: false,
+                  context: context,
+                  barrierDismissible: false, // user must tap button!
+                  builder: (BuildContext context) {
+                    return BazaarDialog(
+                      bazaarModel: bazaarModel,
+                      openTapCallback: openTapCallback,
+                      openLongPressCallback: openLongPressCallback,
+                      items: totalItems,
+                      money: totalMoney,
+                    );
+                  },
+                );
+              },
             ),
-            onTap: () {
-              showDialog<void>(
-                useRootNavigator: false,
-                context: context,
-                barrierDismissible: false, // user must tap button!
-                builder: (BuildContext context) {
-                  return BazaarDialog(
-                    bazaarModel: bazaarModel,
-                    openTapCallback: openTapCallback,
-                    openLongPressCallback: openLongPressCallback,
-                    items: totalItems,
-                    money: totalMoney,
-                  );
-                },
-              );
-            },
           ),
         ],
       ),

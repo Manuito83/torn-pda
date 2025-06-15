@@ -7,11 +7,13 @@ import 'dart:io';
 // Package imports:
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class FirestoreHelper {
@@ -270,16 +272,38 @@ class FirestoreHelper {
     });
   }
 
-  Future<bool> uploadLastActiveTime(int timeStamp) async {
+  Future<bool> uploadLastActiveTimeAndTokensToFirebase(int timeStamp) async {
     if (_uid == null) return false;
-    return _firestore.collection("players").doc(_uid).update({
-      "lastActive": timeStamp,
-      "active": true,
-    }).then((value) {
+
+    try {
+      final Map<String, dynamic> updatePayload = {
+        "lastActive": timeStamp,
+        "active": true,
+      };
+
+      if (Platform.isIOS && kSdkIos >= 17.2) {
+        final laTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
+        if (laTravelEnabled) {
+          final bridgeController = Get.find<LiveActivityBridgeController>();
+
+          // We are getting a new or existing token, it depends on the evaluation
+          final String? tokenToUpdate =
+              await bridgeController.getPushToStartTokenOnly(activityType: LiveActivityType.travel);
+
+          if (tokenToUpdate != null) {
+            updatePayload['la_travel_push_token'] = tokenToUpdate;
+            await Prefs().setLaPushToken(token: tokenToUpdate, activityType: LiveActivityType.travel);
+          }
+        }
+      }
+
+      log("Uploading data to Firestore: $updatePayload");
+      await _firestore.collection("players").doc(_uid).update(updatePayload);
       return true;
-    }).catchError((error) {
+    } catch (error) {
+      log("Error in uploadLastActiveTime: $error");
       return false;
-    });
+    }
   }
 
   // Init State in alerts
@@ -402,5 +426,14 @@ class FirestoreHelper {
       return currentToken;
     }
     return "error";
+  }
+
+  Future<void> disableLiveActivityTravel() async {
+    if (_uid == null) return;
+
+    log("Disabling Live Activities for travel. Deleting token from Firestore");
+    await _firestore.collection("players").doc(_uid).update({
+      "la_travel_push_token": FieldValue.delete(),
+    });
   }
 }

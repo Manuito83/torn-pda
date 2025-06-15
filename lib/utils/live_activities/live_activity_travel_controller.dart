@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 
 class LiveActivityTravelController extends GetxController {
@@ -236,13 +238,17 @@ class LiveActivityTravelController extends GetxController {
       _isLALogicallyActive = true;
       _currentLAArrivalTimestamp = arrivalTimestamp;
       _lastProcessedTravelIdentifier = travelId;
+
+      // Sync with Firebase so that a Cloud Function won't start for this LA
+      log("Syncing arrival timestamp $arrivalTimestamp with server...");
+      _syncTimestamp(arrivalTimestamp);
     }
   }
 
   // Does not end the native Live Activity, just resets the internal state
   void _resetLAStateInternal({bool calledFromDeactivate = false}) {
     if (!calledFromDeactivate) {
-      log("TravelLiveActivityHandler: Internal state reset (native LA might still exist).");
+      log("TravelLiveActivityHandler: Internal state reset (native LA might still exist)");
     }
     _isLALogicallyActive = false;
     _currentLAArrivalTimestamp = 0;
@@ -254,6 +260,7 @@ class LiveActivityTravelController extends GetxController {
   void _resetLAState() {
     _bridgeController.endActivity();
     _resetLAStateInternal(calledFromDeactivate: true);
+    _clearTimestamp();
   }
 
   Map<String, dynamic> _buildArgs({
@@ -337,5 +344,22 @@ class LiveActivityTravelController extends GetxController {
     if (normalized == "cayman-islands") return "cayman";
     if (normalized == "united-arab-emirates") return "uae";
     return normalized;
+  }
+
+  void _syncTimestamp(int arrivalTimestamp) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      FirebaseRtdbHelper().liveActivityTravelTimestampSync(
+        uid: user.uid,
+        arrivalTimestamp: arrivalTimestamp,
+      );
+    }
+  }
+
+  void _clearTimestamp() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      FirebaseRtdbHelper().liveActivityClearTimeStamp(uid: user.uid);
+    }
   }
 }

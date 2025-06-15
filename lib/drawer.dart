@@ -2158,7 +2158,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Uploads last active time to Firebase
     final now = DateTime.now().millisecondsSinceEpoch;
-    final success = await FirestoreHelper().uploadLastActiveTime(now);
+    final success = await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(now);
     if (success) {
       _settingsProvider.updateLastUsed = now;
     }
@@ -2543,8 +2543,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return;
       }
 
-      await Get.find<LiveActivityTravelController>().activate();
-      Get.find<LiveActivityBridgeController>().initializeHandler();
+      final bridgeController = Get.find<LiveActivityBridgeController>();
+      final travelController = Get.find<LiveActivityTravelController>();
+
+      bridgeController.initializeHandler();
+      await travelController.activate();
     });
   }
 

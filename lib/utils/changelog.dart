@@ -100,24 +100,15 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.2 - Build 543 - 07/06/2025
+    // v3.8.2 - Build 549 - 15/06/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.2'
-        ..date = '10 JUN 2025'
-        ..infoString = 'Hotfix for status color counter widget'
+        ..date = '20 JUN 2025'
         ..features = [
-          if (Platform.isIOS)
-            ComplexFeature(
-              "Added live activity support for traveling",
-              explanation: "Only available for iOS 16.2 and above\n\n"
-                  "See Alerts / Live Activities\n\n"
-                  "This feature allows you to track your travel in real-time, "
-                  "providing updates on your journey directly on your device's lock screen or dynamic island.\n\n"
-                  "IMPORTANT: for the time being, live activities will only activate if travel starts or takes place "
-                  "at some point while with Torn PDA in the foreground.\n\n"
-                  "Please note that this is a beta feature and may not work as expected in all cases (any feedback is appreciated).",
-            ),
+          if (Platform.isIOS && kSdkIos >= 17.2)
+            "Travel live activities will now start automatically with app closed or in the foreground",
+          if (Platform.isIOS && kSdkIos >= 16.2) "Travel live activities are now enabled by default",
           if (Platform.isIOS && kSdkIos >= 16.2)
             Consumer<SettingsProvider>(
               builder: (context, settings, child) {
@@ -126,9 +117,20 @@ class ChangeLogState extends State<ChangeLog> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        "Enabled (default)",
-                        style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                      const Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Travel Live Activities",
+                              style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "(enabled by default)",
+                              style: TextStyle(fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ),
                       ),
                       Switch(
                         value: settings.iosLiveActivityTravelEnabled,
@@ -141,6 +143,36 @@ class ChangeLogState extends State<ChangeLog> {
                   ),
                 );
               },
+            ),
+          "Added accessibility (talkback) improvements in the Profile section",
+          ComplexFeature(
+            "Added browser handler to open external device applications (see details)",
+            explanation: "The new handler allows web content / user scripts to launch external applications "
+                "(like Discord) by passing a URL from JavaScript to the native side of the app\n\n"
+                "Please visit the ./docs section in Github for more information.",
+          ),
+          "Fixed issues with API key in YATA stats dialog",
+          "Fixed status color counter widget not updating properly",
+          "Fixed hospital notifications for war targets not working in some devices",
+        ],
+    );
+
+    // v3.8.1 - Build 542 - 07/06/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.8.1'
+        ..date = '10 JUN 2025'
+        ..features = [
+          if (Platform.isIOS)
+            ComplexFeature(
+              "Added live activity support for traveling",
+              explanation: "Only available for iOS 16.2 and above\n\n"
+                  "See Alerts / Live Activities\n\n"
+                  "This feature allows you to track your travel in real-time, "
+                  "providing updates on your journey directly on your device's lock screen or dynamic island.\n\n"
+                  "IMPORTANT: for the time being, live activities will only activate if travel starts or takes place "
+                  "at some point while with Torn PDA in the foreground.\n\n"
+                  "Please note that this is a beta feature and may not work as expected in all cases (any feedback is appreciated).",
             ),
           "Userscripts now support individual custom API keys",
           "Global ranked war list is now searchable and can be sorted",

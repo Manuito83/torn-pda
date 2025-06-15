@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -1435,6 +1434,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
             onChanged: (enabled) async {
               if (enabled == null) return;
               setState(() {
+                // This setter will eventually also get or delete token from Firestore
                 _settingsProvider.iosLiveActivityTravelEnabled = enabled;
               });
 

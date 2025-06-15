@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io' show Platform;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -263,6 +264,56 @@ class _FirebaseFunctions {
 
       final HttpsCallableResult results = await callable.call(json.encode(data));
       return json.decode(results.data);
+    }
+  }
+
+  Future<void> registerLiveActivityPushToStartToken({
+    required String token,
+    required String activityType,
+  }) async {
+    if (!Platform.isIOS) return;
+
+    final String functionName = 'liveActivities-registerPushToStartToken';
+
+    Map<String, dynamic> data = {
+      'token': token,
+      'activityType': activityType,
+    };
+
+    try {
+      if (Platform.isWindows) {
+        await _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+      } else {
+        final HttpsCallable callable = FirebaseFunctions.instanceFor(
+          region: 'us-east4',
+        ).httpsCallable(functionName);
+        await callable.call(data);
+      }
+      log("Successfully called registerPushToStartToken for type: $activityType");
+    } catch (e) {
+      log("Error calling registerPushToStartToken: $e");
+    }
+  }
+
+  Future<void> syncLiveActivityTimestamp({
+    required int arrivalTimestamp,
+  }) async {
+    if (!Platform.isIOS) return;
+
+    final String functionName = 'liveActivities-syncActiveLATimestamp';
+
+    Map<String, dynamic> data = {
+      'arrivalTimestamp': arrivalTimestamp,
+    };
+
+    try {
+      final HttpsCallable callable = FirebaseFunctions.instanceFor(
+        region: 'us-east4',
+      ).httpsCallable(functionName);
+      await callable.call(data);
+      log("Successfully synced LA timestamp ($arrivalTimestamp) with server");
+    } catch (e) {
+      log("Error syncing LA timestamp with server: $e");
     }
   }
 }

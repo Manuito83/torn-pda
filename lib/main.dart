@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:ui';
 
 // Package imports:
+import 'package:accessibility_tools/accessibility_tools.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -74,15 +75,17 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.2';
-const String androidCompilation = '543';
-const String iosCompilation = '543';
+const String androidCompilation = '548';
+const String iosCompilation = '548';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
 const bool pointFunctionsEmulatorToLocal = false;
 
-// TODO (App release)cle
+// TODO (App release)
 const bool enableWakelockForDebug = true;
+
+final enableAccessibilityTools = false;
 
 bool logAndShowToUser = false;
 
@@ -484,7 +487,31 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         navigatorKey: navigatorKey,
         theme: theme,
         debugShowCheckedModeBanner: false,
-        builder: BotToastInit(),
+        builder: (context, child) {
+          final botToastWrappedChild = BotToastInit()(context, child);
+
+          if (enableAccessibilityTools && kDebugMode) {
+            return AccessibilityTools(
+              // Set to null to disable tap area checking
+              minimumTapAreas: null,
+              // Check for semantic labels
+              checkSemanticLabels: true,
+              // Check for flex overflows
+              checkFontOverflows: false,
+              // Check for image labels
+              checkImageLabels: false,
+              // Set how much info about issues is printed
+              logLevel: LogLevel.verbose,
+              // Set where the buttons are placed
+              buttonsAlignment: ButtonsAlignment.bottomRight,
+              // Enable or disable draging the buttons around
+              enableButtonsDrag: true,
+              child: botToastWrappedChild,
+            );
+          } else {
+            return botToastWrappedChild;
+          }
+        },
         navigatorObservers: [BotToastNavigatorObserver()],
         scrollBehavior: !Platform.isWindows
             ? null

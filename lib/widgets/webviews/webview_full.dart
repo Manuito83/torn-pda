@@ -1214,6 +1214,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             WebviewHandlers.addScriptApiHandlers(webview: webViewController!);
 
             WebviewHandlers.addToastHandler(webview: webViewController!);
+
+            WebviewHandlers.addLaunchIntentHandler(webview: webViewController!);
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();

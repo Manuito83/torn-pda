@@ -3519,7 +3519,7 @@ class SettingsPageState extends State<SettingsPage> {
             }
 
             await FirestoreHelper().uploadUsersProfileDetail(myProfile, userTriggered: true);
-            await FirestoreHelper().uploadLastActiveTime(DateTime.now().millisecondsSinceEpoch);
+            await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(DateTime.now().millisecondsSinceEpoch);
             if (Platform.isAndroid) {
               FirestoreHelper().setVibrationPattern(_vibrationValue);
             }
