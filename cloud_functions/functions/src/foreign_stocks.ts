@@ -473,44 +473,140 @@ export const foreignStocksGroup = {
 
   // UTIL FUNCTION
   // Cleans up any periodicMap with more than 200 entries in case we have a leak in any other methods
-  // oneTimeClean: functions.region('us-east4').pubsub
-  //   .schedule("*/3 * * * *")
-  //   .onRun(async () => {
+  oneTimeClean: functions
+    .region("us-east4")
+    .runWith({ timeoutSeconds: 300, memory: "256MB" })
+    .pubsub
+    .schedule("0 3 * * 0") // At 03:00 on Sunday
+    .onRun(async () => {
 
-  //     const db = admin.firestore();
-  //     const snapshot = await db.collection("stocks-main").get();
+      const db = admin.firestore();
+      const snapshot = await db.collection("stocks-main").get();
 
-  //     const cleanupPromises = snapshot.docs.map(async doc => {
-  //       const docData = doc.data();
-  //       if (docData.periodicMap && typeof docData.periodicMap === 'object') {
-  //         const bigMap = docData.periodicMap;
-  //         const allKeys = Object.keys(bigMap)
-  //           .map(Number)
-  //           .filter(k => !isNaN(k))
-  //           .sort((a, b) => b - a);
+      let numberCleared = 0;
 
-  //         if (allKeys.length > 200) {
-  //           const keysToKeep = allKeys.slice(0, 200);
-  //           const filteredMap: { [key: number]: number } = {};
-  //           for (const k of keysToKeep) {
-  //             filteredMap[k] = bigMap[k];
-  //           }
+      const cleanupPromises = snapshot.docs.map(async doc => {
+        const docData = doc.data();
+        if (docData.periodicMap && typeof docData.periodicMap === 'object') {
+          const bigMap = docData.periodicMap;
+          const allKeys = Object.keys(bigMap)
+            .map(Number)
+            .filter(k => !isNaN(k))
+            .sort((a, b) => b - a);
 
-  //           await doc.ref.set({ periodicMap: {} }, { merge: true });
-  //           await doc.ref.set({ periodicMap: filteredMap }, { merge: true });
+          if (allKeys.length > 200) {
+            const keysToKeep = allKeys.slice(0, 200);
+            const filteredMap: { [key: number]: number } = {};
+            for (const k of keysToKeep) {
+              filteredMap[k] = bigMap[k];
+            }
 
-  //           functions.logger.info(`Document ${doc.id}: reduced periodicMap to 200 entries`);
-  //         } else {
-  //           functions.logger.info(`Document ${doc.id}: periodicMap has ${allKeys.length} entries, no cleanup needed`);
-  //         }
-  //       } else {
-  //         functions.logger.info(`Document ${doc.id}: No periodicMap or not an object, no cleanup needed`);
-  //       }
-  //     });
+            await doc.ref.set({ periodicMap: filteredMap }, { merge: true });
 
-  //     await Promise.all(cleanupPromises);
+            functions.logger.info(`Document ${doc.id}: reduced periodicMap to 200 entries`);
+            numberCleared++;
+          } else {
+            //functions.logger.info(`Document ${doc.id}: periodicMap has ${allKeys.length} entries, no cleanup needed`);
+          }
+        } else {
+          functions.logger.info(`Document ${doc.id}: No periodicMap or not an object, no cleanup needed`);
+        }
+      });
 
-  //     return { status: 'cleanup_completed' };
-  //   }),
+      functions.logger.info(`Cleaned up ${numberCleared} documents`);
+
+      await Promise.all(cleanupPromises);
+
+      return { status: 'cleanup_completed' };
+    }),
+
+  // UTIL FUNCTION
+  // Cleans stocks that have not been updated in 3 months (dissapeared from YATA and Prometheus)
+  deleteOldStocks: functions
+    .region("us-east4")
+    .runWith({ timeoutSeconds: 300, memory: "256MB" })
+    .pubsub
+    .schedule("0 4 * * 0")
+    .onRun(async () => {
+      // DEBUG
+      // true: only prints
+      // false: will delete
+      const IS_DRY_RUN = false;
+
+      if (IS_DRY_RUN) {
+        functions.logger.warn("deleteOldStocks: RUNNING IN DRY RUN MODE, NO DELETIONS");
+      } else {
+        functions.logger.warn("deleteOldStocks: NOT RUNNING IN DRY RUN MODE, DELETIONS WILL BE PERFORMED");
+      }
+
+      const db = admin.firestore();
+      const stocksRef = db.collection("stocks-main");
+
+      const totalStocksSnapshot = await stocksRef.select().get();
+      const totalStocksCount = totalStocksSnapshot.size;
+
+      const daysThreshold = 90;
+      const secondsInADay = 24 * 60 * 60;
+      const nowTimestamp = Math.floor(Date.now() / 1000);
+      const cutoffTimestamp = nowTimestamp - (daysThreshold * secondsInADay);
+
+      functions.logger.info(`Looking for stocks with 'update' timestamp older than ${cutoffTimestamp} (approx. ${daysThreshold} days ago).`);
+
+      const oldStocksQuery = stocksRef.where("update", "<", cutoffTimestamp);
+
+      try {
+        const snapshot = await oldStocksQuery.get();
+
+        if (snapshot.empty) {
+          functions.logger.info("No old stocks found to delete. Task finished.");
+          return null;
+        }
+
+        // --- DRY RUN ---
+        if (IS_DRY_RUN) {
+          for (const doc of snapshot.docs) {
+            const data = doc.data();
+            const updateTimestamp = data.update || 0;
+            const ageInSeconds = nowTimestamp - updateTimestamp;
+            const ageInMonths = (ageInSeconds / (secondsInADay * 30.44)).toFixed(1);
+
+            functions.logger.log(`Would delete doc ID: ${doc.id}, Last update: ${new Date(updateTimestamp * 1000).toISOString()}, Age: ~${ageInMonths} months`);
+          }
+          functions.logger.log(`Dry run summary: Would delete ${snapshot.size} out of ${totalStocksCount} total stocks.`);
+          return null;
+        }
+
+        // --- DELETIONS ---
+        const MAX_WRITES_PER_BATCH = 500;
+        const batches: admin.firestore.WriteBatch[] = [];
+        let currentBatch = db.batch();
+        let writeCount = 0;
+
+        for (const doc of snapshot.docs) {
+          currentBatch.delete(doc.ref);
+          writeCount++;
+
+          if (writeCount === MAX_WRITES_PER_BATCH) {
+            batches.push(currentBatch);
+            currentBatch = db.batch();
+            writeCount = 0;
+          }
+        }
+
+        if (writeCount > 0) {
+          batches.push(currentBatch);
+        }
+
+        await Promise.all(batches.map(batch => batch.commit()));
+
+        functions.logger.info(`Successfully deleted ${snapshot.size} old stocks out of a total of ${totalStocksCount}.`);
+
+      } catch (error) {
+        functions.logger.error("Error during deleteOldStocks task:", error);
+        throw new Error("Failed to delete old stocks.");
+      }
+
+      return null;
+    }),
 
 };
