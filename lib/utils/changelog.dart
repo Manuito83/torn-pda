@@ -107,6 +107,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '15 JUL 2025'
         ..features = [
           "Fixed missing Print Store shortcut",
+          "Fixed Wiki references",
         ],
     );
 
