@@ -10,10 +10,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WebviewHandlers {
   static void addTornPDACheckHandler({
@@ -485,6 +487,65 @@ class WebviewHandlers {
         );
 
         return {'status': 'success', 'message': 'Toast displayed successfully'};
+      },
+    );
+  }
+
+  /// Registers a handler to launch external applications via a URL
+  static void addLaunchIntentHandler({
+    required InAppWebViewController webview,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'launchIntent',
+      callback: (args) async {
+        if (args.isEmpty || args[0] is! String || (args[0] as String).isEmpty) {
+          log('[launchIntent Handler] Error: No URL provided');
+          return {'success': false, 'error': 'A non-empty URL string must be provided'};
+        }
+
+        final String urlToLaunch = args[0];
+        final Uri? uri = Uri.tryParse(urlToLaunch);
+
+        if (uri == null) {
+          log('[launchIntent Handler] Error: Could not parse URL: $urlToLaunch');
+          return {'success': false, 'error': 'Invalid URL format'};
+        }
+
+        try {
+          final bool success = await launchUrl(
+            uri,
+            mode: LaunchMode.platformDefault,
+          );
+
+          if (!success) {
+            toastification.show(
+              closeOnClick: true,
+              type: ToastificationType.error,
+              alignment: Alignment.bottomCenter,
+              autoCloseDuration: const Duration(seconds: 10),
+              title: const Text(
+                "There was an error launching native application!",
+                maxLines: 10,
+              ),
+            );
+            return {'success': false, 'error': 'The application could not be launched'};
+          }
+
+          return {'success': true};
+        } catch (e) {
+          log('[launchIntent Handler] Exception launching URL: $urlToLaunch. Error: $e');
+          toastification.show(
+            closeOnClick: true,
+            type: ToastificationType.error,
+            alignment: Alignment.bottomCenter,
+            autoCloseDuration: const Duration(seconds: 10),
+            title: const Text(
+              "There was an error launching native application!",
+              maxLines: 10,
+            ),
+          );
+          return {'success': false, 'error': e.toString()};
+        }
       },
     );
   }

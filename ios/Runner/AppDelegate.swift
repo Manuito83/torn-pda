@@ -13,7 +13,7 @@ import UserNotifications  // for UNUserNotificationCenter
   var memoryChannel: FlutterMethodChannel!
   var liveActivityChannel: FlutterMethodChannel!
 
-  lazy var liveActivityManagerHolder: Any? = {
+  lazy var liveActivityManager: Any? = {
     if #available(iOS 16.2, *) {
       let manager = LiveActivityManager()
       return manager
@@ -23,8 +23,8 @@ import UserNotifications  // for UNUserNotificationCenter
   }()
 
   @available(iOS 16.2, *)
-  private var typedLiveActivityManager: LiveActivityManager? {
-    return liveActivityManagerHolder as? LiveActivityManager
+  private var activityManager: LiveActivityManager? {
+    return liveActivityManager as? LiveActivityManager
   }
 
   override func application(
@@ -154,7 +154,7 @@ import UserNotifications  // for UNUserNotificationCenter
 
     if #available(iOS 16.2, *) {
       liveActivityChannel.setMethodCallHandler { [weak self] (call, result) in
-        guard let self = self, let manager = self.typedLiveActivityManager else {
+        guard let self = self, let manager = self.activityManager else {
           result(
             FlutterError(
               code: "UNAVAILABLE",
@@ -167,6 +167,7 @@ import UserNotifications  // for UNUserNotificationCenter
         let args = call.arguments as? [String: Any]
 
         switch call.method {
+
         case "startTravelActivity":
           guard let currentArgs = args,
             let currentDestinationDisplayName = currentArgs["currentDestinationDisplayName"]
@@ -222,6 +223,7 @@ import UserNotifications  // for UNUserNotificationCenter
               )
             }
           }
+
         case "updateTravelActivity":
           guard let currentArgs = args,
             let currentDestinationDisplayName = currentArgs["currentDestinationDisplayName"]
@@ -277,19 +279,38 @@ import UserNotifications  // for UNUserNotificationCenter
               )
             }
           }
+
         case "endTravelActivity":
           Task {
             await manager.endCurrentTravelActivity()
             result(nil)
           }
+
         case "isAnyTravelActivityActive":
           result(manager.isAnyTravelActivityActive())
+
+        case "getPushToStartToken":
+          guard let args = call.arguments as? [String: Any],
+            let activityType = args["activityType"] as? String
+          else {
+            result(
+              FlutterError(
+                code: "INVALID_ARGUMENTS", message: "activityType is required", details: nil))
+            return
+          }
+
+          if #available(iOS 17.2, *) {
+            let token = manager.getPushToStartToken(for: activityType)
+            result(token)
+          } else {
+            result(nil)
+          }
 
         default:
           result(FlutterMethodNotImplemented)
         }
       }
-      self.typedLiveActivityManager?.checkAndAdoptExistingActivities()
+      self.activityManager?.checkAndAdoptExistingActivities()
     } else {
       liveActivityChannel.setMethodCallHandler { (call, result) in
         print("Live Activities method '\(call.method)' called on unsupported iOS version.")
@@ -309,7 +330,7 @@ import UserNotifications  // for UNUserNotificationCenter
   override func applicationDidBecomeActive(_ application: UIApplication) {
     super.applicationDidBecomeActive(application)
     if #available(iOS 16.2, *) {
-      self.typedLiveActivityManager?.checkAndAdoptExistingActivities()
+      self.activityManager?.checkAndAdoptExistingActivities()
     }
   }
 

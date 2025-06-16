@@ -105,6 +105,10 @@ export const playersGroup = {
         promises.push(manageStats("forumsSubscriptionsNotification", -1));
       }
 
+      if (beforeStat.la_travel_push_token) {
+        promises.push(manageStats("la_travel_enabled", -1));
+      }
+
       if (beforeStat.platform === "android") {
         promises.push(manageStats("android", -1));
       }
@@ -233,6 +237,14 @@ export const playersGroup = {
           manageStats("forumsSubscriptionsNotification", afterStat.forumsSubscriptionsNotification ? 1 : -1
           )
         );
+
+      const wasLaEnabled = beforeStat.la_travel_push_token ? true : false;
+      const isLaEnabled = afterStat.la_travel_push_token ? true : false;
+      if (wasLaEnabled !== isLaEnabled) {
+        promises.push(
+          manageStats("la_travel_enabled", isLaEnabled ? 1 : -1)
+        );
+      }
 
       if (
         !afterStat.energyNotification &&

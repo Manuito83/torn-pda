@@ -106,7 +106,7 @@ export const factionAssistGroup = {
                     token: thisMember.token,
                     title: title,
                     body: body,
-                    icon: "notification_assist",
+                    icon: "notification_assists",
                     color: "#FF0000",
                     channelId: "Alerts assists",
                     assistId: attackId,

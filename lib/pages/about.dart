@@ -816,7 +816,7 @@ class AboutPageState extends State<AboutPage> {
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (context) {
-        return ChangeLog();
+        return const ChangeLog(autoTriggered: false);
       },
     );
   }

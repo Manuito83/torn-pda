@@ -6,6 +6,7 @@ import 'dart:developer';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
@@ -14,6 +15,8 @@ import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 
@@ -1200,11 +1203,23 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   bool _iosLiveActivitiesTravelEnabled = true;
-  bool get iosLiveActivitiesTravelEnabled => _iosLiveActivitiesTravelEnabled;
-  set iosLiveActivitiesTravelEnabled(bool value) {
-    _iosLiveActivitiesTravelEnabled = value;
-    Prefs().setIosLiveActivitiesTravelEnabled(value);
+  bool get iosLiveActivityTravelEnabled => _iosLiveActivitiesTravelEnabled;
+  set iosLiveActivityTravelEnabled(bool enabled) {
+    _iosLiveActivitiesTravelEnabled = enabled;
+    Prefs().setIosLiveActivityTravelEnabled(enabled);
     notifyListeners();
+
+    if (enabled) {
+      if (kSdkIos >= 17.2) {
+        log("Live Activities enabled by user. Requesting push-to-start token...");
+        final bridgeController = Get.find<LiveActivityBridgeController>();
+        // Force, so that we are using the setter also as a way to reset the token
+        bridgeController.getPushToStartTokenAndSendToFirebase(force: true, activityType: LiveActivityType.travel);
+      }
+    } else {
+      FirestoreHelper().disableLiveActivityTravel();
+      Prefs().setLaPushToken(token: null, activityType: LiveActivityType.travel);
+    }
   }
 
   Future<void> loadPreferences() async {
@@ -1442,7 +1457,7 @@ class SettingsProvider extends ChangeNotifier {
     _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
-    _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivitiesTravelEnabled();
+    _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
 
     notifyListeners();
   }

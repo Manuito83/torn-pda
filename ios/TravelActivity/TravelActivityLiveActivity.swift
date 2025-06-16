@@ -84,7 +84,8 @@ struct TravelActivityLiveActivity: Widget {
       )
       .activityBackgroundTint(Color.black.opacity(0.7))
       .activitySystemActionForegroundColor(Color.white)
-    } dynamicIsland: { context in
+    }  // Dynamic Island
+    dynamicIsland: { context in
       dynamicIslandContent(context: context)
     }
   }

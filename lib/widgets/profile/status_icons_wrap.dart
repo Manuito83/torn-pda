@@ -111,28 +111,34 @@ class StatusIconsWrapState extends State<StatusIconsWrap> {
           if (!skip) {
             final icon = Image.asset('images/icons/status/$iconNumber.png', width: 18);
             iconList.add(
-              GestureDetector(
-                child: icon,
-                onTap: () {
-                  BotToast.showText(
-                    text: details.replaceAll(" 0 days, 0 hours, ", " ").replaceAll(" 0 days, ", " "),
-                    textStyle: const TextStyle(
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    contentColor: Colors.blue[700]!,
-                    duration: const Duration(seconds: 5),
-                    contentPadding: const EdgeInsets.all(10),
-                  );
-                },
-                onDoubleTap: () {
-                  final String? url = _constructUrl(iconNumber);
-                  widget.openBrowser(url: url, shortTap: true);
-                },
-                onLongPress: () {
-                  final String? url = _constructUrl(iconNumber);
-                  widget.openBrowser(url: url, shortTap: false);
-                },
+              Semantics(
+                label: details.replaceAll(" 0 days, 0 hours, ", " ").replaceAll(" 0 days, ", " "),
+                value: '',
+                onTapHint: 'Open browser',
+                onLongPressHint: 'Open browser',
+                child: GestureDetector(
+                  child: icon,
+                  onTap: () {
+                    BotToast.showText(
+                      text: details.replaceAll(" 0 days, 0 hours, ", " ").replaceAll(" 0 days, ", " "),
+                      textStyle: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                      ),
+                      contentColor: Colors.blue[700]!,
+                      duration: const Duration(seconds: 5),
+                      contentPadding: const EdgeInsets.all(10),
+                    );
+                  },
+                  onDoubleTap: () {
+                    final String? url = _constructUrl(iconNumber);
+                    widget.openBrowser(url: url, shortTap: true);
+                  },
+                  onLongPress: () {
+                    final String? url = _constructUrl(iconNumber);
+                    widget.openBrowser(url: url, shortTap: false);
+                  },
+                ),
               ),
             );
           }

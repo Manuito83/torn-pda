@@ -2158,7 +2158,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Uploads last active time to Firebase
     final now = DateTime.now().millisecondsSinceEpoch;
-    final success = await FirestoreHelper().uploadLastActiveTime(now);
+    final success = await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(now);
     if (success) {
       _settingsProvider.updateLastUsed = now;
     }
@@ -2535,16 +2535,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   _initialiseLiveActivitiesBridgeService() async {
     _preferencesCompleter.future.whenComplete(() async {
       if (!Platform.isIOS) return;
-      if (!_settingsProvider.iosLiveActivitiesTravelEnabled) return;
+      if (!_settingsProvider.iosLiveActivityTravelEnabled) return;
 
       if (kSdkIos < 16.2) {
         // Regardless of user settings, disable Live Activities on iOS versions below 16.2
-        _settingsProvider.iosLiveActivitiesTravelEnabled = false;
+        _settingsProvider.iosLiveActivityTravelEnabled = false;
         return;
       }
 
-      await Get.find<LiveActivityTravelController>().activate();
-      Get.find<LiveActivityBridgeController>().initializeHandler();
+      final bridgeController = Get.find<LiveActivityBridgeController>();
+      final travelController = Get.find<LiveActivityTravelController>();
+
+      bridgeController.initializeHandler();
+      await travelController.activate();
     });
   }
 

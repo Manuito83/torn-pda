@@ -47,27 +47,30 @@ class MarketStatusCard extends StatelessWidget {
           Text(marketNumber),
           Text(" ($marketPendingString)"),
           const SizedBox(width: 8),
-          GestureDetector(
-            child: const Icon(
-              MdiIcons.basketOutline,
-              size: 20,
+          Semantics(
+            label: 'Open market dialog',
+            child: GestureDetector(
+              child: const Icon(
+                MdiIcons.basketOutline,
+                size: 20,
+              ),
+              onTap: () {
+                showDialog<void>(
+                  useRootNavigator: false,
+                  context: context,
+                  barrierDismissible: false, // user must tap button!
+                  builder: (BuildContext context) {
+                    return MarketDialog(
+                      market: marketModel.itemmarket!,
+                      openTapCallback: openTapCallback,
+                      openLongPressCallback: openLongPressCallback,
+                      items: totalItems,
+                      money: totalMoney,
+                    );
+                  },
+                );
+              },
             ),
-            onTap: () {
-              showDialog<void>(
-                useRootNavigator: false,
-                context: context,
-                barrierDismissible: false, // user must tap button!
-                builder: (BuildContext context) {
-                  return MarketDialog(
-                    market: marketModel.itemmarket!,
-                    openTapCallback: openTapCallback,
-                    openLongPressCallback: openLongPressCallback,
-                    items: totalItems,
-                    money: totalMoney,
-                  );
-                },
-              );
-            },
           ),
         ],
       ),

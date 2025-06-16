@@ -155,7 +155,7 @@ class _YataStatsDialogState extends State<YataStatsDialog> {
   Future<YataStatsResponse?> _fetchDetails() async {
     final yataStatsResponse = await YataStatsComm.getYataStats(
       targetId: widget.yataStatsPayload.targetId.toString(),
-      ownApiKey: _u.alternativeTSCKey,
+      ownApiKey: _u.alternativeYataKey,
     );
     return yataStatsResponse;
   }

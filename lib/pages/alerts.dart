@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -1402,6 +1401,17 @@ class AlertsSettingsState extends State<AlertsSettings> {
   }
 
   Widget _liveActivities() {
+    String laHeader =
+        "Live activities will only start if you have Torn PDA open in the foreground when they take place. "
+        "You'll see them in the lock screen and the dynamic island (if supported)";
+
+    if (kSdkIos >= 17.2) {
+      laHeader =
+          "Live activities will start immediately if you have Torn PDA open in the foreground, or after a few minutes "
+          "when it's in the background or completely closed.\n\n"
+          "They'll show in the lock screen and dynamic island.";
+    }
+
     return Column(
       children: [
         const Padding(
@@ -1411,20 +1421,16 @@ class AlertsSettingsState extends State<AlertsSettings> {
             style: TextStyle(fontSize: 9),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
-          child: Text(
-            "Live activities will only start if you have the Torn PDA app open in the foreground when they take place."
-            "You'll see them in the lock screen and the dynamic island (if supported)",
-            style: TextStyle(fontSize: 12),
-          ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
+          child: Text(laHeader, style: const TextStyle(fontSize: 12)),
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
           child: CheckboxListTile(
             checkColor: Colors.white,
             activeColor: Colors.blueGrey,
-            value: _settingsProvider.iosLiveActivitiesTravelEnabled,
+            value: _settingsProvider.iosLiveActivityTravelEnabled,
             title: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1435,7 +1441,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
             onChanged: (enabled) async {
               if (enabled == null) return;
               setState(() {
-                _settingsProvider.iosLiveActivitiesTravelEnabled = enabled;
+                // This setter will eventually also get or delete token from Firestore
+                _settingsProvider.iosLiveActivityTravelEnabled = enabled;
               });
 
               if (enabled) {

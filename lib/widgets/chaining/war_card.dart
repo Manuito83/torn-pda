@@ -1420,7 +1420,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
   Future<void> _scheduleNotification(DateTime untilTime) async {
     String notificationTitle = "";
     String notificationSubtitle = "";
-    String notificationIconAndroid = "notification_assist";
+    String notificationIconAndroid = "notification_assists";
     Color notificationIconColor = Colors.red;
 
     int secondsToNotification = untilTime.difference(DateTime.now()).inSeconds - 15;

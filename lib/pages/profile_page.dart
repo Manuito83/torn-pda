@@ -2,6 +2,7 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
+import 'dart:ui';
 
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
@@ -596,61 +597,68 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           Column(
             children: [
               if (_user?.name != null && _user!.name!.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    final String status = _user!.lastAction!.status == 'Offline'
-                        ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
-                        : _user!.lastAction!.status == 'Online'
-                            ? 'Online now'
-                            : 'Online ${_user!.lastAction!.relative}';
-                    BotToast.showText(
-                      text: status,
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: Colors.blue,
-                      duration: const Duration(seconds: 3),
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  },
-                  onLongPress: () {
-                    Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
-                    BotToast.showText(
-                      text: "ID copied to the clipboard!",
-                      textStyle: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                      ),
-                      contentColor: Colors.blue,
-                      contentPadding: const EdgeInsets.all(10),
-                    );
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FittedBox(
-                        fit: BoxFit.fitWidth,
-                        child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 5),
-                              child: Text(_user!.name!, style: const TextStyle(color: Colors.white)),
-                            ),
-                            if (_user!.lastAction!.status == "Offline")
-                              const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
-                            else
-                              _user!.lastAction!.status == "Idle"
-                                  ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
-                                  : Icon(Icons.circle, size: 14, color: Colors.green[400]),
-                          ],
+                Semantics(
+                  label: "[${_user!.name}] - Level ${_user!.level}",
+                  onTapHint: "Show online status",
+                  onLongPressHint: "Copy ID to clipboard",
+                  child: GestureDetector(
+                    onTap: () {
+                      final String status = _user!.lastAction!.status == 'Offline'
+                          ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
+                          : _user!.lastAction!.status == 'Online'
+                              ? 'Online now'
+                              : 'Online ${_user!.lastAction!.relative}';
+                      BotToast.showText(
+                        text: status,
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
                         ),
+                        contentColor: Colors.blue,
+                        duration: const Duration(seconds: 3),
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    },
+                    onLongPress: () {
+                      Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
+                      BotToast.showText(
+                        text: "ID copied to the clipboard!",
+                        textStyle: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                        contentColor: Colors.blue,
+                        contentPadding: const EdgeInsets.all(10),
+                      );
+                    },
+                    child: ExcludeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.fitWidth,
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 5),
+                                  child: Text(_user!.name!, style: const TextStyle(color: Colors.white)),
+                                ),
+                                if (_user!.lastAction!.status == "Offline")
+                                  const Icon(Icons.remove_circle, size: 14, color: Colors.grey)
+                                else
+                                  _user!.lastAction!.status == "Idle"
+                                      ? const Icon(Icons.adjust, size: 14, color: Colors.orange)
+                                      : Icon(Icons.circle, size: 14, color: Colors.green[400]),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            "[${_user!.playerId}] - Level ${_user!.level}",
+                            style: const TextStyle(fontSize: 10, color: Colors.white),
+                          ),
+                        ],
                       ),
-                      Text(
-                        "[${_user!.playerId}] - Level ${_user!.level}",
-                        style: const TextStyle(fontSize: 10, color: Colors.white),
-                      ),
-                    ],
+                    ),
                   ),
                 )
               else
@@ -938,7 +946,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           itemCount: _shortcutsProv.activeShortcuts.length,
           itemBuilder: (context, index) {
             final thisShortcut = _shortcutsProv.activeShortcuts[index];
-            return shortcutTile(thisShortcut);
+            return Semantics(
+              label: "Shorcut to ${thisShortcut.name}",
+              child: ExcludeSemantics(child: shortcutTile(thisShortcut)),
+            );
           },
         );
       } else {
@@ -957,7 +968,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             }
           }
           wrapItems.add(
-            SizedBox(height: h, width: w, child: shortcutTile(thisShortcut)),
+            Semantics(
+              label: "Shorcut to ${thisShortcut.name}",
+              child: SizedBox(
+                height: h,
+                width: w,
+                child: ExcludeSemantics(child: shortcutTile(thisShortcut)),
+              ),
+            ),
           );
         }
         return Wrap(alignment: WrapAlignment.center, children: wrapItems);
@@ -997,16 +1015,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   ],
                 ),
                 GestureDetector(
-                  child: IconButton(
-                    icon: const Icon(Icons.switch_access_shortcut_outlined),
-                    color: _themeProvider!.getTextColor(Colors.orange[900]),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (BuildContext context) => ShortcutsPage(),
-                        ),
-                      );
-                    },
+                  child: Semantics(
+                    label: 'Open shortcuts menu',
+                    child: IconButton(
+                      icon: const Icon(Icons.switch_access_shortcut_outlined),
+                      color: _themeProvider!.getTextColor(Colors.orange[900]),
+                      onPressed: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) => ShortcutsPage(),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -1654,23 +1675,30 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       color: _themeProvider!.mainText,
                     ),
                     const SizedBox(width: 6),
-                    Column(
-                      children: [
-                        Text(
-                          "TRAVEL",
-                          style: TextStyle(
-                            fontSize: 8,
-                            color: _themeProvider!.mainText,
+                    Semantics(
+                      label: "Open Travel Agency",
+                      child: Column(
+                        children: [
+                          ExcludeSemantics(
+                            child: Text(
+                              "TRAVEL",
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: _themeProvider!.mainText,
+                              ),
+                            ),
                           ),
-                        ),
-                        Text(
-                          "AGENCY",
-                          style: TextStyle(
-                            fontSize: 8,
-                            color: _themeProvider!.mainText,
+                          ExcludeSemantics(
+                            child: Text(
+                              "AGENCY",
+                              style: TextStyle(
+                                fontSize: 8,
+                                color: _themeProvider!.mainText,
+                              ),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -1812,13 +1840,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 15),
-              child: Text(
-                'TRAVEL',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+            Padding(
+              padding: const EdgeInsets.only(bottom: 15),
+              child: Semantics(
+                label: "Travel Card",
+                child: const ExcludeSemantics(
+                  child: Text(
+                    'TRAVEL',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -2215,8 +2248,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     NotificationType notificationType = NotificationType.notification;
     IconData? notificationIcon;
 
+    String semanticsLabel = "Tap to activate notification";
+    if (notificationType == NotificationType.notification) {
+      semanticsLabel = "Tap to activate notification";
+    } else if (notificationType == NotificationType.alarm) {
+      semanticsLabel = "Tap to activate alarm";
+    } else if (notificationType == NotificationType.timer) {
+      semanticsLabel = "Tap to activate timer";
+    }
+
     switch (profileNotification) {
       case ProfileNotification.travel:
+        semanticsLabel += "for travel";
         _travelArrivalTime = DateTime.fromMillisecondsSinceEpoch(_user!.travel!.timestamp! * 1000);
         final timeDifference = _travelArrivalTime.difference(DateTime.now());
         secondsToGo = timeDifference.inSeconds;
@@ -2264,6 +2307,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
 
       case ProfileNotification.energy:
+        semanticsLabel += "for energy";
         if (_user!.energy!.current! < _user!.energy!.maximum!) {
           if (_customEnergyTrigger! < _user!.energy!.maximum!) {
             final energyToGo = _customEnergyTrigger! - _user!.energy!.current!;
@@ -2318,6 +2362,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
 
       case ProfileNotification.nerve:
+        semanticsLabel += "for nerve";
         if (_user!.nerve!.current! < _user!.nerve!.maximum!) {
           if (_customNerveTrigger! < _user!.nerve!.maximum!) {
             final nerveToGo = _customNerveTrigger! - _user!.nerve!.current!;
@@ -2372,6 +2417,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
 
       case ProfileNotification.life:
+        semanticsLabel += "for life";
         secondsToGo = _user!.life!.fulltime;
         notificationsPending = _lifeNotificationsPending;
         _lifeNotificationTime = DateTime.now().add(Duration(seconds: _user!.life!.fulltime!));
@@ -2388,6 +2434,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationIcon = _lifeNotificationIcon;
 
       case ProfileNotification.drugs:
+        semanticsLabel += "for drugs";
         secondsToGo = _user!.cooldowns!.drug;
         notificationsPending = _drugsNotificationsPending;
         _drugsNotificationTime = DateTime.now().add(Duration(seconds: _user!.cooldowns!.drug!));
@@ -2404,6 +2451,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationIcon = _drugsNotificationIcon;
 
       case ProfileNotification.medical:
+        semanticsLabel += "for medical";
         secondsToGo = _user!.cooldowns!.medical;
         notificationsPending = _medicalNotificationsPending;
         _medicalNotificationTime = DateTime.now().add(Duration(seconds: _user!.cooldowns!.medical!));
@@ -2420,6 +2468,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationIcon = _medicalNotificationIcon;
 
       case ProfileNotification.booster:
+        semanticsLabel += "for booster";
         secondsToGo = _user!.cooldowns!.booster;
         notificationsPending = _boosterNotificationsPending;
         _boosterNotificationTime = DateTime.now().add(Duration(seconds: _user!.cooldowns!.booster!));
@@ -2436,6 +2485,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationIcon = _boosterNotificationIcon;
 
       case ProfileNotification.hospital:
+        semanticsLabel += "for hospital";
         _hospitalReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user!.status!.until! * 1000);
         secondsToGo = _hospitalReleaseTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _hospitalNotificationsPending;
@@ -2469,6 +2519,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationIcon = _hospitalNotificationIcon;
 
       case ProfileNotification.jail:
+        semanticsLabel += "for jail";
         _jailReleaseTime = DateTime.fromMillisecondsSinceEpoch(_user!.status!.until! * 1000);
         secondsToGo = _jailReleaseTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _jailNotificationsPending;
@@ -2502,6 +2553,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationIcon = _jailNotificationIcon;
 
       case ProfileNotification.rankedWar:
+        semanticsLabel += "for war";
         _rankedWarTime = DateTime.fromMillisecondsSinceEpoch(_factionRankedWar!.war!.start! * 1000);
         secondsToGo = _rankedWarTime.difference(DateTime.now()).inSeconds;
         notificationsPending = _rankedWarNotificationsPending;
@@ -2535,6 +2587,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationIcon = _rankedWarNotificationIcon;
 
       case ProfileNotification.raceStart:
+        semanticsLabel += "for race start";
         if (_user?.icons?.icon17 != null) {
           _raceStartTime = _parseRaceTime(_user!.icons!.icon17!.toString())!;
           secondsToGo = _raceStartTime.difference(DateTime.now()).inSeconds;
@@ -2584,20 +2637,52 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
 
-      return InkWell(
-        splashColor: Colors.transparent,
-        child: Icon(
-          notificationIcon,
-          size: size,
-          color: thisColor,
-        ),
-        onTap: () {
-          switch (notificationType) {
-            case NotificationType.notification:
-              if (!notificationsPending) {
-                _scheduleNotification(profileNotification);
+      return Semantics(
+        label: semanticsLabel,
+        child: InkWell(
+          splashColor: Colors.transparent,
+          child: Icon(
+            notificationIcon,
+            size: size,
+            color: thisColor,
+          ),
+          onTap: () {
+            switch (notificationType) {
+              case NotificationType.notification:
+                if (!notificationsPending) {
+                  _scheduleNotification(profileNotification);
+                  BotToast.showText(
+                    text: notificationSetString,
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: percentageError
+                        ? _themeProvider!.getTextColor(Colors.red)
+                        : _themeProvider!.getTextColor(Colors.green),
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                } else if (notificationsPending && notificationType == NotificationType.notification) {
+                  _cancelNotifications(profileNotification);
+                  BotToast.showText(
+                    text: notificationCancelString,
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: _themeProvider!.getTextColor(Colors.orange[800]),
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                }
+              case NotificationType.alarm:
+                _setAlarm(profileNotification, alarmSetString, percentageError);
+
+              case NotificationType.timer:
+                _setTimer(profileNotification);
                 BotToast.showText(
-                  text: notificationSetString,
+                  text: timerSetString,
                   textStyle: const TextStyle(
                     fontSize: 14,
                     color: Colors.white,
@@ -2608,38 +2693,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   duration: const Duration(seconds: 5),
                   contentPadding: const EdgeInsets.all(10),
                 );
-              } else if (notificationsPending && notificationType == NotificationType.notification) {
-                _cancelNotifications(profileNotification);
-                BotToast.showText(
-                  text: notificationCancelString,
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: _themeProvider!.getTextColor(Colors.orange[800]),
-                  duration: const Duration(seconds: 5),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-              }
-            case NotificationType.alarm:
-              _setAlarm(profileNotification, alarmSetString, percentageError);
-
-            case NotificationType.timer:
-              _setTimer(profileNotification);
-              BotToast.showText(
-                text: timerSetString,
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: percentageError
-                    ? _themeProvider!.getTextColor(Colors.red)
-                    : _themeProvider!.getTextColor(Colors.green),
-                duration: const Duration(seconds: 5),
-                contentPadding: const EdgeInsets.all(10),
-              );
-          }
-        },
+            }
+          },
+        ),
       );
     }
   }
@@ -3013,7 +3069,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
 
-      timeline.add(event);
+      timeline.add(Semantics(container: true, child: event));
 
       if (loopCount == maxCount) {
         break;
@@ -3298,7 +3354,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
       );
 
-      timeline.add(messageRow);
+      timeline.add(Semantics(container: true, child: messageRow));
 
       if (loopCount == maxCount) {
         break;
@@ -3468,7 +3524,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return diff;
   }
 
-  Card _playerStats() {
+  Widget _playerStats() {
     // Currency configuration
     final decimalFormat = NumberFormat("#,##0", "en_US");
 
@@ -3697,661 +3753,685 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _sharedEffDexterity = 'Dexterity: ${decimalFormat.format(dexModifiedTotal)} $dexString';
     _sharedEffTotal = 'Total: ${decimalFormat.format(totalEffective)}';
 
-    return Card(
-      child: Builder(builder: (context) {
-        return ExpandablePanel(
-          theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
-          controller: _basicInfoExpController,
-          header: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Row(
-              children: [
-                const Text(
-                  'BASIC INFO',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+    return Semantics(
+      label: "Player stats",
+      explicitChildNodes: true,
+      child: Card(
+        child: Builder(builder: (context) {
+          return ExpandablePanel(
+            theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
+            controller: _basicInfoExpController,
+            header: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Row(
+                children: [
+                  const Text(
+                    'BASIC INFO',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 5),
-                GestureDetector(
-                  child: const Icon(Icons.copy, size: 14),
-                  onTap: () {
-                    _shareMisc();
-                  },
-                ),
-              ],
-            ),
-          ),
-          collapsed: Padding(
-            padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _cashWallet(dense: false),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    GestureDetector(
-                      onLongPress: () {
-                        _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
-                      },
-                      onTap: () async {
-                        _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
-                      },
-                      child: const Icon(
-                        MdiIcons.alphaPCircleOutline,
-                        color: Colors.blueAccent,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text('${_miscModel!.points}'),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                _jobPoints(),
-                const SizedBox(height: 4),
-                _companyAddictionWidget(),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Flexible(
-                      child: SelectableText(
-                        'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
-                      ),
-                    ),
-                    if (totalEffectiveModifier == null)
-                      Text(
-                        'error',
-                        style: TextStyle(
-                          color: _themeProvider!.getTextColor(Colors.red),
-                        ),
-                      )
-                    else if (totalEffectiveModifier < 0)
-                      Text(
-                        ' ($totalEffectiveModifier%)',
-                        style: TextStyle(
-                          color: _themeProvider!.getTextColor(Colors.red),
-                        ),
-                      )
-                    else if (totalEffectiveModifier > 0)
-                      Text(
-                        ' (+$totalEffectiveModifier%)',
-                        style: TextStyle(
-                          color: _themeProvider!.getTextColor(Colors.green),
-                        ),
-                      )
-                  ],
-                ),
-                const SizedBox(height: 2),
-                SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
-                if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
-                  FutureBuilder(
-                    future: _statsChartDataFetched,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        if (_statsChartModel?.data != null) {
-                          return Column(
-                            children: [
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                height: 200,
-                                child: StatsChart(
-                                  statsData: _statsChartModel,
-                                  chartType: _settingsProvider!.tornStatsChartType == "line"
-                                      ? TornStatsChartType.Line
-                                      : TornStatsChartType.Pie,
-                                  userController: _u,
-                                  callbackStatsUpdate: _getStatsChart,
-                                ),
-                              ),
-                              const SizedBox(height: 40),
-                            ],
-                          );
-                        }
-                      }
-                      return const SizedBox(height: 8);
+                  const SizedBox(width: 5),
+                  GestureDetector(
+                    child: const Icon(Icons.copy, size: 14),
+                    onTap: () {
+                      _shareMisc();
                     },
-                  )
-                else
-                  const SizedBox(height: 8),
-                SelectableText('MAN: ${decimalFormat.format(_miscModel!.manualLabor)}'),
-                SelectableText('INT: ${decimalFormat.format(_miscModel!.intelligence)}'),
-                SelectableText('END: ${decimalFormat.format(_miscModel!.endurance)}'),
-              ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          expanded: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SelectableText('Rank: ${_user!.rank}'),
-                      SelectableText('Age: ${_user!.age}'),
-                    ],
+            collapsed: Padding(
+              padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _cashWallet(dense: false),
+                  const SizedBox(height: 4),
+                  Semantics(
+                    label: "${_miscModel!.points} Torn Points, tap to open",
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onLongPress: () {
+                            _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
+                          },
+                          onTap: () async {
+                            _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
+                          },
+                          child: const Icon(
+                            MdiIcons.alphaPCircleOutline,
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text('${_miscModel!.points}'),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: _cashWallet(dense: false),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Row(
+                  const SizedBox(height: 4),
+                  _jobPoints(),
+                  const SizedBox(height: 4),
+                  _companyAddictionWidget(),
+                  const SizedBox(height: 8),
+                  Row(
                     children: [
-                      GestureDetector(
-                        onLongPress: () {
-                          _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
-                        },
-                        onTap: () async {
-                          _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
-                        },
-                        child: const Icon(
-                          MdiIcons.alphaPCircleOutline,
-                          color: Colors.blueAccent,
+                      Flexible(
+                        child: SelectableText(
+                          'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
                         ),
                       ),
-                      const SizedBox(width: 5),
-                      SelectableText('${_miscModel!.points}'),
+                      if (totalEffectiveModifier == null)
+                        SelectableText(
+                          'error',
+                          style: TextStyle(
+                            color: _themeProvider!.getTextColor(Colors.red),
+                          ),
+                        )
+                      else if (totalEffectiveModifier < 0)
+                        SelectableText(
+                          ' ($totalEffectiveModifier%)',
+                          style: TextStyle(
+                            color: _themeProvider!.getTextColor(Colors.red),
+                          ),
+                        )
+                      else if (totalEffectiveModifier > 0)
+                        SelectableText(
+                          ' (+$totalEffectiveModifier%)',
+                          style: TextStyle(
+                            color: _themeProvider!.getTextColor(Colors.green),
+                          ),
+                        )
                     ],
                   ),
-                ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: _jobPoints(),
-                ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: _companyAddictionWidget(),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'EFFECTIVE STATS',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      GestureDetector(
-                        child: const Icon(Icons.copy, size: 14),
-                        onTap: () {
-                          _shareMisc(shareType: "effective");
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                  const SizedBox(height: 2),
+                  SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
+                  if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
+                    FutureBuilder(
+                      future: _statsChartDataFetched,
+                      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done) {
+                          if (_statsChartModel?.data != null) {
+                            return Column(
+                              children: [
+                                const SizedBox(height: 20),
+                                SizedBox(
+                                  height: 200,
+                                  child: ExcludeSemantics(
+                                    child: StatsChart(
+                                      statsData: _statsChartModel,
+                                      chartType: _settingsProvider!.tornStatsChartType == "line"
+                                          ? TornStatsChartType.Line
+                                          : TornStatsChartType.Pie,
+                                      userController: _u,
+                                      callbackStatsUpdate: _getStatsChart,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 40),
+                              ],
+                            );
+                          }
+                        }
+                        return const SizedBox(height: 8);
+                      },
+                    )
+                  else
+                    const SizedBox(height: 8),
+                  SelectableText('MAN: ${decimalFormat.format(_miscModel!.manualLabor)}'),
+                  SelectableText('INT: ${decimalFormat.format(_miscModel!.intelligence)}'),
+                  SelectableText('END: ${decimalFormat.format(_miscModel!.endurance)}'),
+                ],
+              ),
+            ),
+            expanded: Semantics(
+              explicitChildNodes: true,
+              child: Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Strength: '),
-                          ),
-                          SelectableText(decimalFormat.format(strengthModifiedTotal)),
-                          if (strengthModified)
-                            Text(
-                              " $strengthString",
-                              style: TextStyle(color: strengthColor, fontSize: 12),
-                            )
-                          else
-                            const SizedBox.shrink(),
+                          SelectableText('Rank: ${_user!.rank}'),
+                          SelectableText('Age: ${_user!.age}'),
                         ],
                       ),
-                      Row(
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: _cashWallet(dense: false),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Row(
                         children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Defense: '),
-                          ),
-                          SelectableText(decimalFormat.format(defenseModifiedTotal)),
-                          if (defenseModified)
-                            Text(
-                              " $defenseString",
-                              style: TextStyle(color: defenseColor, fontSize: 12),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Speed: '),
-                          ),
-                          SelectableText(decimalFormat.format(speedModifiedTotal)),
-                          if (speedModified)
-                            Text(
-                              " $speedString",
-                              style: TextStyle(color: speedColor, fontSize: 12),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Dexterity: '),
-                          ),
-                          SelectableText(decimalFormat.format(dexModifiedTotal)),
-                          if (dexModified)
-                            Text(
-                              " $dexString",
-                              style: TextStyle(color: dexColor, fontSize: 12),
-                            )
-                          else
-                            const SizedBox.shrink(),
-                        ],
-                      ),
-                      SizedBox(
-                        width: 50,
-                        child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text(
-                              'Total: ',
+                          Semantics(
+                            label: "Open Torn Points",
+                            child: GestureDetector(
+                              onLongPress: () {
+                                _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: false);
+                              },
+                              onTap: () async {
+                                _launchBrowser(url: 'https://www.torn.com/points.php', shortTap: true);
+                              },
+                              child: const Icon(
+                                MdiIcons.alphaPCircleOutline,
+                                color: Colors.blueAccent,
+                              ),
                             ),
                           ),
-                          SelectableText(
-                            decimalFormat.format(totalEffective),
-                          ),
+                          const SizedBox(width: 5),
+                          SelectableText('${_miscModel!.points}'),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'BATTLE STATS',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      GestureDetector(
-                        child: const Icon(Icons.copy, size: 14),
-                        onTap: () {
-                          _shareMisc(shareType: "battle");
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                    ),
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: _jobPoints(),
+                    ),
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: _companyAddictionWidget(),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Row(
                         children: [
-                          const SizedBox(width: 80, child: Text('Strength: ')),
-                          SelectableText(decimalFormat.format(_miscModel!.strength)),
-                          Text(
-                            formatStatsPercent(_miscModel!.strength, _miscModel!.total),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(width: 80, child: Text('Defense: ')),
-                          SelectableText(decimalFormat.format(_miscModel!.defense)),
-                          Text(
-                            formatStatsPercent(_miscModel!.defense, _miscModel!.total),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(width: 80, child: Text('Speed: ')),
-                          SelectableText(decimalFormat.format(_miscModel!.speed)),
-                          Text(
-                            formatStatsPercent(_miscModel!.speed, _miscModel!.total),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(width: 80, child: Text('Dexterity: ')),
-                          SelectableText(decimalFormat.format(_miscModel!.dexterity)),
-                          Text(
-                            formatStatsPercent(_miscModel!.dexterity, _miscModel!.total),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                        ],
-                      ),
-                      SizedBox(
-                        width: 50,
-                        child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 80,
-                            child: Text('Total: '),
-                          ),
-                          SelectableText(decimalFormat.format(_miscModel!.total)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (_settingsProvider!.tornStatsChartEnabled)
-                  FutureBuilder(
-                    future: _statsChartDataFetched,
-                    builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.done) {
-                        if (_statsChartModel?.data != null) {
-                          return Column(
-                            children: [
-                              const SizedBox(height: 40),
-                              SizedBox(
-                                height: 200,
-                                child: StatsChart(
-                                  statsData: _statsChartModel,
-                                  chartType: _settingsProvider!.tornStatsChartType == "line"
-                                      ? TornStatsChartType.Line
-                                      : TornStatsChartType.Pie,
-                                  userController: _u,
-                                  callbackStatsUpdate: _getStatsChart,
-                                ),
-                              ),
-                              const SizedBox(height: 40),
-                            ],
-                          );
-                        }
-                      }
-                      return const SizedBox(height: 20);
-                    },
-                  )
-                else
-                  const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'WORK STATS',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      GestureDetector(
-                        child: const Icon(Icons.copy, size: 14),
-                        onTap: () {
-                          _shareMisc(shareType: "work");
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(left: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 100,
-                            child: Text('Manual labor: '),
-                          ),
-                          SelectableText(decimalFormat.format(_miscModel!.manualLabor)),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 100,
-                            child: Text('Intelligence: '),
-                          ),
-                          SelectableText(decimalFormat.format(_miscModel!.intelligence)),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const SizedBox(
-                            width: 100,
-                            child: Text('Endurance: '),
-                          ),
-                          SelectableText(decimalFormat.format(_miscModel!.endurance)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                if (skillsExist)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 5),
-                        child: Row(
-                          children: [
-                            const Text(
-                              'SKILLS',
+                          Semantics(
+                            label: "Effective Stats",
+                            child: const Text(
+                              'EFFECTIVE STATS',
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(width: 5),
-                            GestureDetector(
-                              child: const Icon(Icons.copy, size: 14),
-                              onTap: () {
-                                _shareMisc(shareType: "skills");
-                              },
-                            ),
-                          ],
-                        ),
+                          ),
+                          const SizedBox(width: 5),
+                          GestureDetector(
+                            child: const Icon(Icons.copy, size: 14),
+                            onTap: () {
+                              _shareMisc(shareType: "effective");
+                            },
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 8.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (racing.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 80,
-                                    child: Text('Racing: '),
-                                  ),
-                                  SelectableText(racing),
-                                ],
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 80,
+                                child: Text('Strength: '),
                               ),
-                            if (reviving.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 80,
-                                    child: Text('Reviving: '),
-                                  ),
-                                  SelectableText(reviving),
-                                ],
+                              SelectableText(decimalFormat.format(strengthModifiedTotal)),
+                              if (strengthModified)
+                                Text(
+                                  " $strengthString",
+                                  style: TextStyle(color: strengthColor, fontSize: 12),
+                                )
+                              else
+                                const SizedBox.shrink(),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 80,
+                                child: Text('Defense: '),
                               ),
-                            if (hunting.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 80,
-                                    child: Text('Hunting: '),
-                                  ),
-                                  SelectableText(hunting),
-                                ],
+                              SelectableText(decimalFormat.format(defenseModifiedTotal)),
+                              if (defenseModified)
+                                Text(
+                                  " $defenseString",
+                                  style: TextStyle(color: defenseColor, fontSize: 12),
+                                )
+                              else
+                                const SizedBox.shrink(),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 80,
+                                child: Text('Speed: '),
                               ),
-                            if (crimesExist)
-                              if (searchForCash.isNotEmpty)
-                                const Padding(
-                                  padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
-                                  child: Text(
-                                    'CRIMES',
-                                    style: TextStyle(fontSize: 10),
-                                  ),
+                              SelectableText(decimalFormat.format(speedModifiedTotal)),
+                              if (speedModified)
+                                Text(
+                                  " $speedString",
+                                  style: TextStyle(color: speedColor, fontSize: 12),
+                                )
+                              else
+                                const SizedBox.shrink(),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 80,
+                                child: Text('Dexterity: '),
+                              ),
+                              SelectableText(decimalFormat.format(dexModifiedTotal)),
+                              if (dexModified)
+                                Text(
+                                  " $dexString",
+                                  style: TextStyle(color: dexColor, fontSize: 12),
+                                )
+                              else
+                                const SizedBox.shrink(),
+                            ],
+                          ),
+                          SizedBox(
+                            width: 50,
+                            child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 80,
+                                child: Text(
+                                  'Total: ',
                                 ),
-                            Row(
+                              ),
+                              SelectableText(
+                                decimalFormat.format(totalEffective),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Row(
+                        children: [
+                          Semantics(
+                            label: "Battle Stats",
+                            child: const Text(
+                              'BATTLE STATS',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          GestureDetector(
+                            child: const Icon(Icons.copy, size: 14),
+                            onTap: () {
+                              _shareMisc(shareType: "battle");
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const SizedBox(width: 80, child: Text('Strength: ')),
+                              SelectableText(decimalFormat.format(_miscModel!.strength)),
+                              Text(
+                                formatStatsPercent(_miscModel!.strength, _miscModel!.total),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(width: 80, child: Text('Defense: ')),
+                              SelectableText(decimalFormat.format(_miscModel!.defense)),
+                              Text(
+                                formatStatsPercent(_miscModel!.defense, _miscModel!.total),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(width: 80, child: Text('Speed: ')),
+                              SelectableText(decimalFormat.format(_miscModel!.speed)),
+                              Text(
+                                formatStatsPercent(_miscModel!.speed, _miscModel!.total),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(width: 80, child: Text('Dexterity: ')),
+                              SelectableText(decimalFormat.format(_miscModel!.dexterity)),
+                              Text(
+                                formatStatsPercent(_miscModel!.dexterity, _miscModel!.total),
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            width: 50,
+                            child: Divider(color: _themeProvider!.mainText, thickness: 0.5),
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 80,
+                                child: Text('Total: '),
+                              ),
+                              SelectableText(decimalFormat.format(_miscModel!.total)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_settingsProvider!.tornStatsChartEnabled)
+                      FutureBuilder(
+                        future: _statsChartDataFetched,
+                        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                          if (snapshot.connectionState == ConnectionState.done) {
+                            if (_statsChartModel?.data != null) {
+                              return Column(
+                                children: [
+                                  const SizedBox(height: 40),
+                                  SizedBox(
+                                    height: 200,
+                                    child: ExcludeSemantics(
+                                      child: StatsChart(
+                                        statsData: _statsChartModel,
+                                        chartType: _settingsProvider!.tornStatsChartType == "line"
+                                            ? TornStatsChartType.Line
+                                            : TornStatsChartType.Pie,
+                                        userController: _u,
+                                        callbackStatsUpdate: _getStatsChart,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 40),
+                                ],
+                              );
+                            }
+                          }
+                          return const SizedBox(height: 20);
+                        },
+                      )
+                    else
+                      const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 5),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'WORK STATS',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          GestureDetector(
+                            child: const Icon(Icons.copy, size: 14),
+                            onTap: () {
+                              _shareMisc(shareType: "work");
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 100,
+                                child: Text('Manual labor: '),
+                              ),
+                              SelectableText(decimalFormat.format(_miscModel!.manualLabor)),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 100,
+                                child: Text('Intelligence: '),
+                              ),
+                              SelectableText(decimalFormat.format(_miscModel!.intelligence)),
+                            ],
+                          ),
+                          Row(
+                            children: [
+                              const SizedBox(
+                                width: 100,
+                                child: Text('Endurance: '),
+                              ),
+                              SelectableText(decimalFormat.format(_miscModel!.endurance)),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (skillsExist)
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 5),
+                            child: Row(
                               children: [
-                                const SizedBox(
-                                  width: 130,
-                                  child: Text('Search for Cash: '),
+                                const Text(
+                                  'SKILLS',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                                SelectableText(searchForCash),
+                                const SizedBox(width: 5),
+                                GestureDetector(
+                                  child: const Icon(Icons.copy, size: 14),
+                                  onTap: () {
+                                    _shareMisc(shareType: "skills");
+                                  },
+                                ),
                               ],
                             ),
-                            if (bootlegging.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Bootlegging: '),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (racing.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 80,
+                                        child: Text('Racing: '),
+                                      ),
+                                      SelectableText(racing),
+                                    ],
                                   ),
-                                  SelectableText(bootlegging),
-                                ],
-                              ),
-                            if (graffiti.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Graffiti: '),
+                                if (reviving.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 80,
+                                        child: Text('Reviving: '),
+                                      ),
+                                      SelectableText(reviving),
+                                    ],
                                   ),
-                                  SelectableText(graffiti),
-                                ],
-                              ),
-                            if (shoplifting.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Shoplifting: '),
+                                if (hunting.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 80,
+                                        child: Text('Hunting: '),
+                                      ),
+                                      SelectableText(hunting),
+                                    ],
                                   ),
-                                  SelectableText(shoplifting),
-                                ],
-                              ),
-                            if (pickpocketing.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Pickpocketing: '),
+                                if (crimesExist)
+                                  if (searchForCash.isNotEmpty)
+                                    const Padding(
+                                      padding: EdgeInsets.fromLTRB(0, 10, 0, 5),
+                                      child: Text(
+                                        'CRIMES',
+                                        style: TextStyle(fontSize: 10),
+                                      ),
+                                    ),
+                                Row(
+                                  children: [
+                                    const SizedBox(
+                                      width: 130,
+                                      child: Text('Search for Cash: '),
+                                    ),
+                                    SelectableText(searchForCash),
+                                  ],
+                                ),
+                                if (bootlegging.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Bootlegging: '),
+                                      ),
+                                      SelectableText(bootlegging),
+                                    ],
                                   ),
-                                  SelectableText(pickpocketing),
-                                ],
-                              ),
-                            if (cardSkimming.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Card Skimming: '),
+                                if (graffiti.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Graffiti: '),
+                                      ),
+                                      SelectableText(graffiti),
+                                    ],
                                   ),
-                                  SelectableText(cardSkimming),
-                                ],
-                              ),
-                            if (burglary.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Burglary: '),
+                                if (shoplifting.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Shoplifting: '),
+                                      ),
+                                      SelectableText(shoplifting),
+                                    ],
                                   ),
-                                  SelectableText(burglary),
-                                ],
-                              ),
-                            if (hustling.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Hustling: '),
+                                if (pickpocketing.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Pickpocketing: '),
+                                      ),
+                                      SelectableText(pickpocketing),
+                                    ],
                                   ),
-                                  SelectableText(hustling),
-                                ],
-                              ),
-                            if (disposal.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Disposal: '),
+                                if (cardSkimming.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Card Skimming: '),
+                                      ),
+                                      SelectableText(cardSkimming),
+                                    ],
                                   ),
-                                  SelectableText(disposal),
-                                ],
-                              ),
-                            if (cracking.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Cracking: '),
+                                if (burglary.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Burglary: '),
+                                      ),
+                                      SelectableText(burglary),
+                                    ],
                                   ),
-                                  SelectableText(cracking),
-                                ],
-                              ),
-                            if (forgery.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Forgery: '),
+                                if (hustling.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Hustling: '),
+                                      ),
+                                      SelectableText(hustling),
+                                    ],
                                   ),
-                                  SelectableText(forgery),
-                                ],
-                              ),
-                            if (scamming.isNotEmpty)
-                              Row(
-                                children: [
-                                  const SizedBox(
-                                    width: 130,
-                                    child: Text('Scamming: '),
+                                if (disposal.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Disposal: '),
+                                      ),
+                                      SelectableText(disposal),
+                                    ],
                                   ),
-                                  SelectableText(scamming),
-                                ],
-                              ),
-                          ],
-                        ),
+                                if (cracking.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Cracking: '),
+                                      ),
+                                      SelectableText(cracking),
+                                    ],
+                                  ),
+                                if (forgery.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Forgery: '),
+                                      ),
+                                      SelectableText(forgery),
+                                    ],
+                                  ),
+                                if (scamming.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Scamming: '),
+                                      ),
+                                      SelectableText(scamming),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                const SizedBox(height: 10),
-              ],
+                    const SizedBox(height: 10),
+                  ],
+                ),
+              ),
             ),
-          ),
-        );
-      }),
+          );
+        }),
+      ),
     );
   }
 
@@ -4364,12 +4444,17 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             onTap: () async {
               _openWalletDialog();
             },
-            child: dense!
-                ? const Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
-                : const Icon(
-                    MdiIcons.cash100,
-                    color: Colors.green,
-                  ),
+            child: Semantics(
+              label: 'Wallet icon',
+              value: '',
+              onTapHint: 'Open wallet dialog',
+              child: dense!
+                  ? const Icon(Icons.account_balance_wallet_rounded, size: 17, color: Colors.brown)
+                  : const Icon(
+                      MdiIcons.cash100,
+                      color: Colors.green,
+                    ),
+            ),
           ),
           const SizedBox(width: 5),
           SelectableText(
@@ -4435,17 +4520,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         brainColor = Colors.red[600];
       }
 
-      addictionWidget = Row(
-        children: <Widget>[
-          Icon(MdiIcons.brain, color: brainColor),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              addictionString!,
-              style: DefaultTextStyle.of(context).style,
+      addictionWidget = Semantics(
+        explicitChildNodes: true,
+        child: Row(
+          children: <Widget>[
+            Icon(MdiIcons.brain, color: brainColor),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                addictionString!,
+                style: DefaultTextStyle.of(context).style,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
 
@@ -4469,59 +4557,62 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         gaugeColor = Colors.red[700];
       }
 
-      racingWidget = Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Flexible(
-            child: Row(
+      racingWidget = Semantics(
+        explicitChildNodes: true,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Flexible(
+              child: Row(
+                children: [
+                  Icon(MdiIcons.gauge, color: gaugeColor),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      racingString!,
+                      style: DefaultTextStyle.of(context).style,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                ],
+              ),
+            ),
+            Row(
               children: [
-                Icon(MdiIcons.gauge, color: gaugeColor),
-                const SizedBox(width: 10),
-                Flexible(
-                  child: Text(
-                    racingString!,
-                    style: DefaultTextStyle.of(context).style,
+                InkWell(
+                  borderRadius: BorderRadius.circular(100),
+                  onLongPress: () {
+                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                  },
+                  onTap: () {
+                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.only(left: 5),
+                    child: Icon(MdiIcons.openInApp, size: 24),
                   ),
                 ),
-                const SizedBox(width: 10),
               ],
             ),
-          ),
-          Row(
-            children: [
-              InkWell(
-                borderRadius: BorderRadius.circular(100),
-                onLongPress: () {
-                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
-                },
-                onTap: () {
-                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
-                },
-                child: const Padding(
-                  padding: EdgeInsets.only(left: 5),
-                  child: Icon(MdiIcons.openInApp, size: 24),
+            if (raceStartTime != null)
+              Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(100),
+                  onLongPress: () {
+                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
+                  },
+                  onTap: () {
+                    _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 5),
+                    child: _notificationIcon(ProfileNotification.raceStart),
+                  ),
                 ),
               ),
-            ],
-          ),
-          if (raceStartTime != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 8),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(100),
-                onLongPress: () {
-                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: false);
-                },
-                onTap: () {
-                  _launchBrowser(url: 'https://www.torn.com/loader.php?sid=racing', shortTap: true);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 5),
-                  child: _notificationIcon(ProfileNotification.raceStart),
-                ),
-              ),
-            ),
-        ],
+          ],
+        ),
       );
     }
 
@@ -4531,9 +4622,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // OC v2
     if (_settingsProvider!.playerInOCv2 && _oc2Model != null) {
-      factionCrimes = OrganizedCrimeWidget(
-        crimeResponse: _oc2Model!,
-        playerId: _userProv!.basic!.playerId!,
+      factionCrimes = Semantics(
+        explicitChildNodes: true,
+        child: OrganizedCrimeWidget(
+          crimeResponse: _oc2Model!,
+          playerId: _userProv!.basic!.playerId!,
+        ),
       );
 
       if (factionCrimes != const SizedBox.shrink()) {
@@ -4544,84 +4638,90 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     else {
       if (_ocFinalStringLong.isNotEmpty) {
         factionCrimesActive = true;
-        factionCrimes = Row(
-          children: [
-            const Icon(MdiIcons.fingerprint),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                _ocFinalStringLong,
-                style: TextStyle(
-                  color: _ocComplexReady
-                      ? _ocComplexPeopleNotReady == 0
-                          ? Colors.green
-                          : Colors.orange[700]
-                      : _themeProvider!.mainText,
+        factionCrimes = Semantics(
+          explicitChildNodes: true,
+          child: Row(
+            children: [
+              const Icon(MdiIcons.fingerprint),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  _ocFinalStringLong,
+                  style: TextStyle(
+                    color: _ocComplexReady
+                        ? _ocComplexPeopleNotReady == 0
+                            ? Colors.green
+                            : Colors.orange[700]
+                        : _themeProvider!.mainText,
+                  ),
                 ),
               ),
-            ),
-            if (_ocComplexReady)
-              InkWell(
-                borderRadius: BorderRadius.circular(100),
-                onLongPress: () {
-                  _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
-                },
-                onTap: () {
-                  _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
-                },
-                child: const Padding(
-                  padding: EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size: 18),
+              if (_ocComplexReady)
+                InkWell(
+                  borderRadius: BorderRadius.circular(100),
+                  onLongPress: () {
+                    _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
+                  },
+                  onTap: () {
+                    _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.only(right: 5),
+                    child: Icon(MdiIcons.openInApp, size: 18),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         );
       } else if (_ocSimpleExists) {
         factionCrimesActive = true;
-        factionCrimes = Row(
-          children: [
-            const Icon(MdiIcons.fingerprint),
-            const SizedBox(width: 10),
-            Flexible(
-              child: Text(
-                _ocSimpleStringFinal,
-                style: TextStyle(color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText),
-              ),
-            ),
-            if (_ocComplexReady)
-              InkWell(
-                borderRadius: BorderRadius.circular(100),
-                onLongPress: () {
-                  _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
-                },
-                onTap: () {
-                  _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
-                },
-                child: const Padding(
-                  padding: EdgeInsets.only(right: 5),
-                  child: Icon(MdiIcons.openInApp, size: 18),
+        factionCrimes = Semantics(
+          explicitChildNodes: true,
+          child: Row(
+            children: [
+              const Icon(MdiIcons.fingerprint),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  _ocSimpleStringFinal,
+                  style: TextStyle(color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText),
                 ),
               ),
-            GestureDetector(
-              child: Icon(
-                MdiIcons.closeCircleOutline,
-                size: 16,
-                color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText,
-              ),
-              onTap: () {
-                showDialog(
-                  useRootNavigator: false,
-                  context: context,
-                  barrierDismissible: true,
-                  builder: (BuildContext context) {
-                    return DisregardCrimeDialog(
-                      disregardCallback: _disregardCrimeCallback,
-                    );
+              if (_ocComplexReady)
+                InkWell(
+                  borderRadius: BorderRadius.circular(100),
+                  onLongPress: () {
+                    _launchBrowser(url: "https://www.torn.com/factions.php?step=your#/tab=crimes", shortTap: false);
                   },
-                );
-              },
-            ),
-          ],
+                  onTap: () {
+                    _launchBrowser(url: 'https://www.torn.com/factions.php?step=your#/tab=crimes', shortTap: true);
+                  },
+                  child: const Padding(
+                    padding: EdgeInsets.only(right: 5),
+                    child: Icon(MdiIcons.openInApp, size: 18),
+                  ),
+                ),
+              GestureDetector(
+                child: Icon(
+                  MdiIcons.closeCircleOutline,
+                  size: 16,
+                  color: _ocSimpleReady ? Colors.orange[700] : _themeProvider!.mainText,
+                ),
+                onTap: () {
+                  showDialog(
+                    useRootNavigator: false,
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (BuildContext context) {
+                      return DisregardCrimeDialog(
+                        disregardCallback: _disregardCrimeCallback,
+                      );
+                    },
+                  );
+                },
+              ),
+            ],
+          ),
         );
       }
     }
@@ -4652,32 +4752,35 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           expiryColor = _themeProvider!.mainText;
         }
 
-        bankWidget = Row(
-          children: <Widget>[
-            const Icon(MdiIcons.bankOutline),
-            const SizedBox(width: 10),
-            Flexible(
-              child: RichText(
-                text: TextSpan(
-                  text: "Your bank investment of ",
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: "\$${moneyFormat.format(_miscModel!.cityBank!.amount)}",
-                      style: TextStyle(
-                        color: _themeProvider!.getTextColor(Colors.green),
+        bankWidget = Semantics(
+          explicitChildNodes: true,
+          child: Row(
+            children: <Widget>[
+              const Icon(MdiIcons.bankOutline),
+              const SizedBox(width: 10),
+              Flexible(
+                child: RichText(
+                  text: TextSpan(
+                    text: "Your bank investment of ",
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: "\$${moneyFormat.format(_miscModel!.cityBank!.amount)}",
+                        style: TextStyle(
+                          color: _themeProvider!.getTextColor(Colors.green),
+                        ),
                       ),
-                    ),
-                    const TextSpan(text: " will expire in "),
-                    TextSpan(
-                      text: expiryString,
-                      style: TextStyle(color: expiryColor),
-                    ),
-                  ],
+                      const TextSpan(text: " will expire in "),
+                      TextSpan(
+                        text: expiryString,
+                        style: TextStyle(color: expiryColor),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         );
       }
     }
@@ -4713,34 +4816,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
         });
 
-        educationWidget = Row(
-          children: <Widget>[
-            const Icon(MdiIcons.schoolOutline),
-            const SizedBox(width: 10),
-            Flexible(
-              child: RichText(
-                text: TextSpan(
-                  text: "Your course: ",
-                  style: DefaultTextStyle.of(context).style,
-                  children: <TextSpan>[
-                    TextSpan(
-                      text: "$courseName",
-                      /*
-                    style: TextStyle(
-                      color: Colors.green,
-                    ),
-                    */
-                    ),
-                    const TextSpan(text: ", will end in "),
-                    TextSpan(
-                      text: expiryString,
-                      style: TextStyle(color: expiryColor),
-                    ),
-                  ],
+        educationWidget = Semantics(
+          explicitChildNodes: true,
+          child: Row(
+            children: <Widget>[
+              const Icon(MdiIcons.schoolOutline),
+              const SizedBox(width: 10),
+              Flexible(
+                child: RichText(
+                  text: TextSpan(
+                    text: "Your course: ",
+                    style: DefaultTextStyle.of(context).style,
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: "$courseName",
+                        /*
+                      style: TextStyle(
+                        color: Colors.green,
+                      ),
+                      */
+                      ),
+                      const TextSpan(text: ", will end in "),
+                      TextSpan(
+                        text: expiryString,
+                        style: TextStyle(color: expiryColor),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         );
       }
       // There is no education on going... why? All done, or forgotten?
@@ -4786,17 +4892,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         donatorString = donatorString!.replaceAll("Donator status:", "Donator:");
       }
 
-      donatorWidget = Row(
-        children: <Widget>[
-          const Icon(MdiIcons.starOutline),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              donatorString!,
-              style: DefaultTextStyle.of(context).style,
+      donatorWidget = Semantics(
+        explicitChildNodes: true,
+        child: Row(
+          children: <Widget>[
+            const Icon(MdiIcons.starOutline),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                donatorString!,
+                style: DefaultTextStyle.of(context).style,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       );
     }
 
@@ -4805,58 +4914,63 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else {
       return Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 15),
-                  child: Text(
-                    'MISC',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+        child: Semantics(
+          label: 'Miscellaneous',
+          explicitChildNodes: true,
+          child: Card(
+            child: Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 15),
+                    child: Text(
+                      'MISC',
+                      semanticsLabel: "",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-                if (addictionActive)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
-                    child: addictionWidget,
-                  ),
-                if (racingActive)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
-                    child: racingWidget,
-                  ),
-                if (factionCrimesActive && _settingsProvider!.oCrimesEnabled)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
-                    child: factionCrimes,
-                  ),
-                if (bankActive)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
-                    child: bankWidget,
-                  ),
-                if (educationActive)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
-                    child: educationWidget,
-                  ),
-                if (propertyActive)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
-                    child: _rentedPropertiesWidget,
-                  ),
-                if (donatorActive)
-                  Padding(
-                    padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
-                    child: donatorWidget,
-                  ),
-              ],
+                  if (addictionActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: addictionWidget,
+                    ),
+                  if (racingActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: racingWidget,
+                    ),
+                  if (factionCrimesActive && _settingsProvider!.oCrimesEnabled)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: factionCrimes,
+                    ),
+                  if (bankActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: bankWidget,
+                    ),
+                  if (educationActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: educationWidget,
+                    ),
+                  if (propertyActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: _rentedPropertiesWidget,
+                    ),
+                  if (donatorActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: donatorWidget,
+                    ),
+                ],
+              ),
             ),
           ),
         ),
@@ -4864,7 +4978,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
-  Card _netWorth() {
+  Widget _netWorth() {
     // Currency configuration
     final moneyFormat = NumberFormat("#,##0", "en_US");
 
@@ -4928,7 +5042,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           width: 150,
           child: Row(
             children: [
-              Text(source),
+              Semantics(
+                label: "$source, ${moneyFormat.format(v.value!.round())}",
+                child: Text(
+                  source,
+                  semanticsLabel: "",
+                ),
+              ),
               pointsPrice,
             ],
           ),
@@ -4948,84 +5068,93 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // Total Expanded
     Widget expandedNetworth = Padding(
       padding: const EdgeInsets.only(left: 25, top: 10, bottom: 20),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Total: ',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 10),
-              ...moneySources,
-              const SizedBox(height: 10),
-              const Text('Updated at: ',
+      child: Semantics(
+        explicitChildNodes: true,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Total: ',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                  ))
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '\$${moneyFormat.format(total)}',
-                style: TextStyle(
-                  color: total! < 0
-                      ? _themeProvider!.getTextColor(Colors.red)
-                      : _themeProvider!.getTextColor(Colors.green),
-                  fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              ...moneyQuantities,
-              const SizedBox(height: 10),
-              Text(
-                formattedTimestamp,
-                style: TextStyle(
-                  color: _themeProvider!.mainText,
-                  fontSize: 12,
+                const SizedBox(height: 10),
+                ...moneySources,
+                const SizedBox(height: 10),
+                const Text('Updated at: ',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ))
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '\$${moneyFormat.format(total)}',
+                  style: TextStyle(
+                    color: total! < 0
+                        ? _themeProvider!.getTextColor(Colors.red)
+                        : _themeProvider!.getTextColor(Colors.green),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(height: 10),
+                ...moneyQuantities,
+                const SizedBox(height: 10),
+                Text(
+                  formattedTimestamp,
+                  style: TextStyle(
+                    color: _themeProvider!.mainText,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
 
     return Card(
-      child: ExpandablePanel(
-        theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
-        controller: _networthExpController,
-        header: const Padding(
-          padding: EdgeInsets.all(15.0),
-          child: Text(
-            'NETWORTH',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+      child: Semantics(
+        label: "Networth",
+        child: ExpandablePanel(
+          theme: ExpandableThemeData(iconColor: _themeProvider!.mainText),
+          controller: _networthExpController,
+          header: const Padding(
+            padding: EdgeInsets.all(15.0),
+            child: ExcludeSemantics(
+              child: Text(
+                'NETWORTH',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
-        ),
-        collapsed: Padding(
-          padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
-          child: Text(
-            '\$${moneyFormat.format(total)} (updated $formattedTimestamp)',
-            softWrap: true,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: total <= 0 ? _themeProvider!.getTextColor(Colors.red) : _themeProvider!.getTextColor(Colors.green),
-              fontWeight: FontWeight.bold,
+          collapsed: Padding(
+            padding: const EdgeInsets.fromLTRB(25, 5, 20, 20),
+            child: Text(
+              '\$${moneyFormat.format(total)} (updated $formattedTimestamp)',
+              softWrap: true,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color:
+                    total <= 0 ? _themeProvider!.getTextColor(Colors.red) : _themeProvider!.getTextColor(Colors.green),
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
+          expanded: expandedNetworth,
         ),
-        expanded: expandedNetworth,
       ),
     );
   }
@@ -7312,15 +7441,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     return Row(
       children: [
-        GestureDetector(
-          onLongPress: () {
-            _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: false);
-          },
-          onTap: () => _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: true),
-          child: Icon(Icons.work, color: Colors.brown[300], size: 23),
+        Semantics(
+          label: "Open job points dialog",
+          child: GestureDetector(
+            onLongPress: () {
+              _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: false);
+            },
+            onTap: () => _launchBrowser(url: 'https://www.torn.com/companies.php', shortTap: true),
+            child: Icon(Icons.work, color: Colors.brown[300], size: 23),
+          ),
         ),
         const SizedBox(width: 6),
-        SelectableText(headerString),
+        Semantics(label: headerString, child: SelectableText(headerString)),
         const SizedBox(width: 10),
         GestureDetector(
           onTap: () => showDialog(
@@ -7351,20 +7483,24 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       return Padding(
         padding: const EdgeInsets.only(left: 2),
-        child: Row(
-          children: [
-            Image.asset(
-              'images/icons/chart_down.png',
-              height: 18,
-              color: Colors.brown[300],
-            ),
-            const SizedBox(width: 9),
-            const Text("Company Addiction: "),
-            Text(
-              "$_companyAddiction",
-              style: TextStyle(color: c),
-            ),
-          ],
+        child: Semantics(
+          container: true,
+          label: "Company addition is $_companyAddiction",
+          child: Row(
+            children: [
+              Image.asset(
+                'images/icons/chart_down.png',
+                height: 18,
+                color: Colors.brown[300],
+              ),
+              const SizedBox(width: 9),
+              const Text("Company Addiction: "),
+              Text(
+                "$_companyAddiction",
+                style: TextStyle(color: c),
+              ),
+            ],
+          ),
         ),
       );
     } catch (e) {
@@ -7656,7 +7792,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (mounted) {
       setState(() {
         _rentedProperties = currentItem;
-        _rentedPropertiesWidget = Column(children: propertyLines);
+        _rentedPropertiesWidget = Semantics(explicitChildNodes: true, child: Column(children: propertyLines));
       });
     }
   }

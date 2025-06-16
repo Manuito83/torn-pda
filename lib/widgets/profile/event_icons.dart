@@ -195,7 +195,9 @@ class EventIcons extends StatelessWidget {
       );
     } else if (message.contains('Your period of renting the') ||
         message.contains('has sent an offer for you to rent') ||
-        message.contains('day extension on the rental of') ||
+        message.contains('extension offer on the rental') ||
+        message.contains('finished renting') ||
+        message.contains('started renting') ||
         message.contains('Your rental agreement with')) {
       insideIcon = Icon(
         Icons.house_outlined,
