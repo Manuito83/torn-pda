@@ -1168,6 +1168,15 @@ class ShortcutsProvider extends ChangeNotifier {
         ..iconUrl = "images/icons/map/post_office.png"
         ..color = Colors.yellow[700],
       Shortcut()
+        ..name = "Print Store"
+        ..nickname = "Print"
+        ..url = "https://www.torn.com/shops.php?step=printstore"
+        ..originalName = "Print Store"
+        ..originalNickname = "Print"
+        ..originalUrl = "https://www.torn.com/shops.php?step=postoffice"
+        ..iconUrl = "images/icons/map/print_store.png"
+        ..color = Colors.yellow[700],
+      Shortcut()
         ..name = "Super Store"
         ..nickname = "Super"
         ..url = "https://www.torn.com/shops.php?step=super"

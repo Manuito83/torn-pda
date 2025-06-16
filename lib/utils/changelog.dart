@@ -100,6 +100,16 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.8.3 - Build 551 - 16/06/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.8.3'
+        ..date = '15 JUL 2025'
+        ..features = [
+          "Fixed missing Print Store shortcut",
+        ],
+    );
+
     // v3.8.2 - Build 550 - 15/06/2025
     itemList.add(
       ChangeLogItem()
