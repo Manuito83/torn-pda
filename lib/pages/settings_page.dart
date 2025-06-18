@@ -326,13 +326,13 @@ class SettingsPageState extends State<SettingsPage> {
                           changeApiError: (val) => setState(() => _apiError = val),
                           changeUserProfile: (val) => setState(() => _userProfile = val),
                         ),
-                      if (_userProfile != null && !_isSearching)
-                        const Column(
-                          children: [
-                            NativeLoginWidget(),
-                            SizedBox(height: 15),
-                          ],
-                        ),
+                      //if (_userProfile != null && !_isSearching)
+                      const Column(
+                        children: [
+                          NativeLoginWidget(),
+                          SizedBox(height: 15),
+                        ],
+                      ),
                       const SizedBox(height: 20),
                       ...buildFilteredSections(),
                       const SizedBox(height: 50),

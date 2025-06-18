@@ -194,7 +194,7 @@ class WebViewProvider extends ChangeNotifier {
   }) {
     browserShowInForeground = true;
 
-    if (automaticLogin && context.read<NativeUserProvider>().isNativeUserEnabled()) {
+    if (automaticLogin && context.read<NativeUserProvider>().playerNativeLoginType != NativeLoginType.none) {
       // When we use the PDA Icon, launch a logout check by default in case we just activated
       // the native user in Settings and are logged out
       assessLoginErrorsFromPdaIcon();
@@ -1652,7 +1652,7 @@ class WebViewProvider extends ChangeNotifier {
     final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
     final UserDetailsProvider userProvider = context.read<UserDetailsProvider>();
 
-    if (!nativeUser.isNativeUserEnabled()) {
+    if (nativeUser.playerNativeLoginType != NativeLoginType.none) {
       log("No native user enabled, skipping auth!");
       return inputUrl;
     }

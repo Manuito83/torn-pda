@@ -27,6 +27,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:showcaseview/showcaseview.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
@@ -2158,7 +2159,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future assessErrorCases({dom.Document? document}) async {
-    if (!_nativeUser.isNativeUserEnabled()) {
+    if (_nativeUser.playerNativeLoginType == NativeLoginType.none) {
       return;
     }
 
@@ -2187,6 +2188,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     }
 
     // If for some reason we are logged out of Torn, try to login again
+
     if (_nativeAuth.tryAutomaticLogins && document.querySelectorAll("[class*='logInWrap_']").isNotEmpty) {
       if (_loginErrorToastTimer == null || DateTime.now().difference(_loginErrorToastTimer!).inSeconds > 4) {
         if (_webViewProvider.browserShowInForeground) {
@@ -2216,30 +2218,72 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         return;
       }
 
-      final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
-        context: context,
-        loginData: GetInitDataModel(
-          playerId: _userProvider!.basic!.playerId,
-          sToken: _nativeUser.playerSToken,
-        ),
-      );
-
-      if (loginResponse.success) {
-        webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
-        await Future.delayed(const Duration(seconds: 4));
-        _loginErrorRetrySeconds = 0;
-      } else {
-        BotToast.showText(
-          text: "Browser error while authenticating: please log in again or verify your user / pass combination "
-              "in the Settings section!",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
+      if (_nativeUser.playerNativeLoginType == NativeLoginType.automaticPassword) {
+        final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
+          context: context,
+          loginData: GetInitDataModel(
+            playerId: _userProvider!.basic!.playerId,
+            sToken: _nativeUser.playerSToken,
           ),
-          contentColor: Colors.red,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
         );
+
+        if (loginResponse.success) {
+          webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+          await Future.delayed(const Duration(seconds: 4));
+          _loginErrorRetrySeconds = 0;
+        } else {
+          BotToast.showText(
+            text: "Browser error while authenticating: please log in again or verify your user / pass combination "
+                "in the Settings section!",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
+      } else if (_nativeUser.playerNativeLoginType == NativeLoginType.automaticGoogle) {
+        final googleIdToken = await _nativeAuth.getGoogleIdToken();
+        if (googleIdToken.isNotEmpty) {
+          // Use Google idToken to authenticate with Torn
+          final loginResponse = await _nativeAuth.requestTornFirstGoogleLoginAuth(
+            nativeUserProvider: _nativeUser,
+            loginData: GetNewDataForGoogleLoginModel(
+              idToken: googleIdToken,
+            ),
+          );
+
+          if (loginResponse.success) {
+            webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+            await Future.delayed(const Duration(seconds: 4));
+            _loginErrorRetrySeconds = 0;
+          }
+        }
+      } else if (_nativeUser.playerNativeLoginType == NativeLoginType.automaticApple) {
+        final credential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+        );
+
+        if (credential.identityToken != null) {
+          // Use Apple idToken to authenticate with Torn
+          final loginResponse = await _nativeAuth.requestTornFirstAppleLoginAuth(
+            nativeUserProvider: _nativeUser,
+            loginData: GetNewDataForAppleLoginModel(
+              idToken: credential.identityToken,
+            ),
+          );
+
+          if (loginResponse.success) {
+            webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+            await Future.delayed(const Duration(seconds: 4));
+            _loginErrorRetrySeconds = 0;
+          }
+        }
       }
     }
   }

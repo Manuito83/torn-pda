@@ -75,7 +75,7 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.3';
-const String androidCompilation = '55';
+const String androidCompilation = '551';
 const String iosCompilation = '551';
 
 // TODO (App release)
@@ -673,9 +673,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
     await nativeUser.loadPreferences();
     await nativeAuth.loadPreferences();
-    if (nativeUser.isNativeUserEnabled()) {
-      nativeAuth.authStatus = NativeAuthStatus.loggedIn;
-    }
   }
 
   Future<void> setAndroidDisplayMode() async {

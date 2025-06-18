@@ -247,6 +247,7 @@
 			buildPhases = (
 				C36FACF4835DC01C4840979F /* [CP] Check Pods Manifest.lock */,
 				9740EEB61CF901F6004384FC /* Run Script */,
+				173C3D8D2E0341ED008FC9D7 /* ENV VARS */,
 				97C146EA1CF9000F007C117D /* Sources */,
 				97C146EB1CF9000F007C117D /* Frameworks */,
 				1749F0132DE1B829008EAB69 /* Embed Foundation Extensions */,
@@ -348,6 +349,24 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-resources.sh\"\n";
 			showEnvVarsInLog = 0;
+		};
+		173C3D8D2E0341ED008FC9D7 /* ENV VARS */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "ENV VARS";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "SECRETS_FILE=\"${SRCROOT}/Flutter/Secrets.xcconfig\"\n\nENV_FILE=\"${SRCROOT}/../.env\"\n\nrm -f \"${SECRETS_FILE}\"\n\necho \"Generando ${SECRETS_FILE} desde ${ENV_FILE}\"\n\n# Revisa si el archivo .env existe\nif [ ! -f \"$ENV_FILE\" ]; then\n    echo \"warning: .env not found, so Secrets.xcconfig won't be created\"\n    touch \"${SECRETS_FILE}\"\n    exit 0\nfi\n\nwhile IFS='=' read -r key value; do\n    [[ \"$key\" =~ ^#.*$ ]] && continue\n    [[ -z \"$key\" ]] && continue\n    \n    echo \"$key = $value\" >> \"${SECRETS_FILE}\"\ndone < \"$ENV_FILE\"\n";
 		};
 		3B06AD1E1E4923F5004D2608 /* Thin Binary */ = {
 			isa = PBXShellScriptBuildPhase;

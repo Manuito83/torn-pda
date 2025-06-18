@@ -25,6 +25,7 @@ class Prefs {
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
   final String _kLastAuthRedirect = "pda_lastAuthRedirect";
   final String _kTryAutomaticLogins = "pda_tryAutomaticLogins";
+  final String _kPlayerLastLoginMethod = "pda_playerLastLoginMethod";
 
   // Targets
   final String _kTargetsList = "pda_targetsList";
@@ -561,6 +562,16 @@ class Prefs {
   Future<bool> setTryAutomaticLogins(bool value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setBool(_kTryAutomaticLogins, value);
+  }
+
+  Future<String> getPlayerLastLoginMethod() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_kPlayerLastLoginMethod) ?? 'none';
+  }
+
+  Future<bool> setPlayerLastLoginMethod(String value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setString(_kPlayerLastLoginMethod, value);
   }
 
   /// ----------------------------

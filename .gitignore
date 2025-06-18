@@ -85,6 +85,7 @@ firebase.json
 **/ios/Flutter/flutter_assets/
 **/ios/ServiceDefinitions.json
 **/ios/Runner/GeneratedPluginRegistrant.*
+**/ios/Flutter/Secrets.xcconfig
 
 # Windows
 **/windows/flutter/ephemeral/
