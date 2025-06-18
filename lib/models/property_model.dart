@@ -14,10 +14,10 @@ class PropertyModel {
     this.property,
   });
 
-  Property? property;
+  PropertyV1? property;
 
   factory PropertyModel.fromJson(Map<String, dynamic> json) => PropertyModel(
-        property: json["property"] == null ? null : Property.fromJson(json["property"]),
+        property: json["property"] == null ? null : PropertyV1.fromJson(json["property"]),
       );
 
   Map<String, dynamic> toJson() => {
@@ -25,8 +25,8 @@ class PropertyModel {
       };
 }
 
-class Property {
-  Property({
+class PropertyV1 {
+  PropertyV1({
     this.ownerId,
     this.propertyType,
     this.happy,
@@ -46,7 +46,7 @@ class Property {
   Rented? rented;
   dynamic usersLiving;
 
-  factory Property.fromJson(Map<String, dynamic> json) => Property(
+  factory PropertyV1.fromJson(Map<String, dynamic> json) => PropertyV1(
         ownerId: json["owner_id"],
         propertyType: json["property_type"],
         happy: json["happy"],

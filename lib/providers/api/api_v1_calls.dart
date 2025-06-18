@@ -386,7 +386,7 @@ class ApiCallsV1 {
     });
     if (apiResult is! ApiError) {
       try {
-        return PropertyModel.fromJson(apiResult as Map<String, dynamic>);
+        return PropertyV1.fromJson(apiResult as Map<String, dynamic>);
       } catch (e, trace) {
         if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
