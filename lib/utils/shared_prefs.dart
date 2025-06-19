@@ -566,7 +566,7 @@ class Prefs {
 
   Future<String> getPlayerLastLoginMethod() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kPlayerLastLoginMethod) ?? 'none';
+    return prefs.getString(_kPlayerLastLoginMethod) ?? '';
   }
 
   Future<bool> setPlayerLastLoginMethod(String value) async {

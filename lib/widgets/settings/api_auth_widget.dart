@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -70,6 +71,7 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
         child: Card(
           child: ExpandablePanel(
+            theme: ExpandableThemeData(iconColor: context.read<ThemeProvider>().mainText),
             controller: widget.expandableController,
             collapsed: Container(),
             header: Padding(

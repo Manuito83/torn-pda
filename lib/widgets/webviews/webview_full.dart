@@ -2159,7 +2159,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future assessErrorCases({dom.Document? document}) async {
-    if (_nativeUser.playerNativeLoginType == NativeLoginType.none) {
+    if (_nativeUser.playerLastLoginMethod == NativeLoginType.none) {
       return;
     }
 
@@ -2218,7 +2218,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         return;
       }
 
-      if (_nativeUser.playerNativeLoginType == NativeLoginType.automaticPassword) {
+      if (_nativeUser.playerLastLoginMethod == NativeLoginType.automaticPassword) {
         final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
           context: context,
           loginData: GetInitDataModel(
@@ -2244,7 +2244,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             contentPadding: const EdgeInsets.all(10),
           );
         }
-      } else if (_nativeUser.playerNativeLoginType == NativeLoginType.automaticGoogle) {
+      } else if (_nativeUser.playerLastLoginMethod == NativeLoginType.automaticGoogle) {
         final googleIdToken = await _nativeAuth.getGoogleIdToken();
         if (googleIdToken.isNotEmpty) {
           // Use Google idToken to authenticate with Torn
@@ -2261,7 +2261,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             _loginErrorRetrySeconds = 0;
           }
         }
-      } else if (_nativeUser.playerNativeLoginType == NativeLoginType.automaticApple) {
+      } else if (_nativeUser.playerLastLoginMethod == NativeLoginType.automaticApple) {
         final credential = await SignInWithApple.getAppleIDCredential(
           scopes: [
             AppleIDAuthorizationScopes.email,
