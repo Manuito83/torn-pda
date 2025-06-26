@@ -1,0 +1,115 @@
+name: Build Torn PDA
+
+on:
+  push:
+    branches: [ master, develop ]
+  pull_request:
+    branches: [ master, develop ]
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '11'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.3.0'
+          channel: 'stab3'
+          cache: true
+
+      - name: Create env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Setup config files
+        run: |
+          echo "${{ secrets.FIREBASE_OPTIONS }}" > lib/firebase_options.dart
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > android/app/google-services.json
+          mkdir -p lib/torn-pda-native
+          echo "${{ secrets.NATIVE_FILES }}" > lib/torn-pda-native/native_files.tar.gz
+          cd lib/torn-pda-native && tar xzf native_files.tar.gz && rm native_files.tar.gz
+
+      - name: Install dependencies
+        run: |
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build APK
+        run: flutter build apk --release
+
+      - name: Build App Bundle
+        run: flutter build appbundle --release
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload App Bundle artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-bundle
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      - name: Upload to Firebase Distribution
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{secrets.FIREBASE_APP_ID}}
+          serviceCredentialsFileContent: ${{ secrets.FIREBASE_SERVICE_CREDENTIALS }}
+          groups: beta-testers
+          file: build/app/outputs/flutter-apk/app-release.apk
+
+  build-ios:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Create env file
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
+      - name: Setup config files
+        run: |
+          echo "${{ secrets.FIREBASE_OPTIONS }}" > lib/firebase_options.dart
+          echo "${{ secrets.GOOGLE_SERVICES_PLIST }}" > ios/Runner/GoogleService-Info.plist
+          mkdir -p lib/torn-pda-native
+          echo "${{ secrets.NATIVE_FILES }}" > lib/torn-pda-native/native_files.tar.gz
+          cd lib/torn-pda-native && tar xzf native_files.tar.gz && rm native_files.tar.gz
+
+      - name: Install dependencies
+        run: |
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Build iOS
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload iOS build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ios-build
+          path: build/ios/iphoneos
