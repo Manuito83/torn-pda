@@ -114,7 +114,11 @@ class WebviewTerminalState extends State<WebviewTerminal> {
                     const SizedBox(width: 10),
                     GestureDetector(
                       onTap: () {
-                        Share.share(widget.terminalProvider.getTerminal(widget.webviewKey!));
+                        SharePlus.instance.share(
+                          ShareParams(
+                            text: (widget.terminalProvider.getTerminal(widget.webviewKey!)),
+                          ),
+                        );
                       },
                       child: const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 4),

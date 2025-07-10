@@ -3264,7 +3264,7 @@ class SettingsPageState extends State<SettingsPage> {
           _vibrationValue = value;
         });
 
-        if ((await Vibration.hasVibrator())!) {
+        if ((await Vibration.hasVibrator())) {
           if (value == 'short') {
             Vibration.vibrate(pattern: [0, 400]);
           } else if (value == 'medium') {

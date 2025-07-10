@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
@@ -64,6 +65,8 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -72,9 +75,15 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
 
     routeName = "profile_notifications";
     routeWithDrawer = false;
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "profile_notifications") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -679,7 +688,7 @@ class ProfileNotificationsAndroidState extends State<ProfileNotificationsAndroid
     });
   }
 
-  _goBack() async {
+  void _goBack() async {
     widget.callback();
     routeName = "profile_options";
     routeWithDrawer = false;

@@ -64,8 +64,8 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      canPop: false,
       // If we are launching from a dialog, it's important not to add the show case, in
       // case this is the first time, as there is no appBar to be found and it would
       // failed to open
@@ -200,9 +200,5 @@ class WebViewFullAwhState extends State<WebViewFullAwh> {
         actions: const <Widget>[],
       ),
     );
-  }
-
-  Future<bool> _willPopCallback() async {
-    return false;
   }
 }

@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:io';
 
 // Flutter imports:
@@ -35,6 +36,8 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -43,9 +46,15 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
 
     routeWithDrawer = false;
     routeName = "war_ahead_options";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "war_ahead_options") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -461,7 +470,7 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     if (widget.callback != null) {
       widget.callback!();
     }

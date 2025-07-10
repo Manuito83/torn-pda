@@ -50,6 +50,8 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
   String _importHintText = 'Paste here previously exported data';
   FontWeight _importHintWeight = FontWeight.normal;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +59,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
 
     routeWithDrawer = false;
     routeName = "friends_backup";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friends_backup") _goBack();
     });
   }
@@ -135,13 +137,15 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
                                       contentPadding: const EdgeInsets.all(10),
                                     );
                                   } else {
-                                    Share.share(
-                                      export,
-                                      sharePositionOrigin: Rect.fromLTWH(
-                                        0,
-                                        0,
-                                        MediaQuery.of(context).size.width,
-                                        MediaQuery.of(context).size.height / 2,
+                                    SharePlus.instance.share(
+                                      ShareParams(
+                                        text: export,
+                                        sharePositionOrigin: Rect.fromLTWH(
+                                          0,
+                                          0,
+                                          MediaQuery.of(context).size.width,
+                                          MediaQuery.of(context).size.height / 2,
+                                        ),
                                       ),
                                     );
                                   }
@@ -290,6 +294,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
     _importInputController.dispose();
     routeWithDrawer = true;
     routeName = "friends";
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -490,7 +495,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
     }
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "friends";
     Navigator.of(context).pop();

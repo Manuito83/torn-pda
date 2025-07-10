@@ -100,7 +100,7 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.3 - Build 551 - 18/06/2025
+    // v3.8.3 - Build 554 - 08/07/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.3'
@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           if (Platform.isAndroid) "Added native Google login (Settings)",
           if (Platform.isIOS) "Added native Apple and Google login (Settings)",
+          "Fixed chat notifications resetting after switching faction or company",
           "Fixed missing Print Store shortcut",
           "Fixed Wiki references",
         ],
@@ -236,7 +237,7 @@ class ChangeLogState extends State<ChangeLog> {
         ],
     );
 
-    // v3.7.4 - Build 511 - 012/04/2025
+    // v3.7.4 - Build 511 - 12/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.4'

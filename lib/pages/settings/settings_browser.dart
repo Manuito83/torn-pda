@@ -118,6 +118,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
   // SEARCH END #######
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -128,7 +130,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
     routeWithDrawer = false;
     routeName = "settings_browser";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "settings_browser") _goBack();
     });
   }
@@ -3285,6 +3287,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _willPopSubscription.cancel();
     super.dispose();
   }
 

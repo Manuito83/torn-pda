@@ -747,7 +747,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             color: _themeProvider!.buttonText,
           ),
           onPressed: () async {
-            final ProfileOptionsReturn newOptions = await Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ProfileOptionsPage(
@@ -757,33 +757,45 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
               ),
             );
-            widget.disableTravelSection(newOptions.disableTravelSection);
+
+            final warnChains = await Prefs().getWarnAboutChains();
+            final headerWallet = await Prefs().getShowHeaderWallet();
+            final headerIcons = await Prefs().getShowHeaderIcons();
+            final dedTravel = await Prefs().getDedicatedTravelCard();
+            final disableTravel = await Prefs().getDisableTravelSection();
+            final expandEvents = await Prefs().getExpandEvents();
+            final eventsNumber = await Prefs().getEventsShowNumber();
+            final expandMessages = await Prefs().getExpandMessages();
+            final messagesNumber = await Prefs().getMessagesShowNumber();
+            final expandBasicInfo = await Prefs().getExpandBasicInfo();
+            final expandNetworth = await Prefs().getExpandNetworth();
+            final sectionList = await Prefs().getProfileSectionOrder();
+
+            widget.disableTravelSection(disableTravel);
             setState(() {
-              if (newOptions.warnAboutChainsEnabled != null) {
-                _warnAboutChains = newOptions.warnAboutChainsEnabled!;
-              }
-              if (newOptions.showHeaderWallet != null) {
-                _showHeaderWallet = newOptions.showHeaderWallet!;
-              }
-              if (newOptions.showHeaderIcons != null) {
-                _showHeaderIcons = newOptions.showHeaderIcons!;
-              }
-              if (newOptions.dedicatedTravelCard != null) {
-                _dedicatedTravelCard = newOptions.dedicatedTravelCard!;
-              }
-              _eventsExpController.expanded = newOptions.expandEvents!;
-              _messagesShowNumber = newOptions.messagesShowNumber;
-              _eventsShowNumber = newOptions.eventsShowNumber;
-              _messagesExpController.expanded = newOptions.expandMessages!;
-              _basicInfoExpController.expanded = newOptions.expandBasicInfo!;
-              _networthExpController.expanded = newOptions.expandNetworth!;
-              _userSectionOrder = newOptions.sectionSort;
+              _warnAboutChains = warnChains;
+              _showHeaderWallet = headerWallet;
+              _showHeaderIcons = headerIcons;
+              _dedicatedTravelCard = dedTravel;
+              _eventsExpController.expanded = expandEvents;
+              _messagesShowNumber = messagesNumber;
+              _eventsShowNumber = eventsNumber;
+              _messagesExpController.expanded = expandMessages;
+              _basicInfoExpController.expanded = expandBasicInfo;
+              _networthExpController.expanded = expandNetworth;
+              _userSectionOrder = sectionList;
             });
+
             // If we reactivated faction crimes, they might take up to a minute
             // to appear unless we call them directly
-            if (newOptions.oCrimesReactivated) {
-              _getFactionCrimesV1();
+            if (_settingsProvider!.oCrimesEnabled) {
+              if (_settingsProvider!.playerInOCv2) {
+                _getFactionCrimesV2();
+              } else {
+                _getFactionCrimesV1();
+              }
             }
+
             if (_settingsProvider!.tornStatsChartDateTime == 0) {
               _getStatsChart();
             }
@@ -5231,6 +5243,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _chainController.getOrSetStatus(externalStatusModel: externalStatusModel);
           }
 
+          if (apiResponse.faction?.factionId != null && apiResponse.faction!.factionId! > 0) {
+            _u.factionId = apiResponse.faction!.factionId!;
+          }
+
+          if (apiResponse.job?.companyId != null && apiResponse.job!.companyId! > 0) {
+            _u.companyId = apiResponse.job!.companyId!;
+          }
+
           _checkIfNotificationsAreCurrent();
         } else {
           if (_apiGoodData && _apiRetries < 8) {
@@ -6648,15 +6668,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _onShare(String shareText) async {
-    await Share.share(
-      shareText,
+    await SharePlus.instance.share(ShareParams(
+      text: shareText,
       sharePositionOrigin: Rect.fromLTWH(
         0,
         0,
         MediaQuery.of(context).size.width,
         MediaQuery.of(context).size.height / 2,
       ),
-    );
+    ));
   }
 
   Future _loadPreferences() async {

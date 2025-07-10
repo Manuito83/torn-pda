@@ -37,8 +37,10 @@ class VaultOptionsPageState extends State<VaultOptionsPage> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        widget.callback();
+      },
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
@@ -144,10 +146,5 @@ class VaultOptionsPageState extends State<VaultOptionsPage> {
     setState(() {
       _vaultEnabled = vaultEnabled;
     });
-  }
-
-  Future<bool> _willPopCallback() async {
-    widget.callback();
-    return true;
   }
 }

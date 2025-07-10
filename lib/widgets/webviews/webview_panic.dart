@@ -179,8 +179,11 @@ class WebViewPanicState extends State<WebViewPanic> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        await _tryGoBack();
+      },
       child: Container(
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
@@ -947,11 +950,6 @@ class WebViewPanicState extends State<WebViewPanic> {
       _chatRemovalEnabled = removalEnabled;
       _chatRemovalActive = removalActive;
     });
-  }
-
-  Future<bool> _willPopCallback() async {
-    await _tryGoBack();
-    return false;
   }
 }
 

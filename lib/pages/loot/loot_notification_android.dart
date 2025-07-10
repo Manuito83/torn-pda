@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -35,6 +37,8 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -43,9 +47,15 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
 
     routeWithDrawer = false;
     routeName = "loot_notification";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "loot_notification") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override

@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -42,6 +44,8 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -50,9 +54,15 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
 
     routeWithDrawer = false;
     routeName = "targets_options";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "targets_options") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -462,7 +472,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "chaining_targets";
     Navigator.of(context).pop(

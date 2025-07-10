@@ -1,5 +1,7 @@
 // Flutter imports:
 // Package imports:
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -31,6 +33,8 @@ class MemberDetailsPageState extends State<MemberDetailsPage> {
   Future? _memberFetched;
   TargetModel? _member;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -40,9 +44,15 @@ class MemberDetailsPageState extends State<MemberDetailsPage> {
 
     routeWithDrawer = false;
     routeName = "member_details";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "member_details") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -443,7 +453,7 @@ class MemberDetailsPageState extends State<MemberDetailsPage> {
     }
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "chaining_war";
     Navigator.of(context).pop();

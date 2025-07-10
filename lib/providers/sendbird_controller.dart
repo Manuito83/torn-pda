@@ -115,6 +115,9 @@ class SendbirdController extends GetxController {
       if (success) {
         await Prefs().setSendbirdNotificationsEnabled(true);
         _sendBirdNotificationsEnabled = true;
+
+        _checkAndUpdateServerFactionPushPreferences();
+        _checkAndUpdateServerCompanyPushPreferences();
       } else {
         toastification.show(
           closeOnClick: true,
@@ -202,15 +205,11 @@ class SendbirdController extends GetxController {
 
             await sendbirdRegisterFCMTokenAndChannel();
 
-            // Refresh notification preferences
-            // This might not seem necessary, but it updates across apps, so it will use this installation preferences now
-            if (_uc.factionId != 0) {
-              _setChannelPushPreference(exclude: _excludeFactionMessages, channelUrl: "faction-${_uc.factionId}");
-            }
-
-            if (_uc.companyId != 0) {
-              _setChannelPushPreference(exclude: _excludeCompanyMessages, channelUrl: "company-${_uc.companyId}");
-            }
+            // Refresh notification preferences!!
+            // The server setting is per user, so we need to maintain coherence between installations
+            // Also, we need to recheck (and resync) when the user changes faction or company
+            await _checkAndUpdateServerFactionPushPreferences();
+            await _checkAndUpdateServerCompanyPushPreferences();
           } else {
             await sendbirdUnregisterFCMTokenAndChannel();
           }
@@ -477,6 +476,129 @@ class SendbirdController extends GetxController {
       logToUser("Sendbird API: General error for user '$playerId' on channel '$channelUrl': $e");
       return false;
     }
+  }
+
+  Future<String> _getChannelPushPreference({
+    required String channelUrl,
+    required bool exclude,
+  }) async {
+    String playerId = Get.find<UserController>().playerId.toString();
+    if (playerId == "0") {
+      throw ("Invalid player ID, can't connect to Sendbird!");
+    }
+
+    final dio = Dio();
+    final url = 'https://api-$_sendbirdAppId.sendbird.com/v3/users/$playerId/push_preference/$channelUrl';
+
+    try {
+      final response = await dio.get(
+        url,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json; charset=utf-8',
+            'Api-Token': _sendbirdAppToken,
+          },
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        logToUser("Sendbird API Success: Retrieved push preference for user '$playerId' on "
+            "channel '$channelUrl'. Response: ${response.data['push_trigger_option']}");
+        return response.data['push_trigger_option'];
+      } else {
+        logToUser("Sendbird API Error: Unexpected response status ${response.statusCode} "
+            "for user '$playerId' on channel '$channelUrl'. Response: ${response.data}");
+        return "";
+      }
+    } on DioException catch (e) {
+      String errorMessage = "Sendbird API DioException for user '$playerId' "
+          "on channel '$channelUrl': ${e.message}";
+      if (e.response != null) {
+        errorMessage += "\nStatus: ${e.response?.statusCode}\nData: ${e.response?.data}";
+      }
+      logToUser(errorMessage);
+
+      return "";
+    } catch (e) {
+      logToUser("Sendbird API: General error for user '$playerId' on channel '$channelUrl': $e");
+      return "";
+    }
+  }
+
+  Future<void> _checkAndUpdateServerFactionPushPreferences() async {
+    if (_uc.factionId != 0) {
+      // We first get the current preference, which might have been set by another installation
+      String factionExcludedAPI = await _getChannelPushPreference(
+        channelUrl: "faction-${_uc.factionId}",
+        exclude: _excludeFactionMessages,
+      );
+
+      if (factionExcludedAPI.isNotEmpty) {
+        final incomingFactionExcluded = factionExcludedAPI.isNotEmpty
+            ? factionExcludedAPI == "off"
+                ? true
+                : false
+            : false;
+
+        // If it does not match the current preference, we update it
+        if (incomingFactionExcluded != _excludeFactionMessages) {
+          _excludeFactionMessages = incomingFactionExcluded;
+          update();
+          Prefs().setSendbirdExcludeFactionMessages(incomingFactionExcluded);
+        }
+      }
+    }
+  }
+
+  Future<void> _checkAndUpdateServerCompanyPushPreferences() async {
+    if (_uc.companyId != 0) {
+      // We first get the current preference, which might have been set by another installation
+      String companyExcludedAPI = await _getChannelPushPreference(
+        channelUrl: "company-${_uc.companyId}",
+        exclude: _excludeCompanyMessages,
+      );
+
+      if (companyExcludedAPI.isNotEmpty) {
+        final incomingCompanyExcluded = companyExcludedAPI.isNotEmpty
+            ? companyExcludedAPI == "off"
+                ? true
+                : false
+            : false;
+
+        // If it does not match the current preference, we update it
+        if (incomingCompanyExcluded != _excludeCompanyMessages) {
+          _excludeCompanyMessages = incomingCompanyExcluded;
+          update();
+          Prefs().setSendbirdExcludeCompanyMessages(incomingCompanyExcluded);
+        }
+      }
+    }
+  }
+
+  /// If we have changed faction, we need to update the push preferences for the faction channel
+  /// Based on the current existing preference in this app installation
+  Future<void> updatePushPreferencesAfterFactionChange() async {
+    // If notifications are not enabled, it could be because
+    //   - It's either the first app run
+    //   - They were disabled and we don't really care
+    // ... in both cases, there is no need to update: when the user enables them globally, he'll either
+    //     see them enabled (and can act) or will get a disabled update if another installation changed them)
+    if (!_sendBirdNotificationsEnabled) return;
+
+    _setChannelPushPreference(exclude: _excludeFactionMessages, channelUrl: "faction-${_uc.factionId}");
+  }
+
+  /// If we have changed company, we need to update the push preferences for the company channel
+  /// Based on the current existing preference in this app installation
+  Future<void> updatePushPreferencesAfterCompanyChange() async {
+    // If notifications are not enabled, it could be because
+    //   - It's either the first app run
+    //   - They were disabled and we don't really care
+    // ... in both cases, there is no need to update: when the user enables them globally, he'll either
+    //     see them enabled (and can act) or will get a disabled update if another installation changed them)
+    if (!_sendBirdNotificationsEnabled) return;
+
+    _setChannelPushPreference(exclude: _excludeCompanyMessages, channelUrl: "company-${_uc.companyId}");
   }
 }
 

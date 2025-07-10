@@ -95,6 +95,8 @@ class WebViewProvider extends ChangeNotifier {
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
+  int loginErrorRetrySeconds = 0;
+
   // Windows user data folder
   WebViewEnvironment? webViewEnvironment;
 
@@ -1652,7 +1654,7 @@ class WebViewProvider extends ChangeNotifier {
     final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
     final UserDetailsProvider userProvider = context.read<UserDetailsProvider>();
 
-    if (nativeUser.playerLastLoginMethod != NativeLoginType.none) {
+    if (nativeUser.playerLastLoginMethod == NativeLoginType.none) {
       log("No native user enabled, skipping auth!");
       return inputUrl;
     }

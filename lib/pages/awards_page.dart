@@ -760,7 +760,7 @@ class AwardsPageState extends State<AwardsPage> {
     }
   }
 
-  _populateInfo(Map awardsJson) async {
+  Future<void> _populateInfo(Map awardsJson) async {
     // Copy graphs for later use
     _allAwardsGraphs = awardsJson["graph"];
 
@@ -1029,13 +1029,13 @@ class AwardsPageState extends State<AwardsPage> {
     }
   }
 
-  _restorePrefs() async {
+  Future<void> _restorePrefs() async {
     _savedSort = await Prefs().getAwardsSort();
     _showAchievedAwards = await Prefs().getShowAchievedAwards();
     _hiddenCategories = await Prefs().getHiddenAwardCategories();
   }
 
-  _onPinnedConditionChange() {
+  void _onPinnedConditionChange() {
     _buildAwardsWidgetList();
   }
 }

@@ -56,7 +56,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get a faction's hall of fame rankings.
   ///@param id Faction id
-  @Get(path: '/faction/{id}/hof')
+  @GET(path: '/faction/{id}/hof')
   Future<chopper.Response<FactionHofResponse>> _factionIdHofGet({@Path('id') required int? id});
 
   ///Get your faction's hall of fame rankings.
@@ -67,7 +67,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your faction's hall of fame rankings.
-  @Get(path: '/faction/hof')
+  @GET(path: '/faction/hof')
   Future<chopper.Response<FactionHofResponse>> _factionHofGet();
 
   ///Get a list of a faction's members
@@ -85,7 +85,7 @@ abstract class TornV2 extends ChopperService {
   ///Get a list of a faction's members
   ///@param id Faction id
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
-  @Get(path: '/faction/{id}/members')
+  @GET(path: '/faction/{id}/members')
   Future<chopper.Response<FactionMembersResponse>> _factionIdMembersGet({
     @Path('id') required int? id,
     @Query('striptags') String? striptags,
@@ -101,7 +101,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get a list of your faction's members
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
-  @Get(path: '/faction/members')
+  @GET(path: '/faction/members')
   Future<chopper.Response<FactionMembersResponse>> _factionMembersGet({@Query('striptags') String? striptags});
 
   ///Get a faction's basic details
@@ -114,7 +114,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get a faction's basic details
   ///@param id Faction id
-  @Get(path: '/faction/{id}/basic')
+  @GET(path: '/faction/{id}/basic')
   Future<chopper.Response<FactionBasicResponse>> _factionIdBasicGet({@Path('id') required int? id});
 
   ///Get your faction's basic details
@@ -125,7 +125,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your faction's basic details
-  @Get(path: '/faction/basic')
+  @GET(path: '/faction/basic')
   Future<chopper.Response<FactionBasicResponse>> _factionBasicGet();
 
   ///Get a faction's wars & pacts details
@@ -138,7 +138,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get a faction's wars & pacts details
   ///@param id Faction id
-  @Get(path: '/faction/{id}/wars')
+  @GET(path: '/faction/{id}/wars')
   Future<chopper.Response<FactionWarsResponse>> _factionIdWarsGet({@Path('id') required int? id});
 
   ///Get your faction's wars & pacts details
@@ -149,7 +149,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your faction's wars & pacts details
-  @Get(path: '/faction/wars')
+  @GET(path: '/faction/wars')
   Future<chopper.Response<FactionWarsResponse>> _factionWarsGet();
 
   ///Get your faction's news details
@@ -185,7 +185,7 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
   ///@param cat News category type
-  @Get(path: '/faction/news')
+  @GET(path: '/faction/news')
   Future<chopper.Response<FactionNewsResponse>> _factionNewsGet({
     @Query('striptags') String? striptags,
     @Query('limit') int? limit,
@@ -216,7 +216,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  @Get(path: '/faction/attacks')
+  @GET(path: '/faction/attacks')
   Future<chopper.Response<FactionAttacksResponse>> _factionAttacksGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -245,7 +245,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  @Get(path: '/faction/attacksfull')
+  @GET(path: '/faction/attacksfull')
   Future<chopper.Response<FactionAttacksFullResponse>> _factionAttacksfullGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -261,7 +261,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your faction's applications
-  @Get(path: '/faction/applications')
+  @GET(path: '/faction/applications')
   Future<chopper.Response<FactionApplicationsResponse>> _factionApplicationsGet();
 
   ///Get a faction's current chain
@@ -274,7 +274,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get a faction's current chain
   ///@param id Faction id
-  @Get(path: '/faction/{id}/chain')
+  @GET(path: '/faction/{id}/chain')
   Future<chopper.Response<FactionOngoingChainResponse>> _factionIdChainGet({@Path('id') required int? id});
 
   ///Get your faction's current chain
@@ -285,7 +285,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your faction's current chain
-  @Get(path: '/faction/chain')
+  @GET(path: '/faction/chain')
   Future<chopper.Response<FactionOngoingChainResponse>> _factionChainGet();
 
   ///Get a list of a faction's completed chains
@@ -312,7 +312,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  @Get(path: '/faction/{id}/chains')
+  @GET(path: '/faction/{id}/chains')
   Future<chopper.Response<FactionChainsResponse>> _factionIdChainsGet({
     @Path('id') required int? id,
     @Query('limit') int? limit,
@@ -342,7 +342,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest timestamps
   ///@param to Timestamp that sets the upper limit for the data returned. Data returned will be up to and including this time
   ///@param from Timestamp that sets the lower limit for the data returned. Data returned will be after this time
-  @Get(path: '/faction/chains')
+  @GET(path: '/faction/chains')
   Future<chopper.Response<FactionChainsResponse>> _factionChainsGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -360,7 +360,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get a chain report
   ///@param chainId Chain id
-  @Get(path: '/faction/{chainId}/chainreport')
+  @GET(path: '/faction/{chainId}/chainreport')
   Future<chopper.Response<FactionChainReportResponse>> _factionChainIdChainreportGet(
       {@Path('chainId') required int? chainId});
 
@@ -372,7 +372,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your faction's latest chain report
-  @Get(path: '/faction/chainreport')
+  @GET(path: '/faction/chainreport')
   Future<chopper.Response<FactionChainReportResponse>> _factionChainreportGet();
 
   ///Get your faction's organized crimes
@@ -400,7 +400,7 @@ abstract class TornV2 extends ChopperService {
   ///@param from Returns crimes created after this timestamp
   ///@param to Returns crimes created before this timestamp
   ///@param sort Direction to sort rows in
-  @Get(path: '/faction/crimes')
+  @GET(path: '/faction/crimes')
   Future<chopper.Response<FactionCrimesResponse>> _factionCrimesGet({
     @Query('cat') String? cat,
     @Query('offset') int? offset,
@@ -417,7 +417,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///
-  @Get(path: '/faction/lookup')
+  @GET(path: '/faction/lookup')
   Future<chopper.Response<FactionLookupResponse>> _factionLookupGet();
 
   ///Get current server time
@@ -428,7 +428,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get current server time
-  @Get(path: '/faction/timestamp')
+  @GET(path: '/faction/timestamp')
   Future<chopper.Response<TimestampResponse>> _factionTimestampGet();
 
   ///Get any Faction selection
@@ -474,7 +474,7 @@ abstract class TornV2 extends ChopperService {
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param sort Direction to sort rows in
   ///@param offset
-  @Get(path: '/faction')
+  @GET(path: '/faction')
   Future<chopper.Response> _factionGet({
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
@@ -495,7 +495,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get publicly available forum categories
-  @Get(path: '/forum/categories')
+  @GET(path: '/forum/categories')
   Future<chopper.Response<ForumCategoriesResponse>> _forumCategoriesGet();
 
   ///Get threads for specific public forum category or categories
@@ -523,7 +523,7 @@ abstract class TornV2 extends ChopperService {
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
   ///@param categoryIds Category id or a list of category ids (comma separated)
-  @Get(path: '/forum/{categoryIds}/threads')
+  @GET(path: '/forum/{categoryIds}/threads')
   Future<chopper.Response<ForumThreadsResponse>> _forumCategoryIdsThreadsGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -553,7 +553,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
-  @Get(path: '/forum/threads')
+  @GET(path: '/forum/threads')
   Future<chopper.Response<ForumThreadsResponse>> _forumThreadsGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -571,7 +571,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get specific thread details
   ///@param threadId Thread id
-  @Get(path: '/forum/{threadId}/thread')
+  @GET(path: '/forum/{threadId}/thread')
   Future<chopper.Response<ForumThreadResponse>> _forumThreadIdThreadGet({@Path('threadId') required int? threadId});
 
   ///Get specific forum thread posts
@@ -592,7 +592,7 @@ abstract class TornV2 extends ChopperService {
   ///@param offset
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param threadId Thread id
-  @Get(path: '/forum/{threadId}/posts')
+  @GET(path: '/forum/{threadId}/posts')
   Future<chopper.Response<ForumPostsResponse>> _forumThreadIdPostsGet({
     @Query('offset') int? offset,
     @Query('striptags') String? striptags,
@@ -607,7 +607,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get all available forum selections
-  @Get(path: '/forum/lookup')
+  @GET(path: '/forum/lookup')
   Future<chopper.Response<ForumLookupResponse>> _forumLookupGet();
 
   ///Get current server time
@@ -618,7 +618,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get current server time
-  @Get(path: '/forum/timestamp')
+  @GET(path: '/forum/timestamp')
   Future<chopper.Response<TimestampResponse>> _forumTimestampGet();
 
   ///Get any Forum selection
@@ -664,7 +664,7 @@ abstract class TornV2 extends ChopperService {
   ///@param cat Selection category
   ///@param sort Direction to sort rows in
   ///@param offset
-  @Get(path: '/forum')
+  @GET(path: '/forum')
   Future<chopper.Response> _forumGet({
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
@@ -695,7 +695,7 @@ abstract class TornV2 extends ChopperService {
   ///@param id Item id
   ///@param bonus Used to filter weapons with a specific bonus.
   ///@param offset
-  @Get(path: '/market/{id}/itemmarket')
+  @GET(path: '/market/{id}/itemmarket')
   Future<chopper.Response<MarketItemMarketResponse>> _marketIdItemmarketGet({
     @Path('id') required int? id,
     @Query('bonus') String? bonus,
@@ -710,7 +710,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get all available market selections
-  @Get(path: '/market/lookup')
+  @GET(path: '/market/lookup')
   Future<chopper.Response<MarketLookupResponse>> _marketLookupGet();
 
   ///Get current server time
@@ -721,7 +721,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get current server time
-  @Get(path: '/market/timestamp')
+  @GET(path: '/market/timestamp')
   Future<chopper.Response<TimestampResponse>> _marketTimestampGet();
 
   ///Get any Market selection
@@ -755,7 +755,7 @@ abstract class TornV2 extends ChopperService {
   ///@param cat Selection category
   ///@param sort Direction to sort rows in
   ///@param offset
-  @Get(path: '/market')
+  @GET(path: '/market')
   Future<chopper.Response> _marketGet({
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
@@ -790,7 +790,7 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp until when started races are returned (schedule.start)
   ///@param from Timestamp after when started races are returned (scheduled.start)
   ///@param cat Category of races returned
-  @Get(path: '/racing/races')
+  @GET(path: '/racing/races')
   Future<chopper.Response<RacingRacesResponse>> _racingRacesGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -814,7 +814,7 @@ abstract class TornV2 extends ChopperService {
   ///Get track records
   ///@param trackId Track id
   ///@param cat Car class
-  @Get(path: '/racing/{trackId}/records')
+  @GET(path: '/racing/{trackId}/records')
   Future<chopper.Response<RacingTrackRecordsResponse>> _racingTrackIdRecordsGet({
     @Path('trackId') required int? trackId,
     @Query('cat') required String? cat,
@@ -830,7 +830,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get specific race details
   ///@param raceId Race id
-  @Get(path: '/racing/{raceId}/race')
+  @GET(path: '/racing/{raceId}/race')
   Future<chopper.Response<RacingRaceDetailsResponse>> _racingRaceIdRaceGet({@Path('raceId') required int? raceId});
 
   ///Get cars and their racing stats
@@ -841,7 +841,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get cars and their racing stats
-  @Get(path: '/racing/cars')
+  @GET(path: '/racing/cars')
   Future<chopper.Response<RacingCarsResponse>> _racingCarsGet();
 
   ///Get race tracks and descriptions
@@ -852,7 +852,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get race tracks and descriptions
-  @Get(path: '/racing/tracks')
+  @GET(path: '/racing/tracks')
   Future<chopper.Response<RacingTracksResponse>> _racingTracksGet();
 
   ///Get all possible car upgrades
@@ -863,7 +863,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get all possible car upgrades
-  @Get(path: '/racing/carupgrades')
+  @GET(path: '/racing/carupgrades')
   Future<chopper.Response<RacingCarUpgradesResponse>> _racingCarupgradesGet();
 
   ///Get all available racing selections
@@ -874,7 +874,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get all available racing selections
-  @Get(path: '/racing/lookup')
+  @GET(path: '/racing/lookup')
   Future<chopper.Response<RacingLookupResponse>> _racingLookupGet();
 
   ///Get current server time
@@ -885,7 +885,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get current server time
-  @Get(path: '/racing/timestamp')
+  @GET(path: '/racing/timestamp')
   Future<chopper.Response<TimestampResponse>> _racingTimestampGet();
 
   ///Get any Racing selection
@@ -927,7 +927,7 @@ abstract class TornV2 extends ChopperService {
   ///@param cat Selection category
   ///@param sort Direction to sort rows in
   ///@param offset
-  @Get(path: '/racing')
+  @GET(path: '/racing')
   Future<chopper.Response> _racingGet({
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
@@ -949,7 +949,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get Subcrimes information
   ///@param crimeId Crime id
-  @Get(path: '/torn/{crimeId}/subcrimes')
+  @GET(path: '/torn/{crimeId}/subcrimes')
   Future<chopper.Response<TornSubcrimesResponse>> _tornCrimeIdSubcrimesGet({@Path('crimeId') required String? crimeId});
 
   ///Get crimes information
@@ -960,7 +960,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get crimes information
-  @Get(path: '/torn/crimes')
+  @GET(path: '/torn/crimes')
   Future<chopper.Response<TornCrimesResponse>> _tornCrimesGet();
 
   ///Get calendar information
@@ -971,7 +971,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get calendar information
-  @Get(path: '/torn/calendar')
+  @GET(path: '/torn/calendar')
   Future<chopper.Response<TornCalendarResponse>> _tornCalendarGet();
 
   ///Get player hall of fame positions for a specific category
@@ -992,7 +992,7 @@ abstract class TornV2 extends ChopperService {
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
-  @Get(path: '/torn/hof')
+  @GET(path: '/torn/hof')
   Future<chopper.Response<TornHofResponse>> _tornHofGet({
     @Query('limit') int? limit,
     @Query('offset') int? offset,
@@ -1017,7 +1017,7 @@ abstract class TornV2 extends ChopperService {
   ///@param limit
   ///@param offset
   ///@param cat Leaderboards category
-  @Get(path: '/torn/factionhof')
+  @GET(path: '/torn/factionhof')
   Future<chopper.Response<TornFactionHofResponse>> _tornFactionhofGet({
     @Query('limit') int? limit,
     @Query('offset') int? offset,
@@ -1034,7 +1034,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get available log ids for a specific log category
   ///@param logCategoryId Log category id
-  @Get(path: '/torn/{logCategoryId}/logtypes')
+  @GET(path: '/torn/{logCategoryId}/logtypes')
   Future<chopper.Response<TornLogTypesResponse>> _tornLogCategoryIdLogtypesGet(
       {@Path('logCategoryId') required int? logCategoryId});
 
@@ -1046,7 +1046,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get all available log ids
-  @Get(path: '/torn/logtypes')
+  @GET(path: '/torn/logtypes')
   Future<chopper.Response<TornLogTypesResponse>> _tornLogtypesGet();
 
   ///Get available log categories
@@ -1057,7 +1057,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get available log categories
-  @Get(path: '/torn/logcategories')
+  @GET(path: '/torn/logcategories')
   Future<chopper.Response<TornLogCategoriesResponse>> _tornLogcategoriesGet();
 
   ///Get bounties
@@ -1075,7 +1075,7 @@ abstract class TornV2 extends ChopperService {
   ///Get bounties
   ///@param limit
   ///@param offset
-  @Get(path: '/torn/bounties')
+  @GET(path: '/torn/bounties')
   Future<chopper.Response<TornBountiesResponse>> _tornBountiesGet({
     @Query('limit') int? limit,
     @Query('offset') int? offset,
@@ -1089,7 +1089,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get all available torn selections
-  @Get(path: '/torn/lookup')
+  @GET(path: '/torn/lookup')
   Future<chopper.Response<TornLookupResponse>> _tornLookupGet();
 
   ///Get current server time
@@ -1100,7 +1100,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get current server time
-  @Get(path: '/torn/timestamp')
+  @GET(path: '/torn/timestamp')
   Future<chopper.Response<TimestampResponse>> _tornTimestampGet();
 
   ///Get any Torn selection
@@ -1146,7 +1146,7 @@ abstract class TornV2 extends ChopperService {
   ///@param cat Selection category
   ///@param sort Direction to sort rows in
   ///@param offset
-  @Get(path: '/torn')
+  @GET(path: '/torn')
   Future<chopper.Response> _tornGet({
     @Query('selections') List<Object?>? selections,
     @Query('id') String? id,
@@ -1181,7 +1181,7 @@ abstract class TornV2 extends ChopperService {
   ///@param cat
   ///@param stat Stat names (10 maximum). Used to fetch historical stat values
   ///@param timestamp Returns stats until this timestamp (converted to nearest date).
-  @Get(path: '/user/{id}/personalstats')
+  @GET(path: '/user/{id}/personalstats')
   Future<chopper.Response<UserPersonalStatsResponse>> _userIdPersonalstatsGet({
     @Path('id') required int? id,
     @Query('cat') String? cat,
@@ -1208,7 +1208,7 @@ abstract class TornV2 extends ChopperService {
   ///@param cat Stats category. Required unless requesting specific stats via 'stat' query parameter
   ///@param stat Stat names (10 maximum). Used to fetch historical stat values
   ///@param timestamp Returns stats until this timestamp (converted to nearest date).
-  @Get(path: '/user/personalstats')
+  @GET(path: '/user/personalstats')
   Future<chopper.Response<UserPersonalStatsResponse>> _userPersonalstatsGet({
     @Query('cat') String? cat,
     @Query('stat') List<Object?>? stat,
@@ -1225,7 +1225,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get your crime statistics
   ///@param crimeId Crime id
-  @Get(path: '/user/{crimeId}/crimes')
+  @GET(path: '/user/{crimeId}/crimes')
   Future<chopper.Response<UserCrimesResponse>> _userCrimeIdCrimesGet({@Path('crimeId') required String? crimeId});
 
   ///Get user races
@@ -1252,7 +1252,7 @@ abstract class TornV2 extends ChopperService {
   ///@param to Timestamp until when started races are returned (schedule.start)
   ///@param from Timestamp after when started races are returned (scheduled.start)
   ///@param cat Category of races returned
-  @Get(path: '/user/races')
+  @GET(path: '/user/races')
   Future<chopper.Response<UserRacesResponse>> _userRacesGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -1269,7 +1269,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get user enlisted cars
-  @Get(path: '/user/enlistedcars')
+  @GET(path: '/user/enlistedcars')
   Future<chopper.Response<UserEnlistedCarsResponse>> _userEnlistedcarsGet();
 
   ///Get posts for a specific player
@@ -1305,7 +1305,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by post created timestamp
   ///@param to Returns posts created before this timestamp
   ///@param from Returns posts created after this timestamp
-  @Get(path: '/user/{id}/forumposts')
+  @GET(path: '/user/{id}/forumposts')
   Future<chopper.Response<UserForumPostsResponse>> _userIdForumpostsGet({
     @Query('striptags') String? striptags,
     @Path('id') required int? id,
@@ -1340,7 +1340,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by post created timestamp
   ///@param to Returns posts created before this timestamp
   ///@param from Returns posts created after this timestamp
-  @Get(path: '/user/forumposts')
+  @GET(path: '/user/forumposts')
   Future<chopper.Response<UserForumPostsResponse>> _userForumpostsGet({
     @Query('striptags') String? striptags,
     @Query('limit') int? limit,
@@ -1373,7 +1373,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
-  @Get(path: '/user/{id}/forumthreads')
+  @GET(path: '/user/{id}/forumthreads')
   Future<chopper.Response<UserForumThreadsResponse>> _userIdForumthreadsGet({
     @Path('id') required int? id,
     @Query('limit') int? limit,
@@ -1403,7 +1403,7 @@ abstract class TornV2 extends ChopperService {
   ///@param sort Sorted by the greatest of first_post_time and last_post_time timestamps
   ///@param to Returns threads created before this timestamp
   ///@param from Returns threads created after this timestamp
-  @Get(path: '/user/forumthreads')
+  @GET(path: '/user/forumthreads')
   Future<chopper.Response<UserForumThreadsResponse>> _userForumthreadsGet({
     @Query('limit') int? limit,
     @Query('sort') String? sort,
@@ -1420,7 +1420,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get updates on threads you subscribed to
-  @Get(path: '/user/forumsubscribedthreads')
+  @GET(path: '/user/forumsubscribedthreads')
   Future<chopper.Response<UserForumSubscribedThreadsResponse>> _userForumsubscribedthreadsGet();
 
   ///Get updates on your threads and posts
@@ -1431,7 +1431,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get updates on your threads and posts
-  @Get(path: '/user/forumfeed')
+  @GET(path: '/user/forumfeed')
   Future<chopper.Response<UserForumFeedResponse>> _userForumfeedGet();
 
   ///Get updates on your friends' activity
@@ -1442,7 +1442,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get updates on your friends' activity
-  @Get(path: '/user/forumfriends')
+  @GET(path: '/user/forumfriends')
   Future<chopper.Response<UserForumFriendsResponse>> _userForumfriendsGet();
 
   ///Get hall of fame rankings for a specific player
@@ -1455,7 +1455,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get hall of fame rankings for a specific player
   ///@param id User id
-  @Get(path: '/user/{id}/hof')
+  @GET(path: '/user/{id}/hof')
   Future<chopper.Response<UserHofResponse>> _userIdHofGet({@Path('id') required int? id});
 
   ///Get your hall of fame rankings
@@ -1466,7 +1466,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your hall of fame rankings
-  @Get(path: '/user/hof')
+  @GET(path: '/user/hof')
   Future<chopper.Response<UserHofResponse>> _userHofGet();
 
   ///Get your competition's event start time
@@ -1477,7 +1477,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your competition's event start time
-  @Get(path: '/user/calendar')
+  @GET(path: '/user/calendar')
   Future<chopper.Response<UserCalendarResponse>> _userCalendarGet();
 
   ///Get bounties placed on a specific user
@@ -1490,7 +1490,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get bounties placed on a specific user
   ///@param id User id
-  @Get(path: '/user/{id}/bounties')
+  @GET(path: '/user/{id}/bounties')
   Future<chopper.Response<UserBountiesResponse>> _userIdBountiesGet({@Path('id') required int? id});
 
   ///Get bounties placed on you
@@ -1501,7 +1501,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get bounties placed on you
-  @Get(path: '/user/bounties')
+  @GET(path: '/user/bounties')
   Future<chopper.Response<UserBountiesResponse>> _userBountiesGet();
 
   ///Get your starter job positions
@@ -1512,7 +1512,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your starter job positions
-  @Get(path: '/user/jobranks')
+  @GET(path: '/user/jobranks')
   Future<chopper.Response<UserJobRanksResponse>> _userJobranksGet();
 
   ///Get your item market listings for a specific item
@@ -1525,7 +1525,7 @@ abstract class TornV2 extends ChopperService {
 
   ///Get your item market listings for a specific item
   ///@param offset
-  @Get(path: '/user/itemmarket')
+  @GET(path: '/user/itemmarket')
   Future<chopper.Response<UserItemMarketResponse>> _userItemmarketGet({@Query('offset') int? offset});
 
   ///Get your current faction balance
@@ -1536,7 +1536,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your current faction balance
-  @Get(path: '/user/factionbalance')
+  @GET(path: '/user/factionbalance')
   Future<chopper.Response<UserFactionBalanceResponse>> _userFactionbalanceGet();
 
   ///Get your current ongoing organized crime
@@ -1547,7 +1547,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get your current ongoing organized crime
-  @Get(path: '/user/organizedcrime')
+  @GET(path: '/user/organizedcrime')
   Future<chopper.Response<UserOrganizedCrimeResponse>> _userOrganizedcrimeGet();
 
   ///Get all available user selections
@@ -1558,7 +1558,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get all available user selections
-  @Get(path: '/user/lookup')
+  @GET(path: '/user/lookup')
   Future<chopper.Response<UserLookupResponse>> _userLookupGet();
 
   ///Get current server time
@@ -1569,7 +1569,7 @@ abstract class TornV2 extends ChopperService {
   }
 
   ///Get current server time
-  @Get(path: '/user/timestamp')
+  @GET(path: '/user/timestamp')
   Future<chopper.Response<TimestampResponse>> _userTimestampGet();
 
   ///Get any User selection
@@ -1619,7 +1619,7 @@ abstract class TornV2 extends ChopperService {
   ///@param striptags Determines if fields include HTML or not ('Hospitalized by <a href=...>user</a>' vs 'Hospitalized by user').
   ///@param sort Direction to sort rows in
   ///@param offset
-  @Get(path: '/user')
+  @GET(path: '/user')
   Future<chopper.Response> _userGet({
     @Query('selections') String? selections,
     @Query('id') String? id,

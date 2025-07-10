@@ -1,4 +1,5 @@
 // Flutter imports:
+import 'dart:async';
 import 'dart:io';
 
 // Package imports:
@@ -36,6 +37,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   final _scrollController = ScrollController();
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +64,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
     routeWithDrawer = false;
     routeName = "userscripts";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "userscripts") _goBack();
     });
   }
@@ -69,6 +72,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -1161,10 +1165,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  WillPopScope _firstTimeDialog() {
+  PopScope _firstTimeDialog() {
     // Will show for users updating to V2, as well as new users.
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: AlertDialog(
         title: const Text("CAUTION"),
         content: const SingleChildScrollView(

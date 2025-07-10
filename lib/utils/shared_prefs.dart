@@ -21,6 +21,9 @@ class Prefs {
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
 
+  final String _kLastKnownFaction = "pfa_lastKnownFaction";
+  final String _kLastKnownCompany = "pfa_lastKnownCompany";
+
   // Native login
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
   final String _kLastAuthRedirect = "pda_lastAuthRedirect";
@@ -529,6 +532,29 @@ class Prefs {
   Future<bool> setLastAppUse(int value) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.setInt(_kLastAppUse, value);
+  }
+
+  /// ----------------------------
+  /// Methods for faction and company tracking
+  /// ----------------------------
+  Future<int> getLastKnownFaction() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kLastKnownFaction) ?? 0;
+  }
+
+  Future<bool> setLastKnownFaction(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kLastKnownFaction, value);
+  }
+
+  Future<int> getLastKnownCompany() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_kLastKnownCompany) ?? 0;
+  }
+
+  Future<bool> setLastKnownCompany(int value) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.setInt(_kLastKnownCompany, value);
   }
 
   /// ----------------------------

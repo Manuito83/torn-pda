@@ -1537,7 +1537,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                 ? MediaQuery.orientationOf(context) == Orientation.portrait
                     ? Colors.blueGrey
                     : _themeProvider!.canvas
-                : _themeProvider!.canvas,
+                : _themeProvider!.statusBar,
             child: SafeArea(
               right: _webViewProvider.webViewSplitActive &&
                   _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,

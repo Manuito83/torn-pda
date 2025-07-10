@@ -146,6 +146,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   final List<ForeignStock> _hiddenStocks = <ForeignStock>[];
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -156,9 +158,15 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
     routeWithDrawer = false;
     routeName = "foreign_stock";
-    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "foreign_stock") _goBack(false, false);
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override

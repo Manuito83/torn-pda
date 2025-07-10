@@ -206,7 +206,7 @@ class ChainStatusController extends GetxController {
   Timer? _tickerCallOnlyStatusColorApi;
 
   // MARK: - Initialization
-  initialiseProvider() {
+  void initialiseProvider() {
     if (!initialised) {
       _loadPreferences();
     }
@@ -256,7 +256,7 @@ class ChainStatusController extends GetxController {
     log("Chain watcher timers activated!");
   }
 
-  deactivateStatus() {
+  void deactivateStatus() {
     _tickerCallFullChainApi?.cancel();
     _tickerDecreaseCount?.cancel();
     _chainWidgetRequestsActive = false;
@@ -273,7 +273,7 @@ class ChainStatusController extends GetxController {
     update();
   }
 
-  deactivateWatcher() {
+  void deactivateWatcher() {
     _watcherActive = false;
     _borderColor = Colors.transparent;
     _chainWatcherDefcon = WatchDefcon.off;
@@ -770,8 +770,8 @@ class ChainStatusController extends GetxController {
   }
 
   // MARK: - Utilities (Vibration, Wakelock)
-  _vibrate(int times) async {
-    if ((await Vibration.hasVibrator())!) {
+  Future<void> _vibrate(int times) async {
+    if ((await Vibration.hasVibrator())) {
       for (var i = 0; i < times; i++) {
         Vibration.vibrate();
         await Future.delayed(const Duration(milliseconds: 1000));
@@ -796,7 +796,7 @@ class ChainStatusController extends GetxController {
   }
 
   // MARK: - Preferences
-  _loadPreferences() async {
+  Future<void> _loadPreferences() async {
     initialised = true;
     _soundEnabled = await Prefs().getChainWatcherSound();
     _vibrationEnabled = await Prefs().getChainWatcherVibration();

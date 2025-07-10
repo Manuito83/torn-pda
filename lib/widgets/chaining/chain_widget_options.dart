@@ -1,10 +1,13 @@
 // Flutter imports:
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 // Package imports:
 import 'package:provider/provider.dart';
+import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
@@ -27,13 +30,38 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
   ThemeProvider? _themeProvider;
   late SettingsProvider _settingsProvider;
 
+  late StreamSubscription _willPopSubscription;
+
+  @override
+  initState() {
+    super.initState();
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    routeWithDrawer = false;
+    routeName = "chain_watcher_options";
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+      if (mounted && routeName == "chain_watcher_options") _goBack();
+    });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          widget.callBackOptions!();
+          routeWithDrawer = true;
+          routeName = "chaining_targets";
+        }
+      },
       child: Container(
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
@@ -115,7 +143,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          _goBack();
         },
       ),
       actions: [
@@ -908,10 +936,11 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
     return "$twoDigitMinutes:$twoDigitSeconds";
   }
 
-  Future<bool> _willPopCallback() async {
+  void _goBack() async {
     widget.callBackOptions!();
+    routeWithDrawer = true;
+    routeName = "chaining_targets";
     Navigator.of(context).pop();
-    return true;
   }
 
   void _errorReset(ChainStatusController chainP) {

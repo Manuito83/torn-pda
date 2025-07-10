@@ -45,8 +45,10 @@ class TradesOptionsState extends State<TradesOptions> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        _willPopCallback();
+      },
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait

@@ -1,5 +1,7 @@
 // Flutter imports:
 // Package imports:
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +30,8 @@ class FriendDetailsPageState extends State<FriendDetailsPage> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -36,9 +40,15 @@ class FriendDetailsPageState extends State<FriendDetailsPage> {
 
     routeWithDrawer = false;
     routeName = "friend_details";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friend_details") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -395,7 +405,7 @@ class FriendDetailsPageState extends State<FriendDetailsPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "friends";
     Navigator.of(context).pop();

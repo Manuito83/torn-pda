@@ -61,6 +61,8 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
   late int _timeNow;
   int _ownFaction = 0;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +81,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
 
     routeWithDrawer = false;
     routeName = "ranked_wars";
-    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "ranked_wars") _goBack();
     });
 
@@ -97,6 +99,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
     _tabController?.removeListener(_handleTabSelection);
     _tabController?.dispose();
     _searchController.dispose();
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -590,7 +593,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
     return Map.fromEntries(sortedEntries);
   }
 
-  _goBack() {
+  void _goBack() {
     if (widget.calledFromMenu) {
       final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
       if (scaffoldState != null) {
