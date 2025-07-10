@@ -1324,7 +1324,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           bazaarModel: _miscModel?.bazaar,
                           launchBrowser: _launchBrowser,
                         ),
-                        if (_marketItemsV2?.itemmarket != null && _marketItemsV2!.itemmarket!.isNotEmpty)
+                        if (_marketItemsV2?.itemmarket != null && _marketItemsV2!.itemmarket.isNotEmpty)
                           MarketStatusCard(
                             marketModel: _marketItemsV2!,
                             launchBrowser: _launchBrowser,

@@ -51,6 +51,7 @@ import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -354,6 +355,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "revive_nuke": "1 million or 1 Xanax",
         "revive_uhc": "1 million or 1 Xanax",
         "revive_wtf": "1 million or 1 Xanax",
+        // Torn API
+        "apiV2LegacyRequests": "",
       });
 
       // Remote Config first fetch and live update
@@ -380,6 +383,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
         sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
 
+        // Torn API
+        apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
+
         // Dynamic App Icon depends on Remote Config
         if (Platform.isIOS) {
           _setDynamicAppIcon();
@@ -404,6 +410,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // Sendbird
           sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
           sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
+          // Torn API
+          apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
         });
       });
     }

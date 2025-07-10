@@ -9,6 +9,8 @@ import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 
+String apiV2LegacyRequests = "";
+
 class ApiCallsV2 {
   /// Get item market listings
   /// PAYLOAD
