@@ -83,7 +83,8 @@ dependencies:
   intl: 0.20.2
   flutter_material_design_icons: 1.1.7447
   path_provider: 2.1.5
-  percent_indicator: 4.2.5
+  ## Bug submitted for v4.2.5 (plane icon out of place)
+  percent_indicator: 4.2.3
   provider: 6.1.5
   pull_to_refresh: 2.0.0
   quick_actions: 1.1.0
