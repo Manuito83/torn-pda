@@ -575,6 +575,11 @@ class SendbirdController extends GetxController {
     }
   }
 
+  Future<void> updateFactionAndCompanyPreferences() async {
+    await _checkAndUpdateServerFactionPushPreferences();
+    await _checkAndUpdateServerCompanyPushPreferences();
+  }
+
   /// If we have changed faction, we need to update the push preferences for the faction channel
   /// Based on the current existing preference in this app installation
   Future<void> updatePushPreferencesAfterFactionChange() async {
