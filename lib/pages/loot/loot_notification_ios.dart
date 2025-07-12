@@ -289,7 +289,7 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     widget.callback();
     routeWithDrawer = true;
     routeName = "loot";

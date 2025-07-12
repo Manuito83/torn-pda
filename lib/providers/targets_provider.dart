@@ -687,7 +687,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   // SERVER BACKUP RESTORE
-  restoreTargetsFromServerSave({required List<String> backup, required bool overwritte}) async {
+  Future<void> restoreTargetsFromServerSave({required List<String> backup, required bool overwritte}) async {
     if (overwritte) {
       _targets.clear();
     }

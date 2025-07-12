@@ -242,8 +242,10 @@ class WebViewPanicState extends State<WebViewPanic> {
     if (!page.contains('torn.com')) return;
 
     final intColor = Color(_settingsProvider.highlightColor);
-    final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
-    final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    final background =
+        'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
+    final senderColor =
+        'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
     final String hlMap = '[ "${_userProv!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 

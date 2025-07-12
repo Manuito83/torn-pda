@@ -567,7 +567,7 @@ class ProfileCheckAddDialogState extends State<ProfileCheckAddDialog> {
     });
   }
 
-  _showToast({required String text, required Color color, required int seconds}) {
+  void _showToast({required String text, required Color color, required int seconds}) {
     BotToast.showText(
       clickClose: true,
       text: HtmlParser.fix(text),

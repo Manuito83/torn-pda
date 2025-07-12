@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 
 // Package imports:
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:provider/provider.dart';
 

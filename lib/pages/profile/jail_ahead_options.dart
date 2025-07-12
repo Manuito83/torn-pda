@@ -456,7 +456,7 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     if (widget.callback != null) {
       widget.callback!();
     }

@@ -626,7 +626,7 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     widget.callback();
     routeWithDrawer = true;
     routeName = "loot";

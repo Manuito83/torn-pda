@@ -1143,7 +1143,7 @@ class WarController extends GetxController {
     }
   }
 
-  _deleteSpiedStats(Member member) {
+  void _deleteSpiedStats(Member member) {
     member.spySource = SpiesSource.yata;
     member.statsExactTotal = -1;
     member.statsExactTotalUpdated = -1;

@@ -14,14 +14,17 @@ class UpdateTargetsResult {
   int numberErrors;
   int numberSuccessful;
 
-  UpdateTargetsResult(
-      {required this.success, required this.numberErrors, required this.numberSuccessful,});
+  UpdateTargetsResult({
+    required this.success,
+    required this.numberErrors,
+    required this.numberSuccessful,
+  });
 }
 
 class TacProvider extends ChangeNotifier {
   List<TacTarget> targetsList = <TacTarget>[];
 
-  getSingleStatus(int index, TargetModel model) async {
+  Future<void> getSingleStatus(int index, TargetModel model) async {
     final tac = targetsList.elementAt(index);
     tac.currentLife = model.life!.current;
     tac.maxLife = model.life!.maximum;

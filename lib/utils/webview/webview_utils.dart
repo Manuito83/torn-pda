@@ -1,3 +1,6 @@
+// ignore_for_file: unintended_html_in_doc_comment
+
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/parser.dart';
 

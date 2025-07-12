@@ -342,7 +342,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  _goBack(bool flag, bool shortTap) {
+  void _goBack(bool flag, bool shortTap) {
     routeWithDrawer = true;
     routeName = "drawer";
     // Returning 'false' to indicate we did not press a flag
@@ -1624,7 +1624,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
   }
 
-  _refreshMoney() async {
+  Future<void> _refreshMoney() async {
     final profileModel = await ApiCallsV1.getOwnProfileExtended(limit: 3);
     if (profileModel is OwnProfileExtended && mounted) {
       setState(() {
@@ -1646,7 +1646,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _saveHiddenStocks();
   }
 
-  _unhideMember(int? id, String? countryCode) {
+  void _unhideMember(int? id, String? countryCode) {
     setState(() {
       _hiddenStocks.removeWhere((element) => element.id == id && element.countryCode == countryCode);
     });
@@ -1654,7 +1654,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _saveHiddenStocks();
   }
 
-  _saveHiddenStocks() {
+  void _saveHiddenStocks() {
     final hiddenSaveList = <String>[];
     for (final h in _hiddenStocks) {
       hiddenSaveList.add(foreignStockToJson(h));

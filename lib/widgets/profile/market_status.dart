@@ -12,18 +12,18 @@ class MarketStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (marketModel.itemmarket == null || marketModel.itemmarket!.isEmpty) return const SizedBox.shrink();
+    if (marketModel.itemmarket.isEmpty) return const SizedBox.shrink();
 
     int totalItems = 0;
     int totalMoney = 0;
 
-    for (final item in marketModel.itemmarket!) {
-      totalItems += item.amount!;
-      totalMoney += item.amount! * item.price!;
+    for (final item in marketModel.itemmarket) {
+      totalItems += item.amount;
+      totalMoney += item.amount * item.price;
     }
 
     var marketNumber = "";
-    marketModel.itemmarket!.length == 1 ? marketNumber = "1 item" : marketNumber = "$totalItems items";
+    marketModel.itemmarket.length == 1 ? marketNumber = "1 item" : marketNumber = "$totalItems items";
 
     var marketPendingString = "";
     marketPendingString = "\$${formatProfit(inputInt: totalMoney)}";
@@ -61,7 +61,7 @@ class MarketStatusCard extends StatelessWidget {
                   barrierDismissible: false, // user must tap button!
                   builder: (BuildContext context) {
                     return MarketDialog(
-                      market: marketModel.itemmarket!,
+                      market: marketModel.itemmarket,
                       openTapCallback: openTapCallback,
                       openLongPressCallback: openLongPressCallback,
                       items: totalItems,

@@ -50,7 +50,7 @@ class UhcReviveButtonState extends State<UhcReviveButton> {
   }
 }
 
-openUhcReviveDialog(BuildContext c, ThemeProvider themeProvider, OwnProfileExtended? user) {
+Future<void> openUhcReviveDialog(BuildContext c, ThemeProvider themeProvider, OwnProfileExtended? user) {
   final revivePrice = c.read<SettingsProvider>().reviveUhcPrice;
   return showDialog<void>(
     context: c,

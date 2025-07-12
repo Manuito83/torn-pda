@@ -410,7 +410,7 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "chaining_targets";
     Navigator.of(context).pop();

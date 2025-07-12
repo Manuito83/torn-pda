@@ -227,7 +227,7 @@ class UserScriptModel {
     };
   }
 
-  shouldInject(String url, [UserScriptTime? time]) =>
+  bool shouldInject(String url, [UserScriptTime? time]) =>
       enabled &&
       (this.time == time || time == null) &&
       matches.any((match) => (match == "*" || url.contains(match.replaceAll("*", ""))));

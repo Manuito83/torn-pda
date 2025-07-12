@@ -1249,7 +1249,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = false;
     routeName = "settings_browser";
     Navigator.of(context).pop();

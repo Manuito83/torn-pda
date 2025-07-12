@@ -68,7 +68,7 @@ class UserController extends GetxController {
     update();
   }
 
-  _checkIfNewFactionAndReport() async {
+  Future<void> _checkIfNewFactionAndReport() async {
     final lastKnown = await Prefs().getLastKnownFaction();
     if (lastKnown != _factionId) {
       log("Faction changed from $lastKnown to $_factionId!!");
@@ -81,7 +81,7 @@ class UserController extends GetxController {
     }
   }
 
-  _checkIfNewCompanyAndReport() async {
+  Future<void> _checkIfNewCompanyAndReport() async {
     final lastKnown = await Prefs().getLastKnownCompany();
     if (lastKnown != _companyId) {
       log("Company changed from $lastKnown to $_companyId!!");

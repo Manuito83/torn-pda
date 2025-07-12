@@ -493,7 +493,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     if (widget.callback != null) {
       widget.callback!();
     }

@@ -2234,7 +2234,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return ChangeLog();
+        return const ChangeLog();
       },
     );
 
@@ -2327,7 +2327,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _getPages();
   }
 
-  _openDrawer() {
+  void _openDrawer() {
     if (routeWithDrawer) {
       if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
         _scaffoldKey.currentState!.openEndDrawer();
@@ -2540,7 +2540,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
   }
 
-  _initialiseLiveActivitiesBridgeService() async {
+  Future<void> _initialiseLiveActivitiesBridgeService() async {
     _preferencesCompleter.future.whenComplete(() async {
       if (!Platform.isIOS) return;
       if (!_settingsProvider.iosLiveActivityTravelEnabled) return;

@@ -411,7 +411,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     }
   }
 
-  void _launchBrowser({required shortTap}) {
+  void _launchBrowser({required bool shortTap}) {
     const String url = "https://www.torn.com/page.php?sid=stocks";
     _webViewProvider.openBrowserPreference(
       context: context,

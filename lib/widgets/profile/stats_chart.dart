@@ -376,7 +376,7 @@ class _StatsChartState extends State<StatsChart> {
         touchTooltipData: LineTouchTooltipData(
           fitInsideHorizontally: true,
           fitInsideVertically: false,
-          getTooltipColor: (touchedSpot) => Colors.blueGrey.withOpacity(1),
+          getTooltipColor: (touchedSpot) => Colors.blueGrey.withAlpha(255),
           getTooltipItems: (value) {
             final tooltips = <LineTooltipItem>[];
             int thisX = value[0].x.toInt();

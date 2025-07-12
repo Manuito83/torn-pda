@@ -277,7 +277,7 @@ class TravelOptionsWindowsState extends State<TravelOptionsWindows> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = false;
     routeName = "profile_notifications";
     if (widget.callback != null) {

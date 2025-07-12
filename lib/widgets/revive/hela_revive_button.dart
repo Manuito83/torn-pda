@@ -50,7 +50,7 @@ class HelaReviveButtonState extends State<HelaReviveButton> {
   }
 }
 
-openHelaReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExtended? user) {
+Future<void> openHelaReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExtended? user) {
   return showDialog<void>(
     context: _,
     barrierDismissible: false, // user must tap button!

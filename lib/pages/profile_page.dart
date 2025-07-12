@@ -37,7 +37,7 @@ import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/models/chaining/bars_model.dart' as barsModel;
+import 'package:torn_pda/models/chaining/bars_model.dart' as bars_model;
 import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
@@ -5222,21 +5222,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _chainController.statusUpdateSource = "profile";
 
             // We need to adapt Status and Travel models to the BarsModel
-            barsModel.Status chainStatusModel = barsModel.Status()
+            bars_model.Status chainStatusModel = bars_model.Status()
               ..color = apiResponse.status!.color
               ..description = apiResponse.status!.description
               ..details = apiResponse.status!.details
               ..state = apiResponse.status!.state
               ..until = apiResponse.status!.until;
 
-            barsModel.Travel chainTravelModel = barsModel.Travel()
+            bars_model.Travel chainTravelModel = bars_model.Travel()
               ..departed = apiResponse.travel!.departed
               ..destination = apiResponse.travel!.destination
               ..departed = apiResponse.travel!.departed
               ..timeLeft = apiResponse.travel!.timeLeft
               ..timestamp = apiResponse.travel!.timestamp;
 
-            barsModel.BarsStatusCooldownsModel externalStatusModel = barsModel.BarsStatusCooldownsModel()
+            bars_model.BarsStatusCooldownsModel externalStatusModel = bars_model.BarsStatusCooldownsModel()
               ..status = chainStatusModel
               ..travel = chainTravelModel;
 

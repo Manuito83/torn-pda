@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 // Package imports:
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
@@ -264,7 +265,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
     );
   }
 
-  _refreshInventory() {
+  void _refreshInventory() {
     if (!widget.faction) {
       _itemsProvider.updateInventoryQuantities();
     }

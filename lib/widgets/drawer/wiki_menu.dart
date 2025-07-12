@@ -171,7 +171,7 @@ class _WikiMenuState extends State<WikiMenu> {
     );
   }
 
-  _buildSearchLines(BuildContext context, {String search = ""}) {
+  void _buildSearchLines(BuildContext context, {String search = ""}) {
     List<Widget> items = <Widget>[];
 
     WikiMenu._pages.forEach((key, value) {

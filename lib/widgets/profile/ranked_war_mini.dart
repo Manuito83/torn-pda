@@ -180,7 +180,7 @@ class RankedWarMiniState extends State<RankedWarMini> {
     return const SizedBox.shrink();
   }
 
-  _updateTimeString({bool displayTotalHours = false}) {
+  void _updateTimeString({bool displayTotalHours = false}) {
     final dt = DateTime.fromMillisecondsSinceEpoch(widget.rankedWar!.war!.start! * 1000);
     final timeDifference = dt.difference(DateTime.now());
 

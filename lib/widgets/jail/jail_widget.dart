@@ -3,6 +3,7 @@
 import 'dart:math';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_xlider/flutter_xlider.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';

@@ -1,4 +1,6 @@
 // Dart imports:
+// ignore_for_file: strict_top_level_inference
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
@@ -425,7 +427,7 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _lifeNotificationTapAction = "ownItems";
-  get lifeNotificationTapAction => _lifeNotificationTapAction;
+  String get lifeNotificationTapAction => _lifeNotificationTapAction;
   set lifeNotificationTapAction(value) {
     _lifeNotificationTapAction = value;
     Prefs().setLifeNotificationTapAction(_lifeNotificationTapAction);
@@ -433,7 +435,7 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _drugsNotificationTapAction = "ownItems";
-  get drugsNotificationTapAction => _drugsNotificationTapAction;
+  String get drugsNotificationTapAction => _drugsNotificationTapAction;
   set drugsNotificationTapAction(value) {
     _drugsNotificationTapAction = value;
     Prefs().setDrugsNotificationTapAction(_drugsNotificationTapAction);
@@ -441,7 +443,7 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _medicalNotificationTapAction = "ownItems";
-  get medicalNotificationTapAction => _medicalNotificationTapAction;
+  String get medicalNotificationTapAction => _medicalNotificationTapAction;
   set medicalNotificationTapAction(value) {
     _medicalNotificationTapAction = value;
     Prefs().setMedicalNotificationTapAction(_medicalNotificationTapAction);
@@ -449,7 +451,7 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   var _boosterNotificationTapAction = "ownItems";
-  get boosterNotificationTapAction => _boosterNotificationTapAction;
+  String get boosterNotificationTapAction => _boosterNotificationTapAction;
   set boosterNotificationTapAction(value) {
     _boosterNotificationTapAction = value;
     Prefs().setBoosterNotificationTapAction(_boosterNotificationTapAction);
@@ -908,7 +910,7 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  clearShowCases() {
+  void clearShowCases() {
     _showCases.clear();
     Prefs().setShowCases([]);
     notifyListeners();

@@ -1009,7 +1009,7 @@ class RetalCardState extends State<RetalCard> {
     }
   }
 
-  _refreshLifeClock(DateTime timeEnd) {
+  void _refreshLifeClock(DateTime timeEnd) {
     final diff = timeEnd.difference(DateTime.now());
     if (diff.inSeconds > 0) {
       final Duration timeOut = Duration(seconds: diff.inSeconds);
@@ -1055,7 +1055,7 @@ class RetalCardState extends State<RetalCard> {
     }
   }
 
-  _releaseFromHospital() async {
+  Future<void> _releaseFromHospital() async {
     await Future.delayed(const Duration(seconds: 5));
     if (_lifeTicker != null) {
       _lifeTicker!.cancel();

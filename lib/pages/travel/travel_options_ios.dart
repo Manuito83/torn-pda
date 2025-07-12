@@ -279,7 +279,7 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = false;
     routeName = "profile_notifications";
     if (widget.callback != null) {

@@ -680,7 +680,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
   }
 
   /// Retrieves remote import prefs with username and password
-  _getImportPrefs() async {
+  Future<void> _getImportPrefs() async {
     setState(() {
       _importFetchActive = true;
     });

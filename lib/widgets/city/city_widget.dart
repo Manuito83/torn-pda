@@ -2,6 +2,7 @@
 // Package imports:
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:intl/intl.dart';
 // Project imports:

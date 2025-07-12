@@ -1360,7 +1360,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
     );
   }
 
-  _refreshLifeClock(DateTime timeEnd) {
+  void _refreshLifeClock(DateTime timeEnd) {
     final diff = timeEnd.difference(DateTime.now());
     if (diff.inSeconds > 0) {
       final Duration timeOut = Duration(seconds: diff.inSeconds);
@@ -1406,7 +1406,7 @@ class CombinedHealthBarsState extends State<CombinedHealthBars> {
     }
   }
 
-  _releaseFromRedStatus() async {
+  Future<void> _releaseFromRedStatus() async {
     await Future.delayed(const Duration(seconds: 5));
     if (_redStatusTicker != null) {
       _redStatusTicker!.cancel();

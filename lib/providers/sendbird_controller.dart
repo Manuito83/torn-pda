@@ -108,7 +108,7 @@ class SendbirdController extends GetxController {
 
   bool _sendBirdNotificationsEnabled = false;
   bool get sendBirdNotificationsEnabled => _sendBirdNotificationsEnabled;
-  sendBirdNotificationsToggle({required bool enabled}) async {
+  Future<void> sendBirdNotificationsToggle({required bool enabled}) async {
     if (enabled) {
       bool success = await register();
       success = await sendbirdRegisterFCMTokenAndChannel();
@@ -367,7 +367,7 @@ class SendbirdController extends GetxController {
     return currentDate.difference(tokenDate);
   }
 
-  sendMessage({required String channelUrl, required String message}) async {
+  Future<void> sendMessage({required String channelUrl, required String message}) async {
     try {
       final connectionState = SendbirdChat.getConnectionState();
       if (connectionState != MyConnectionState.open) {
