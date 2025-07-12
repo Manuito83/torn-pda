@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           if (Platform.isAndroid) "Added native Google login (Settings)",
           if (Platform.isIOS) "Added native Apple and Google login (Settings)",
+          if (Platform.isIOS) "Fixed incorrect live activity activations",
           "Fixed chat notifications resetting after switching faction or company",
           "Fixed missing Print Store shortcut",
           "Fixed Wiki references",

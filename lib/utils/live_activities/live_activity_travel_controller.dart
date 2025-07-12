@@ -87,11 +87,18 @@ class LiveActivityTravelController extends GetxController {
   }
 
   bool _isPlayerStatusHospitalizedAndPotentiallyReturning(
-      PlayerStatusColor? currentStatusColor, BarsStatusCooldownsModel? model) {
+    PlayerStatusColor? currentStatusColor,
+    BarsStatusCooldownsModel? model,
+  ) {
     if (model == null) return false;
     if (currentStatusColor == PlayerStatusColor.hospital) {
-      return ((model.status?.until ?? 0) > (DateTime.now().millisecondsSinceEpoch ~/ 1000)) &&
-          (model.travel != null && model.travel!.destination == "Torn");
+      if ((model.status?.until ?? 0) > (DateTime.now().millisecondsSinceEpoch ~/ 1000) &&
+          model.travel != null &&
+          model.travel!.destination == "Torn" &&
+          (model.travel!.timeLeft ?? 0) > 0) {
+        return true;
+      }
+      return false;
     }
     return false;
   }
