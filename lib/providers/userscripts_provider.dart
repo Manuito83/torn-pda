@@ -362,13 +362,17 @@ class UserScriptsProvider extends ChangeNotifier {
         savedScripts = await Prefs().getUserScriptsList();
         // If the load is successful, break
         if (savedScripts != null) {
-          if (i > 0) log("UserScripts load attempt ${i + 1} succeeded");
+          if (i > 0) {
+            log("UserScripts load attempt ${i + 1} succeeded");
+          }
           break;
         }
 
         // If it's not the last attempt, log and wait before trying again
         if (i < maxRetries) {
           log("UserScripts load attempt ${i + 1} failed, retrying...");
+          // Actively try to fix the state by forcing a re-read from disk
+          await Prefs().reload();
           await Future.delayed(retryDelay);
         } else {
           log("UserScripts load failed after ${maxRetries + 1} attempts");
@@ -479,7 +483,7 @@ class UserScriptsProvider extends ChangeNotifier {
         s.updateStatus = updateStatus;
         notifyListeners(); // Notify listeners of the change after every row
       }).catchError((e) {
-        print(e);
+        log(e);
         s.updateStatus = UserScriptUpdateStatus.error;
         notifyListeners(); // Notify listeners of the change after every row
       });

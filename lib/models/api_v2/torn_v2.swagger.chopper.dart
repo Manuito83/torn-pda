@@ -915,7 +915,6 @@ final class _$TornV2 extends TornV2 {
       client.baseUrl,
       parameters: {...$params, 'comment': 'PDA-App', 'legacy': apiV2LegacyRequests},
     );
-    print($request);
     return client.send<dynamic, dynamic>($request);
   }
 

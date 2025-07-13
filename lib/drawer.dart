@@ -136,10 +136,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Used to avoid racing condition with browser launch from notifications (not included in the FutureBuilder), as
   // preferences take time to load
   final Completer _preferencesCompleter = Completer();
-  final Completer _changelogCompleter = Completer();
   // Used for the main UI loading (FutureBuilder)
   Future? _finishedWithPreferences;
-  Future? _finishedWithChangelog;
 
   int _activeDrawerIndex = 0;
   int _selected = 0;
@@ -231,11 +229,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     ];
 
     // Ensures Shared Prefs are ready for changelog data saving
-    Prefs().reload().then((_) {
-      _finishedWithChangelog = _handleChangelog();
-      _changelogCompleter.complete(_finishedWithChangelog);
-
-      mainSettingsLoaded = _finishedWithPreferences = _loadInitPreferences();
+    Prefs().reload().then((_) async {
+      await _handleChangelog();
+      _finishedWithPreferences = _loadInitPreferences();
       _preferencesCompleter.complete(_finishedWithPreferences);
     });
 
@@ -440,7 +436,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   void _setDynamicAppIcon() {
     // Dynamic app icon
     _preferencesCompleter.future.whenComplete(() async {
-      await _changelogCompleter.future;
       _settingsProvider.appIconChangeBasedOnCondition();
     });
   }
@@ -627,7 +622,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (launchBrowser) {
       _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
@@ -729,8 +723,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         _preferencesCompleter.future.whenComplete(() async {
-          await _changelogCompleter.future;
-
           logToUser(
             "Deep link browser opens\n\n$url",
             duration: 3,
@@ -798,6 +790,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _onFirebaseBackgroundNotification(Map<String, dynamic> message) async {
+    // Important: await preferences in case we need to use settings providers
+    await _preferencesCompleter.future;
+
     // Opens new tab in broser
     bool launchBrowserWithUrl = false;
     var browserUrl = "https://www.torn.com";
@@ -921,9 +916,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/crimes.php";
     } else if (life) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.lifeNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#medical-items';
@@ -938,9 +930,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/gym.php";
     } else if (drugs) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.drugsNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';
@@ -949,9 +938,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs';
       }
     } else if (medical) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.medicalNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#medical-items';
@@ -960,9 +946,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
       }
     } else if (booster) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.boosterNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#boosters-items';
@@ -982,9 +965,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
 
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (!_settingsProvider.retaliationSectionEnabled ||
           (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
         launchBrowserWithUrl = true;
@@ -1000,8 +980,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // If we pass all checks above, redirect to the retals section
           _retalsRedirection = true;
           _callSectionFromOutside(2);
-          Future.delayed(const Duration(seconds: 2)).then((value) {
-            _retalsRedirection = false;
+          Future.delayed(const Duration(seconds: 2)).then((_) {
+            if (mounted) {
+              _retalsRedirection = false;
+            }
           });
         }
       }
@@ -1143,7 +1125,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (launchBrowserWithUrl) {
       _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
@@ -1152,7 +1133,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       });
     } else if (showBrowserForeground) {
       _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
         _webViewProvider.browserShowInForeground = true;
       });
     }
@@ -1492,7 +1472,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       if (launchBrowserWithUrl) {
         _preferencesCompleter.future.whenComplete(() async {
-          await _changelogCompleter.future;
           _webViewProvider.openBrowserPreference(
             context: context,
             url: browserUrl,
@@ -1501,7 +1480,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
       } else if (showBrowserForeground) {
         _preferencesCompleter.future.whenComplete(() async {
-          await _changelogCompleter.future;
           _webViewProvider.browserShowInForeground = true;
         });
       }
@@ -2014,11 +1992,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
   }
 
-  Future<void> _loadInitPreferences() async {
+  Future _loadInitPreferences() async {
     // Set up SettingsProvider so that user preferences are applied
     // ## Leave this first as other options below need this to be initialized ##
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
+
+    // Set up UserScriptsProvider so that user preferences are applied
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    await _userScriptsProvider.loadPreferences();
 
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
@@ -2026,10 +2008,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
       _openDrawer();
     });
-
-    // Set up UserScriptsProvider so that user preferences are applied
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
-    await _userScriptsProvider.loadPreferences();
 
     // Set up UserProvider. If key is empty, redirect to the Settings page.
     // Else, open the default
