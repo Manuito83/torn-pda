@@ -1888,35 +1888,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               action: HttpAuthResponseAction.CANCEL,
             );
           },
-          /*
-            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-              // MAIN AJAX REQUEST RETURN
-              return x;
-            },
-          */
-        ),
-        // Container that covers Torn's top bar to serve as a gesture detector
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onVerticalDragEnd: (_) async {
-            // Pull to refresh for short pages (since v3.1.0 we also add an extra height to short pages via scripts)
-            if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
-              await _reload();
-              _pullToRefreshController!.beginRefreshing();
-            }
-          },
-          onDoubleTap: () {
-            if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
-              _webViewProvider.verticalMenuClose();
-              _webViewProvider.setCurrentUiMode(UiMode.window, context);
-              if (_settingsProvider.fullScreenRemovesChat) {
-                _webViewProvider.showAllChatsFullScreen();
-              }
-            }
-          },
-          child: Container(
-            height: 32,
-          ),
         ),
       ],
     );
