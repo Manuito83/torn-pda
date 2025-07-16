@@ -326,6 +326,22 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
     );
   }
 
+  /// Builds a single row for the ToS compliance table.
+  TableRow _buildTosTableRow(String title, String content) {
+    return TableRow(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(content),
+        ),
+      ],
+    );
+  }
+
   Widget _bottomExplanatory() {
     if (widget.apiError) {
       return Padding(
@@ -363,31 +379,66 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
         padding: const EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
         child: Column(
           children: <Widget>[
-            const Text(
-              "Torn PDA needs your API Key to obtain your user's "
-              'information. The key is protected in the app and will not '
-              'be shared under any circumstances.',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
+            // ToS Compliance Table
+            Table(
+              border: TableBorder.all(
+                borderRadius: const BorderRadius.all(Radius.circular(5)),
               ),
+              columnWidths: const <int, TableColumnWidth>{
+                0: FlexColumnWidth(),
+                1: FlexColumnWidth(2),
+              },
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: <TableRow>[
+                const TableRow(
+                  decoration: BoxDecoration(
+                    color: Colors.black12,
+                    borderRadius: BorderRadius.only(topLeft: Radius.circular(5), topRight: Radius.circular(5)),
+                  ),
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('Category', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Text('Description', style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+                _buildTosTableRow('Data Storage', 'Persistent - until you remove the key from the app.'),
+                _buildTosTableRow('Data Sharing',
+                    'Your data is not shared. Only service owners may access data for maintenance and support purposes.'),
+                _buildTosTableRow(
+                    'Purpose of Use', 'To provide application features and display your personal Torn data within the app.'),
+                _buildTosTableRow('Key Storage & Sharing',
+                    'Stored remotely and securely. Used only for automated requests to the Torn API on your behalf.'),
+                _buildTosTableRow('Key Access Level', 'Limited Access.'),
+              ],
             ),
+            const SizedBox(height: 20),
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, color: Colors.blue),
+                const Padding(
+                  padding: EdgeInsets.only(top: 4.0),
+                  child: Icon(Icons.info_outline, color: Colors.blue),
+                ),
                 const SizedBox(width: 10),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "\nYou can get your API key in the Torn website by tapping your profile picture (upper right corner)"
-                        " and going to Settings, API Keys. Torn PDA only needs a Limited Access key.\n",
+                        "You can get your API key on the Torn website under Settings > API Keys. Torn PDA only needs a Limited Access key.",
                       ),
+                      const SizedBox(height: 8),
                       RichText(
                         text: TextSpan(
                           style: DefaultTextStyle.of(context).style,
                           children: <InlineSpan>[
                             WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
                               child: GestureDetector(
                                 onTap: () {
                                   const url = 'https://www.torn.com/preferences.php#tab=api';
@@ -411,9 +462,8 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
                                 ),
                               ),
                             ),
-                            TextSpan(
-                              text: ' to be redirected',
-                              style: DefaultTextStyle.of(context).style,
+                            const TextSpan(
+                              text: ' to be redirected to the API key page.',
                             ),
                           ],
                         ),
@@ -423,11 +473,10 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
                 ),
               ],
             ),
-            const Text('\nIn any case, please make sure to '
-                "follow Torn's staff recommendations on how to protect your key "
-                'from any malicious use.'),
-            const Text('\nYou can always remove it from the '
-                'app or reset it in your Torn preferences page.'),
+            const Padding(
+              padding: EdgeInsets.only(top: 12.0),
+              child: Text('By providing your API key, you agree to these terms. You can remove your key from the app at any time.'),
+            ),
           ],
         ),
       );
