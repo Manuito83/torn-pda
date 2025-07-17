@@ -157,6 +157,9 @@ class WebViewPanicState extends State<WebViewPanic> {
       )
       ..setNavigationDelegate(
         NavigationDelegate(
+          onNavigationRequest: (NavigationRequest request) {
+            return NavigationDecision.navigate;
+          },
           onPageStarted: (page) {
             _hideChat();
             _assessProfileAttack(page);
