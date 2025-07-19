@@ -113,6 +113,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed missing Print Store shortcut",
           "Fixed Wiki references",
           "Fixed userscrips persistence",
+          "Fixed sliding up panel layout in split screen mode",
         ],
     );
 

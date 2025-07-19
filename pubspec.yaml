@@ -99,7 +99,6 @@ dependencies:
   shared_preferences: 2.5.3
   showcaseview: 4.0.1
   sign_in_with_apple: 7.0.1
-  sliding_up_panel: 2.0.0+1
   timeline_tile: 2.0.0
   timezone: 0.10.0
   toastification: 2.3.0
