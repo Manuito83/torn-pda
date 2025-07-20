@@ -143,7 +143,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,

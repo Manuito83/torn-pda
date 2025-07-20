@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -84,7 +85,9 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,

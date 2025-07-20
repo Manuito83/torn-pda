@@ -104,6 +104,8 @@ bool syncTheme = false;
 
 Future? mainSettingsLoaded;
 
+bool isStatusBarShown = false;
+
 double kSdkIos = 0;
 
 class ReceivedNotification {
@@ -410,6 +412,8 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void didChangeMetrics() async {
     // Assess the split screen condition after the device or window metrics change
     _setSplitScreenPosition();
+
+    isStatusBarShown = MediaQuery.of(context).padding.top > 0;
   }
 
   @override
@@ -617,11 +621,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
           statusBarIconBrightness: Brightness.light,
 
           // iOS
-          statusBarBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
-              ? _themeProvider.currentTheme == AppTheme.light
-                  ? Brightness.light
-                  : Brightness.dark
-              : Brightness.dark,
+          statusBarBrightness: Brightness.dark,
         ),
       );
     });

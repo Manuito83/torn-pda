@@ -12,6 +12,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
@@ -188,7 +189,9 @@ class WebViewPanicState extends State<WebViewPanic> {
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider!.canvas
+                : isStatusBarShown
+                    ? _themeProvider!.statusBar
+                    : _themeProvider!.canvas
             : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(

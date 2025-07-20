@@ -9,6 +9,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/pages/profile/hospital_ahead_options.dart';
@@ -80,7 +81,9 @@ class ProfileNotificationsWindowsState extends State<ProfileNotificationsWindows
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&

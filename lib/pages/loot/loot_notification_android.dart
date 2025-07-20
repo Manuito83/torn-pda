@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -65,7 +66,9 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&

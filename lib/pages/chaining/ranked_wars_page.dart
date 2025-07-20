@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
@@ -112,7 +113,9 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider!.canvas
+              : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
           : _themeProvider!.canvas,
       child: FutureBuilder(
         future: _rankedWarsFetchedAndPrefsLoaded,
@@ -133,7 +136,9 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
                               color: _themeProvider!.currentTheme == AppTheme.light
                                   ? MediaQuery.orientationOf(context) == Orientation.portrait
                                       ? Colors.blueGrey
-                                      : _themeProvider!.canvas
+                                      : isStatusBarShown
+                                          ? _themeProvider!.statusBar
+                                          : _themeProvider!.canvas
                                   : _themeProvider!.canvas,
                               child: Column(
                                 children: <Widget>[

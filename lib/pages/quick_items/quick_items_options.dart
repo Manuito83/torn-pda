@@ -7,6 +7,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 // Project imports:
@@ -68,7 +69,9 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider!.canvas
+                : isStatusBarShown
+                    ? _themeProvider!.statusBar
+                    : _themeProvider!.canvas
             : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(

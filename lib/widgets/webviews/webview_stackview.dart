@@ -156,6 +156,13 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
   }
 
   Widget stackView() {
+    // This method aims for a consistent and visually appealing layout across challenging scenarios like split-screen mode. We must
+    // micromanage the layout because a simple top-level Container's color doesn't reliably fill the native status and navigation
+    // bars across all devices; on some it works, on others it doesn't. A primary goal is also to improve the look of display
+    // notches in landscape. Instead of the default app background, we render custom-colored dark 'gutters' for a
+    // cleaner look. This logic is handled by a manual Stack/Row layout. The key to making it work without double-padding is the
+    // SafeArea + MediaQuery.removePadding pattern, which creates the physical space while preventing the inner Scaffold from
+    // adding its own redundant insets
     final bool dialog = _webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2;
 
     bool shouldShowFab = false;
@@ -171,60 +178,123 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
       }
     }
 
-    return MediaQuery.removePadding(
-      context: context,
-      removeTop:
-          dialog || (_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
-      child: Container(
+    // Get screen properties for layout decisions
+    final mediaQuery = MediaQuery.of(context);
+    final orientation = mediaQuery.orientation;
+
+    // Define the main UI widget once to avoid duplication
+    final Widget mainUiContent = ShowCaseWidget(
+      builder: (_) {
+        if (_webViewProvider.browserShowInForeground) {
+          _launchShowCases(_);
+        }
+        return FutureBuilder(
+          future: providerInitialised,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            return Scaffold(
+              resizeToAvoidBottomInset:
+                  !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+              backgroundColor: _themeProvider.statusBar,
+              appBar: snapshot.connectionState != ConnectionState.done ? buildCustomAppBar() : null,
+              body: snapshot.connectionState == ConnectionState.done
+                  ? Stack(
+                      children: [
+                        buildMainContent(),
+                        shouldShowFab ? const WebviewFab() : const SizedBox.shrink(),
+                      ],
+                    )
+                  : Container(
+                      color: Colors.blueGrey[800],
+                      child: const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+            );
+          },
+        );
+      },
+    );
+
+    // Assess if horizontal safe area should be applied based on existing rules
+    final bool applyLeftSafeArea = assessSafeAreaSide(dialog, "left");
+    final bool applyRightSafeArea = assessSafeAreaSide(dialog, "right");
+
+    // Check if a custom gutter layout is needed for landscape
+    final bool useCustomGutters = orientation == Orientation.landscape && (applyLeftSafeArea || applyRightSafeArea);
+
+    final Widget layoutChild;
+    if (useCustomGutters) {
+      // Build the custom layout for landscape with insets
+      final Color gutterColor = _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900]!;
+
+      layoutChild = Stack(
+        children: [
+          // Base layer to ensure correct status bar background color
+          Container(color: _themeProvider.statusBar),
+          // Manual layout with side gutters
+          Row(
+            children: [
+              // Left gutter
+              if (applyLeftSafeArea) Container(width: mediaQuery.padding.left, color: gutterColor),
+              // Main content area
+              Expanded(
+                child: SafeArea(
+                  // Create the physical safe area insets
+                  top: true,
+                  bottom: true,
+                  left: false,
+                  right: false,
+                  child: MediaQuery.removePadding(
+                    // Then, reset padding context so the inner Scaffold doesn't add its own
+                    context: context,
+                    removeLeft: true,
+                    removeRight: true,
+                    removeTop: true,
+                    removeBottom: true,
+                    child: mainUiContent,
+                  ),
+                ),
+              ),
+              // Right gutter
+              if (applyRightSafeArea) Container(width: mediaQuery.padding.right, color: gutterColor),
+            ],
+          ),
+        ],
+      );
+    } else {
+      // Use the standard layout for portrait or non-inset screens
+      layoutChild = Container(
         color: _themeProvider.currentTheme == AppTheme.light
-            ? MediaQuery.orientationOf(context) == Orientation.portrait
+            ? (orientation == Orientation.portrait
                 ? Colors.blueGrey
-                : Colors.grey[900]
-            : _themeProvider.currentTheme == AppTheme.dark
+                : isStatusBarShown
+                    ? _themeProvider.statusBar
+                    : Colors.grey[900])
+            : (_themeProvider.currentTheme == AppTheme.dark
                 ? Colors.grey[900]
-                : Colors.black,
+                : isStatusBarShown
+                    ? _themeProvider.statusBar
+                    : Colors.black),
         child: SafeArea(
           top: !dialog &&
               !(_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
           bottom: !dialog &&
               !(_settingsProvider.fullScreenOverBottom && _webViewProvider.currentUiMode == UiMode.fullScreen),
-          left: assessSafeAreaSide(dialog, "left"),
-          right: assessSafeAreaSide(dialog, "right"),
-          child: ShowCaseWidget(
-            builder: (_) {
-              if (_webViewProvider.browserShowInForeground) {
-                _launchShowCases(_);
-              }
-              return FutureBuilder(
-                future: providerInitialised,
-                builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                  return Scaffold(
-                    resizeToAvoidBottomInset:
-                        !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
-                    backgroundColor: _themeProvider.statusBar,
-                    appBar: snapshot.connectionState != ConnectionState.done ? buildCustomAppBar() : null,
-                    body: snapshot.connectionState == ConnectionState.done
-                        ? Stack(
-                            children: [
-                              buildMainContent(),
-                              shouldShowFab ? const WebviewFab() : const SizedBox.shrink(),
-                            ],
-                          )
-                        : Container(
-                            color: Colors.blueGrey[800],
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                  );
-                },
-              );
-            },
-          ),
+          left: applyLeftSafeArea,
+          right: applyRightSafeArea,
+          child: mainUiContent,
         ),
-      ),
+      );
+    }
+
+    // The top-level widget removes system padding that is handled manually elsewhere
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop:
+          dialog || (_settingsProvider.fullScreenOverNotch && _webViewProvider.currentUiMode == UiMode.fullScreen),
+      child: layoutChild,
     );
   }
 

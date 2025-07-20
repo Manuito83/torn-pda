@@ -1522,7 +1522,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             color: _themeProvider!.currentTheme == AppTheme.light
                 ? MediaQuery.orientationOf(context) == Orientation.portrait
                     ? Colors.blueGrey
-                    : _themeProvider!.canvas
+                    : isStatusBarShown
+                        ? _themeProvider!.statusBar
+                        : _themeProvider!.canvas
                 : _themeProvider!.statusBar,
             child: SafeArea(
               right: _webViewProvider.webViewSplitActive &&

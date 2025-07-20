@@ -10,6 +10,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -73,7 +74,9 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&

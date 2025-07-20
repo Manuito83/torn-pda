@@ -8,6 +8,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
@@ -66,7 +67,9 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider!.canvas
+                : isStatusBarShown
+                    ? _themeProvider!.statusBar
+                    : _themeProvider!.canvas
             : _themeProvider!.canvas,
         child: SafeArea(
           child: GetBuilder<ChainStatusController>(builder: (chainP) {

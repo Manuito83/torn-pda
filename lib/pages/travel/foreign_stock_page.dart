@@ -174,10 +174,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : Colors.grey[900]
-          : _themeProvider!.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Colors.black,
+              : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
+          : _themeProvider!.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
