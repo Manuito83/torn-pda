@@ -65,7 +65,6 @@ import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/changelog.dart';
-import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
@@ -2037,53 +2036,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
-      // Firestore get auth and init
-      if (!Platform.isWindows) {
-        // See note in [firebase_auth.dart]
-        FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-          // Only execute once, otherwise we risk creating users in a row below
-          if (_drawerUserChecked) return;
-          _drawerUserChecked = true;
-
-          if (user == null) {
-            log("Drawer: Firebase user is null, signing in!");
-            // Upload information to Firebase (this includes the token)
-            final User newAnonUser = await firebaseAuth.signInAnon() as User;
-            FirestoreHelper().setUID(newAnonUser.uid);
-            _updateFirebaseDetails();
-            _userUID = newAnonUser.uid;
-
-            // Warn user about the possibility of a new UID being regenerated
-            // We should not arrive here under normal circumstances, as null users are redirected to Settings
-            if (!Platform.isWindows) {
-              BotToast.showText(
-                clickClose: true,
-                text: "A problem was found with your user.\n\n"
-                    "Please visit the Alerts page and ensure that your alerts are properly setup!",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.blue,
-                duration: const Duration(seconds: 6),
-                contentPadding: const EdgeInsets.all(10),
-              );
-            }
-          } else {
-            final existingUid = user.uid;
-            log("Drawer: Firebase user ID $existingUid");
-            FirestoreHelper().setUID(existingUid);
-            _userUID = existingUid;
-          }
-        });
-
-        // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
-        // since some people might leave the app opened for weeks in the background)
-        // Completer to ensure that we have a valid UID and avoid any race condition!!
-        FirestoreHelper().uidCompleter.future.whenComplete(() {
-          _updateLastActiveTime();
-        });
-      }
+      await _initializeAndHandleFirebaseAuth();
 
       checkForScriptUpdates();
     }
@@ -2102,6 +2055,52 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         DeviceOrientation.portraitUp,
       ]);
     }
+  }
+
+  Future<void> _initializeAndHandleFirebaseAuth() async {
+    if (Platform.isWindows || _drawerUserChecked) {
+      return;
+    }
+
+    // Attempt to get user immediately
+    User? user = FirebaseAuth.instance.currentUser;
+
+    // If the first check is null, but we have a valid API key (we are calling this method because we do),
+    // we will wait for a maximum of 4 seconds
+    if (user == null) {
+      log("API key found. Starting extended retry loop to restore session (max 4s)...");
+      final stopwatch = Stopwatch()..start();
+      const timeout = Duration(seconds: 4);
+      const checkInterval = Duration(milliseconds: 200);
+
+      while (stopwatch.elapsed < timeout && FirebaseAuth.instance.currentUser == null) {
+        await Future.delayed(checkInterval);
+      }
+
+      stopwatch.stop();
+      log("Retry loop finished after ${stopwatch.elapsedMilliseconds}ms");
+      user = FirebaseAuth.instance.currentUser;
+    }
+
+    if (user != null) {
+      log("Drawer: Restored existing session with UID ${user.uid}");
+      _userUID = user.uid;
+      FirestoreHelper().setUID(_userUID);
+    } else {
+      // If we reach this point, it means that the user is not logged in Firebase
+      // (or the session was lost for some reason), even though we have a valid API key in Torn
+      BotToast.showText(
+        clickClose: true,
+        text: "A problem was found with your Firebase user.\n\n"
+            "Please reload your API key in Settings and restart the app.",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.blue,
+        duration: const Duration(seconds: 6),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    }
+
+    _drawerUserChecked = true;
   }
 
   Future<void> _updateLastActiveTime() async {
