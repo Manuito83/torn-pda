@@ -29,6 +29,8 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/util/legacy_to_async_migration_util.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:toastification/toastification.dart';
 // Project imports:
@@ -74,8 +76,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.3';
-const String androidCompilation = '557';
-const String iosCompilation = '557';
+const String androidCompilation = '558';
+const String iosCompilation = '558';
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -104,6 +106,8 @@ bool syncTheme = false;
 
 Future? mainSettingsLoaded;
 
+bool justImportedFromLocalBackup = false;
+
 bool isStatusBarShown = false;
 
 double kSdkIos = 0;
@@ -126,8 +130,6 @@ class ReceivedNotification {
 Future<void> _messagingBackgroundHandler(RemoteMessage message) async {
   try {
     if (message.data["channelId"]?.contains("Alerts stocks") == true) {
-      // Reload isolate (as we are reading from background)
-      await Prefs().reload();
       final oldData = await Prefs().getDataStockMarket();
       var newData = "";
       if (oldData.isNotEmpty) {
@@ -135,7 +137,7 @@ Future<void> _messagingBackgroundHandler(RemoteMessage message) async {
       } else {
         newData = "$oldData${message.notification!.body}";
       }
-      Prefs().setDataStockMarket(newData);
+      await Prefs().setDataStockMarket(newData);
     }
 
     if (message.data["sendbird"] != null) {
@@ -161,6 +163,16 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
+  // ==================== MIGRRATION TO SHARED PREFS ASYNC v3.8.3 ====================
+  const SharedPreferencesOptions sharedPreferencesOptions = SharedPreferencesOptions();
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await migrateLegacySharedPreferencesToSharedPreferencesAsyncIfNecessary(
+    legacySharedPreferencesInstance: prefs,
+    sharedPreferencesAsyncOptions: sharedPreferencesOptions,
+    migrationCompletedKey: 'pda_prefs_migrationCompleted',
+  );
+  // ================================ END MIGRATION ==================================
+
   if (Platform.isIOS) {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
@@ -169,7 +181,7 @@ Future<void> main() async {
   }
 
   // Check for a pending local backup and import it
-  await PrefsBackupService.importIfScheduled();
+  justImportedFromLocalBackup = await PrefsBackupService.importIfScheduled();
 
   // START ## Force splash screen to stay on until we get essential start-up data
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);

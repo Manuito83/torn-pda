@@ -85,7 +85,6 @@ FutureOr<void> pdaWidget_callback(Uri? data) async {
 
 Future<void> pdaWidget_fetchData() async {
   try {
-    await Prefs().reload();
     String apiKey = "";
     var savedUser = await Prefs().getOwnDetails();
     if (savedUser != '') {

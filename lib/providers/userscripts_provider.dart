@@ -372,7 +372,6 @@ class UserScriptsProvider extends ChangeNotifier {
         if (i < maxRetries) {
           log("UserScripts load attempt ${i + 1} failed, retrying...");
           // Actively try to fix the state by forcing a re-read from disk
-          await Prefs().reload();
           await Future.delayed(retryDelay);
         } else {
           log("UserScripts load failed after ${maxRetries + 1} attempts");

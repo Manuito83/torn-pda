@@ -1,7 +1,7 @@
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
-import 'package:torn_pda/utils/settings/backup_prefs_groups.dart';
+import 'package:torn_pda/utils/settings/backup_online/backup_online_prefs_groups.dart';
 
 /// If [fromShareDialog] is true, import settings won't be filled by default, and we'll also give an extra
 /// warning in case that user scripts are selected

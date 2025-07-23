@@ -302,9 +302,10 @@ class UserScriptModel {
     if (url == null) {
       return UserScriptUpdateStatus.noRemote;
     }
-    final response = await http.get(Uri.parse(url!));
-    if (response.statusCode == 200) {
-      try {
+
+    try {
+      final response = await http.get(Uri.parse(url!));
+      if (response.statusCode == 200) {
         final metaMap = UserScriptModel.parseHeader(response.body);
         if (metaMap["version"] == null) {
           return UserScriptUpdateStatus.upToDate;
@@ -315,12 +316,11 @@ class UserScriptModel {
         )
             ? UserScriptUpdateStatus.updateAvailable
             : UserScriptUpdateStatus.upToDate;
-      } catch (_) {
-        return UserScriptUpdateStatus.error;
       }
-    } else {
+    } catch (_) {
       return UserScriptUpdateStatus.error;
     }
+    return UserScriptUpdateStatus.error;
   }
 
   static List<String> tryGetMatches(String source) {

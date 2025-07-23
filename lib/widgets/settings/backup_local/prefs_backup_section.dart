@@ -238,8 +238,8 @@ class PrefsBackupWidget extends StatelessWidget {
 
     try {
       final decoded = _decodeBackup(file.bytes!, key);
-      final prefs = await SharedPreferences.getInstance();
-      final matched = prefs.getKeys().intersection(decoded.keys.toSet()).length;
+      final prefs = SharedPreferencesAsync();
+      final matched = (await prefs.getKeys()).intersection(decoded.keys.toSet()).length;
       final backupKeys = decoded.keys.length;
 
       if (matched == 0) {

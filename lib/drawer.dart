@@ -65,11 +65,13 @@ import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/changelog.dart';
+import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/settings/prefs_backup_from_file_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/memory_widget_drawer.dart';
@@ -227,12 +229,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _aboutPosition,
     ];
 
-    // Ensures Shared Prefs are ready for changelog data saving
-    Prefs().reload().then((_) async {
-      await _handleChangelog();
-      _finishedWithPreferences = _loadInitPreferences();
-      _preferencesCompleter.complete(_finishedWithPreferences);
-    });
+    _loadPreferencesAsync();
 
     // Live Activities
     if (Platform.isIOS) {
@@ -430,6 +427,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         Prefs().setBringBrowserForwardOnStart(false);
       }
     });
+  }
+
+  Future<void> _loadPreferencesAsync() async {
+    await _handleChangelog();
+    _finishedWithPreferences = _loadInitPreferences();
+    _preferencesCompleter.complete(_finishedWithPreferences);
   }
 
   void _setDynamicAppIcon() {
@@ -777,8 +780,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _getBackgroundNotificationSavedData() async {
-    // Reload isolate (as we are reading from background)
-    await Prefs().reload();
     // Get the save alerts
     Prefs().getDataStockMarket().then((stocks) {
       if (stocks.isNotEmpty) {
@@ -2038,6 +2039,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       await _initializeAndHandleFirebaseAuth();
 
+      // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
+      // since some people might leave the app opened for weeks in the background)
+      // Completer to ensure that we have a valid UID and avoid any race condition!!
+      if (!Platform.isWindows) {
+        FirestoreHelper().uidCompleter.future.whenComplete(() {
+          _updateLastActiveTime();
+        });
+      }
+
       checkForScriptUpdates();
     }
 
@@ -2070,7 +2080,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (user == null) {
       log("API key found. Starting extended retry loop to restore session (max 4s)...");
       final stopwatch = Stopwatch()..start();
-      const timeout = Duration(seconds: 4);
+      final timeout = Duration(seconds: justImportedFromLocalBackup ? 2 : 4);
       const checkInterval = Duration(milliseconds: 200);
 
       while (stopwatch.elapsed < timeout && FirebaseAuth.instance.currentUser == null) {
@@ -2087,15 +2097,52 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _userUID = user.uid;
       FirestoreHelper().setUID(_userUID);
     } else {
+      if (justImportedFromLocalBackup) {
+        log("Drawer: Firebase user is null after local import, signing in!");
+        try {
+          // Upload information to Firebase (this includes the token)
+          final User newAnonUser = await firebaseAuth.signInAnon() as User;
+          FirestoreHelper().setUID(newAnonUser.uid);
+          _updateFirebaseDetails();
+          _userUID = newAnonUser.uid;
+
+          // Show a dialog to the user to inform that we have reloaded the user
+          await showDialog(
+            useRootNavigator: false,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) {
+              return const PrefsLocalAfterImportDialog();
+            },
+          );
+          log("Drawer: Firebase user restored after local import with UID ${newAnonUser.uid}");
+          justImportedFromLocalBackup = false;
+          return;
+        } catch (e) {
+          log("Drawer: Error showing after-import dialog: $e");
+        }
+      }
+
       // If we reach this point, it means that the user is not logged in Firebase
       // (or the session was lost for some reason), even though we have a valid API key in Torn
+      String message = "A problem was found with your Firebase user.\n\n"
+          "Please reload your API key in Settings and restart the app.";
+      int duration = 6;
+      Color messageColor = Colors.blue;
+      if (justImportedFromLocalBackup) {
+        message = "There was a problem importing your local backup and a new server-side user has not been created.\n\n"
+            "Please make sure to remove and readd your API key in Settings.\n\n"
+            "Then have a look at the Alerts section and ensure to reconfigure them as appropriate.";
+        duration = 10;
+        messageColor = Colors.red;
+      }
+
       BotToast.showText(
         clickClose: true,
-        text: "A problem was found with your Firebase user.\n\n"
-            "Please reload your API key in Settings and restart the app.",
+        text: message,
         textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: Colors.blue,
-        duration: const Duration(seconds: 6),
+        contentColor: messageColor,
+        duration: Duration(seconds: duration),
         contentPadding: const EdgeInsets.all(10),
       );
     }
@@ -2123,7 +2170,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _forceFireUserReload = false;
       }
 
-      if (duration.inDays > 2 || kDebugMode) {
+      if (duration.inDays > 1 || kDebugMode) {
         _settingsProvider.checkIfUserIsOnOCv2();
       }
     });
@@ -2152,10 +2199,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _handleChangelog() async {
-    _preferencesCompleter.future.whenComplete(() async {
-      _settingsProvider.checkIfUserIsOnOCv2();
-    });
-
     final String savedCompilation = await Prefs().getAppCompilation();
     final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
 
@@ -2175,9 +2218,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _changelogIsActive = true;
       await _showChangeLogDialog(context);
 
-      // TODO Note: added in v3.7.0 so that right after update we transfer the users to OC2
-      // This can be removed in the future since [_updateLastActiveTime] will take care
-      // of this when the app launches for first time
+      // Force OC2 check when changelog is shown
+      // (we also do this once a day with [_updateLastActiveTime])
       _preferencesCompleter.future.whenComplete(() async {
         _settingsProvider.checkIfUserIsOnOCv2();
       });
