@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isIOS) "Added native Apple and Google login (Settings)",
           "Added Torn's ToS table in Settings when adding a new API key [TheProgrammer]",
           if (Platform.isIOS) "Fixed incorrect live activity activations",
+          "Updated UserScript API [Kwack]",
           "Fixed chat notifications resetting after switching faction or company",
           "Fixed missing Print Store shortcut",
           "Fixed Wiki references",
