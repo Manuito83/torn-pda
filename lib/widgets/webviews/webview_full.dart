@@ -84,6 +84,7 @@ import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
 import 'package:torn_pda/widgets/webviews/memory_widget_browser.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
@@ -4353,9 +4354,44 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           inAppWebview: webViewController,
           callFindInPage: _activateFindInPage,
           userProvider: _userProvider,
+          webviewKey: widget.key,
+          openDevTools: _openDevTools,
         );
       },
     );
+  }
+
+  /// We use this to open the DevTools page from the webview, so that we can
+  /// hide the dev tools sections from a few seconds and still have the parent mounted
+  /// (the URL dialog should not be the parent or it would be in the way!)
+  void _openDevTools() async {
+    int initialTabIndex = 0;
+    bool shouldReopen = true;
+
+    do {
+      if (!mounted) return;
+      if (!_webViewProvider.browserShowInForeground) return;
+
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => DevToolsMainPage(
+            webViewController: webViewController,
+            webviewKey: widget.key,
+            initialIndex: initialTabIndex,
+          ),
+        ),
+      );
+
+      if (result is List && result.length == 2 && result[0] is int && result[1] is int) {
+        final int seconds = result[0];
+        initialTabIndex = result[1];
+        shouldReopen = true;
+
+        await Future.delayed(Duration(seconds: seconds));
+      } else {
+        shouldReopen = false;
+      }
+    } while (shouldReopen && mounted);
   }
 
   void openCloseChainWidgetFromOutside() {

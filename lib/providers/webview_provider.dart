@@ -111,6 +111,17 @@ class WebViewProvider extends ChangeNotifier {
     "https://www.torn.com/personalstats.php?",
   ];
 
+  // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
+  DateTime? _devToolsReopenTime;
+  DateTime? get devToolsReopenTime => _devToolsReopenTime;
+  Future<void> startDevToolsCooldown(int seconds) async {
+    _devToolsReopenTime = DateTime.now().add(Duration(seconds: seconds));
+    notifyListeners();
+    await Future.delayed(Duration(seconds: seconds));
+    _devToolsReopenTime = null;
+    notifyListeners();
+  }
+
   bool _bottomBarStyleEnabled = false;
   bool get bottomBarStyleEnabled => _bottomBarStyleEnabled;
   set bottomBarStyleEnabled(bool value) {
