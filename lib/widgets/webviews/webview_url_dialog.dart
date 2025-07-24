@@ -573,7 +573,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'DEV',
+                                  'DEVELOPERS',
                                   style: TextStyle(fontSize: 8),
                                 ),
                               ],
