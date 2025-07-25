@@ -6,6 +6,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mime/mime.dart';
 
 enum SortColumn { name, type, start, time }
@@ -124,9 +125,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
             const Divider(height: 1, thickness: 1),
             Expanded(
               child: RefreshIndicator(
-                onRefresh: () async {
-                  setState(() {});
-                },
+                onRefresh: () async => setState(() {}),
                 child: ListView.separated(
                   itemCount: resources.length,
                   separatorBuilder: (context, index) => const Divider(height: 1),
@@ -149,7 +148,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
       final duration = (res['duration'] as num? ?? 0).toDouble();
       if (duration > maxDuration) maxDuration = duration;
     }
-    if (maxDuration == 0) maxDuration = 100;
+    if (maxDuration <= 0) maxDuration = 100;
 
     final double minBarHeight = maxDuration * 0.05;
 
@@ -169,7 +168,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
                   x: index,
                   barRods: [
                     BarChartRodData(
-                      toY: duration + minBarHeight,
+                      toY: (duration < 0 ? 0 : duration) + minBarHeight,
                       color: _getColorForType(resource['initiatorType'] as String? ?? 'other'),
                       width: 12,
                       borderRadius: const BorderRadius.only(topLeft: Radius.circular(3), topRight: Radius.circular(3)),
@@ -213,13 +212,13 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     final resource = resources[group.x] as Map<String, dynamic>;
                     final urlString = resource['name'] as String? ?? '';
-                    final duration = resource['duration'] as num? ?? 0;
+                    final duration = (resource['duration'] as num? ?? 0);
                     return BarTooltipItem(
                       '${urlString.split('/').last.split('?').first}\n',
                       const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                       children: <TextSpan>[
                         TextSpan(
-                          text: _formatMilliseconds(duration),
+                          text: _formatMilliseconds(duration < 0 ? 0 : duration),
                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.normal, fontSize: 11),
                         ),
                       ],
@@ -301,24 +300,46 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
     final initiatorType = resource['initiatorType'] as String? ?? 'other';
     final startTime = resource['startTime'] as num? ?? 0;
     final duration = resource['duration'] as num? ?? 0;
+    final isImage = mimeType?.startsWith("image/") ?? false;
 
-    IconData getIconData() {
-      if (mimeType?.startsWith("image/") ?? false) return Icons.image_outlined;
-      if (mimeType?.startsWith("font/") ?? false) return Icons.font_download_outlined;
+    Widget getIconWidget() {
+      if (isImage) {
+        final isSvg = mimeType == 'image/svg+xml';
+        return SizedBox(
+          width: 20,
+          height: 20,
+          child: isSvg
+              ? SvgPicture.network(urlString, placeholderBuilder: (_) => const Icon(Icons.image_outlined, size: 20))
+              : Image.network(urlString,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) =>
+                      Icon(Icons.broken_image_outlined, size: 20, color: Colors.grey.shade700)),
+        );
+      }
+      IconData iconData;
       switch (initiatorType) {
         case "script":
-          return Icons.code;
+          iconData = Icons.code;
+          break;
         case "css":
-          return Icons.style;
+          iconData = Icons.style;
+          break;
         case "xmlhttprequest":
-          return Icons.sync_alt;
+          iconData = Icons.sync_alt;
+          break;
         case "link":
-          return Icons.link;
+          iconData = Icons.link;
+          break;
         case "fetch":
-          return Icons.http;
+          iconData = Icons.http;
+          break;
+        case "font":
+          iconData = Icons.font_download_outlined;
+          break;
         default:
-          return Icons.insert_drive_file_outlined;
+          iconData = Icons.insert_drive_file_outlined;
       }
+      return Icon(iconData, size: 20, color: Colors.grey.shade700);
     }
 
     return InkWell(
@@ -331,7 +352,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
               flex: 4,
               child: Row(
                 children: [
-                  Icon(getIconData(), size: 20, color: Colors.grey.shade700),
+                  getIconWidget(),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -350,23 +371,20 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
               ),
             ),
             Expanded(
-              flex: 2,
-              child: Text(initiatorType,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontSize: 13)),
-            ),
+                flex: 2,
+                child: Text(initiatorType,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13))),
             Expanded(
-              flex: 2,
-              child: Text(_formatMilliseconds(startTime),
-                  textAlign: TextAlign.right, style: const TextStyle(fontSize: 13)),
-            ),
+                flex: 2,
+                child: Text(_formatMilliseconds(startTime),
+                    textAlign: TextAlign.right, style: const TextStyle(fontSize: 13))),
             Expanded(
-              flex: 2,
-              child:
-                  Text(_formatMilliseconds(duration), textAlign: TextAlign.right, style: const TextStyle(fontSize: 13)),
-            ),
+                flex: 2,
+                child: Text(_formatMilliseconds(duration < 0 ? 0 : duration),
+                    textAlign: TextAlign.right, style: const TextStyle(fontSize: 13))),
           ],
         ),
       ),
@@ -381,6 +399,9 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
     final initiatorType = resource['initiatorType'] as String? ?? 'N/A';
     final transferSize = resource['transferSize'] as num? ?? 0;
     final decodedBodySize = resource['decodedBodySize'] as num? ?? 0;
+    final mimeType = lookupMimeType(urlString);
+    final isImage = mimeType?.startsWith("image/") ?? false;
+    final isSvg = mimeType == 'image/svg+xml';
 
     final redirectTime = (resource['redirectEnd'] - resource['redirectStart'])?.toDouble() ?? 0.0;
     final dnsTime = (resource['domainLookupEnd'] - resource['domainLookupStart'])?.toDouble() ?? 0.0;
@@ -399,40 +420,88 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Resource Details"),
-        content: SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              _buildDetailRow("URL:", urlString),
-              _buildDetailRow("Entry Type:", entryType),
-              _buildDetailRow("Initiator:", initiatorType),
-              _buildDetailRow("Start Time:", _formatMilliseconds(startTime)),
-              _buildDetailRow("Total Duration:", _formatMilliseconds(duration)),
-              _buildDetailRow("Transfer Size:", formatBytes(transferSize)),
-              _buildDetailRow("Decoded Size:", formatBytes(decodedBodySize)),
-              if (hasTimingData) ...[
-                const Divider(height: 24),
-                const Text("Timing Breakdown", style: TextStyle(fontWeight: FontWeight.bold)),
-                _buildTimingBar("Redirect", redirectTime, duration.toDouble()),
-                _buildTimingBar("DNS Lookup", dnsTime, duration.toDouble()),
-                _buildTimingBar("Connection", connectTime, duration.toDouble()),
-                _buildTimingBar("Request Sent", requestTime, duration.toDouble()),
-                _buildTimingBar("Response", responseTime, duration.toDouble()),
-              ]
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: urlString));
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('URL copied to clipboard')));
-              },
-              child: const Text("Copy URL")),
-          TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Close")),
-        ],
-      ),
+      builder: (context) {
+        bool isZoomed = false;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Widget imageWidget = isSvg
+                ? SvgPicture.network(
+                    urlString,
+                    fit: BoxFit.contain,
+                    placeholderBuilder: (_) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                : Image.network(
+                    urlString,
+                    fit: BoxFit.contain,
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(Icons.broken_image, size: 48),
+                    ),
+                  );
+
+            return AlertDialog(
+              title: const Text("Resource Details"),
+              content: SingleChildScrollView(
+                child: ListBody(
+                  children: <Widget>[
+                    if (isImage)
+                      GestureDetector(
+                        onTap: () => setDialogState(() => isZoomed = !isZoomed),
+                        child: TweenAnimationBuilder<double>(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.fastOutSlowIn,
+                          tween: Tween<double>(
+                            begin: 100.0,
+                            end: isZoomed ? MediaQuery.of(context).size.height * 0.5 : 100.0,
+                          ),
+                          builder: (BuildContext context, double height, Widget? child) {
+                            return SizedBox(
+                              height: height,
+                              child: child,
+                            );
+                          },
+                          child: InteractiveViewer(
+                            panEnabled: isZoomed,
+                            scaleEnabled: isZoomed,
+                            child: imageWidget,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 16),
+                    _buildDetailRow("URL:", urlString),
+                    _buildDetailRow("Entry Type:", entryType),
+                    _buildDetailRow("Initiator:", initiatorType),
+                    _buildDetailRow("Start Time:", _formatMilliseconds(startTime)),
+                    _buildDetailRow("Total Duration:", _formatMilliseconds(duration < 0 ? 0 : duration)),
+                    _buildDetailRow("Transfer Size:", formatBytes(transferSize)),
+                    _buildDetailRow("Decoded Size:", formatBytes(decodedBodySize)),
+                    if (hasTimingData) ...[
+                      const Divider(height: 24),
+                      const Text("Timing Breakdown", style: TextStyle(fontWeight: FontWeight.bold)),
+                      _buildTimingBar("Redirect", redirectTime, duration.toDouble()),
+                      _buildTimingBar("DNS Lookup", dnsTime, duration.toDouble()),
+                      _buildTimingBar("Connection", connectTime, duration.toDouble()),
+                      _buildTimingBar("Request Sent", requestTime, duration.toDouble()),
+                      _buildTimingBar("Response", responseTime, duration.toDouble()),
+                    ]
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: urlString));
+                      ScaffoldMessenger.of(context)
+                          .showSnackBar(const SnackBar(content: Text('URL copied to clipboard')));
+                    },
+                    child: const Text("Copy URL")),
+                TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text("Close")),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -443,14 +512,14 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12, color: Colors.grey)),
-          SelectableText(value, style: const TextStyle(fontSize: 14)),
+          Text(value, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );
   }
 
   Widget _buildTimingBar(String label, double time, double totalTime) {
-    if (time <= 0) return const SizedBox.shrink();
+    if (time < 0) time = 0;
     final percentage = totalTime > 0 ? (time / totalTime) : 0.0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -466,7 +535,7 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
           ),
           const SizedBox(height: 4),
           LinearProgressIndicator(
-            value: percentage,
+            value: percentage > 1.0 ? 1.0 : percentage,
             minHeight: 8,
             borderRadius: BorderRadius.circular(4),
           ),

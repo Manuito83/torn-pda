@@ -63,6 +63,7 @@ dependencies:
   flutter_secure_storage: 9.2.4
   flutter_slidable: 4.0.0
   flutter_speed_dial: 7.0.0
+  flutter_svg: 2.2.0
   flutter_timezone: 4.1.1
   flutter_xlider: 3.5.0
   font_awesome_flutter: 10.8.0

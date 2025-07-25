@@ -1,7 +1,10 @@
+// ignore_for_file: depend_on_referenced_packages
+
+import 'dart:convert';
 import 'dart:io' show Platform;
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 
 class DevToolsStorageTab extends StatefulWidget {
@@ -17,15 +20,6 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   final WebStorageManager? _webStorageManager = !Platform.isWindows ? WebStorageManager.instance() : null;
   final HttpAuthCredentialDatabase? _httpAuthCredentialDatabase =
       !Platform.isWindows ? HttpAuthCredentialDatabase.instance() : null;
-
-  List<Cookie> _cookies = [];
-  bool _isCookiesLoading = false;
-
-  List<WebStorageItem> _localStorageItems = [];
-  bool _isLocalStorageLoading = false;
-
-  List<WebStorageItem> _sessionStorageItems = [];
-  bool _isSessionStorageLoading = false;
 
   final TextEditingController _newCookieNameController = TextEditingController();
   final TextEditingController _newCookieValueController = TextEditingController();
@@ -63,44 +57,10 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     super.dispose();
   }
 
-  Future<void> _fetchCookies() async {
-    if (_isCookiesLoading) return;
-    setState(() => _isCookiesLoading = true);
+  Future<Map<String, dynamic>> _getStorageData(dynamic webStorage) async {
     final url = await widget.webViewController?.getUrl();
-    List<Cookie> cookies = [];
-    if (url != null) {
-      cookies = await _cookieManager.getCookies(url: url);
-    }
-    if (mounted) {
-      setState(() {
-        _cookies = cookies;
-        _isCookiesLoading = false;
-      });
-    }
-  }
-
-  Future<void> _fetchLocalStorage() async {
-    if (_isLocalStorageLoading) return;
-    setState(() => _isLocalStorageLoading = true);
-    final items = await widget.webViewController?.webStorage.localStorage.getItems();
-    if (mounted) {
-      setState(() {
-        _localStorageItems = items ?? [];
-        _isLocalStorageLoading = false;
-      });
-    }
-  }
-
-  Future<void> _fetchSessionStorage() async {
-    if (_isSessionStorageLoading) return;
-    setState(() => _isSessionStorageLoading = true);
-    final items = await widget.webViewController?.webStorage.sessionStorage.getItems();
-    if (mounted) {
-      setState(() {
-        _sessionStorageItems = items ?? [];
-        _isSessionStorageLoading = false;
-      });
-    }
+    final items = await webStorage.getItems();
+    return {'origin': url?.origin ?? 'N/A', 'items': items ?? []};
   }
 
   void _showValueEditDialog(
@@ -306,6 +266,22 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     );
   }
 
+  String _formatBytes(num bytes) {
+    if (bytes <= 0) return "0 B";
+    const suffixes = ["B", "KB", "MB", "GB"];
+    var i = (bytes.abs() == 0) ? 0 : (log(bytes.abs()) / log(1024)).floor();
+    return "${(bytes / pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}";
+  }
+
+  String _calculateStorageSize(List<WebStorageItem> items) {
+    double totalBytes = 0;
+    for (var item in items) {
+      totalBytes += utf8.encode(item.key ?? '').length;
+      totalBytes += utf8.encode(item.value).length;
+    }
+    return _formatBytes(totalBytes);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.webViewController == null) {
@@ -328,198 +304,219 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   }
 
   Widget _buildCookiesExpansionTile() {
-    return ExpansionTile(
-      key: const ValueKey('cookies'),
-      title: const Text("Cookies", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-      onExpansionChanged: (isExpanding) {
-        if (isExpanding) _fetchCookies();
-      },
-      children: [
-        if (_isCookiesLoading)
-          const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
-        else
-          Column(
-            children: [
-              _buildTableHeader("Name", "Value", "Del"),
-              const Divider(height: 1, thickness: 1),
-              if (_cookies.isEmpty)
-                const Padding(padding: EdgeInsets.all(16.0), child: Text("No cookies for this domain.")),
-              for (final cookie in _cookies)
-                _buildDataRow(
-                  keyText: cookie.name,
-                  valueText: cookie.value,
-                  onCellTap: () => _showActionDialog(
-                      title: cookie.name,
-                      value: cookie.value,
-                      expiresDate:
-                          cookie.expiresDate != null ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!) : null,
-                      canDelete: cookie.isHttpOnly != true,
-                      onDelete: () async {
-                        final url = await widget.webViewController?.getUrl();
-                        if (url == null) return;
-                        await _cookieManager.deleteCookie(
-                            url: url, name: cookie.name, domain: cookie.domain, path: cookie.path ?? '/');
-                        await _fetchCookies();
-                      },
-                      onEdit: () => _showCookieEditDialog(
-                          cookie: cookie,
-                          onSave: (updatedCookie) async {
-                            final url = await widget.webViewController?.getUrl();
-                            if (url == null) return;
-                            await _cookieManager.setCookie(
-                                url: url,
-                                name: updatedCookie.name,
-                                value: updatedCookie.value,
-                                domain: updatedCookie.domain,
-                                path: updatedCookie.path ?? '/',
-                                expiresDate: updatedCookie.expiresDate,
-                                isSecure: updatedCookie.isSecure);
-                            await _fetchCookies();
-                          })),
-                  deleteWidget: cookie.isHttpOnly == true
-                      ? Tooltip(
-                          message: "HttpOnly cookies cannot be deleted individually",
-                          child: Icon(Icons.lock, size: 20, color: Colors.grey.shade600))
-                      : IconButton(
-                          icon: const Icon(Icons.delete_outline, size: 20),
-                          onPressed: () async {
+    return FutureBuilder<List<Cookie>>(
+      future: widget.webViewController
+          ?.getUrl()
+          .then((url) => url == null ? Future.value(<Cookie>[]) : _cookieManager.getCookies(url: url)),
+      builder: (context, snapshot) {
+        final cookies = snapshot.data ?? [];
+        return ExpansionTile(
+          key: const ValueKey('cookies'),
+          title: const Text("Cookies", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+          children: [
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+            else
+              Column(
+                children: [
+                  _buildTableHeader("Name", "Value", "Del"),
+                  const Divider(height: 1, thickness: 1),
+                  if (cookies.isEmpty)
+                    const Padding(padding: EdgeInsets.all(16.0), child: Text("No cookies for this domain.")),
+                  for (final cookie in cookies)
+                    _buildDataRow(
+                      keyText: cookie.name,
+                      valueText: cookie.value,
+                      onCellTap: () => _showActionDialog(
+                          title: cookie.name,
+                          value: cookie.value,
+                          expiresDate: cookie.expiresDate != null
+                              ? DateTime.fromMillisecondsSinceEpoch(cookie.expiresDate!)
+                              : null,
+                          canDelete: cookie.isHttpOnly != true,
+                          onDelete: () async {
                             final url = await widget.webViewController?.getUrl();
                             if (url == null) return;
                             await _cookieManager.deleteCookie(
                                 url: url, name: cookie.name, domain: cookie.domain, path: cookie.path ?? '/');
-                            await _fetchCookies();
-                          }),
-                ),
-              _buildNewCookieForm(),
-              const Divider(height: 1, thickness: 1),
-              TextButton(
-                child: const Text("Clear all cookies for this domain"),
-                onPressed: () async {
-                  final url = await widget.webViewController?.getUrl();
-                  if (url == null) return;
-                  await _cookieManager.deleteCookies(url: url);
-                  await _fetchCookies();
-                },
+                            setState(() {});
+                          },
+                          onEdit: () => _showCookieEditDialog(
+                              cookie: cookie,
+                              onSave: (updatedCookie) async {
+                                final url = await widget.webViewController?.getUrl();
+                                if (url == null) return;
+                                await _cookieManager.setCookie(
+                                    url: url,
+                                    name: updatedCookie.name,
+                                    value: updatedCookie.value,
+                                    domain: updatedCookie.domain,
+                                    path: updatedCookie.path ?? '/',
+                                    expiresDate: updatedCookie.expiresDate,
+                                    isSecure: updatedCookie.isSecure);
+                                setState(() {});
+                              })),
+                      deleteWidget: cookie.isHttpOnly == true
+                          ? Tooltip(
+                              message: "HttpOnly cookies cannot be deleted individually",
+                              child: Icon(Icons.lock, size: 20, color: Colors.grey.shade600))
+                          : IconButton(
+                              icon: const Icon(Icons.delete_outline, size: 20),
+                              onPressed: () async {
+                                final url = await widget.webViewController?.getUrl();
+                                if (url == null) return;
+                                await _cookieManager.deleteCookie(
+                                    url: url, name: cookie.name, domain: cookie.domain, path: cookie.path ?? '/');
+                                setState(() {});
+                              },
+                            ),
+                    ),
+                  _buildNewCookieForm(),
+                  const Divider(height: 1, thickness: 1),
+                  TextButton(
+                    child: const Text("Clear all cookies for this domain"),
+                    onPressed: () async {
+                      final url = await widget.webViewController?.getUrl();
+                      if (url == null) return;
+                      await _cookieManager.deleteCookies(url: url);
+                      setState(() {});
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
-      ],
+          ],
+        );
+      },
     );
   }
 
   Widget _buildWebLocalStorageExpansionTile() {
-    return ExpansionTile(
-      key: const ValueKey('local_storage'),
-      title: const Text("Local Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-      onExpansionChanged: (isExpanding) {
-        if (isExpanding) _fetchLocalStorage();
-      },
-      children: [
-        if (_isLocalStorageLoading)
-          const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
-        else
-          Column(
-            children: [
-              _buildTableHeader("Key", "Value", "Del"),
-              const Divider(height: 1, thickness: 1),
-              if (_localStorageItems.isEmpty)
-                const Padding(padding: EdgeInsets.all(16.0), child: Text("Local Storage is empty.")),
-              for (final item in _localStorageItems)
-                _buildDataRow(
-                    keyText: item.key ?? '',
-                    valueText: item.value,
-                    onCellTap: () => _showActionDialog(
-                        title: item.key!,
-                        value: item.value,
-                        onDelete: () async {
-                          await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
-                          await _fetchLocalStorage();
-                        },
-                        onEdit: () => _showValueEditDialog(
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getStorageData(widget.webViewController!.webStorage.localStorage),
+      builder: (context, snapshot) {
+        final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
+        final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
+        final size = _calculateStorageSize(items);
+
+        return ExpansionTile(
+          key: const ValueKey('local_storage'),
+          title: const Text("Local Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+          subtitle: Text("Origin: $origin - Size: $size", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          children: [
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+            else
+              Column(
+                children: [
+                  _buildTableHeader("Key", "Value", "Del"),
+                  const Divider(height: 1, thickness: 1),
+                  if (items.isEmpty)
+                    const Padding(padding: EdgeInsets.all(16.0), child: Text("Local Storage is empty.")),
+                  for (final item in items)
+                    _buildDataRow(
+                        keyText: item.key ?? '',
+                        valueText: item.value,
+                        onCellTap: () => _showActionDialog(
                             title: item.key!,
-                            initialValue: item.value,
-                            onSave: (newValue) async {
-                              await widget.webViewController!.webStorage.localStorage
-                                  .setItem(key: item.key!, value: newValue);
-                              await _fetchLocalStorage();
+                            value: item.value,
+                            onDelete: () async {
+                              await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
+                              setState(() {});
+                            },
+                            onEdit: () => _showValueEditDialog(
+                                title: item.key!,
+                                initialValue: item.value,
+                                onSave: (newValue) async {
+                                  await widget.webViewController!.webStorage.localStorage
+                                      .setItem(key: item.key!, value: newValue);
+                                  setState(() {});
+                                })),
+                        deleteWidget: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            onPressed: () async {
+                              await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
+                              setState(() {});
                             })),
-                    deleteWidget: IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        onPressed: () async {
-                          await widget.webViewController!.webStorage.localStorage.removeItem(key: item.key!);
-                          await _fetchLocalStorage();
-                        })),
-              _buildAddNewWebStorageItem(
-                  formKey: _newLocalStorageItemFormKey,
-                  nameController: _newLocalStorageKeyController,
-                  valueController: _newLocalStorageValueController,
-                  labelName: "Local Item Key",
-                  labelValue: "Local Item Value",
-                  onAdded: (name, value) async {
-                    await widget.webViewController!.webStorage.localStorage.setItem(key: name, value: value);
-                    await _fetchLocalStorage();
-                  }),
-            ],
-          ),
-      ],
+                  _buildAddNewWebStorageItem(
+                      formKey: _newLocalStorageItemFormKey,
+                      nameController: _newLocalStorageKeyController,
+                      valueController: _newLocalStorageValueController,
+                      labelName: "Local Item Key",
+                      labelValue: "Local Item Value",
+                      onAdded: (name, value) async {
+                        await widget.webViewController!.webStorage.localStorage.setItem(key: name, value: value);
+                        setState(() {});
+                      }),
+                ],
+              ),
+          ],
+        );
+      },
     );
   }
 
   Widget _buildWebSessionStorageExpansionTile() {
-    return ExpansionTile(
-      key: const ValueKey('session_storage'),
-      title: const Text("Session Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
-      onExpansionChanged: (isExpanding) {
-        if (isExpanding) _fetchSessionStorage();
-      },
-      children: [
-        if (_isSessionStorageLoading)
-          const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
-        else
-          Column(
-            children: [
-              _buildTableHeader("Key", "Value", "Del"),
-              const Divider(height: 1, thickness: 1),
-              if (_sessionStorageItems.isEmpty)
-                const Padding(padding: EdgeInsets.all(16.0), child: Text("Session Storage is empty.")),
-              for (final item in _sessionStorageItems)
-                _buildDataRow(
-                    keyText: item.key ?? '',
-                    valueText: item.value,
-                    onCellTap: () => _showActionDialog(
-                        title: item.key!,
-                        value: item.value,
-                        onDelete: () async {
-                          await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
-                          await _fetchSessionStorage();
-                        },
-                        onEdit: () => _showValueEditDialog(
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _getStorageData(widget.webViewController!.webStorage.sessionStorage),
+      builder: (context, snapshot) {
+        final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
+        final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
+        final size = _calculateStorageSize(items);
+
+        return ExpansionTile(
+          key: const ValueKey('session_storage'),
+          title: const Text("Session Storage", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
+          subtitle: Text("Origin: $origin - Size: $size", style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          children: [
+            if (snapshot.connectionState == ConnectionState.waiting)
+              const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()))
+            else
+              Column(
+                children: [
+                  _buildTableHeader("Key", "Value", "Del"),
+                  const Divider(height: 1, thickness: 1),
+                  if (items.isEmpty)
+                    const Padding(padding: EdgeInsets.all(16.0), child: Text("Session Storage is empty.")),
+                  for (final item in items)
+                    _buildDataRow(
+                        keyText: item.key ?? '',
+                        valueText: item.value,
+                        onCellTap: () => _showActionDialog(
                             title: item.key!,
-                            initialValue: item.value,
-                            onSave: (newValue) async {
-                              await widget.webViewController!.webStorage.sessionStorage
-                                  .setItem(key: item.key!, value: newValue);
-                              await _fetchSessionStorage();
+                            value: item.value,
+                            onDelete: () async {
+                              await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
+                              setState(() {});
+                            },
+                            onEdit: () => _showValueEditDialog(
+                                title: item.key!,
+                                initialValue: item.value,
+                                onSave: (newValue) async {
+                                  await widget.webViewController!.webStorage.sessionStorage
+                                      .setItem(key: item.key!, value: newValue);
+                                  setState(() {});
+                                })),
+                        deleteWidget: IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            onPressed: () async {
+                              await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
+                              setState(() {});
                             })),
-                    deleteWidget: IconButton(
-                        icon: const Icon(Icons.delete_outline, size: 20),
-                        onPressed: () async {
-                          await widget.webViewController!.webStorage.sessionStorage.removeItem(key: item.key!);
-                          await _fetchSessionStorage();
-                        })),
-              _buildAddNewWebStorageItem(
-                  formKey: _newSessionStorageItemFormKey,
-                  nameController: _newSessionStorageKeyController,
-                  valueController: _newSessionStorageValueController,
-                  labelName: "Session Item Key",
-                  labelValue: "Session Item Value",
-                  onAdded: (name, value) async {
-                    await widget.webViewController!.webStorage.sessionStorage.setItem(key: name, value: value);
-                    await _fetchSessionStorage();
-                  }),
-            ],
-          ),
-      ],
+                  _buildAddNewWebStorageItem(
+                      formKey: _newSessionStorageItemFormKey,
+                      nameController: _newSessionStorageKeyController,
+                      valueController: _newSessionStorageValueController,
+                      labelName: "Session Item Key",
+                      labelValue: "Session Item Value",
+                      onAdded: (name, value) async {
+                        await widget.webViewController!.webStorage.sessionStorage.setItem(key: name, value: value);
+                        setState(() {});
+                      }),
+                ],
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -633,7 +630,7 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                         _newCookieExpiresDate = null;
                       });
                       FocusScope.of(context).unfocus();
-                      await _fetchCookies();
+                      setState(() {});
                     }
                   },
                 ))
@@ -741,10 +738,20 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           future: _webStorageManager?.fetchDataRecords(dataTypes: WebsiteDataType.ALL),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()));
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ),
+              );
             }
             if (snapshot.hasError || !snapshot.hasData) {
-              return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text("Could not load data.")));
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text("Could not load data."),
+                ),
+              );
             }
 
             return Column(
@@ -801,10 +808,12 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
         FutureBuilder<List<URLProtectionSpaceHttpAuthCredentials>>(
           future: _httpAuthCredentialDatabase?.getAllAuthCredentials(),
           builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting)
+            if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: CircularProgressIndicator()));
-            if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty)
+            }
+            if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
               return const Center(child: Padding(padding: EdgeInsets.all(16.0), child: Text("No credentials saved.")));
+            }
 
             return Column(
               children: [
