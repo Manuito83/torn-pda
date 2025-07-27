@@ -345,8 +345,9 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   Future<void> loadPreferences() async {
-    // Clear the in-memory list to ensure a clean slate and prevent duplicates.
-    _userScriptList.clear();
+    // We use a temporary list to load the data into
+    // until we are sure the load was successful
+    final List<UserScriptModel> tempList = <UserScriptModel>[];
 
     try {
       _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
@@ -382,15 +383,16 @@ class UserScriptsProvider extends ChangeNotifier {
       // Failed or first time (SharedPrefs returns null by default)
       if (savedScripts == null || savedScripts.isEmpty) {
         // Only seed with defaults scripts if it's the first app run
+        // Here we modify [addDefaultScripts()] directly, as it is the first time loading scripts
         if (_scriptsFirstTime) {
           await addDefaultScripts();
         }
 
+        // If loading failed but it's not the first time do nothind
         notifyListeners();
         return;
       }
 
-      // Decode and populate
       final decoded = json.decode(savedScripts);
       if (decoded is List) {
         for (final dec in decoded) {
@@ -400,25 +402,8 @@ class UserScriptsProvider extends ChangeNotifier {
             // Check if the script with the same name already exists in the list
             // (user-reported bug)
             final String name = decodedModel.name.toLowerCase();
-            if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
-
-            // Use a direct add to avoid triggering saves
-            _userScriptList.add(
-              UserScriptModel(
-                name: decodedModel.name,
-                time: decodedModel.time,
-                source: decodedModel.source,
-                enabled: decodedModel.enabled,
-                version: decodedModel.version,
-                manuallyEdited: decodedModel.manuallyEdited,
-                url: decodedModel.url,
-                updateStatus: decodedModel.updateStatus,
-                matches: decodedModel.matches,
-                isExample: decodedModel.isExample,
-                customApiKey: decodedModel.customApiKey,
-                customApiKeyCandidate: decodedModel.customApiKeyCandidate,
-              ),
-            );
+            if (tempList.any((script) => script.name.toLowerCase() == name)) continue;
+            tempList.add(decodedModel);
           } catch (e, trace) {
             if (!Platform.isWindows) {
               FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
@@ -429,14 +414,15 @@ class UserScriptsProvider extends ChangeNotifier {
         }
       }
 
+      // Swap lists
+      _userScriptList.clear();
+      _userScriptList.addAll(tempList);
+
       _sort();
       _checkForCustomApiKeyCandidates();
 
       notifyListeners();
     } catch (e, trace) {
-      // The main list will be empty, but the user's data is not wiped from disk
-      // ... perhaps recoverable after reloading the app...?
-      // (see bug explanation for retries above)
       if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
         FirebaseCrashlytics.instance.recordError(e, trace);
@@ -492,23 +478,46 @@ class UserScriptsProvider extends ChangeNotifier {
     return updates;
   }
 
-  Future<({int added, int failed, int removed})> addDefaultScripts() async {
+  Future<({int added, int failed, int removed})> addDefaultScripts({bool overwriteExisting = false}) async {
     int added = 0;
     int failed = 0;
-    // int alreadyAdded = 0;
-    int initialScriptCount = userScriptList.length;
-    // Remove example scripts;
-    userScriptList.removeWhere((s) => s.isExample);
-    await Future.wait(defaultScriptUrls.map((url) => url == null
-        ? Future.value()
-        : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
+    int removed = 0;
+
+    if (overwriteExisting) {
+      final originalCount = _userScriptList.length;
+      _userScriptList.removeWhere((s) => s.isExample);
+      removed = originalCount - _userScriptList.length;
+    }
+
+    final existingScriptNames = _userScriptList.map((s) => s.name.toLowerCase()).toSet();
+
+    for (final url in defaultScriptUrls) {
+      if (url == null) continue;
+
+      final response = await UserScriptModel.fromURL(url, isExample: true);
+
+      if (response.success && response.model != null) {
+        if (!existingScriptNames.contains(response.model!.name.toLowerCase())) {
+          _userScriptList.add(response.model!);
+          added++;
+        }
+      } else {
+        failed++;
+      }
+    }
+
+    if (added > 0 || removed > 0) {
+      _sort();
+      await _saveUserScriptsListSharedPrefs();
+      notifyListeners();
+    }
 
     _checkForCustomApiKeyCandidates();
 
     return (
       added: added,
       failed: failed,
-      removed: initialScriptCount - (userScriptList.length - added),
+      removed: removed,
     );
   }
 

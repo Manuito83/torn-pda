@@ -20,6 +20,7 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
   late UserScriptsProvider _userScriptsProvider;
 
   bool _loading = false;
+  bool _overwrite = false;
 
   @override
   void initState() {
@@ -30,8 +31,6 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-
-    // Get number missing example scripts
 
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -68,16 +67,43 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                     const SizedBox(height: 10),
                     Flexible(
                       child: Text(
-                        "This will re-add any of the example userscripts that you may have deleted!",
-                        style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                        _overwrite
+                            ? "This will REMOVE all example scripts and re-download fresh copies.\n\nLocal modifications will be lost!"
+                            : "This will re-add any of the example userscripts that you may have deleted.\n\nExisting scripts will be kept.",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _overwrite ? Colors.orange[800] : _themeProvider.mainText,
+                          fontWeight: _overwrite ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        textAlign: TextAlign.center,
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            "Overwrite existing (also if modified)",
+                            style: TextStyle(fontSize: 12, color: _themeProvider.mainText),
+                          ),
+                        ),
+                        Switch(
+                          value: _overwrite,
+                          onChanged: (value) {
+                            setState(() {
+                              _overwrite = value;
+                            });
+                          },
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: <Widget>[
                         TextButton(
-                          child: const Text("Do it!"),
+                          child: Text(_overwrite ? "Reset!" : "Do it!"),
                           onPressed: _loading
                               ? null
                               : () {
@@ -85,19 +111,23 @@ class UserScriptsRevertDialogState extends State<UserScriptsRevertDialog> {
                                     _loading = true;
                                   });
                                   _userScriptsProvider
-                                      .addDefaultScripts()
+                                      .addDefaultScripts(overwriteExisting: _overwrite)
                                       .then((r) => BotToast.showText(
-                                            text: "${r.added} script${r.added == 1 ? "" : "s"} added.\n"
-                                                "${r.failed} script${r.failed == 1 ? "" : "s"} failed.\n"
-                                                "${r.removed} script${r.removed == 1 ? "" : "s"} removed.",
+                                            text: "${r.removed} script${r.removed == 1 ? "" : "s"} removed\n"
+                                                "${r.added} script${r.added == 1 ? "" : "s"} added\n\n"
+                                                "${r.failed} script${r.failed == 1 ? "" : "s"} failed to load",
                                             textStyle: const TextStyle(
                                               color: Colors.white,
                                             ),
                                           ))
-                                      .then(Navigator.of(context).pop)
-                                      .then((_) => setState(() {
-                                            _loading = false;
-                                          }));
+                                      .whenComplete(() {
+                                    if (mounted) {
+                                      Navigator.of(context).pop();
+                                      setState(() {
+                                        _loading = false;
+                                      });
+                                    }
+                                  });
                                 },
                         ),
                         TextButton(
