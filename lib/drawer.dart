@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
@@ -2072,79 +2073,160 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       return;
     }
 
-    // Attempt to get user immediately
-    User? user = FirebaseAuth.instance.currentUser;
+    // NOTE: we have already checked this before, but it's important!
+    // (so be leave this as a reminder)
+    if (_userProvider?.basic?.userApiKeyValid != true) return;
 
-    // If the first check is null, but we have a valid API key (we are calling this method because we do),
-    // we will wait for a maximum of 4 seconds
-    if (user == null) {
-      log("API key found. Starting extended retry loop to restore session (max 4s)...");
-      final stopwatch = Stopwatch()..start();
-      final timeout = Duration(seconds: justImportedFromLocalBackup ? 2 : 4);
-      const checkInterval = Duration(milliseconds: 200);
+    // Case 1: Post-import user creation
+    if (justImportedFromLocalBackup) {
+      if (FirebaseAuth.instance.currentUser == null) {
+        log(
+          "Drawer: Post-import check. Firebase user is null, proceeding with new anonymous sign-in.",
+          name: "Drawer AUTH",
+        );
 
-      while (stopwatch.elapsed < timeout && FirebaseAuth.instance.currentUser == null) {
-        await Future.delayed(checkInterval);
-      }
-
-      stopwatch.stop();
-      log("Retry loop finished after ${stopwatch.elapsedMilliseconds}ms");
-      user = FirebaseAuth.instance.currentUser;
-    }
-
-    if (user != null) {
-      log("Drawer: Restored existing session with UID ${user.uid}");
-      _userUID = user.uid;
-      FirestoreHelper().setUID(_userUID);
-    } else {
-      if (justImportedFromLocalBackup) {
-        log("Drawer: Firebase user is null after local import, signing in!");
         try {
-          // Upload information to Firebase (this includes the token)
-          final User newAnonUser = await firebaseAuth.signInAnon() as User;
-          FirestoreHelper().setUID(newAnonUser.uid);
-          _updateFirebaseDetails();
+          final User newAnonUser = (await firebaseAuth.signInAnon()).user!;
           _userUID = newAnonUser.uid;
-
-          // Show a dialog to the user to inform that we have reloaded the user
+          FirestoreHelper().setUID(_userUID);
+          await _updateFirebaseDetails();
           await showDialog(
             useRootNavigator: false,
             context: context,
             barrierDismissible: false,
-            builder: (context) {
-              return const PrefsLocalAfterImportDialog();
-            },
+            builder: (context) => const PrefsLocalAfterImportDialog(),
           );
-          log("Drawer: Firebase user restored after local import with UID ${newAnonUser.uid}");
-          justImportedFromLocalBackup = false;
-          return;
-        } catch (e) {
-          log("Drawer: Error showing after-import dialog: $e");
-        }
-      }
 
-      // If we reach this point, it means that the user is not logged in Firebase
-      // (or the session was lost for some reason), even though we have a valid API key in Torn
-      String message = "A problem was found with your Firebase user.\n\n"
-          "Please reload your API key in Settings and restart the app.";
-      int duration = 6;
-      Color messageColor = Colors.blue;
-      if (justImportedFromLocalBackup) {
-        message = "There was a problem importing your local backup and a new server-side user has not been created.\n\n"
-            "Please make sure to remove and readd your API key in Settings.\n\n"
-            "Then have a look at the Alerts section and ensure to reconfigure them as appropriate.";
-        duration = 10;
-        messageColor = Colors.red;
+          log(
+            "Drawer: Firebase user created successfully after local import. UID: ${newAnonUser.uid}",
+            name: "Drawer AUTH",
+          );
+        } catch (e, s) {
+          log(
+            "Drawer: CRITICAL - Failed to sign-in anonymously after local backup import. Error: $e",
+            name: "Drawer AUTH",
+          );
+
+          await FirebaseCrashlytics.instance.recordError(e, s, reason: 'Auth Restoration: Post-import sign-in failed');
+          BotToast.showText(
+            clickClose: true,
+            text: "A critical error occurred while creating your profile after the import.\n\n"
+                "Please check your internet connection, restart the app, and reload your API key in Settings.",
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+            contentColor: Colors.red,
+            duration: const Duration(seconds: 10),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
+      } else {
+        log(
+          "Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
+          name: "Drawer AUTH",
+        );
+        _userUID = FirebaseAuth.instance.currentUser!.uid;
+        FirestoreHelper().setUID(_userUID);
       }
+      justImportedFromLocalBackup = false;
+      _drawerUserChecked = true;
+      return;
+    }
+
+    // Case 2: Standard app launch
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      log(
+        "Drawer: Session restored immediately. UID: ${user.uid}",
+        name: "Drawer AUTH",
+      );
+
+      _userUID = user.uid;
+      FirestoreHelper().setUID(_userUID);
+      _drawerUserChecked = true;
+      return;
+    }
+
+    log(
+      "Drawer: No user found. Listening to authStateChanges...",
+      name: "Drawer AUTH",
+    );
+
+    final stopwatch = Stopwatch()..start();
+    Timer? waitingMessageTimer;
+
+    try {
+      waitingMessageTimer = Timer(const Duration(seconds: 2), () {
+        BotToast.showText(
+          clickClose: true,
+          text: "Authentication with Firebase is taking longer than expected.\n\n"
+              "Please wait, Torn PDA will try for another 15 seconds.",
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+          contentColor: Colors.orange,
+          duration: const Duration(seconds: 15),
+          contentPadding: const EdgeInsets.all(10),
+        );
+      });
+
+      user = await FirebaseAuth.instance
+          .authStateChanges()
+          .firstWhere((user) => user != null)
+          .timeout(const Duration(seconds: 20));
+
+      log(
+        "Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
+        name: "Drawer AUTH",
+      );
+
+      await FirebaseCrashlytics.instance.recordError(
+        Exception('Auth Restoration: Slow path success'),
+        null,
+        reason: 'Auth Restoration: Slow path success',
+        information: ['Restoration time: ${stopwatch.elapsedMilliseconds} ms', 'Final UID: ${user.uid}'],
+        fatal: false,
+      );
+
+      _userUID = user.uid;
+      FirestoreHelper().setUID(_userUID);
+    } on TimeoutException {
+      log(
+        "Drawer: Timeout reached after 20 seconds. Firebase session not restored. Informing user.",
+        name: "Drawer AUTH",
+      );
+
+      final String fullApiKey = _userProvider?.basic?.userApiKey ?? 'API Key not available';
+
+      await FirebaseCrashlytics.instance.recordError(
+        Exception('Auth Restoration: Timeout after 20 seconds'),
+        StackTrace.current,
+        reason: 'Auth Restoration: Timeout',
+        information: ['Torn API Key: $fullApiKey'], // Sending full key
+        fatal: true,
+      );
 
       BotToast.showText(
         clickClose: true,
-        text: message,
+        text: "A problem was found with your Firebase user.\n\n"
+            "Please reload your API key in Settings, then kill and restart the app.",
         textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: messageColor,
-        duration: Duration(seconds: duration),
+        contentColor: Colors.red,
+        duration: const Duration(seconds: 8),
         contentPadding: const EdgeInsets.all(10),
       );
+    } catch (e, s) {
+      log(
+        "Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
+        name: "Drawer AUTH",
+      );
+
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        s,
+        reason: 'Auth Restoration: Unexpected error',
+        fatal: true,
+      );
+    } finally {
+      waitingMessageTimer?.cancel();
+      stopwatch.stop();
     }
 
     _drawerUserChecked = true;
