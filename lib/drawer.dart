@@ -2003,7 +2003,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Set up UserScriptsProvider so that user preferences are applied
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
-    await _userScriptsProvider.loadPreferences();
+    await _userScriptsProvider.loadPreferencesAndScripts();
 
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
