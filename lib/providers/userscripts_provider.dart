@@ -25,8 +25,12 @@ class UserScriptsProvider extends ChangeNotifier {
 
   List<UserScriptModel> exampleScripts = <UserScriptModel>[];
 
-  bool _scriptsFirstTime = true;
-  bool get scriptsFirstTime => _scriptsFirstTime;
+  bool _scriptsSectionNeverVisited = true;
+  bool get scriptsFirstTime => _scriptsSectionNeverVisited;
+  set changeScriptsFirstTime(bool value) {
+    _scriptsSectionNeverVisited = value;
+    Prefs().setUserScriptsSectionNeverVisited(value);
+  }
 
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
@@ -339,18 +343,17 @@ class UserScriptsProvider extends ChangeNotifier {
     _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
-  void changeScriptsFirstTime(bool value) {
-    _scriptsFirstTime = value;
-    Prefs().setUserScriptsFirstTime(value);
-  }
+  Future<void> loadPreferencesAndScripts() async {
+    _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
 
-  Future<void> loadPreferences() async {
     // We use a temporary list to load the data into
     // until we are sure the load was successful
     final List<UserScriptModel> tempList = <UserScriptModel>[];
 
     try {
-      _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
+      // We use this variable for the first app/script load ever, and the main purpose
+      // is to avoid
+      final scriptsNeverLoaded = await Prefs().getUserScriptsNeverLoaded();
 
       // #### RETRY LOGIC START
       // (mainly because of numerous user reports of empty scripts)
@@ -359,37 +362,43 @@ class UserScriptsProvider extends ChangeNotifier {
       const int maxRetries = 2;
       const Duration retryDelay = Duration(seconds: 1);
 
-      for (int i = 0; i <= maxRetries; i++) {
-        savedScripts = await Prefs().getUserScriptsList();
-        // If the load is successful, break
-        if (savedScripts != null) {
-          if (i > 0) {
-            log("UserScripts load attempt ${i + 1} succeeded");
+      if (!scriptsNeverLoaded) {
+        for (int i = 0; i <= maxRetries; i++) {
+          savedScripts = await Prefs().getUserScriptsList();
+          // If the load is successful, break
+          if (savedScripts != null) {
+            if (i > 0) {
+              log("UserScripts load attempt ${i + 1} succeeded");
+            }
+            break;
           }
-          break;
-        }
 
-        // If it's not the last attempt, log and wait before trying again
-        if (i < maxRetries) {
-          log("UserScripts load attempt ${i + 1} failed, retrying...");
-          // Actively try to fix the state by forcing a re-read from disk
-          await Future.delayed(retryDelay);
-        } else {
-          log("UserScripts load failed after ${maxRetries + 1} attempts");
+          // If it's not the last attempt, log and wait before trying again
+          if (i < maxRetries) {
+            log("UserScripts load attempt ${i + 1} failed, retrying...");
+            // Actively try to fix the state by forcing a re-read from disk
+            await Future.delayed(retryDelay);
+          } else {
+            log("UserScripts load failed after ${maxRetries + 1} attempts");
+          }
         }
       }
+
       // #### RETRY LOGIC END
 
       // Failed or first time (SharedPrefs returns null by default)
-      if (savedScripts == null || savedScripts.isEmpty) {
+      if ((savedScripts == null || savedScripts.isEmpty) && scriptsNeverLoaded) {
         // Only seed with defaults scripts if it's the first app run
         // Here we modify [addDefaultScripts()] directly, as it is the first time loading scripts
-        if (_scriptsFirstTime) {
-          await addDefaultScripts();
-        }
-
-        // If loading failed but it's not the first time do nothind
+        await Prefs().setUserScriptsNeverLoaded(false);
+        await addDefaultScripts();
         notifyListeners();
+        return;
+      }
+
+      // If loading failed but it's not the first time do nothing
+      if (savedScripts == null || savedScripts.isEmpty) {
+        log("UserScripts load failed, no scripts found");
         return;
       }
 

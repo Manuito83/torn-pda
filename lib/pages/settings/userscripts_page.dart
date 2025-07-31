@@ -1223,7 +1223,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
             child: TextButton(
               child: const Text("Yes, I promise!"),
               onPressed: () {
-                _userScriptsProvider.changeScriptsFirstTime(false);
+                _userScriptsProvider.changeScriptsFirstTime = false;
                 Navigator.of(context).pop('exit');
               },
             ),

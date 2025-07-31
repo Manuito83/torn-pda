@@ -271,6 +271,7 @@ class Prefs {
   final String _kUserScriptsList = "pda_userScriptsList";
   // final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
+  final String _kUserScriptsNeverLoaded = "pda_userScriptsNeverLoaded";
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
 
@@ -2768,13 +2769,27 @@ class Prefs {
     return await _asyncPrefs.setString(_kUserScriptsList, value);
   }
 
-  Future<bool> getUserScriptsFirstTime() async {
+  // --
+
+  Future<bool> getUserScriptsSectionNeverVisited() async {
     return await _asyncPrefs.getBool(_kUserScriptsV2FirstTime) ?? true;
   }
 
-  Future setUserScriptsFirstTime(bool value) async {
+  Future setUserScriptsSectionNeverVisited(bool value) async {
     return await _asyncPrefs.setBool(_kUserScriptsV2FirstTime, value);
   }
+
+  // --
+
+  Future<bool> getUserScriptsNeverLoaded() async {
+    return await _asyncPrefs.getBool(_kUserScriptsNeverLoaded) ?? true;
+  }
+
+  Future setUserScriptsNeverLoaded(bool value) async {
+    return await _asyncPrefs.setBool(_kUserScriptsNeverLoaded, value);
+  }
+
+  // --
 
   Future<bool> getUserScriptsFeatInjectionTimeShown() async {
     return await _asyncPrefs.getBool(_kUserScriptsFeatInjectionTimeShown) ?? false;
