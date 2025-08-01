@@ -1583,7 +1583,14 @@ class SettingsProvider extends ChangeNotifier {
     final dynamic apiResponse = await ApiCallsV2.getUserOC2Crime_v2();
     if (apiResponse != null) {
       final crime = apiResponse as UserOrganizedCrimeResponse;
-      if (crime.organizedCrime != null) {
+
+      if (crime.organizedCrime != null && crime.organizedCrime?["error"] != null) {
+        if (crime.organizedCrime["error"] == "Must be migrated to organized crimes 2.0") {
+          playerInOCv2 = false;
+          log("Switching player to OC v1");
+          return;
+        }
+      } else if (crime.organizedCrime != null && crime.organizedCrime?["id"] != null) {
         playerInOCv2 = true;
         log("Switching player to OC v2");
         return;
