@@ -144,7 +144,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   int _activeDrawerIndex = 0;
   int _selected = 0;
 
-  bool _changelogIsActive = false;
   bool _forceFireUserReload = false;
 
   bool _retalsRedirection = false;
@@ -230,7 +229,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _aboutPosition,
     ];
 
-    _loadPreferencesAsync();
+    _finishedWithPreferences = _loadPreferencesAsync();
 
     // Live Activities
     if (Platform.isIOS) {
@@ -431,9 +430,36 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _loadPreferencesAsync() async {
-    await _handleChangelog();
-    _finishedWithPreferences = _loadInitPreferences();
-    _preferencesCompleter.complete(_finishedWithPreferences);
+    if (appHasBeenUpdated) {
+      // Will trigger an extra upload to Firebase when version changes
+      _forceFireUserReload = true;
+    }
+
+    // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
+    // Deletes current channels and create new ones
+    if (Platform.isAndroid) {
+      final vibration = await Prefs().getVibrationPattern();
+      await reconfigureNotificationChannels(mod: vibration);
+    }
+
+    await _loadInitPreferences();
+
+    if (!_preferencesCompleter.isCompleted) {
+      _preferencesCompleter.complete();
+    }
+
+    // Force OC2 check when changelog is shown
+    // (we also do this once a day with [_updateLastActiveTime])
+    // (we shouldn't need to check the completer, as it's checked in initState, but just in case)
+    _preferencesCompleter.future.whenComplete(() async {
+      _settingsProvider.checkIfUserIsOnOCv2();
+    });
+
+    try {
+      await _handleChangelogAndOtherDialogs();
+    } catch (e) {
+      log("Error loading changelog: $e");
+    }
   }
 
   void _setDynamicAppIcon() {
@@ -1516,7 +1542,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
+        if (snapshot.connectionState == ConnectionState.done) {
           // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
           // safe area will be black
           return Container(
@@ -2086,10 +2112,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         );
 
         try {
-          final User newAnonUser = (await firebaseAuth.signInAnon()).user!;
+          final User newAnonUser = await (firebaseAuth.signInAnon());
           _userUID = newAnonUser.uid;
           FirestoreHelper().setUID(_userUID);
           await _updateFirebaseDetails();
+
+          // This dialog can be shown here with no postframe callback as it is inside
+          // of the Preferences Completer, so the main FutureBuilder hasn't loaded
           await showDialog(
             useRootNavigator: false,
             context: context,
@@ -2280,55 +2309,57 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
-  Future<void> _handleChangelog() async {
-    final String savedCompilation = await Prefs().getAppCompilation();
-    final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+  Future<void> _handleChangelogAndOtherDialogs() async {
+    final dialogCompleter = Completer<void>();
 
-    if (savedCompilation != currentCompilation) {
-      Prefs().setAppCompilation(currentCompilation);
-
-      // Will trigger an extra upload to Firebase when version changes
-      _forceFireUserReload = true;
-
-      // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
-      // Deletes current channels and create new ones
-      if (Platform.isAndroid) {
-        final vibration = await Prefs().getVibrationPattern();
-        await reconfigureNotificationChannels(mod: vibration);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        dialogCompleter.complete();
+        return;
       }
 
-      _changelogIsActive = true;
-      await _showChangeLogDialog(context);
+      try {
+        if (appHasBeenUpdated || lastSavedAppCompilation.isEmpty) {
+          await _showChangeLogDialog(context);
+        } else {
+          // Other dialogs we need to show when the dialog is not being displayed
+          bool dialogWasShown = false;
 
-      // Force OC2 check when changelog is shown
-      // (we also do this once a day with [_updateLastActiveTime])
-      _preferencesCompleter.future.whenComplete(() async {
-        _settingsProvider.checkIfUserIsOnOCv2();
-      });
-    } else {
-      // Other dialogs we need to show when the dialog is not being displayed
-
-      // Appwidget dialog
-      if (Platform.isAndroid) {
-        if (!await Prefs().getAppwidgetExplanationShown()) {
-          if ((await pdaWidget_numberInstalled()).isNotEmpty) {
-            await _showAppwidgetExplanationDialog(context);
-            Prefs().setAppwidgetExplanationShown(true);
-            return; // Do not show more dialogs below
+          // Appwidget dialog
+          if (Platform.isAndroid) {
+            if (!await Prefs().getAppwidgetExplanationShown()) {
+              if ((await pdaWidget_numberInstalled()).isNotEmpty) {
+                if (mounted) {
+                  await _showAppwidgetExplanationDialog(context);
+                }
+                Prefs().setAppwidgetExplanationShown(true);
+                dialogWasShown = true;
+              }
+            }
           }
+
+          // Stats Announcement dialog
+          if (mounted && !dialogWasShown) {
+            bool statsShown = await _showAppStatsAnnouncementDialog();
+            if (mounted && !statsShown) {
+              await _showBugsAnnouncementDialog();
+            }
+          }
+
+          // Other dialogs
+          //...
         }
+
+        if (!dialogCompleter.isCompleted) {
+          dialogCompleter.complete();
+        }
+      } catch (e, s) {
+        log('Error showing initial dialogs: $e', error: e, stackTrace: s);
+        dialogCompleter.completeError(e, s);
       }
+    });
 
-      // Stats Announcement dialog
-      bool statsShown = await _showAppStatsAnnouncementDialog();
-
-      if (!statsShown) {
-        await _showBugsAnnouncementDialog();
-      }
-
-      // Other dialogs
-      //...
-    }
+    return dialogCompleter.future;
   }
 
   Future<void> _showChangeLogDialog(BuildContext context) async {
@@ -2340,10 +2371,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         return const ChangeLog();
       },
     );
-
-    setState(() {
-      _changelogIsActive = false;
-    });
   }
 
   Future<void> _showAppwidgetExplanationDialog(BuildContext context) async {
@@ -2575,6 +2602,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final int alreadyAvailableCount = _userScriptsProvider.userScriptList
         .where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable)
         .length;
+
     _userScriptsProvider.checkForUpdates().then((i) async {
       // Check if we need to show a notification (only if there are any new updates)
       if (_userScriptsProvider.userScriptsNotifyUpdates && i - alreadyAvailableCount > 0) {

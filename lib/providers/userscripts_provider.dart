@@ -346,26 +346,24 @@ class UserScriptsProvider extends ChangeNotifier {
   Future<void> loadPreferencesAndScripts() async {
     _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
 
-    // We use a temporary list to load the data into
-    // until we are sure the load was successful
-    final List<UserScriptModel> tempList = <UserScriptModel>[];
-
+    // GET SAVED SCRIPTS
     try {
-      // We use this variable for the first app/script load ever, and the main purpose
-      // is to avoid
-      final scriptsNeverLoaded = await Prefs().getUserScriptsNeverLoaded();
+      // First time we run the app
+      if (lastSavedAppCompilation.isEmpty) {
+        // Only seed with defaults scripts if it's the first app run
+        // Here we modify [addDefaultScripts()] directly, as it is the first time loading scripts
+        await addDefaultScripts();
+        notifyListeners();
+        return;
+      }
 
       // #### RETRY LOGIC START
       // (mainly because of numerous user reports of empty scripts)
-      String? savedScripts;
-      // Try a total of 3 times (initial + 2 retries)
-      const int maxRetries = 2;
-      const Duration retryDelay = Duration(seconds: 1);
-
-      if (!scriptsNeverLoaded) {
+      String? savedScripts = await Prefs().getUserScriptsList();
+      if (savedScripts == null) {
+        const int maxRetries = 2;
         for (int i = 0; i <= maxRetries; i++) {
           savedScripts = await Prefs().getUserScriptsList();
-          // If the load is successful, break
           if (savedScripts != null) {
             if (i > 0) {
               log("UserScripts load attempt ${i + 1} succeeded");
@@ -373,35 +371,25 @@ class UserScriptsProvider extends ChangeNotifier {
             break;
           }
 
-          // If it's not the last attempt, log and wait before trying again
           if (i < maxRetries) {
             log("UserScripts load attempt ${i + 1} failed, retrying...");
-            // Actively try to fix the state by forcing a re-read from disk
-            await Future.delayed(retryDelay);
+            await Future.delayed(const Duration(seconds: 1));
           } else {
             log("UserScripts load failed after ${maxRetries + 1} attempts");
           }
         }
       }
-
       // #### RETRY LOGIC END
 
-      // Failed or first time (SharedPrefs returns null by default)
-      if ((savedScripts == null || savedScripts.isEmpty) && scriptsNeverLoaded) {
-        // Only seed with defaults scripts if it's the first app run
-        // Here we modify [addDefaultScripts()] directly, as it is the first time loading scripts
-        await Prefs().setUserScriptsNeverLoaded(false);
-        await addDefaultScripts();
-        notifyListeners();
-        return;
-      }
-
-      // If loading failed but it's not the first time do nothing
-      if (savedScripts == null || savedScripts.isEmpty) {
+      // If loading failed do nothing
+      if (savedScripts == null) {
         log("UserScripts load failed, no scripts found");
         return;
       }
 
+      // Here, we have a valid savedScripts string. We decode it and add each script to the tempList.
+      // (we use a temporary list to load the data into until we are sure the load was successful)
+      final List<UserScriptModel> tempList = <UserScriptModel>[];
       final decoded = json.decode(savedScripts);
       if (decoded is List) {
         for (final dec in decoded) {

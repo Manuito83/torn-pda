@@ -76,8 +76,12 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.3';
-const String androidCompilation = '564';
-const String iosCompilation = '564';
+const String androidCompilation = '566';
+const String iosCompilation = '566';
+
+// This also saves as a mean to check if it's the first time the app is launched
+String lastSavedAppCompilation = "";
+bool appHasBeenUpdated = false;
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -172,6 +176,21 @@ Future<void> main() async {
     migrationCompletedKey: 'pda_prefs_migrationCompleted',
   );
   // ================================ END MIGRATION ==================================
+
+  lastSavedAppCompilation = await Prefs().getAppCompilation();
+  final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+  if (lastSavedAppCompilation.isNotEmpty) {
+    if (lastSavedAppCompilation != currentCompilation) {
+      appHasBeenUpdated = true;
+      log("App has been updated from $lastSavedAppCompilation to $currentCompilation");
+
+      // Save the new compilation
+      await Prefs().setAppCompilation(currentCompilation);
+    }
+  } else {
+    // Save the new compilation
+    await Prefs().setAppCompilation(currentCompilation);
+  }
 
   if (Platform.isIOS) {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();

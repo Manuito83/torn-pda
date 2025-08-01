@@ -269,9 +269,7 @@ class Prefs {
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
   final String _kUserScriptsNotifyUpdates = "pda_userScriptsNotifyUpdates";
   final String _kUserScriptsList = "pda_userScriptsList";
-  // final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
-  final String _kUserScriptsNeverLoaded = "pda_userScriptsNeverLoaded";
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
 
@@ -2777,16 +2775,6 @@ class Prefs {
 
   Future setUserScriptsSectionNeverVisited(bool value) async {
     return await _asyncPrefs.setBool(_kUserScriptsV2FirstTime, value);
-  }
-
-  // --
-
-  Future<bool> getUserScriptsNeverLoaded() async {
-    return await _asyncPrefs.getBool(_kUserScriptsNeverLoaded) ?? true;
-  }
-
-  Future setUserScriptsNeverLoaded(bool value) async {
-    return await _asyncPrefs.setBool(_kUserScriptsNeverLoaded, value);
   }
 
   // --
