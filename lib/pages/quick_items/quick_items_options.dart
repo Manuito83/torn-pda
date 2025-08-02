@@ -189,7 +189,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          Navigator.of(context).pop();
         },
       ),
       actions: <Widget>[
@@ -910,7 +910,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   Future<bool> _willPopCallback() async {
     _searchController.text = "";
-    Navigator.of(context).pop();
     return true;
   }
 }

@@ -100,11 +100,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.3 - Build 566 - 01/08/2025
+    // v3.8.3 - Build 567 - 02/08/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.3'
-        ..date = '04 AUG 2025'
+        ..date = '05 AUG 2025'
         ..features = [
           if (Platform.isAndroid) "Added native Google login (Settings)",
           if (Platform.isIOS) "Added native Apple and Google login (Settings)",
