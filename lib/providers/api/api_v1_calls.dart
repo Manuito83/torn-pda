@@ -75,6 +75,29 @@ class ApiCallsV1 {
     }
   }
 
+  static Future<dynamic> getAppWidgetRankedWars({required String? forcedApiKey}) async {
+    dynamic apiResult;
+    // NOTE: we don't use the ApiCallerController with Getx here, but instead call directly
+    // as the app widget won'e be able to find the controller while in the background!
+    final apiCaller = ApiCallerController();
+    await apiCaller.enqueueApiCall(apiSelection: ApiSelection_v1.rankedWars, forcedApiKey: forcedApiKey).then((value) {
+      apiResult = value;
+    });
+    if (apiResult is! ApiError) {
+      try {
+        return RankedWarsModel.fromJson(apiResult as Map<String, dynamic>);
+      } catch (e, trace) {
+        // Need to initialize Firebase in the isolate for Crashlytics (Api Caller) to work in this isolate
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+        return ApiError(errorId: 101, pdaErrorDetails: "$e\n$trace");
+      }
+    } else {
+      return apiResult;
+    }
+  }
+
   static Future<dynamic> getOwnProfileBasic({String? forcedApiKey = ""}) async {
     dynamic apiResult;
     final apiCaller = Get.find<ApiCallerController>();

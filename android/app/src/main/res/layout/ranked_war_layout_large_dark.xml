@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rw_widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="8dp"
+    android:background="@drawable/widget_background">
+
+    <!-- Upcoming War Layout -->
+    <LinearLayout android:id="@+id/rw_upcoming_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <ImageView android:id="@+id/rw_icon_upcoming"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/swords"
+            android:layout_marginEnd="8dp" />
+
+        <TextView android:id="@+id/rw_countdown_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            tools:text="Starts in 1d 12h 30m" />
+    </LinearLayout>
+
+    <!-- Active War Layout -->
+    <LinearLayout android:id="@+id/rw_active_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:visibility="gone">
+
+        <LinearLayout android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView android:id="@+id/rw_player_faction_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="10sp"
+                tools:text="[TAG]" />
+
+            <TextView android:id="@+id/rw_player_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:textColor="#008000"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="1,234" />
+
+            <TextView android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="VS"
+                android:textColor="#666666"
+                android:textSize="10sp" />
+
+            <TextView android:id="@+id/rw_enemy_score"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="4dp"
+                android:textColor="#C60303"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                tools:text="1,100" />
+
+            <TextView android:id="@+id/rw_enemy_faction_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:textSize="10sp"
+                tools:text="Enemy" />
+        </LinearLayout>
+
+        <ProgressBar android:id="@+id/rw_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:layout_marginTop="4dp"
+            android:progressDrawable="@drawable/ranked_war_progress_bar"
+            tools:progress="60"
+            tools:max="100" />
+
+    </LinearLayout>
+
+    <!-- No War Layout -->
+    <LinearLayout android:id="@+id/rw_no_war_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <ImageView android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/swords"
+            android:layout_marginEnd="8dp" />
+
+        <TextView android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#9E9E9E"
+            android:textSize="12sp"
+            android:text="No active war" />
+    </LinearLayout>
+
+</RelativeLayout>

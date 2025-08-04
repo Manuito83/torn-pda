@@ -1,6 +1,7 @@
 # PDA specifics
 /lib/config/
 /lib/torn-pda-native/
+/android/app/sign-key.jks
 
 # Miscellaneoussure
 *.class
