@@ -50,6 +50,8 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
   String _importHintText = 'Paste here previously exported data';
   FontWeight _importHintWeight = FontWeight.normal;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +59,7 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
 
     routeWithDrawer = false;
     routeName = "targets_backup";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "targets_backup") _goBack();
     });
   }
@@ -137,13 +139,15 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
                                       contentPadding: const EdgeInsets.all(10),
                                     );
                                   } else {
-                                    Share.share(
-                                      export,
-                                      sharePositionOrigin: Rect.fromLTWH(
-                                        0,
-                                        0,
-                                        MediaQuery.of(context).size.width,
-                                        MediaQuery.of(context).size.height / 2,
+                                    SharePlus.instance.share(
+                                      ShareParams(
+                                        text: export,
+                                        sharePositionOrigin: Rect.fromLTWH(
+                                          0,
+                                          0,
+                                          MediaQuery.of(context).size.width,
+                                          MediaQuery.of(context).size.height / 2,
+                                        ),
                                       ),
                                     );
                                   }
@@ -292,6 +296,7 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
     _importInputController.dispose();
     routeWithDrawer = true;
     routeName = "chaining_targets";
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -514,7 +519,7 @@ class TargetsBackupPageState extends State<TargetsBackupPage> {
     }
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "chaining_targets";
     Navigator.of(context).pop();

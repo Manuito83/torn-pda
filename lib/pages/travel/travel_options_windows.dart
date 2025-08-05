@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 // Package imports:
@@ -31,6 +33,8 @@ class TravelOptionsWindowsState extends State<TravelOptionsWindows> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -39,16 +43,26 @@ class TravelOptionsWindowsState extends State<TravelOptionsWindows> {
 
     routeName = "travel_options";
     routeWithDrawer = false;
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "travel_options") _goBack();
     });
   }
 
   @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (widget.callback != null) {
+          widget.callback!();
+        }
+      },
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
@@ -240,13 +254,6 @@ class TravelOptionsWindowsState extends State<TravelOptionsWindows> {
     });
   }
 
-  Future<bool> _willPopCallback() async {
-    if (widget.callback != null) {
-      widget.callback!();
-    }
-    return true;
-  }
-
   Future _showNotificationTextDialog() async {
     final title = await Prefs().getTravelNotificationTitle();
     final body = await Prefs().getTravelNotificationBody();
@@ -270,7 +277,7 @@ class TravelOptionsWindowsState extends State<TravelOptionsWindows> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = false;
     routeName = "profile_notifications";
     if (widget.callback != null) {

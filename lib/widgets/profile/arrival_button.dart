@@ -125,7 +125,7 @@ class ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateMi
     );
   }
 
-  _launchBrowser({required bool? shortTap, required String? url}) {
+  void _launchBrowser({required bool? shortTap, required String? url}) {
     if (shortTap == null) return;
     if (shortTap) {
       widget.launchBrowser(url: 'https://www.torn.com', shortTap: true);

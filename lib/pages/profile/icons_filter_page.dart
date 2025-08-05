@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +21,7 @@ class IconsFilterPage extends StatefulWidget {
 class IconsFilterPageState extends State<IconsFilterPage> {
   List<String> filteredIcons = <String>[];
   late ThemeProvider _themeProvider;
+  late StreamSubscription _willPopSubscription;
 
   @override
   void initState() {
@@ -28,57 +31,70 @@ class IconsFilterPageState extends State<IconsFilterPage> {
     final s = Provider.of<SettingsProvider>(context, listen: false);
     routeWithDrawer = false;
     routeName = "icons_filter_page";
-    s.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _willPopSubscription = s.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "icons_filter_page") _goBack();
     });
   }
 
   @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return Container(
-      color: _themeProvider.currentTheme == AppTheme.light
-          ? MediaQuery.orientationOf(context) == Orientation.portrait
-              ? Colors.blueGrey
-              : _themeProvider.canvas
-          : _themeProvider.canvas,
-      child: SafeArea(
-        right: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
-        left: context.read<WebViewProvider>().webViewSplitActive &&
-            context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
-        child: Scaffold(
-          backgroundColor: _themeProvider.canvas,
-          appBar: widget.settingsProvider!.appBarTop ? buildAppBar() : null,
-          bottomNavigationBar: !widget.settingsProvider!.appBarTop
-              ? SizedBox(
-                  height: AppBar().preferredSize.height,
-                  child: buildAppBar(),
-                )
-              : null,
-          body: Container(
-            color: _themeProvider.canvas,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-                    child: Text("Select which icons you would like to include as part of the Profile section's header"),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 50),
-                    child: ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: allowedIcons.length,
-                      itemBuilder: (context, i) {
-                        final String key = allowedIcons.keys.elementAt(i);
-                        return _iconFilterCard(key, allowedIcons[key]!);
-                      },
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        routeWithDrawer = false;
+        routeName = "profile_notifications";
+      },
+      child: Container(
+        color: _themeProvider.currentTheme == AppTheme.light
+            ? MediaQuery.orientationOf(context) == Orientation.portrait
+                ? Colors.blueGrey
+                : _themeProvider.canvas
+            : _themeProvider.canvas,
+        child: SafeArea(
+          right: context.read<WebViewProvider>().webViewSplitActive &&
+              context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
+          left: context.read<WebViewProvider>().webViewSplitActive &&
+              context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.right,
+          child: Scaffold(
+            backgroundColor: _themeProvider.canvas,
+            appBar: widget.settingsProvider!.appBarTop ? buildAppBar() : null,
+            bottomNavigationBar: !widget.settingsProvider!.appBarTop
+                ? SizedBox(
+                    height: AppBar().preferredSize.height,
+                    child: buildAppBar(),
+                  )
+                : null,
+            body: Container(
+              color: _themeProvider.canvas,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+                      child:
+                          Text("Select which icons you would like to include as part of the Profile section's header"),
                     ),
-                  ),
-                ],
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 50),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: allowedIcons.length,
+                        itemBuilder: (context, i) {
+                          final String key = allowedIcons.keys.elementAt(i);
+                          return _iconFilterCard(key, allowedIcons[key]!);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -163,7 +179,7 @@ class IconsFilterPageState extends State<IconsFilterPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = false;
     routeName = "profile_notifications";
     Navigator.of(context).pop();

@@ -10,6 +10,7 @@ import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
@@ -50,6 +51,8 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
   String _importHintText = 'Paste here previously exported data';
   FontWeight _importHintWeight = FontWeight.normal;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -57,7 +60,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
 
     routeWithDrawer = false;
     routeName = "friends_backup";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friends_backup") _goBack();
     });
   }
@@ -71,7 +74,9 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
@@ -135,13 +140,15 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
                                       contentPadding: const EdgeInsets.all(10),
                                     );
                                   } else {
-                                    Share.share(
-                                      export,
-                                      sharePositionOrigin: Rect.fromLTWH(
-                                        0,
-                                        0,
-                                        MediaQuery.of(context).size.width,
-                                        MediaQuery.of(context).size.height / 2,
+                                    SharePlus.instance.share(
+                                      ShareParams(
+                                        text: export,
+                                        sharePositionOrigin: Rect.fromLTWH(
+                                          0,
+                                          0,
+                                          MediaQuery.of(context).size.width,
+                                          MediaQuery.of(context).size.height / 2,
+                                        ),
                                       ),
                                     );
                                   }
@@ -290,6 +297,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
     _importInputController.dispose();
     routeWithDrawer = true;
     routeName = "friends";
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -490,7 +498,7 @@ class FriendsBackupPageState extends State<FriendsBackupPage> {
     }
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "friends";
     Navigator.of(context).pop();

@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 class AudioController extends GetxController {
   final AudioPlayer _audioPlayer = AudioPlayer();
 
-  play({required String file}) {
+  void play({required String file}) {
     if (Platform.isIOS) {
       _audioPlayer.setAudioContext(AudioContext(
         iOS: AudioContextIOS(

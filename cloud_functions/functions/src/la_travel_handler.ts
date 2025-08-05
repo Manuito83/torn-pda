@@ -17,6 +17,7 @@ export async function handleTravelLiveActivity(
   subscriber: any
 ) {
   const travel = userStats.travel;
+  const status = userStats.status;
   const uid = subscriber.uid;
 
   // If API shows no travel, clean up the stored timestamp and exit
@@ -52,20 +53,50 @@ export async function handleTravelLiveActivity(
         return;
       }
 
-      const contentState = {
-        currentDestinationDisplayName: travel.destination,
-        currentDestinationFlagAsset: travel.destination === "Torn" ? "ball_torn" : `ball_${normalizeCountryNameForAsset(travel.destination)}`,
-        originDisplayName: travel.destination === "Torn" ? "Abroad" : "Torn",
-        originFlagAsset: travel.destination === "Torn" ? "world_origin_icon" : "ball_torn",
-        arrivalTimeTimestamp: travel.timestamp,
-        departureTimeTimestamp: travel.departed,
-        currentServerTimestamp: Math.floor(Date.now() / 1000),
-        vehicleAssetName: isChristmasTime() ? "sleigh" : (travel.destination === "Torn" ? "plane_left" : "plane_right"),
-        earliestReturnTimestamp: travel.destination === "Torn" ? null : travel.timestamp + (travel.timestamp - travel.departed),
-        activityStateTitle: travel.destination === "Torn" ? "Returning to" : "Traveling to",
-        showProgressBar: true,
-        hasArrived: false,
-      };
+      const nowInSeconds = Math.floor(Date.now() / 1000);
+
+      // Check if the user is traveling back to Torn while being hospitalized
+      const isRepatriating =
+        travel.destination === "Torn" &&
+        status?.color === "red" &&
+        (status?.until || 0) > nowInSeconds;
+
+      let contentState: any;
+
+      if (isRepatriating) {
+        // Build the specific payload for repatriation
+        contentState = {
+          currentDestinationDisplayName: "Torn",
+          currentDestinationFlagAsset: "ball_torn",
+          originDisplayName: "Hospital",
+          originFlagAsset: "hospital_origin_icon",
+          arrivalTimeTimestamp: travel.timestamp,
+          departureTimeTimestamp: travel.departed,
+          currentServerTimestamp: nowInSeconds,
+          vehicleAssetName: isChristmasTime() ? "sleigh" : "plane_left",
+          earliestReturnTimestamp: null,
+          activityStateTitle: "Repatriating to",
+          showProgressBar: true,
+          hasArrived: false,
+        };
+      } else {
+        // Build the payload for a standard trip
+        const isReturningToTorn = travel.destination === "Torn";
+        contentState = {
+          currentDestinationDisplayName: travel.destination,
+          currentDestinationFlagAsset: isReturningToTorn ? "ball_torn" : `ball_${normalizeCountryNameForAsset(travel.destination)}`,
+          originDisplayName: isReturningToTorn ? "Abroad" : "Torn",
+          originFlagAsset: isReturningToTorn ? "world_origin_icon" : "ball_torn",
+          arrivalTimeTimestamp: travel.timestamp,
+          departureTimeTimestamp: travel.departed,
+          currentServerTimestamp: nowInSeconds,
+          vehicleAssetName: isChristmasTime() ? "sleigh" : (isReturningToTorn ? "plane_left" : "plane_right"),
+          earliestReturnTimestamp: isReturningToTorn ? null : travel.timestamp + (travel.timestamp - travel.departed),
+          activityStateTitle: isReturningToTorn ? "Returning to" : "Traveling to",
+          showProgressBar: true,
+          hasArrived: false,
+        };
+      }
 
       const pushSentSuccessfully = await sendTravelPushToStart(pushToStartToken, contentState);
 
@@ -74,11 +105,16 @@ export async function handleTravelLiveActivity(
         await laStatusRef.set({
           "arrivalTimestamp": travel.timestamp,
         });
+        // Also clear the failure timestamp if it exists
+        if (subscriber.la_travel_push_start_first_failure_ts) {
+          await admin.firestore().collection("players").doc(uid).update({
+            la_travel_push_start_first_failure_ts: FieldValue.delete(),
+          });
+        }
       } else {
         // Handle push notification failure.
         const FAILURE_GRACE_PERIOD_SECONDS = 48 * 60 * 60;
         const firstFailureTimestamp = subscriber.la_travel_push_start_first_failure_ts;
-        const nowInSeconds = Math.floor(Date.now() / 1000);
 
         if (firstFailureTimestamp) {
           if (nowInSeconds - firstFailureTimestamp >= FAILURE_GRACE_PERIOD_SECONDS) {
@@ -110,7 +146,7 @@ export async function handleTravelLiveActivity(
 function isChristmasTime(): boolean {
   const now = new Date();
   const year = now.getFullYear();
-  const christmasStart = new Date(year, 11, 19);
+  const christmasStart = new Date(year, 11, 19); // Month is 0-indexed, so 11 is December
   const christmasEnd = new Date(year, 11, 31, 23, 59, 59);
   return now >= christmasStart && now <= christmasEnd;
 }

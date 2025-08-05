@@ -1519,7 +1519,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
         touchTooltipData: LineTouchTooltipData(
           fitInsideHorizontally: true,
           fitInsideVertically: false,
-          getTooltipColor: (touchedSpot) => Colors.blueGrey.withOpacity(1),
+          getTooltipColor: (touchedSpot) => Colors.blueGrey.withAlpha(255),
           getTooltipItems: (value) {
             final tooltips = <LineTooltipItem>[];
             for (final spot in value) {
@@ -1677,7 +1677,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     return "${twoDigits(duration.inHours)}h ${twoDigitMinutes}m";
   }
 
-  _calculateDetails() {
+  void _calculateDetails() {
     // INVENTORY
     _invQuantity = widget.foreignStock.inventoryQuantity;
 

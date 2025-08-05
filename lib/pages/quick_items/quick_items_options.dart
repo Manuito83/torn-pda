@@ -7,6 +7,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 // Project imports:
@@ -60,13 +61,17 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        _willPopCallback();
+      },
       child: Container(
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider!.canvas
+                : isStatusBarShown
+                    ? _themeProvider!.statusBar
+                    : _themeProvider!.canvas
             : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(
@@ -184,7 +189,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         onPressed: () {
-          _willPopCallback();
+          Navigator.of(context).pop();
         },
       ),
       actions: <Widget>[
@@ -905,7 +910,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
 
   Future<bool> _willPopCallback() async {
     _searchController.text = "";
-    Navigator.of(context).pop();
     return true;
   }
 }

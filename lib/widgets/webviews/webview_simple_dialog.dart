@@ -123,15 +123,14 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      canPop: false,
       child: buildScaffold(context),
     );
   }
 
   Widget buildScaffold(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
@@ -287,9 +286,5 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
         return;
       },
     );
-  }
-
-  Future<bool> _willPopCallback() async {
-    return false;
   }
 }

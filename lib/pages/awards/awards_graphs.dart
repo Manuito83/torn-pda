@@ -303,7 +303,7 @@ class AwardsGraphsState extends State<AwardsGraphs> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     // Only revert rotation if it's not allowed app-wide
     if (!_settingsProvider.allowScreenRotation) {
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);

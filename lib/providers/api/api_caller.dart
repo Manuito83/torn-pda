@@ -540,7 +540,7 @@ class ApiCallerController extends GetxController {
   }
 
   // TODO: Probably needs to be completed with more use cases as in API V1
-  _handleError_v2(dynamic e, int? statusCode, StackTrace? trace) {
+  ApiError _handleError_v2(dynamic e, int? statusCode, StackTrace? trace) {
     if (e is TimeoutException) {
       log("TORN API v2 TIMED OUT: $e, trace: $trace");
 

@@ -1,9 +1,12 @@
 // Flutter imports:
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -35,6 +38,8 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -43,9 +48,15 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
 
     routeWithDrawer = false;
     routeName = "loot_notification";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "loot_notification") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -55,7 +66,9 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
@@ -616,7 +629,7 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     widget.callback();
     routeWithDrawer = true;
     routeName = "loot";

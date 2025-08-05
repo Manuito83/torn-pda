@@ -194,28 +194,20 @@ class TctClockState extends State<TctClock> {
     List<dynamic> eventsList = [];
     final DateTime now = DateTime.now().toUtc();
 
-    if (_calendar != null && _calendar!.calendar != null) {
-      if (_calendar!.calendar!.competitions != null) {
-        for (var comp in _calendar!.calendar!.competitions!) {
-          if (comp.start != null && comp.end != null) {
-            DateTime start = DateTime.fromMillisecondsSinceEpoch(comp.start! * 1000, isUtc: true);
-            DateTime end = DateTime.fromMillisecondsSinceEpoch(comp.end! * 1000, isUtc: true);
-            if (now.isAfter(start) && now.isBefore(end)) {
-              eventsList.add(comp);
-            }
-          }
+    if (_calendar != null) {
+      for (var comp in _calendar!.calendar.competitions) {
+        DateTime start = DateTime.fromMillisecondsSinceEpoch(comp.start * 1000, isUtc: true);
+        DateTime end = DateTime.fromMillisecondsSinceEpoch(comp.end * 1000, isUtc: true);
+        if (now.isAfter(start) && now.isBefore(end)) {
+          eventsList.add(comp);
         }
       }
 
-      if (_calendar!.calendar!.events != null) {
-        for (var ev in _calendar!.calendar!.events!) {
-          if (ev.start != null && ev.end != null) {
-            DateTime start = DateTime.fromMillisecondsSinceEpoch(ev.start! * 1000, isUtc: true);
-            DateTime end = DateTime.fromMillisecondsSinceEpoch(ev.end! * 1000, isUtc: true);
-            if (now.isAfter(start) && now.isBefore(end)) {
-              eventsList.add(ev);
-            }
-          }
+      for (var ev in _calendar!.calendar.events) {
+        DateTime start = DateTime.fromMillisecondsSinceEpoch(ev.start * 1000, isUtc: true);
+        DateTime end = DateTime.fromMillisecondsSinceEpoch(ev.end * 1000, isUtc: true);
+        if (now.isAfter(start) && now.isBefore(end)) {
+          eventsList.add(ev);
         }
       }
     }

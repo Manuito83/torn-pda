@@ -21,15 +21,16 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kProfileMode;
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_displaymode/flutter_displaymode.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/util/legacy_to_async_migration_util.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:toastification/toastification.dart';
 // Project imports:
@@ -74,9 +75,13 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.8.2';
-const String androidCompilation = '550';
-const String iosCompilation = '550';
+const String appVersion = '3.8.3';
+const String androidCompilation = '567';
+const String iosCompilation = '567';
+
+// This also saves as a mean to check if it's the first time the app is launched
+String lastSavedAppCompilation = "";
+bool appHasBeenUpdated = false;
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -105,6 +110,10 @@ bool syncTheme = false;
 
 Future? mainSettingsLoaded;
 
+bool justImportedFromLocalBackup = false;
+
+bool isStatusBarShown = false;
+
 double kSdkIos = 0;
 
 class ReceivedNotification {
@@ -125,8 +134,6 @@ class ReceivedNotification {
 Future<void> _messagingBackgroundHandler(RemoteMessage message) async {
   try {
     if (message.data["channelId"]?.contains("Alerts stocks") == true) {
-      // Reload isolate (as we are reading from background)
-      await Prefs().reload();
       final oldData = await Prefs().getDataStockMarket();
       var newData = "";
       if (oldData.isNotEmpty) {
@@ -134,7 +141,7 @@ Future<void> _messagingBackgroundHandler(RemoteMessage message) async {
       } else {
         newData = "$oldData${message.notification!.body}";
       }
-      Prefs().setDataStockMarket(newData);
+      await Prefs().setDataStockMarket(newData);
     }
 
     if (message.data["sendbird"] != null) {
@@ -160,6 +167,31 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
+  // ==================== MIGRRATION TO SHARED PREFS ASYNC v3.8.3 ====================
+  const SharedPreferencesOptions sharedPreferencesOptions = SharedPreferencesOptions();
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
+  await migrateLegacySharedPreferencesToSharedPreferencesAsyncIfNecessary(
+    legacySharedPreferencesInstance: prefs,
+    sharedPreferencesAsyncOptions: sharedPreferencesOptions,
+    migrationCompletedKey: 'pda_prefs_migrationCompleted',
+  );
+  // ================================ END MIGRATION ==================================
+
+  lastSavedAppCompilation = await Prefs().getAppCompilation();
+  final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+  if (lastSavedAppCompilation.isNotEmpty) {
+    if (lastSavedAppCompilation != currentCompilation) {
+      appHasBeenUpdated = true;
+      log("App has been updated from $lastSavedAppCompilation to $currentCompilation");
+
+      // Save the new compilation
+      await Prefs().setAppCompilation(currentCompilation);
+    }
+  } else {
+    // Save the new compilation
+    await Prefs().setAppCompilation(currentCompilation);
+  }
+
   if (Platform.isIOS) {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
     final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
@@ -168,7 +200,7 @@ Future<void> main() async {
   }
 
   // Check for a pending local backup and import it
-  await PrefsBackupService.importIfScheduled();
+  justImportedFromLocalBackup = await PrefsBackupService.importIfScheduled();
 
   // START ## Force splash screen to stay on until we get essential start-up data
   FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
@@ -405,14 +437,14 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
         );
       },
     );
-
-    setAndroidDisplayMode();
   }
 
   @override
   void didChangeMetrics() async {
     // Assess the split screen condition after the device or window metrics change
     _setSplitScreenPosition();
+
+    isStatusBarShown = MediaQuery.of(context).padding.top > 0;
   }
 
   @override
@@ -431,7 +463,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
     final ThemeData theme = ThemeData(
       cardColor: _themeProvider.cardColor,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         // Material 3 overrides
         surfaceTintColor: _themeProvider.cardSurfaceTintColor,
         color: _themeProvider.cardColor,
@@ -449,22 +481,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
           foregroundColor:
               _themeProvider.accesibilityNoTextColors ? WidgetStateProperty.all(_themeProvider.mainText) : null,
         ),
-      ),
-    );
-
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: _themeProvider.statusBar,
-        systemNavigationBarColor: _themeProvider.statusBar,
-        systemNavigationBarIconBrightness: Brightness.light,
-        statusBarIconBrightness: Brightness.light,
-
-        // iOS
-        statusBarBrightness: MediaQuery.orientationOf(context) == Orientation.landscape
-            ? _themeProvider.currentTheme == AppTheme.light
-                ? Brightness.light
-                : Brightness.dark
-            : Brightness.dark,
       ),
     );
 
@@ -593,7 +609,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
   }
 
-  _openDrawerIfPossible() async {
+  Future<void> _openDrawerIfPossible() async {
     final SettingsProvider s = Provider.of<SettingsProvider>(context, listen: false);
     if (routeWithDrawer) {
       // Open drawer instead
@@ -627,6 +643,18 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
           _webViewProvider.browserShowInForeground = true;
         }
       }
+
+      SystemChrome.setSystemUIOverlayStyle(
+        SystemUiOverlayStyle(
+          statusBarColor: _themeProvider.statusBar,
+          systemNavigationBarColor: _themeProvider.statusBar,
+          systemNavigationBarIconBrightness: Brightness.light,
+          statusBarIconBrightness: Brightness.light,
+
+          // iOS
+          statusBarBrightness: Brightness.dark,
+        ),
+      );
     });
   }
 
@@ -673,24 +701,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
     await nativeUser.loadPreferences();
     await nativeAuth.loadPreferences();
-    if (nativeUser.isNativeUserEnabled()) {
-      nativeAuth.authStatus = NativeAuthStatus.loggedIn;
-    }
-  }
-
-  Future<void> setAndroidDisplayMode() async {
-    if (!Platform.isAndroid) return;
-    SchedulerBinding.instance.addPostFrameCallback((_) async {
-      try {
-        await FlutterDisplayMode.setHighRefreshRate();
-        DisplayMode refresh = await FlutterDisplayMode.active;
-        log("Refresh rate at: $refresh");
-        setState(() {});
-      } on PlatformException catch (e, trace) {
-        log("Refresh rate error: $e");
-        FirebaseCrashlytics.instance.recordError("Refresh rate error: $e", trace);
-      }
-    });
   }
 }
 
@@ -749,7 +759,7 @@ Future<void> _shouldSyncDeviceTheme(WidgetsBinding widgetsBinding) async {
   }
 }
 
-logToUser(
+void logToUser(
   String? message, {
   int duration = 3,
   Color? textColor,

@@ -2,7 +2,6 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:ui';
 
 // Flutter imports:
 import 'package:android_intent_plus/android_intent.dart';
@@ -38,7 +37,8 @@ import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
-import 'package:torn_pda/models/chaining/bars_model.dart' as barsModel;
+import 'package:torn_pda/models/chaining/bars_model.dart' as bars_model;
+import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
 import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
@@ -747,7 +747,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             color: _themeProvider!.buttonText,
           ),
           onPressed: () async {
-            final ProfileOptionsReturn newOptions = await Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (context) => ProfileOptionsPage(
@@ -757,33 +757,45 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 ),
               ),
             );
-            widget.disableTravelSection(newOptions.disableTravelSection);
+
+            final warnChains = await Prefs().getWarnAboutChains();
+            final headerWallet = await Prefs().getShowHeaderWallet();
+            final headerIcons = await Prefs().getShowHeaderIcons();
+            final dedTravel = await Prefs().getDedicatedTravelCard();
+            final disableTravel = await Prefs().getDisableTravelSection();
+            final expandEvents = await Prefs().getExpandEvents();
+            final eventsNumber = await Prefs().getEventsShowNumber();
+            final expandMessages = await Prefs().getExpandMessages();
+            final messagesNumber = await Prefs().getMessagesShowNumber();
+            final expandBasicInfo = await Prefs().getExpandBasicInfo();
+            final expandNetworth = await Prefs().getExpandNetworth();
+            final sectionList = await Prefs().getProfileSectionOrder();
+
+            widget.disableTravelSection(disableTravel);
             setState(() {
-              if (newOptions.warnAboutChainsEnabled != null) {
-                _warnAboutChains = newOptions.warnAboutChainsEnabled!;
-              }
-              if (newOptions.showHeaderWallet != null) {
-                _showHeaderWallet = newOptions.showHeaderWallet!;
-              }
-              if (newOptions.showHeaderIcons != null) {
-                _showHeaderIcons = newOptions.showHeaderIcons!;
-              }
-              if (newOptions.dedicatedTravelCard != null) {
-                _dedicatedTravelCard = newOptions.dedicatedTravelCard!;
-              }
-              _eventsExpController.expanded = newOptions.expandEvents!;
-              _messagesShowNumber = newOptions.messagesShowNumber;
-              _eventsShowNumber = newOptions.eventsShowNumber;
-              _messagesExpController.expanded = newOptions.expandMessages!;
-              _basicInfoExpController.expanded = newOptions.expandBasicInfo!;
-              _networthExpController.expanded = newOptions.expandNetworth!;
-              _userSectionOrder = newOptions.sectionSort;
+              _warnAboutChains = warnChains;
+              _showHeaderWallet = headerWallet;
+              _showHeaderIcons = headerIcons;
+              _dedicatedTravelCard = dedTravel;
+              _eventsExpController.expanded = expandEvents;
+              _messagesShowNumber = messagesNumber;
+              _eventsShowNumber = eventsNumber;
+              _messagesExpController.expanded = expandMessages;
+              _basicInfoExpController.expanded = expandBasicInfo;
+              _networthExpController.expanded = expandNetworth;
+              _userSectionOrder = sectionList;
             });
+
             // If we reactivated faction crimes, they might take up to a minute
             // to appear unless we call them directly
-            if (newOptions.oCrimesReactivated) {
-              _getFactionCrimesV1();
+            if (_settingsProvider!.oCrimesEnabled) {
+              if (_settingsProvider!.playerInOCv2) {
+                _getFactionCrimesV2();
+              } else {
+                _getFactionCrimesV1();
+              }
             }
+
             if (_settingsProvider!.tornStatsChartDateTime == 0) {
               _getStatsChart();
             }
@@ -1312,7 +1324,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           bazaarModel: _miscModel?.bazaar,
                           launchBrowser: _launchBrowser,
                         ),
-                        if (_marketItemsV2?.itemmarket != null && _marketItemsV2!.itemmarket!.isNotEmpty)
+                        if (_marketItemsV2?.itemmarket != null && _marketItemsV2!.itemmarket.isNotEmpty)
                           MarketStatusCard(
                             marketModel: _marketItemsV2!,
                             launchBrowser: _launchBrowser,
@@ -2631,7 +2643,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         thisColor = Colors.green;
       } else {
         if (percentageError) {
-          thisColor = Colors.red[400]!.withOpacity(0.7);
+          thisColor = Colors.red[400]!.withAlpha((0.7 * 255).round());
         } else {
           thisColor = _themeProvider!.mainText;
         }
@@ -4787,73 +4799,73 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // EDUCATION
     Widget educationWidget = const SizedBox.shrink();
+
     if (_tornEducationModel is TornEducationModel) {
-      if ((_miscModel?.educationTimeleft ?? 0) > 0) {
-        showMisc = true;
-        educationActive = true;
-        final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.educationTimeleft!));
+      final currentEducation = _miscModel?.education.current;
+
+      if (currentEducation != null) {
+        final timeExpiry = DateTime.fromMillisecondsSinceEpoch(currentEducation.until * 1000);
         final timeDifference = timeExpiry.difference(DateTime.now());
-        Color? expiryColor = Colors.orange[800];
-        String expiryString;
-        if (timeDifference.inHours < 1) {
-          expiryString = 'less than an hour';
-        } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-          expiryString = 'about an hour';
-        } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-          expiryString = '${timeDifference.inHours} hours';
-        } else if (timeDifference.inDays == 1) {
-          expiryString = '1 day';
-          expiryColor = _themeProvider!.mainText;
-        } else {
-          expiryString = '${timeDifference.inDays} days';
-          expiryColor = _themeProvider!.mainText;
-        }
 
-        String? courseName;
-        _tornEducationModel!.education.forEach((key, value) {
-          if (key == _miscModel!.educationCurrent.toString()) {
-            courseName = value.name;
+        if (!timeDifference.isNegative) {
+          showMisc = true;
+          educationActive = true;
+          Color? expiryColor = Colors.orange[800];
+          String expiryString;
+          if (timeDifference.inHours < 1) {
+            expiryString = 'less than an hour';
+          } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+            expiryString = 'about an hour';
+          } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+            expiryString = '${timeDifference.inHours} hours';
+          } else if (timeDifference.inDays == 1) {
+            expiryString = '1 day';
+            expiryColor = _themeProvider!.mainText;
+          } else {
+            expiryString = '${timeDifference.inDays} days';
+            expiryColor = _themeProvider!.mainText;
           }
-        });
 
-        educationWidget = Semantics(
-          explicitChildNodes: true,
-          child: Row(
-            children: <Widget>[
-              const Icon(MdiIcons.schoolOutline),
-              const SizedBox(width: 10),
-              Flexible(
-                child: RichText(
-                  text: TextSpan(
-                    text: "Your course: ",
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: "$courseName",
-                        /*
-                      style: TextStyle(
-                        color: Colors.green,
-                      ),
-                      */
-                      ),
-                      const TextSpan(text: ", will end in "),
-                      TextSpan(
-                        text: expiryString,
-                        style: TextStyle(color: expiryColor),
-                      ),
-                    ],
+          String? courseName;
+          _tornEducationModel!.education.forEach((key, value) {
+            if (key == currentEducation.id.toString()) {
+              courseName = value.name;
+            }
+          });
+
+          educationWidget = Semantics(
+            explicitChildNodes: true,
+            child: Row(
+              children: <Widget>[
+                const Icon(MdiIcons.schoolOutline),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: RichText(
+                    text: TextSpan(
+                      text: "Your course: ",
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: "$courseName",
+                        ),
+                        const TextSpan(text: ", will end in "),
+                        TextSpan(
+                          text: expiryString,
+                          style: TextStyle(color: expiryColor),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            ],
-          ),
-        );
+                )
+              ],
+            ),
+          );
+        }
       }
-      // There is no education on going... why? All done, or forgotten?
-      else {
-        // If the number of courses studied and available are not the same, we have forgotten
-        // NOTE: decreased by one because the Dual Wield Melee Course is not offered any more
-        if (_miscModel!.educationCompleted.length < _tornEducationModel!.education.length - 1) {
+
+      if (!educationActive) {
+        final completedCourses = _miscModel?.education.complete ?? [];
+        if (completedCourses.length < _tornEducationModel!.education.length - 1) {
           showMisc = true;
           educationActive = true;
           educationWidget = Row(
@@ -5210,25 +5222,33 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             _chainController.statusUpdateSource = "profile";
 
             // We need to adapt Status and Travel models to the BarsModel
-            barsModel.Status chainStatusModel = barsModel.Status()
+            bars_model.Status chainStatusModel = bars_model.Status()
               ..color = apiResponse.status!.color
               ..description = apiResponse.status!.description
               ..details = apiResponse.status!.details
               ..state = apiResponse.status!.state
               ..until = apiResponse.status!.until;
 
-            barsModel.Travel chainTravelModel = barsModel.Travel()
+            bars_model.Travel chainTravelModel = bars_model.Travel()
               ..departed = apiResponse.travel!.departed
               ..destination = apiResponse.travel!.destination
               ..departed = apiResponse.travel!.departed
               ..timeLeft = apiResponse.travel!.timeLeft
               ..timestamp = apiResponse.travel!.timestamp;
 
-            barsModel.BarsStatusCooldownsModel externalStatusModel = barsModel.BarsStatusCooldownsModel()
+            bars_model.BarsStatusCooldownsModel externalStatusModel = bars_model.BarsStatusCooldownsModel()
               ..status = chainStatusModel
               ..travel = chainTravelModel;
 
             _chainController.getOrSetStatus(externalStatusModel: externalStatusModel);
+          }
+
+          if (apiResponse.faction?.factionId != null && apiResponse.faction!.factionId! > 0) {
+            _u.factionId = apiResponse.faction!.factionId!;
+          }
+
+          if (apiResponse.job?.companyId != null && apiResponse.job!.companyId! > 0) {
+            _u.companyId = apiResponse.job!.companyId!;
           }
 
           _checkIfNotificationsAreCurrent();
@@ -6648,15 +6668,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _onShare(String shareText) async {
-    await Share.share(
-      shareText,
+    await SharePlus.instance.share(ShareParams(
+      text: shareText,
       sharePositionOrigin: Rect.fromLTWH(
         0,
         0,
         MediaQuery.of(context).size.width,
         MediaQuery.of(context).size.height / 2,
       ),
-    );
+    ));
   }
 
   Future _loadPreferences() async {
@@ -7693,36 +7713,41 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final thisRented = <String, Map<String, String>>{};
     final propertyModel = miscApiResponse.properties;
 
-    final keys = [];
-    final details = [];
-    if (propertyModel != null) {
-      propertyModel.forEach((key, value) {
-        if (value.status == "Currently being rented") {
-          keys.add(key);
-          details.add(value);
-        }
-      });
+    final List<PropertyV2> rentedProperties = propertyModel.where((p) => p.status == "Currently being rented").toList();
+
+    if (rentedProperties.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _rentedProperties = 0;
+          _rentedPropertiesWidget = const SizedBox.shrink();
+        });
+      }
+      return;
     }
 
-    int number = 0;
-    await Future.forEach(keys, (dynamic element) async {
-      final rentDetails = await ApiCallsV1.getProperty(propertyId: element.toString());
+    final List<Future<void>> futures = [];
+    for (final property in rentedProperties) {
+      futures.add(() async {
+        try {
+          final rentDetails = await ApiCallsV1.getProperty(propertyId: property.id.toString());
 
-      if (rentDetails is PropertyModel) {
-        final timeLeft = rentDetails.property!.rented!.daysLeft!;
-        final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
-        if (timeLeft > 0) {
-          thisRented.addAll({
-            element: {
-              "time": timeLeft.toString(),
-              "text": "Your ${details[number].property.toLowerCase()}'s "
-                  "rent will end in $daysString!",
+          if (rentDetails is PropertyModel && rentDetails.property?.rented?.daysLeft != null) {
+            final timeLeft = rentDetails.property!.rented!.daysLeft!;
+            final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
+            if (timeLeft > 0) {
+              thisRented[property.id.toString()] = {
+                "time": timeLeft.toString(),
+                "text": "Your ${property.propertyInfo.name.toLowerCase()}'s "
+                    "rent will end in $daysString!",
+              };
             }
-          });
+          }
+        } catch (e) {
+          //
         }
-      }
-      number++;
-    });
+      }());
+    }
+    await Future.wait(futures);
 
     // Convert to a widget
     final propertyLines = <Widget>[];

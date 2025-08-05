@@ -73,71 +73,97 @@ class WebviewTerminalState extends State<WebviewTerminal> {
               Positioned(
                 top: 3,
                 right: 2,
+                left: 2,
                 child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
                       onTap: () {
                         setState(() {
-                          isExpanded = !isExpanded;
+                          context.read<SettingsProvider>().changeTerminalEnabled = false;
                         });
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
                         child: Icon(
-                          isExpanded ? Icons.compress : Icons.expand,
-                          color: Colors.yellow[800],
+                          Icons.close,
+                          color: Colors.red,
                           size: 18,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: () {
-                        final TextEditingController jsController = TextEditingController();
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext dialogContext) {
-                            return TerminalDialog(widget: widget, jsController: jsController);
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              isExpanded = !isExpanded;
+                            });
                           },
-                        );
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          Icons.fullscreen,
-                          color: Colors.blue,
-                          size: 18,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              isExpanded ? Icons.compress : Icons.expand,
+                              color: Colors.yellow[800],
+                              size: 18,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: () {
-                        Share.share(widget.terminalProvider.getTerminal(widget.webviewKey!));
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          Icons.share,
-                          color: Colors.green,
-                          size: 18,
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            final TextEditingController jsController = TextEditingController();
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext dialogContext) {
+                                return TerminalDialog(widget: widget, jsController: jsController);
+                              },
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              Icons.fullscreen,
+                              color: Colors.blue,
+                              size: 18,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    GestureDetector(
-                      onTap: () {
-                        widget.terminalProvider.clearTerminal(widget.webviewKey!);
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 4),
-                        child: Icon(
-                          Icons.delete,
-                          color: Colors.orange,
-                          size: 18,
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            SharePlus.instance.share(
+                              ShareParams(
+                                text: (widget.terminalProvider.getTerminal(widget.webviewKey!)),
+                              ),
+                            );
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              Icons.share,
+                              color: Colors.green,
+                              size: 18,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: () {
+                            widget.terminalProvider.clearTerminal(widget.webviewKey!);
+                          },
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 4),
+                            child: Icon(
+                              Icons.delete,
+                              color: Colors.orange,
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

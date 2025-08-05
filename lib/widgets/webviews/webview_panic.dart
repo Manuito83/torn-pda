@@ -12,6 +12,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/config/webview_config.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
@@ -179,13 +180,18 @@ class WebViewPanicState extends State<WebViewPanic> {
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        await _tryGoBack();
+      },
       child: Container(
         color: _themeProvider!.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
                 ? Colors.blueGrey
-                : _themeProvider!.canvas
+                : isStatusBarShown
+                    ? _themeProvider!.statusBar
+                    : _themeProvider!.canvas
             : _themeProvider!.canvas,
         child: SafeArea(
           child: Scaffold(
@@ -239,8 +245,10 @@ class WebViewPanicState extends State<WebViewPanic> {
     if (!page.contains('torn.com')) return;
 
     final intColor = Color(_settingsProvider.highlightColor);
-    final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
-    final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    final background =
+        'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
+    final senderColor =
+        'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
     final String hlMap = '[ "${_userProv!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
@@ -947,11 +955,6 @@ class WebViewPanicState extends State<WebViewPanic> {
       _chatRemovalEnabled = removalEnabled;
       _chatRemovalActive = removalActive;
     });
-  }
-
-  Future<bool> _willPopCallback() async {
-    await _tryGoBack();
-    return false;
   }
 }
 

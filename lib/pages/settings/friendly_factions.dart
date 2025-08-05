@@ -1,10 +1,13 @@
 // Flutter imports:
 // Package imports:
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 // Project imports:
 import 'package:torn_pda/models/faction/faction_model.dart';
@@ -25,6 +28,8 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -32,9 +37,15 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
 
     routeWithDrawer = false;
     routeName = "friendly_factions";
-    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "friendly_factions") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -44,7 +55,9 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider!.canvas
+              : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
           : _themeProvider!.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
@@ -343,7 +356,7 @@ class FriendlyFactionsPageState extends State<FriendlyFactionsPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = false;
     routeName = "settings_browser";
     Navigator.of(context).pop();

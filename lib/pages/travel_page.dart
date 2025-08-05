@@ -1071,7 +1071,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     ).formatHour;
   }
 
-  _callBackFromTravelOptions() async {
+  Future<void> _callBackFromTravelOptions() async {
     await _restorePreferences();
   }
 }

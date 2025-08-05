@@ -51,7 +51,7 @@ class WtfReviveButtonState extends State<WtfReviveButton> {
   }
 }
 
-openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExtended? user) {
+Future<void> openWtfReviveDialog(BuildContext _, ThemeProvider themeProvider, OwnProfileExtended? user) {
   return showDialog<void>(
     context: _,
     barrierDismissible: false, // user must tap button!

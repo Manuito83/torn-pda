@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
@@ -8,6 +9,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
 // Package imports:
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:torn_pda/main.dart';
 
@@ -23,8 +25,12 @@ class UserScriptsProvider extends ChangeNotifier {
 
   List<UserScriptModel> exampleScripts = <UserScriptModel>[];
 
-  bool _scriptsFirstTime = true;
-  bool get scriptsFirstTime => _scriptsFirstTime;
+  bool _scriptsSectionNeverVisited = true;
+  bool get scriptsFirstTime => _scriptsSectionNeverVisited;
+  set changeScriptsFirstTime(bool value) {
+    _scriptsSectionNeverVisited = value;
+    Prefs().setUserScriptsSectionNeverVisited(value);
+  }
 
   var _userScriptsEnabled = true;
   bool get userScriptsEnabled => _userScriptsEnabled;
@@ -147,21 +153,20 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addUserScript(
+  Future<void> addUserScript(
     String name,
     UserScriptTime time,
     String source, {
     bool enabled = true,
     String version = "0.0.0",
-    manuallyEdited = false,
+    bool manuallyEdited = false,
     String? url,
     UserScriptUpdateStatus updateStatus = UserScriptUpdateStatus.noRemote,
-    allScriptFirstLoad = false,
     bool isExample = false,
     List<String>? matches,
     String? customApiKey,
     bool? customApiKeyCandidate,
-  }) {
+  }) async {
     final newScript = UserScriptModel(
       name: name,
       time: time,
@@ -176,14 +181,12 @@ class UserScriptsProvider extends ChangeNotifier {
       customApiKey: customApiKey ?? "",
       customApiKeyCandidate: customApiKeyCandidate ?? false,
     );
-    userScriptList.add(newScript);
 
-    // During first load we just sort, save and notify once
-    if (!allScriptFirstLoad) {
-      _sort();
-      notifyListeners();
-      _saveUserScriptsListSharedPrefs();
-    }
+    _userScriptList.add(newScript);
+
+    _sort();
+    await _saveUserScriptsListSharedPrefs();
+    notifyListeners();
   }
 
   /// Returns a bool indicating if the header could be parsed
@@ -257,145 +260,176 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   /// [defaultToDisabled] makes all scripts inactive, if we can trust them 100% because they come from a shared backup
-  void restoreScriptsFromServerSave({
-    required bool overwritte,
+  Future<void> restoreScriptsFromServerSave({
+    required bool overwrite, // Renamed for clarity, Dart convention
     required String scriptsList,
     bool defaultToDisabled = false,
   }) async {
-    // If we overwritte, just save to prefs and initialise
-    if (overwritte) {
-      await Prefs().setUserScriptsList(scriptsList);
+    if (overwrite) {
       _userScriptList.clear();
-      await loadPreferences();
+      final List<dynamic> decoded = json.decode(scriptsList);
+
+      for (final dec in decoded) {
+        try {
+          // Create and add the model
+          _userScriptList.add(UserScriptModel.fromJson(dec));
+        } catch (e, trace) {
+          // Log if a single script in the backup is corrupt, but continue
+          if (!Platform.isWindows) {
+            FirebaseCrashlytics.instance.log("PDA error parsing server script on overwrite. Error: $e.");
+          }
+          if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+          logToUser("PDA error at parsing server script. Error: $e");
+        }
+      }
+
       if (defaultToDisabled) {
         for (final script in _userScriptList) {
           script.enabled = false;
         }
-        // Ensure that current scripts are actually saved as disabled
-        _saveUserScriptsListSharedPrefs();
       }
-      return;
-    }
+    } else {
+      // We add the scripts that don't already exist
+      final decoded = json.decode(scriptsList);
 
-    // If we don't overwritte, try to add the scripts
-    final decoded = json.decode(scriptsList);
-    for (final dec in decoded) {
-      try {
-        final decodedModel = UserScriptModel.fromJson(dec);
+      for (final dec in decoded) {
+        try {
+          final decodedModel = UserScriptModel.fromJson(dec);
 
-        // Check if the script with the same name already exists in the list
-        final bool scriptExists = _userScriptList.any((script) {
-          return script.name.toLowerCase() == decodedModel.name.toLowerCase();
-        });
+          // Check if the script with the same name already exists in the list
+          final bool scriptExists = _userScriptList.any(
+            (script) => script.name.toLowerCase() == decodedModel.name.toLowerCase(),
+          );
 
-        if (scriptExists) continue;
+          if (scriptExists) continue;
 
-        addUserScript(
-          decodedModel.name,
-          decodedModel.time,
-          decodedModel.source,
-          enabled: defaultToDisabled ? false : decodedModel.enabled,
-          version: decodedModel.version,
-          manuallyEdited: decodedModel.manuallyEdited,
-          allScriptFirstLoad: true,
-          isExample: decodedModel.isExample,
-          updateStatus: decodedModel.updateStatus,
-          url: decodedModel.url,
-          matches: decodedModel.matches,
-        );
-      } catch (e, trace) {
-        if (!Platform.isWindows) {
-          FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+          _userScriptList.add(UserScriptModel(
+              name: decodedModel.name,
+              time: decodedModel.time,
+              source: decodedModel.source,
+              enabled: defaultToDisabled ? false : decodedModel.enabled,
+              version: decodedModel.version,
+              manuallyEdited: decodedModel.manuallyEdited,
+              isExample: decodedModel.isExample,
+              updateStatus: decodedModel.updateStatus,
+              url: decodedModel.url,
+              matches: decodedModel.matches,
+              // Custom API key fields are already part of fromJson, but explicitly listing them is fine.
+              customApiKey: decodedModel.customApiKey,
+              customApiKeyCandidate: decodedModel.customApiKeyCandidate));
+        } catch (e, trace) {
+          if (!Platform.isWindows) {
+            FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
+          }
+          if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+          logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
         }
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-        logToUser("PDA error at adding server userscript. Error: $e. Stack: $trace");
       }
     }
 
+    // Perform final operations once, after the list has been fully manipulated
     _sort();
+    await _saveUserScriptsListSharedPrefs();
     notifyListeners();
-    _saveUserScriptsListSharedPrefs();
   }
 
-  void _saveUserScriptsListSharedPrefs() {
+  Future<void> _saveUserScriptsListSharedPrefs() async {
     _checkForCustomApiKeyCandidates();
     final saveString = json.encode(_userScriptList);
-    Prefs().setUserScriptsList(saveString);
+    await Prefs().setUserScriptsList(saveString);
   }
 
   void _sort() {
     _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
-  void changeScriptsFirstTime(bool value) {
-    _scriptsFirstTime = value;
-    Prefs().setUserScriptsFirstTime(value);
-  }
+  Future<void> loadPreferencesAndScripts() async {
+    _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
 
-  Future<void> loadPreferences() async {
+    // GET SAVED SCRIPTS
     try {
-      // _userScriptsEnabled = await Prefs().getUserScriptsEnabled();
-
-      _scriptsFirstTime = await Prefs().getUserScriptsFirstTime();
-
-      final savedScripts = await Prefs().getUserScriptsList();
-
-      // NULL returned if we installed the app, so we add all the example scripts
-      if (savedScripts == null) {
+      // First time we run the app
+      if (lastSavedAppCompilation.isEmpty) {
+        // Only seed with defaults scripts if it's the first app run
+        // Here we modify [addDefaultScripts()] directly, as it is the first time loading scripts
         await addDefaultScripts();
-        _saveUserScriptsListSharedPrefs();
-      } else {
-        if (savedScripts.isNotEmpty) {
-          final decoded = json.decode(savedScripts);
-          for (final dec in decoded) {
-            try {
-              final decodedModel = UserScriptModel.fromJson(dec);
+        notifyListeners();
+        return;
+      }
 
-              // Check if the script with the same name already exists in the list
-              // (user-reported bug)
-              final String name = decodedModel.name.toLowerCase();
-              if (_userScriptList.any((script) => script.name.toLowerCase() == name)) continue;
-
-              addUserScript(
-                decodedModel.name,
-                decodedModel.time,
-                decodedModel.source,
-                enabled: decodedModel.enabled,
-                version: decodedModel.version,
-                manuallyEdited: decodedModel.manuallyEdited,
-                url: decodedModel.url,
-                updateStatus: decodedModel.updateStatus,
-                allScriptFirstLoad: true,
-                isExample: decodedModel.isExample,
-                customApiKey: decodedModel.customApiKey,
-                customApiKeyCandidate: decodedModel.customApiKeyCandidate,
-              );
-            } catch (e, trace) {
-              if (!Platform.isWindows) {
-                FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
-              }
-              if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-              logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
+      // #### RETRY LOGIC START
+      // (mainly because of numerous user reports of empty scripts)
+      String? savedScripts = await Prefs().getUserScriptsList();
+      if (savedScripts == null) {
+        const int maxRetries = 2;
+        for (int i = 0; i <= maxRetries; i++) {
+          savedScripts = await Prefs().getUserScriptsList();
+          if (savedScripts != null) {
+            if (i > 0) {
+              log("UserScripts load attempt ${i + 1} succeeded");
             }
+            break;
+          }
+
+          if (i < maxRetries) {
+            log("UserScripts load attempt ${i + 1} failed, retrying...");
+            await Future.delayed(const Duration(seconds: 1));
+          } else {
+            log("UserScripts load failed after ${maxRetries + 1} attempts");
           }
         }
-
-        _sort();
-        _saveUserScriptsListSharedPrefs();
       }
+      // #### RETRY LOGIC END
+
+      // If loading failed do nothing
+      if (savedScripts == null) {
+        log("UserScripts load failed, no scripts found");
+        return;
+      }
+
+      // Here, we have a valid savedScripts string. We decode it and add each script to the tempList.
+      // (we use a temporary list to load the data into until we are sure the load was successful)
+      final List<UserScriptModel> tempList = <UserScriptModel>[];
+      final decoded = json.decode(savedScripts);
+      if (decoded is List) {
+        for (final dec in decoded) {
+          try {
+            final decodedModel = UserScriptModel.fromJson(dec);
+
+            // Check if the script with the same name already exists in the list
+            // (user-reported bug)
+            final String name = decodedModel.name.toLowerCase();
+            if (tempList.any((script) => script.name.toLowerCase() == name)) continue;
+            tempList.add(decodedModel);
+          } catch (e, trace) {
+            if (!Platform.isWindows) {
+              FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
+            }
+            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+            logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
+          }
+        }
+      }
+
+      // Swap lists
+      _userScriptList.clear();
+      _userScriptList.addAll(tempList);
+
+      _sort();
+      _checkForCustomApiKeyCandidates();
+
       notifyListeners();
     } catch (e, trace) {
-      // Pass (scripts will be empty)
       if (!Platform.isWindows) {
         FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.recordError(e, trace);
       }
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
       logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
     }
   }
 
   /// Flag scripts that are candidates for custom API keys
-  _checkForCustomApiKeyCandidates() {
+  void _checkForCustomApiKeyCandidates() {
     try {
       for (final script in _userScriptList) {
         if (script.source.contains("###PDA-APIKEY###")) {
@@ -431,7 +465,7 @@ class UserScriptsProvider extends ChangeNotifier {
         s.updateStatus = updateStatus;
         notifyListeners(); // Notify listeners of the change after every row
       }).catchError((e) {
-        print(e);
+        log(e);
         s.updateStatus = UserScriptUpdateStatus.error;
         notifyListeners(); // Notify listeners of the change after every row
       });
@@ -441,23 +475,46 @@ class UserScriptsProvider extends ChangeNotifier {
     return updates;
   }
 
-  Future<({int added, int failed, int removed})> addDefaultScripts() async {
+  Future<({int added, int failed, int removed})> addDefaultScripts({bool overwriteExisting = false}) async {
     int added = 0;
     int failed = 0;
-    // int alreadyAdded = 0;
-    int initialScriptCount = userScriptList.length;
-    // Remove example scripts;
-    userScriptList.removeWhere((s) => s.isExample);
-    await Future.wait(defaultScriptUrls.map((url) => url == null
-        ? Future.value()
-        : addUserScriptFromURL(url, isExample: true).then((r) => r.success ? added++ : failed++)));
+    int removed = 0;
+
+    if (overwriteExisting) {
+      final originalCount = _userScriptList.length;
+      _userScriptList.removeWhere((s) => s.isExample);
+      removed = originalCount - _userScriptList.length;
+    }
+
+    final existingScriptNames = _userScriptList.map((s) => s.name.toLowerCase()).toSet();
+
+    for (final url in defaultScriptUrls) {
+      if (url == null) continue;
+
+      final response = await UserScriptModel.fromURL(url, isExample: true);
+
+      if (response.success && response.model != null) {
+        if (!existingScriptNames.contains(response.model!.name.toLowerCase())) {
+          _userScriptList.add(response.model!);
+          added++;
+        }
+      } else {
+        failed++;
+      }
+    }
+
+    if (added > 0 || removed > 0) {
+      _sort();
+      await _saveUserScriptsListSharedPrefs();
+      notifyListeners();
+    }
 
     _checkForCustomApiKeyCandidates();
 
     return (
       added: added,
       failed: failed,
-      removed: initialScriptCount - (userScriptList.length - added),
+      removed: removed,
     );
   }
 

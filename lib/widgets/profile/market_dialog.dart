@@ -118,7 +118,7 @@ class MarketDialog extends StatelessWidget {
     final costCurrency = NumberFormat("#,##0", "en_US");
 
     for (final element in market) {
-      final marketDiff = element.averagePrice! - element.price!;
+      final marketDiff = element.averagePrice - element.price;
       Color? marketColor = Colors.green;
       var marketString = "";
       if (marketDiff.isNegative) {
@@ -144,7 +144,7 @@ class MarketDialog extends StatelessWidget {
                       },
                     ),
                     Text(
-                      "${element.item!.name!} x${element.amount!}",
+                      "${element.item.name} x${element.amount}",
                       style: const TextStyle(
                         fontSize: 13,
                       ),
@@ -159,7 +159,7 @@ class MarketDialog extends StatelessWidget {
                       const SizedBox(height: 5),
                       Text(
                         "@ \$${costCurrency.format(element.price)}"
-                        "${element.amount! > 1 ? " ea. (\$${costCurrency.format(element.price! * element.amount!)})" : ""}",
+                        "${element.amount > 1 ? " ea. (\$${costCurrency.format(element.price * element.amount)})" : ""}",
                         style: const TextStyle(
                           fontSize: 13,
                         ),

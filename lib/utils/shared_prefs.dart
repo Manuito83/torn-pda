@@ -10,9 +10,7 @@ import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class Prefs {
-  ///
-  /// Instantiation of the SharedPreferences library
-  ///
+  final SharedPreferencesAsync _asyncPrefs = SharedPreferencesAsync();
 
   // General
   final String _kAppVersion = "pda_appVersion";
@@ -21,10 +19,14 @@ class Prefs {
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
 
+  final String _kLastKnownFaction = "pfa_lastKnownFaction";
+  final String _kLastKnownCompany = "pfa_lastKnownCompany";
+
   // Native login
   final String _kNativePlayerEmail = "pda_nativePlayerEmail";
   final String _kLastAuthRedirect = "pda_lastAuthRedirect";
   final String _kTryAutomaticLogins = "pda_tryAutomaticLogins";
+  final String _kPlayerLastLoginMethod = "pda_playerLastLoginMethod";
 
   // Targets
   final String _kTargetsList = "pda_targetsList";
@@ -267,7 +269,6 @@ class Prefs {
   final String _kUserScriptsEnabled = "pda_userScriptsEnabled";
   final String _kUserScriptsNotifyUpdates = "pda_userScriptsNotifyUpdates";
   final String _kUserScriptsList = "pda_userScriptsList";
-  // final String _kUserScriptsFirstTime = "pda_userScriptsFirstTime";
   final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
@@ -458,26 +459,15 @@ class Prefs {
   final String _kIosLiveActivityTravelEnabled = "pda_iosLiveActivityTravelEnabled";
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
 
-  /// SharedPreferences can be used on background events handlers.
-  /// The problem is that the background handler run in a different isolate so, when we try to
-  /// get a data, the shared preferences instance is empty.
-  /// To avoid this, simply force a refresh
-  Future reload() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.reload();
-  }
-
   /// ----------------------------
   /// Methods for app version
   /// ----------------------------
   Future<String> getAppCompilation() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAppVersion) ?? "";
+    return await _asyncPrefs.getString(_kAppVersion) ?? "";
   }
 
-  Future<bool> setAppCompilation(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAppVersion, value);
+  Future setAppCompilation(String value) async {
+    return await _asyncPrefs.setString(_kAppVersion, value);
   }
 
   /// -------------------------------
@@ -485,793 +475,678 @@ class Prefs {
   /// -------------------------------
 
   Future<int> getAppStatsAnnouncementDialogVersion() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kAppAnnouncementDialogVersion) ?? 0;
+    return await _asyncPrefs.getInt(_kAppAnnouncementDialogVersion) ?? 0;
   }
 
-  Future<bool> setAppStatsAnnouncementDialogVersion(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kAppAnnouncementDialogVersion, value);
+  Future setAppStatsAnnouncementDialogVersion(int value) async {
+    await _asyncPrefs.setInt(_kAppAnnouncementDialogVersion, value);
   }
 
   Future<int> getBugsAnnouncementDialogVersion() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kBugsAnnouncementDialogVersion) ?? 0;
+    return await _asyncPrefs.getInt(_kBugsAnnouncementDialogVersion) ?? 0;
   }
 
-  Future<bool> setBugsAnnouncementDialogVersion(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kBugsAnnouncementDialogVersion, value);
+  Future setBugsAnnouncementDialogVersion(int value) async {
+    await _asyncPrefs.setInt(_kBugsAnnouncementDialogVersion, value);
   }
 
   /// ----------------------------
   /// Methods for identification
   /// ----------------------------
   Future<String> getOwnDetails() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kOwnDetails) ?? "";
+    return await _asyncPrefs.getString(_kOwnDetails) ?? "";
   }
 
-  Future<bool> setOwnDetails(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kOwnDetails, value);
+  Future setOwnDetails(String value) async {
+    return await _asyncPrefs.setString(_kOwnDetails, value);
   }
 
   /// ----------------------------
   /// Methods for identification
   /// ----------------------------
   Future<int> getLastAppUse() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kLastAppUse) ?? 0;
+    return await _asyncPrefs.getInt(_kLastAppUse) ?? 0;
   }
 
-  Future<bool> setLastAppUse(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kLastAppUse, value);
+  Future setLastAppUse(int value) async {
+    return await _asyncPrefs.setInt(_kLastAppUse, value);
+  }
+
+  /// ----------------------------
+  /// Methods for faction and company tracking
+  /// ----------------------------
+  Future<int> getLastKnownFaction() async {
+    return await _asyncPrefs.getInt(_kLastKnownFaction) ?? 0;
+  }
+
+  Future setLastKnownFaction(int value) async {
+    return await _asyncPrefs.setInt(_kLastKnownFaction, value);
+  }
+
+  Future<int> getLastKnownCompany() async {
+    return await _asyncPrefs.getInt(_kLastKnownCompany) ?? 0;
+  }
+
+  Future setLastKnownCompany(int value) async {
+    return await _asyncPrefs.setInt(_kLastKnownCompany, value);
   }
 
   /// ----------------------------
   /// Methods for native login
   /// ----------------------------
   Future<String> getNativePlayerEmail() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kNativePlayerEmail) ?? '';
+    return await _asyncPrefs.getString(_kNativePlayerEmail) ?? '';
   }
 
-  Future<bool> setNativePlayerEmail(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kNativePlayerEmail, value);
+  Future setNativePlayerEmail(String value) async {
+    return await _asyncPrefs.setString(_kNativePlayerEmail, value);
   }
 
   Future<int> getLastAuthRedirect() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kLastAuthRedirect) ?? 0;
+    return await _asyncPrefs.getInt(_kLastAuthRedirect) ?? 0;
   }
 
-  Future<bool> setLastAuthRedirect(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kLastAuthRedirect, value);
+  Future setLastAuthRedirect(int value) async {
+    return await _asyncPrefs.setInt(_kLastAuthRedirect, value);
   }
 
   Future<bool> getTryAutomaticLogins() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTryAutomaticLogins) ?? true;
+    return await _asyncPrefs.getBool(_kTryAutomaticLogins) ?? true;
   }
 
-  Future<bool> setTryAutomaticLogins(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTryAutomaticLogins, value);
+  Future setTryAutomaticLogins(bool value) async {
+    return await _asyncPrefs.setBool(_kTryAutomaticLogins, value);
+  }
+
+  Future<String> getPlayerLastLoginMethod() async {
+    return await _asyncPrefs.getString(_kPlayerLastLoginMethod) ?? '';
+  }
+
+  Future setPlayerLastLoginMethod(String value) async {
+    return await _asyncPrefs.setString(_kPlayerLastLoginMethod, value);
   }
 
   /// ----------------------------
   /// Methods for profile section order
   /// ----------------------------
   Future<List<String>> getProfileSectionOrder() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kProfileSectionOrder) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kProfileSectionOrder) ?? <String>[];
   }
 
-  Future<bool> setProfileSectionOrder(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kProfileSectionOrder, value);
+  Future setProfileSectionOrder(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kProfileSectionOrder, value);
   }
 
   /// ------------------------------
   /// Methods for colored status card
   /// --------------------------------
   Future<bool> getColorCodedStatusCard() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kColorCodedStatusCard) ?? true;
+    return await _asyncPrefs.getBool(_kColorCodedStatusCard) ?? true;
   }
 
-  Future<bool> setColorCodedStatusCard(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kColorCodedStatusCard, value);
+  Future setColorCodedStatusCard(bool value) async {
+    return await _asyncPrefs.setBool(_kColorCodedStatusCard, value);
   }
 
   /// ----------------------------
   /// Methods for targets
   /// ----------------------------
   Future<List<String>> getTargetsList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kTargetsList) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kTargetsList) ?? <String>[];
   }
 
-  Future<bool> setTargetsList(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kTargetsList, value);
+  Future setTargetsList(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kTargetsList, value);
   }
 
   //**************
   Future<String> getTargetsSort() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTargetsSort) ?? '';
+    return await _asyncPrefs.getString(_kTargetsSort) ?? '';
   }
 
-  Future<bool> setTargetsSort(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTargetsSort, value);
+  Future setTargetsSort(String value) async {
+    return await _asyncPrefs.setString(_kTargetsSort, value);
   }
 
   //**************
   Future<List<String>> getTargetsColorFilter() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kTargetsColorFilter) ?? [];
+    return await _asyncPrefs.getStringList(_kTargetsColorFilter) ?? [];
   }
 
-  Future<bool> setTargetsColorFilter(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kTargetsColorFilter, value);
+  Future setTargetsColorFilter(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kTargetsColorFilter, value);
   }
 
   //**************
   Future<List<String>> getWarFactions() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kWarFactions) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kWarFactions) ?? <String>[];
   }
 
-  Future<bool> setWarFactions(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kWarFactions, value);
+  Future setWarFactions(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kWarFactions, value);
   }
 
   Future<List<String>> getFilterListInWars() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kFilterListInWars) ?? [];
+    return await _asyncPrefs.getStringList(_kFilterListInWars) ?? [];
   }
 
-  Future<bool> setFilterListInWars(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kFilterListInWars, value);
+  Future setFilterListInWars(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kFilterListInWars, value);
   }
 
   Future<int> getOnlineFilterInWars() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kOnlineFilterInWars) ?? 0;
+    return await _asyncPrefs.getInt(_kOnlineFilterInWars) ?? 0;
   }
 
-  Future<bool> setOnlineFilterInWars(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kOnlineFilterInWars, value);
+  Future setOnlineFilterInWars(int value) async {
+    return await _asyncPrefs.setInt(_kOnlineFilterInWars, value);
   }
 
   Future<int> getOkayRedFilterInWars() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kOkayRedFilterInWars) ?? 0;
+    return await _asyncPrefs.getInt(_kOkayRedFilterInWars) ?? 0;
   }
 
-  Future<bool> setOkayRedFilterInWars(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kOkayRedFilterInWars, value);
+  Future setOkayRedFilterInWars(int value) async {
+    return await _asyncPrefs.setInt(_kOkayRedFilterInWars, value);
   }
 
   Future<bool> getCountryFilterInWars() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kCountryFilterInWars) ?? false;
+    return await _asyncPrefs.getBool(_kCountryFilterInWars) ?? false;
   }
 
-  Future<bool> setCountryFilterInWars(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kCountryFilterInWars, value);
+  Future setCountryFilterInWars(bool value) async {
+    return await _asyncPrefs.setBool(_kCountryFilterInWars, value);
   }
 
   Future<int> getTravelingFilterInWars() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTravelingFilterInWars) ?? 0;
+    return await _asyncPrefs.getInt(_kTravelingFilterInWars) ?? 0;
   }
 
-  Future<bool> setTravelingFilterInWars(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTravelingFilterInWars, value);
+  Future setTravelingFilterInWars(int value) async {
+    return await _asyncPrefs.setInt(_kTravelingFilterInWars, value);
   }
 
   Future<bool> getShowChainWidgetInWars() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowChainWidgetInWars) ?? true;
+    return await _asyncPrefs.getBool(_kShowChainWidgetInWars) ?? true;
   }
 
-  Future<bool> setShowChainWidgetInWars(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowChainWidgetInWars, value);
+  Future setShowChainWidgetInWars(bool value) async {
+    return await _asyncPrefs.setBool(_kShowChainWidgetInWars, value);
   }
 
   Future<String> getWarMembersSort() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWarMembersSort) ?? '';
+    return await _asyncPrefs.getString(_kWarMembersSort) ?? '';
   }
 
-  Future<bool> setWarMembersSort(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kWarMembersSort, value);
+  Future setWarMembersSort(String value) async {
+    return await _asyncPrefs.setString(_kWarMembersSort, value);
   }
 
   Future<String> getRankerWarSortPerTab() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kRankedWarSortPerTab) ?? 'active#progressDes-upcoming#timeAsc-finished#timeAsc';
+    return await _asyncPrefs.getString(_kRankedWarSortPerTab) ?? 'active#progressDes-upcoming#timeAsc-finished#timeAsc';
   }
 
-  Future<bool> setRankerWarSortPerTab(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kRankedWarSortPerTab, value);
+  Future setRankerWarSortPerTab(String value) async {
+    return await _asyncPrefs.setString(_kRankedWarSortPerTab, value);
   }
 
   Future<List<String>> getYataSpies() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kYataSpies) ?? [];
+    return await _asyncPrefs.getStringList(_kYataSpies) ?? [];
   }
 
-  Future<bool> setYataSpies(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kYataSpies, value);
+  Future setYataSpies(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kYataSpies, value);
   }
 
   Future<int> getYataSpiesTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kYataSpiesTime) ?? 0;
+    return await _asyncPrefs.getInt(_kYataSpiesTime) ?? 0;
   }
 
-  Future<bool> setYataSpiesTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kYataSpiesTime, value);
+  Future setYataSpiesTime(int value) async {
+    return await _asyncPrefs.setInt(_kYataSpiesTime, value);
   }
 
   Future<String> getTornStatsSpies() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTornStatsSpies) ?? "";
+    return await _asyncPrefs.getString(_kTornStatsSpies) ?? "";
   }
 
-  Future<bool> setTornStatsSpies(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTornStatsSpies, value);
+  Future setTornStatsSpies(String value) async {
+    return await _asyncPrefs.setString(_kTornStatsSpies, value);
   }
 
   Future<int> getTornStatsSpiesTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTornStatsSpiesTime) ?? 0;
+    return await _asyncPrefs.getInt(_kTornStatsSpiesTime) ?? 0;
   }
 
-  Future<bool> setTornStatsSpiesTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTornStatsSpiesTime, value);
+  Future setTornStatsSpiesTime(int value) async {
+    return await _asyncPrefs.setInt(_kTornStatsSpiesTime, value);
   }
 
   Future<int> getWarIntegrityCheckTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kWarIntegrityCheckTime) ?? 0;
+    return await _asyncPrefs.getInt(_kWarIntegrityCheckTime) ?? 0;
   }
 
-  Future<bool> setWarIntegrityCheckTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kWarIntegrityCheckTime, value);
+  Future setWarIntegrityCheckTime(int value) async {
+    return await _asyncPrefs.setInt(_kWarIntegrityCheckTime, value);
   }
 
   //**************
   Future<int> getChainingCurrentPage() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kChainingCurrentPage) ?? 0;
+    return await _asyncPrefs.getInt(_kChainingCurrentPage) ?? 0;
   }
 
-  Future<bool> setChainingCurrentPage(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kChainingCurrentPage, value);
+  Future setChainingCurrentPage(int value) async {
+    return await _asyncPrefs.setInt(_kChainingCurrentPage, value);
   }
 
   Future<bool> getTargetSkippingAll() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTargetSkipping) ?? true;
+    return await _asyncPrefs.getBool(_kTargetSkipping) ?? true;
   }
 
-  Future<bool> setTargetSkipping(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTargetSkipping, value);
+  Future setTargetSkipping(bool value) async {
+    return await _asyncPrefs.setBool(_kTargetSkipping, value);
   }
 
   Future<bool> getTargetSkippingFirst() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTargetSkippingFirst) ?? false;
+    return await _asyncPrefs.getBool(_kTargetSkippingFirst) ?? false;
   }
 
-  Future<bool> setTargetSkippingFirst(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTargetSkippingFirst, value);
+  Future setTargetSkippingFirst(bool value) async {
+    return await _asyncPrefs.setBool(_kTargetSkippingFirst, value);
   }
 
   Future<bool> getShowTargetsNotes() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowTargetsNotes) ?? true;
+    return await _asyncPrefs.getBool(_kShowTargetsNotes) ?? true;
   }
 
-  Future<bool> setShowTargetsNotes(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowTargetsNotes, value);
+  Future setShowTargetsNotes(bool value) async {
+    return await _asyncPrefs.setBool(_kShowTargetsNotes, value);
   }
 
   Future<bool> getShowBlankTargetsNotes() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowBlankTargetsNotes) ?? false;
+    return await _asyncPrefs.getBool(_kShowBlankTargetsNotes) ?? false;
   }
 
-  Future<bool> setShowBlankTargetsNotes(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowBlankTargetsNotes, value);
+  Future setShowBlankTargetsNotes(bool value) async {
+    return await _asyncPrefs.setBool(_kShowBlankTargetsNotes, value);
   }
 
   Future<bool> getShowOnlineFactionWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowOnlineFactionWarning) ?? true;
+    return await _asyncPrefs.getBool(_kShowOnlineFactionWarning) ?? true;
   }
 
-  Future<bool> setShowOnlineFactionWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowOnlineFactionWarning, value);
+  Future setShowOnlineFactionWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kShowOnlineFactionWarning, value);
   }
 
   Future<String> getChainWatcherSettings() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kChainWatcherSettings) ?? '';
+    return await _asyncPrefs.getString(_kChainWatcherSettings) ?? '';
   }
 
-  Future<bool> setChainWatcherSettings(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kChainWatcherSettings, value);
+  Future setChainWatcherSettings(String value) async {
+    return await _asyncPrefs.setString(_kChainWatcherSettings, value);
   }
 
   Future<List<String>> getChainWatcherPanicTargets() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kChainWatcherPanicTargets) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kChainWatcherPanicTargets) ?? <String>[];
   }
 
-  Future<bool> setChainWatcherPanicTargets(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kChainWatcherPanicTargets, value);
+  Future setChainWatcherPanicTargets(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kChainWatcherPanicTargets, value);
   }
 
   Future<bool> getChainWatcherSound() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kChainWatcherSound) ?? true;
+    return await _asyncPrefs.getBool(_kChainWatcherSound) ?? true;
   }
 
-  Future<bool> setChainWatcherSound(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kChainWatcherSound, value);
+  Future setChainWatcherSound(bool value) async {
+    return await _asyncPrefs.setBool(_kChainWatcherSound, value);
   }
 
   Future<bool> getChainWatcherVibration() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kChainWatcherVibration) ?? true;
+    return await _asyncPrefs.getBool(_kChainWatcherVibration) ?? true;
   }
 
-  Future<bool> setChainWatcherVibration(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kChainWatcherVibration, value);
+  Future setChainWatcherVibration(bool value) async {
+    return await _asyncPrefs.setBool(_kChainWatcherVibration, value);
   }
 
   Future<bool> getChainWatcherNotificationsEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kChainWatcherNotifications) ?? true;
+    return await _asyncPrefs.getBool(_kChainWatcherNotifications) ?? true;
   }
 
-  Future<bool> setChainWatcherNotificationsEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kChainWatcherNotifications, value);
+  Future setChainWatcherNotificationsEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kChainWatcherNotifications, value);
   }
 
   Future<bool> getYataTargetsEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kYataTargetsEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kYataTargetsEnabled) ?? true;
   }
 
-  Future<bool> setYataTargetsEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kYataTargetsEnabled, value);
+  Future setYataTargetsEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kYataTargetsEnabled, value);
   }
 
   Future<bool> getStatusColorWidgetEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStatusColorWidgetEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kStatusColorWidgetEnabled) ?? true;
   }
 
-  Future<bool> setStatusColorWidgetEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kStatusColorWidgetEnabled, value);
+  Future setStatusColorWidgetEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kStatusColorWidgetEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for attacks
   /// ----------------------------
   Future<String> getAttackSort() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAttacksSort) ?? '';
+    return await _asyncPrefs.getString(_kAttacksSort) ?? '';
   }
 
-  Future<bool> setAttackSort(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAttacksSort, value);
+  Future setAttackSort(String value) async {
+    return await _asyncPrefs.setString(_kAttacksSort, value);
   }
 
   /// ----------------------------
   /// Methods for friends
   /// ----------------------------
   Future<List<String>> getFriendsList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kFriendsList) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kFriendsList) ?? <String>[];
   }
 
-  Future<bool> setFriendsList(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kFriendsList, value);
+  Future setFriendsList(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kFriendsList, value);
   }
 
   //**************
   Future<String> getFriendsSort() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kFriendsSort) ?? '';
+    return await _asyncPrefs.getString(_kFriendsSort) ?? '';
   }
 
-  Future<bool> setFriendsSort(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kFriendsSort, value);
+  Future setFriendsSort(String value) async {
+    return await _asyncPrefs.setString(_kFriendsSort, value);
   }
 
   /// ----------------------------
   /// Methods for theme
   /// ----------------------------
   Future<String> getAppTheme() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTheme) ?? 'light';
+    return await _asyncPrefs.getString(_kTheme) ?? 'light';
   }
 
-  Future<bool> setAppTheme(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTheme, value);
+  Future setAppTheme(String value) async {
+    return await _asyncPrefs.setString(_kTheme, value);
   }
 
   Future<bool> getUseMaterial3() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseMaterial3Theme) ?? false;
+    return await _asyncPrefs.getBool(_kUseMaterial3Theme) ?? false;
   }
 
-  Future<bool> setUseMaterial3(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseMaterial3Theme, value);
+  Future setUseMaterial3(bool value) async {
+    return await _asyncPrefs.setBool(_kUseMaterial3Theme, value);
   }
 
   Future<bool> getAccesibilityNoTextColors() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAccesibilityNoTextColors) ?? false;
+    return await _asyncPrefs.getBool(_kAccesibilityNoTextColors) ?? false;
   }
 
-  Future<bool> setAccesibilityNoTextColors(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAccesibilityNoTextColors, value);
+  Future setAccesibilityNoTextColors(bool value) async {
+    return await _asyncPrefs.setBool(_kAccesibilityNoTextColors, value);
   }
 
   /// ----------------------------
   /// Methods for theme sync with web and device
   /// ----------------------------
   Future<bool> getSyncTornWebTheme() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSyncTornWebTheme) ?? true;
+    return await _asyncPrefs.getBool(_kSyncTornWebTheme) ?? true;
   }
 
-  Future<bool> setSyncTornWebTheme(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSyncTornWebTheme, value);
+  Future setSyncTornWebTheme(bool value) async {
+    return await _asyncPrefs.setBool(_kSyncTornWebTheme, value);
   }
 
   Future<bool> getSyncDeviceTheme() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSyncDeviceTheme) ?? false;
+    return await _asyncPrefs.getBool(_kSyncDeviceTheme) ?? false;
   }
 
-  Future<bool> setSyncDeviceTheme(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSyncDeviceTheme, value);
+  Future setSyncDeviceTheme(bool value) async {
+    return await _asyncPrefs.setBool(_kSyncDeviceTheme, value);
   }
 
   Future<String> getDarkThemeToSync() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDarkThemeToSync) ?? 'dark';
+    return await _asyncPrefs.getString(_kDarkThemeToSync) ?? 'dark';
   }
 
-  Future<bool> setDarkThemeToSync(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDarkThemeToSync, value);
+  Future setDarkThemeToSync(String value) async {
+    return await _asyncPrefs.setString(_kDarkThemeToSync, value);
   }
 
   /// ----------------------------
   /// Methods for dynamic app icons
   /// ----------------------------
   Future<bool> getDynamicAppIcons() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDynamicAppIcons) ?? true;
+    return await _asyncPrefs.getBool(_kDynamicAppIcons) ?? true;
   }
 
-  Future<bool> setDynamicAppIcons(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDynamicAppIcons, value);
+  Future setDynamicAppIcons(bool value) async {
+    return await _asyncPrefs.setBool(_kDynamicAppIcons, value);
   }
 
   //--
 
   Future<String> getDynamicAppIconsManual() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDynamicAppIconsManual) ?? "off";
+    return await _asyncPrefs.getString(_kDynamicAppIconsManual) ?? "off";
   }
 
-  Future<bool> setDynamicAppIconsManual(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDynamicAppIconsManual, value);
+  Future setDynamicAppIconsManual(String value) async {
+    return await _asyncPrefs.setString(_kDynamicAppIconsManual, value);
   }
 
   /// ----------------------------
   /// Methods for vibration pattern
   /// ----------------------------
   Future<String> getVibrationPattern() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kVibrationPattern) ?? 'medium';
+    return await _asyncPrefs.getString(_kVibrationPattern) ?? 'medium';
   }
 
-  Future<bool> setVibrationPattern(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kVibrationPattern, value);
+  Future setVibrationPattern(String value) async {
+    return await _asyncPrefs.setString(_kVibrationPattern, value);
   }
 
   /// ----------------------------
   /// Methods for discreet notifications
   /// ----------------------------
   Future<bool> getDiscreetNotifications() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDiscreetNotifications) ?? false;
+    return await _asyncPrefs.getBool(_kDiscreetNotifications) ?? false;
   }
 
-  Future<bool> setDiscreetNotifications(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDiscreetNotifications, value);
+  Future setDiscreetNotifications(bool value) async {
+    return await _asyncPrefs.setBool(_kDiscreetNotifications, value);
   }
 
   /// ----------------------------
   /// Methods for default launch section
   /// ----------------------------
   Future<String> getDefaultSection() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDefaultSection) ?? '0';
+    return await _asyncPrefs.getString(_kDefaultSection) ?? '0';
   }
 
-  Future<bool> setDefaultSection(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDefaultSection, value);
+  Future setDefaultSection(String value) async {
+    return await _asyncPrefs.setString(_kDefaultSection, value);
   }
 
   /// ----------------------------
   /// Methods for on app exit
   /// ----------------------------
   Future<String> getOnBackButtonAppExit() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kOnBackButtonAppExit) ?? 'stay';
+    return await _asyncPrefs.getString(_kOnBackButtonAppExit) ?? 'stay';
   }
 
-  Future<bool> setOnAppExit(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kOnBackButtonAppExit, value);
+  Future setOnAppExit(String value) async {
+    return await _asyncPrefs.setString(_kOnBackButtonAppExit, value);
   }
 
   /// ----------------------------
   /// Methods for debug messages
   /// ----------------------------
   Future<bool> getDebugMessages() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDebugMessages) ?? false;
+    return await _asyncPrefs.getBool(_kDebugMessages) ?? false;
   }
 
-  Future<bool> setDebugMessages(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDebugMessages, value);
+  Future setDebugMessages(bool value) async {
+    return await _asyncPrefs.setBool(_kDebugMessages, value);
   }
 
   /// ----------------------------
   /// Methods for default browser
   /// ----------------------------
   Future<String> getDefaultBrowser() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDefaultBrowser) ?? 'app';
+    return await _asyncPrefs.getString(_kDefaultBrowser) ?? 'app';
   }
 
-  Future<bool> setDefaultBrowser(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDefaultBrowser, value);
+  Future setDefaultBrowser(String value) async {
+    return await _asyncPrefs.setString(_kDefaultBrowser, value);
   }
 
   Future<bool> getLoadBarBrowser() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kLoadBarBrowser) ?? true;
+    return await _asyncPrefs.getBool(_kLoadBarBrowser) ?? true;
   }
 
-  Future<bool> setLoadBarBrowser(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kLoadBarBrowser, value);
+  Future setLoadBarBrowser(bool value) async {
+    return await _asyncPrefs.setBool(_kLoadBarBrowser, value);
   }
 
   Future<String> getBrowserRefreshMethod() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBrowserRefreshMethod2) ?? "both";
+    return await _asyncPrefs.getString(_kBrowserRefreshMethod2) ?? "both";
   }
 
-  Future<bool> setBrowserRefreshMethod(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kBrowserRefreshMethod2, value);
+  Future setBrowserRefreshMethod(String value) async {
+    return await _asyncPrefs.setString(_kBrowserRefreshMethod2, value);
   }
 
   Future<String> getBrowserShowNavArrowsAppbar() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBrowserShowNavArrowsAppbar) ?? "wide";
+    return await _asyncPrefs.getString(_kBrowserShowNavArrowsAppbar) ?? "wide";
   }
 
-  Future<bool> setBrowserShowNavArrowsAppbar(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kBrowserShowNavArrowsAppbar, value);
+  Future setBrowserShowNavArrowsAppbar(String value) async {
+    return await _asyncPrefs.setString(_kBrowserShowNavArrowsAppbar, value);
   }
 
   Future<bool> getBrowserBottomBarStyleEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kBrowserStyleBottomBarEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kBrowserStyleBottomBarEnabled) ?? false;
   }
 
-  Future<bool> setBrowserBottomBarStyleEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kBrowserStyleBottomBarEnabled, value);
+  Future setBrowserBottomBarStyleEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kBrowserStyleBottomBarEnabled, value);
   }
 
   Future<int> getBrowserBottomBarStyleType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kBrowserStyleBottomBarType) ?? 1;
+    return await _asyncPrefs.getInt(_kBrowserStyleBottomBarType) ?? 1;
   }
 
-  Future<bool> setBrowserBottomBarStyleType(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kBrowserStyleBottomBarType, value);
+  Future setBrowserBottomBarStyleType(int value) async {
+    return await _asyncPrefs.setInt(_kBrowserStyleBottomBarType, value);
   }
 
   Future<bool> getBrowserBottomBarStylePlaceTabsAtBottom() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kBrowserBottomBarStylePlaceTabsAtBottom) ?? false;
+    return await _asyncPrefs.getBool(_kBrowserBottomBarStylePlaceTabsAtBottom) ?? false;
   }
 
-  Future<bool> setBrowserBottomBarStylePlaceTabsAtBottom(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kBrowserBottomBarStylePlaceTabsAtBottom, value);
+  Future setBrowserBottomBarStylePlaceTabsAtBottom(bool value) async {
+    return await _asyncPrefs.setBool(_kBrowserBottomBarStylePlaceTabsAtBottom, value);
   }
 
   Future<String> getTMenuButtonLongPressBrowser() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kUseQuickBrowser) ?? "quick";
+    return await _asyncPrefs.getString(_kUseQuickBrowser) ?? "quick";
   }
 
-  Future<bool> setTMenuButtonLongPressBrowser(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kUseQuickBrowser, value);
+  Future setTMenuButtonLongPressBrowser(String value) async {
+    return await _asyncPrefs.setString(_kUseQuickBrowser, value);
   }
 
   Future<bool> getRestoreSessionCookie() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRestoreSessionCookie) ?? false;
+    return await _asyncPrefs.getBool(_kRestoreSessionCookie) ?? false;
   }
 
-  Future<bool> setRestoreSessionCookie(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRestoreSessionCookie, value);
+  Future setRestoreSessionCookie(bool value) async {
+    return await _asyncPrefs.setBool(_kRestoreSessionCookie, value);
   }
 
   Future<bool> getWebviewCacheEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWebviewCacheEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kWebviewCacheEnabled) ?? true;
   }
 
-  Future<bool> setWebviewCacheEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWebviewCacheEnabled, value);
+  Future setWebviewCacheEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kWebviewCacheEnabled, value);
   }
 
   /*
   Future<bool> getClearBrowserCacheNextOpportunity() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kClearBrowserCacheNextOpportunity) ?? false;
+    
+    return await _asyncPrefs.getBool(_kClearBrowserCacheNextOpportunity) ?? false;
   }
   
-  Future<bool> setClearBrowserCacheNextOpportunity(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kClearBrowserCacheNextOpportunity, value);
+  Future setClearBrowserCacheNextOpportunity(bool value) async {
+    
+    return await _asyncPrefs.setBool(_kClearBrowserCacheNextOpportunity, value);
   }
   */
 
   Future<int> getAndroidBrowserScale() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kAndroidBrowserScale) ?? 0;
+    return await _asyncPrefs.getInt(_kAndroidBrowserScale) ?? 0;
   }
 
-  Future<bool> setAndroidBrowserScale(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kAndroidBrowserScale, value);
+  Future setAndroidBrowserScale(int value) async {
+    return await _asyncPrefs.setInt(_kAndroidBrowserScale, value);
   }
 
   Future<int> getAndroidBrowserTextScale() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kAndroidBrowserTextScale) ?? 8;
+    return await _asyncPrefs.getInt(_kAndroidBrowserTextScale) ?? 8;
   }
 
-  Future<bool> setAndroidBrowserTextScale(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kAndroidBrowserTextScale, value);
+  Future setAndroidBrowserTextScale(int value) async {
+    return await _asyncPrefs.setInt(_kAndroidBrowserTextScale, value);
   }
 
   // Settings - Browser FAB
 
   Future<bool> getWebviewFabEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWebviewFabEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kWebviewFabEnabled) ?? false;
   }
 
-  Future<bool> setWebviewFabEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWebviewFabEnabled, value);
+  Future setWebviewFabEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kWebviewFabEnabled, value);
   }
 
   // --
 
   Future<bool> getWebviewFabShownNow() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWebviewFabShownNow) ?? true;
+    return await _asyncPrefs.getBool(_kWebviewFabShownNow) ?? true;
   }
 
-  Future<bool> setWebviewFabShownNow(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWebviewFabShownNow, value);
+  Future setWebviewFabShownNow(bool value) async {
+    return await _asyncPrefs.setBool(_kWebviewFabShownNow, value);
   }
 
   // --
 
   Future<String> getWebviewFabDirection() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWebviewFabDirection) ?? "center";
+    return await _asyncPrefs.getString(_kWebviewFabDirection) ?? "center";
   }
 
-  Future<bool> setWebviewFabDirection(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kWebviewFabDirection, value);
+  Future setWebviewFabDirection(String value) async {
+    return await _asyncPrefs.setString(_kWebviewFabDirection, value);
   }
 
   // --
 
-  Future<bool> setWebviewFabPositionXY(List<int> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+  Future setWebviewFabPositionXY(List<int> value) async {
     // Convert list to JSON string for storage
-    return prefs.setString(_kWebviewFabPositionXY, jsonEncode(value));
+    return await _asyncPrefs.setString(_kWebviewFabPositionXY, jsonEncode(value));
   }
 
   // Retrieve FAB position and decode JSON string to List<int>
   Future<List<int>> getWebviewFabPositionXY() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString(_kWebviewFabPositionXY);
+    final jsonString = await _asyncPrefs.getString(_kWebviewFabPositionXY);
     if (jsonString != null) {
       try {
         // Decode JSON string back to List<int>
@@ -1286,41 +1161,35 @@ class Prefs {
   // --
 
   Future<bool> getWebviewFabOnlyFullScreen() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWebviewFabOnlyFullScreen) ?? false;
+    return await _asyncPrefs.getBool(_kWebviewFabOnlyFullScreen) ?? false;
   }
 
-  Future<bool> setWebviewFabOnlyFullScreen(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWebviewFabOnlyFullScreen, value);
+  Future setWebviewFabOnlyFullScreen(bool value) async {
+    return await _asyncPrefs.setBool(_kWebviewFabOnlyFullScreen, value);
   }
 
   // --
 
-  Future<bool> setFabButtonCount(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kFabButtonCount, value);
+  Future setFabButtonCount(int value) async {
+    return await _asyncPrefs.setInt(_kFabButtonCount, value);
   }
 
   Future<int> getFabButtonCount() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kFabButtonCount) ?? 4; // Default to 4 buttons
+    return await _asyncPrefs.getInt(_kFabButtonCount) ?? 4; // Default to 4 buttons
   }
 
 // --
 
-  Future<bool> setFabButtonActions(List<WebviewFabAction> actions) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+  Future setFabButtonActions(List<WebviewFabAction> actions) async {
     final actionIndices = actions.map((action) => action.index).toList();
-    return prefs.setStringList(
+    return await _asyncPrefs.setStringList(
       _kFabButtonActions,
       actionIndices.map((e) => e.toString()).toList(),
     );
   }
 
   Future<List<WebviewFabAction>> getFabButtonActions() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final actionStrings = prefs.getStringList(_kFabButtonActions);
+    final actionStrings = await _asyncPrefs.getStringList(_kFabButtonActions);
 
     if (actionStrings != null) {
       return actionStrings
@@ -1343,14 +1212,12 @@ class Prefs {
 
 // --
 
-  Future<bool> setFabDoubleTapAction(WebviewFabAction action) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kFabDoubleTapAction, action.index);
+  Future setFabDoubleTapAction(WebviewFabAction action) async {
+    return await _asyncPrefs.setInt(_kFabDoubleTapAction, action.index);
   }
 
   Future<WebviewFabAction> getFabDoubleTapAction() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final actionIndex = prefs.getInt(_kFabDoubleTapAction);
+    final actionIndex = await _asyncPrefs.getInt(_kFabDoubleTapAction);
     return actionIndex != null
         ? FabActionExtension.fromIndex(actionIndex)
         : WebviewFabAction.openTabsMenu; // Default to Open Tabs Menu
@@ -1358,14 +1225,12 @@ class Prefs {
 
 // --
 
-  Future<bool> setFabTripleTapAction(WebviewFabAction action) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kFabTripleTapAction, action.index);
+  Future setFabTripleTapAction(WebviewFabAction action) async {
+    return await _asyncPrefs.setInt(_kFabTripleTapAction, action.index);
   }
 
   Future<WebviewFabAction> getFabTripleTapAction() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final actionIndex = prefs.getInt(_kFabTripleTapAction);
+    final actionIndex = await _asyncPrefs.getInt(_kFabTripleTapAction);
     return actionIndex != null
         ? FabActionExtension.fromIndex(actionIndex)
         : WebviewFabAction.closeCurrentTab; // Default to Close Current Tab
@@ -1374,213 +1239,175 @@ class Prefs {
   // FAB ENDS ###
 
   Future<bool> getBrowserDoNotPauseWebviews() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kBrowserDoNotPauseWebviews) ?? false;
+    return await _asyncPrefs.getBool(_kBrowserDoNotPauseWebviews) ?? false;
   }
 
-  Future<bool> setBrowserDoNotPauseWebviews(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kBrowserDoNotPauseWebviews, value);
+  Future setBrowserDoNotPauseWebviews(bool value) async {
+    return await _asyncPrefs.setBool(_kBrowserDoNotPauseWebviews, value);
   }
 
   // Settings - Browser Gestures
 
   Future<bool> getIosBrowserPinch() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kIosBrowserPinch) ?? false;
+    return await _asyncPrefs.getBool(_kIosBrowserPinch) ?? false;
   }
 
-  Future<bool> setIosBrowserPinch(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kIosBrowserPinch, value);
+  Future setIosBrowserPinch(bool value) async {
+    return await _asyncPrefs.setBool(_kIosBrowserPinch, value);
   }
 
   Future<bool> getIosDisallowOverscroll() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kIosDisallowOverscroll) ?? false;
+    return await _asyncPrefs.getBool(_kIosDisallowOverscroll) ?? false;
   }
 
-  Future<bool> setIosDisallowOverscroll(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kIosDisallowOverscroll, value);
+  Future setIosDisallowOverscroll(bool value) async {
+    return await _asyncPrefs.setBool(_kIosDisallowOverscroll, value);
   }
 
   Future<bool> getBrowserReverseNavigationSwipe() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kBrowserReverseNavigationSwipe) ?? false;
+    return await _asyncPrefs.getBool(_kBrowserReverseNavigationSwipe) ?? false;
   }
 
-  Future<bool> setBrowserReverseNavigationSwipe(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kBrowserReverseNavigationSwipe, value);
+  Future setBrowserReverseNavigationSwipe(bool value) async {
+    return await _asyncPrefs.setBool(_kBrowserReverseNavigationSwipe, value);
   }
 
   Future<bool> getBrowserCenterEditingTextField() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kBrowserCenterEditingTextField) ?? true;
+    return await _asyncPrefs.getBool(_kBrowserCenterEditingTextField) ?? true;
   }
 
-  Future<bool> setBrowserCenterEditingTextField(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kBrowserCenterEditingTextField, value);
+  Future setBrowserCenterEditingTextField(bool value) async {
+    return await _asyncPrefs.setBool(_kBrowserCenterEditingTextField, value);
   }
 
   /// ----------------------------
   /// Methods for test browser
   /// ----------------------------
   Future<bool> getTestBrowserActive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTestBrowserActive) ?? false;
+    return await _asyncPrefs.getBool(_kTestBrowserActive) ?? false;
   }
 
-  Future<bool> setTestBrowserActive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTestBrowserActive, value);
+  Future setTestBrowserActive(bool value) async {
+    return await _asyncPrefs.setBool(_kTestBrowserActive, value);
   }
 
   /// ----------------------------
   /// Methods for notifications on launch
   /// ----------------------------
   Future<bool> getRemoveNotificationsOnLaunch() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRemoveNotificationsOnLaunch) ?? true;
+    return await _asyncPrefs.getBool(_kRemoveNotificationsOnLaunch) ?? true;
   }
 
-  Future<bool> setRemoveNotificationsOnLaunch(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRemoveNotificationsOnLaunch, value);
+  Future setRemoveNotificationsOnLaunch(bool value) async {
+    return await _asyncPrefs.setBool(_kRemoveNotificationsOnLaunch, value);
   }
 
   /// ----------------------------
   /// Methods for clock
   /// ----------------------------
   Future<String> getDefaultTimeFormat() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDefaultTimeFormat) ?? '24';
+    return await _asyncPrefs.getString(_kDefaultTimeFormat) ?? '24';
   }
 
-  Future<bool> setDefaultTimeFormat(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDefaultTimeFormat, value);
+  Future setDefaultTimeFormat(String value) async {
+    return await _asyncPrefs.setString(_kDefaultTimeFormat, value);
   }
 
   Future<String> getDefaultTimeZone() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDefaultTimeZone) ?? 'local';
+    return await _asyncPrefs.getString(_kDefaultTimeZone) ?? 'local';
   }
 
-  Future<bool> setDefaultTimeZone(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDefaultTimeZone, value);
+  Future setDefaultTimeZone(String value) async {
+    return await _asyncPrefs.setString(_kDefaultTimeZone, value);
   }
 
   Future<String> getShowDateInClock() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kShowDateInClockString) ?? "dayfirst";
+    return await _asyncPrefs.getString(_kShowDateInClockString) ?? "dayfirst";
   }
 
-  Future<bool> setShowDateInClock(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kShowDateInClockString, value);
+  Future setShowDateInClock(String value) async {
+    return await _asyncPrefs.setString(_kShowDateInClockString, value);
   }
 
   Future<bool> getShowSecondsInClock() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowSecondsInClock) ?? true;
+    return await _asyncPrefs.getBool(_kShowSecondsInClock) ?? true;
   }
 
-  Future<bool> setShowSecondsInClock(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowSecondsInClock, value);
+  Future setShowSecondsInClock(bool value) async {
+    return await _asyncPrefs.setBool(_kShowSecondsInClock, value);
   }
 
   /// ----------------------------
   /// Methods for spies source
   /// ----------------------------
   Future<String> getSpiesSource() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kSpiesSource) ?? 'yata';
+    return await _asyncPrefs.getString(_kSpiesSource) ?? 'yata';
   }
 
-  Future<bool> setSpiesSource(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kSpiesSource, value);
+  Future setSpiesSource(String value) async {
+    return await _asyncPrefs.setString(_kSpiesSource, value);
   }
 
   Future<bool> getAllowMixedSpiesSources() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAllowMixedSpiesSources) ?? true;
+    return await _asyncPrefs.getBool(_kAllowMixedSpiesSources) ?? true;
   }
 
-  Future<bool> setAllowMixedSpiesSources(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAllowMixedSpiesSources, value);
+  Future setAllowMixedSpiesSources(bool value) async {
+    return await _asyncPrefs.setBool(_kAllowMixedSpiesSources, value);
   }
 
   /// ----------------------------
   /// Methods for OC Crimes NNB Source
   /// ----------------------------
   Future<String> getNaturalNerveBarSource() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kNaturalNerveBarSource) ?? 'yata';
+    return await _asyncPrefs.getString(_kNaturalNerveBarSource) ?? 'yata';
   }
 
-  Future<bool> setNaturalNerveBarSource(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kNaturalNerveBarSource, value);
+  Future setNaturalNerveBarSource(String value) async {
+    return await _asyncPrefs.setString(_kNaturalNerveBarSource, value);
   }
 
   Future<int> getNaturalNerveYataTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kNaturalNerveYataTime) ?? 0;
+    return await _asyncPrefs.getInt(_kNaturalNerveYataTime) ?? 0;
   }
 
-  Future<bool> setNaturalNerveYataTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kNaturalNerveYataTime, value);
+  Future setNaturalNerveYataTime(int value) async {
+    return await _asyncPrefs.setInt(_kNaturalNerveYataTime, value);
   }
 
   Future<String> getNaturalNerveYataModel() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kNaturalNerveYataModel) ?? '';
+    return await _asyncPrefs.getString(_kNaturalNerveYataModel) ?? '';
   }
 
-  Future<bool> setNaturalNerveYataModel(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kNaturalNerveYataModel, value);
+  Future setNaturalNerveYataModel(String value) async {
+    return await _asyncPrefs.setString(_kNaturalNerveYataModel, value);
   }
 
   Future<int> getNaturalNerveTornStatsTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kNaturalNerveTornStatsTime) ?? 0;
+    return await _asyncPrefs.getInt(_kNaturalNerveTornStatsTime) ?? 0;
   }
 
-  Future<bool> setNaturalNerveTornStatsTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kNaturalNerveTornStatsTime, value);
+  Future setNaturalNerveTornStatsTime(int value) async {
+    return await _asyncPrefs.setInt(_kNaturalNerveTornStatsTime, value);
   }
 
   Future<String> getNaturalNerveTornStatsModel() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kNaturalNerveTornStatsModel) ?? '';
+    return await _asyncPrefs.getString(_kNaturalNerveTornStatsModel) ?? '';
   }
 
-  Future<bool> setNaturalNerveTornStatsModel(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kNaturalNerveTornStatsModel, value);
+  Future setNaturalNerveTornStatsModel(String value) async {
+    return await _asyncPrefs.setString(_kNaturalNerveTornStatsModel, value);
   }
 
   /// ----------------------------
   /// Methods for appBar position
   /// ----------------------------
   Future<String> getAppBarPosition() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAppBarPosition) ?? 'top';
+    return await _asyncPrefs.getString(_kAppBarPosition) ?? 'top';
   }
 
-  Future<bool> setAppBarPosition(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAppBarPosition, value);
+  Future setAppBarPosition(String value) async {
+    return await _asyncPrefs.setString(_kAppBarPosition, value);
   }
 
   /// ----------------------------
@@ -1588,13 +1415,11 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getAllowScreenRotation() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAllowScreenRotation) ?? false;
+    return await _asyncPrefs.getBool(_kAllowScreenRotation) ?? false;
   }
 
-  Future<bool> setAllowScreenRotation(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAllowScreenRotation, value);
+  Future setAllowScreenRotation(bool value) async {
+    return await _asyncPrefs.setBool(_kAllowScreenRotation, value);
   }
 
   /// ----------------------------
@@ -1602,13 +1427,11 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getIosAllowLinkPreview() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kIosAllowLinkPreview) ?? true;
+    return await _asyncPrefs.getBool(_kIosAllowLinkPreview) ?? true;
   }
 
-  Future<bool> setIosAllowLinkPreview(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kIosAllowLinkPreview, value);
+  Future setIosAllowLinkPreview(bool value) async {
+    return await _asyncPrefs.setBool(_kIosAllowLinkPreview, value);
   }
 
   /// ----------------------------
@@ -1616,13 +1439,11 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getExcessTabsAlerted() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kExcessTabsAlerted) ?? false;
+    return await _asyncPrefs.getBool(_kExcessTabsAlerted) ?? false;
   }
 
-  Future<bool> setExcessTabsAlerted(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kExcessTabsAlerted, value);
+  Future setExcessTabsAlerted(bool value) async {
+    return await _asyncPrefs.setBool(_kExcessTabsAlerted, value);
   }
 
   /// ----------------------------
@@ -1630,99 +1451,81 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getFirstTabLockAlerted() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFirstTabLockAlerted) ?? false;
+    return await _asyncPrefs.getBool(_kFirstTabLockAlerted) ?? false;
   }
 
-  Future<bool> setFirstTabLockAlerted(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFirstTabLockAlerted, value);
+  Future setFirstTabLockAlerted(bool value) async {
+    return await _asyncPrefs.setBool(_kFirstTabLockAlerted, value);
   }
 
   /// ----------------------------
   /// Methods for travel options
   /// ----------------------------
   Future<String> getTravelNotificationTitle() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationTitle) ?? 'TORN TRAVEL';
+    return await _asyncPrefs.getString(_kTravelNotificationTitle) ?? 'TORN TRAVEL';
   }
 
-  Future<bool> setTravelNotificationTitle(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelNotificationTitle, value);
+  Future setTravelNotificationTitle(String value) async {
+    return await _asyncPrefs.setString(_kTravelNotificationTitle, value);
   }
 
   Future<String> getTravelNotificationBody() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
+    return await _asyncPrefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
   }
 
-  Future<bool> setTravelNotificationBody(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelNotificationBody, value);
+  Future setTravelNotificationBody(String value) async {
+    return await _asyncPrefs.setString(_kTravelNotificationBody, value);
   }
 
   Future<String> getTravelNotificationAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationAhead) ?? '0';
+    return await _asyncPrefs.getString(_kTravelNotificationAhead) ?? '0';
   }
 
-  Future<bool> setTravelNotificationAhead(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelNotificationAhead, value);
+  Future setTravelNotificationAhead(String value) async {
+    return await _asyncPrefs.setString(_kTravelNotificationAhead, value);
   }
 
   Future<String> getTravelAlarmAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelAlarmAhead) ?? '0';
+    return await _asyncPrefs.getString(_kTravelAlarmAhead) ?? '0';
   }
 
-  Future<bool> setTravelAlarmAhead(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelAlarmAhead, value);
+  Future setTravelAlarmAhead(String value) async {
+    return await _asyncPrefs.setString(_kTravelAlarmAhead, value);
   }
 
   Future<String> getTravelTimerAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelTimerAhead) ?? '0';
+    return await _asyncPrefs.getString(_kTravelTimerAhead) ?? '0';
   }
 
-  Future<bool> setTravelTimerAhead(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelTimerAhead, value);
+  Future setTravelTimerAhead(String value) async {
+    return await _asyncPrefs.setString(_kTravelTimerAhead, value);
   }
 
   Future<bool> getRemoveAirplane() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRemoveAirplane) ?? false;
+    return await _asyncPrefs.getBool(_kRemoveAirplane) ?? false;
   }
 
-  Future<bool> setRemoveAirplane(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRemoveAirplane, value);
+  Future setRemoveAirplane(bool value) async {
+    return await _asyncPrefs.setBool(_kRemoveAirplane, value);
   }
 
   Future<bool> getRemoveTravelQuickReturnButton() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRemoveTravelQuickReturnButton) ?? false;
+    return await _asyncPrefs.getBool(_kRemoveTravelQuickReturnButton) ?? false;
   }
 
-  Future<bool> setRemoveTravelQuickReturnButton(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRemoveTravelQuickReturnButton, value);
+  Future setRemoveTravelQuickReturnButton(bool value) async {
+    return await _asyncPrefs.setBool(_kRemoveTravelQuickReturnButton, value);
   }
 
   /// ----------------------------
   /// Methods for Profile Bars
   /// ----------------------------
   Future<String> getLifeBarOption() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLifeBarOption) ?? 'ask';
+    return await _asyncPrefs.getString(_kLifeBarOption) ?? 'ask';
   }
 
-  Future<bool> setLifeBarOption(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLifeBarOption, value);
+  Future setLifeBarOption(String value) async {
+    return await _asyncPrefs.setString(_kLifeBarOption, value);
   }
 
   /// ----------------------------
@@ -1730,850 +1533,687 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getExtraPlayerInformation() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kExtraPlayerInformation) ?? true;
+    return await _asyncPrefs.getBool(_kExtraPlayerInformation) ?? true;
   }
 
-  Future<bool> setExtraPlayerInformation(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kExtraPlayerInformation, value);
+  Future setExtraPlayerInformation(bool value) async {
+    return await _asyncPrefs.setBool(_kExtraPlayerInformation, value);
   }
 
   // *************
   Future<String> getProfileStatsEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kProfileStatsEnabled) ?? "0";
+    return await _asyncPrefs.getString(_kProfileStatsEnabled) ?? "0";
   }
 
-  Future<bool> setProfileStatsEnabled(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kProfileStatsEnabled, value);
+  Future setProfileStatsEnabled(String value) async {
+    return await _asyncPrefs.setString(_kProfileStatsEnabled, value);
   }
 
   // *************
   Future<List<String>> getShareAttackOptions() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kShareAttackOptions) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kShareAttackOptions) ?? <String>[];
   }
 
-  Future<bool> setShareAttackOptions(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kShareAttackOptions, value);
+  Future setShareAttackOptions(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kShareAttackOptions, value);
   }
 
   // *************
   Future<int> getTSCEnabledStatus() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTSCEnabledStatus) ?? -1;
+    return await _asyncPrefs.getInt(_kTSCEnabledStatus) ?? -1;
   }
 
-  Future<bool> setTSCEnabledStatus(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTSCEnabledStatus, value);
+  Future setTSCEnabledStatus(int value) async {
+    return await _asyncPrefs.setInt(_kTSCEnabledStatus, value);
   }
 
   // *************
   Future<int> getYataStatsEnabledStatus() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kYataStatsEnabledStatus) ?? 1;
+    return await _asyncPrefs.getInt(_kYataStatsEnabledStatus) ?? 1;
   }
 
-  Future<bool> setYataStatsEnabledStatus(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kYataStatsEnabledStatus, value);
+  Future setYataStatsEnabledStatus(int value) async {
+    return await _asyncPrefs.setInt(_kYataStatsEnabledStatus, value);
   }
 
   // *************
   Future<String> getFriendlyFactions() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kFriendlyFactions) ?? "";
+    return await _asyncPrefs.getString(_kFriendlyFactions) ?? "";
   }
 
-  Future<bool> setFriendlyFactions(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kFriendlyFactions, value);
+  Future setFriendlyFactions(String value) async {
+    return await _asyncPrefs.setString(_kFriendlyFactions, value);
   }
 
   // *************
   Future<bool> getNotesWidgetEnabledProfile() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kNotesWidgetEnabledProfile) ?? false;
+    return await _asyncPrefs.getBool(_kNotesWidgetEnabledProfile) ?? false;
   }
 
-  Future<bool> setNotesWidgetEnabledProfile(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kNotesWidgetEnabledProfile, value);
+  Future setNotesWidgetEnabledProfile(bool value) async {
+    return await _asyncPrefs.setBool(_kNotesWidgetEnabledProfile, value);
   }
 
   // *************
   Future<bool> getExtraPlayerNetworth() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kExtraPlayerNetworth) ?? false;
+    return await _asyncPrefs.getBool(_kExtraPlayerNetworth) ?? false;
   }
 
-  Future<bool> setExtraPlayerNetworth(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kExtraPlayerNetworth, value);
+  Future setExtraPlayerNetworth(bool value) async {
+    return await _asyncPrefs.setBool(_kExtraPlayerNetworth, value);
   }
 
   // *************
   Future<bool> getHitInMiniProfileOpensNewTab() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kHitInMiniProfileOpensNewTab) ?? false;
+    return await _asyncPrefs.getBool(_kHitInMiniProfileOpensNewTab) ?? false;
   }
 
-  Future<bool> setHitInMiniProfileOpensNewTab(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kHitInMiniProfileOpensNewTab, value);
+  Future setHitInMiniProfileOpensNewTab(bool value) async {
+    return await _asyncPrefs.setBool(_kHitInMiniProfileOpensNewTab, value);
   }
 
   Future<bool> getHitInMiniProfileOpensNewTabAndChangeTab() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kHitInMiniProfileOpensNewTabAndChangeTab) ?? true;
+    return await _asyncPrefs.getBool(_kHitInMiniProfileOpensNewTabAndChangeTab) ?? true;
   }
 
-  Future<bool> setHitInMiniProfileOpensNewTabAndChangeTab(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kHitInMiniProfileOpensNewTabAndChangeTab, value);
+  Future setHitInMiniProfileOpensNewTabAndChangeTab(bool value) async {
+    return await _asyncPrefs.setBool(_kHitInMiniProfileOpensNewTabAndChangeTab, value);
   }
 
   /// ----------------------------
   /// Methods for foreign stocks
   /// ----------------------------
   Future<List<String>> getStockCountryFilter() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1');
+    return await _asyncPrefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1');
   }
 
-  Future<bool> setStockCountryFilter(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kStockCountryFilter, value);
+  Future setStockCountryFilter(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kStockCountryFilter, value);
   }
 
   Future<List<String>> getStockTypeFilter() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1');
+    return await _asyncPrefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1');
   }
 
-  Future<bool> setStockTypeFilter(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kStockTypeFilter, value);
+  Future setStockTypeFilter(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kStockTypeFilter, value);
   }
 
   Future<String> getStockSort() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kStockSort) ?? 'profit';
+    return await _asyncPrefs.getString(_kStockSort) ?? 'profit';
   }
 
-  Future<bool> setStockSort(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kStockSort, value);
+  Future setStockSort(String value) async {
+    return await _asyncPrefs.setString(_kStockSort, value);
   }
 
   Future<int> getStockCapacity() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kStockCapacity) ?? 1;
+    return await _asyncPrefs.getInt(_kStockCapacity) ?? 1;
   }
 
-  Future<bool> setStockCapacity(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kStockCapacity, value);
+  Future setStockCapacity(int value) async {
+    return await _asyncPrefs.setInt(_kStockCapacity, value);
   }
 
   Future<bool> getShowForeignInventory() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowForeignInventory) ?? true;
+    return await _asyncPrefs.getBool(_kShowForeignInventory) ?? true;
   }
 
-  Future<bool> setShowForeignInventory(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowForeignInventory, value);
+  Future setShowForeignInventory(bool value) async {
+    return await _asyncPrefs.setBool(_kShowForeignInventory, value);
   }
 
   Future<bool> getShowArrivalTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowArrivalTime) ?? true;
+    return await _asyncPrefs.getBool(_kShowArrivalTime) ?? true;
   }
 
-  Future<bool> setShowArrivalTime(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowArrivalTime, value);
+  Future setShowArrivalTime(bool value) async {
+    return await _asyncPrefs.setBool(_kShowArrivalTime, value);
   }
 
   Future<bool> getShowBarsCooldownAnalysis() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowBarsCooldownAnalysis) ?? true;
+    return await _asyncPrefs.getBool(_kShowBarsCooldownAnalysis) ?? true;
   }
 
-  Future<bool> setShowBarsCooldownAnalysis(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowBarsCooldownAnalysis, value);
+  Future setShowBarsCooldownAnalysis(bool value) async {
+    return await _asyncPrefs.setBool(_kShowBarsCooldownAnalysis, value);
   }
 
   Future<String> getTravelTicket() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelTicket) ?? "private";
+    return await _asyncPrefs.getString(_kTravelTicket) ?? "private";
   }
 
-  Future<bool> setTravelTicket(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelTicket, value);
+  Future setTravelTicket(String value) async {
+    return await _asyncPrefs.setString(_kTravelTicket, value);
   }
 
   Future<String> getForeignStocksDataProvider() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kForeignStocksDataProvider) ?? "yata";
+    return await _asyncPrefs.getString(_kForeignStocksDataProvider) ?? "yata";
   }
 
-  Future<bool> setForeignStocksDataProvider(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kForeignStocksDataProvider, value);
+  Future setForeignStocksDataProvider(String value) async {
+    return await _asyncPrefs.setString(_kForeignStocksDataProvider, value);
   }
 
   Future<bool> getRestocksNotificationEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRestocksEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kRestocksEnabled) ?? false;
   }
 
-  Future<bool> setRestocksNotificationEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRestocksEnabled, value);
+  Future setRestocksNotificationEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kRestocksEnabled, value);
   }
 
   Future<String> getActiveRestocks() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kActiveRestocks) ?? "{}";
+    return await _asyncPrefs.getString(_kActiveRestocks) ?? "{}";
   }
 
-  Future<bool> setActiveRestocks(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kActiveRestocks, value);
+  Future setActiveRestocks(String value) async {
+    return await _asyncPrefs.setString(_kActiveRestocks, value);
   }
 
   Future<List<String>> getHiddenForeignStocks() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kHiddenForeignStocks) ?? [];
+    return await _asyncPrefs.getStringList(_kHiddenForeignStocks) ?? [];
   }
 
-  Future<bool> setHiddenForeignStocks(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kHiddenForeignStocks, value);
+  Future setHiddenForeignStocks(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kHiddenForeignStocks, value);
   }
 
   Future<bool> getCountriesAlphabeticalFilter() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kCountriesAlphabeticalFilter) ?? true;
+    return await _asyncPrefs.getBool(_kCountriesAlphabeticalFilter) ?? true;
   }
 
-  Future<bool> setCountriesAlphabeticalFilter(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kCountriesAlphabeticalFilter, value);
+  Future setCountriesAlphabeticalFilter(bool value) async {
+    return await _asyncPrefs.setBool(_kCountriesAlphabeticalFilter, value);
   }
 
   /// ----------------------------
   /// Methods for notification types
   /// ----------------------------
   Future<String> getTravelNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTravelNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kTravelNotificationType) ?? '0';
   }
 
-  Future<bool> setTravelNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTravelNotificationType, value);
+  Future setTravelNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kTravelNotificationType, value);
   }
 
   Future<String> getEnergyNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kEnergyNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kEnergyNotificationType) ?? '0';
   }
 
-  Future<bool> setEnergyNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kEnergyNotificationType, value);
+  Future setEnergyNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kEnergyNotificationType, value);
   }
 
   Future<int> getEnergyNotificationValue() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kEnergyNotificationValue) ?? 0;
+    return await _asyncPrefs.getInt(_kEnergyNotificationValue) ?? 0;
   }
 
-  Future<bool> setEnergyNotificationValue(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kEnergyNotificationValue, value);
+  Future setEnergyNotificationValue(int value) async {
+    return await _asyncPrefs.setInt(_kEnergyNotificationValue, value);
   }
 
-  Future<bool> setEnergyPercentageOverride(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kEnergyCustomOverride, value);
+  Future setEnergyPercentageOverride(bool value) async {
+    return await _asyncPrefs.setBool(_kEnergyCustomOverride, value);
   }
 
   Future<bool> getEnergyPercentageOverride() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kEnergyCustomOverride) ?? false;
+    return await _asyncPrefs.getBool(_kEnergyCustomOverride) ?? false;
   }
 
   Future<String> getNerveNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kNerveNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kNerveNotificationType) ?? '0';
   }
 
-  Future<bool> setNerveNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kNerveNotificationType, value);
+  Future setNerveNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kNerveNotificationType, value);
   }
 
   Future<int> getNerveNotificationValue() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kNerveNotificationValue) ?? 0;
+    return await _asyncPrefs.getInt(_kNerveNotificationValue) ?? 0;
   }
 
-  Future<bool> setNerveNotificationValue(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kNerveNotificationValue, value);
+  Future setNerveNotificationValue(int value) async {
+    return await _asyncPrefs.setInt(_kNerveNotificationValue, value);
   }
 
-  Future<bool> setNervePercentageOverride(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kNerveCustomOverride, value);
+  Future setNervePercentageOverride(bool value) async {
+    return await _asyncPrefs.setBool(_kNerveCustomOverride, value);
   }
 
   Future<bool> getNervePercentageOverride() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kNerveCustomOverride) ?? false;
+    return await _asyncPrefs.getBool(_kNerveCustomOverride) ?? false;
   }
 
   Future<String> getLifeNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLifeNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kLifeNotificationType) ?? '0';
   }
 
-  Future<bool> setLifeNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLifeNotificationType, value);
+  Future setLifeNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kLifeNotificationType, value);
   }
 
   Future<String> getDrugNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDrugNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kDrugNotificationType) ?? '0';
   }
 
-  Future<bool> setDrugNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDrugNotificationType, value);
+  Future setDrugNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kDrugNotificationType, value);
   }
 
   Future<String> getMedicalNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kMedicalNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kMedicalNotificationType) ?? '0';
   }
 
-  Future<bool> setMedicalNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kMedicalNotificationType, value);
+  Future setMedicalNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kMedicalNotificationType, value);
   }
 
   Future<String> getBoosterNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBoosterNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kBoosterNotificationType) ?? '0';
   }
 
-  Future<bool> setBoosterNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kBoosterNotificationType, value);
+  Future setBoosterNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kBoosterNotificationType, value);
   }
 
   Future<String> getHospitalNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kHospitalNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kHospitalNotificationType) ?? '0';
   }
 
-  Future<bool> setHospitalNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kHospitalNotificationType, value);
+  Future setHospitalNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kHospitalNotificationType, value);
   }
 
   Future<int> getHospitalNotificationAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kHospitalNotificationAhead) ?? 40;
+    return await _asyncPrefs.getInt(_kHospitalNotificationAhead) ?? 40;
   }
 
-  Future<bool> setHospitalNotificationAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kHospitalNotificationAhead, value);
+  Future setHospitalNotificationAhead(int value) async {
+    return await _asyncPrefs.setInt(_kHospitalNotificationAhead, value);
   }
 
   Future<int> getHospitalAlarmAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kHospitalAlarmAhead) ?? 1;
+    return await _asyncPrefs.getInt(_kHospitalAlarmAhead) ?? 1;
   }
 
-  Future<bool> setHospitalAlarmAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kHospitalAlarmAhead, value);
+  Future setHospitalAlarmAhead(int value) async {
+    return await _asyncPrefs.setInt(_kHospitalAlarmAhead, value);
   }
 
   Future<int> getHospitalTimerAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kHospitalTimerAhead) ?? 40;
+    return await _asyncPrefs.getInt(_kHospitalTimerAhead) ?? 40;
   }
 
-  Future<bool> setHospitalTimerAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kHospitalTimerAhead, value);
+  Future setHospitalTimerAhead(int value) async {
+    return await _asyncPrefs.setInt(_kHospitalTimerAhead, value);
   }
 
   Future<String> getJailNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kJailNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kJailNotificationType) ?? '0';
   }
 
-  Future<bool> setJailNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kJailNotificationType, value);
+  Future setJailNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kJailNotificationType, value);
   }
 
   Future<int> getJailNotificationAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kJailNotificationAhead) ?? 40;
+    return await _asyncPrefs.getInt(_kJailNotificationAhead) ?? 40;
   }
 
-  Future<bool> setJailNotificationAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kJailNotificationAhead, value);
+  Future setJailNotificationAhead(int value) async {
+    return await _asyncPrefs.setInt(_kJailNotificationAhead, value);
   }
 
   Future<int> getJailAlarmAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kJailAlarmAhead) ?? 1;
+    return await _asyncPrefs.getInt(_kJailAlarmAhead) ?? 1;
   }
 
-  Future<bool> setJailAlarmAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kJailAlarmAhead, value);
+  Future setJailAlarmAhead(int value) async {
+    return await _asyncPrefs.setInt(_kJailAlarmAhead, value);
   }
 
   Future<int> getJailTimerAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kJailTimerAhead) ?? 40;
+    return await _asyncPrefs.getInt(_kJailTimerAhead) ?? 40;
   }
 
-  Future<bool> setJailTimerAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kJailTimerAhead, value);
+  Future setJailTimerAhead(int value) async {
+    return await _asyncPrefs.setInt(_kJailTimerAhead, value);
   }
 
   // Ranked War notification
   Future<String> getRankedWarNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kRankedWarNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kRankedWarNotificationType) ?? '0';
   }
 
-  Future<bool> setRankedWarNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kRankedWarNotificationType, value);
+  Future setRankedWarNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kRankedWarNotificationType, value);
   }
 
   Future<int> getRankedWarNotificationAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kRankedWarNotificationAhead) ?? 60;
+    return await _asyncPrefs.getInt(_kRankedWarNotificationAhead) ?? 60;
   }
 
-  Future<bool> setRankedWarNotificationAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kRankedWarNotificationAhead, value);
+  Future setRankedWarNotificationAhead(int value) async {
+    return await _asyncPrefs.setInt(_kRankedWarNotificationAhead, value);
   }
 
   Future<int> getRankedWarAlarmAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kRankedWarAlarmAhead) ?? 1;
+    return await _asyncPrefs.getInt(_kRankedWarAlarmAhead) ?? 1;
   }
 
-  Future<bool> setRankedWarAlarmAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kRankedWarAlarmAhead, value);
+  Future setRankedWarAlarmAhead(int value) async {
+    return await _asyncPrefs.setInt(_kRankedWarAlarmAhead, value);
   }
 
   Future<int> getRankedWarTimerAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kRankedWarTimerAhead) ?? 60;
+    return await _asyncPrefs.getInt(_kRankedWarTimerAhead) ?? 60;
   }
 
-  Future<bool> setRankedWarTimerAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kRankedWarTimerAhead, value);
+  Future setRankedWarTimerAhead(int value) async {
+    return await _asyncPrefs.setInt(_kRankedWarTimerAhead, value);
   }
 
   //
 
   // Ranked War notification
   Future<String> getRaceStartNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kRaceStartNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kRaceStartNotificationType) ?? '0';
   }
 
-  Future<bool> setRaceStartNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kRaceStartNotificationType, value);
+  Future setRaceStartNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kRaceStartNotificationType, value);
   }
 
   Future<int> getRaceStartNotificationAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kRaceStartNotificationAhead) ?? 60;
+    return await _asyncPrefs.getInt(_kRaceStartNotificationAhead) ?? 60;
   }
 
-  Future<bool> setRaceStartNotificationAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kRaceStartNotificationAhead, value);
+  Future setRaceStartNotificationAhead(int value) async {
+    return await _asyncPrefs.setInt(_kRaceStartNotificationAhead, value);
   }
 
   Future<int> getRaceStartAlarmAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kRaceStartAlarmAhead) ?? 1;
+    return await _asyncPrefs.getInt(_kRaceStartAlarmAhead) ?? 1;
   }
 
-  Future<bool> setRaceStartAlarmAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kRaceStartAlarmAhead, value);
+  Future setRaceStartAlarmAhead(int value) async {
+    return await _asyncPrefs.setInt(_kRaceStartAlarmAhead, value);
   }
 
   Future<int> getRaceStartTimerAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kRaceStartTimerAhead) ?? 60;
+    return await _asyncPrefs.getInt(_kRaceStartTimerAhead) ?? 60;
   }
 
-  Future<bool> setRaceStartTimerAhead(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kRaceStartTimerAhead, value);
+  Future setRaceStartTimerAhead(int value) async {
+    return await _asyncPrefs.setInt(_kRaceStartTimerAhead, value);
   }
 
   //
 
   Future<bool> getManualAlarmVibration() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kManualAlarmVibration) ?? true;
+    return await _asyncPrefs.getBool(_kManualAlarmVibration) ?? true;
   }
 
-  Future<bool> setManualAlarmVibration(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kManualAlarmVibration, value);
+  Future setManualAlarmVibration(bool value) async {
+    return await _asyncPrefs.setBool(_kManualAlarmVibration, value);
   }
 
   Future<bool> getManualAlarmSound() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kManualAlarmSound) ?? true;
+    return await _asyncPrefs.getBool(_kManualAlarmSound) ?? true;
   }
 
-  Future<bool> setManualAlarmSound(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kManualAlarmSound, value);
+  Future setManualAlarmSound(bool value) async {
+    return await _asyncPrefs.setBool(_kManualAlarmSound, value);
   }
 
   Future<bool> getShowHeaderWallet() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowHeaderWallet) ?? true;
+    return await _asyncPrefs.getBool(_kShowHeaderWallet) ?? true;
   }
 
-  Future<bool> setShowHeaderWallet(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowHeaderWallet, value);
+  Future setShowHeaderWallet(bool value) async {
+    return await _asyncPrefs.setBool(_kShowHeaderWallet, value);
   }
 
   Future<bool> getShowHeaderIcons() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowHeaderIcons) ?? true;
+    return await _asyncPrefs.getBool(_kShowHeaderIcons) ?? true;
   }
 
-  Future<bool> setShowHeaderIcons(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowHeaderIcons, value);
+  Future setShowHeaderIcons(bool value) async {
+    return await _asyncPrefs.setBool(_kShowHeaderIcons, value);
   }
 
   Future<List<String>> getIconsFiltered() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kIconsFiltered) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kIconsFiltered) ?? <String>[];
   }
 
-  Future<bool> setIconsFiltered(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kIconsFiltered, value);
+  Future setIconsFiltered(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kIconsFiltered, value);
   }
 
   Future<bool> getDedicatedTravelCard() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDedicatedTravelCard) ?? true;
+    return await _asyncPrefs.getBool(_kDedicatedTravelCard) ?? true;
   }
 
-  Future<bool> setDedicatedTravelCard(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDedicatedTravelCard, value);
+  Future setDedicatedTravelCard(bool value) async {
+    return await _asyncPrefs.setBool(_kDedicatedTravelCard, value);
   }
 
   Future<bool> getDisableTravelSection() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDisableTravelSection) ?? false;
+    return await _asyncPrefs.getBool(_kDisableTravelSection) ?? false;
   }
 
-  Future<bool> setDisableTravelSection(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDisableTravelSection, value);
+  Future setDisableTravelSection(bool value) async {
+    return await _asyncPrefs.setBool(_kDisableTravelSection, value);
   }
 
   Future<bool> getWarnAboutChains() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWarnAboutChains) ?? true;
+    return await _asyncPrefs.getBool(_kWarnAboutChains) ?? true;
   }
 
-  Future<bool> setWarnAboutChains(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWarnAboutChains, value);
+  Future setWarnAboutChains(bool value) async {
+    return await _asyncPrefs.setBool(_kWarnAboutChains, value);
   }
 
   Future<bool> getWarnAboutExcessEnergy() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kWarnAboutExcessEnergy) ?? true;
+    return await _asyncPrefs.getBool(_kWarnAboutExcessEnergy) ?? true;
   }
 
-  Future<bool> setWarnAboutExcessEnergy(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kWarnAboutExcessEnergy, value);
+  Future setWarnAboutExcessEnergy(bool value) async {
+    return await _asyncPrefs.setBool(_kWarnAboutExcessEnergy, value);
   }
 
   Future<int> getWarnAboutExcessEnergyThreshold() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kWarnAboutExcessEnergyThreshold) ?? 200;
+    return await _asyncPrefs.getInt(_kWarnAboutExcessEnergyThreshold) ?? 200;
   }
 
-  Future<bool> setWarnAboutExcessEnergyThreshold(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kWarnAboutExcessEnergyThreshold, value);
+  Future setWarnAboutExcessEnergyThreshold(int value) async {
+    return await _asyncPrefs.setInt(_kWarnAboutExcessEnergyThreshold, value);
   }
 
   // -- Travel Agency Warnings
 
   Future<bool> getTravelEnergyExcessWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelEnergyExcessWarning) ?? true;
+    return await _asyncPrefs.getBool(_kTravelEnergyExcessWarning) ?? true;
   }
 
-  Future<bool> setTravelEnergyExcessWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelEnergyExcessWarning, value);
+  Future setTravelEnergyExcessWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kTravelEnergyExcessWarning, value);
   }
 
   Future<RangeValues> getTravelEnergyRangeWarningRange() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final int min = prefs.getInt(_kTravelEnergyRangeWarningThresholdMin) ?? 10;
-    final int max = prefs.getInt(_kTravelEnergyRangeWarningThresholdMax) ?? 100;
+    final int min = await _asyncPrefs.getInt(_kTravelEnergyRangeWarningThresholdMin) ?? 10;
+    final int max = await _asyncPrefs.getInt(_kTravelEnergyRangeWarningThresholdMax) ?? 100;
     return RangeValues(min.toDouble(), max == 110 ? 110 : max.toDouble());
   }
 
-  Future<bool> setTravelEnergyRangeWarningRange(int min, int max) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    final bool minSet = await prefs.setInt(_kTravelEnergyRangeWarningThresholdMin, min);
-    final bool maxSet = await prefs.setInt(_kTravelEnergyRangeWarningThresholdMax, max >= 110 ? 110 : max);
-    return minSet && maxSet;
+  Future setTravelEnergyRangeWarningRange(int min, int max) async {
+    await _asyncPrefs.setInt(_kTravelEnergyRangeWarningThresholdMin, min);
+    await _asyncPrefs.setInt(_kTravelEnergyRangeWarningThresholdMax, max >= 110 ? 110 : max);
   }
 
   Future<bool> getTravelNerveExcessWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelNerveExcessWarning) ?? true;
+    return await _asyncPrefs.getBool(_kTravelNerveExcessWarning) ?? true;
   }
 
-  Future<bool> setTravelNerveExcessWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelNerveExcessWarning, value);
+  Future setTravelNerveExcessWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kTravelNerveExcessWarning, value);
   }
 
   Future<int> getTravelNerveExcessWarningThreshold() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTravelNerveExcessWarningThreshold) ?? 50;
+    return await _asyncPrefs.getInt(_kTravelNerveExcessWarningThreshold) ?? 50;
   }
 
-  Future<bool> setTravelNerveExcessWarningThreshold(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTravelNerveExcessWarningThreshold, value);
+  Future setTravelNerveExcessWarningThreshold(int value) async {
+    return await _asyncPrefs.setInt(_kTravelNerveExcessWarningThreshold, value);
   }
 
   Future<bool> getTravelLifeExcessWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelLifeExcessWarning) ?? true;
+    return await _asyncPrefs.getBool(_kTravelLifeExcessWarning) ?? true;
   }
 
-  Future<bool> setTravelLifeExcessWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelLifeExcessWarning, value);
+  Future setTravelLifeExcessWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kTravelLifeExcessWarning, value);
   }
 
   Future<int> getTravelLifeExcessWarningThreshold() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTravelLifeExcessWarningThreshold) ?? 50;
+    return await _asyncPrefs.getInt(_kTravelLifeExcessWarningThreshold) ?? 50;
   }
 
-  Future<bool> setTravelLifeExcessWarningThreshold(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTravelLifeExcessWarningThreshold, value);
+  Future setTravelLifeExcessWarningThreshold(int value) async {
+    return await _asyncPrefs.setInt(_kTravelLifeExcessWarningThreshold, value);
   }
 
   Future<bool> getTravelDrugCooldownWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelDrugCooldownWarning) ?? true;
+    return await _asyncPrefs.getBool(_kTravelDrugCooldownWarning) ?? true;
   }
 
-  Future<bool> setTravelDrugCooldownWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelDrugCooldownWarning, value);
+  Future setTravelDrugCooldownWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kTravelDrugCooldownWarning, value);
   }
 
   Future<bool> getTravelBoosterCooldownWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelBoosterCooldownWarning) ?? true;
+    return await _asyncPrefs.getBool(_kTravelBoosterCooldownWarning) ?? true;
   }
 
-  Future<bool> setTravelBoosterCooldownWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelBoosterCooldownWarning, value);
+  Future setTravelBoosterCooldownWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kTravelBoosterCooldownWarning, value);
   }
 
   Future<bool> getTravelWalletMoneyWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTravelWalletMoneyWarning) ?? true;
+    return await _asyncPrefs.getBool(_kTravelWalletMoneyWarning) ?? true;
   }
 
-  Future<bool> setTravelWalletMoneyWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTravelWalletMoneyWarning, value);
+  Future setTravelWalletMoneyWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kTravelWalletMoneyWarning, value);
   }
 
   Future<int> getTravelWalletMoneyWarningThreshold() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTravelWalletMoneyWarningThreshold) ?? 50000;
+    return await _asyncPrefs.getInt(_kTravelWalletMoneyWarningThreshold) ?? 50000;
   }
 
-  Future<bool> setTravelWalletMoneyWarningThreshold(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTravelWalletMoneyWarningThreshold, value);
+  Future setTravelWalletMoneyWarningThreshold(int value) async {
+    return await _asyncPrefs.setInt(_kTravelWalletMoneyWarningThreshold, value);
   }
 
   // -- Terminal
 
   Future<bool> getTerminalEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTerminalEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kTerminalEnabled) ?? false;
   }
 
-  Future<bool> setTerminalEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTerminalEnabled, value);
+  Future setTerminalEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kTerminalEnabled, value);
   }
 
   // -- Events
 
   Future<bool> getExpandEvents() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kExpandEvents) ?? false;
+    return await _asyncPrefs.getBool(_kExpandEvents) ?? false;
   }
 
-  Future<bool> setExpandEvents(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kExpandEvents, value);
+  Future setExpandEvents(bool value) async {
+    return await _asyncPrefs.setBool(_kExpandEvents, value);
   }
 
   Future<int> getEventsShowNumber() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kEventsShowNumber) ?? 25;
+    return await _asyncPrefs.getInt(_kEventsShowNumber) ?? 25;
   }
 
-  Future<bool> setEventsShowNumber(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kEventsShowNumber, value);
+  Future setEventsShowNumber(int value) async {
+    return await _asyncPrefs.setInt(_kEventsShowNumber, value);
   }
 
   Future<int> getEventsLastRetrieved() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kEventsLastRetrieved) ?? 0;
+    return await _asyncPrefs.getInt(_kEventsLastRetrieved) ?? 0;
   }
 
-  Future<bool> setEventsLastRetrieved(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kEventsLastRetrieved, value);
+  Future setEventsLastRetrieved(int value) async {
+    return await _asyncPrefs.setInt(_kEventsLastRetrieved, value);
   }
 
   Future<List<String>> getEventsSave() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kEventsSave) ?? [];
+    return await _asyncPrefs.getStringList(_kEventsSave) ?? [];
   }
 
-  Future<bool> setEventsSave(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kEventsSave, value);
+  Future setEventsSave(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kEventsSave, value);
   }
 
   // --
 
   Future<bool> getExpandMessages() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kExpandMessages) ?? false;
+    return await _asyncPrefs.getBool(_kExpandMessages) ?? false;
   }
 
-  Future<bool> setExpandMessages(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kExpandMessages, value);
+  Future setExpandMessages(bool value) async {
+    return await _asyncPrefs.setBool(_kExpandMessages, value);
   }
 
   Future<int> getMessagesShowNumber() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kMessagesShowNumber) ?? 25;
+    return await _asyncPrefs.getInt(_kMessagesShowNumber) ?? 25;
   }
 
-  Future<bool> setMessagesShowNumber(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kMessagesShowNumber, value);
+  Future setMessagesShowNumber(int value) async {
+    return await _asyncPrefs.setInt(_kMessagesShowNumber, value);
   }
 
   Future<bool> getExpandBasicInfo() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kExpandBasicInfo) ?? false;
+    return await _asyncPrefs.getBool(_kExpandBasicInfo) ?? false;
   }
 
-  Future<bool> setExpandBasicInfo(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kExpandBasicInfo, value);
+  Future setExpandBasicInfo(bool value) async {
+    return await _asyncPrefs.setBool(_kExpandBasicInfo, value);
   }
 
   Future<bool> getExpandNetworth() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kExpandNetworth) ?? false;
+    return await _asyncPrefs.getBool(_kExpandNetworth) ?? false;
   }
 
-  Future<bool> setExpandNetworth(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kExpandNetworth, value);
+  Future setExpandNetworth(bool value) async {
+    return await _asyncPrefs.setBool(_kExpandNetworth, value);
   }
 
   /// ----------------------------
   /// Methods job addiction in Profile
   /// ----------------------------
   Future<int> getJobAddictionValue() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kJobAddictionValue) ?? 0;
+    return await _asyncPrefs.getInt(_kJobAddictionValue) ?? 0;
   }
 
-  Future<bool> setJobAdditionValue(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kJobAddictionValue, value);
+  Future setJobAdditionValue(int value) async {
+    return await _asyncPrefs.setInt(_kJobAddictionValue, value);
   }
 
   //--
 
   Future<int> getJobAddictionNextCallTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kJobAddictionNextCallTime) ?? 0;
+    return await _asyncPrefs.getInt(_kJobAddictionNextCallTime) ?? 0;
   }
 
-  Future<bool> setJobAddictionNextCallTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kJobAddictionNextCallTime, value);
+  Future setJobAddictionNextCallTime(int value) async {
+    return await _asyncPrefs.setInt(_kJobAddictionNextCallTime, value);
   }
 
   /// ----------------------------
@@ -2581,485 +2221,397 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getUseNukeRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseNukeRevive) ?? true;
+    return await _asyncPrefs.getBool(_kUseNukeRevive) ?? true;
   }
 
-  Future<bool> setUseNukeRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseNukeRevive, value);
+  Future setUseNukeRevive(bool value) async {
+    return await _asyncPrefs.setBool(_kUseNukeRevive, value);
   }
 
   Future<bool> getUseUhcRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseUhcRevive) ?? false;
+    return await _asyncPrefs.getBool(_kUseUhcRevive) ?? false;
   }
 
-  Future<bool> setUseUhcRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseUhcRevive, value);
+  Future setUseUhcRevive(bool value) async {
+    return await _asyncPrefs.setBool(_kUseUhcRevive, value);
   }
 
   Future<bool> getUseHelaRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseHelaRevive) ?? false;
+    return await _asyncPrefs.getBool(_kUseHelaRevive) ?? false;
   }
 
-  Future<bool> setUseHelaRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseHelaRevive, value);
+  Future setUseHelaRevive(bool value) async {
+    return await _asyncPrefs.setBool(_kUseHelaRevive, value);
   }
 
   Future<bool> getUseWtfRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseWtfRevive) ?? false;
+    return await _asyncPrefs.getBool(_kUseWtfRevive) ?? false;
   }
 
-  Future<bool> setUseWtfRevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseWtfRevive, value);
+  Future setUseWtfRevive(bool value) async {
+    return await _asyncPrefs.setBool(_kUseWtfRevive, value);
   }
 
   Future<bool> getUseMidnightXRevive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseMidnightXRevive) ?? false;
+    return await _asyncPrefs.getBool(_kUseMidnightXRevive) ?? false;
   }
 
-  Future<bool> setUseMidnightXevive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseMidnightXRevive, value);
+  Future setUseMidnightXevive(bool value) async {
+    return await _asyncPrefs.setBool(_kUseMidnightXRevive, value);
   }
 
   /// ---------------------------------------
   /// Methods for stats sharing configuration
   /// ---------------------------------------
   Future<bool> getStatsShareIncludeHiddenTargets() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStatsShareIncludeHiddenTargets) ?? true;
+    return await _asyncPrefs.getBool(_kStatsShareIncludeHiddenTargets) ?? true;
   }
 
-  Future<bool> setStatsShareIncludeHiddenTargets(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kStatsShareIncludeHiddenTargets, value);
+  Future setStatsShareIncludeHiddenTargets(bool value) async {
+    return await _asyncPrefs.setBool(_kStatsShareIncludeHiddenTargets, value);
   }
 
   //
 
   Future<bool> getStatsShareShowOnlyTotals() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStatsShareShowOnlyTotals) ?? false;
+    return await _asyncPrefs.getBool(_kStatsShareShowOnlyTotals) ?? false;
   }
 
-  Future<bool> setStatsShareShowOnlyTotals(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kStatsShareShowOnlyTotals, value);
+  Future setStatsShareShowOnlyTotals(bool value) async {
+    return await _asyncPrefs.setBool(_kStatsShareShowOnlyTotals, value);
   }
 
   //
 
   Future<bool> getStatsShareShowEstimatesIfNoSpyAvailable() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStatsShareShowEstimatesIfNoSpyAvailable) ?? true;
+    return await _asyncPrefs.getBool(_kStatsShareShowEstimatesIfNoSpyAvailable) ?? true;
   }
 
-  Future<bool> setStatsShareShowEstimatesIfNoSpyAvailable(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kStatsShareShowEstimatesIfNoSpyAvailable, value);
+  Future setStatsShareShowEstimatesIfNoSpyAvailable(bool value) async {
+    return await _asyncPrefs.setBool(_kStatsShareShowEstimatesIfNoSpyAvailable, value);
   }
 
   //
 
   Future<bool> getStatsShareIncludeTargetsWithNoStatsAvailable() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStatsShareIncludeTargetsWithNoStatsAvailable) ?? false;
+    return await _asyncPrefs.getBool(_kStatsShareIncludeTargetsWithNoStatsAvailable) ?? false;
   }
 
-  Future<bool> setStatsShareIncludeTargetsWithNoStatsAvailable(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, value);
+  Future setStatsShareIncludeTargetsWithNoStatsAvailable(bool value) async {
+    return await _asyncPrefs.setBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, value);
   }
 
   /// ----------------------------
   /// Methods for shortcuts
   /// ----------------------------
   Future<bool> getShortcutsEnabledProfile() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kEnableShortcuts) ?? true;
+    return await _asyncPrefs.getBool(_kEnableShortcuts) ?? true;
   }
 
-  Future<bool> setShortcutsEnabledProfile(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kEnableShortcuts, value);
+  Future setShortcutsEnabledProfile(bool value) async {
+    return await _asyncPrefs.setBool(_kEnableShortcuts, value);
   }
 
   Future<String> getShortcutTile() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kShortcutTile) ?? 'both';
+    return await _asyncPrefs.getString(_kShortcutTile) ?? 'both';
   }
 
-  Future<bool> setShortcutTile(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kShortcutTile, value);
+  Future setShortcutTile(String value) async {
+    return await _asyncPrefs.setString(_kShortcutTile, value);
   }
 
   Future<String> getShortcutMenu() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kShortcutMenu) ?? 'carousel';
+    return await _asyncPrefs.getString(_kShortcutMenu) ?? 'carousel';
   }
 
-  Future<bool> setShortcutMenu(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kShortcutMenu, value);
+  Future setShortcutMenu(String value) async {
+    return await _asyncPrefs.setString(_kShortcutMenu, value);
   }
 
   Future<List<String>> getActiveShortcutsList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kActiveShortcutsList) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kActiveShortcutsList) ?? <String>[];
   }
 
-  Future<bool> setActiveShortcutsList(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kActiveShortcutsList, value);
+  Future setActiveShortcutsList(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kActiveShortcutsList, value);
   }
 
   /// ----------------------------
   /// Methods for easy crimes
   /// ----------------------------
   Future<List<String>> getActiveCrimesList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kActiveCrimesList) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kActiveCrimesList) ?? <String>[];
   }
 
-  Future<bool> setActiveCrimesList(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kActiveCrimesList, value);
+  Future setActiveCrimesList(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kActiveCrimesList, value);
   }
 
   /// ----------------------------
   /// Methods for quick items
   /// ----------------------------
   Future<List<String>> getQuickItemsList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kQuickItemsList) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kQuickItemsList) ?? <String>[];
   }
 
-  Future<bool> setQuickItemsList(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kQuickItemsList, value);
+  Future setQuickItemsList(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kQuickItemsList, value);
   }
 
   Future<List<String>> getQuickItemsListFaction() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kQuickItemsListFaction) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kQuickItemsListFaction) ?? <String>[];
   }
 
-  Future<bool> setQuickItemsListFaction(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kQuickItemsListFaction, value);
+  Future setQuickItemsListFaction(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kQuickItemsListFaction, value);
   }
 
   Future<int> getNumberOfLoadouts() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kQuickItemsLoadoutsNumber) ?? 3;
+    return await _asyncPrefs.getInt(_kQuickItemsLoadoutsNumber) ?? 3;
   }
 
-  Future<bool> setNumberOfLoadouts(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kQuickItemsLoadoutsNumber, value);
+  Future setNumberOfLoadouts(int value) async {
+    return await _asyncPrefs.setInt(_kQuickItemsLoadoutsNumber, value);
   }
 
   /// ----------------------------
   /// Methods for loot
   /// ----------------------------
   Future<String> getLootTimerType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLootTimerType) ?? 'timer';
+    return await _asyncPrefs.getString(_kLootTimerType) ?? 'timer';
   }
 
-  Future<bool> setLootTimerType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLootTimerType, value);
+  Future setLootTimerType(String value) async {
+    return await _asyncPrefs.setString(_kLootTimerType, value);
   }
 
   Future<String> getLootNotificationType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLootNotificationType) ?? '0';
+    return await _asyncPrefs.getString(_kLootNotificationType) ?? '0';
   }
 
-  Future<bool> setLootNotificationType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLootNotificationType, value);
+  Future setLootNotificationType(String value) async {
+    return await _asyncPrefs.setString(_kLootNotificationType, value);
   }
 
   Future<String> getLootNotificationAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLootNotificationAhead) ?? '0';
+    return await _asyncPrefs.getString(_kLootNotificationAhead) ?? '0';
   }
 
-  Future<bool> setLootNotificationAhead(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLootNotificationAhead, value);
+  Future setLootNotificationAhead(String value) async {
+    return await _asyncPrefs.setString(_kLootNotificationAhead, value);
   }
 
   Future<String> getLootAlarmAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLootAlarmAhead) ?? '0';
+    return await _asyncPrefs.getString(_kLootAlarmAhead) ?? '0';
   }
 
-  Future<bool> setLootAlarmAhead(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLootAlarmAhead, value);
+  Future setLootAlarmAhead(String value) async {
+    return await _asyncPrefs.setString(_kLootAlarmAhead, value);
   }
 
   Future<String> getLootTimerAhead() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLootTimerAhead) ?? '0';
+    return await _asyncPrefs.getString(_kLootTimerAhead) ?? '0';
   }
 
-  Future<bool> setLootTimerAhead(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLootTimerAhead, value);
+  Future setLootTimerAhead(String value) async {
+    return await _asyncPrefs.setString(_kLootTimerAhead, value);
   }
 
   Future<List<String>> getLootFiltered() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kLootFiltered) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kLootFiltered) ?? <String>[];
   }
 
-  Future<bool> setLootFiltered(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kLootFiltered, value);
+  Future setLootFiltered(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kLootFiltered, value);
   }
 
   /// ----------------------------
   /// Methods for Trades Calculator
   /// ----------------------------
   Future<bool> getTradeCalculatorEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTradeCalculatorEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kTradeCalculatorEnabled) ?? true;
   }
 
-  Future<bool> setTradeCalculatorEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTradeCalculatorEnabled, value);
+  Future setTradeCalculatorEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kTradeCalculatorEnabled, value);
   }
 
   Future<bool> getAWHEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAWHEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kAWHEnabled) ?? true;
   }
 
-  Future<bool> setAWHEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAWHEnabled, value);
+  Future setAWHEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kAWHEnabled, value);
   }
 
   Future<bool> getTornExchangeEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTornExchangeEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kTornExchangeEnabled) ?? true;
   }
 
-  Future<bool> setTornExchangeEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTornExchangeEnabled, value);
+  Future setTornExchangeEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kTornExchangeEnabled, value);
   }
 
   Future<bool> getTornExchangeProfitEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTornExchangeProfitEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kTornExchangeProfitEnabled) ?? false;
   }
 
-  Future<bool> setTornExchangeProfitEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTornExchangeProfitEnabled, value);
+  Future setTornExchangeProfitEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kTornExchangeProfitEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for City Finder
   /// ----------------------------
   Future<bool> getCityEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kCityFinderEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kCityFinderEnabled) ?? true;
   }
 
-  Future<bool> setCityEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kCityFinderEnabled, value);
+  Future setCityEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kCityFinderEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for Awards
   /// ----------------------------
   Future<String> getAwardsSort() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAwardsSort) ?? '';
+    return await _asyncPrefs.getString(_kAwardsSort) ?? '';
   }
 
-  Future<bool> setAwardsSort(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAwardsSort, value);
+  Future setAwardsSort(String value) async {
+    return await _asyncPrefs.setString(_kAwardsSort, value);
   }
 
   Future<bool> getShowAchievedAwards() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowAchievedAwards) ?? true;
+    return await _asyncPrefs.getBool(_kShowAchievedAwards) ?? true;
   }
 
-  Future<bool> setShowAchievedAwards(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowAchievedAwards, value);
+  Future setShowAchievedAwards(bool value) async {
+    return await _asyncPrefs.setBool(_kShowAchievedAwards, value);
   }
 
   Future<List<String?>> getHiddenAwardCategories() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kHiddenAwardCategories) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kHiddenAwardCategories) ?? <String>[];
   }
 
-  Future<bool> setHiddenAwardCategories(List<String?> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kHiddenAwardCategories, value as List<String>);
+  Future setHiddenAwardCategories(List<String?> value) async {
+    return await _asyncPrefs.setStringList(_kHiddenAwardCategories, value as List<String>);
   }
 
   /// ----------------------------
   /// Methods for Items
   /// ----------------------------
   Future<String> getItemsSort() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kItemsSort) ?? '';
+    return await _asyncPrefs.getString(_kItemsSort) ?? '';
   }
 
-  Future<bool> setItemsSort(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kItemsSort, value);
+  Future setItemsSort(String value) async {
+    return await _asyncPrefs.setString(_kItemsSort, value);
   }
 
   Future<int> getOnlyOwnedItemsFilter() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kOnlyOwnedItemsFilter) ?? 0;
+    return await _asyncPrefs.getInt(_kOnlyOwnedItemsFilter) ?? 0;
   }
 
-  Future<bool> setOnlyOwnedItemsFilter(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kOnlyOwnedItemsFilter, value);
+  Future setOnlyOwnedItemsFilter(int value) async {
+    return await _asyncPrefs.setInt(_kOnlyOwnedItemsFilter, value);
   }
 
   Future<List<String>> getHiddenItemsCategories() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kHiddenItemsCategories) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kHiddenItemsCategories) ?? <String>[];
   }
 
-  Future<bool> setHiddenItemsCategories(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kHiddenItemsCategories, value);
+  Future setHiddenItemsCategories(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kHiddenItemsCategories, value);
   }
 
   Future<List<String>> getPinnedItems() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kPinnedItems) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kPinnedItems) ?? <String>[];
   }
 
-  Future<bool> setPinnedItems(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kPinnedItems, value);
+  Future setPinnedItems(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kPinnedItems, value);
   }
 
   /// ----------------------------
   /// Methods for Stakeouts
   /// ----------------------------
   Future<bool> getStakeoutsEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStakeoutsEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kStakeoutsEnabled) ?? true;
   }
 
-  Future<bool> setStakeoutsEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kStakeoutsEnabled, value);
+  Future setStakeoutsEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kStakeoutsEnabled, value);
   }
 
   Future<List<String>> getStakeouts() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStakeouts) ?? [];
+    return await _asyncPrefs.getStringList(_kStakeouts) ?? [];
   }
 
-  Future<bool> setStakeouts(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kStakeouts, value);
+  Future setStakeouts(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kStakeouts, value);
   }
 
   Future<int> getStakeoutsSleepTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kStakeoutsSleepTime) ?? 0;
+    return await _asyncPrefs.getInt(_kStakeoutsSleepTime) ?? 0;
   }
 
-  Future<bool> setStakeoutsSleepTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kStakeoutsSleepTime, value);
+  Future setStakeoutsSleepTime(int value) async {
+    return await _asyncPrefs.setInt(_kStakeoutsSleepTime, value);
   }
 
   Future<int> getStakeoutsFetchDelayLimit() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kStakeoutsFetchDelayLimit) ?? 60;
+    return await _asyncPrefs.getInt(_kStakeoutsFetchDelayLimit) ?? 60;
   }
 
-  Future<bool> setStakeoutsFetchDelayLimit(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kStakeoutsFetchDelayLimit, value);
+  Future setStakeoutsFetchDelayLimit(int value) async {
+    return await _asyncPrefs.setInt(_kStakeoutsFetchDelayLimit, value);
   }
 
   /// ----------------------------
   /// Methods for Chat Removal
   /// ----------------------------
   Future<bool> getChatRemovalEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kChatRemovalEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kChatRemovalEnabled) ?? true;
   }
 
-  Future<bool> setChatRemovalEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kChatRemovalEnabled, value);
+  Future setChatRemovalEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kChatRemovalEnabled, value);
   }
 
   Future<bool> getChatRemovalActive() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kChatRemovalActive) ?? false;
+    return await _asyncPrefs.getBool(_kChatRemovalActive) ?? false;
   }
 
-  Future<bool> setChatRemovalActive(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kChatRemovalActive, value);
+  Future setChatRemovalActive(bool value) async {
+    return await _asyncPrefs.setBool(_kChatRemovalActive, value);
   }
 
   /// ----------------------------
   /// Methods for Chat Highlight
   /// ----------------------------
   Future<bool> getHighlightChat() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kHighlightChat) ?? true;
+    return await _asyncPrefs.getBool(_kHighlightChat) ?? true;
   }
 
-  Future<bool> setHighlightChat(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kHighlightChat, value);
+  Future setHighlightChat(bool value) async {
+    return await _asyncPrefs.setBool(_kHighlightChat, value);
   }
 
   Future<List<String>> getHighlightWordList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kHighlightChatWordsList) ?? const [];
+    return await _asyncPrefs.getStringList(_kHighlightChatWordsList) ?? const [];
   }
 
-  Future<bool> setHighlightWordList(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kHighlightChatWordsList, value);
+  Future setHighlightWordList(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kHighlightChatWordsList, value);
   }
 
   Future<int> getHighlightColor() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kHighlightColor) ?? 0x701397248;
+    return await _asyncPrefs.getInt(_kHighlightColor) ?? 0x701397248;
   }
 
-  Future<bool> setHighlightColor(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kHighlightColor, value);
+  Future setHighlightColor(int value) async {
+    return await _asyncPrefs.setInt(_kHighlightColor, value);
   }
 
   /// -------------------
@@ -3068,65 +2620,53 @@ class Prefs {
 
   // YATA
   Future<bool> getAlternativeYataKeyEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAlternativeYataKeyEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kAlternativeYataKeyEnabled) ?? false;
   }
 
-  Future<bool> setAlternativeYataKeyEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAlternativeYataKeyEnabled, value);
+  Future setAlternativeYataKeyEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kAlternativeYataKeyEnabled, value);
   }
 
   Future<String> getAlternativeYataKey() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAlternativeYataKey) ?? "";
+    return await _asyncPrefs.getString(_kAlternativeYataKey) ?? "";
   }
 
-  Future<bool> setAlternativeYataKey(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAlternativeYataKey, value);
+  Future setAlternativeYataKey(String value) async {
+    return await _asyncPrefs.setString(_kAlternativeYataKey, value);
   }
 
   // TORN STATS
   Future<bool> getAlternativeTornStatsKeyEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAlternativeTornStatsKeyEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kAlternativeTornStatsKeyEnabled) ?? false;
   }
 
-  Future<bool> setAlternativeTornStatsKeyEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAlternativeTornStatsKeyEnabled, value);
+  Future setAlternativeTornStatsKeyEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kAlternativeTornStatsKeyEnabled, value);
   }
 
   Future<String> getAlternativeTornStatsKey() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAlternativeTornStatsKey) ?? "";
+    return await _asyncPrefs.getString(_kAlternativeTornStatsKey) ?? "";
   }
 
-  Future<bool> setAlternativeTornStatsKey(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAlternativeTornStatsKey, value);
+  Future setAlternativeTornStatsKey(String value) async {
+    return await _asyncPrefs.setString(_kAlternativeTornStatsKey, value);
   }
 
   // TORN SPIES CENTRAL
   Future<bool> getAlternativeTSCKeyEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAlternativeTSCKeyEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kAlternativeTSCKeyEnabled) ?? false;
   }
 
-  Future<bool> setAlternativeTSCKeyEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAlternativeTSCKeyEnabled, value);
+  Future setAlternativeTSCKeyEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kAlternativeTSCKeyEnabled, value);
   }
 
   Future<String> getAlternativeTSCKey() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAlternativeTSCKey) ?? "";
+    return await _asyncPrefs.getString(_kAlternativeTSCKey) ?? "";
   }
 
-  Future<bool> setAlternativeTSCKey(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAlternativeTSCKey, value);
+  Future setAlternativeTSCKey(String value) async {
+    return await _asyncPrefs.setString(_kAlternativeTSCKey, value);
   }
 
   /// ---------------------
@@ -3134,149 +2674,125 @@ class Prefs {
   /// ---------------------
 
   Future<String> getTornStatsChartSave() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTornStatsChartSave) ?? "";
+    return await _asyncPrefs.getString(_kTornStatsChartSave) ?? "";
   }
 
-  Future<bool> setTornStatsChartSave(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTornStatsChartSave, value);
+  Future setTornStatsChartSave(String value) async {
+    return await _asyncPrefs.setString(_kTornStatsChartSave, value);
   }
 
   Future<int> getTornStatsChartDateTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTornStatsChartDateTime) ?? 0;
+    return await _asyncPrefs.getInt(_kTornStatsChartDateTime) ?? 0;
   }
 
-  Future<bool> setTornStatsChartDateTime(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTornStatsChartDateTime, value);
+  Future setTornStatsChartDateTime(int value) async {
+    return await _asyncPrefs.setInt(_kTornStatsChartDateTime, value);
   }
 
   Future<bool> getTornStatsChartEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTornStatsChartEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kTornStatsChartEnabled) ?? true;
   }
 
-  Future<bool> setTornStatsChartEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTornStatsChartEnabled, value);
+  Future setTornStatsChartEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kTornStatsChartEnabled, value);
   }
 
   Future<String> getTornStatsChartType() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTornStatsChartType) ?? "line";
+    return await _asyncPrefs.getString(_kTornStatsChartType) ?? "line";
   }
 
-  Future<bool> setTornStatsChartType(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTornStatsChartType, value);
+  Future setTornStatsChartType(String value) async {
+    return await _asyncPrefs.setString(_kTornStatsChartType, value);
   }
 
   Future<bool> getTornStatsChartInCollapsedMiscCard() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTornStatsChartInCollapsedMiscCard) ?? true;
+    return await _asyncPrefs.getBool(_kTornStatsChartInCollapsedMiscCard) ?? true;
   }
 
-  Future<bool> setTornStatsChartInCollapsedMiscCard(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTornStatsChartInCollapsedMiscCard, value);
+  Future setTornStatsChartInCollapsedMiscCard(bool value) async {
+    return await _asyncPrefs.setBool(_kTornStatsChartInCollapsedMiscCard, value);
   }
 
   /// -------------------
   /// TORN ATTACK CENTRAL
   /// -------------------
   Future<bool> getTACEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTACEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kTACEnabled) ?? false;
   }
 
-  Future<bool> setTACEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTACEnabled, value);
+  Future setTACEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kTACEnabled, value);
   }
 
   Future<String> getTACFilters() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTACFilters) ?? "";
+    return await _asyncPrefs.getString(_kTACFilters) ?? "";
   }
 
-  Future<bool> setTACFilters(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTACFilters, value);
+  Future setTACFilters(String value) async {
+    return await _asyncPrefs.setString(_kTACFilters, value);
   }
 
   Future<String> getTACTargets() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTACTargets) ?? "";
+    return await _asyncPrefs.getString(_kTACTargets) ?? "";
   }
 
-  Future<bool> setTACTargets(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTACTargets, value);
+  Future setTACTargets(String value) async {
+    return await _asyncPrefs.setString(_kTACTargets, value);
   }
 
   /// -----------------------------
   /// METHODS FOR LISTS IN SETTINGS
   /// -----------------------------
   Future<bool> getUserScriptsEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUserScriptsEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kUserScriptsEnabled) ?? true;
   }
 
-  Future<bool> setUserScriptsEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUserScriptsEnabled, value);
+  Future setUserScriptsEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kUserScriptsEnabled, value);
   }
 
   Future<bool> getUserScriptsNotifyUpdates() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUserScriptsNotifyUpdates) ?? true;
+    return await _asyncPrefs.getBool(_kUserScriptsNotifyUpdates) ?? true;
   }
 
-  Future<bool> setUserScriptsNotifyUpdates(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUserScriptsNotifyUpdates, value);
+  Future setUserScriptsNotifyUpdates(bool value) async {
+    return await _asyncPrefs.setBool(_kUserScriptsNotifyUpdates, value);
   }
 
   Future<String?> getUserScriptsList() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kUserScriptsList);
+    return await _asyncPrefs.getString(_kUserScriptsList);
   }
 
-  Future<bool> setUserScriptsList(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kUserScriptsList, value);
+  Future setUserScriptsList(String value) async {
+    return await _asyncPrefs.setString(_kUserScriptsList, value);
   }
 
-  Future<bool> getUserScriptsFirstTime() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUserScriptsV2FirstTime) ?? true;
+  // --
+
+  Future<bool> getUserScriptsSectionNeverVisited() async {
+    return await _asyncPrefs.getBool(_kUserScriptsV2FirstTime) ?? true;
   }
 
-  Future<bool> setUserScriptsFirstTime(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUserScriptsV2FirstTime, value);
+  Future setUserScriptsSectionNeverVisited(bool value) async {
+    return await _asyncPrefs.setBool(_kUserScriptsV2FirstTime, value);
   }
+
+  // --
 
   Future<bool> getUserScriptsFeatInjectionTimeShown() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUserScriptsFeatInjectionTimeShown) ?? false;
+    return await _asyncPrefs.getBool(_kUserScriptsFeatInjectionTimeShown) ?? false;
   }
 
-  Future<bool> setUserScriptsFeatInjectionTimeShown(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUserScriptsFeatInjectionTimeShown, value);
+  Future setUserScriptsFeatInjectionTimeShown(bool value) async {
+    return await _asyncPrefs.setBool(_kUserScriptsFeatInjectionTimeShown, value);
   }
 
   Future<List<String>> getUserScriptsForcedVersions() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kUserScriptsForcedVersions) ?? [];
+    return await _asyncPrefs.getStringList(_kUserScriptsForcedVersions) ?? [];
   }
 
-  Future<bool> setUserScriptsForcedVersions(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kUserScriptsForcedVersions, value);
+  Future setUserScriptsForcedVersions(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kUserScriptsForcedVersions, value);
   }
 
   /// --------------------------------
@@ -3284,13 +2800,11 @@ class Prefs {
   /// --------------------------------
 
   Future<bool> getPlayerInOCv2() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kPlayerAlreadyInOCv2) ?? false;
+    return await _asyncPrefs.getBool(_kPlayerAlreadyInOCv2) ?? false;
   }
 
-  Future<bool> setPlayerInOCv2(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kPlayerAlreadyInOCv2, value);
+  Future setPlayerInOCv2(bool value) async {
+    return await _asyncPrefs.setBool(_kPlayerAlreadyInOCv2, value);
   }
 
   /// -----------------------------
@@ -3298,318 +2812,260 @@ class Prefs {
   /// -----------------------------
 
   Future<bool> getOCrimesEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kOCrimesEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kOCrimesEnabled) ?? true;
   }
 
-  Future<bool> setOCrimesEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kOCrimesEnabled, value);
+  Future setOCrimesEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kOCrimesEnabled, value);
   }
 
   Future<int> getOCrimeDisregarded() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kOCrimeDisregarded) ?? 0;
+    return await _asyncPrefs.getInt(_kOCrimeDisregarded) ?? 0;
   }
 
-  Future<bool> setOCrimeDisregarded(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kOCrimeDisregarded, value);
+  Future setOCrimeDisregarded(int value) async {
+    return await _asyncPrefs.setInt(_kOCrimeDisregarded, value);
   }
 
   Future<int> getOCrimeLastKnown() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kOCrimeLastKnown) ?? 0;
+    return await _asyncPrefs.getInt(_kOCrimeLastKnown) ?? 0;
   }
 
-  Future<bool> setOCrimeLastKnown(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kOCrimeLastKnown, value);
+  Future setOCrimeLastKnown(int value) async {
+    return await _asyncPrefs.setInt(_kOCrimeLastKnown, value);
   }
 
   /// -----------------------------
   /// METHODS FOR VAULT SHARE
   /// -----------------------------
   Future<bool> getVaultEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kVaultShareEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kVaultShareEnabled) ?? true;
   }
 
-  Future<bool> setVaultEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kVaultShareEnabled, value);
+  Future setVaultEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kVaultShareEnabled, value);
   }
 
   Future<String> getVaultShareCurrent() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kVaultShareCurrent) ?? "";
+    return await _asyncPrefs.getString(_kVaultShareCurrent) ?? "";
   }
 
-  Future<bool> setVaultShareCurrent(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kVaultShareCurrent, value);
+  Future setVaultShareCurrent(String value) async {
+    return await _asyncPrefs.setString(_kVaultShareCurrent, value);
   }
 
   /// -----------------------------
   /// METHODS FOR JAIL
   /// -----------------------------
   Future<String> getJailModel() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kJailModel) ?? "";
+    return await _asyncPrefs.getString(_kJailModel) ?? "";
   }
 
-  Future<bool> setJailModel(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kJailModel, value);
+  Future setJailModel(String value) async {
+    return await _asyncPrefs.setString(_kJailModel, value);
   }
 
   /// -----------------------------
   /// METHODS FOR BOUNTIES
   /// -----------------------------
   Future<String> getBountiesModel() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBountiesModel) ?? "";
+    return await _asyncPrefs.getString(_kBountiesModel) ?? "";
   }
 
-  Future<bool> setBountiesModel(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kBountiesModel, value);
+  Future setBountiesModel(String value) async {
+    return await _asyncPrefs.setString(_kBountiesModel, value);
   }
 
   /// -----------------------------
   /// METHODS FOR EXTRA ACCESS TO RANKED WAR
   /// -----------------------------
   Future<bool> getRankedWarsInMenu() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRankedWarsInMenu) ?? false;
+    return await _asyncPrefs.getBool(_kRankedWarsInMenu) ?? false;
   }
 
-  Future<bool> setRankedWarsInMenu(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRankedWarsInMenu, value);
+  Future setRankedWarsInMenu(bool value) async {
+    return await _asyncPrefs.setBool(_kRankedWarsInMenu, value);
   }
 
   Future<bool> getRankedWarsInProfile() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRankedWarsInProfile) ?? true;
+    return await _asyncPrefs.getBool(_kRankedWarsInProfile) ?? true;
   }
 
-  Future<bool> setRankedWarsInProfile(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRankedWarsInProfile, value);
+  Future setRankedWarsInProfile(bool value) async {
+    return await _asyncPrefs.setBool(_kRankedWarsInProfile, value);
   }
 
   Future<bool> getRankedWarsInProfileShowTotalHours() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRankedWarsInProfileShowTotalHours) ?? false;
+    return await _asyncPrefs.getBool(_kRankedWarsInProfileShowTotalHours) ?? false;
   }
 
-  Future<bool> setRankedWarsInProfileShowTotalHours(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRankedWarsInProfileShowTotalHours, value);
+  Future setRankedWarsInProfileShowTotalHours(bool value) async {
+    return await _asyncPrefs.setBool(_kRankedWarsInProfileShowTotalHours, value);
   }
 
   /// -----------------------
   /// METHODS FOR RETALIATION
   /// -----------------------
   Future<bool> getRetaliationSectionEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRetaliationSectionEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kRetaliationSectionEnabled) ?? true;
   }
 
-  Future<bool> setRetaliationSectionEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRetaliationSectionEnabled, value);
+  Future setRetaliationSectionEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kRetaliationSectionEnabled, value);
   }
 
   Future<bool> getSingleRetaliationOpensBrowser() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSingleRetaliationOpensBrowser) ?? false;
+    return await _asyncPrefs.getBool(_kSingleRetaliationOpensBrowser) ?? false;
   }
 
-  Future<bool> setSingleRetaliationOpensBrowser(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSingleRetaliationOpensBrowser, value);
+  Future setSingleRetaliationOpensBrowser(bool value) async {
+    return await _asyncPrefs.setBool(_kSingleRetaliationOpensBrowser, value);
   }
 
   /// -----------------------------
   /// METHODS FOR DATA STOCK MARKET
   /// -----------------------------
   Future<String> getDataStockMarket() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDataStockMarket) ?? "";
+    return await _asyncPrefs.getString(_kDataStockMarket) ?? "";
   }
 
-  Future<bool> setDataStockMarket(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDataStockMarket, value);
+  Future setDataStockMarket(String value) async {
+    return await _asyncPrefs.setString(_kDataStockMarket, value);
   }
 
   Future<bool> getStockExchangeInMenu() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kStockExchangeInMenu) ?? false;
+    return await _asyncPrefs.getBool(_kStockExchangeInMenu) ?? false;
   }
 
-  Future<bool> setStockExchangeInMenu(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kStockExchangeInMenu, value);
+  Future setStockExchangeInMenu(bool value) async {
+    return await _asyncPrefs.setBool(_kStockExchangeInMenu, value);
   }
 
   /// -----------------------------
   /// METHODS FOR WEB VIEW TABS
   /// -----------------------------
   Future<int> getWebViewLastActiveTab() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kWebViewLastActiveTab) ?? 0;
+    return await _asyncPrefs.getInt(_kWebViewLastActiveTab) ?? 0;
   }
 
-  Future<bool> setWebViewLastActiveTab(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kWebViewLastActiveTab, value);
+  Future setWebViewLastActiveTab(int value) async {
+    return await _asyncPrefs.setInt(_kWebViewLastActiveTab, value);
   }
 
   Future<String> getWebViewSessionCookie() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWebViewSessionCookie) ?? '';
+    return await _asyncPrefs.getString(_kWebViewSessionCookie) ?? '';
   }
 
-  Future<bool> setWebViewSessionCookie(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kWebViewSessionCookie, value);
+  Future setWebViewSessionCookie(String value) async {
+    return await _asyncPrefs.setString(_kWebViewSessionCookie, value);
   }
 
   Future<String> getWebViewMainTab() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWebViewMainTab) ?? '{"tabsSave": []}';
+    return await _asyncPrefs.getString(_kWebViewMainTab) ?? '{"tabsSave": []}';
   }
 
-  Future<bool> setWebViewMainTab(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kWebViewMainTab, value);
+  Future setWebViewMainTab(String value) async {
+    return await _asyncPrefs.setString(_kWebViewMainTab, value);
   }
 
   Future<String> getWebViewSecondaryTabs() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kWebViewSecondaryTabs) ?? '{"tabsSave": []}';
+    return await _asyncPrefs.getString(_kWebViewSecondaryTabs) ?? '{"tabsSave": []}';
   }
 
-  Future<bool> setWebViewSecondaryTabs(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kWebViewSecondaryTabs, value);
+  Future setWebViewSecondaryTabs(String value) async {
+    return await _asyncPrefs.setString(_kWebViewSecondaryTabs, value);
   }
 
   Future<bool> getUseTabsFullBrowser() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseTabsInFullBrowser) ?? true;
+    return await _asyncPrefs.getBool(_kUseTabsInFullBrowser) ?? true;
   }
 
-  Future<bool> setUseTabsFullBrowser(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseTabsInFullBrowser, value);
+  Future setUseTabsFullBrowser(bool value) async {
+    return await _asyncPrefs.setBool(_kUseTabsInFullBrowser, value);
   }
 
   Future<bool> getUseTabsBrowserDialog() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseTabsInBrowserDialog) ?? true;
+    return await _asyncPrefs.getBool(_kUseTabsInBrowserDialog) ?? true;
   }
 
-  Future<bool> setUseTabsBrowserDialog(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseTabsInBrowserDialog, value);
+  Future setUseTabsBrowserDialog(bool value) async {
+    return await _asyncPrefs.setBool(_kUseTabsInBrowserDialog, value);
   }
 
   // -- Remove unused tabs
 
   Future<bool> getRemoveUnusedTabs() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRemoveUnusedTabs) ?? true;
+    return await _asyncPrefs.getBool(_kRemoveUnusedTabs) ?? true;
   }
 
-  Future<bool> setRemoveUnusedTabs(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRemoveUnusedTabs, value);
+  Future setRemoveUnusedTabs(bool value) async {
+    return await _asyncPrefs.setBool(_kRemoveUnusedTabs, value);
   }
 
   Future<bool> getRemoveUnusedTabsIncludesLocked() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kRemoveUnusedTabsIncludesLocked) ?? false;
+    return await _asyncPrefs.getBool(_kRemoveUnusedTabsIncludesLocked) ?? false;
   }
 
-  Future<bool> setRemoveUnusedTabsIncludesLocked(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kRemoveUnusedTabsIncludesLocked, value);
+  Future setRemoveUnusedTabsIncludesLocked(bool value) async {
+    return await _asyncPrefs.setBool(_kRemoveUnusedTabsIncludesLocked, value);
   }
 
   Future<int> getRemoveUnusedTabsRangeDays() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kRemoveUnusedTabsRangeDays) ?? 7;
+    return await _asyncPrefs.getInt(_kRemoveUnusedTabsRangeDays) ?? 7;
   }
 
-  Future<bool> setRemoveUnusedTabsRangeDays(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kRemoveUnusedTabsRangeDays, value);
+  Future setRemoveUnusedTabsRangeDays(int value) async {
+    return await _asyncPrefs.setInt(_kRemoveUnusedTabsRangeDays, value);
   }
 
   // ---------------------
 
   Future<bool> getOnlyLoadTabsWhenUsed() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kOnlyLoadTabsWhenUsed) ?? true;
+    return await _asyncPrefs.getBool(_kOnlyLoadTabsWhenUsed) ?? true;
   }
 
-  Future<bool> setOnlyLoadTabsWhenUsed(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kOnlyLoadTabsWhenUsed, value);
+  Future setOnlyLoadTabsWhenUsed(bool value) async {
+    return await _asyncPrefs.setBool(_kOnlyLoadTabsWhenUsed, value);
   }
 
   Future<bool> getAutomaticChangeToNewTabFromURL() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAutomaticChangeToNewTabFromURL) ?? true;
+    return await _asyncPrefs.getBool(_kAutomaticChangeToNewTabFromURL) ?? true;
   }
 
-  Future<bool> setAutomaticChangeToNewTabFromURL(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAutomaticChangeToNewTabFromURL, value);
+  Future setAutomaticChangeToNewTabFromURL(bool value) async {
+    return await _asyncPrefs.setBool(_kAutomaticChangeToNewTabFromURL, value);
   }
 
   Future<bool> getUseTabsHideFeature() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseTabsHideFeature) ?? true;
+    return await _asyncPrefs.getBool(_kUseTabsHideFeature) ?? true;
   }
 
-  Future<bool> setUseTabsHideFeature(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseTabsHideFeature, value);
+  Future setUseTabsHideFeature(bool value) async {
+    return await _asyncPrefs.setBool(_kUseTabsHideFeature, value);
   }
 
-  Future<bool> setTabsHideBarColor(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTabsHideBarColor, value);
+  Future setTabsHideBarColor(int value) async {
+    return await _asyncPrefs.setInt(_kTabsHideBarColor, value);
   }
 
   Future<int> getTabsHideBarColor() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
+    return await _asyncPrefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
   }
 
   Future<bool> getShowTabLockWarnings() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowTabLockWarnings) ?? true;
+    return await _asyncPrefs.getBool(_kShowTabLockWarnings) ?? true;
   }
 
-  Future<bool> setShowTabLockWarnings(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowTabLockWarnings, value);
+  Future setShowTabLockWarnings(bool value) async {
+    return await _asyncPrefs.setBool(_kShowTabLockWarnings, value);
   }
 
   Future<bool> getFullLockNavigationAttemptOpensNewTab() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullLockNavigationAttemptOpensNewTab) ?? false;
+    return await _asyncPrefs.getBool(_kFullLockNavigationAttemptOpensNewTab) ?? false;
   }
 
-  Future<bool> setFullLockNavigationAttemptOpensNewTab(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullLockNavigationAttemptOpensNewTab, value);
+  Future setFullLockNavigationAttemptOpensNewTab(bool value) async {
+    return await _asyncPrefs.setBool(_kFullLockNavigationAttemptOpensNewTab, value);
   }
 
   // -- LockedTabsNavigationExceptions
@@ -3619,220 +3075,180 @@ class Prefs {
   ];
 
   Future<String> getLockedTabsNavigationExceptions() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kFullLockedTabsNavigationExceptions) ??
+    return await _asyncPrefs.getString(_kFullLockedTabsNavigationExceptions) ??
         json.encode(_defaultFullLockedTabsNavigationExceptions);
   }
 
-  Future<bool> setLockedTabsNavigationExceptions(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kFullLockedTabsNavigationExceptions, value);
+  Future setLockedTabsNavigationExceptions(String value) async {
+    return await _asyncPrefs.setString(_kFullLockedTabsNavigationExceptions, value);
   }
 
   // --
 
   Future<bool> getUseTabsIcons() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kUseTabsIcons) ?? true;
+    return await _asyncPrefs.getBool(_kUseTabsIcons) ?? true;
   }
 
-  Future<bool> setUseTabsIcons(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kUseTabsIcons, value);
+  Future setUseTabsIcons(bool value) async {
+    return await _asyncPrefs.setBool(_kUseTabsIcons, value);
   }
 
   Future<bool> getHideTabs() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kHideTabs) ?? false;
+    return await _asyncPrefs.getBool(_kHideTabs) ?? false;
   }
 
-  Future<bool> setHideTabs(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kHideTabs, value);
+  Future setHideTabs(bool value) async {
+    return await _asyncPrefs.setBool(_kHideTabs, value);
   }
 
   Future<bool> getReminderAboutHideTabFeature() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kReminderAboutHideTabFeature) ?? false;
+    return await _asyncPrefs.getBool(_kReminderAboutHideTabFeature) ?? false;
   }
 
-  Future<bool> setReminderAboutHideTabFeature(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kReminderAboutHideTabFeature, value);
+  Future setReminderAboutHideTabFeature(bool value) async {
+    return await _asyncPrefs.setBool(_kReminderAboutHideTabFeature, value);
   }
 
   // -- Quick menu tab
 
   Future<bool> getFullScreenExplanationShown() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenExplanationShown) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenExplanationShown) ?? false;
   }
 
-  Future<bool> setFullScreenExplanationShown(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenExplanationShown, value);
+  Future setFullScreenExplanationShown(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenExplanationShown, value);
   }
 
   Future<bool> getFullScreenRemovesWidgets() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenRemovesWidgets) ?? true;
+    return await _asyncPrefs.getBool(_kFullScreenRemovesWidgets) ?? true;
   }
 
-  Future<bool> setFullScreenRemovesWidgets(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenRemovesWidgets, value);
+  Future setFullScreenRemovesWidgets(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenRemovesWidgets, value);
   }
 
   Future<bool> getFullScreenRemovesChat() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenRemovesChat) ?? true;
+    return await _asyncPrefs.getBool(_kFullScreenRemovesChat) ?? true;
   }
 
-  Future<bool> setFullScreenRemovesChat(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenRemovesChat, value);
+  Future setFullScreenRemovesChat(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenRemovesChat, value);
   }
 
   Future<bool> getFullScreenExtraCloseButton() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenExtraCloseButton) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenExtraCloseButton) ?? false;
   }
 
-  Future<bool> setFullScreenExtraCloseButton(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenExtraCloseButton, value);
+  Future setFullScreenExtraCloseButton(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenExtraCloseButton, value);
   }
 
   Future<bool> getFullScreenExtraReloadButton() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenExtraReloadButton) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenExtraReloadButton) ?? false;
   }
 
-  Future<bool> setFullScreenExtraReloadButton(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenExtraReloadButton, value);
+  Future setFullScreenExtraReloadButton(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenExtraReloadButton, value);
   }
 
   Future<bool> getFullScreenOverNotch() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenOverNotch) ?? true;
+    return await _asyncPrefs.getBool(_kFullScreenOverNotch) ?? true;
   }
 
-  Future<bool> setFullScreenOverNotch(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenOverNotch, value);
+  Future setFullScreenOverNotch(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenOverNotch, value);
   }
 
   Future<bool> getFullScreenOverBottom() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenOverBottom) ?? true;
+    return await _asyncPrefs.getBool(_kFullScreenOverBottom) ?? true;
   }
 
-  Future<bool> setFullScreenOverBottom(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenOverBottom, value);
+  Future setFullScreenOverBottom(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenOverBottom, value);
   }
 
   Future<bool> getFullScreenOverSides() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenOverSides) ?? true;
+    return await _asyncPrefs.getBool(_kFullScreenOverSides) ?? true;
   }
 
-  Future<bool> setFullScreenOverSides(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenOverSides, value);
+  Future setFullScreenOverSides(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenOverSides, value);
   }
 
   //--
 
   Future<bool> getFullScreenByShortTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenByShortTap) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenByShortTap) ?? false;
   }
 
-  Future<bool> setFullScreenByShortTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenByShortTap, value);
+  Future setFullScreenByShortTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenByShortTap, value);
   }
 
   //--
   Future<bool> getFullScreenByLongTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenByLongTap) ?? true;
+    return await _asyncPrefs.getBool(_kFullScreenByLongTap) ?? true;
   }
 
-  Future<bool> setFullScreenByLongTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenByLongTap, value);
+  Future setFullScreenByLongTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenByLongTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByNotificationTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenByNotificationTap) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenByNotificationTap) ?? false;
   }
 
-  Future<bool> setFullScreenByNotificationTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenByNotificationTap, value);
+  Future setFullScreenByNotificationTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenByNotificationTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByShortChainingTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenByShortChainingTap) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenByShortChainingTap) ?? false;
   }
 
-  Future<bool> setFullScreenByShortChainingTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenByShortChainingTap, value);
+  Future setFullScreenByShortChainingTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenByShortChainingTap, value);
   }
 
   Future<bool> getFullScreenByLongChainingTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenByLongChainingTap) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenByLongChainingTap) ?? false;
   }
 
-  Future<bool> setFullScreenByLongChainingTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenByLongChainingTap, value);
+  Future setFullScreenByLongChainingTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenByLongChainingTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByDeepLinkTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenByDeepLinkTap) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenByDeepLinkTap) ?? false;
   }
 
-  Future<bool> setFullScreenByDeepLinkTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenByDeepLinkTap, value);
+  Future setFullScreenByDeepLinkTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenByDeepLinkTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByQuickItemTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenByQuickItemTap) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenByQuickItemTap) ?? false;
   }
 
-  Future<bool> setFullScreenByQuickItemTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenByQuickItemTap, value);
+  Future setFullScreenByQuickItemTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenByQuickItemTap, value);
   }
 
   //--
   Future<bool> getFullScreenIncludesPDAButtonTap() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kFullScreenIncludesPDAButtonTap) ?? false;
+    return await _asyncPrefs.getBool(_kFullScreenIncludesPDAButtonTap) ?? false;
   }
 
-  Future<bool> setFullScreenIncludesPDAButtonTap(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kFullScreenIncludesPDAButtonTap, value);
+  Future setFullScreenIncludesPDAButtonTap(bool value) async {
+    return await _asyncPrefs.setBool(_kFullScreenIncludesPDAButtonTap, value);
   }
 
   /// --------------------------------
@@ -3840,49 +3256,41 @@ class Prefs {
   /// --------------------------------
 
   Future<String> getLifeNotificationTapAction() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kLifeNotificationTapAction) ?? 'itemsOwn';
+    return await _asyncPrefs.getString(_kLifeNotificationTapAction) ?? 'itemsOwn';
   }
 
-  Future<bool> setLifeNotificationTapAction(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kLifeNotificationTapAction, value);
+  Future setLifeNotificationTapAction(String value) async {
+    return await _asyncPrefs.setString(_kLifeNotificationTapAction, value);
   }
 
   //
 
   Future<String> getDrugsNotificationTapAction() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kDrugsNotificationTapAction) ?? 'itemsOwn';
+    return await _asyncPrefs.getString(_kDrugsNotificationTapAction) ?? 'itemsOwn';
   }
 
-  Future<bool> setDrugsNotificationTapAction(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kDrugsNotificationTapAction, value);
+  Future setDrugsNotificationTapAction(String value) async {
+    return await _asyncPrefs.setString(_kDrugsNotificationTapAction, value);
   }
 
   //
 
   Future<String> getMedicalNotificationTapAction() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kMedicalNotificationTapAction) ?? 'itemsOwn';
+    return await _asyncPrefs.getString(_kMedicalNotificationTapAction) ?? 'itemsOwn';
   }
 
-  Future<bool> setMedicalNotificationTapAction(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kMedicalNotificationTapAction, value);
+  Future setMedicalNotificationTapAction(String value) async {
+    return await _asyncPrefs.setString(_kMedicalNotificationTapAction, value);
   }
 
   //
 
   Future<String> getBoosterNotificationTapAction() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kBoosterNotificationTapAction) ?? 'itemsOwn';
+    return await _asyncPrefs.getString(_kBoosterNotificationTapAction) ?? 'itemsOwn';
   }
 
-  Future<bool> setBoosterNotificationTapAction(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kBoosterNotificationTapAction, value);
+  Future setBoosterNotificationTapAction(String value) async {
+    return await _asyncPrefs.setString(_kBoosterNotificationTapAction, value);
   }
 
   /// ----------------------------
@@ -3890,36 +3298,30 @@ class Prefs {
   /// ----------------------------
   /// tabs_general -> for tab use information in webview_stackview
   Future<List<String>> getShowCases() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kShowCases) ?? <String>[];
+    return await _asyncPrefs.getStringList(_kShowCases) ?? <String>[];
   }
 
-  Future<bool> setShowCases(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kShowCases, value);
+  Future setShowCases(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kShowCases, value);
   }
 
   /// ----------------------------
   /// Methods for stats analytics
   /// ----------------------------
   Future<int> getStatsFirstLoginTimestamp() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kStatsFirstLoginTimestamp) ?? 0;
+    return await _asyncPrefs.getInt(_kStatsFirstLoginTimestamp) ?? 0;
   }
 
-  Future<bool> setStatsFirstLoginTimestamp(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kStatsFirstLoginTimestamp, value);
+  Future setStatsFirstLoginTimestamp(int value) async {
+    return await _asyncPrefs.setInt(_kStatsFirstLoginTimestamp, value);
   }
 
   Future<int> getStatsCumulatedAppUseSeconds() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kStatsCumulatedAppUseSeconds) ?? 0;
+    return await _asyncPrefs.getInt(_kStatsCumulatedAppUseSeconds) ?? 0;
   }
 
-  Future<bool> setStatsCumulatedAppUseSeconds(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kStatsCumulatedAppUseSeconds, value);
+  Future setStatsCumulatedAppUseSeconds(int value) async {
+    return await _asyncPrefs.setInt(_kStatsCumulatedAppUseSeconds, value);
   }
 
   /// Current valid events:
@@ -3931,84 +3333,70 @@ class Prefs {
   ///
   /// List formatting: ["15m_4h", "30m_24h", "1h_3d", "2h_5d", "4h_7d"]
   Future<List<String>> getStatsEventsAchieved() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getStringList(_kStatsEventsAchieved) ?? [];
+    return await _asyncPrefs.getStringList(_kStatsEventsAchieved) ?? [];
   }
 
-  Future<bool> setStatsCumulatedEventsAchieved(List<String> value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setStringList(_kStatsEventsAchieved, value);
+  Future setStatsCumulatedEventsAchieved(List<String> value) async {
+    return await _asyncPrefs.setStringList(_kStatsEventsAchieved, value);
   }
 
   /// ----------------------------
   /// Methods for appwidget
   /// ----------------------------
   Future<bool> getAppwidgetDarkMode() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAppwidgetDarkMode) ?? false;
+    return await _asyncPrefs.getBool(_kAppwidgetDarkMode) ?? false;
   }
 
-  Future<bool> setAppwidgetDarkMode(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAppwidgetDarkMode, value);
+  Future setAppwidgetDarkMode(bool value) async {
+    return await _asyncPrefs.setBool(_kAppwidgetDarkMode, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetRemoveShortcutsOneRowLayout() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAppwidgetRemoveShortcutsOneRowLayout) ?? false;
+    return await _asyncPrefs.getBool(_kAppwidgetRemoveShortcutsOneRowLayout) ?? false;
   }
 
-  Future<bool> setAppwidgetRemoveShortcutsOneRowLayout(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAppwidgetRemoveShortcutsOneRowLayout, value);
+  Future setAppwidgetRemoveShortcutsOneRowLayout(bool value) async {
+    return await _asyncPrefs.setBool(_kAppwidgetRemoveShortcutsOneRowLayout, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetMoneyEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAppwidgetMoneyEnabled) ?? true;
+    return await _asyncPrefs.getBool(_kAppwidgetMoneyEnabled) ?? true;
   }
 
-  Future<bool> setAppwidgetMoneyEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAppwidgetMoneyEnabled, value);
+  Future setAppwidgetMoneyEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kAppwidgetMoneyEnabled, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetCooldownTapOpensBrowser() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAppwidgetCooldownTapOpensBrowser) ?? false;
+    return await _asyncPrefs.getBool(_kAppwidgetCooldownTapOpensBrowser) ?? false;
   }
 
-  Future<bool> setAppwidgetCooldownTapOpensBrowser(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAppwidgetCooldownTapOpensBrowser, value);
+  Future setAppwidgetCooldownTapOpensBrowser(bool value) async {
+    return await _asyncPrefs.setBool(_kAppwidgetCooldownTapOpensBrowser, value);
   }
 
   Future<String> getAppwidgetCooldownTapOpensBrowserDestination() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kAppwidgetCooldownTapOpensBrowserDestination) ?? "own";
+    return await _asyncPrefs.getString(_kAppwidgetCooldownTapOpensBrowserDestination) ?? "own";
   }
 
-  Future<bool> setAppwidgetCooldownTapOpensBrowserDestination(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kAppwidgetCooldownTapOpensBrowserDestination, value);
+  Future setAppwidgetCooldownTapOpensBrowserDestination(String value) async {
+    return await _asyncPrefs.setString(_kAppwidgetCooldownTapOpensBrowserDestination, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetExplanationShown() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kAppwidgetExplanationShown) ?? false;
+    return await _asyncPrefs.getBool(_kAppwidgetExplanationShown) ?? false;
   }
 
-  Future<bool> setAppwidgetExplanationShown(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kAppwidgetExplanationShown, value);
+  Future setAppwidgetExplanationShown(bool value) async {
+    return await _asyncPrefs.setBool(_kAppwidgetExplanationShown, value);
   }
 
   /// ----------------------------
@@ -4016,13 +3404,11 @@ class Prefs {
   /// ----------------------------
 
   Future<int> getExactPermissionDialogShownAndroid() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kExactPermissionDialogShownAndroid) ?? 0;
+    return await _asyncPrefs.getInt(_kExactPermissionDialogShownAndroid) ?? 0;
   }
 
-  Future<bool> setExactPermissionDialogShownAndroid(int value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kExactPermissionDialogShownAndroid, value);
+  Future setExactPermissionDialogShownAndroid(int value) async {
+    return await _asyncPrefs.setInt(_kExactPermissionDialogShownAndroid, value);
   }
 
   /// ----------------------------
@@ -4030,174 +3416,144 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getDownloadActionShare() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_downloadActionShare) ?? true;
+    return await _asyncPrefs.getBool(_downloadActionShare) ?? true;
   }
 
-  Future<bool> setDownloadActionShare(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_downloadActionShare, value);
+  Future setDownloadActionShare(bool value) async {
+    return await _asyncPrefs.setBool(_downloadActionShare, value);
   }
 
   /// ----------------------------
   /// Methods for Api Rate
   /// ----------------------------
   Future<bool> getShowApiRateInDrawer() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowApiRateInDrawer) ?? false;
+    return await _asyncPrefs.getBool(_kShowApiRateInDrawer) ?? false;
   }
 
-  Future<bool> setShowApiRateInDrawer(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowApiRateInDrawer, value);
+  Future setShowApiRateInDrawer(bool value) async {
+    return await _asyncPrefs.setBool(_kShowApiRateInDrawer, value);
   }
 
   Future<bool> getDelayApiCalls() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kDelayApiCalls) ?? false;
+    return await _asyncPrefs.getBool(_kDelayApiCalls) ?? false;
   }
 
-  Future<bool> setDelayApiCalls(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kDelayApiCalls, value);
+  Future setDelayApiCalls(bool value) async {
+    return await _asyncPrefs.setBool(_kDelayApiCalls, value);
   }
 
   // ---
 
   Future<bool> getShowApiMaxCallWarning() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowApiMaxCallWarning) ?? false;
+    return await _asyncPrefs.getBool(_kShowApiMaxCallWarning) ?? false;
   }
 
-  Future<bool> setShowApiMaxCallWarning(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowApiMaxCallWarning, value);
+  Future setShowApiMaxCallWarning(bool value) async {
+    return await _asyncPrefs.setBool(_kShowApiMaxCallWarning, value);
   }
 
   /// ----------------------------
   /// Methods for Memory
   /// ----------------------------
   Future<bool> getShowMemoryInDrawer() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowMemoryInDrawer) ?? false;
+    return await _asyncPrefs.getBool(_kShowMemoryInDrawer) ?? false;
   }
 
-  Future<bool> setShowMemoryInDrawer(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowMemoryInDrawer, value);
+  Future setShowMemoryInDrawer(bool value) async {
+    return await _asyncPrefs.setBool(_kShowMemoryInDrawer, value);
   }
 
   // ---
 
   Future<bool> getShowMemoryInWebview() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowMemoryInWebview) ?? false;
+    return await _asyncPrefs.getBool(_kShowMemoryInWebview) ?? false;
   }
 
-  Future<bool> setShowMemoryInWebview(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowMemoryInWebview, value);
+  Future setShowMemoryInWebview(bool value) async {
+    return await _asyncPrefs.setBool(_kShowMemoryInWebview, value);
   }
 
   /// ----------------------------
   /// Methods for Split Screen
   /// ----------------------------
   Future<String> getSplitScreenWebview() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kSplitScreenWebview) ?? 'off';
+    return await _asyncPrefs.getString(_kSplitScreenWebview) ?? 'off';
   }
 
-  Future<bool> setSplitScreenWebview(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kSplitScreenWebview, value);
+  Future setSplitScreenWebview(String value) async {
+    return await _asyncPrefs.setString(_kSplitScreenWebview, value);
   }
 
   Future<bool> getSplitScreenRevertsToApp() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSplitScreenRevertsToApp) ?? true;
+    return await _asyncPrefs.getBool(_kSplitScreenRevertsToApp) ?? true;
   }
 
-  Future<bool> setSplitScreenRevertsToApp(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSplitScreenRevertsToApp, value);
+  Future setSplitScreenRevertsToApp(bool value) async {
+    return await _asyncPrefs.setBool(_kSplitScreenRevertsToApp, value);
   }
 
   /// ----------------------------
   /// FCM Token
   /// ----------------------------
   Future<String> getFCMToken() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kFCMToken) ?? "";
+    return await _asyncPrefs.getString(_kFCMToken) ?? "";
   }
 
-  Future<bool> setFCMToken(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kFCMToken, value);
+  Future setFCMToken(String value) async {
+    return await _asyncPrefs.setString(_kFCMToken, value);
   }
 
   /// ----------------------------
   /// Methods for Sendbird notifications
   /// ----------------------------
   Future<bool> getSendbirdNotificationsEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSendbirdnotificationsEnabled) ?? false;
+    return await _asyncPrefs.getBool(_kSendbirdnotificationsEnabled) ?? false;
   }
 
-  Future<bool> setSendbirdNotificationsEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSendbirdnotificationsEnabled, value);
+  Future setSendbirdNotificationsEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kSendbirdnotificationsEnabled, value);
   }
 
   Future<String> getSendbirdSessionToken() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kSendbirdSessionToken) ?? "";
+    return await _asyncPrefs.getString(_kSendbirdSessionToken) ?? "";
   }
 
-  Future<bool> setSendbirdSessionToken(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kSendbirdSessionToken, value);
+  Future setSendbirdSessionToken(String value) async {
+    return await _asyncPrefs.setString(_kSendbirdSessionToken, value);
   }
 
   Future<int> getSendbirdTokenTimestamp() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kSendbirdTokenTimestamp) ?? 0;
+    return await _asyncPrefs.getInt(_kSendbirdTokenTimestamp) ?? 0;
   }
 
-  Future<bool> setSendbirdTokenTimestamp(int timestamp) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kSendbirdTokenTimestamp, timestamp);
+  Future setSendbirdTokenTimestamp(int timestamp) async {
+    return await _asyncPrefs.setInt(_kSendbirdTokenTimestamp, timestamp);
   }
 
   Future<bool> getSendbirdExcludeFactionMessages() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSendbirdExcludeFactionMessages) ?? false;
+    return await _asyncPrefs.getBool(_kSendbirdExcludeFactionMessages) ?? false;
   }
 
-  Future<bool> setSendbirdExcludeFactionMessages(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSendbirdExcludeFactionMessages, value);
+  Future setSendbirdExcludeFactionMessages(bool value) async {
+    return await _asyncPrefs.setBool(_kSendbirdExcludeFactionMessages, value);
   }
 
   Future<bool> getSendbirdExcludeCompanyMessages() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kSendbirdExcludeCompanyMessages) ?? false;
+    return await _asyncPrefs.getBool(_kSendbirdExcludeCompanyMessages) ?? false;
   }
 
-  Future<bool> setSendbirdExcludeCompanyMessages(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kSendbirdExcludeCompanyMessages, value);
+  Future setSendbirdExcludeCompanyMessages(bool value) async {
+    return await _asyncPrefs.setBool(_kSendbirdExcludeCompanyMessages, value);
   }
 
   ///////
 
   Future<bool> getBringBrowserForwardOnStart() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kBringBrowserForwardOnStart) ?? false;
+    return await _asyncPrefs.getBool(_kBringBrowserForwardOnStart) ?? false;
   }
 
-  Future<bool> setBringBrowserForwardOnStart(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kBringBrowserForwardOnStart, value);
+  Future setBringBrowserForwardOnStart(bool value) async {
+    return await _asyncPrefs.setBool(_kBringBrowserForwardOnStart, value);
   }
 
   /// -----------------------------------
@@ -4205,21 +3561,18 @@ class Prefs {
   /// -----------------------------------
 
   /// Stores the last execution time for a given task name
-  Future<bool> setLastExecutionTime(String taskName, int timestamp) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt("$_taskPrefix$taskName", timestamp);
+  Future setLastExecutionTime(String taskName, int timestamp) async {
+    return await _asyncPrefs.setInt("$_taskPrefix$taskName", timestamp);
   }
 
   /// Retrieves the last execution time for a given task name
   Future<int> getLastExecutionTime(String taskName) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt("$_taskPrefix$taskName") ?? 0;
+    return await _asyncPrefs.getInt("$_taskPrefix$taskName") ?? 0;
   }
 
   /// Removes the stored execution time for a task
-  Future<bool> removeLastExecutionTime(String taskName) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.remove("$_taskPrefix$taskName");
+  Future removeLastExecutionTime(String taskName) async {
+    await _asyncPrefs.remove("$_taskPrefix$taskName");
   }
 
   /// -----------------------------------
@@ -4227,33 +3580,27 @@ class Prefs {
   /// -----------------------------------
 
   Future<String> getTornCalendarModel() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_kTornCalendarModel) ?? "";
+    return await _asyncPrefs.getString(_kTornCalendarModel) ?? "";
   }
 
-  Future<bool> setTornCalendarModel(String value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setString(_kTornCalendarModel, value);
+  Future setTornCalendarModel(String value) async {
+    return await _asyncPrefs.setString(_kTornCalendarModel, value);
   }
 
   Future<int> getTornCalendarLastUpdate() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getInt(_kTornCalendarLastUpdate) ?? 0;
+    return await _asyncPrefs.getInt(_kTornCalendarLastUpdate) ?? 0;
   }
 
-  Future<bool> setTornCalendarLastUpdate(int timestamp) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setInt(_kTornCalendarLastUpdate, timestamp);
+  Future setTornCalendarLastUpdate(int timestamp) async {
+    return await _asyncPrefs.setInt(_kTornCalendarLastUpdate, timestamp);
   }
 
   Future<bool> getTctClockHighlightsEvents() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kTctClockHighlightsEvents) ?? true;
+    return await _asyncPrefs.getBool(_kTctClockHighlightsEvents) ?? true;
   }
 
-  Future<bool> setTctClockHighlightsEvents(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kTctClockHighlightsEvents, value);
+  Future setTctClockHighlightsEvents(bool value) async {
+    return await _asyncPrefs.setBool(_kTctClockHighlightsEvents, value);
   }
 
   /// -----------------------------------
@@ -4261,13 +3608,11 @@ class Prefs {
   /// -----------------------------------
 
   Future<bool> getShowWikiInDrawer() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kShowWikiInDrawer) ?? true;
+    return await _asyncPrefs.getBool(_kShowWikiInDrawer) ?? true;
   }
 
-  Future<bool> setShowWikiInDrawer(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kShowWikiInDrawer, value);
+  Future setShowWikiInDrawer(bool value) async {
+    return await _asyncPrefs.setBool(_kShowWikiInDrawer, value);
   }
 
   /// -----------------------------------
@@ -4285,30 +3630,26 @@ class Prefs {
     required LiveActivityType activityType,
     required String? token,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
     final key = _getLaPushTokenKey(activityType);
     if (token == null) {
-      await prefs.remove(key);
+      await _asyncPrefs.remove(key);
     } else {
-      await prefs.setString(key, token);
+      await _asyncPrefs.setString(key, token);
     }
   }
 
   Future<String?> getLaPushToken({
     required LiveActivityType activityType,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
     final key = _getLaPushTokenKey(activityType);
-    return prefs.getString(key);
+    return await _asyncPrefs.getString(key);
   }
 
   Future<bool> getIosLiveActivityTravelEnabled() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.getBool(_kIosLiveActivityTravelEnabled) ?? kSdkIos >= 16.2 ? true : false;
+    return await _asyncPrefs.getBool(_kIosLiveActivityTravelEnabled) ?? kSdkIos >= 16.2 ? true : false;
   }
 
-  Future<bool> setIosLiveActivityTravelEnabled(bool value) async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.setBool(_kIosLiveActivityTravelEnabled, value);
+  Future setIosLiveActivityTravelEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kIosLiveActivityTravelEnabled, value);
   }
 }

@@ -9,6 +9,7 @@ import 'dart:math' as math;
 import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
@@ -51,6 +52,7 @@ import 'package:torn_pda/pages/tips_page.dart';
 import 'package:torn_pda/pages/travel_page.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -69,7 +71,8 @@ import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/settings/prefs_backup_from_file_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/memory_widget_drawer.dart';
@@ -135,15 +138,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Used to avoid racing condition with browser launch from notifications (not included in the FutureBuilder), as
   // preferences take time to load
   final Completer _preferencesCompleter = Completer();
-  final Completer _changelogCompleter = Completer();
   // Used for the main UI loading (FutureBuilder)
   Future? _finishedWithPreferences;
-  Future? _finishedWithChangelog;
 
   int _activeDrawerIndex = 0;
   int _selected = 0;
 
-  bool _changelogIsActive = false;
   bool _forceFireUserReload = false;
 
   bool _retalsRedirection = false;
@@ -229,14 +229,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _aboutPosition,
     ];
 
-    // Ensures Shared Prefs are ready for changelog data saving
-    Prefs().reload().then((_) {
-      _finishedWithChangelog = _handleChangelog();
-      _changelogCompleter.complete(_finishedWithChangelog);
-
-      mainSettingsLoaded = _finishedWithPreferences = _loadInitPreferences();
-      _preferencesCompleter.complete(_finishedWithPreferences);
-    });
+    _finishedWithPreferences = _loadPreferencesAsync();
 
     // Live Activities
     if (Platform.isIOS) {
@@ -354,6 +347,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "revive_nuke": "1 million or 1 Xanax",
         "revive_uhc": "1 million or 1 Xanax",
         "revive_wtf": "1 million or 1 Xanax",
+        // Torn API
+        "apiV2LegacyRequests": "",
       });
 
       // Remote Config first fetch and live update
@@ -380,6 +375,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
         sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
 
+        // Torn API
+        apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
+
         // Dynamic App Icon depends on Remote Config
         if (Platform.isIOS) {
           _setDynamicAppIcon();
@@ -404,6 +402,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // Sendbird
           sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
           sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
+          // Torn API
+          apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
         });
       });
     }
@@ -429,10 +429,42 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
   }
 
+  Future<void> _loadPreferencesAsync() async {
+    if (appHasBeenUpdated) {
+      // Will trigger an extra upload to Firebase when version changes
+      _forceFireUserReload = true;
+    }
+
+    // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
+    // Deletes current channels and create new ones
+    if (Platform.isAndroid) {
+      final vibration = await Prefs().getVibrationPattern();
+      await reconfigureNotificationChannels(mod: vibration);
+    }
+
+    await _loadInitPreferences();
+
+    if (!_preferencesCompleter.isCompleted) {
+      _preferencesCompleter.complete();
+    }
+
+    // Force OC2 check when changelog is shown
+    // (we also do this once a day with [_updateLastActiveTime])
+    // (we shouldn't need to check the completer, as it's checked in initState, but just in case)
+    _preferencesCompleter.future.whenComplete(() async {
+      _settingsProvider.checkIfUserIsOnOCv2();
+    });
+
+    try {
+      await _handleChangelogAndOtherDialogs();
+    } catch (e) {
+      log("Error loading changelog: $e");
+    }
+  }
+
   void _setDynamicAppIcon() {
     // Dynamic app icon
     _preferencesCompleter.future.whenComplete(() async {
-      await _changelogCompleter.future;
       _settingsProvider.appIconChangeBasedOnCondition();
     });
   }
@@ -619,7 +651,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (launchBrowser) {
       _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
@@ -721,8 +752,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
         _deepLinkSubTriggeredTime = DateTime.now();
         _preferencesCompleter.future.whenComplete(() async {
-          await _changelogCompleter.future;
-
           logToUser(
             "Deep link browser opens\n\n$url",
             duration: 3,
@@ -778,8 +807,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _getBackgroundNotificationSavedData() async {
-    // Reload isolate (as we are reading from background)
-    await Prefs().reload();
     // Get the save alerts
     Prefs().getDataStockMarket().then((stocks) {
       if (stocks.isNotEmpty) {
@@ -790,6 +817,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _onFirebaseBackgroundNotification(Map<String, dynamic> message) async {
+    // Important: await preferences in case we need to use settings providers
+    await _preferencesCompleter.future;
+
     // Opens new tab in broser
     bool launchBrowserWithUrl = false;
     var browserUrl = "https://www.torn.com";
@@ -913,9 +943,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/crimes.php";
     } else if (life) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.lifeNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#medical-items';
@@ -930,9 +957,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       launchBrowserWithUrl = true;
       browserUrl = "https://www.torn.com/gym.php";
     } else if (drugs) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.drugsNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#drugs-items';
@@ -941,9 +965,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=drugs';
       }
     } else if (medical) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.medicalNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#medical-items';
@@ -952,9 +973,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         browserUrl = 'https://www.torn.com/factions.php?step=your&type=1#/tab=armoury&start=0&sub=medical';
       }
     } else if (booster) {
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (_settingsProvider.boosterNotificationTapAction == "itemsOwn") {
         launchBrowserWithUrl = true;
         browserUrl = 'https://www.torn.com/item.php#boosters-items';
@@ -974,9 +992,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       // Or everything is OK but we elected to open the browser with just 1 target
       // >> Open browser
 
-      // Important: await preferences before using SettingsProvider (in case app is launching)
-      await _changelogCompleter.future;
-
       if (!_settingsProvider.retaliationSectionEnabled ||
           (int.parse(bulkDetails) == 1 && _settingsProvider.singleRetaliationOpensBrowser)) {
         launchBrowserWithUrl = true;
@@ -992,8 +1007,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // If we pass all checks above, redirect to the retals section
           _retalsRedirection = true;
           _callSectionFromOutside(2);
-          Future.delayed(const Duration(seconds: 2)).then((value) {
-            _retalsRedirection = false;
+          Future.delayed(const Duration(seconds: 2)).then((_) {
+            if (mounted) {
+              _retalsRedirection = false;
+            }
           });
         }
       }
@@ -1135,7 +1152,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (launchBrowserWithUrl) {
       _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
         _webViewProvider.openBrowserPreference(
           context: context,
           url: browserUrl,
@@ -1144,7 +1160,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       });
     } else if (showBrowserForeground) {
       _preferencesCompleter.future.whenComplete(() async {
-        await _changelogCompleter.future;
         _webViewProvider.browserShowInForeground = true;
       });
     }
@@ -1484,7 +1499,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       if (launchBrowserWithUrl) {
         _preferencesCompleter.future.whenComplete(() async {
-          await _changelogCompleter.future;
           _webViewProvider.openBrowserPreference(
             context: context,
             url: browserUrl,
@@ -1493,7 +1507,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         });
       } else if (showBrowserForeground) {
         _preferencesCompleter.future.whenComplete(() async {
-          await _changelogCompleter.future;
           _webViewProvider.browserShowInForeground = true;
         });
       }
@@ -1529,15 +1542,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     return FutureBuilder(
       future: _finishedWithPreferences,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        if (snapshot.connectionState == ConnectionState.done && !_changelogIsActive) {
+        if (snapshot.connectionState == ConnectionState.done) {
           // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
           // safe area will be black
           return Container(
             color: _themeProvider!.currentTheme == AppTheme.light
                 ? MediaQuery.orientationOf(context) == Orientation.portrait
                     ? Colors.blueGrey
-                    : _themeProvider!.canvas
-                : _themeProvider!.canvas,
+                    : isStatusBarShown
+                        ? _themeProvider!.statusBar
+                        : _themeProvider!.canvas
+                : _themeProvider!.statusBar,
             child: SafeArea(
               right: _webViewProvider.webViewSplitActive &&
                   _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
@@ -2006,11 +2021,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
   }
 
-  Future<void> _loadInitPreferences() async {
+  Future _loadInitPreferences() async {
     // Set up SettingsProvider so that user preferences are applied
     // ## Leave this first as other options below need this to be initialized ##
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
+
+    // Set up UserScriptsProvider so that user preferences are applied
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    await _userScriptsProvider.loadPreferencesAndScripts();
 
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
@@ -2018,10 +2037,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
       _openDrawer();
     });
-
-    // Set up UserScriptsProvider so that user preferences are applied
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
-    await _userScriptsProvider.loadPreferences();
 
     // Set up UserProvider. If key is empty, redirect to the Settings page.
     // Else, open the default
@@ -2049,49 +2064,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
-      // Firestore get auth and init
+      await _initializeAndHandleFirebaseAuth();
+
+      // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
+      // since some people might leave the app opened for weeks in the background)
+      // Completer to ensure that we have a valid UID and avoid any race condition!!
       if (!Platform.isWindows) {
-        // See note in [firebase_auth.dart]
-        FirebaseAuth.instance.authStateChanges().listen((User? user) async {
-          // Only execute once, otherwise we risk creating users in a row below
-          if (_drawerUserChecked) return;
-          _drawerUserChecked = true;
-
-          if (user == null) {
-            log("Drawer: Firebase user is null, signing in!");
-            // Upload information to Firebase (this includes the token)
-            final User newAnonUser = await firebaseAuth.signInAnon() as User;
-            FirestoreHelper().setUID(newAnonUser.uid);
-            _updateFirebaseDetails();
-            _userUID = newAnonUser.uid;
-
-            // Warn user about the possibility of a new UID being regenerated
-            // We should not arrive here under normal circumstances, as null users are redirected to Settings
-            if (!Platform.isWindows) {
-              BotToast.showText(
-                clickClose: true,
-                text: "A problem was found with your user.\n\n"
-                    "Please visit the Alerts page and ensure that your alerts are properly setup!",
-                textStyle: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.white,
-                ),
-                contentColor: Colors.blue,
-                duration: const Duration(seconds: 6),
-                contentPadding: const EdgeInsets.all(10),
-              );
-            }
-          } else {
-            final existingUid = user.uid;
-            log("Drawer: Firebase user ID $existingUid");
-            FirestoreHelper().setUID(existingUid);
-            _userUID = existingUid;
-          }
-        });
-
-        // Update last used time in Firebase when the app opens (we'll do the same in onResumed,
-        // since some people might leave the app opened for weeks in the background)
-        // Completer to ensure that we have a valid UID and avoid any race condition!!
         FirestoreHelper().uidCompleter.future.whenComplete(() {
           _updateLastActiveTime();
         });
@@ -2116,6 +2094,173 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  Future<void> _initializeAndHandleFirebaseAuth() async {
+    if (Platform.isWindows || _drawerUserChecked) {
+      return;
+    }
+
+    // NOTE: we have already checked this before, but it's important!
+    // (so be leave this as a reminder)
+    if (_userProvider?.basic?.userApiKeyValid != true) return;
+
+    // Case 1: Post-import user creation
+    if (justImportedFromLocalBackup) {
+      if (FirebaseAuth.instance.currentUser == null) {
+        log(
+          "Drawer: Post-import check. Firebase user is null, proceeding with new anonymous sign-in.",
+          name: "Drawer AUTH",
+        );
+
+        try {
+          final User newAnonUser = await (firebaseAuth.signInAnon());
+          _userUID = newAnonUser.uid;
+          FirestoreHelper().setUID(_userUID);
+          await _updateFirebaseDetails();
+
+          // This dialog can be shown here with no postframe callback as it is inside
+          // of the Preferences Completer, so the main FutureBuilder hasn't loaded
+          await showDialog(
+            useRootNavigator: false,
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const PrefsLocalAfterImportDialog(),
+          );
+
+          log(
+            "Drawer: Firebase user created successfully after local import. UID: ${newAnonUser.uid}",
+            name: "Drawer AUTH",
+          );
+        } catch (e, s) {
+          log(
+            "Drawer: CRITICAL - Failed to sign-in anonymously after local backup import. Error: $e",
+            name: "Drawer AUTH",
+          );
+
+          await FirebaseCrashlytics.instance.recordError(e, s, reason: 'Auth Restoration: Post-import sign-in failed');
+          BotToast.showText(
+            clickClose: true,
+            text: "A critical error occurred while creating your profile after the import.\n\n"
+                "Please check your internet connection, restart the app, and reload your API key in Settings.",
+            textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+            contentColor: Colors.red,
+            duration: const Duration(seconds: 10),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
+      } else {
+        log(
+          "Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
+          name: "Drawer AUTH",
+        );
+        _userUID = FirebaseAuth.instance.currentUser!.uid;
+        FirestoreHelper().setUID(_userUID);
+      }
+      justImportedFromLocalBackup = false;
+      _drawerUserChecked = true;
+      return;
+    }
+
+    // Case 2: Standard app launch
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      log(
+        "Drawer: Session restored immediately. UID: ${user.uid}",
+        name: "Drawer AUTH",
+      );
+
+      _userUID = user.uid;
+      FirestoreHelper().setUID(_userUID);
+      _drawerUserChecked = true;
+      return;
+    }
+
+    log(
+      "Drawer: No user found. Listening to authStateChanges...",
+      name: "Drawer AUTH",
+    );
+
+    final stopwatch = Stopwatch()..start();
+    Timer? waitingMessageTimer;
+
+    try {
+      waitingMessageTimer = Timer(const Duration(seconds: 2), () {
+        BotToast.showText(
+          clickClose: true,
+          text: "Authentication with Firebase is taking longer than expected.\n\n"
+              "Please wait, Torn PDA will try for another 15 seconds.",
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+          contentColor: Colors.orange,
+          duration: const Duration(seconds: 15),
+          contentPadding: const EdgeInsets.all(10),
+        );
+      });
+
+      user = await FirebaseAuth.instance
+          .authStateChanges()
+          .firstWhere((user) => user != null)
+          .timeout(const Duration(seconds: 20));
+
+      log(
+        "Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
+        name: "Drawer AUTH",
+      );
+
+      await FirebaseCrashlytics.instance.recordError(
+        Exception('Auth Restoration: Slow path success'),
+        null,
+        reason: 'Auth Restoration: Slow path success',
+        information: ['Restoration time: ${stopwatch.elapsedMilliseconds} ms', 'Final UID: ${user.uid}'],
+        fatal: false,
+      );
+
+      _userUID = user.uid;
+      FirestoreHelper().setUID(_userUID);
+    } on TimeoutException {
+      log(
+        "Drawer: Timeout reached after 20 seconds. Firebase session not restored. Informing user.",
+        name: "Drawer AUTH",
+      );
+
+      final String fullApiKey = _userProvider?.basic?.userApiKey ?? 'API Key not available';
+
+      await FirebaseCrashlytics.instance.recordError(
+        Exception('Auth Restoration: Timeout after 20 seconds'),
+        StackTrace.current,
+        reason: 'Auth Restoration: Timeout',
+        information: ['Torn API Key: $fullApiKey'], // Sending full key
+        fatal: true,
+      );
+
+      BotToast.showText(
+        clickClose: true,
+        text: "A problem was found with your Firebase user.\n\n"
+            "Please reload your API key in Settings, then kill and restart the app.",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.red,
+        duration: const Duration(seconds: 8),
+        contentPadding: const EdgeInsets.all(10),
+      );
+    } catch (e, s) {
+      log(
+        "Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
+        name: "Drawer AUTH",
+      );
+
+      await FirebaseCrashlytics.instance.recordError(
+        e,
+        s,
+        reason: 'Auth Restoration: Unexpected error',
+        fatal: true,
+      );
+    } finally {
+      waitingMessageTimer?.cancel();
+      stopwatch.stop();
+    }
+
+    _drawerUserChecked = true;
+  }
+
   Future<void> _updateLastActiveTime() async {
     _preferencesCompleter.future.whenComplete(() async {
       // Prevents update on first load
@@ -2136,7 +2281,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _forceFireUserReload = false;
       }
 
-      if (duration.inDays > 2 || kDebugMode) {
+      if (duration.inDays > 1 || kDebugMode) {
         _settingsProvider.checkIfUserIsOnOCv2();
       }
     });
@@ -2164,60 +2309,57 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
-  Future<void> _handleChangelog() async {
-    _preferencesCompleter.future.whenComplete(() async {
-      _settingsProvider.checkIfUserIsOnOCv2();
+  Future<void> _handleChangelogAndOtherDialogs() async {
+    final dialogCompleter = Completer<void>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) {
+        dialogCompleter.complete();
+        return;
+      }
+
+      try {
+        if (appHasBeenUpdated || lastSavedAppCompilation.isEmpty) {
+          await _showChangeLogDialog(context);
+        } else {
+          // Other dialogs we need to show when the dialog is not being displayed
+          bool dialogWasShown = false;
+
+          // Appwidget dialog
+          if (Platform.isAndroid) {
+            if (!await Prefs().getAppwidgetExplanationShown()) {
+              if ((await pdaWidget_numberInstalled()).isNotEmpty) {
+                if (mounted) {
+                  await _showAppwidgetExplanationDialog(context);
+                }
+                Prefs().setAppwidgetExplanationShown(true);
+                dialogWasShown = true;
+              }
+            }
+          }
+
+          // Stats Announcement dialog
+          if (mounted && !dialogWasShown) {
+            bool statsShown = await _showAppStatsAnnouncementDialog();
+            if (mounted && !statsShown) {
+              await _showBugsAnnouncementDialog();
+            }
+          }
+
+          // Other dialogs
+          //...
+        }
+
+        if (!dialogCompleter.isCompleted) {
+          dialogCompleter.complete();
+        }
+      } catch (e, s) {
+        log('Error showing initial dialogs: $e', error: e, stackTrace: s);
+        dialogCompleter.completeError(e, s);
+      }
     });
 
-    final String savedCompilation = await Prefs().getAppCompilation();
-    final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
-
-    if (savedCompilation != currentCompilation) {
-      Prefs().setAppCompilation(currentCompilation);
-
-      // Will trigger an extra upload to Firebase when version changes
-      _forceFireUserReload = true;
-
-      // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
-      // Deletes current channels and create new ones
-      if (Platform.isAndroid) {
-        final vibration = await Prefs().getVibrationPattern();
-        await reconfigureNotificationChannels(mod: vibration);
-      }
-
-      _changelogIsActive = true;
-      await _showChangeLogDialog(context);
-
-      // TODO Note: added in v3.7.0 so that right after update we transfer the users to OC2
-      // This can be removed in the future since [_updateLastActiveTime] will take care
-      // of this when the app launches for first time
-      _preferencesCompleter.future.whenComplete(() async {
-        _settingsProvider.checkIfUserIsOnOCv2();
-      });
-    } else {
-      // Other dialogs we need to show when the dialog is not being displayed
-
-      // Appwidget dialog
-      if (Platform.isAndroid) {
-        if (!await Prefs().getAppwidgetExplanationShown()) {
-          if ((await pdaWidget_numberInstalled()).isNotEmpty) {
-            await _showAppwidgetExplanationDialog(context);
-            Prefs().setAppwidgetExplanationShown(true);
-            return; // Do not show more dialogs below
-          }
-        }
-      }
-
-      // Stats Announcement dialog
-      bool statsShown = await _showAppStatsAnnouncementDialog();
-
-      if (!statsShown) {
-        await _showBugsAnnouncementDialog();
-      }
-
-      // Other dialogs
-      //...
-    }
+    return dialogCompleter.future;
   }
 
   Future<void> _showChangeLogDialog(BuildContext context) async {
@@ -2226,13 +2368,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return ChangeLog();
+        return const ChangeLog();
       },
     );
-
-    setState(() {
-      _changelogIsActive = false;
-    });
   }
 
   Future<void> _showAppwidgetExplanationDialog(BuildContext context) async {
@@ -2319,7 +2457,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _getPages();
   }
 
-  _openDrawer() {
+  void _openDrawer() {
     if (routeWithDrawer) {
       if (_webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left) {
         _scaffoldKey.currentState!.openEndDrawer();
@@ -2464,6 +2602,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final int alreadyAvailableCount = _userScriptsProvider.userScriptList
         .where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable)
         .length;
+
     _userScriptsProvider.checkForUpdates().then((i) async {
       // Check if we need to show a notification (only if there are any new updates)
       if (_userScriptsProvider.userScriptsNotifyUpdates && i - alreadyAvailableCount > 0) {
@@ -2532,7 +2671,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
   }
 
-  _initialiseLiveActivitiesBridgeService() async {
+  Future<void> _initialiseLiveActivitiesBridgeService() async {
     _preferencesCompleter.future.whenComplete(() async {
       if (!Platform.isIOS) return;
       if (!_settingsProvider.iosLiveActivityTravelEnabled) return;

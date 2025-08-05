@@ -288,7 +288,7 @@ class CrimesOptionsState extends State<CrimesOptions> {
     setState(() {});
   }
 
-  _initCrimes() {
+  void _initCrimes() {
     _mainCrimeList.addAll([
       // NERVE 2
       Crime(

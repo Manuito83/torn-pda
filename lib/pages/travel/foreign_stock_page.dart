@@ -13,7 +13,6 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 // Project imports:
@@ -29,6 +28,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/sliding_up_panel.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
@@ -49,10 +49,9 @@ class ForeignStockPage extends StatefulWidget {
 }
 
 class ForeignStockPageState extends State<ForeignStockPage> {
-  final PanelController _pc = PanelController();
+  final CustomPanelController _pc = CustomPanelController();
 
   final double _initFabHeight = 25.0;
-  double? _fabHeight;
   final double _panelHeightOpen = 300;
   final double _panelHeightClosed = 75.0;
 
@@ -146,19 +145,26 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   final List<ForeignStock> _hiddenStocks = <ForeignStock>[];
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _fabHeight = _initFabHeight;
     _apiCalled = _fetchApiInformation();
     _restoreSharedPreferences();
 
     routeWithDrawer = false;
     routeName = "foreign_stock";
-    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "foreign_stock") _goBack(false, false);
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -168,10 +174,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : Colors.grey[900]
-          : _themeProvider!.currentTheme == AppTheme.dark
-              ? Colors.grey[900]
-              : Colors.black,
+              : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
+          : _themeProvider!.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
@@ -188,145 +194,117 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               : null,
           body: Container(
             color: _themeProvider!.currentTheme == AppTheme.extraDark ? Colors.black : Colors.transparent,
-            child: Stack(
-              alignment: Alignment.topCenter,
-              children: <Widget>[
-                FutureBuilder(
-                  future: _apiCalled,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (_apiSuccess) {
-                        return SmartRefresher(
-                          header: WaterDropMaterialHeader(
-                            backgroundColor: Theme.of(context).primaryColor,
-                          ),
-                          controller: _refreshController,
-                          onRefresh: _onRefresh,
-                          child: ListView(
-                            children: _stockItems(),
-                          ),
-                        );
-                      } else {
-                        final errorTiles = <Widget>[];
-                        errorTiles.add(
-                          Center(
-                            child: Column(
-                              children: [
-                                Image.asset(
-                                  'images/icons/airplane.png',
-                                  height: 100,
-                                ),
-                                const SizedBox(height: 15),
-                                const Text(
-                                  'OOPS!',
-                                  style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-                                  child: Text(
-                                    'There was an error getting the information, please '
-                                    'try again later or pull to refresh!',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
+            child: FutureBuilder(
+              future: _apiCalled,
+              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+                if (snapshot.connectionState == ConnectionState.done) {
+                  if (_apiSuccess) {
+                    return CustomSlidingUpPanel(
+                      controller: _pc,
+                      maxHeight: _panelHeightOpen,
+                      minHeight: _panelHeightClosed,
+                      renderPanelSheet: false,
+                      backdropEnabled: true,
+                      parallaxEnabled: true,
+                      parallaxOffset: .1,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(18.0),
+                        topRight: Radius.circular(18.0),
+                      ),
 
-                        return SmartRefresher(
-                          header: WaterDropMaterialHeader(
-                            backgroundColor: Theme.of(context).primaryColor,
-                          ),
-                          controller: _refreshController,
-                          onRefresh: _onRefresh,
-                          child: ListView(
-                            children: [
-                              SizedBox(
-                                height: MediaQuery.sizeOf(context).height / 2,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: errorTiles,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }
-                    } else {
-                      return const Center(
+                      // The main listview
+                      body: SmartRefresher(
+                        header: WaterDropMaterialHeader(
+                          backgroundColor: Theme.of(context).primaryColor,
+                        ),
+                        controller: _refreshController,
+                        onRefresh: _onRefresh,
+                        child: ListView(
+                          children: _stockItems(),
+                        ),
+                      ),
+
+                      // The panel content
+                      panelBuilder: (sc) => _bottomPanel(sc),
+
+                      // FAB
+                      floatingActionButton: FloatingActionButton.extended(
+                        icon: const Icon(Icons.filter_list),
+                        label: const Text("Filter"),
+                        elevation: 4,
+                        onPressed: () {
+                          if (_pc.isPanelAnimating) return;
+                          if (!_pc.isPanelClosed) {
+                            _pc.close();
+                          } else {
+                            _pc.open();
+                          }
+                        },
+                        backgroundColor: Colors.orange,
+                      ),
+                      floatingActionButtonOffset: _initFabHeight,
+                    );
+                  } else {
+                    // Error case handling
+                    final errorTiles = <Widget>[];
+                    errorTiles.add(
+                      Center(
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text('Fetching data...'),
-                            SizedBox(height: 30),
-                            CircularProgressIndicator(),
+                          children: [
+                            Image.asset(
+                              'images/icons/airplane.png',
+                              height: 100,
+                            ),
+                            const SizedBox(height: 15),
+                            const Text(
+                              'OOPS!',
+                              style: TextStyle(color: Colors.red, fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                              child: Text(
+                                'There was an error getting the information, please '
+                                'try again later or pull to refresh!',
+                              ),
+                            ),
                           ],
                         ),
-                      );
-                    }
-                  },
-                ),
+                      ),
+                    );
 
-                // Sliding panel
-                FutureBuilder(
-                  future: _apiCalled,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (_apiSuccess) {
-                        return SlidingUpPanel(
-                          controller: _pc,
-                          maxHeight: _panelHeightOpen,
-                          minHeight: _panelHeightClosed,
-                          renderPanelSheet: false,
-                          backdropEnabled: true,
-                          parallaxEnabled: true,
-                          parallaxOffset: .5,
-                          panelBuilder: (sc) => _bottomPanel(sc),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(18.0),
-                            topRight: Radius.circular(18.0),
+                    return SmartRefresher(
+                      header: WaterDropMaterialHeader(
+                        backgroundColor: Theme.of(context).primaryColor,
+                      ),
+                      controller: _refreshController,
+                      onRefresh: _onRefresh,
+                      child: ListView(
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.sizeOf(context).height / 2,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: errorTiles,
+                            ),
                           ),
-                          onPanelSlide: (double pos) => setState(() {
-                            _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                          }),
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    } else {
-                      return const SizedBox.shrink();
-                    }
-                  },
-                ),
-
-                // FAB
-                FutureBuilder(
-                  future: _apiCalled,
-                  builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    if (snapshot.connectionState == ConnectionState.done) {
-                      if (_apiSuccess) {
-                        return Positioned(
-                          right: 35.0,
-                          bottom: _fabHeight,
-                          child: FloatingActionButton.extended(
-                            icon: const Icon(Icons.filter_list),
-                            label: const Text("Filter"),
-                            elevation: 4,
-                            onPressed: () {
-                              _pc.isPanelOpen ? _pc.close() : _pc.open();
-                            },
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                      } else {
-                        return const SizedBox.shrink();
-                      }
-                    } else {
-                      return const SizedBox.shrink();
-                    }
-                  },
-                ),
-              ],
+                        ],
+                      ),
+                    );
+                  }
+                } else {
+                  // Loading case
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text('Fetching data...'),
+                        SizedBox(height: 30),
+                        CircularProgressIndicator(),
+                      ],
+                    ),
+                  );
+                }
+              },
             ),
           ),
         ),
@@ -334,7 +312,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  _goBack(bool flag, bool shortTap) {
+  void _goBack(bool flag, bool shortTap) {
     routeWithDrawer = true;
     routeName = "drawer";
     // Returning 'false' to indicate we did not press a flag
@@ -428,8 +406,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               Container(
                 width: 30,
                 height: 5,
-                decoration:
-                    BoxDecoration(color: Colors.grey[400], borderRadius: const BorderRadius.all(Radius.circular(12.0))),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: const BorderRadius.all(
+                    Radius.circular(12.0),
+                  ),
+                ),
               ),
             ],
           ),
@@ -1466,7 +1448,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       flagStrings[i] == '0' ? _filteredFlags[i] = false : _filteredFlags[i] = true;
     }
     _alphabeticalFilter = await Prefs().getCountriesAlphabeticalFilter();
-    //_transformAlphabeticalTime();
 
     final typesStrings = await Prefs().getStockTypeFilter();
     for (var i = 0; i < typesStrings.length; i++) {
@@ -1616,7 +1597,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
   }
 
-  _refreshMoney() async {
+  Future<void> _refreshMoney() async {
     final profileModel = await ApiCallsV1.getOwnProfileExtended(limit: 3);
     if (profileModel is OwnProfileExtended && mounted) {
       setState(() {
@@ -1638,7 +1619,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _saveHiddenStocks();
   }
 
-  _unhideMember(int? id, String? countryCode) {
+  void _unhideMember(int? id, String? countryCode) {
     setState(() {
       _hiddenStocks.removeWhere((element) => element.id == id && element.countryCode == countryCode);
     });
@@ -1646,7 +1627,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _saveHiddenStocks();
   }
 
-  _saveHiddenStocks() {
+  void _saveHiddenStocks() {
     final hiddenSaveList = <String>[];
     for (final h in _hiddenStocks) {
       hiddenSaveList.add(foreignStockToJson(h));

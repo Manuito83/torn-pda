@@ -348,6 +348,9 @@ class AboutPageState extends State<AboutPage> {
                         ],
                       ),
                     ),
+                    const SizedBox(
+                      height: 15,
+                    ),
                     if (widget.uid.isNotEmpty)
                       Row(
                         children: <Widget>[
@@ -355,6 +358,20 @@ class AboutPageState extends State<AboutPage> {
                             flex: 2,
                             child: Text(
                               "UID: ${widget.uid.substring(widget.uid.length - 4)}",
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Row(
+                        children: <Widget>[
+                          Flexible(
+                            flex: 2,
+                            child: Text(
+                              "UID not assigned, please reload your API key in Settings!",
+                              style: TextStyle(
+                                color: _themeProvider.getTextColor(Colors.red),
+                              ),
                             ),
                           ),
                         ],

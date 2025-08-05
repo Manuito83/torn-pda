@@ -374,7 +374,7 @@ class ItemCardState extends State<ItemCard> {
 
       List<Widget> marketList = <Widget>[];
       var mIndex = 0;
-      for (final m in _marketItem.listings!) {
+      for (final m in _marketItem.listings) {
         if (mIndex >= 3) break;
         mIndex++;
 
@@ -506,7 +506,7 @@ class ItemCardState extends State<ItemCard> {
       if (apiResponse is MarketItemMarketResponse) {
         setState(() {
           _footerSuccessful = true;
-          _marketItem = apiResponse.itemmarket!;
+          _marketItem = apiResponse.itemmarket;
         });
       }
     } catch (e) {

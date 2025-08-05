@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -55,6 +56,8 @@ class ApiKeySectionWidget extends StatefulWidget {
 }
 
 class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
+  ExpandableController _tosExpandableController = ExpandableController();
+
   @override
   Widget build(BuildContext context) {
     if (widget.apiIsLoading) {
@@ -70,6 +73,7 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
         padding: const EdgeInsets.fromLTRB(10, 20, 10, 0),
         child: Card(
           child: ExpandablePanel(
+            theme: ExpandableThemeData(iconColor: context.read<ThemeProvider>().mainText),
             controller: widget.expandableController,
             collapsed: Container(),
             header: Padding(
@@ -360,7 +364,7 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
       );
     } else if (widget.userProfile == null) {
       return Padding(
-        padding: const EdgeInsetsDirectional.fromSTEB(10, 30, 10, 0),
+        padding: const EdgeInsetsDirectional.fromSTEB(0, 30, 0, 0),
         child: Column(
           children: <Widget>[
             const Text(
@@ -373,12 +377,81 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
             ),
             Row(
               children: [
-                const Icon(Icons.info_outline, color: Colors.blue),
-                const SizedBox(width: 10),
                 Flexible(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // ToS Compliance Table
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      Card(
+                        shadowColor: Colors.blueGrey,
+                        elevation: 2,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ExpandablePanel(
+                            theme: ExpandableThemeData(iconColor: context.read<ThemeProvider>().mainText),
+                            controller: _tosExpandableController,
+                            header: const Text(
+                              "See how we comply with Torn's Terms of Service",
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            collapsed: const Text(
+                              "Expand the section below to see how Torn PDA complies with these guidelines.",
+                            ),
+                            expanded: Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 15),
+                                  child: Table(
+                                    border: TableBorder.all(
+                                      borderRadius: const BorderRadius.all(Radius.circular(5)),
+                                    ),
+                                    columnWidths: const <int, TableColumnWidth>{
+                                      0: FlexColumnWidth(1),
+                                      1: FlexColumnWidth(2),
+                                    },
+                                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                                    children: <TableRow>[
+                                      const TableRow(
+                                        decoration: BoxDecoration(
+                                          color: Colors.black12,
+                                          borderRadius: BorderRadius.only(
+                                              topLeft: Radius.circular(5), topRight: Radius.circular(5)),
+                                        ),
+                                        children: <Widget>[
+                                          Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Text('Category', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          ),
+                                          Padding(
+                                            padding: EdgeInsets.all(8.0),
+                                            child: Text('Description', style: TextStyle(fontWeight: FontWeight.bold)),
+                                          ),
+                                        ],
+                                      ),
+                                      _buildTosTableRow('Data Storage',
+                                          'Persistent - until you remove the key from the app. This also applies to the Torn PDA server'),
+                                      _buildTosTableRow('Data Sharing',
+                                          'Your data is not shared. Only service owners may access data for maintenance and support purposes'),
+                                      _buildTosTableRow('Purpose of Use',
+                                          'To provide application features and display your Torn data within the app'),
+                                      _buildTosTableRow('Key Storage & Sharing',
+                                          'Stored remotely and securely. Used only for automated requests to the Torn API on your behalf'),
+                                      _buildTosTableRow('Key Access Level', 'Limited Access'),
+                                    ],
+                                  ),
+                                ),
+                                const Text(
+                                  "Note: if you are curious about Torn PDA's own privacy policy, you can access it in the Abour section of the app",
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                       const Text(
                         "\nYou can get your API key in the Torn website by tapping your profile picture (upper right corner)"
                         " and going to Settings, API Keys. Torn PDA only needs a Limited Access key.\n",
@@ -458,5 +531,20 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
     String allowedChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     myCurrentKey = myCurrentKey.replaceAll(RegExp('[^$allowedChars]+'), '');
     return myCurrentKey;
+  }
+
+  TableRow _buildTosTableRow(String title, String content) {
+    return TableRow(
+      children: <Widget>[
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Text(content),
+        ),
+      ],
+    );
   }
 }

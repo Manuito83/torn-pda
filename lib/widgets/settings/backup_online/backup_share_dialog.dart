@@ -5,9 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
-import 'package:torn_pda/utils/settings/backup_prefs_groups.dart';
-import 'package:torn_pda/widgets/settings/backup/backup_import_widget.dart';
-import 'package:torn_pda/widgets/settings/backup/backup_restore_button.dart';
+import 'package:torn_pda/utils/settings/backup_online/backup_online_prefs_groups.dart';
+import 'package:torn_pda/widgets/settings/backup_online/backup_import_widget.dart';
+import 'package:torn_pda/widgets/settings/backup_online/backup_restore_button.dart';
 
 class BackupShareDialog extends StatefulWidget {
   final OwnProfileBasic userProfile;
@@ -680,7 +680,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
   }
 
   /// Retrieves remote import prefs with username and password
-  _getImportPrefs() async {
+  Future<void> _getImportPrefs() async {
     setState(() {
       _importFetchActive = true;
     });

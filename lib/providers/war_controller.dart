@@ -1143,7 +1143,7 @@ class WarController extends GetxController {
     }
   }
 
-  _deleteSpiedStats(Member member) {
+  void _deleteSpiedStats(Member member) {
     member.spySource = SpiesSource.yata;
     member.statsExactTotal = -1;
     member.statsExactTotalUpdated = -1;
@@ -1438,13 +1438,15 @@ class WarController extends GetxController {
 
       String stats = statsBuffer.toString();
 
-      await Share.share(
-        stats,
-        sharePositionOrigin: Rect.fromLTWH(
-          0,
-          0,
-          MediaQuery.of(context).size.width,
-          MediaQuery.of(context).size.height / 2,
+      await SharePlus.instance.share(
+        ShareParams(
+          text: stats,
+          sharePositionOrigin: Rect.fromLTWH(
+            0,
+            0,
+            MediaQuery.of(context).size.width,
+            MediaQuery.of(context).size.height / 2,
+          ),
         ),
       );
     } catch (e, t) {
@@ -1585,7 +1587,11 @@ class WarController extends GetxController {
       // Create an XFile from the file path and share it
       final XFile xFile = XFile(path);
 
-      await Share.shareXFiles([xFile], text: 'War targets stats');
+      final shareParams = ShareParams(
+        text: 'War targets stats',
+        files: [xFile],
+      );
+      await SharePlus.instance.share(shareParams);
 
       // Clean the temporary file
       await file.delete();

@@ -1,4 +1,4 @@
-// ignore_for_file: non_constant_identifier_names
+// ignore_for_file: non_constant_identifier_names, depend_on_referenced_packages, camel_case_types
 
 import 'dart:async';
 import 'package:chopper/chopper.dart' as chopper;

@@ -195,7 +195,13 @@ class PrefsBackupWidget extends StatelessWidget {
     final dir = await getTemporaryDirectory();
     final file = File('${dir.path}/pda_prefs_backup_${_ts()}.pda');
     await file.writeAsString(data);
-    final res = await Share.shareXFiles([XFile(file.path)], subject: 'PDA Preferences Backup');
+
+    final shareParams = ShareParams(
+      text: 'PDA Preferences Backup',
+      files: [XFile(file.path)],
+    );
+    final res = await SharePlus.instance.share(shareParams);
+
     if (res.status == ShareResultStatus.success) {
       _showToast('Backup saved', ToastificationType.success);
     }
@@ -232,8 +238,8 @@ class PrefsBackupWidget extends StatelessWidget {
 
     try {
       final decoded = _decodeBackup(file.bytes!, key);
-      final prefs = await SharedPreferences.getInstance();
-      final matched = prefs.getKeys().intersection(decoded.keys.toSet()).length;
+      final prefs = SharedPreferencesAsync();
+      final matched = (await prefs.getKeys()).intersection(decoded.keys.toSet()).length;
       final backupKeys = decoded.keys.length;
 
       if (matched == 0) {

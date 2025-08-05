@@ -125,7 +125,6 @@ export const alertsGroup = {
           );
           return value;
         });
-
       }
 
       promisesGlobal.push(checkIOS());
@@ -280,7 +279,7 @@ async function sendNotificationForProfile(
   subscriber: any,
   foreignStocks: any,
   stockMarket: any,
-  forceTest: boolean = false,
+  forceTest: boolean = false
 ): Promise<any> {
   const notificationsToSend: NotificationParams[] = [];
   const firestoreUpdates: { [key: string]: any } = {};
@@ -290,7 +289,6 @@ async function sendNotificationForProfile(
     const userStats: any = await getUsersStat(subscriber.apiKey);
 
     if (!userStats.error) {
-
       // 1. Live Activities: Call handleTravelLiveActivity (it handles its own RTDB writes)
       // This is a direct async call, independent of other alerts.
       if (subscriber.la_travel_push_token) {
@@ -300,19 +298,47 @@ async function sendNotificationForProfile(
       // 2. Prepare an array to collect results conditionally
       const checkResults: NotificationCheckResult[] = [];
 
-      if (subscriber.energyNotification) { checkResults.push(sendEnergyNotification(userStats, subscriber)); }
-      if (subscriber.nerveNotification) { checkResults.push(sendNerveNotification(userStats, subscriber)); }
-      if (subscriber.lifeNotification) { checkResults.push(sendLifeNotification(userStats, subscriber)); }
-      if (subscriber.travelNotification) { checkResults.push(logTravelArrival(userStats, subscriber)); }
-      if (subscriber.hospitalNotification) { checkResults.push(sendHospitalNotification(userStats, subscriber)); }
-      if (subscriber.drugsNotification) { checkResults.push(sendDrugsNotification(userStats, subscriber)); }
-      if (subscriber.medicalNotification) { checkResults.push(sendMedicalNotification(userStats, subscriber)); }
-      if (subscriber.boosterNotification) { checkResults.push(sendBoosterNotification(userStats, subscriber)); }
-      if (subscriber.racingNotification) { checkResults.push(sendRacingNotification(userStats, subscriber)); }
-      if (subscriber.messagesNotification) { checkResults.push(sendMessagesNotification(userStats, subscriber)); }
-      if (subscriber.eventsNotification) { checkResults.push(sendEventsNotification(userStats, subscriber)); }
-      if (subscriber.foreignRestockNotification) { checkResults.push(sendForeignRestockNotification(userStats, foreignStocks, subscriber)); }
-      if (subscriber.stockMarketNotification) { checkResults.push(sendStockMarketNotification(stockMarket, subscriber)); }
+      if (subscriber.energyNotification) {
+        checkResults.push(sendEnergyNotification(userStats, subscriber));
+      }
+      if (subscriber.nerveNotification) {
+        checkResults.push(sendNerveNotification(userStats, subscriber));
+      }
+      if (subscriber.lifeNotification) {
+        checkResults.push(sendLifeNotification(userStats, subscriber));
+      }
+      if (subscriber.travelNotification) {
+        checkResults.push(logTravelArrival(userStats, subscriber));
+      }
+      if (subscriber.hospitalNotification) {
+        checkResults.push(sendHospitalNotification(userStats, subscriber));
+      }
+      if (subscriber.drugsNotification) {
+        checkResults.push(sendDrugsNotification(userStats, subscriber));
+      }
+      if (subscriber.medicalNotification) {
+        checkResults.push(sendMedicalNotification(userStats, subscriber));
+      }
+      if (subscriber.boosterNotification) {
+        checkResults.push(sendBoosterNotification(userStats, subscriber));
+      }
+      if (subscriber.racingNotification) {
+        checkResults.push(sendRacingNotification(userStats, subscriber));
+      }
+      if (subscriber.messagesNotification) {
+        checkResults.push(sendMessagesNotification(userStats, subscriber));
+      }
+      if (subscriber.eventsNotification) {
+        checkResults.push(sendEventsNotification(userStats, subscriber));
+      }
+      if (subscriber.foreignRestockNotification) {
+        checkResults.push(
+          sendForeignRestockNotification(userStats, foreignStocks, subscriber)
+        );
+      }
+      if (subscriber.stockMarketNotification) {
+        checkResults.push(sendStockMarketNotification(stockMarket, subscriber));
+      }
 
       // 3. Process collected results, both notifications and Firestore updates
       for (const result of checkResults) {
@@ -326,17 +352,24 @@ async function sendNotificationForProfile(
 
       // 4. Perform a single Firestore update for this user
       if (Object.keys(firestoreUpdates).length > 0) {
-        allPromises.push(admin.firestore().collection("players").doc(subscriber.uid).update(firestoreUpdates));
+        allPromises.push(
+          admin
+            .firestore()
+            .collection("players")
+            .doc(subscriber.uid)
+            .update(firestoreUpdates)
+        );
       }
 
       // 5. Send all collected notifications in parallel
       if (notificationsToSend.length > 0) {
-        allPromises.push(...notificationsToSend.map(params => sendNotificationToUser(params)));
+        allPromises.push(
+          ...notificationsToSend.map((params) => sendNotificationToUser(params))
+        );
       }
 
       // 6. Wait for all concurrent operations to complete
       await Promise.all(allPromises);
-
     } else {
       // Return API errors for certain statistics
       if (userStats.error.error.includes("IP block")) {
@@ -353,20 +386,32 @@ async function sendNotificationForProfile(
       if (subscriber.tokenErrors !== undefined) {
         const errors = subscriber.tokenErrors + 1;
         if (errors >= 10) {
-          await admin.firestore().collection("players").doc(subscriber.uid).update({
-            active: false,
-            tokenErrors: errors,
-          });
+          await admin
+            .firestore()
+            .collection("players")
+            .doc(subscriber.uid)
+            .update({
+              active: false,
+              tokenErrors: errors,
+            });
           functions.logger.warn(
             `Staled: ${subscriber.name}[${subscriber.playerId}] with UID ${subscriber.uid} after ${errors} token errors`
           );
         } else {
-          await admin.firestore().collection("players").doc(subscriber.uid).update({
-            tokenErrors: errors,
-          });
+          await admin
+            .firestore()
+            .collection("players")
+            .doc(subscriber.uid)
+            .update({
+              tokenErrors: errors,
+            });
         }
       } else {
-        await admin.firestore().collection("players").doc(subscriber.uid).update({ tokenErrors: 1 });
+        await admin
+          .firestore()
+          .collection("players")
+          .doc(subscriber.uid)
+          .update({ tokenErrors: 1 });
       }
     }
   }
@@ -387,10 +432,16 @@ export const alertsTestGroup = {
       const userName = data.userName || "Manuito";
 
       if (!userName) {
-        throw new functions.https.HttpsError("invalid-argument", "No username provided.");
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "No username provided."
+        );
       }
       if (!context.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
+        throw new functions.https.HttpsError(
+          "unauthenticated",
+          "Authentication required."
+        );
       }
 
       functions.logger.info(`Running full alert check for: ${userName}`);
@@ -423,8 +474,14 @@ export const alertsTestGroup = {
 
       let blocks = 0;
       for (const subscriber of subscribers) {
-        const result = await sendNotificationForProfile(subscriber, foreignStocks, stockMarket);
-        if (result === "ip-block") { blocks++; }
+        const result = await sendNotificationForProfile(
+          subscriber,
+          foreignStocks,
+          stockMarket
+        );
+        if (result === "ip-block") {
+          blocks++;
+        }
       }
 
       const millisAfterFinish = Date.now();
@@ -446,24 +503,42 @@ export const alertsTestGroup = {
       const userName = data.userName || "Manuito";
 
       if (!userName) {
-        throw new functions.https.HttpsError("invalid-argument", "No username provided.");
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "No username provided."
+        );
       }
       if (!context.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
+        throw new functions.https.HttpsError(
+          "unauthenticated",
+          "Authentication required."
+        );
       }
 
-      functions.logger.info(`Sending hardcoded test notification to ${userName}.`);
+      functions.logger.info(
+        `Sending hardcoded test notification to ${userName}.`
+      );
 
-      const userDoc = await admin.firestore().collection("players").where("name", "==", userName).get();
+      const userDoc = await admin
+        .firestore()
+        .collection("players")
+        .where("name", "==", userName)
+        .get();
       if (userDoc.empty) {
-        throw new functions.https.HttpsError("not-found", `User '${userName}' not found.`);
+        throw new functions.https.HttpsError(
+          "not-found",
+          `User '${userName}' not found.`
+        );
       }
       const subscriber = userDoc.docs[0].data();
       const token = subscriber.token;
       const vibration = subscriber.vibration || "";
 
       if (!token || token === "windows") {
-        throw new functions.https.HttpsError("failed-precondition", `User '${userName}' has no valid FCM token.`);
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          `User '${userName}' has no valid FCM token.`
+        );
       }
 
       const defaultTestParams: NotificationParams = {
@@ -479,88 +554,178 @@ export const alertsTestGroup = {
 
       try {
         await sendNotificationToUser(defaultTestParams);
-        functions.logger.info(`Successfully sent hardcoded test notification to ${userName}.`);
+        functions.logger.info(
+          `Successfully sent hardcoded test notification to ${userName}.`
+        );
         return { success: true, message: `Test notification sent.` };
       } catch (error: any) {
-        functions.logger.error(`Failed to send test notification to ${userName}:`, error);
-        throw new functions.https.HttpsError("internal", `Failed to send notification: ${error.message}`);
+        functions.logger.error(
+          `Failed to send test notification to ${userName}:`,
+          error
+        );
+        throw new functions.https.HttpsError(
+          "internal",
+          `Failed to send notification: ${error.message}`
+        );
       }
     }),
 
-  /**
-   * Sends a mass notification to all active players
-   * Ignores user's alertsEnabled preference
-   */
   sendMassNotification: functions
     .region("us-east4")
-    .runWith(runtimeOpts1024)
-    .https.onCall(async (data, context) => {
+    .runWith({ timeoutSeconds: 540, memory: "1GB" })
+    .https.onRequest(async (_request, response) => {
 
-      // ####### WARNING!! ########
-      const active = false;
-      if (!active) {
-        functions.logger.warn("MASS NOTIFICATION NOT ACTIVE!!!!");
-        return null;
+      // --- WARNING CONFIG ---
+      const IS_ACTIVE = false;   // FALSE is SECURED
+      const IS_TEST_MODE = true; // TRUE is TEST MODE (only sends to TEST_USER_NAME - active neeeds to be true anyway)
+      const TEST_USER_NAME = "Manuito";
+      // ---------------------------------
+
+      if (!IS_ACTIVE) {
+        response
+          .status(403)
+          .json({ success: false, message: "Inactive function!" });
+        return;
       }
 
-      const defaultContentParams = {
-        title: "TORN PDA INFO",
-        body: "TEST",
+      const notificationContent = {
+        title: "TORN PDA INFO - Profile Bug 🐞",
+        body:
+          "As some of you have let us know, there's a bug in several sections of the Profile page in the app. " +
+          "We are fully aware and working on it. There's more information in the Torn PDA official forum thread if you are interested.",
         icon: "notification_icon",
         color: "#00FF00",
         channelId: "Alerts information",
         sound: "aircraft_seatbelt.aiff",
       };
 
-      if (!context.auth) {
-        throw new functions.https.HttpsError("unauthenticated", "Authentication required.");
-      }
+      functions.logger.info(
+        `Starting mass notification. Test Mode: ${IS_TEST_MODE}`
+      );
 
-      functions.logger.info(`Sending mass notification: "${defaultContentParams.title}" - "${defaultContentParams.body}"`);
-
-      // Query all active players, even if alerts not enabled
-      const activePlayersSnapshot = await admin
-        .firestore()
-        .collection("players")
-        .where("active", "==", true)
-        .get();
-
-      const notificationsPromises: Promise<any>[] = [];
-      let sentCount = 0;
-      let failedCount = 0;
-
-      for (const doc of activePlayersSnapshot.docs) {
-        const subscriber = doc.data();
-        const token = subscriber.token;
-        const vibration = subscriber.vibration || "";
-
-        if (token && token !== "windows") {
-          const userNotificationParams: NotificationParams = {
-            token: token,
-            title: defaultContentParams.title,
-            body: defaultContentParams.body,
-            icon: defaultContentParams.icon,
-            color: defaultContentParams.color,
-            channelId: defaultContentParams.channelId,
-            vibration: vibration,
-            sound: defaultContentParams.sound,
-          };
-
-          notificationsPromises.push(
-            sendNotificationToUser(userNotificationParams)
-              .then(() => {
-                sentCount++;
-              }).catch((e: any) => {
-                functions.logger.warn(`Failed to send mass notification to ${doc.id}: ${e.message}`);
-                failedCount++;
-              })
-          );
+      try {
+        let playersSnapshot;
+        if (IS_TEST_MODE) {
+          playersSnapshot = await admin
+            .firestore()
+            .collection("players")
+            .where("name", "==", TEST_USER_NAME)
+            .where("active", "==", true)
+            .get();
+        } else {
+          playersSnapshot = await admin
+            .firestore()
+            .collection("players")
+            .where("active", "==", true)
+            .get();
         }
+
+        const allTokens: string[] = [];
+        for (const doc of playersSnapshot.docs) {
+          const token = doc.data().token;
+          if (
+            token &&
+            typeof token === "string" &&
+            token.length > 10 &&
+            token !== "windows"
+          ) {
+            allTokens.push(token);
+          }
+        }
+
+        if (allTokens.length === 0) {
+          response
+            .status(200)
+            .json({ success: true, message: "No valid tokens found." });
+          return;
+        }
+
+        const chunkSize = 1000;
+        const totalChunks = Math.ceil(allTokens.length / chunkSize);
+
+        functions.logger.info(
+          `Found ${allTokens.length} tokens. Will be processed in ${totalChunks} chunks of ${chunkSize}.`
+        );
+
+        let failedCount = 0;
+        let tokenNotFoundCount = 0;
+
+        for (let i = 0; i < allTokens.length; i += chunkSize) {
+          const currentChunkNumber = i / chunkSize + 1;
+          const chunk = allTokens.slice(i, i + chunkSize);
+
+          const promises = chunk.map((token) => {
+            const payload: admin.messaging.Message = {
+              token: token,
+              notification: {
+                title: notificationContent.title,
+                body: notificationContent.body,
+              },
+              android: {
+                priority: "high",
+                notification: {
+                  channelId: notificationContent.channelId,
+                  color: notificationContent.color,
+                  icon: notificationContent.icon,
+                  sound: "default",
+                },
+              },
+              apns: {
+                headers: { "apns-priority": "10" },
+                payload: {
+                  aps: { sound: notificationContent.sound, badge: 1 },
+                },
+              },
+            };
+
+            return admin
+              .messaging()
+              .send(payload)
+              .then(() => ({ success: true }))
+              .catch((error) => ({ success: false, error: error }));
+          });
+
+          const results = await Promise.all(promises);
+
+          for (const result of results) {
+            if (!result.success) {
+              failedCount++;
+              if (
+                "error" in result &&
+                result.error &&
+                result.error
+                  .toString()
+                  .includes("Requested entity was not found")
+              ) {
+                tokenNotFoundCount++;
+              }
+            }
+          }
+
+          functions.logger.info(
+            `Processed chunk ${currentChunkNumber}/${totalChunks}. Total failures so far: ${failedCount}`
+          );
+
+          if (i + chunkSize < allTokens.length) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+
+        const sentCount = allTokens.length - failedCount;
+        const finalMessage = `Mass notification completed. Total Sent: ${sentCount}, Total Failed: ${failedCount} (of which ${tokenNotFoundCount} were invalid tokens).`;
+        functions.logger.info(finalMessage);
+        response.status(200).json({ success: true, message: finalMessage });
+
+      } catch (error) {
+        functions.logger.error("A critical error occurred:", error);
+        response
+          .status(500)
+          .json({
+            success: false,
+            message: "An internal server error occurred.",
+          });
       }
 
-      await Promise.all(notificationsPromises);
-
-      functions.logger.info(`Mass notification completed. Sent: ${sentCount}, Failed: ${failedCount}.`);
-      return { success: true, message: `Mass notification sent. Sent: ${sentCount}, Failed: ${failedCount}.` };
     }),
+
 };

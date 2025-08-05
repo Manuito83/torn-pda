@@ -46,7 +46,7 @@ class StakeoutsController extends GetxController {
 
   bool? _stakeoutsEnabled;
   bool? get stakeoutsEnabled => _stakeoutsEnabled;
-  enableStakeOuts() async {
+  Future<void> enableStakeOuts() async {
     // Quickly update active stakeouts that have not been updated in 30 seconds
     final int millis = DateTime.now().millisecondsSinceEpoch;
     bool anySuccess = false;
@@ -78,7 +78,7 @@ class StakeoutsController extends GetxController {
     update();
   }
 
-  disableStakeouts() {
+  void disableStakeouts() {
     _stakeoutsEnabled = false;
     Prefs().setStakeoutsEnabled(false);
     update();

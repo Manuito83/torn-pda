@@ -177,134 +177,186 @@ String handler_evaluateJS() {
 /// By Kwack [2190604]
 String handler_GM() {
   return '''
-    if (typeof GMforPDAversion === 'undefined') {
-
-      const GMforPDAversion = 0.2;
-
-      if (!window.flutter_inappwebview) {
-        throw new Error(
-            "GMforPDA requires flutter_inappwebview to be defined. Ensure this script is running inside of PDA."
-        );
-      }
-
-      window.GM = {
-        
-        GMforPDAversion,
-
-        getValue(key, defaultValue) {
-            return localStorage.getItem(key) ?? defaultValue;
-        },
-
-        setValue(key, value) {
-            localStorage.setItem(key, value);
-        },
-
-        deleteValue(key) {
-            localStorage.removeItem(key);
-        },
-
-        listValues() {
-            return Object.values(localStorage);
-        },
-
-        addStyle(style) {
-            if (!style) return;
-            const s = document.createElement("style");
-            s.type = "text/css";
-            s.innerHTML = style;
-
-            document.head.appendChild(s);
-        },
-
-        setClipboard(text) {
-            if (!document.hasFocus())
-                throw new DOMException("Document is not focused");
-            navigator.clipboard.writeText(text);
-        },
-
-        async xmlhttpRequest(details) {
-            try {
-                if (!details || typeof details !== "object")
-                    throw new TypeError(
-                        "Invalid details passed to GM.xmlHttpRequest"
-                    );
-                let { url, method, data, body, headers, onload, onerror } =
-                    details;
-                if (!url || !(typeof url === "string" || url instanceof URL))
-                    throw new TypeError("Invalid url passed to GM.xmlHttpRequest");
-                if ((method && typeof method !== "string"))
-                    throw new TypeError(
-                        "Invalid method passed to GM.xmlHttpRequest"
-                    );
-                if (!method || method.toLowerCase() === "get") {
-		    const h = headers ?? {};
-		    h["X-GMforPDA"] = "Sent from PDA via GMforPDA";
-                    return await PDA_httpGet(url, h ?? {})
-                        .then(onload ?? ((x) => x))
-                        .catch(onerror ?? ((e) => console.error(e)));
-                } else if (method.toLowerCase() === "post") {
-                    const h = headers ?? {};
-                    h["X-GMforPDA"] = "Sent from PDA via GMforPDA";
-                    url = url instanceof URL ? url.href : url;
-                    return await PDA_httpPost(url, h ?? {}, body ?? data ?? "")
-                        .then(onload ?? ((x) => x))
-                        .catch(onerror ?? ((e) => console.error(e)));
-                } else
-                    throw new TypeError(
-                        "Invalid method passed to GM.xmlHttpRequest"
-                    );
-            } catch (e) {
-
-                console.error(
-                    "An uncaught error occured in GM.xmlHttpRequest - please report this in the PDA discord if this is unexpected. The error is above ^ "
-                );
-                console.error(e instanceof Error ? e : JSON.stringify(e));
-                throw e instanceof Error ? e : new Error(e);
-            }
-        },
-
-        notification(...args) {
-            let text, title, onclick, ondone;
-            if (typeof args[0] === "string") {
-                [text, title, , onclick] = args;
-            } else {
-                ({ text, title, onclick, ondone } = args[0]);
-            }
-            const alert =
-                (title
-                    ? `Notification from script \${title}:`
-                    : "Notification from unnamed source:") +
-                "\\n" +
-                text;
-            if (confirm(alert)) onclick?.();
-            return ondone?.();
-        },
-
-        openInTab(url) {
-            if (!url) throw TypeError("No URL provided to GM.openInTab");
-            window.open(url, "_blank");
-        },
-
-        info: {
-            script: {
-                description: "This information is unavailable in TornPDA",
-                excludes: [],
-                includes: [],
-                matches: [],
-                name: undefined,
-                namespace: undefined,
-                resources: {},
-                "run-at": undefined,
-                version: undefined,
-            },
-            scriptMetaStr: "This information is unavailable in TornPDA",
-            scriptHandler: `TornPDA, using GMforPDA version \${GMforPDAversion}`,
-            version: GMforPDAversion,
-        },
-
-      },
-
-      Object.entries(GM).forEach(([k, v]) => window[`GM_\${k}`] = v);
-    }
+  ((e, t, o, r, n, i) => {
+  	    const s = {
+  		script: {},
+  		scriptHandler: "GMforPDA version 2.2",
+  		version: 2.2,
+  	};
+  	function a(e, t) {
+  		if (!e) throw new TypeError("No key supplied to GM_getValue");
+  		const o = i.getItem(e);
+  		return "string" != typeof o
+  			? t
+  			: o.startsWith("GMV2_")
+  			? JSON.parse(o.slice(5)) ?? t
+  			: o ?? t;
+  	}
+  	function l(e, t) {
+  		if (!e) throw new TypeError("No key supplied to GM_setValue");
+  		i.setItem(e, "GMV2_" + JSON.stringify(t));
+  	}
+  	function u(e) {
+  		if (!e) throw new TypeError("No key supplied to GM_deleteValue");
+  		i.removeItem(e);
+  	}
+  	function c() {
+  		return t.keys(i);
+  	}
+  	function d(e) {
+  		if (!e || "string" != typeof e) return;
+  		const t = document.createElement("style");
+  		(t.type = "text/css"), (t.innerHTML = e), document.head.appendChild(t);
+  	}
+  	function p(...e) {
+  		if ("object" == typeof e[0]) {
+  			const { text: o, title: r, onclick: n, ondone: i } = e[0];
+  			t(o, r, n, i);
+  		} else if ("string" == typeof e[0]) {
+  			const [o, r, , n] = e;
+  			t(o, r, n);
+  		}
+  		return { remove: () => {} };
+  		function t(e, t, o, r) {
+  			if (!e)
+  				throw new TypeError(
+  					"No notification text supplied to GM_notification"
+  				);
+  			confirm(`\${t ?? "No title specified"}\n\${e}`) && o?.(), r?.();
+  		}
+  	}
+  	function f(e) {
+  		if (!e) throw new TypeError("No text supplied to GM_setClipboard");
+  		navigator.clipboard.writeText(e);
+  	}
+  	const w = {
+  		version: 2.2,
+  		info: s,
+  		addStyle: d,
+  		deleteValue: async (e) => u(e),
+  		getValue: async (e, t) => a(e, t),
+  		listValues: async () => c(),
+  		notification: p,
+  		setClipboard: f,
+  		setValue: async (e, t) => l(e, t),
+  		xmlHttpRequest: async (e) => {
+  			if (!e || "object" != typeof e)
+  				throw new TypeError(
+  					"Invalid details passed to GM.xmlHttpRequest"
+  				);
+  			const { abortController: t, prom: o } = y(e);
+  			return (o.abort = () => t.abort()), o;
+  		},
+  	};
+  	function y(e) {
+  		const t = new r(),
+  			i = t.signal,
+  			s = new r(),
+  			a = s.signal,
+  			{
+  				url: l,
+  				method: u,
+  				headers: c,
+  				timeout: d,
+  				data: p,
+  				onabort: f,
+  				onerror: w,
+  				onload: y,
+  				onloadend: h,
+  				onprogress: b,
+  				onreadystatechange: m,
+  				ontimeout: M,
+  			} = e;
+  		setTimeout(() => s.abort(), d ?? 3e4);
+  		return {
+  			abortController: t,
+  			prom: new n(async (e, t) => {
+  				try {
+  					l || t("No URL supplied"),
+  						i.addEventListener("abort", () => t("Request aborted")),
+  						a.addEventListener("abort", () =>
+  							t("Request timed out")
+  						),
+  						u && "post" === u.toLowerCase()
+  							? (PDA_httpPost(l, c ?? {}, p ?? "")
+  									.then(e)
+  									.catch(t),
+  							  b?.())
+  							: (PDA_httpGet(l).then(e).catch(t), b?.());
+  				} catch (e) {
+  					t(e);
+  				}
+  			})
+  				.then((e) => (y?.(e), h?.(e), m?.(e), e))
+  				.catch((e) => {
+  					switch (!0) {
+  						case "Request aborted" === e:
+  							if (
+  								((e = new o("Request aborted", "AbortError")),
+  								f)
+  							)
+  								return f(e);
+  							if (w) return w(e);
+  							throw e;
+  						case "Request timed out" === e:
+  							if (
+  								((e = new o(
+  									"Request timed out",
+  									"TimeoutError"
+  								)),
+  								M)
+  							)
+  								return M(e);
+  							if (w) return w(e);
+  							throw e;
+  						case "No URL supplied" === e:
+  							if (
+  								((e = new TypeError(
+  									"Failed to fetch: No URL supplied"
+  								)),
+  								w)
+  							)
+  								return w(e);
+  							throw e;
+  						default:
+  							if (
+  								((e && e instanceof Error) ||
+  									(e = new Error(e ?? "Unknown Error")),
+  								w)
+  							)
+  								return w(e);
+  							throw e;
+  					}
+  				}),
+  		};
+  	}
+  	t.entries({
+  		GM: t.freeze(w),
+  		GM_info: t.freeze(s),
+  		GM_getValue: a,
+  		GM_setValue: l,
+  		GM_deleteValue: u,
+  		GM_listValues: c,
+  		GM_addStyle: d,
+  		GM_notification: p,
+  		GM_setClipboard: f,
+  		GM_xmlhttpRequest: function (e) {
+  			const { abortController: t } = y(e);
+  			if (!e || "object" != typeof e)
+  				throw new TypeError(
+  					"Invalid details passed to GM_xmlHttpRequest"
+  				);
+  			return { abort: () => t.abort() };
+  		},
+  		unsafeWindow: e,
+  	}).forEach(([o, r]) => {
+  		t.defineProperty(e, o, {
+  			value: r,
+  			writable: !1,
+  			enumerable: !0,
+  			configurable: !1,
+  		});
+  	});
+  })(window, Object, DOMException, AbortController, Promise, localStorage);
    ''';
 }

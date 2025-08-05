@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/ranked_wars_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
@@ -61,6 +62,8 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
   late int _timeNow;
   int _ownFaction = 0;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -79,7 +82,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
 
     routeWithDrawer = false;
     routeName = "ranked_wars";
-    _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider!.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "ranked_wars") _goBack();
     });
 
@@ -97,6 +100,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
     _tabController?.removeListener(_handleTabSelection);
     _tabController?.dispose();
     _searchController.dispose();
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -109,7 +113,9 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider!.canvas
+              : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
           : _themeProvider!.canvas,
       child: FutureBuilder(
         future: _rankedWarsFetchedAndPrefsLoaded,
@@ -130,7 +136,9 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
                               color: _themeProvider!.currentTheme == AppTheme.light
                                   ? MediaQuery.orientationOf(context) == Orientation.portrait
                                       ? Colors.blueGrey
-                                      : _themeProvider!.canvas
+                                      : isStatusBarShown
+                                          ? _themeProvider!.statusBar
+                                          : _themeProvider!.canvas
                                   : _themeProvider!.canvas,
                               child: Column(
                                 children: <Widget>[
@@ -590,7 +598,7 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
     return Map.fromEntries(sortedEntries);
   }
 
-  _goBack() {
+  void _goBack() {
     if (widget.calledFromMenu) {
       final ScaffoldState? scaffoldState = context.findRootAncestorStateOfType();
       if (scaffoldState != null) {

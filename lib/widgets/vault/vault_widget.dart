@@ -386,7 +386,7 @@ class VaultWidgetState extends State<VaultWidget> {
     );
   }
 
-  _configurationCallback() {
+  void _configurationCallback() {
     if (!mounted) return;
     if (_vaultStatus.player == null) {
       setState(() {

@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
-import 'package:torn_pda/utils/settings/backup_prefs_groups.dart';
+import 'package:torn_pda/utils/settings/backup_online/backup_online_prefs_groups.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class BackupSaveDialog extends StatefulWidget {

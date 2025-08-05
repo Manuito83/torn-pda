@@ -100,6 +100,36 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.8.3 - Build 567 - 02/08/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.8.3'
+        ..date = '05 AUG 2025'
+        ..features = [
+          if (Platform.isAndroid) "Added native Google login (Settings)",
+          if (Platform.isIOS) "Added native Apple and Google login (Settings)",
+          ComplexFeature(
+            "Added Developer Tools for advanced users",
+            explanation: "You can now access additional developer tools directly within the app\n\n"
+                "To open them, tap the browser's title bar to open the URL Menu (or long-press the 'CLOSE' button in dialog mode) and select 'Open Dev Tools'.\n\n"
+                "This new screen provides three essential utilities for inspecting the WebView:\n\n"
+                "1. Terminal: another place to acces the terminal, and execute JavaScript commands. Includes command history.\n\n"
+                "2. Network: list of all network resources (scripts, images, APIs) loaded by the current page, including their type and load time.\n\n"
+                "3. Storage: inspect and manage Cookies, Local Storage, and Session Storage. You can view, edit, and delete individual items.\n\n"
+                "A special 'hide' timer is also included (see the appbar icon), allowing you to temporarily close the Dev Tools to interact with the underlying WebView and then automatically reopen them to see the results.",
+          ),
+          "Added Torn's ToS table in Settings when adding a new API key [TheProgrammer]",
+          if (Platform.isIOS) "Fixed incorrect live activity activations",
+          "Updated UserScript API [Kwack]",
+          "Fixed chat notifications resetting after switching faction or company",
+          "Fixed missing Print Store shortcut",
+          "Fixed Wiki references",
+          "Fixed userscrips persistence",
+          "Fixed sliding up panel layout in split screen mode",
+          "Fixed wrong OC v2 activation when not migrated",
+        ],
+    );
+
     // v3.8.2 - Build 550 - 15/06/2025
     itemList.add(
       ChangeLogItem()
@@ -223,7 +253,7 @@ class ChangeLogState extends State<ChangeLog> {
         ],
     );
 
-    // v3.7.4 - Build 511 - 012/04/2025
+    // v3.7.4 - Build 511 - 12/04/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.7.4'

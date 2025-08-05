@@ -8,7 +8,6 @@ import 'package:get/get.dart';
 // Package imports:
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/inventory_model.dart';
@@ -23,6 +22,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/items/item_card.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
+import 'package:torn_pda/widgets/sliding_up_panel.dart';
 
 class ItemsPage extends StatefulWidget {
   const ItemsPage({super.key});
@@ -39,9 +39,8 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
 
   final ScrollController _filterScroll = ScrollController();
   ScrollPhysics _filterPhysics = const NeverScrollableScrollPhysics();
-  final PanelController _pc = PanelController();
+  final CustomPanelController _pc = CustomPanelController();
   final double _initFabHeight = 25.0;
-  double _fabHeight = 25.0;
   final double _panelHeightOpen = 400.0;
   final double _panelHeightClosed = 75.0;
 
@@ -121,100 +120,69 @@ class ItemsPageState extends State<ItemsPage> with WidgetsBindingObserver {
           : null,
       body: Container(
         color: _themeProvider!.canvas,
-        child: Stack(
-          children: [
-            FutureBuilder(
-              future: _loadedApiItems,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (_itemsSuccess) {
-                    return _itemsMain();
-                  }
-                  return _errorMain();
-                } else {
-                  return const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(10),
-                      child: CircularProgressIndicator(),
-                    ),
-                  );
-                }
-              },
-            ),
+        child: FutureBuilder(
+          future: _loadedApiItems,
+          builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              if (_itemsSuccess) {
+                return CustomSlidingUpPanel(
+                  controller: _pc,
+                  maxHeight: _panelHeightOpen,
+                  minHeight: _panelHeightClosed,
+                  renderPanelSheet: false,
+                  backdropEnabled: true,
+                  isDraggable: false,
+                  parallaxOffset: .0,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(18.0),
+                    topRight: Radius.circular(18.0),
+                  ),
 
-            // Sliding panel
-            FutureBuilder(
-              future: _loadedApiItems,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (_itemsSuccess) {
-                    return SlidingUpPanel(
-                      controller: _pc,
-                      maxHeight: _panelHeightOpen,
-                      minHeight: _panelHeightClosed,
-                      renderPanelSheet: false,
-                      backdropEnabled: true,
-                      isDraggable: false,
-                      parallaxOffset: .0,
-                      panelBuilder: (sc) => _bottomPanel(sc),
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(18.0),
-                        topRight: Radius.circular(18.0),
-                      ),
-                      onPanelClosed: () {
-                        _filterPhysics = const NeverScrollableScrollPhysics();
-                      },
-                      onPanelOpened: () {
-                        _filterPhysics = const AlwaysScrollableScrollPhysics();
-                      },
-                      onPanelSlide: (double pos) {
-                        setState(() {
-                          _fabHeight = pos * (_panelHeightOpen - _panelHeightClosed) + _initFabHeight;
-                        });
-                      },
-                    );
-                  } else {
-                    return const SizedBox.shrink();
-                  }
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
+                  // Callbacks
+                  onPanelClosed: () {
+                    _filterPhysics = const NeverScrollableScrollPhysics();
+                  },
+                  onPanelOpened: () {
+                    _filterPhysics = const AlwaysScrollableScrollPhysics();
+                  },
 
-            // FAB
-            FutureBuilder(
-              future: _loadedApiItems,
-              builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  if (_itemsSuccess) {
-                    return Positioned(
-                      right: 35.0,
-                      bottom: _fabHeight,
-                      child: FloatingActionButton.extended(
-                        icon: const Icon(Icons.filter_list),
-                        label: const Text("Filter"),
-                        elevation: 4,
-                        onPressed: () {
-                          if (_pc.isPanelOpen) {
-                            _pc.close();
-                            _filterScroll.animateTo(0, duration: const Duration(seconds: 1), curve: Curves.easeInOut);
-                          } else {
-                            _pc.open();
-                          }
-                        },
-                        backgroundColor: Colors.orange,
-                      ),
-                    );
-                  } else {
-                    return const SizedBox.shrink();
-                  }
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
-          ],
+                  // Body
+                  body: _itemsMain(),
+
+                  // Content
+                  panelBuilder: (sc) => _bottomPanel(sc),
+
+                  // FAB
+                  floatingActionButton: FloatingActionButton.extended(
+                    icon: const Icon(Icons.filter_list),
+                    label: const Text("Filter"),
+                    elevation: 4,
+                    onPressed: () {
+                      if (_pc.isPanelAnimating) return;
+                      if (!_pc.isPanelClosed) {
+                        _pc.close();
+                        _filterScroll.animateTo(0, duration: const Duration(seconds: 1), curve: Curves.easeInOut);
+                      } else {
+                        _pc.open();
+                      }
+                    },
+                    backgroundColor: Colors.orange,
+                  ),
+                  floatingActionButtonOffset: _initFabHeight,
+                );
+              }
+              // Error case
+              return _errorMain();
+            } else {
+              // Loading case
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(10),
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+          },
         ),
       ),
     );

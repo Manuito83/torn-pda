@@ -363,7 +363,7 @@ class RankedWarCardState extends State<RankedWarCard> {
     );
   }
 
-  void _launchBrowser({required factionId, required shortTap}) {
+  void _launchBrowser({required String factionId, required bool shortTap}) {
     final String url = "https://www.torn.com/factions.php?step=profile&ID=$factionId";
     _webViewProvider.openBrowserPreference(
       context: context,
@@ -403,7 +403,7 @@ class RankedWarCardState extends State<RankedWarCard> {
     ).formatDayWeek;
   }
 
-  _checkFactionLeftAdded() {
+  void _checkFactionLeftAdded() {
     for (final f in _w.factions) {
       if (f.id.toString() == _factionsIds[0]) {
         setState(() {
@@ -413,7 +413,7 @@ class RankedWarCardState extends State<RankedWarCard> {
     }
   }
 
-  _checkFactionRightAdded() {
+  void _checkFactionRightAdded() {
     for (final f in _w.factions) {
       if (f.id.toString() == _factionsIds[1]) {
         setState(() {

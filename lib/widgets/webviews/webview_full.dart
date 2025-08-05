@@ -84,6 +84,7 @@ import 'package:torn_pda/widgets/trades/trades_widget.dart';
 import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
+import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
 import 'package:torn_pda/widgets/webviews/memory_widget_browser.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
@@ -341,7 +342,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   late NativeAuthProvider _nativeAuth;
 
   // Time triggers for login error
-  int _loginErrorRetrySeconds = 0;
   DateTime? _loginErrorToastTimer;
 
   // Showcases
@@ -940,7 +940,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             child: _progress < 1.0
                 ? LinearProgressIndicator(
                     value: _progress,
-                    backgroundColor: Colors.blueGrey[100],
+                    backgroundColor: Colors.black,
                     valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
                   )
                 : Container(height: 2),
@@ -1889,46 +1889,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               action: HttpAuthResponseAction.CANCEL,
             );
           },
-          /*
-            shouldInterceptAjaxRequest: (InAppWebViewController c, AjaxRequest x) async {
-              // MAIN AJAX REQUEST RETURN
-              return x;
-            },
-          */
-        ),
-        // Container that covers Torn's top bar to serve as a gesture detector
-        GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onVerticalDragEnd: (_) async {
-            // Pull to refresh for short pages (since v3.1.0 we also add an extra height to short pages via scripts)
-            if (_settingsProvider.browserRefreshMethod != BrowserRefreshSetting.icon) {
-              await _reload();
-              _pullToRefreshController!.beginRefreshing();
-            }
-          },
-          onDoubleTap: () {
-            if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
-              _webViewProvider.verticalMenuClose();
-              _webViewProvider.setCurrentUiMode(UiMode.window, context);
-              if (_settingsProvider.fullScreenRemovesChat) {
-                _webViewProvider.showAllChatsFullScreen();
-              }
-            }
-          },
-          child: Container(
-            height: 32,
-          ),
         ),
       ],
     );
   }
 
-  _openNewTabFromWindowRequest(String url, int? windowId) {
+  void _openNewTabFromWindowRequest(String url, int? windowId) {
     _webViewProvider.addTab(url: url, windowId: windowId);
     _webViewProvider.activateTab(_webViewProvider.tabList.length - 1);
   }
 
-  _removeTravelAirplaneIfEnabled(InAppWebViewController c) async {
+  Future<void> _removeTravelAirplaneIfEnabled(InAppWebViewController c) async {
     if (_settingsProvider.removeAirplane) {
       if ((await c.getUrl()).toString() == "https://www.torn.com/page.php?sid=travel") {
         webViewController!.evaluateJavascript(source: travelRemovePlaneJS());
@@ -2143,7 +2114,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     return false;
   }
 
-  _addExtraHeightForPullToRefresh() {
+  void _addExtraHeightForPullToRefresh() {
     webViewController!.evaluateJavascript(source: addHeightForPullToRefresh());
   }
 
@@ -2158,7 +2129,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future assessErrorCases({dom.Document? document}) async {
-    if (!_nativeUser.isNativeUserEnabled()) {
+    if (_nativeUser.playerLastLoginMethod == NativeLoginType.none) {
       return;
     }
 
@@ -2207,8 +2178,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
       // New attempts will be made in a row if unsuccessful, so make them wait longer
       // (this is the result of Torn going to an error page at first sometimes)
-      _loginErrorRetrySeconds++;
-      await Future.delayed(Duration(seconds: _loginErrorRetrySeconds));
+      _webViewProvider.loginErrorRetrySeconds++;
+      await Future.delayed(Duration(seconds: _webViewProvider.loginErrorRetrySeconds));
 
       final newDoc = parse(await webViewController!.getHtml());
       if (newDoc.querySelectorAll("[class*='logInWrap_']").isEmpty ||
@@ -2216,30 +2187,34 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         return;
       }
 
-      final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
-        context: context,
-        loginData: GetInitDataModel(
-          playerId: _userProvider!.basic!.playerId,
-          sToken: _nativeUser.playerSToken,
-        ),
-      );
-
-      if (loginResponse.success) {
-        webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
-        await Future.delayed(const Duration(seconds: 4));
-        _loginErrorRetrySeconds = 0;
-      } else {
-        BotToast.showText(
-          text: "Browser error while authenticating: please log in again or verify your user / pass combination "
-              "in the Settings section!",
-          textStyle: const TextStyle(
-            fontSize: 14,
-            color: Colors.white,
+      // At this point, try to use the stored credentials to log in again
+      // (it does not matter what login method was used to obtain the sToken)
+      if (_nativeUser.playerLastLoginMethod != NativeLoginType.none) {
+        final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
+          context: context,
+          loginData: GetInitDataModel(
+            playerId: _userProvider!.basic!.playerId,
+            sToken: _nativeUser.playerSToken,
           ),
-          contentColor: Colors.red,
-          duration: const Duration(seconds: 4),
-          contentPadding: const EdgeInsets.all(10),
         );
+
+        if (loginResponse.success) {
+          webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri(loginResponse.authUrl)));
+          await Future.delayed(const Duration(seconds: 4));
+          _webViewProvider.loginErrorRetrySeconds = 0;
+        } else {
+          BotToast.showText(
+            text: "Browser error while authenticating: please log in again or verify your user / pass combination "
+                "in the Settings section!",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            contentPadding: const EdgeInsets.all(10),
+          );
+        }
       }
     }
   }
@@ -2281,8 +2256,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (!_currentUrl.contains('torn.com')) return;
 
     final intColor = Color(_settingsProvider.highlightColor);
-    final background = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, ${intColor.opacity})';
-    final senderColor = 'rgba(${intColor.red}, ${intColor.green}, ${intColor.blue}, 1)';
+    final background =
+        'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
+    final senderColor =
+        'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
     final String hlMap = '[ "${_userProvider!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
@@ -2745,7 +2722,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         : const SizedBox.shrink();
   }
 
-  _goBackOrForward(DragEndDetails details) async {
+  Future<void> _goBackOrForward(DragEndDetails details) async {
     bool rightToLeft = details.primaryVelocity! < 0;
     bool leftToRight = details.primaryVelocity! > 0;
 
@@ -4377,9 +4354,44 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           inAppWebview: webViewController,
           callFindInPage: _activateFindInPage,
           userProvider: _userProvider,
+          webviewKey: widget.key,
+          openDevTools: _openDevTools,
         );
       },
     );
+  }
+
+  /// We use this to open the DevTools page from the webview, so that we can
+  /// hide the dev tools sections from a few seconds and still have the parent mounted
+  /// (the URL dialog should not be the parent or it would be in the way!)
+  void _openDevTools() async {
+    int initialTabIndex = 0;
+    bool shouldReopen = true;
+
+    do {
+      if (!mounted) return;
+      if (!_webViewProvider.browserShowInForeground) return;
+
+      final result = await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => DevToolsMainPage(
+            webViewController: webViewController,
+            webviewKey: widget.key,
+            initialIndex: initialTabIndex,
+          ),
+        ),
+      );
+
+      if (result is List && result.length == 2 && result[0] is int && result[1] is int) {
+        final int seconds = result[0];
+        initialTabIndex = result[1];
+        shouldReopen = true;
+
+        await Future.delayed(Duration(seconds: seconds));
+      } else {
+        shouldReopen = false;
+      }
+    } while (shouldReopen && mounted);
   }
 
   void openCloseChainWidgetFromOutside() {
@@ -5510,9 +5522,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
       // Share the file
       if (_settingsProvider.downloadActionShare) {
-        await Share.shareXFiles(
-          [XFile(fileSavePath)],
+        final shareParams = ShareParams(
           text: fileName,
+          files: [XFile(fileSavePath)],
           sharePositionOrigin: Rect.fromLTWH(
             0,
             0,
@@ -5520,6 +5532,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             MediaQuery.of(context).size.height / 2,
           ),
         );
+        await SharePlus.instance.share(shareParams);
       }
 
       if (!_settingsProvider.downloadActionShare) {
@@ -5555,9 +5568,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       final file = await File(downloadPath).create(recursive: true);
       await file.writeAsString(data);
       if (_settingsProvider.downloadActionShare) {
-        await Share.shareXFiles(
-          [XFile(file.path)],
+        final shareParams = ShareParams(
           text: fileName,
+          files: [XFile(file.path)],
           sharePositionOrigin: Rect.fromLTWH(
             0,
             0,
@@ -5565,6 +5578,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             MediaQuery.of(context).size.height / 2,
           ),
         );
+        await SharePlus.instance.share(shareParams);
       } else {
         BotToast.showText(
           text: Platform.isIOS ? "Downloaded in app folder as $fileName" : "Downloaded as $downloadPath",
@@ -6067,7 +6081,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     );
   }
 
-  clearCacheAndReload() async {
+  Future<void> clearCacheAndReload() async {
     if (!Platform.isWindows) {
       await InAppWebViewController.clearAllCache();
     }
@@ -6082,7 +6096,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     webViewController!.loadUrl(urlRequest: URLRequest(url: WebUri("https://www.torn.com")));
   }
 
-  _requestTornThemeChange({required bool dark}) {
+  void _requestTornThemeChange({required bool dark}) {
     webViewController!.evaluateJavascript(
       source: '''
         var event = new CustomEvent("onChangeTornMode", {
@@ -6093,7 +6107,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     );
   }
 
-  updatePullToRefresh(BrowserRefreshSetting? value) async {
+  Future<void> updatePullToRefresh(BrowserRefreshSetting? value) async {
     if (value == BrowserRefreshSetting.pull || value == BrowserRefreshSetting.both) {
       _pullToRefreshController!.setEnabled(true);
     } else {
@@ -6149,7 +6163,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     }
   }
 
-  _assessNotificationPermissions() async {
+  Future<void> _assessNotificationPermissions() async {
     if (Platform.isAndroid) {
       await assessExactAlarmsPermissionsAndroid(context, _settingsProvider);
     }

@@ -7,6 +7,7 @@ import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
@@ -26,6 +27,7 @@ import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
+import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_open_button.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -37,6 +39,8 @@ class WebviewUrlDialog extends StatefulWidget {
   final InAppWebViewController? inAppWebview;
   final WebViewController? stockWebView;
   final UserDetailsProvider? userProvider;
+  final Key? webviewKey;
+  final Function? openDevTools;
 
   const WebviewUrlDialog({
     this.callFindInPage,
@@ -45,6 +49,8 @@ class WebviewUrlDialog extends StatefulWidget {
     this.inAppWebview,
     this.stockWebView,
     required this.userProvider,
+    this.webviewKey,
+    this.openDevTools,
   });
 
   @override
@@ -572,8 +578,8 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'DEV',
-                                  style: TextStyle(fontSize: 8),
+                                  'DEVELOPERS',
+                                  style: TextStyle(fontSize: 10),
                                 ),
                               ],
                             ),
@@ -584,7 +590,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
-                                      const Text("Show terminal", style: TextStyle(fontSize: 12)),
+                                      const Text("Quick terminal", style: TextStyle(fontSize: 12)),
                                       Switch(
                                         value: _settingsProvider.terminalEnabled,
                                         onChanged: (value) {
@@ -598,6 +604,14 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     ],
                                   ),
                                 ),
+                                if (widget.inAppWebview != null)
+                                  DevToolsCooldownButton(
+                                    onPressed: () {
+                                      _customURLController.text = "";
+                                      Navigator.of(context).pop();
+                                      widget.openDevTools!();
+                                    },
+                                  )
                               ],
                             ),
                           ],

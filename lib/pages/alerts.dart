@@ -61,10 +61,14 @@ class AlertsSettingsState extends State<AlertsSettings> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    final sbController = Get.find<SendbirdController>();
     _getFirebaseAndTornDetails = Future.wait([
       FirestoreHelper().getUserProfile(),
       _getFactionApiAccess(),
+      sbController.updateFactionAndCompanyPreferences(),
     ]);
+
     analytics?.logScreenView(screenName: 'alerts');
 
     routeWithDrawer = true;

@@ -49,13 +49,13 @@ class AwardCardState extends State<AwardCard> {
               award.image!,
               Text(
                 award.name!,
-                style: TextStyle(
+                style: const TextStyle(
                   fontFamily: 'Visitor',
                   fontSize: 13.0,
                   color: Colors.white,
-                  backgroundColor: Colors.black.withOpacity(0.2),
+                  backgroundColor: Color.fromARGB(51, 0, 0, 0),
                   shadows: [
-                    const Shadow(
+                    Shadow(
                       offset: Offset(2.0, 2.0),
                       blurRadius: 2.0,
                       color: Colors.black,

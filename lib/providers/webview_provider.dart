@@ -10,6 +10,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+// ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
@@ -95,6 +96,8 @@ class WebViewProvider extends ChangeNotifier {
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
+  int loginErrorRetrySeconds = 0;
+
   // Windows user data folder
   WebViewEnvironment? webViewEnvironment;
 
@@ -107,6 +110,17 @@ class WebViewProvider extends ChangeNotifier {
   List<String> urlsWithStuckHistory = [
     "https://www.torn.com/personalstats.php?",
   ];
+
+  // DEV TOOL REOPENING CONTROLLER (TO DEACTIVATE BUTTON)
+  DateTime? _devToolsReopenTime;
+  DateTime? get devToolsReopenTime => _devToolsReopenTime;
+  Future<void> startDevToolsCooldown(int seconds) async {
+    _devToolsReopenTime = DateTime.now().add(Duration(seconds: seconds));
+    notifyListeners();
+    await Future.delayed(Duration(seconds: seconds));
+    _devToolsReopenTime = null;
+    notifyListeners();
+  }
 
   bool _bottomBarStyleEnabled = false;
   bool get bottomBarStyleEnabled => _bottomBarStyleEnabled;
@@ -187,14 +201,14 @@ class WebViewProvider extends ChangeNotifier {
     resumeAllWebviews();
   }
 
-  pdaIconActivation({
+  void pdaIconActivation({
     required bool shortTap,
     required BuildContext context,
     required bool automaticLogin,
   }) {
     browserShowInForeground = true;
 
-    if (automaticLogin && context.read<NativeUserProvider>().isNativeUserEnabled()) {
+    if (automaticLogin && context.read<NativeUserProvider>().playerLastLoginMethod != NativeLoginType.none) {
       // When we use the PDA Icon, launch a logout check by default in case we just activated
       // the native user in Settings and are logged out
       assessLoginErrorsFromPdaIcon();
@@ -246,7 +260,7 @@ class WebViewProvider extends ChangeNotifier {
 
   UiMode _currentUiMode = UiMode.window;
   UiMode get currentUiMode => _currentUiMode;
-  setCurrentUiMode(UiMode value, BuildContext context) {
+  void setCurrentUiMode(UiMode value, BuildContext context) {
     _currentUiMode = value;
     if (_currentUiMode == UiMode.fullScreen) {
       final SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
@@ -308,12 +322,12 @@ class WebViewProvider extends ChangeNotifier {
   int verticalMenuCurrentIndex = 0;
   bool verticalMenuIsOpen = false;
 
-  verticalMenuOpen() {
+  void verticalMenuOpen() {
     verticalMenuIsOpen = true;
     notifyListeners();
   }
 
-  verticalMenuClose() {
+  void verticalMenuClose() {
     verticalMenuIsOpen = false;
     notifyListeners();
   }
@@ -344,11 +358,7 @@ class WebViewProvider extends ChangeNotifier {
 
   bool _gymMessageActive = false;
 
-  int _currentTab = 0;
-  int get currentTab => _currentTab;
-  set currentTab(int value) {
-    _currentTab = value;
-  }
+  int currentTab = 0;
 
   bool _secondaryInitialised = false;
 
@@ -414,9 +424,9 @@ class WebViewProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  var _fabEnabled = true;
-  get fabEnabled => _fabEnabled;
-  set fabEnabled(value) {
+  bool _fabEnabled = true;
+  bool get fabEnabled => _fabEnabled;
+  set fabEnabled(bool value) {
     _fabEnabled = value;
     Prefs().setWebviewFabEnabled(_fabEnabled);
     notifyListeners();
@@ -459,32 +469,32 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   var _fabShownNow = true;
-  get fabShownNow => _fabShownNow;
-  set fabShownNow(value) {
+  bool get fabShownNow => _fabShownNow;
+  set fabShownNow(bool value) {
     _fabShownNow = value;
     Prefs().setWebviewFabShownNow(_fabShownNow);
     notifyListeners();
   }
 
   var _fabDirection = "center";
-  get fabDirection => _fabDirection;
-  set fabDirection(value) {
+  String get fabDirection => _fabDirection;
+  set fabDirection(String value) {
     _fabDirection = value;
     Prefs().setWebviewFabDirection(_fabDirection);
     notifyListeners();
   }
 
   var _fabSavedPositionXY = [100, 100];
-  get fabSavedPositionXY => _fabSavedPositionXY;
-  set fabSavedPositionXY(value) {
+  List<int> get fabSavedPositionXY => _fabSavedPositionXY;
+  set fabSavedPositionXY(List<int> value) {
     _fabSavedPositionXY = value;
     Prefs().setWebviewFabPositionXY(_fabSavedPositionXY);
     notifyListeners();
   }
 
   var _fabOnlyFullScreen = false;
-  get fabOnlyFullScreen => _fabOnlyFullScreen;
-  set fabOnlyFullScreen(value) {
+  bool get fabOnlyFullScreen => _fabOnlyFullScreen;
+  set fabOnlyFullScreen(bool value) {
     _fabOnlyFullScreen = value;
     Prefs().setWebviewFabOnlyFullScreen(_fabOnlyFullScreen);
     notifyListeners();
@@ -579,7 +589,7 @@ class WebViewProvider extends ChangeNotifier {
       );
     }
 
-    _currentTab = 0;
+    currentTab = 0;
   }
 
   Future<void> _clearTemporaryDownloadedFiles(BuildContext context) async {
@@ -649,18 +659,18 @@ class WebViewProvider extends ChangeNotifier {
       int lastActive = await Prefs().getWebViewLastActiveTab();
       if (lastActive < 0) lastActive = 0;
       if (lastActive <= _tabList.length - 1) {
-        _currentTab = lastActive;
+        currentTab = lastActive;
       } else {
-        _currentTab = 0;
+        currentTab = 0;
       }
 
       // Awake WebView if we are recalling it
-      if (_tabList[_currentTab].sleepTab) {
-        _tabList[_currentTab].sleepTab = false;
-        _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView!);
+      if (_tabList[currentTab].sleepTab) {
+        _tabList[currentTab].sleepTab = false;
+        _tabList[currentTab].webView = _buildRealWebViewFromSleeping(_tabList[currentTab].sleepingWebView!);
       }
     } else {
-      _currentTab = 0;
+      currentTab = 0;
     }
   }
 
@@ -765,33 +775,33 @@ class WebViewProvider extends ChangeNotifier {
 
   Future<void> removeTab({int? position, bool calledFromTab = false}) async {
     if (calledFromTab) {
-      position = _currentTab;
+      position = currentTab;
     }
 
     if (position == null || position == 0) return;
 
-    final bool wasLast = _currentTab == _tabList.length - 1 || false;
+    final bool wasLast = currentTab == _tabList.length - 1 || false;
 
     // If we remove the current tab, we need to decrease the current tab by 1
-    if (position == _currentTab) {
-      _currentTab = position - 1;
+    if (position == currentTab) {
+      currentTab = position - 1;
 
       // Awake WebView if necessary
-      final activated = _tabList[_currentTab];
+      final activated = _tabList[currentTab];
       if (activated.sleepTab) {
         activated.sleepTab = false;
         activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView!);
       }
 
-      _tabList[_currentTab].webViewKey?.currentState?.resumeThisWebview();
-    } else if (_currentTab == _tabList.length - 1) {
+      _tabList[currentTab].webViewKey?.currentState?.resumeThisWebview();
+    } else if (currentTab == _tabList.length - 1) {
       // If upon removal of any other, the last tab is active, we also decrease the current tab by 1 (-2 from length)
-      _currentTab = _tabList.length - 2;
+      currentTab = _tabList.length - 2;
     }
 
     // If the tab removed was the last and therefore we activate the [now] last tab, we need to resume timers
     if (wasLast) {
-      _tabList[_currentTab].webViewKey?.currentState?.resumeThisWebview();
+      _tabList[currentTab].webViewKey?.currentState?.resumeThisWebview();
       // Notify listeners first so that the tab changes
       notifyListeners();
       // Then wait 200 milliseconds so that the animated stack view changes its child
@@ -806,7 +816,7 @@ class WebViewProvider extends ChangeNotifier {
     _saveTabs();
   }
 
-  wipeTabs({
+  void wipeTabs({
     required bool includeLockedTabs,
     required TabsWipeTimeRange timeRange,
   }) {
@@ -853,7 +863,7 @@ class WebViewProvider extends ChangeNotifier {
     }
 
     // Default to tab 0 to avoid issues
-    _currentTab = 0;
+    currentTab = 0;
     _tabList[0].webViewKey?.currentState?.resumeThisWebview();
 
     notifyListeners();
@@ -864,13 +874,13 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty || _tabList.length - 1 < newActiveTab) return;
 
     // Avoid activating the same tab again (pause/resume could cause issues if call on iOS)
-    if (newActiveTab == _currentTab) return;
+    if (newActiveTab == currentTab) return;
 
-    final deactivated = _tabList[_currentTab];
+    final deactivated = _tabList[currentTab];
     deactivated.webViewKey?.currentState?.pauseThisWebview();
 
-    _currentTab = newActiveTab;
-    final activated = _tabList[_currentTab];
+    currentTab = newActiveTab;
+    final activated = _tabList[currentTab];
 
     // Log time at which time the tab is last used
     activated.lastUsedTimeDT = DateTime.now();
@@ -920,8 +930,8 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  updateLastTabUse() {
-    final tab = _tabList[_currentTab];
+  void updateLastTabUse() {
+    final tab = _tabList[currentTab];
     // Log time at which time the tab is last used
     tab.lastUsedTimeDT = DateTime.now();
   }
@@ -938,8 +948,8 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
-  void rebuildUnresponsiveWebView({required isChainingBrowser, required chainingPayload}) {
-    final crashedTab = _tabList[_currentTab];
+  void rebuildUnresponsiveWebView({required bool isChainingBrowser, required dynamic chainingPayload}) {
+    final crashedTab = _tabList[currentTab];
 
     // Reconnect the controller and widgets with a new key
     final newKey = GlobalKey<WebViewFullState>();
@@ -954,8 +964,8 @@ class WebViewProvider extends ChangeNotifier {
       allowDownloads: true,
     );
 
-    _tabList[_currentTab].webView = crashedTab.webView;
-    _tabList[_currentTab].webViewKey = newKey;
+    _tabList[currentTab].webView = crashedTab.webView;
+    _tabList[currentTab].webViewKey = newKey;
 
     _callAssessMethods();
     notifyListeners();
@@ -965,14 +975,14 @@ class WebViewProvider extends ChangeNotifier {
   void pauseCurrentWebview() {
     if (_tabList.isEmpty) return;
     log("Pausing current webview!");
-    final currentTab = _tabList[_currentTab];
+    final currentTab = _tabList[this.currentTab];
     currentTab.webViewKey?.currentState?.pauseThisWebview();
   }
 
   void resumeCurrentWebview() {
     if (_tabList.isEmpty) return;
     log("Resuming current webview!");
-    final currentTab = _tabList[_currentTab];
+    final currentTab = _tabList[this.currentTab];
     currentTab.webViewKey?.currentState?.resumeThisWebview();
   }
 
@@ -982,7 +992,7 @@ class WebViewProvider extends ChangeNotifier {
 
     try {
       if (_tabList.isEmpty) return;
-      final currentTab = _tabList[_currentTab];
+      final currentTab = _tabList[this.currentTab];
       // NOTE: IOS only stops the current active webview
       currentTab.webViewKey?.currentState?.webViewController?.pauseTimers();
     } catch (e, trace) {
@@ -996,7 +1006,7 @@ class WebViewProvider extends ChangeNotifier {
       if (Platform.isWindows) return;
       if (_tabList.isEmpty) return;
 
-      final currentTab = _tabList[_currentTab];
+      final currentTab = _tabList[this.currentTab];
       currentTab.webViewKey?.currentState?.webViewController?.resumeTimers();
 
       if (Platform.isAndroid) {
@@ -1020,7 +1030,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void openUrlDialog() {
     if (_tabList.isEmpty) return;
-    final currentTab = _tabList[_currentTab];
+    final currentTab = _tabList[this.currentTab];
     currentTab.webViewKey?.currentState?.openUrlDialog();
   }
 
@@ -1029,7 +1039,7 @@ class WebViewProvider extends ChangeNotifier {
 
     // Wait 200 milliseconds for build to finish (if we come from a tab)
     await Future.delayed(const Duration(milliseconds: 200));
-    _currentTab = 0;
+    currentTab = 0;
     notifyListeners();
     // Wait 200 milliseconds so that the animated stack view changes to main tab
     await Future.delayed(const Duration(milliseconds: 200));
@@ -1040,8 +1050,8 @@ class WebViewProvider extends ChangeNotifier {
 
     // Awake remaining tab if necessary
     if (_tabList[0].sleepTab) {
-      _tabList[_currentTab].sleepTab = false;
-      _tabList[_currentTab].webView = _buildRealWebViewFromSleeping(_tabList[_currentTab].sleepingWebView!);
+      _tabList[currentTab].sleepTab = false;
+      _tabList[currentTab].webView = _buildRealWebViewFromSleeping(_tabList[currentTab].sleepingWebView!);
     }
 
     _tabList[0].webViewKey?.currentState?.resumeThisWebview();
@@ -1089,7 +1099,7 @@ class WebViewProvider extends ChangeNotifier {
     tab.pageTitle = pageTitle;
 
     // Pause timers for tabs that load which are not active (e.g. at the initialization, we pause all except the main)
-    if (_tabList[_currentTab] != tab) {
+    if (_tabList[currentTab] != tab) {
       tab.webViewKey?.currentState?.pauseThisWebview();
     }
 
@@ -1098,7 +1108,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void reportChatRemovalChange(bool active, bool global) {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     tab.chatRemovalActiveTab = active;
     if (global) {
       chatRemovalActiveGlobal = active;
@@ -1171,7 +1181,7 @@ class WebViewProvider extends ChangeNotifier {
     tab.isLockFull = isLockFull;
 
     if (!wasLocked && tab.isLocked || wasLocked && !tab.isLocked) {
-      final activeKey = _tabList[_currentTab].webView?.key;
+      final activeKey = _tabList[currentTab].webView?.key;
       _tabList.remove(tab);
 
       int insertIndex = _tabList.lastIndexWhere((t) => t.isLocked);
@@ -1239,7 +1249,7 @@ class WebViewProvider extends ChangeNotifier {
 
   int returnBackPagesNumber() {
     if (_tabList.isNotEmpty) {
-      var tab = _tabList[_currentTab];
+      var tab = _tabList[currentTab];
       return tab.historyBack.length;
     }
     return 0;
@@ -1247,14 +1257,14 @@ class WebViewProvider extends ChangeNotifier {
 
   int returnForwardPagesNumber() {
     if (_tabList.isNotEmpty) {
-      var tab = _tabList[_currentTab];
+      var tab = _tabList[currentTab];
       return tab.historyForward.length;
     }
     return 0;
   }
 
   bool tryGoBack() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     if (tab.historyBack.isNotEmpty) {
       final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
       addToHistoryForward(tab: tab, url: tab.currentUrl);
@@ -1290,7 +1300,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   bool tryGoForward() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     if (tab.historyForward.isNotEmpty) {
       final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
 
@@ -1327,10 +1337,10 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  assessLoginErrorsFromPdaIcon() async {
+  Future<void> assessLoginErrorsFromPdaIcon() async {
     TabDetails tab;
 
-    if (_currentTab < 0) _currentTab = 0;
+    if (currentTab < 0) currentTab = 0;
 
     // This might be executed before the browser is ready, so wait for it
     if (_tabList.isEmpty) {
@@ -1340,13 +1350,13 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
     if (_tabList.isNotEmpty) {
-      tab = _tabList[_currentTab];
+      tab = _tabList[currentTab];
       tab.webViewKey?.currentState?.assessErrorCases();
     }
   }
 
   bool reviveUrl() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     if (tab.currentUrl != null) {
       tab.webViewKey?.currentState?.loadFromExterior(url: tab.currentUrl, omitHistory: true);
       _saveTabs();
@@ -1360,7 +1370,7 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     final tab = _tabList[0];
     tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
-    if (_currentTab != 0) {
+    if (currentTab != 0) {
       activateTab(0);
     }
   }
@@ -1370,7 +1380,7 @@ class WebViewProvider extends ChangeNotifier {
     final tab = _tabList[0];
     tab.isChainingBrowser = true;
     tab.webViewKey?.currentState?.convertToChainingBrowser(chainingPayload: chainingPayload!);
-    if (_currentTab != 0) {
+    if (currentTab != 0) {
       activateTab(0);
     }
     _saveTabs();
@@ -1386,7 +1396,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void loadCurrentTabUrl(String? url) {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     if (tab.currentUrl != null) {
       tab.webViewKey?.currentState?.loadFromExterior(url: url, omitHistory: false);
       _saveTabs();
@@ -1394,7 +1404,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   String? currentTabUrl() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     if (tab.currentUrl != null) {
       return tab.webViewKey?.currentState?.reportCurrentUrl();
     }
@@ -1402,7 +1412,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   String? currentTabTitle() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     if (tab.currentUrl != null) {
       return tab.webViewKey?.currentState?.reportCurrentTitle();
     }
@@ -1453,10 +1463,10 @@ class WebViewProvider extends ChangeNotifier {
 
   void _saveCurrentActiveTabPosition() {
     // Ensure tab number is correct before saving active session
-    if (_currentTab >= _tabList.length) {
-      _tabList.length == 1 ? _currentTab = 0 : _currentTab = _tabList.length - 1;
+    if (currentTab >= _tabList.length) {
+      _tabList.length == 1 ? currentTab = 0 : currentTab = _tabList.length - 1;
     }
-    Prefs().setWebViewLastActiveTab(_currentTab);
+    Prefs().setWebViewLastActiveTab(currentTab);
   }
 
   void clearOnDispose() {
@@ -1464,7 +1474,7 @@ class WebViewProvider extends ChangeNotifier {
     _secondaryInitialised = false;
 
     // It is necessary to bring this to 0 so that on opening no checks are performed in tabs that don't exist yet
-    _currentTab = 0;
+    currentTab = 0;
   }
 
   TabDetails? getTabFromKey(Key? reporterKey) {
@@ -1479,7 +1489,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void _callAssessMethods() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
 
     // Gym and Hunting for Energy
     if (tab.currentUrl!.contains("gym.php") || tab.currentUrl!.contains("index.php?page=hunting")) {
@@ -1620,27 +1630,27 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   void closeWebViewFromOutside() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     tab.webViewKey?.currentState?.closeBrowserFromOutside();
   }
 
   void reloadFromOutside() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     tab.webViewKey?.currentState?.reloadFromOutside();
   }
 
   void passHealingChoiceFromOutside(HealingPages choice) {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     tab.webViewKey?.currentState?.openHealingPage(choice);
   }
 
   void passOpenCloseChainWidgetFromOutside() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     tab.webViewKey?.currentState?.openCloseChainWidgetFromOutside();
   }
 
   void passNextChainAttackFromOutside() {
-    final tab = _tabList[_currentTab];
+    final tab = _tabList[currentTab];
     tab.webViewKey?.currentState?.nextChainAttack();
   }
 
@@ -1652,7 +1662,7 @@ class WebViewProvider extends ChangeNotifier {
     final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
     final UserDetailsProvider userProvider = context.read<UserDetailsProvider>();
 
-    if (!nativeUser.isNativeUserEnabled()) {
+    if (nativeUser.playerLastLoginMethod == NativeLoginType.none) {
       log("No native user enabled, skipping auth!");
       return inputUrl;
     }
@@ -1790,6 +1800,8 @@ class WebViewProvider extends ChangeNotifier {
       return Image.asset('images/icons/home/crimes.png', color: iconColor);
     } else if (url.contains("index.php")) {
       return ImageIcon(const AssetImage('images/icons/home/home.png'), color: iconColor);
+    } else if (url.contains("sid=travel")) {
+      return Image.asset('images/icons/map/travel_agency.png', color: iconColor);
     } else if (!url.contains("torn.com")) {
       return Icon(Icons.public, size: 22, color: iconColor);
     }
@@ -1893,7 +1905,7 @@ class WebViewProvider extends ChangeNotifier {
     );
   }
 
-  togglePeriodicUnusedTabsRemovalRequest({required bool enable}) {
+  void togglePeriodicUnusedTabsRemovalRequest({required bool enable}) {
     final pc = Get.find<PeriodicExecutionController>();
     if (enable) {
       pc.registerTask(
@@ -1911,7 +1923,7 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  assessPeriodidTabRemovalOnLaunch() {
+  void assessPeriodidTabRemovalOnLaunch() {
     if (!removeUnusedTabs) return;
 
     final pc = Get.find<PeriodicExecutionController>();

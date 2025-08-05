@@ -278,7 +278,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
         ));
   }
 
-  _onTabTapped() async {
+  Future<void> _onTabTapped() async {
     if (!_spyExists && _tabController.index == 0) {
       setState(() {
         _tabController.index = _originTab;
@@ -297,7 +297,7 @@ class _StatsDialogState extends State<StatsDialog> with TickerProviderStateMixin
     }
   }
 
-  _disableTSC() {
+  void _disableTSC() {
     setState(() {
       _disableTSCcalledBack = true;
       _tabController.index = 1;

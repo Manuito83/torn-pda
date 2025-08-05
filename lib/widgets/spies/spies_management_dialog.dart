@@ -145,7 +145,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
                 width: 15,
                 child: ColorFiltered(
                   colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.5),
+                    Colors.black.withAlpha((0.5 * 255).toInt()),
                     BlendMode.srcATop,
                   ),
                   child: Image.asset(

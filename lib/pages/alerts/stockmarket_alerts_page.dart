@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -48,6 +49,8 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
   Future? _stocksInitialised;
   bool _errorInitializing = false;
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -60,7 +63,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       _fbUser = widget.fbUser;
 
       routeWithDrawer = false;
-      _settingsP!.willPopShouldGoBackStream.stream.listen((event) {
+      _willPopSubscription = _settingsP!.willPopShouldGoBackStream.stream.listen((event) {
         if (mounted && routeName == "stockmarket_alerts_page") _goBack();
       });
     } else {
@@ -68,6 +71,12 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     }
     _stocksInitialised = _initialiseStocks();
     analytics?.logScreenView(screenName: 'stockMarket');
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -79,7 +88,9 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
       color: _themeProvider!.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider!.canvas
+              : isStatusBarShown
+                  ? _themeProvider!.statusBar
+                  : _themeProvider!.canvas
           : _themeProvider!.canvas,
       child: SafeArea(
         right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
@@ -402,7 +413,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     }
   }
 
-  void _launchBrowser({required shortTap}) {
+  void _launchBrowser({required bool shortTap}) {
     const String url = "https://www.torn.com/page.php?sid=stocks";
     _webViewProvider.openBrowserPreference(
       context: context,
@@ -411,7 +422,7 @@ class StockMarketAlertsPageState extends State<StockMarketAlertsPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     if (!widget.calledFromMenu) {
       routeName = "alerts";

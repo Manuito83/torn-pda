@@ -430,7 +430,7 @@ class RetalsController extends GetxController {
     }
   }
 
-  _deleteSpiedStats(Retal retal) {
+  void _deleteSpiedStats(Retal retal) {
     retal.spySource = SpiesSource.yata;
     retal.statsExactTotal = -1;
     retal.statsExactTotalUpdated = -1;

@@ -21,10 +21,9 @@ class WikiMenu extends StatefulWidget {
     "Attacking": "https://wiki.torn.com/wiki/Attack",
     "Awards": "https://wiki.torn.com/wiki/Award",
     "Awareness": "https://wiki.torn.com/wiki/Awareness",
-    "Basics": "https://wiki.torn.com/wiki/Back_to_Basics",
     "Battle Stats": "https://wiki.torn.com/wiki/Battle_Stats",
     "Books": "https://wiki.torn.com/wiki/Books",
-    "Cars": "https://wiki.torn.com/wiki/Other_Items#Cars",
+    "Cars": "https://wiki.torn.com/wiki/Cars",
     "Casino": "https://wiki.torn.com/wiki/Casino",
     "City": "https://wiki.torn.com/wiki/City",
     "Collectibles": "https://wiki.torn.com/wiki/Collectible#Collectibles",
@@ -172,7 +171,7 @@ class _WikiMenuState extends State<WikiMenu> {
     );
   }
 
-  _buildSearchLines(BuildContext context, {String search = ""}) {
+  void _buildSearchLines(BuildContext context, {String search = ""}) {
     List<Widget> items = <Widget>[];
 
     WikiMenu._pages.forEach((key, value) {

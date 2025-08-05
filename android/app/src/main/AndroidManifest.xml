@@ -32,6 +32,8 @@
             android:documentLaunchMode="never"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:windowSoftInputMode="adjustResize"
+            android:hardwareAccelerated="true"
+            android:enableOnBackInvokedCallback="false"
             android:exported="true">
             <meta-data android:name="flutter_deeplinking_enabled"
                 android:value="false" />

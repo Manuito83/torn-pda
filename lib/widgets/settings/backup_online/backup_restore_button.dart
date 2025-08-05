@@ -114,7 +114,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
       if (userscripts != null && widget.selectedItems.contains("userscripts")) {
         final userscriptsProvider = context.read<UserScriptsProvider>();
         userscriptsProvider.restoreScriptsFromServerSave(
-          overwritte: widget.overwritteUserscripts,
+          overwrite: widget.overwritteUserscripts,
           scriptsList: userscripts,
         );
       }
@@ -187,7 +187,7 @@ class BackupRestoreButtonState extends State<BackupRestoreButton> with TickerPro
       if (userscripts != null) {
         final userscriptsProvider = context.read<UserScriptsProvider>();
         userscriptsProvider.restoreScriptsFromServerSave(
-          overwritte: widget.overwritteUserscripts,
+          overwrite: widget.overwritteUserscripts,
           scriptsList: userscripts,
           defaultToDisabled: true,
         );

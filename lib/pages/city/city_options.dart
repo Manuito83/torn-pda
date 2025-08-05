@@ -43,8 +43,12 @@ class CityOptionsState extends State<CityOptions> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) {
+          widget.callback();
+        }
+      },
       child: Container(
         color: _themeProvider.currentTheme == AppTheme.light
             ? MediaQuery.orientationOf(context) == Orientation.portrait
@@ -155,10 +159,5 @@ class CityOptionsState extends State<CityOptions> {
     setState(() {
       _cityEnabled = cityEnabled;
     });
-  }
-
-  Future<bool> _willPopCallback() async {
-    widget.callback();
-    return true;
   }
 }

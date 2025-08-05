@@ -118,6 +118,8 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
   // SEARCH END #######
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -128,7 +130,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
 
     routeWithDrawer = false;
     routeName = "settings_browser";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "settings_browser") _goBack();
     });
   }
@@ -141,7 +143,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
@@ -2996,7 +3000,6 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Flexible(child: Text("Center text field when editing")),
-                  // TODO
                   Switch(
                     value: _settingsProvider.browserCenterEditingTextField &&
                         _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed,
@@ -3078,7 +3081,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               color: Color(_settingsProvider.tabsHideBarColor),
               onColorChanged: (color) {
                 setState(() {
-                  _settingsProvider.changeTabsHideBarColor = color.value;
+                  _settingsProvider.changeTabsHideBarColor = color.toARGB32();
                 });
               },
               width: 40,
@@ -3147,7 +3150,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             child: ColorPicker(
               color: _highlightColor,
               onColorChanged: (color) {
-                _settingsProvider.changeHighlightColor = color.value;
+                _settingsProvider.changeHighlightColor = color.toARGB32();
                 setState(() {
                   pickerColor = color;
                 });
@@ -3285,6 +3288,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   @override
   void dispose() {
     _ticker?.cancel();
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -3585,7 +3589,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
     });
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "settings";
     Navigator.of(context).pop();

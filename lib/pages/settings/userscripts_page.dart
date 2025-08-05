@@ -1,4 +1,5 @@
 // Flutter imports:
+import 'dart:async';
 import 'dart:io';
 
 // Package imports:
@@ -9,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -36,6 +38,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
   final _scrollController = ScrollController();
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -61,7 +65,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
 
     routeWithDrawer = false;
     routeName = "userscripts";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "userscripts") _goBack();
     });
   }
@@ -69,6 +73,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _willPopSubscription.cancel();
     super.dispose();
   }
 
@@ -80,7 +85,9 @@ class UserScriptsPageState extends State<UserScriptsPage> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: _webViewProvider.webViewSplitActive && _webViewProvider.splitScreenPosition == WebViewSplitPosition.left,
@@ -1161,10 +1168,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  WillPopScope _firstTimeDialog() {
+  PopScope _firstTimeDialog() {
     // Will show for users updating to V2, as well as new users.
-    return WillPopScope(
-      onWillPop: () async => false,
+    return PopScope(
+      canPop: false,
       child: AlertDialog(
         title: const Text("CAUTION"),
         content: const SingleChildScrollView(
@@ -1216,7 +1223,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
             child: TextButton(
               child: const Text("Yes, I promise!"),
               onPressed: () {
-                _userScriptsProvider.changeScriptsFirstTime(false);
+                _userScriptsProvider.changeScriptsFirstTime = false;
                 Navigator.of(context).pop('exit');
               },
             ),
@@ -1245,7 +1252,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = false;
     routeName = "settings_browser";
     Navigator.of(context).pop();

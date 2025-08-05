@@ -43,8 +43,10 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
   Widget build(BuildContext context) {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    return WillPopScope(
-      onWillPop: _willPopCallback,
+    return PopScope(
+      onPopInvokedWithResult: (didPop, result) {
+        widget.callback();
+      },
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
             context.read<WebViewProvider>().splitScreenPosition == WebViewSplitPosition.left,
@@ -320,17 +322,12 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
     );
   }
 
-  _onDialogSendData() {
+  void _onDialogSendData() {
     setState(() {
       // Shares info has been added
     });
 
     final save = vaultStatusModelToJson(widget.vaultStatus);
     Prefs().setVaultShareCurrent(save);
-  }
-
-  Future<bool> _willPopCallback() async {
-    widget.callback();
-    return true;
   }
 }

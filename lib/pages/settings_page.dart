@@ -25,7 +25,7 @@ import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
-import 'package:torn_pda/utils/settings/prefs_backup_section.dart';
+import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -50,10 +50,10 @@ import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/settings/api_auth_widget.dart';
 import 'package:torn_pda/widgets/settings/api_error_history_dialog.dart';
 import 'package:torn_pda/widgets/settings/applinks_browser_dialog.dart';
-import 'package:torn_pda/widgets/settings/backup/backup_delete_dialog.dart';
-import 'package:torn_pda/widgets/settings/backup/backup_restore_dialog.dart';
-import 'package:torn_pda/widgets/settings/backup/backup_save_dialog.dart';
-import 'package:torn_pda/widgets/settings/backup/backup_share_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_online/backup_delete_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_online/backup_restore_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_online/backup_save_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_online/backup_share_dialog.dart';
 import 'package:torn_pda/widgets/settings/browser_info_dialog.dart';
 import 'package:torn_pda/widgets/settings/reviving_services_dialog.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
@@ -326,13 +326,13 @@ class SettingsPageState extends State<SettingsPage> {
                           changeApiError: (val) => setState(() => _apiError = val),
                           changeUserProfile: (val) => setState(() => _userProfile = val),
                         ),
-                      if (_userProfile != null && !_isSearching)
-                        const Column(
-                          children: [
-                            NativeLoginWidget(),
-                            SizedBox(height: 15),
-                          ],
-                        ),
+                      //if (_userProfile != null && !_isSearching)
+                      const Column(
+                        children: [
+                          NativeLoginWidget(),
+                          SizedBox(height: 15),
+                        ],
+                      ),
                       const SizedBox(height: 20),
                       ...buildFilteredSections(),
                       const SizedBox(height: 50),
@@ -3264,7 +3264,7 @@ class SettingsPageState extends State<SettingsPage> {
           _vibrationValue = value;
         });
 
-        if ((await Vibration.hasVibrator())!) {
+        if ((await Vibration.hasVibrator())) {
           if (value == 'short') {
             Vibration.vibrate(pattern: [0, 400]);
           } else if (value == 'medium') {

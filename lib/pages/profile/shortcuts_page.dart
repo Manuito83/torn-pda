@@ -1,5 +1,7 @@
 // Flutter imports:
 // Package imports:
+import 'dart:async';
+
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -7,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/main.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -29,6 +32,8 @@ class ShortcutsPageState extends State<ShortcutsPage> {
   final _customNameKey = GlobalKey<FormState>();
   final _customURLKey = GlobalKey<FormState>();
 
+  late StreamSubscription _willPopSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -36,9 +41,15 @@ class ShortcutsPageState extends State<ShortcutsPage> {
 
     routeWithDrawer = false;
     routeName = "shortcuts";
-    _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
+    _willPopSubscription = _settingsProvider.willPopShouldGoBackStream.stream.listen((event) {
       if (mounted && routeName == "shortcuts") _goBack();
     });
+  }
+
+  @override
+  void dispose() {
+    _willPopSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -49,7 +60,9 @@ class ShortcutsPageState extends State<ShortcutsPage> {
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
               ? Colors.blueGrey
-              : _themeProvider.canvas
+              : isStatusBarShown
+                  ? _themeProvider.statusBar
+                  : _themeProvider.canvas
           : _themeProvider.canvas,
       child: SafeArea(
         right: context.read<WebViewProvider>().webViewSplitActive &&
@@ -910,7 +923,7 @@ class ShortcutsPageState extends State<ShortcutsPage> {
     );
   }
 
-  _goBack() {
+  void _goBack() {
     routeWithDrawer = true;
     routeName = "settings";
     Navigator.of(context).pop();

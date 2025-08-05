@@ -411,7 +411,7 @@ class ChainWidgetState extends State<ChainWidget> {
     );
   }
 
-  initialise() {
+  void initialise() {
     if (!_initialised || _chainStatusProvider.chainModel == null) {
       _initialised = true;
       if (!_chainStatusProvider.statusActive) {

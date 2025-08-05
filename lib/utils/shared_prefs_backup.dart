@@ -8,9 +8,10 @@ class PrefsBackupService {
 
   /// Export all prefs as an XOR‑ciphered Base64 string
   static Future<String> exportPrefs(String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    final map = {for (var k in prefs.getKeys()) k: prefs.get(k)};
-    final bytes = utf8.encode(jsonEncode(map));
+    final prefs = SharedPreferencesAsync();
+    final Map<String, Object?> allPrefsMap = await prefs.getAll();
+
+    final bytes = utf8.encode(jsonEncode(allPrefsMap));
     final keyBytes = utf8.encode(key);
     final cipher = List<int>.generate(
       bytes.length,
@@ -32,25 +33,25 @@ class PrefsBackupService {
 
   /// Schedule backup import on next launch by saving data and key
   static Future<void> scheduleImport(String encoded, String key) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs
-      ..setString(_dataKey, encoded)
-      ..setString(_keyKey, key)
-      ..setBool(_flagKey, true);
+    final prefs = SharedPreferencesAsync();
+    await prefs.setString(_dataKey, encoded);
+    await prefs.setString(_keyKey, key);
+    await prefs.setBool(_flagKey, true);
   }
 
   /// If import is pending, apply it now and clear the flag, returns true if applied
   static Future<bool> importIfScheduled() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!(prefs.getBool(_flagKey) ?? false)) return false;
+    final prefs = SharedPreferencesAsync();
 
-    final encoded = prefs.getString(_dataKey);
-    final key = prefs.getString(_keyKey);
+    if (!(await prefs.getBool(_flagKey) ?? false)) return false;
+
+    final encoded = await prefs.getString(_dataKey);
+    final key = await prefs.getString(_keyKey);
+
     if (encoded == null || key == null) {
-      prefs
-        ..remove(_dataKey)
-        ..remove(_keyKey)
-        ..setBool(_flagKey, false);
+      await prefs.remove(_dataKey);
+      await prefs.remove(_keyKey);
+      await prefs.setBool(_flagKey, false);
       return false;
     }
 
@@ -65,16 +66,15 @@ class PrefsBackupService {
         if (v is String) await prefs.setString(k, v);
         if (v is List) await prefs.setStringList(k, v.cast<String>());
       }
-      prefs
-        ..remove(_dataKey)
-        ..remove(_keyKey)
-        ..setBool(_flagKey, false);
+
+      await prefs.remove(_dataKey);
+      await prefs.remove(_keyKey);
+      await prefs.setBool(_flagKey, false);
       return true;
     } catch (_) {
-      prefs
-        ..remove(_dataKey)
-        ..remove(_keyKey)
-        ..setBool(_flagKey, false);
+      await prefs.remove(_dataKey);
+      await prefs.remove(_keyKey);
+      await prefs.setBool(_flagKey, false);
       return false;
     }
   }
