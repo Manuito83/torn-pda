@@ -523,10 +523,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _statsController.logCheckOut();
 
       // Refresh widget to have up to date info when we exit
-      if (Platform.isAndroid) {
-        if ((await pdaWidget_numberInstalled()).isNotEmpty) {
-          pdaWidget_startBackgroundUpdate();
-        }
+      if ((await getInstalledHomeWidgets()).isNotEmpty) {
+        startBackgroundRefresh();
       }
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
@@ -547,9 +545,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _statsController.logCheckIn();
 
       // App widget - reset background updater
-      if (Platform.isAndroid) {
-        pdaWidget_handleBackgroundUpdateStatus();
-      }
+      syncBackgroundRefreshWithWidgetInstallation();
 
       checkForScriptUpdates();
 
@@ -2328,7 +2324,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           // Appwidget dialog
           if (Platform.isAndroid) {
             if (!await Prefs().getAppwidgetExplanationShown()) {
-              if ((await pdaWidget_numberInstalled()).isNotEmpty) {
+              if ((await getInstalledHomeWidgets()).isNotEmpty) {
                 if (mounted) {
                   await _showAppwidgetExplanationDialog(context);
                 }

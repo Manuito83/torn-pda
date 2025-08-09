@@ -214,7 +214,7 @@ class PrefsBackupWidget extends StatelessWidget {
     final result = await FileSaver.instance.saveAs(
       name: 'prefs_backup_${_ts()}',
       bytes: bytes,
-      ext: 'pda',
+      fileExtension: 'pda',
       mimeType: MimeType.custom,
       customMimeType: "application/octet-stream",
     );

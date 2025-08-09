@@ -217,8 +217,16 @@ Future<void> main() async {
   }
 
   // Initialise Workmanager for app widget
-  // [isInDebugMode] sends notifications each time a task is performed
-  if (Platform.isAndroid) Workmanager().initialize(pdaWidget_backgroundUpdate);
+  Workmanager().initialize(widgetBackgroundTaskDispatcher);
+
+  // Handle home widget
+  if (Platform.isAndroid) {
+    HomeWidget.setAppGroupId('torn_pda');
+  } else if (Platform.isIOS) {
+    HomeWidget.setAppGroupId('group.com.manuito.tornpda');
+  }
+  HomeWidget.registerInteractivityCallback(onWidgetInteractivityCallback);
+  syncBackgroundRefreshWithWidgetInstallation();
 
   Get.put(UserController(), permanent: true);
   Get.put(AudioController(), permanent: true);
@@ -412,13 +420,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
-
-    // Handle home widget
-    if (Platform.isAndroid) {
-      HomeWidget.setAppGroupId('torn_pda');
-      HomeWidget.registerInteractivityCallback(pdaWidget_callback);
-      pdaWidget_handleBackgroundUpdateStatus();
-    }
 
     // Callback to force the browser back to full screen if there is a system request to revert
     // Might happen when app is on the background or when only the top is being extended

@@ -47,7 +47,7 @@ dependencies:
   envied: 1.1.1
   expandable: 5.0.1
   file_picker: 10.2.0
-  file_saver: 0.3.0
+  file_saver: 0.3.1
   firebase_analytics: 11.5.2
   firebase_auth: 5.6.2
   firebase_core: 3.15.1
@@ -74,8 +74,9 @@ dependencies:
   home_widget:
     git:
       url: https://github.com/Manuito83/home_widget.git
-      ## TODO: merge pda-dev into pda-stable and change ref
-      ref: 8ecac9ede8c4a06a9409848da339f181169300db
+      ## branch pda-dev-0.8.0
+      ref: ba572cad62e12b42b5c6d6fa4bac7cfec9adbb7c
+      path: packages/home_widget
   html: 0.15.6
   http: 1.4.0
   json_annotation: 4.9.0 # Used by swagger_dart_code_generator
