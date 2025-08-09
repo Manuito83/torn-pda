@@ -146,7 +146,7 @@
 					rej("Request timed out")
 				);
 				if (!method || method.toLowerCase() !== "post") {
-					PDA_httpGet(url).then(res).catch(rej);
+					PDA_httpGet(url, headers ?? {}).then(res).catch(rej);
 					onprogress?.();
 				} else {
 					PDA_httpPost(url, headers ?? {}, data ?? "")
