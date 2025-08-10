@@ -1,8 +1,7 @@
 import AppIntents
 import Foundation
-import home_widget  // Asegúrate de que este import está presente
+import WidgetKit
 
-// El appGroup se puede definir aquí para reusarlo
 private let appGroup = "group.com.manuito.tornpda"
 
 @available(iOS 17, *)
@@ -24,14 +23,10 @@ public struct ReloadWidgetActionIntent: AppIntent {
   public func perform() async throws -> some IntentResult {
     if let prefs = UserDefaults(suiteName: appGroup) {
       prefs.setValue(true, forKey: "reloading")
+      prefs.synchronize()
     }
 
-    await HomeWidgetBackgroundWorker.run(
-      url: URL(string: "pdaWidget://reload_clicked"),
-      appGroup: appGroup
-    )
-
-    print("ReloadWidgetActionIntent: Background task initiated to call pdaWidget_callback")
+    WidgetCenter.shared.reloadTimelines(ofKind: "HomeWidgetRankedWar")
 
     return .result()
   }

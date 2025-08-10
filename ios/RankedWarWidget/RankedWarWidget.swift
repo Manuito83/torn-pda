@@ -129,12 +129,10 @@ struct HeaderView: View {
       Spacer()
 
       Button(intent: ReloadWidgetActionIntent()) {
-        SpinningReloadIcon(reloading: reloading)
-          .font(.caption)
-          .foregroundColor(reloading ? .accentColor : .gray)
+        SpinningReloadIcon(trigger: reloading)
+          .font(.headline)
       }
       .buttonStyle(.plain)
-      .disabled(reloading)
 
     }
     .padding([.horizontal, .top])
@@ -238,23 +236,31 @@ extension View {
 }
 
 struct SpinningReloadIcon: View {
-  let reloading: Bool
+  // Dispara una sola rotación cuando cambia a true
+  let trigger: Bool
 
   @State private var isRotating = false
 
   var body: some View {
     Image(systemName: "arrow.clockwise")
       .rotationEffect(Angle.degrees(isRotating ? 360 : 0))
-      .onAppear(perform: updateRotation)
-      .onChange(of: reloading) { _ in updateRotation() }
+      // Solo se pone azul mientras gira
+      .foregroundColor(isRotating ? .accentColor : .gray)
+      .onAppear {
+        if trigger { spinOnce() }
+      }
+      .onChange(of: trigger) { newValue in
+        if newValue { spinOnce() }
+      }
   }
 
-  private func updateRotation() {
-    if reloading {
-      withAnimation(.linear(duration: 1).repeatForever(autoreverses: false)) {
-        isRotating = true
-      }
-    } else {
+  private func spinOnce() {
+    // Reinicia y anima una sola vuelta (~0.7s)
+    isRotating = false
+    withAnimation(.linear(duration: 0.7)) {
+      isRotating = true
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
       withAnimation(nil) {
         isRotating = false
       }
