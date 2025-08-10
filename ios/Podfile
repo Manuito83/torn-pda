@@ -4,6 +4,9 @@ platform :ios, '14.0'
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
 
+use_frameworks!
+use_modular_headers!
+
 project 'Runner', {
   'Debug' => :debug,
   'Profile' => :release,
@@ -28,22 +31,11 @@ require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelpe
 flutter_ios_podfile_setup
 
 target 'Runner' do
-  use_frameworks!
-  use_modular_headers!
-
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
 
   # This line needs to be updated with the version or commented out (in which case build will take longer, but nothing else)
   # Version at https://github.com/invertase/firestore-ios-sdk-frameworks
   pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '11.15.0'
-
-  target 'RankedWarWidget' do
-    use_frameworks!
-    use_modular_headers!
-    inherit! :search_paths
-    pod 'home_widget', :path => '.symlinks/plugins/home_widget/ios'
-  end
-
 end
 
 post_install do |installer|
