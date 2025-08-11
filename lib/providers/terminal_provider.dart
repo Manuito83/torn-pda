@@ -19,10 +19,21 @@ class TerminalProvider extends ChangeNotifier {
   }
 
   // Add an instruction to a specific webview's terminal
-  void addInstruction(Key? webviewKey, String instruction) {
+  void addInstruction(Key? webviewKey, String instruction, {bool isError = false}) {
     if (webviewKey == null) return;
+
     final existing = _terminals[webviewKey] ?? "";
-    _terminals[webviewKey] = "$instruction\n\n$existing";
+
+    String prefixedInstruction;
+    if (isError) {
+      prefixedInstruction = "[ERR] ! $instruction";
+    } else if (instruction.startsWith("[IN]") || instruction.startsWith("[OUT]") || instruction.startsWith("[ERR]")) {
+      prefixedInstruction = instruction;
+    } else {
+      prefixedInstruction = "[OUT] < $instruction";
+    }
+
+    _terminals[webviewKey] = "$prefixedInstruction\n\n$existing";
     notifyListeners();
   }
 

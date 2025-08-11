@@ -1793,7 +1793,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                   !consoleMessage.message.contains("srcset") &&
                   !consoleMessage.message.contains("Missed ID for Quote saving") &&
                   !consoleMessage.message.contains("@firebase/analytics: Failed to fetch this Firebase")) {
-                _terminalProvider.addInstruction(widget.key, consoleMessage.message);
+                final bool isJSError = consoleMessage.messageLevel == ConsoleMessageLevel.ERROR;
+                _terminalProvider.addInstruction(widget.key, consoleMessage.message, isError: isJSError);
+
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
             }
