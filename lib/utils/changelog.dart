@@ -100,6 +100,17 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // v3.8.4 - Build 568 - 10/08/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.8.4'
+        ..date = '20 AUG 2025'
+        ..features = [
+          "User scripts can now be accessed from the browser URL dialog",
+          "Fixed Dev Tools console issues",
+        ],
+    );
+
     // v3.8.3 - Build 567 - 02/08/2025
     itemList.add(
       ChangeLogItem()
