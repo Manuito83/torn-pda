@@ -107,6 +107,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '20 AUG 2025'
         ..features = [
           "User scripts can now be accessed from the browser URL dialog",
+          "Fixed regression in GET requests from GM_xmlhttpRequest [tiksan]",
           "Fixed Dev Tools console issues",
         ],
     );
