@@ -1760,10 +1760,12 @@ class WebViewProvider extends ChangeNotifier {
     // Find some icons manually first, as they might trigger errors with shortcuts
     if (tabList[i].isChainingBrowser) {
       return const Icon(MdiIcons.linkVariant, color: Colors.red);
-    } else if (url.contains("sid=attack&user2ID=2225097")) {
+    } else if (url.contains("sid=attack&user2ID=2225097") || url.contains("sid=getInAttack&user2ID=2225097")) {
       return const Icon(MdiIcons.pistol, color: Colors.pink);
-    } else if (url.contains("sid=attack&user2ID=")) {
-      return Icon(Icons.person, color: iconColor);
+    } else if (url.contains("sid=attack&user2ID=") || url.contains("sid=getInAttack&user2ID=")) {
+      return Icon(MdiIcons.pistol, color: iconColor);
+    } else if (url.contains("sid=attackLog&ID=")) {
+      return Icon(MdiIcons.notebookOutline, color: iconColor);
     } else if (url.contains("profiles.php?XID=2225097")) {
       return const Icon(Icons.person, color: Colors.pink);
     } else if (url.contains("profiles.php")) {
