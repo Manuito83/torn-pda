@@ -107,7 +107,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '20 AUG 2025'
         ..infoString = Platform.isIOS
             ? "Please note that the minimum supported OS version will be updated to iOS 15 soon"
-            : "Please note that the minimum supported OS version will be updated to Android 6 (Marshmallow) soon"
+            : "Please note that the minimum supported OS version will be updated to Android 7 (Nougat) soon"
         ..features = [
           "User scripts can now be accessed from the browser URL dialog",
           "Fixed browser reset when rotating screen",
