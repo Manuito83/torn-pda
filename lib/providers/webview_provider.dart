@@ -50,6 +50,15 @@ enum WebViewSplitPosition {
   off,
 }
 
+class RotatedDisposedTabDetails {
+  GlobalKey<WebViewFullState>? key;
+  String? currentUrl;
+  int? scrollY;
+  int? scrollX;
+
+  RotatedDisposedTabDetails({this.key, this.currentUrl, this.scrollY, this.scrollX});
+}
+
 class TabDetails {
   bool sleepTab = false;
   bool initialised = false;
@@ -97,6 +106,9 @@ class WebViewProvider extends ChangeNotifier {
   List<TabDetails> get tabList => _tabList;
 
   int loginErrorRetrySeconds = 0;
+
+  // Rotate tab details
+  List<RotatedDisposedTabDetails> rotatedTabDetails = [];
 
   // Windows user data folder
   WebViewEnvironment? webViewEnvironment;

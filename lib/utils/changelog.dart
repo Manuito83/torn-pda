@@ -100,13 +100,14 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.4 - Build 568 - 10/08/2025
+    // v3.8.4 - Build 568 - 16/08/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.4'
-        ..date = '20 AUG 2025'
+        ..date = '25 AUG 2025'
         ..features = [
           "User scripts can now be accessed from the browser URL dialog",
+          "Fixed browser reset when scrolling",
           "Fixed regression in GET requests from GM_xmlhttpRequest [tiksan]",
           "Fixed Dev Tools console issues",
         ],
