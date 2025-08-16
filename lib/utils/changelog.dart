@@ -104,7 +104,10 @@ class ChangeLogState extends State<ChangeLog> {
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.4'
-        ..date = '25 AUG 2025'
+        ..date = '20 AUG 2025'
+        ..infoString = Platform.isIOS
+            ? "Please note that the minimum supported OS version will be updated to iOS 15 soon"
+            : "Please note that the minimum supported OS version will be updated to Android 6 (Marshmallow) soon"
         ..features = [
           "User scripts can now be accessed from the browser URL dialog",
           "Fixed browser reset when rotating screen",
