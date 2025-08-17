@@ -39,7 +39,6 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart' as bars_model;
 import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
-import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -7769,7 +7768,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final thisRented = <String, Map<String, String>>{};
     final propertyModel = miscApiResponse.properties;
 
-    final List<PropertyV2> rentedProperties = propertyModel.where((p) => p.status == "Currently being rented").toList();
+    final List<PropertyV2> rentedProperties = propertyModel.where((p) {
+      if (p.status != null && p.status!.contains("rented")) {
+        return true;
+      }
+      return false;
+    }).toList();
 
     if (rentedProperties.isEmpty) {
       if (mounted) {
@@ -7785,15 +7789,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     for (final property in rentedProperties) {
       futures.add(() async {
         try {
-          final rentDetails = await ApiCallsV1.getProperty(propertyId: property.id.toString());
-
-          if (rentDetails is PropertyModel && rentDetails.property?.rented?.daysLeft != null) {
-            final timeLeft = rentDetails.property!.rented!.daysLeft!;
+          if (property.rentalPeriodRemaining != null && property.id != null && property.property?.name != null) {
+            final timeLeft = property.rentalPeriodRemaining!;
             final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
             if (timeLeft > 0) {
               thisRented[property.id.toString()] = {
                 "time": timeLeft.toString(),
-                "text": "Your ${property.propertyInfo.name.toLowerCase()}'s "
+                "text": "Your ${property.property!.name!.toLowerCase()}'s "
                     "rent will end in $daysString!",
               };
             }
@@ -7809,7 +7811,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final propertyLines = <Widget>[];
     var currentItem = 0;
     thisRented.forEach((key, value) {
-      final int numberDays = int.parse(value["time"]!);
+      final int? numberDays = int.tryParse(value["time"]!);
+      if (numberDays == null) return; // Skip if can't parse days
+
       final Widget prop = Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

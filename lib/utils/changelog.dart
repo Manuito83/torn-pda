@@ -118,6 +118,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "(e.g., 90Hz, 120Hz) for smoother animations.\n\n"
                 "May increase battery consumption and device heat but provides smoother animations.",
           ),
+          "Fixed rented properties information in Profile (Misc card)",
           "Fixed browser reset when rotating screen",
           "Fixed regression in GET requests from GM_xmlhttpRequest [tiksan]",
           "Fixed Dev Tools console issues",

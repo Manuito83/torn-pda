@@ -3,6 +3,7 @@
 //     final ownProfileMisc = ownProfileMiscFromJson(jsonString);
 
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:torn_pda/models/profile/user_v2_selections/education_v2_model.dart';
 import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
@@ -14,9 +15,9 @@ OwnProfileMisc ownProfileMiscFromJson(String rawJson) => OwnProfileMisc.fromJson
 String ownProfileMiscToJson(OwnProfileMisc data) => json.encode(data.toJson());
 
 class OwnProfileMisc {
-  // Transition from V1 selections to V2 selections
-  final EducationV2 education; // Transtitioned
-  final List<PropertyV2> properties; // In transition
+  // V2 API selections - properties can come as List or Map format
+  final EducationV2 education;
+  final List<PropertyV2> properties;
 
   int? points;
   int? caymanBank;
@@ -110,24 +111,19 @@ class OwnProfileMisc {
     this.metadata,
   });
 
-  static List<PropertyV2> _parsePropertiesV1orV2(dynamic propertiesData) {
-    // V2 selection
-    if (propertiesData is List) {
-      return propertiesData.map((p) => PropertyV2.fromJson(p as Map<String, dynamic>)).toList();
-    }
-    // V1 selection
-    else if (propertiesData is Map<String, dynamic>) {
-      return propertiesData.entries
-          .map((entry) => PropertyV2.fromLegacyJson(entry.key, entry.value as Map<String, dynamic>))
-          .toList();
-    }
-    return [];
-  }
-
   factory OwnProfileMisc.fromJson(Map<String, dynamic> json) {
     return OwnProfileMisc(
       education: EducationV2.fromJson(json["education"] ?? {}),
-      properties: _parsePropertiesV1orV2(json['properties']),
+      properties: json['properties'] != null
+          ? (() {
+              try {
+                return List<PropertyV2>.from(json['properties'].map((x) => PropertyV2.fromJson(x)));
+              } catch (e) {
+                log('Error parsing properties: $e');
+                return <PropertyV2>[];
+              }
+            })()
+          : [],
       points: json["points"],
       caymanBank: json["cayman_bank"],
       vaultAmount: json["vault_amount"],
