@@ -88,6 +88,7 @@ dependencies:
   path_provider: 2.1.5
   ## Bug submitted for v4.2.5 (plane icon out of place)
   percent_indicator: 4.2.3
+  flutter_refresh_rate_control: ^0.0.4+1
   provider: 6.1.5
   pull_to_refresh: 2.0.0
   quick_actions: 1.1.0

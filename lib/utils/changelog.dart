@@ -110,6 +110,13 @@ class ChangeLogState extends State<ChangeLog> {
             : "Please note that the minimum supported OS version will be updated to Android 7 (Nougat) soon"
         ..features = [
           "User scripts can now be accessed from the browser URL dialog",
+          ComplexFeature(
+            "Added high refresh rate control",
+            explanation: "Settings > Screen Configuration (disabled by default)\n\n"
+                "Enables the highest available refresh rate on supported devices "
+                "(e.g., 90Hz, 120Hz) for smoother animations.\n\n"
+                "May increase battery consumption and device heat but provides smoother animations.",
+          ),
           "Fixed browser reset when rotating screen",
           "Fixed regression in GET requests from GM_xmlhttpRequest [tiksan]",
           "Fixed Dev Tools console issues",

@@ -459,6 +459,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _preferencesCompleter.complete();
     }
 
+    // Configure high refresh rate based on user preferences
+    _preferencesCompleter.future.whenComplete(() async {
+      await _configureHighRefreshRate();
+    });
+
     // Force OC2 check when changelog is shown
     // (we also do this once a day with [_updateLastActiveTime])
     // (we shouldn't need to check the completer, as it's checked in initState, but just in case)
@@ -1308,7 +1313,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (BuildContext context) => UserScriptsPage(),
+            builder: (BuildContext context) => const UserScriptsPage(),
           ),
         );
       } else if (payload.contains('400-')) {
@@ -2686,6 +2691,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       bridgeController.initializeHandler();
       await travelController.activate();
     });
+  }
+
+  Future<void> _configureHighRefreshRate() async {
+    try {
+      await _settingsProvider.configureRefreshRate();
+    } catch (e) {
+      log('Error configuring refresh rate: $e');
+    }
   }
 
   void changeUID(String uid) {
