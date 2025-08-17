@@ -100,11 +100,11 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
-    // v3.8.4 - Build 568 - 16/08/2025
+    // v3.8.4 - Build 570 - 17/08/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.4'
-        ..date = '20 AUG 2025'
+        ..date = '25 AUG 2025'
         ..infoString = Platform.isIOS
             ? "Please note that the minimum supported OS version will be updated to iOS 15 soon"
             : "Please note that the minimum supported OS version will be updated to Android 7 (Nougat) soon"
