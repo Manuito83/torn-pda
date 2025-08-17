@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
             : "Please note that the minimum supported OS version will be updated to Android 7 (Nougat) soon"
         ..features = [
           "User scripts can now be accessed from the browser URL dialog",
+          if (Platform.isAndroid) "Discreet notification setting now also applies to alarms and timers",
           ComplexFeature(
             "Added high refresh rate control",
             explanation: "Settings > Screen Configuration (disabled by default)\n\n"

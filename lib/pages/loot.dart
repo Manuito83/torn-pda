@@ -1339,7 +1339,7 @@ class LootPageState extends State<LootPage> {
     alarmTime = alarmTime.add(Duration(minutes: -_lootAlarmAhead));
     final int hour = alarmTime.hour;
     final int minute = alarmTime.minute;
-    final String message = title;
+    final String message = _settingsProvider.discreetNotifications ? "L" : title;
 
     String thisSound;
     if (_alarmSound) {
@@ -1364,7 +1364,7 @@ class LootPageState extends State<LootPage> {
 
   void _setTimer(DateTime alarmTime, String title) {
     final int totalSeconds = alarmTime.difference(DateTime.now()).inSeconds;
-    final String message = title;
+    final String message = _settingsProvider.discreetNotifications ? "L" : title;
 
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',

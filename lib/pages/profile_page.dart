@@ -7069,7 +7069,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
-        'android.intent.extra.alarm.MESSAGE': message,
+        'android.intent.extra.alarm.MESSAGE':
+            _settingsProvider!.discreetNotifications ? _getDiscreetAlarmMessage(profileNotification) : message,
       },
     );
     intent.launch();
@@ -7120,10 +7121,65 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.LENGTH': totalSeconds,
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.MESSAGE': message,
+        'android.intent.extra.alarm.MESSAGE':
+            _settingsProvider!.discreetNotifications ? _getDiscreetTimerMessage(profileNotification) : message,
       },
     );
     intent.launch();
+  }
+
+  String _getDiscreetAlarmMessage(ProfileNotification profileNotification) {
+    switch (profileNotification) {
+      case ProfileNotification.travel:
+        return "T";
+      case ProfileNotification.energy:
+        return "E";
+      case ProfileNotification.nerve:
+        return "N";
+      case ProfileNotification.life:
+        return "Lf";
+      case ProfileNotification.drugs:
+        return "D";
+      case ProfileNotification.medical:
+        return "Med";
+      case ProfileNotification.booster:
+        return "B";
+      case ProfileNotification.hospital:
+        return "H";
+      case ProfileNotification.jail:
+        return "J";
+      case ProfileNotification.rankedWar:
+        return "W";
+      case ProfileNotification.raceStart:
+        return "R";
+    }
+  }
+
+  String _getDiscreetTimerMessage(ProfileNotification profileNotification) {
+    switch (profileNotification) {
+      case ProfileNotification.travel:
+        return "T";
+      case ProfileNotification.energy:
+        return "E";
+      case ProfileNotification.nerve:
+        return "N";
+      case ProfileNotification.life:
+        return "Lf";
+      case ProfileNotification.drugs:
+        return "D";
+      case ProfileNotification.medical:
+        return "Med";
+      case ProfileNotification.booster:
+        return "B";
+      case ProfileNotification.hospital:
+        return "H";
+      case ProfileNotification.jail:
+        return "J";
+      case ProfileNotification.rankedWar:
+        return "W";
+      case ProfileNotification.raceStart:
+        return "R";
+    }
   }
 
   Future<void> _callBackFromNotificationOptions() async {
