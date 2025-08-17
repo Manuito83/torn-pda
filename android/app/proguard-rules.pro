@@ -48,3 +48,6 @@
 
 ## Added after Flutter 3.22
 -dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
+
+# Flutter InAppWebView (for PDA >= v3.8.4, Flutter >= 3.32)
+-keep class com.pichillilorenzo.flutter_inappwebview_android.** { *; }
