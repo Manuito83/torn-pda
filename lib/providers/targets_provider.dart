@@ -478,7 +478,6 @@ class TargetsProvider extends ChangeNotifier {
         _targets.sort((a, b) => b.life!.current!.compareTo(a.life!.current!));
       case TargetSortType.lifeAsc:
         _targets.sort((a, b) => a.life!.current!.compareTo(b.life!.current!));
-
       case TargetSortType.hospitalDes:
         _targets.sort((a, b) {
           return b.hospitalSort!.compareTo(a.hospitalSort!);
@@ -497,7 +496,6 @@ class TargetsProvider extends ChangeNotifier {
             return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
           }
         });
-
       case TargetSortType.colorDes:
         _targets.sort((a, b) => b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase()));
       case TargetSortType.colorAsc:
@@ -579,19 +577,19 @@ class TargetsProvider extends ChangeNotifier {
       case TargetSortType.ffDes:
         sortToSave = 'ffDes';
       case TargetSortType.ffAsc:
-        sortToSave = 'ffDes';
+        sortToSave = 'ffAsc';
       case TargetSortType.nameDes:
         sortToSave = 'nameDes';
       case TargetSortType.nameAsc:
-        sortToSave = 'nameDes';
+        sortToSave = 'nameAsc';
       case TargetSortType.lifeDes:
         sortToSave = 'lifeDes';
       case TargetSortType.lifeAsc:
-        sortToSave = 'lifeDes';
+        sortToSave = 'lifeAsc';
       case TargetSortType.hospitalDes:
         sortToSave = 'hospitalDes';
       case TargetSortType.hospitalAsc:
-        sortToSave = 'hospitalDes';
+        sortToSave = 'hospitalAsc';
       case TargetSortType.colorDes:
         sortToSave = 'colorDes';
       case TargetSortType.colorAsc:
@@ -664,9 +662,9 @@ class TargetsProvider extends ChangeNotifier {
       case 'nameAsc':
         currentSort = TargetSortType.nameAsc;
       case 'colorAsc':
-        currentSort = TargetSortType.colorDes;
-      case 'colorDes':
         currentSort = TargetSortType.colorAsc;
+      case 'colorDes':
+        currentSort = TargetSortType.colorDes;
       case 'onlineDes':
         currentSort = TargetSortType.onlineDes;
       case 'onlineAsc':
@@ -682,8 +680,13 @@ class TargetsProvider extends ChangeNotifier {
     // Targets color filter
     _currentColorFilterOut = await Prefs().getTargetsColorFilter();
 
-    // Notification
-    notifyListeners();
+    // Apply the restored sort if we have targets
+    if (_targets.isNotEmpty && currentSort != null) {
+      sortTargets(currentSort);
+    } else {
+      // Notification only if we didn't call sortTargets (which already calls notifyListeners)
+      notifyListeners();
+    }
   }
 
   // SERVER BACKUP RESTORE
@@ -702,7 +705,13 @@ class TargetsProvider extends ChangeNotifier {
     }
 
     await _saveTargetsSharedPrefs();
-    notifyListeners();
+
+    // Apply current sort to the restored targets
+    if (_targets.isNotEmpty && currentSort != null) {
+      sortTargets(currentSort);
+    } else {
+      notifyListeners();
+    }
   }
 
   // Bounty calculation
