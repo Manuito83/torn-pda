@@ -1808,7 +1808,7 @@ class WebViewProvider extends ChangeNotifier {
       return Icon(MdiIcons.target, size: 20, color: iconColor);
     } else if (url.contains("bazaar.php")) {
       return Image.asset('images/icons/inventory/bazaar.png', color: iconColor);
-    } else if (url.contains("imarket.php")) {
+    } else if (url.contains("sid=ItemMarket")) {
       return Image.asset('images/icons/map/item_market.png', color: iconColor);
     } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
       return Image.asset('images/icons/home/crimes.png', color: iconColor);
