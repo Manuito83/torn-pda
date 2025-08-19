@@ -385,25 +385,29 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
         remoteConfig.onConfigUpdated.listen((event) async {
           await remoteConfig.activate();
-          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-          _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
-          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
-          _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
-          _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
-          _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
-          _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
-              remoteConfig.getBool("browser_center_editing_text_field_allowed");
-          // Revives
-          _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
-          _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
-          _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
-          _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
-          _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
-          // Sendbird
-          sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
-          sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
-          // Torn API
-          apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
+
+          // Ensure all platform channel communications happen on the main thread
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+            _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+            _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+            _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
+            _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+            _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+            _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
+                remoteConfig.getBool("browser_center_editing_text_field_allowed");
+            // Revives
+            _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
+            _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
+            _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
+            _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
+            _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
+            // Sendbird
+            sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
+            sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
+            // Torn API
+            apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
+          });
         });
       });
     }
