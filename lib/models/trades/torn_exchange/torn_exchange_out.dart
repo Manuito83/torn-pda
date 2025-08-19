@@ -13,12 +13,14 @@ class TornExchangeOutModel {
   List<int> quantities;
   String userName;
   String sellerName;
+  int tradeId;
 
   TornExchangeOutModel({
     required this.items,
     required this.quantities,
     required this.userName,
     required this.sellerName,
+    required this.tradeId,
   });
 
   factory TornExchangeOutModel.fromJson(Map<String, dynamic> json) => TornExchangeOutModel(
@@ -26,6 +28,7 @@ class TornExchangeOutModel {
         quantities: List<int>.from(json["quantities"].map((x) => x)),
         userName: json["user_name"],
         sellerName: json["seller_name"],
+        tradeId: json["trade_id"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -33,5 +36,6 @@ class TornExchangeOutModel {
         "quantities": List<dynamic>.from(quantities.map((x) => x)),
         "user_name": userName,
         "seller_name": sellerName,
+        "trade_id": tradeId,
       };
 }
