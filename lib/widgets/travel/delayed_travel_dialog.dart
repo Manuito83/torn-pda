@@ -403,7 +403,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     final alarmTime = widget.boardingTime.add(Duration(minutes: _delayMinutes!));
     final hour = alarmTime.hour;
     final minute = alarmTime.minute;
-    final message = 'Flight Boarding - ${widget.stockName}';
+    final message = _settingsProvider.discreetNotifications ? "Fl" : 'Flight Boarding - ${widget.stockName}';
 
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
@@ -421,7 +421,7 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
 
   void _setTimer() {
     final totalSeconds = widget.boardingTime.difference(DateTime.now()).inSeconds + _delayMinutes! * 60;
-    final message = 'Flight Boarding - ${widget.stockName}';
+    final message = _settingsProvider.discreetNotifications ? "Fl" : 'Flight Boarding - ${widget.stockName}';
 
     final AndroidIntent intent = AndroidIntent(
       action: 'android.intent.action.SET_TIMER',

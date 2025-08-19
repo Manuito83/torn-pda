@@ -1,4 +1,6 @@
 // Flutter imports:
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 class DiscreetInfo extends StatefulWidget {
@@ -22,6 +24,16 @@ class DiscreetInfoState extends State<DiscreetInfo> {
 
   @override
   Widget build(BuildContext context) {
+    String discreetText = "Discreet notifications are designed for environments (work, school...) where the standard "
+        "notification text (i.e.: referencing loot, drugs, etc.) would not be appropriate."
+        "\n\nInstead, you will receive a much shorter text, as explained below."
+        "\n\nBe aware that you might lose some key information in the notification "
+        "(e.g.: event or message details). Applies both for manual notifications and automatic alerts.";
+
+    if (Platform.isAndroid) {
+      discreetText += "\n\nNOTE: This setting also applies to titles for alarms and timers.";
+    }
+
     return AlertDialog(
       title: const Text("Discreet notifications"),
       content: Scrollbar(
@@ -29,30 +41,26 @@ class DiscreetInfoState extends State<DiscreetInfo> {
         thumbVisibility: true,
         child: SingleChildScrollView(
           controller: _scrollController,
-          child: const Padding(
-            padding: EdgeInsets.only(right: 12),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 12),
             child: Column(
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Discreet notifications are designed for environments (work, school...) where the standard "
-                      "notification text (i.e.: referencing loot, drugs, etc.) would not be appropriate."
-                      "\n\nInstead, you will receive a much shorter text, as explained below."
-                      "\n\nBe aware that you might lose some key information in the notification "
-                      "(e.g.: event or message details). Applies both for manual notifications and automatic alerts.",
-                      style: TextStyle(fontSize: 13),
+                      discreetText,
+                      style: const TextStyle(fontSize: 13),
                     ),
-                    SizedBox(height: 20),
-                    Text(
+                    const SizedBox(height: 20),
+                    const Text(
                       "Examples notification titles and bodies if discreet notifications are enabled:",
                       style: TextStyle(fontSize: 13),
                     ),
                   ],
                 ),
-                SizedBox(height: 20),
-                Column(
+                const SizedBox(height: 20),
+                const Column(
                   children: [
                     Column(
                       children: [
@@ -479,7 +487,7 @@ class DiscreetInfoState extends State<DiscreetInfo> {
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
               ],
             ),
           ),

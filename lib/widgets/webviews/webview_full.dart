@@ -300,6 +300,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   int? _scrollY = 0;
   int? _scrollX = 0;
 
+  bool _foundDisposedRotation = false;
+  int _disposedScrollX = 0;
+  int _disposedScrollY = 0;
+
   double _progress = 0;
 
   late SettingsProvider _settingsProvider;
@@ -360,7 +364,45 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addObserver(this);
+
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+
+    // Check rotation! Webview will dispose itself
+    // If we find a matching disposed tab, sharing the SAME KEY, it means that it was disposed (most probably due to rotation)
+    // so we need to restore its state manually here (we'll also scroll in onLoadStop)
+    if (_settingsProvider.allowScreenRotation) {
+      for (var disposedTab in _webViewProvider.rotatedTabDetails) {
+        if (disposedTab.key == widget.key) {
+          _foundDisposedRotation = true;
+          _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
+          _disposedScrollX = disposedTab.scrollX ?? 0;
+          _disposedScrollY = disposedTab.scrollY ?? 0;
+          log(
+            "Found rotated webview ${widget.key}, url ${disposedTab.currentUrl}, scrollY $_disposedScrollY, scrollX $_disposedScrollX",
+            name: "ROTATED WEBVIEW",
+          );
+
+          // Give it a second to that all disposed/reinitiated webviews load, then clear the list
+          Future.delayed(const Duration(milliseconds: 1000), () {
+            _webViewProvider.rotatedTabDetails.clear();
+          });
+        }
+      }
+
+      if (!_foundDisposedRotation) {
+        // This is not a initialised tab after a rotation/disposed, so we use the standard URL
+        _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
+
+        // We keep the list of rotated tabs tidy (not strictly necessary)
+        _webViewProvider.rotatedTabDetails.clear();
+      }
+    } else {
+      // If we are not allowing rotation, we just use the custom URL
+      _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
+    }
 
     // We will later changed this for a listenable one in build()
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
@@ -370,15 +412,10 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     _localChatRemovalActive = widget.chatRemovalActive;
 
     _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
     _nativeUser = context.read<NativeUserProvider>();
     _nativeAuth = context.read<NativeAuthProvider>();
-
-    _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
 
     _isChainingBrowser = widget.isChainingBrowser;
     if (_isChainingBrowser) {
@@ -471,8 +508,40 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   @override
-  void dispose() {
+  void didChangeMetrics() async {
+    super.didChangeMetrics();
+
+    // Update the scrolls with the latest width available
+    // (in case we need to regenerate the webview after rotating the screen)
+    // If null, it's probably because the webview is not yet initialized (so we don't log)
+    if (_settingsProvider.allowScreenRotation) {
+      final scrollX = await webViewController?.getScrollX();
+      if (scrollX != null) {
+        _scrollX = scrollX;
+      }
+
+      final scrollY = await webViewController?.getScrollY();
+      if (scrollY != null) {
+        _scrollY = scrollY;
+      }
+    }
+  }
+
+  @override
+  void dispose() async {
     try {
+      // Send details to provider in case we are rotating
+      if (_settingsProvider.allowScreenRotation) {
+        _webViewProvider.rotatedTabDetails.add(
+          RotatedDisposedTabDetails(
+            key: widget.key,
+            currentUrl: _currentUrl,
+            scrollY: _scrollY,
+            scrollX: _scrollX,
+          ),
+        );
+      }
+
       WidgetsBinding.instance.removeObserver(this);
       _findController.dispose();
       _findFocus.dispose();
@@ -512,7 +581,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _terminalProvider = Provider.of<TerminalProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
 
@@ -1587,6 +1655,18 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                 _scrollAfterLoad = false;
               }
 
+              // If we have a disposed rotation, we scroll to the last position
+              if (_foundDisposedRotation) {
+                _foundDisposedRotation = false;
+                Future.delayed(const Duration(milliseconds: 500)).then(
+                  (_) {
+                    if (mounted) {
+                      webViewController!.scrollTo(x: _disposedScrollX, y: _disposedScrollY);
+                    }
+                  },
+                );
+              }
+
               if (_settingsProvider.restoreSessionCookie) {
                 if (_currentUrl.contains("torn.com")) {
                   Cookie? session = await cm.getCookie(url: WebUri("https://www.torn.com"), name: "PHPSESSID");
@@ -1793,7 +1873,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                   !consoleMessage.message.contains("srcset") &&
                   !consoleMessage.message.contains("Missed ID for Quote saving") &&
                   !consoleMessage.message.contains("@firebase/analytics: Failed to fetch this Firebase")) {
-                _terminalProvider.addInstruction(widget.key, consoleMessage.message);
+                final bool isJSError = consoleMessage.messageLevel == ConsoleMessageLevel.ERROR;
+                _terminalProvider.addInstruction(widget.key, consoleMessage.message, isError: isJSError);
+
                 log("TORN PDA CONSOLE: ${consoleMessage.message}");
               }
             }

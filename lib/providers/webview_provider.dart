@@ -50,6 +50,15 @@ enum WebViewSplitPosition {
   off,
 }
 
+class RotatedDisposedTabDetails {
+  GlobalKey<WebViewFullState>? key;
+  String? currentUrl;
+  int? scrollY;
+  int? scrollX;
+
+  RotatedDisposedTabDetails({this.key, this.currentUrl, this.scrollY, this.scrollX});
+}
+
 class TabDetails {
   bool sleepTab = false;
   bool initialised = false;
@@ -97,6 +106,9 @@ class WebViewProvider extends ChangeNotifier {
   List<TabDetails> get tabList => _tabList;
 
   int loginErrorRetrySeconds = 0;
+
+  // Rotate tab details
+  List<RotatedDisposedTabDetails> rotatedTabDetails = [];
 
   // Windows user data folder
   WebViewEnvironment? webViewEnvironment;
@@ -1760,10 +1772,12 @@ class WebViewProvider extends ChangeNotifier {
     // Find some icons manually first, as they might trigger errors with shortcuts
     if (tabList[i].isChainingBrowser) {
       return const Icon(MdiIcons.linkVariant, color: Colors.red);
-    } else if (url.contains("sid=attack&user2ID=2225097")) {
+    } else if (url.contains("sid=attack&user2ID=2225097") || url.contains("sid=getInAttack&user2ID=2225097")) {
       return const Icon(MdiIcons.pistol, color: Colors.pink);
-    } else if (url.contains("sid=attack&user2ID=")) {
-      return Icon(Icons.person, color: iconColor);
+    } else if (url.contains("sid=attack&user2ID=") || url.contains("sid=getInAttack&user2ID=")) {
+      return Icon(MdiIcons.pistol, color: iconColor);
+    } else if (url.contains("sid=attackLog&ID=")) {
+      return Icon(MdiIcons.notebookOutline, color: iconColor);
     } else if (url.contains("profiles.php?XID=2225097")) {
       return const Icon(Icons.person, color: Colors.pink);
     } else if (url.contains("profiles.php")) {
@@ -1794,7 +1808,7 @@ class WebViewProvider extends ChangeNotifier {
       return Icon(MdiIcons.target, size: 20, color: iconColor);
     } else if (url.contains("bazaar.php")) {
       return Image.asset('images/icons/inventory/bazaar.png', color: iconColor);
-    } else if (url.contains("imarket.php")) {
+    } else if (url.contains("sid=ItemMarket")) {
       return Image.asset('images/icons/map/item_market.png', color: iconColor);
     } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
       return Image.asset('images/icons/home/crimes.png', color: iconColor);

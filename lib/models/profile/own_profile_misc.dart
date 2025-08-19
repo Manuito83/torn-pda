@@ -3,6 +3,7 @@
 //     final ownProfileMisc = ownProfileMiscFromJson(jsonString);
 
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:torn_pda/models/profile/user_v2_selections/education_v2_model.dart';
 import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
@@ -14,50 +15,24 @@ OwnProfileMisc ownProfileMiscFromJson(String rawJson) => OwnProfileMisc.fromJson
 String ownProfileMiscToJson(OwnProfileMisc data) => json.encode(data.toJson());
 
 class OwnProfileMisc {
-  // Transition from V1 selections to V2 selections
-  final EducationV2 education; // Transtitioned
-  final List<PropertyV2> properties; // In transition
+  // V2 API selections transitioned
+  final EducationV2 education;
+  final List<PropertyV2> properties;
 
-  int? points;
-  int? caymanBank;
-  int? vaultAmount;
-  int? companyFunds;
-  int? dailyNetworth;
-  int? moneyOnhand;
-  int? manualLabor;
-  int? intelligence;
-  int? endurance;
-  int? strength;
-  int? speed;
-  int? dexterity;
-  int? defense;
-  int? total;
-  int? strengthModifier;
-  int? defenseModifier;
-  int? speedModifier;
-  int? dexterityModifier;
-  String? searchForCash;
-  String? forgery;
-  String? bootlegging;
-  String? reviving;
-  String? graffiti;
-  String? hunting;
-  String? burglary;
-  String? shoplifting;
-  String? cracking;
-  String? pickpocketing;
-  String? racing;
-  String? scamming;
-  String? disposal;
-  String? hustling;
-  String? cardSkimming;
+  // V2 API CURRENTLY IN transition from legacy in v3.8.4
+  WorkStats? workStats;
+  BattleStats? battleStats;
+  Jobpoints? jobpoints;
+  Money? money;
+  Skills? skills;
+
+  // Legacy / V1 API fields not transitioned by Torn
   int? playerId;
   CityBank? cityBank;
   List<String>? strengthInfo;
   List<String>? defenseInfo;
   List<String>? speedInfo;
   List<String>? dexterityInfo;
-  Jobpoints? jobpoints;
   List<Bazaar>? bazaar;
   List<Itemmarket>? itemmarket;
   Metadata? metadata;
@@ -65,109 +40,46 @@ class OwnProfileMisc {
   OwnProfileMisc({
     required this.education,
     required this.properties,
-    this.points,
-    this.caymanBank,
-    this.vaultAmount,
-    this.companyFunds,
-    this.dailyNetworth,
-    this.moneyOnhand,
-    this.manualLabor,
-    this.intelligence,
-    this.endurance,
-    this.strength,
-    this.speed,
-    this.dexterity,
-    this.defense,
-    this.total,
-    this.strengthModifier,
-    this.defenseModifier,
-    this.speedModifier,
-    this.dexterityModifier,
-    this.searchForCash,
-    this.forgery,
-    this.bootlegging,
-    this.reviving,
-    this.graffiti,
-    this.hunting,
-    this.burglary,
-    this.shoplifting,
-    this.cracking,
-    this.pickpocketing,
-    this.racing,
-    this.scamming,
-    this.disposal,
-    this.hustling,
-    this.cardSkimming,
+    this.workStats,
+    this.battleStats,
+    this.jobpoints,
+    this.money,
+    this.skills,
     this.playerId,
     this.cityBank,
     this.strengthInfo,
     this.defenseInfo,
     this.speedInfo,
     this.dexterityInfo,
-    this.jobpoints,
     this.bazaar,
     this.itemmarket,
     this.metadata,
   });
 
-  static List<PropertyV2> _parsePropertiesV1orV2(dynamic propertiesData) {
-    // V2 selection
-    if (propertiesData is List) {
-      return propertiesData.map((p) => PropertyV2.fromJson(p as Map<String, dynamic>)).toList();
-    }
-    // V1 selection
-    else if (propertiesData is Map<String, dynamic>) {
-      return propertiesData.entries
-          .map((entry) => PropertyV2.fromLegacyJson(entry.key, entry.value as Map<String, dynamic>))
-          .toList();
-    }
-    return [];
-  }
-
   factory OwnProfileMisc.fromJson(Map<String, dynamic> json) {
     return OwnProfileMisc(
       education: EducationV2.fromJson(json["education"] ?? {}),
-      properties: _parsePropertiesV1orV2(json['properties']),
-      points: json["points"],
-      caymanBank: json["cayman_bank"],
-      vaultAmount: json["vault_amount"],
-      companyFunds: json["company_funds"],
-      dailyNetworth: json["daily_networth"],
-      moneyOnhand: json["money_onhand"],
-      manualLabor: json["manual_labor"],
-      intelligence: json["intelligence"],
-      endurance: json["endurance"],
-      strength: json["strength"],
-      speed: json["speed"],
-      dexterity: json["dexterity"],
-      defense: json["defense"],
-      total: json["total"],
-      strengthModifier: json["strength_modifier"],
-      defenseModifier: json["defense_modifier"],
-      speedModifier: json["speed_modifier"],
-      dexterityModifier: json["dexterity_modifier"],
-      searchForCash: json["search_for_cash"],
-      forgery: json["forgery"],
-      bootlegging: json["bootlegging"],
-      reviving: json["reviving"],
-      graffiti: json["graffiti"],
-      hunting: json["hunting"],
-      burglary: json["burglary"],
-      shoplifting: json["shoplifting"],
-      cracking: json["cracking"],
-      pickpocketing: json["pickpocketing"],
-      racing: json["racing"],
-      scamming: json["scamming"],
-      disposal: json["disposal"],
-      hustling: json["hustling"],
-      cardSkimming: json["card_skimming"],
+      properties: json['properties'] != null && json['properties'] is List
+          ? (() {
+              try {
+                return List<PropertyV2>.from(json['properties'].map((x) => PropertyV2.fromJson(x)));
+              } catch (e) {
+                log('Error parsing properties: $e');
+                return <PropertyV2>[];
+              }
+            })()
+          : [],
+      workStats: WorkStats.fromJson(json),
+      battleStats: BattleStats.fromJson(json),
+      jobpoints: Jobpoints.fromJson(json),
+      money: Money.fromJson(json),
+      skills: Skills.fromJson(json),
       playerId: json["player_id"],
       cityBank: json["city_bank"] == null ? null : CityBank.fromJson(json["city_bank"]),
       strengthInfo: json["strength_info"] == null ? [] : List<String>.from(json["strength_info"]),
       defenseInfo: json["defense_info"] == null ? [] : List<String>.from(json["defense_info"]),
       speedInfo: json["speed_info"] == null ? [] : List<String>.from(json["speed_info"]),
       dexterityInfo: json["dexterity_info"] == null ? [] : List<String>.from(json["dexterity_info"]),
-      jobpoints: json["jobpoints"] == null ? null : Jobpoints.fromJson(json["jobpoints"]),
       bazaar: json["bazaar"] == null ? [] : List<Bazaar>.from(json["bazaar"].map((x) => Bazaar.fromJson(x))),
       itemmarket: json["itemmarket"] == null
           ? []
@@ -179,46 +91,17 @@ class OwnProfileMisc {
   Map<String, dynamic> toJson() => {
         "education": education.toJson(),
         "properties": List<dynamic>.from(properties.map((x) => x.toJson())),
-        "points": points,
-        "cayman_bank": caymanBank,
-        "vault_amount": vaultAmount,
-        "company_funds": companyFunds,
-        "daily_networth": dailyNetworth,
-        "money_onhand": moneyOnhand,
-        "manual_labor": manualLabor,
-        "intelligence": intelligence,
-        "endurance": endurance,
-        "strength": strength,
-        "speed": speed,
-        "dexterity": dexterity,
-        "defense": defense,
-        "total": total,
-        "strength_modifier": strengthModifier,
-        "defense_modifier": defenseModifier,
-        "speed_modifier": speedModifier,
-        "dexterity_modifier": dexterityModifier,
-        "search_for_cash": searchForCash,
-        "forgery": forgery,
-        "bootlegging": bootlegging,
-        "reviving": reviving,
-        "graffiti": graffiti,
-        "hunting": hunting,
-        "burglary": burglary,
-        "shoplifting": shoplifting,
-        "cracking": cracking,
-        "pickpocketing": pickpocketing,
-        "racing": racing,
-        "scamming": scamming,
-        "disposal": disposal,
-        "hustling": hustling,
-        "card_skimming": cardSkimming,
+        "workstats": workStats?.toJson(),
+        "battlestats": battleStats?.toJson(),
+        "jobpoints": jobpoints?.toJson(),
+        "money": money?.toJson(),
+        "skills": skills?.skillList.map((x) => x.toJson()).toList() ?? [],
         "player_id": playerId,
         "city_bank": cityBank?.toJson(),
         "strength_info": strengthInfo == null ? [] : List<dynamic>.from(strengthInfo!.map((x) => x)),
         "defense_info": defenseInfo == null ? [] : List<dynamic>.from(defenseInfo!.map((x) => x)),
         "speed_info": speedInfo == null ? [] : List<dynamic>.from(speedInfo!.map((x) => x)),
         "dexterity_info": dexterityInfo == null ? [] : List<dynamic>.from(dexterityInfo!.map((x) => x)),
-        "jobpoints": jobpoints?.toJson(),
         "bazaar": bazaar == null ? [] : List<dynamic>.from(bazaar!.map((x) => x.toJson())),
         "itemmarket": itemmarket == null ? [] : List<dynamic>.from(itemmarket!.map((x) => x.toJson())),
         "_metadata": metadata?.toJson(),
@@ -367,26 +250,108 @@ class Item {
 
 class Jobpoints {
   Jobs? jobs;
-  Map<String, Company>? companies;
+  List<CompanyJobpoints>? companies;
 
   Jobpoints({
     this.jobs,
     this.companies,
   });
 
-  factory Jobpoints.fromJson(Map<String, dynamic> json) => Jobpoints(
-        jobs: json["jobs"] == null ? null : Jobs.fromJson(json["jobs"]),
-        companies: json["companies"] == null
-            ? null
-            : Map.from(json["companies"]).map((k, v) => MapEntry<String, Company>(k, Company.fromJson(v))),
+  factory Jobpoints.fromJson(Map<String, dynamic> json) {
+    // TODO: Once legacy API is removed, only use this
+    /*
+      if (json.containsKey('jobpoints') && json['jobpoints'] != null) {
+        final jobpointsData = json['jobpoints'] as Map<String, dynamic>;
+        return Jobpoints(
+          jobs: jobpointsData['jobs'] != null ? Jobs.fromJson(jobpointsData['jobs']) : null,
+          companies: jobpointsData['companies'] != null && jobpointsData['companies'] is List
+              ? List<CompanyJobpoints>.from(jobpointsData['companies'].map((x) => CompanyJobpoints.fromJson(x)))
+              : null,
+        );
+      }
+      return Jobpoints();
+    */
+
+    // Handle both legacy and new API structures
+    if (json.containsKey('jobpoints') && json['jobpoints'] != null) {
+      // New API: jobpoints is a separate object with companies as List
+      final jobpointsData = json['jobpoints'] as Map<String, dynamic>;
+      return Jobpoints(
+        jobs: jobpointsData['jobs'] != null ? Jobs.fromJson(jobpointsData['jobs']) : null,
+        companies: jobpointsData['companies'] != null && jobpointsData['companies'] is List
+            ? List<CompanyJobpoints>.from(jobpointsData['companies'].map((x) => CompanyJobpoints.fromJson(x)))
+            : null,
       );
+    } else {
+      // Legacy API: jobpoints at root with companies as Map
+      return Jobpoints(
+        jobs: json['jobs'] != null ? Jobs.fromJson(json['jobs']) : null,
+        companies: json['companies'] != null && json['companies'] is Map
+            ? (json['companies'] as Map<String, dynamic>).entries.map((entry) {
+                return CompanyJobpoints.legacy(
+                  int.parse(entry.key),
+                  entry.value['name'] ?? '',
+                  entry.value['jobpoints'] ?? 0,
+                );
+              }).toList()
+            : null,
+      );
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "jobs": jobs?.toJson(),
-        "companies": Map.from(companies!).map((k, v) => MapEntry<String, dynamic>(k, v.toJson())),
+        "companies": companies?.map((x) => x.toJson()).toList() ?? [],
       };
 }
 
+class CompanyJobpoints {
+  CompanyInfo company;
+  int points;
+
+  CompanyJobpoints({
+    required this.company,
+    required this.points,
+  });
+
+  factory CompanyJobpoints.fromJson(Map<String, dynamic> json) => CompanyJobpoints(
+        company: CompanyInfo.fromJson(json['company']),
+        points: json['points'] ?? 0,
+      );
+
+  // TODO: Remove when legacy API is discontinued
+  factory CompanyJobpoints.legacy(int id, String name, int jobpoints) => CompanyJobpoints(
+        company: CompanyInfo(id: id, name: name),
+        points: jobpoints,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "company": company.toJson(),
+        "points": points,
+      };
+}
+
+class CompanyInfo {
+  int id;
+  String name;
+
+  CompanyInfo({
+    required this.id,
+    required this.name,
+  });
+
+  factory CompanyInfo.fromJson(Map<String, dynamic> json) => CompanyInfo(
+        id: json['id'],
+        name: json['name'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+      };
+}
+
+// Legacy class - TODO: Remove when legacy API is discontinued
 class Company {
   String? name;
   int? jobpoints;
@@ -470,5 +435,385 @@ class Links {
   Map<String, dynamic> toJson() => {
         "prev": prev,
         "next": next,
+      };
+}
+
+class WorkStats {
+  final int manualLabor;
+  final int intelligence;
+  final int endurance;
+
+  WorkStats({
+    required this.manualLabor,
+    required this.intelligence,
+    required this.endurance,
+  });
+
+  factory WorkStats.fromJson(Map<String, dynamic> json) {
+    // TODO: Once legacy API is removed, only use this
+    /*
+      if (json.containsKey('workstats') && json['workstats'] != null) {
+        final workstatsData = json['workstats'] as Map<String, dynamic>;
+        return WorkStats(
+          manualLabor: workstatsData['manual_labor'] ?? 0,
+          intelligence: workstatsData['intelligence'] ?? 0,
+          endurance: workstatsData['endurance'] ?? 0,
+        );
+      }
+      return WorkStats(manualLabor: 0, intelligence: 0, endurance: 0);
+    */
+
+    // Handle both legacy and new API structures
+    final workstatsData = (json.containsKey('workstats') && json['workstats'] != null)
+        ? json['workstats'] as Map<String, dynamic> // New API
+        : json; // Legacy API
+
+    return WorkStats(
+      manualLabor: workstatsData['manual_labor'] ?? 0,
+      intelligence: workstatsData['intelligence'] ?? 0,
+      endurance: workstatsData['endurance'] ?? 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        "manual_labor": manualLabor,
+        "intelligence": intelligence,
+        "endurance": endurance,
+      };
+}
+
+class BattleStats {
+  final BattleStat? strength;
+  final BattleStat? defense;
+  final BattleStat? speed;
+  final BattleStat? dexterity;
+  final int? total;
+
+  BattleStats({
+    this.strength,
+    this.defense,
+    this.speed,
+    this.dexterity,
+    this.total,
+  });
+
+  factory BattleStats.fromJson(Map<String, dynamic> json) {
+    // TODO: Once legacy API is removed, only use this
+    /*
+      if (json.containsKey('battlestats') && json['battlestats'] != null) {
+        final battlestatsData = json['battlestats'] as Map<String, dynamic>;
+        return BattleStats(
+          strength: battlestatsData['strength'] != null ? BattleStat.fromJson(battlestatsData['strength']) : null,
+          defense: battlestatsData['defense'] != null ? BattleStat.fromJson(battlestatsData['defense']) : null,
+          speed: battlestatsData['speed'] != null ? BattleStat.fromJson(battlestatsData['speed']) : null,
+          dexterity: battlestatsData['dexterity'] != null ? BattleStat.fromJson(battlestatsData['dexterity']) : null,
+          total: battlestatsData['total'],
+        );
+      }
+      return BattleStats();
+    */
+
+    // Handle both legacy and new API structures
+    if (json.containsKey('battlestats') && json['battlestats'] != null) {
+      // New API: battlestats is a separate object with rich structure
+      final battlestatsData = json['battlestats'] as Map<String, dynamic>;
+      return BattleStats(
+        strength: battlestatsData['strength'] != null ? BattleStat.fromJson(battlestatsData['strength']) : null,
+        defense: battlestatsData['defense'] != null ? BattleStat.fromJson(battlestatsData['defense']) : null,
+        speed: battlestatsData['speed'] != null ? BattleStat.fromJson(battlestatsData['speed']) : null,
+        dexterity: battlestatsData['dexterity'] != null ? BattleStat.fromJson(battlestatsData['dexterity']) : null,
+        total: battlestatsData['total'],
+      );
+    } else {
+      // Legacy API: battlestats are at the root with simple structure
+      return BattleStats(
+        strength: json['strength'] != null ? BattleStat.legacy(json['strength'], json['strength_modifier'] ?? 0) : null,
+        defense: json['defense'] != null ? BattleStat.legacy(json['defense'], json['defense_modifier'] ?? 0) : null,
+        speed: json['speed'] != null ? BattleStat.legacy(json['speed'], json['speed_modifier'] ?? 0) : null,
+        dexterity:
+            json['dexterity'] != null ? BattleStat.legacy(json['dexterity'], json['dexterity_modifier'] ?? 0) : null,
+        total: json['total'],
+      );
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        "strength": strength?.toJson(),
+        "defense": defense?.toJson(),
+        "speed": speed?.toJson(),
+        "dexterity": dexterity?.toJson(),
+        "total": total,
+      };
+}
+
+class BattleStat {
+  final int value;
+  final int modifier;
+  final List<BattleStatModifier>? modifiers;
+
+  BattleStat({
+    required this.value,
+    required this.modifier,
+    this.modifiers,
+  });
+
+  factory BattleStat.fromJson(Map<String, dynamic> json) => BattleStat(
+        value: json['value'],
+        modifier: json['modifier'],
+        modifiers: json['modifiers'] != null
+            ? List<BattleStatModifier>.from(json['modifiers'].map((x) => BattleStatModifier.fromJson(x)))
+            : null,
+      );
+
+  // TODO: Remove when legacy API is discontinued
+  factory BattleStat.legacy(int value, int modifier) => BattleStat(
+        value: value,
+        modifier: modifier,
+        modifiers: null,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "value": value,
+        "modifier": modifier,
+        "modifiers": modifiers?.map((x) => x.toJson()).toList(),
+      };
+}
+
+class BattleStatModifier {
+  final String effect;
+  final int value;
+  final String type;
+
+  BattleStatModifier({
+    required this.effect,
+    required this.value,
+    required this.type,
+  });
+
+  factory BattleStatModifier.fromJson(Map<String, dynamic> json) => BattleStatModifier(
+        effect: json['effect'],
+        value: json['value'],
+        type: json['type'],
+      );
+
+  Map<String, dynamic> toJson() => {
+        "effect": effect,
+        "value": value,
+        "type": type,
+      };
+}
+
+class Money {
+  final int points;
+  final int wallet;
+  final int company;
+  final int vault;
+  final int caymanBank;
+  final CityBankV2 cityBank;
+  final FactionMoney? faction;
+  final int dailyNetworth;
+
+  Money({
+    required this.points,
+    required this.wallet,
+    required this.company,
+    required this.vault,
+    required this.caymanBank,
+    required this.cityBank,
+    this.faction,
+    required this.dailyNetworth,
+  });
+
+  factory Money.fromJson(Map<String, dynamic> json) {
+    // TODO: Once legacy API is removed, only use this
+    /*
+      if (json.containsKey('money') && json['money'] != null) {
+        final moneyData = json['money'] as Map<String, dynamic>;
+        return Money(
+          points: moneyData['points'] ?? 0,
+          wallet: moneyData['wallet'] ?? 0,
+          company: moneyData['company'] ?? 0,
+          vault: moneyData['vault'] ?? 0,
+          caymanBank: moneyData['cayman_bank'] ?? 0,
+          cityBank: CityBankV2.fromJson(moneyData['city_bank'] ?? {}),
+          faction: moneyData['faction'] != null ? FactionMoney.fromJson(moneyData['faction']) : null,
+          dailyNetworth: moneyData['daily_networth'] ?? 0,
+        );
+      }
+      return Money(
+        points: 0, wallet: 0, company: 0, vault: 0, 
+        caymanBank: 0, cityBank: CityBankV2(), dailyNetworth: 0
+      );
+    */
+
+    // Handle both legacy and new API structures
+    if (json.containsKey('money') && json['money'] != null) {
+      // New API: money is a unified object
+      final moneyData = json['money'] as Map<String, dynamic>;
+      return Money(
+        points: moneyData['points'] ?? 0,
+        wallet: moneyData['wallet'] ?? 0,
+        company: moneyData['company'] ?? 0,
+        vault: moneyData['vault'] ?? 0,
+        caymanBank: moneyData['cayman_bank'] ?? 0,
+        cityBank: CityBankV2.fromJson(moneyData['city_bank'] ?? {}),
+        faction: moneyData['faction'] != null ? FactionMoney.fromJson(moneyData['faction']) : null,
+        dailyNetworth: moneyData['daily_networth'] ?? 0,
+      );
+    } else {
+      // Legacy API: money fields scattered at root level
+      return Money(
+        points: json['points'] ?? 0,
+        wallet: json['money_onhand'] ?? 0,
+        company: json['company_funds'] ?? 0,
+        vault: json['vault_amount'] ?? 0,
+        caymanBank: json['cayman_bank'] ?? 0,
+        cityBank: json['city_bank'] != null ? CityBankV2.legacy(json['city_bank']) : CityBankV2(),
+        faction: null,
+        dailyNetworth: json['daily_networth'] ?? 0,
+      );
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        "points": points,
+        "wallet": wallet,
+        "company": company,
+        "vault": vault,
+        "cayman_bank": caymanBank,
+        "city_bank": cityBank.toJson(),
+        "faction": faction?.toJson(),
+        "daily_networth": dailyNetworth,
+      };
+}
+
+class CityBankV2 {
+  final int amount;
+  final int until;
+
+  CityBankV2({
+    this.amount = 0,
+    this.until = 0,
+  });
+
+  factory CityBankV2.fromJson(Map<String, dynamic> json) => CityBankV2(
+        amount: json['amount'] ?? 0,
+        until: json['until'] ?? 0,
+      );
+
+  // TODO: Remove when legacy API is discontinued
+  factory CityBankV2.legacy(Map<String, dynamic> json) => CityBankV2(
+        amount: json['amount'] ?? 0,
+        until: json['time_left'] ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "amount": amount,
+        "until": until,
+      };
+}
+
+class FactionMoney {
+  final int money;
+  final int points;
+
+  FactionMoney({
+    required this.money,
+    required this.points,
+  });
+
+  factory FactionMoney.fromJson(Map<String, dynamic> json) => FactionMoney(
+        money: json['money'] ?? 0,
+        points: json['points'] ?? 0,
+      );
+
+  Map<String, dynamic> toJson() => {
+        "money": money,
+        "points": points,
+      };
+}
+
+class Skills {
+  final List<Skill> skillList;
+
+  Skills({required this.skillList});
+
+  factory Skills.fromJson(Map<String, dynamic> json) {
+    // TODO: Once legacy API is removed, only use this
+    /*
+      if (json.containsKey('skills') && json['skills'] != null && json['skills'] is List) {
+        return Skills(
+          skillList: List<Skill>.from(json['skills'].map((x) => Skill.fromJson(x))),
+        );
+      }
+      return Skills(skillList: []);
+    */
+
+    // Handle both legacy and new API structures
+    if (json.containsKey('skills') && json['skills'] != null && json['skills'] is List) {
+      // New API: skills is a List of Skill objects
+      return Skills(
+        skillList: List<Skill>.from(json['skills'].map((x) => Skill.fromJson(x))),
+      );
+    } else {
+      // Legacy API: skills are individual fields at root level
+      final List<Skill> skills = [];
+
+      // Map all known skill fields from legacy to new structure
+      final Map<String, String> skillMap = {
+        'forgery': 'Forgery',
+        'search_for_cash': 'Search for Cash',
+        'bootlegging': 'Bootlegging',
+        'card_skimming': 'Card Skimming',
+        'reviving': 'Reviving',
+        'graffiti': 'Graffiti',
+        'hunting': 'Hunting',
+        'burglary': 'Burglary',
+        'shoplifting': 'Shoplifting',
+        'cracking': 'Cracking',
+        'scamming': 'Scamming',
+        'pickpocketing': 'Pickpocketing',
+        'racing': 'Racing',
+        'hustling': 'Hustling',
+        'disposal': 'Disposal',
+      };
+
+      skillMap.forEach((slug, name) {
+        if (json[slug] != null) {
+          final level = double.tryParse(json[slug].toString()) ?? 0.0;
+          skills.add(Skill(slug: slug, name: name, level: level));
+        }
+      });
+
+      return Skills(skillList: skills);
+    }
+  }
+
+  Map<String, dynamic> toJson() => {
+        "skills": skillList.map((x) => x.toJson()).toList(),
+      };
+}
+
+class Skill {
+  final String slug;
+  final String name;
+  final double level;
+
+  Skill({
+    required this.slug,
+    required this.name,
+    required this.level,
+  });
+
+  factory Skill.fromJson(Map<String, dynamic> json) => Skill(
+        slug: json['slug'] ?? '',
+        name: json['name'] ?? '',
+        level: (json['level'] ?? 0).toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "slug": slug,
+        "name": name,
+        "level": level,
       };
 }

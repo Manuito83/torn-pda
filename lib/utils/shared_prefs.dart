@@ -428,6 +428,9 @@ class Prefs {
   final String _kShowMemoryInDrawer = "pda_showMemoryInDrawer";
   final String _kShowMemoryInWebview = "pda_showMemoryInWebview";
 
+  // Refresh Rate
+  final String _kHighRefreshRateEnabled = "pda_highRefreshRateEnabled";
+
   // Split screen configuration
   final String _kSplitScreenWebview = "pda_splitScreenWebview";
   final String _kSplitScreenRevertsToApp = "pda_splitScreenRevertsToApp";
@@ -3474,7 +3477,18 @@ class Prefs {
   }
 
   /// ----------------------------
-  /// Methods for Split Screen
+  /// Methods for Refresh Rate
+  /// ----------------------------
+  Future<bool> getHighRefreshRateEnabled() async {
+    return await _asyncPrefs.getBool(_kHighRefreshRateEnabled) ?? false;
+  }
+
+  Future setHighRefreshRateEnabled(bool value) async {
+    return await _asyncPrefs.setBool(_kHighRefreshRateEnabled, value);
+  }
+
+  /// ----------------------------
+  /// Methods for Refresh Rate
   /// ----------------------------
   Future<String> getSplitScreenWebview() async {
     return await _asyncPrefs.getString(_kSplitScreenWebview) ?? 'off';

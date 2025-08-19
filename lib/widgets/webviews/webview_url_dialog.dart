@@ -16,6 +16,7 @@ import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/profile/other_profile_model.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
+import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
@@ -611,7 +612,35 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                       Navigator.of(context).pop();
                                       widget.openDevTools!();
                                     },
-                                  )
+                                  ),
+                                if (widget.inAppWebview != null)
+                                  ElevatedButton(
+                                    child: const Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(MdiIcons.script, size: 20),
+                                        SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            'User Scripts',
+                                            style: TextStyle(fontSize: 12),
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    onPressed: () {
+                                      _customURLController.text = "";
+                                      Navigator.of(context).pop();
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (BuildContext context) => const UserScriptsPage(
+                                            fromWebview: true,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
                               ],
                             ),
                           ],

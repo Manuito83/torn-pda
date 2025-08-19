@@ -33,6 +33,7 @@ class TornExchangeComm {
       userName: buyerName,
       quantities: itemQuantities,
       items: itemNames,
+      tradeId: tradeId.toString(),
     );
 
     try {

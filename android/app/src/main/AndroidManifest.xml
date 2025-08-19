@@ -149,8 +149,5 @@
             android:resource="@drawable/notification_icon" />
         <meta-data android:name="flutterEmbedding"
             android:value="2" />
-        <!-- IMPELLER DISABLED FOR FLUTTER 3.27.1 -->
-        <meta-data android:name="io.flutter.embedding.android.EnableImpeller"
-            android:value="false" />
     </application>
 </manifest>

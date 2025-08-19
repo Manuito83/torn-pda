@@ -17,6 +17,7 @@
 		17A0B84B2E412D56008D1D57 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1749EFFE2DE1B828008EAB69 /* WidgetKit.framework */; };
 		17A0B84C2E412D56008D1D57 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1749F0002DE1B828008EAB69 /* SwiftUI.framework */; };
 		17A0B85B2E412D57008D1D57 /* RankedWarWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 17A0B84A2E412D56008D1D57 /* RankedWarWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		23525EA8095D278492D3AB73 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EB8900A5C73002C19D931B52 /* Pods_Runner.framework */; };
 		32018DF526A491BB007D71C3 /* aircraft_seatbelt.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 32018DF426A491BB007D71C3 /* aircraft_seatbelt.aiff */; };
 		32018E2126A492CB007D71C3 /* slow_spring_board.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 32018E2026A492CB007D71C3 /* slow_spring_board.aiff */; };
 		3213EB7627258275006C1C26 /* sword_clash.aiff in Resources */ = {isa = PBXBuildFile; fileRef = 3213EB7527258275006C1C26 /* sword_clash.aiff */; };
@@ -446,11 +447,13 @@
 			inputFileListPaths = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/../.env",
 			);
 			name = "Sync RankedWarWidget extension build version with the app to avoid AppStore errors";
 			outputFileListPaths = (
 			);
 			outputPaths = (
+				"$(SRCROOT)/Flutter/Secrets.xcconfig",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -951,7 +954,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 567;
+				CURRENT_PROJECT_VERSION = 571;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 53KVJRJS99;
 				ENABLE_BITCODE = NO;
@@ -969,7 +972,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.8.3;
+				MARKETING_VERSION = 3.8.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.manuito.tornpda;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1100,7 +1103,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 567;
+				CURRENT_PROJECT_VERSION = 571;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 53KVJRJS99;
 				ENABLE_BITCODE = NO;
@@ -1118,7 +1121,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.8.3;
+				MARKETING_VERSION = 3.8.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.manuito.tornpda;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -1141,7 +1144,7 @@
 				CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 567;
+				CURRENT_PROJECT_VERSION = 571;
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = 53KVJRJS99;
 				ENABLE_BITCODE = NO;
@@ -1159,7 +1162,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/Flutter",
 				);
-				MARKETING_VERSION = 3.8.3;
+				MARKETING_VERSION = 3.8.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.manuito.tornpda;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
