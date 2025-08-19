@@ -328,7 +328,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
-    // Initialise periodic API refresh
+    // Initialize periodic API refresh
     _resetApiTimer();
 
     // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
@@ -958,7 +958,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           itemBuilder: (context, index) {
             final thisShortcut = _shortcutsProv.activeShortcuts[index];
             return Semantics(
-              label: "Shorcut to ${thisShortcut.name}",
+              label: "Shortcut to ${thisShortcut.name}",
               child: ExcludeSemantics(child: shortcutTile(thisShortcut)),
             );
           },
@@ -980,7 +980,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
           wrapItems.add(
             Semantics(
-              label: "Shorcut to ${thisShortcut.name}",
+              label: "Shortcut to ${thisShortcut.name}",
               child: SizedBox(
                 height: h,
                 width: w,
@@ -7751,14 +7751,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return sectionSort;
   }
 
-  // Check whethere we actually need to call the API (we call every 10 minutes for properties to easy API usage)
+  // Check whether we actually need to call the API (we call every 10 minutes for properties to easy API usage)
   Future<void> _checkProperties(OwnProfileMisc miscApiResponse, bool forcedUpdate) async {
     final now = DateTime.now();
 
-    final propertyInfoIsAbsolete =
+    final propertyInfoIsObsolete =
         _rentedPropertiesLastChecked == null || now.difference(_rentedPropertiesLastChecked!).inMinutes >= 10;
 
-    if (forcedUpdate || propertyInfoIsAbsolete) {
+    if (forcedUpdate || propertyInfoIsObsolete) {
       _rentedPropertiesLastChecked = now;
       await _fetchAndUpdateProperties(miscApiResponse);
     }
