@@ -13,7 +13,7 @@ class TornExchangeOutModel {
   List<int> quantities;
   String userName;
   String sellerName;
-  int tradeId;
+  String tradeId;
 
   TornExchangeOutModel({
     required this.items,
