@@ -13,6 +13,7 @@ struct RankedWarEntry: TimelineEntry {
   let activeTargetScore: Int
   let activePlayerTag: String
   let activeEnemyName: String
+  let activePlayerChain: Int
   let lastUpdated: String
   let reloading: Bool
   let widgetVisible: Bool
@@ -29,29 +30,30 @@ struct RankedWarProvider: AppIntentTimelineProvider {
   func placeholder(in context: Context) -> RankedWarEntry {
     RankedWarEntry(
       date: Date(), state: "active", upcomingCountdown: "Loading...", upcomingDate: "",
-      upcomingSoon: false, activePlayerScore: 1234, activeEnemyScore: 567, activeTargetScore: 2500,
-      activePlayerTag: "[ME]", activeEnemyName: "The Enemy", lastUpdated: "Just now",
+      upcomingSoon: false, activePlayerScore: 1, activeEnemyScore: 1, activeTargetScore: 10,
+      activePlayerTag: "[XXX]", activeEnemyName: "Enemy", activePlayerChain: 0,
+      lastUpdated: "Just now",
       reloading: false, widgetVisible: true, darkMode: false,
       finishedWinner: "", finishedPlayerScore: 1234, finishedEnemyScore: 567,
-      finishedPlayerTag: "[ME]", finishedEnemyName: "The Enemy", finishedEndDate: ""
+      finishedPlayerTag: "[XXX]", finishedEnemyName: "Enemy", finishedEndDate: ""
     )
   }
 
   func snapshot(
     for configuration: PdaWidgetMainIntent, in context: Context
   ) async -> RankedWarEntry {
-    loadData()
+    loadData(configuration: configuration)
   }
 
   func timeline(
     for configuration: PdaWidgetMainIntent, in context: Context
   ) async -> Timeline<RankedWarEntry> {
-    let entry = loadData()
+    let entry = loadData(configuration: configuration)
     let nextUpdateDate = Calendar.current.date(byAdding: .minute, value: 15, to: Date())!
     return Timeline(entries: [entry], policy: .after(nextUpdateDate))
   }
 
-  private func loadData() -> RankedWarEntry {
+  private func loadData(configuration: PdaWidgetMainIntent) -> RankedWarEntry {
     guard let prefs = UserDefaults(suiteName: "group.com.manuito.tornpda") else {
       return RankedWarEntry(
         date: Date(),
@@ -64,6 +66,7 @@ struct RankedWarProvider: AppIntentTimelineProvider {
         activeTargetScore: 0,
         activePlayerTag: "N/A",
         activeEnemyName: "",
+        activePlayerChain: 0,
         lastUpdated: "Now",
         reloading: false,
         widgetVisible: true,
@@ -84,12 +87,11 @@ struct RankedWarProvider: AppIntentTimelineProvider {
       .decodingHTMLEntities()
     let activeEnemyName = (prefs.string(forKey: "rw_enemy_faction_name") ?? "")
       .decodingHTMLEntities()
-
+    let activePlayerChain = prefs.integer(forKey: "rw_player_chain")
     let lastUpdated = prefs.string(forKey: "last_updated") ?? "Updating..."
     let reloading = prefs.bool(forKey: "reloading")
     let widgetVisible = prefs.bool(forKey: "rw_widget_visibility")
-    let darkMode = prefs.bool(forKey: "darkMode")
-
+    let darkMode = configuration.darkMode
     let finishedWinner = (prefs.string(forKey: "rw_winner") ?? "").decodingHTMLEntities()
     let finishedPlayerScore = prefs.integer(forKey: "rw_player_score")
     let finishedEnemyScore = prefs.integer(forKey: "rw_enemy_score")
@@ -104,7 +106,8 @@ struct RankedWarProvider: AppIntentTimelineProvider {
       upcomingSoon: upcomingSoon, activePlayerScore: activePlayerScore,
       activeEnemyScore: activeEnemyScore,
       activeTargetScore: activeTargetScore, activePlayerTag: activePlayerTag,
-      activeEnemyName: activeEnemyName, lastUpdated: lastUpdated, reloading: reloading,
+      activeEnemyName: activeEnemyName, activePlayerChain: activePlayerChain,
+      lastUpdated: lastUpdated, reloading: reloading,
       widgetVisible: widgetVisible, darkMode: darkMode,
       finishedWinner: finishedWinner, finishedPlayerScore: finishedPlayerScore,
       finishedEnemyScore: finishedEnemyScore, finishedPlayerTag: finishedPlayerTag,
@@ -117,13 +120,21 @@ struct RankedWarWidgetEntryView: View {
   var entry: RankedWarProvider.Entry
 
   var body: some View {
+    let primaryTextColor = entry.darkMode ? Color.white : Color.black
+
     if !entry.widgetVisible {
       NoWarView(
-        message: "No ranked war data", lastUpdated: entry.lastUpdated, reloading: entry.reloading
+        message: "No ranked war data", lastUpdated: entry.lastUpdated, reloading: entry.reloading,
+        darkMode: entry.darkMode,
+        playerChain: entry.activePlayerChain
       )
+      .foregroundColor(primaryTextColor)
     } else {
       VStack(spacing: 8) {
-        HeaderView(lastUpdated: entry.lastUpdated, reloading: entry.reloading)
+        HeaderView(
+          lastUpdated: entry.lastUpdated, reloading: entry.reloading, darkMode: entry.darkMode,
+          playerChain: entry.activePlayerChain)
+
         switch entry.state {
         case "upcoming":
           UpcomingWarView(
@@ -131,7 +142,8 @@ struct RankedWarWidgetEntryView: View {
             date: entry.upcomingDate,
             playerTag: entry.activePlayerTag,
             enemyName: entry.activeEnemyName,
-            isUpcomingSoon: entry.upcomingSoon
+            isUpcomingSoon: entry.upcomingSoon,
+            darkMode: entry.darkMode,
           )
         case "active":
           ActiveWarView(
@@ -146,7 +158,8 @@ struct RankedWarWidgetEntryView: View {
             enemyScore: entry.finishedEnemyScore,
             playerTag: entry.finishedPlayerTag,
             enemyName: entry.finishedEnemyName,
-            endDate: entry.finishedEndDate
+            endDate: entry.finishedEndDate,
+            darkMode: entry.darkMode
           )
         default:
           Spacer()
@@ -154,7 +167,9 @@ struct RankedWarWidgetEntryView: View {
             .padding()
           Spacer()
         }
+        Spacer()
       }
+      .foregroundColor(primaryTextColor)
     }
   }
 }
@@ -162,22 +177,40 @@ struct RankedWarWidgetEntryView: View {
 struct HeaderView: View {
   let lastUpdated: String
   let reloading: Bool
+  let darkMode: Bool
+  let playerChain: Int
 
   var body: some View {
-    HStack {
+    let secondaryColor = darkMode ? Color(white: 0.6) : .gray
 
+    HStack {
       Text(lastUpdated == "Updating..." ? "" : lastUpdated)
         .font(.caption2)
-        .foregroundColor(.gray)
+        .foregroundColor(secondaryColor)
+        .frame(minWidth: 60)
+
+      Spacer()
+
+      if playerChain >= 10 {
+        Text("CHAINING")
+          .font(.caption)
+          .fontWeight(.heavy)
+          .foregroundColor(.red)
+          .padding(.horizontal, 6)
+          .padding(.vertical, 2)
+          .overlay(
+            RoundedRectangle(cornerRadius: 4)
+              .stroke(Color.red, lineWidth: 1)
+          )
+      }
 
       Spacer()
 
       Button(intent: ReloadWidgetActionIntent()) {
-        SpinningReloadIcon(trigger: reloading)
+        SpinningReloadIcon(trigger: reloading, darkMode: darkMode)
           .font(.headline)
       }
       .buttonStyle(.plain)
-
     }
     .padding(.horizontal)
   }
@@ -189,8 +222,11 @@ struct UpcomingWarView: View {
   let playerTag: String
   let enemyName: String
   let isUpcomingSoon: Bool
+  let darkMode: Bool
 
   var body: some View {
+    let secondaryColor = darkMode ? Color(white: 0.7) : .secondary
+
     VStack(spacing: 8) {
       HStack {
         Image(systemName: "swords")
@@ -206,12 +242,14 @@ struct UpcomingWarView: View {
         Text(countdown)
           .font(isUpcomingSoon ? .title : .title2)
           .fontWeight(isUpcomingSoon ? .bold : .semibold)
-          .foregroundColor(isUpcomingSoon ? .orange : .primary)
+          .if(isUpcomingSoon) { view in
+            view.foregroundColor(.orange)
+          }
 
         if !date.isEmpty {
           Text(date)
             .font(.caption)
-            .foregroundColor(.secondary)
+            .foregroundColor(secondaryColor)
         }
       }
 
@@ -224,7 +262,7 @@ struct UpcomingWarView: View {
               .foregroundColor(.blue)
             Text("vs")
               .font(.caption2)
-              .foregroundColor(.secondary)
+              .foregroundColor(secondaryColor)
             Text(enemyName.prefix(15))
               .font(.caption)
               .fontWeight(.bold)
@@ -234,7 +272,7 @@ struct UpcomingWarView: View {
         }
       }
     }
-    .padding()
+    .padding(.horizontal)
     .overlay(
       RoundedRectangle(cornerRadius: 8)
         .stroke(isUpcomingSoon ? Color.orange : Color.clear, lineWidth: isUpcomingSoon ? 2 : 0)
@@ -272,7 +310,7 @@ struct ActiveWarView: View {
         Text(String(format: "%.1f%%", percentageValue))
       }.font(.caption)
     }
-    .padding()
+    .padding(.horizontal)
     .widgetURL(URL(string: "pdaWidget://open:app"))
   }
 }
@@ -284,9 +322,11 @@ struct FinishedWarView: View {
   let playerTag: String
   let enemyName: String
   let endDate: String
+  let darkMode: Bool
 
   var body: some View {
     let playerWon = playerScore >= enemyScore
+    let secondaryColor = darkMode ? Color(white: 0.7) : .secondary
 
     VStack(spacing: 8) {
       HStack {
@@ -299,15 +339,13 @@ struct FinishedWarView: View {
           .fontWeight(.bold)
           .foregroundColor(playerWon ? .green : .red)
           .lineLimit(1)
+      }
 
-        Spacer()
-
-        if !endDate.isEmpty {
-          Text(endDate)
-            .font(.caption)
-            .foregroundColor(.secondary)
-            .lineLimit(1)
-        }
+      if !endDate.isEmpty {
+        Text("Ended \(endDate)")
+          .font(.caption)
+          .foregroundColor(secondaryColor)
+          .lineLimit(1)
       }
 
       HStack {
@@ -334,10 +372,11 @@ struct FinishedWarView: View {
         }
       }
     }
-    .padding()
+    .padding(.horizontal)
+    .padding(.vertical, 4)
     .overlay(
       RoundedRectangle(cornerRadius: 8)
-        .stroke(playerWon ? Color.green : Color.red, lineWidth: 2)
+        .stroke(playerWon ? Color.green : Color.red, lineWidth: 1)
     )
     .widgetURL(URL(string: "pdaWidget://open:app"))
   }
@@ -347,10 +386,14 @@ struct NoWarView: View {
   let message: String
   let lastUpdated: String
   let reloading: Bool
+  let darkMode: Bool
+  let playerChain: Int
 
   var body: some View {
     VStack(spacing: 0) {
-      HeaderView(lastUpdated: lastUpdated, reloading: reloading)
+      HeaderView(
+        lastUpdated: lastUpdated, reloading: reloading, darkMode: darkMode, playerChain: playerChain
+      )
       Spacer()
       Text(message).padding()
       Spacer()
@@ -367,7 +410,12 @@ struct RankedWarWidget: Widget {
       kind: kind, intent: PdaWidgetMainIntent.self, provider: RankedWarProvider()
     ) { entry in
       RankedWarWidgetEntryView(entry: entry)
-        .containerBackground(.fill.tertiary, for: .widget)
+        .containerBackground(
+          entry.darkMode
+            ? AnyShapeStyle(Color.black)
+            : AnyShapeStyle(.fill.tertiary),
+          for: .widget
+        )
     }
     .configurationDisplayName("Ranked War")
     .description("Displays information about the current ranked war.")
@@ -394,13 +442,16 @@ extension View {
 
 struct SpinningReloadIcon: View {
   let trigger: Bool
+  let darkMode: Bool
 
   @State private var isRotating = false
 
   var body: some View {
+    let secondaryColor = darkMode ? Color(white: 0.6) : .gray
+
     Image(systemName: "arrow.clockwise")
       .rotationEffect(Angle.degrees(isRotating ? 360 : 0))
-      .foregroundColor(isRotating ? .accentColor : .gray)
+      .foregroundColor(isRotating ? .accentColor : secondaryColor)
       .onAppear {
         if trigger { spinOnce() }
       }
@@ -448,5 +499,17 @@ extension String {
     }
 
     return attributedString.string
+  }
+}
+
+extension View {
+  @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content)
+    -> some View
+  {
+    if condition {
+      transform(self)
+    } else {
+      self
+    }
   }
 }

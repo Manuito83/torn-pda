@@ -3,7 +3,6 @@
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
@@ -325,7 +324,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
 
   // --- DEBUG: RANKED WAR WIDGET ---
   if (kDebugMode) {
-    //factionIdForCheck = 11108;
+    //factionIdForCheck = 1234;
   }
   // --- END DEBUG ---
 
@@ -386,17 +385,17 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
             final bool lessThan24h = warStarts - ts < 86400000;
             HomeWidget.saveWidgetData<bool>('rw_upcoming_soon', lessThan24h);
 
-            HomeWidget.saveWidgetData<String>('rw_player_faction_tag',
-                "[${playerFaction.name!.substring(0, math.min(playerFaction.name!.length, 4))}]");
+            HomeWidget.saveWidgetData<String>('rw_player_faction_tag', user.faction!.factionTag);
             HomeWidget.saveWidgetData<String>('rw_enemy_faction_name', enemyFaction.name);
+            HomeWidget.saveWidgetData<int>('rw_player_chain', 0);
           } else {
             HomeWidget.saveWidgetData<String>('rw_state', 'active');
             HomeWidget.saveWidgetData<int>('rw_player_score', playerFaction.score);
             HomeWidget.saveWidgetData<int>('rw_enemy_score', enemyFaction.score);
-            HomeWidget.saveWidgetData<String>('rw_player_faction_tag',
-                "[${playerFaction.name!.substring(0, math.min(playerFaction.name!.length, 4))}]");
+            HomeWidget.saveWidgetData<String>('rw_player_faction_tag', user.faction!.factionTag);
             HomeWidget.saveWidgetData<String>('rw_enemy_faction_name', enemyFaction.name);
             HomeWidget.saveWidgetData<int>('rw_target_score', war.war!.target);
+            HomeWidget.saveWidgetData<int>('rw_player_chain', playerFaction.chain ?? 0);
           }
           break;
         } else if (warIsFinished && !finishedWarFound) {
@@ -420,8 +419,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
       });
       HomeWidget.saveWidgetData<int>('rw_player_score', playerFaction.score);
       HomeWidget.saveWidgetData<int>('rw_enemy_score', enemyFaction.score);
-      HomeWidget.saveWidgetData<String>(
-          'rw_player_faction_tag', "[${playerFaction.name!.substring(0, math.min(playerFaction.name!.length, 4))}]");
+      HomeWidget.saveWidgetData<String>('rw_player_faction_tag', user.faction!.factionTag);
       HomeWidget.saveWidgetData<String>('rw_enemy_faction_name', enemyFaction.name);
       HomeWidget.saveWidgetData<int>('rw_target_score', finishedWar.war!.target);
       // Winner
@@ -438,6 +436,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
   }
   if (!warFound && !finishedWarFound) {
     HomeWidget.saveWidgetData<bool>('rw_widget_visibility', false);
+    HomeWidget.saveWidgetData<int>('rw_player_chain', 0);
   }
 }
 

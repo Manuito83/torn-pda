@@ -11,7 +11,16 @@ public struct PdaWidgetMainIntent: WidgetConfigurationIntent {
   static public var description = IntentDescription(
     "Displays the current status of the ranked war.")
 
-  public init() {}
+  @Parameter(title: "Dark Mode", default: false)
+  var darkMode: Bool
+
+  public init() {
+    self.darkMode = false
+  }
+
+  public init(darkMode: Bool) {
+    self.darkMode = darkMode
+  }
 }
 
 @available(iOS 17, *)
