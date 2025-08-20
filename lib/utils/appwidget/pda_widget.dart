@@ -325,47 +325,71 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
 
   // --- DEBUG: RANKED WAR WIDGET ---
   if (kDebugMode) {
-    //factionIdForCheck = 12345;
+    //factionIdForCheck = 11108;
   }
   // --- END DEBUG ---
 
   bool warFound = false;
+  bool finishedWarFound = false;
   if (warResponse is RankedWarsModel && factionIdForCheck != null) {
+    final ts = DateTime.now().millisecondsSinceEpoch;
+    RankedWar? finishedWar;
     for (final warMap in warResponse.rankedwars!.entries) {
-      // Use the potentially overridden faction ID for the check
       if (warMap.value.factions!.containsKey(factionIdForCheck.toString())) {
-        final ts = DateTime.now().millisecondsSinceEpoch;
         final war = warMap.value;
         final warStarts = war.war!.start! * 1000;
+        final warEnds = war.war!.end! * 1000;
 
         final bool warIsUpcoming = warStarts > ts;
         final bool warIsActive = warStarts < ts && war.war!.end == 0;
+        final bool warIsFinished = war.war!.end != 0 && (ts - warEnds < 48 * 3600 * 1000);
+
+        WarFaction playerFaction = WarFaction();
+        WarFaction enemyFaction = WarFaction();
+        war.factions!.forEach((id, factionData) {
+          if (id == factionIdForCheck.toString()) {
+            playerFaction = factionData;
+          } else {
+            enemyFaction = factionData;
+          }
+        });
 
         if (warIsUpcoming || warIsActive) {
           warFound = true;
           HomeWidget.saveWidgetData<bool>('rw_widget_visibility', true);
 
-          WarFaction playerFaction = WarFaction();
-          WarFaction enemyFaction = WarFaction();
-          war.factions!.forEach((id, factionData) {
-            // Use the overridden ID again to correctly identify the player's faction
-            if (id == factionIdForCheck.toString()) {
-              playerFaction = factionData;
-            } else {
-              enemyFaction = factionData;
-            }
-          });
-
           if (warIsUpcoming) {
             HomeWidget.saveWidgetData<String>('rw_state', 'upcoming');
             final timeDifference = DateTime.fromMillisecondsSinceEpoch(warStarts).difference(DateTime.now());
-            String twoDigits(int n) => n.toString().padLeft(2, "0");
-            String countdown =
-                '${timeDifference.inDays}d ${twoDigits(timeDifference.inHours.remainder(24))}h ${twoDigits(timeDifference.inMinutes.remainder(60))}m';
-            countdown = countdown.replaceAll("0d ", "");
-            HomeWidget.saveWidgetData<String>('rw_countdown_string', "Starts in $countdown");
+            String countdown;
+            if (timeDifference.inMinutes < 15) {
+              countdown = "About to start!";
+            } else if (timeDifference.inMinutes < 45) {
+              countdown = "About 30 minutes!";
+            } else if (timeDifference.inHours < 1) {
+              countdown = "Less than an hour!";
+            } else {
+              String twoDigits(int n) => n.toString().padLeft(2, "0");
+              if (timeDifference.inDays > 0) {
+                countdown = '${timeDifference.inDays}d ${twoDigits(timeDifference.inHours.remainder(24))}h';
+              } else {
+                countdown = '${twoDigits(timeDifference.inHours)}h';
+              }
+              countdown = countdown.replaceAll("0d ", "");
+            }
+            HomeWidget.saveWidgetData<String>('rw_countdown_string', countdown);
+
+            final warStartDateTime = DateTime.fromMillisecondsSinceEpoch(warStarts);
+            final dateFormat = DateFormat('MMM d, HH:mm');
+            HomeWidget.saveWidgetData<String>('rw_date_string', dateFormat.format(warStartDateTime));
+
+            final bool lessThan24h = warStarts - ts < 86400000;
+            HomeWidget.saveWidgetData<bool>('rw_upcoming_soon', lessThan24h);
+
+            HomeWidget.saveWidgetData<String>('rw_player_faction_tag',
+                "[${playerFaction.name!.substring(0, math.min(playerFaction.name!.length, 4))}]");
+            HomeWidget.saveWidgetData<String>('rw_enemy_faction_name', enemyFaction.name);
           } else {
-            // warIsActive
             HomeWidget.saveWidgetData<String>('rw_state', 'active');
             HomeWidget.saveWidgetData<int>('rw_player_score', playerFaction.score);
             HomeWidget.saveWidgetData<int>('rw_enemy_score', enemyFaction.score);
@@ -374,14 +398,45 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
             HomeWidget.saveWidgetData<String>('rw_enemy_faction_name', enemyFaction.name);
             HomeWidget.saveWidgetData<int>('rw_target_score', war.war!.target);
           }
-          break; // exit loop once war is found
+          break;
+        } else if (warIsFinished && !finishedWarFound) {
+          // Save the most recent finished war within 48h
+          finishedWar = war;
+          finishedWarFound = true;
         }
       }
     }
+    if (!warFound && finishedWarFound && finishedWar != null) {
+      HomeWidget.saveWidgetData<bool>('rw_widget_visibility', true);
+      HomeWidget.saveWidgetData<String>('rw_state', 'finished');
+      WarFaction playerFaction = WarFaction();
+      WarFaction enemyFaction = WarFaction();
+      finishedWar.factions!.forEach((id, factionData) {
+        if (id == factionIdForCheck.toString()) {
+          playerFaction = factionData;
+        } else {
+          enemyFaction = factionData;
+        }
+      });
+      HomeWidget.saveWidgetData<int>('rw_player_score', playerFaction.score);
+      HomeWidget.saveWidgetData<int>('rw_enemy_score', enemyFaction.score);
+      HomeWidget.saveWidgetData<String>(
+          'rw_player_faction_tag', "[${playerFaction.name!.substring(0, math.min(playerFaction.name!.length, 4))}]");
+      HomeWidget.saveWidgetData<String>('rw_enemy_faction_name', enemyFaction.name);
+      HomeWidget.saveWidgetData<int>('rw_target_score', finishedWar.war!.target);
+      // Winner
+      String winner = "";
+      if (playerFaction.score != null && enemyFaction.score != null) {
+        winner = playerFaction.score! > enemyFaction.score! ? playerFaction.name ?? "" : enemyFaction.name ?? "";
+      }
+      HomeWidget.saveWidgetData<String>('rw_winner', winner);
+      // End date
+      final warEndDateTime = DateTime.fromMillisecondsSinceEpoch(finishedWar.war!.end! * 1000);
+      final dateFormat = DateFormat('MMM d, HH:mm');
+      HomeWidget.saveWidgetData<String>('rw_end_date_string', dateFormat.format(warEndDateTime));
+    }
   }
-
-  if (!warFound) {
-    // No relevant war found, hide content
+  if (!warFound && !finishedWarFound) {
     HomeWidget.saveWidgetData<bool>('rw_widget_visibility', false);
   }
 }

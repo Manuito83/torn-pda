@@ -1,6 +1,7 @@
 import AppIntents
 import Foundation
 import WidgetKit
+import home_widget
 
 private let appGroup = "group.com.manuito.tornpda"
 
@@ -22,11 +23,17 @@ public struct ReloadWidgetActionIntent: AppIntent {
 
   public func perform() async throws -> some IntentResult {
     if let prefs = UserDefaults(suiteName: appGroup) {
+      prefs.setValue("Updating...", forKey: "last_updated")
       prefs.setValue(true, forKey: "reloading")
       prefs.synchronize()
     }
 
     WidgetCenter.shared.reloadTimelines(ofKind: "HomeWidgetRankedWar")
+
+    Task {
+      await HomeWidgetBackgroundWorker.run(
+        url: URL(string: "pdaWidget://reload_clicked"), appGroup: appGroup)
+    }
 
     return .result()
   }
