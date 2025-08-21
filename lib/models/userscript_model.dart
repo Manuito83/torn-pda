@@ -364,7 +364,6 @@ class UserScriptModel {
     // 6: Company Activity
     "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Company%20Activity%20(Torn%20PDA).js",
     // 7: Hospital Filters
-    // TODO: Add remote for Hosp Filters after merge
-    null,
+    "https://github.com/Manuito83/torn-pda/raw/master/userscripts/Hospital%20Revive%20Filters%20(Torn%20PDA).js",
   ];
 }
