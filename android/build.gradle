@@ -17,6 +17,16 @@ subprojects {
                 }
             }
         }
+
+        // Needed for sendbird_chat to build with no message "error: resource android:attr/lStar not found"
+        // see https://stackoverflow.com/questions/69033022/message-error-resource-androidattr-lstar-not-found
+        if (project.plugins.hasPlugin("com.android.application") ||
+                project.plugins.hasPlugin("com.android.library")) {
+            project.android {
+                compileSdkVersion 36
+                buildToolsVersion "36.0.0"
+            }
+        }
     }
 }
 
