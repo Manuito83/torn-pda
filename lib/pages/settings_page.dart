@@ -117,6 +117,10 @@ class SettingsPageState extends State<SettingsPage> {
 
   final _apiFormKey = GlobalKey<FormState>();
 
+  // Refresh rate control
+  Map<String, dynamic> _refreshRateInfo = {};
+  bool _isUpdatingRefreshRate = false;
+
   // SEARCH ##########
   bool _isSearching = false;
   String _searchText = '';
@@ -180,6 +184,7 @@ class SettingsPageState extends State<SettingsPage> {
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     _preferencesRestored = _restorePreferences();
+    _loadRefreshRateInfo();
     analytics?.logScreenView(screenName: 'settings');
 
     routeWithDrawer = true;
@@ -872,6 +877,7 @@ class SettingsPageState extends State<SettingsPage> {
         child: Padding(
           padding: const EdgeInsets.only(left: 20, right: 20),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1503,6 +1509,84 @@ class SettingsPageState extends State<SettingsPage> {
               ),
               Text(
                 'When split screen is no longer active (e.g., device rotated to a width lower than 800 dpi), this option determines whether the webview or the app remains in the foreground.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "High refresh rate",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(top: 10, left: 20, right: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text("High refresh rate"),
+                        if (_refreshRateInfo.isNotEmpty)
+                          Text(
+                            'Current: ${_refreshRateInfo['currentRefreshRate']?.round().toString() ?? 'Unknown'} Hz',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        if (_refreshRateInfo.isNotEmpty && _refreshRateInfo['maximumFramesPerSecond'] != null)
+                          Text(
+                            'Max: ${_refreshRateInfo['maximumFramesPerSecond']?.toString() ?? 'Unknown'} Hz',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 11,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  _isUpdatingRefreshRate
+                      ? const SizedBox(
+                          width: 48,
+                          height: 28,
+                          child: Center(
+                            child: SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          ),
+                        )
+                      : Switch(
+                          value: _settingsProvider.highRefreshRateEnabled,
+                          onChanged: (value) {
+                            setState(() {
+                              _settingsProvider.changeHighRefreshRateEnabled = value;
+                            });
+                            _updateRefreshRateAfterChange();
+                          },
+                          activeTrackColor: Colors.lightGreenAccent,
+                          activeColor: Colors.green,
+                        ),
+                ],
+              ),
+              Text(
+                'Enables the highest available refresh rate on supported devices (e.g., 90Hz, 120Hz). '
+                'May increase battery consumption and device heat but provides smoother animations.'
+                '\n\nNOTE: it might be necessary to restart the app after disabling this feature.',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -3804,6 +3888,35 @@ class SettingsPageState extends State<SettingsPage> {
         ],
       ),
     );
+  }
+
+  Future<void> _loadRefreshRateInfo() async {
+    try {
+      final info = await _settingsProvider.getRefreshRateInfo();
+      if (mounted) {
+        setState(() {
+          _refreshRateInfo = info;
+        });
+      }
+    } catch (e) {
+      log('Error loading refresh rate info: $e');
+    }
+  }
+
+  Future<void> _updateRefreshRateAfterChange() async {
+    setState(() {
+      _isUpdatingRefreshRate = true;
+    });
+
+    // Wait for the settings to take effect
+    await Future.delayed(const Duration(milliseconds: 1000));
+    await _loadRefreshRateInfo();
+
+    if (mounted) {
+      setState(() {
+        _isUpdatingRefreshRate = false;
+      });
+    }
   }
 }
 

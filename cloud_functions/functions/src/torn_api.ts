@@ -31,7 +31,7 @@ export async function getUsersForums(apiKey: string): Promise<ForumsApiResponse>
 
 
 export async function checkUserIdKey(apiKey: string, userId: number) {
-  const response = await fetch(`https://api.torn.com/user/?selections=basic&key=${apiKey}`);
+  const response = await fetch(`https://api.torn.com/user/?selections=profile&key=${apiKey}`);
   const data = await response.json();
 
   if (data.error) {

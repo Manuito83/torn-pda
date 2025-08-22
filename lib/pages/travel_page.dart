@@ -986,7 +986,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': _alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
-        'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications ? "T" : 'TORN PDA Travel',
       },
     );
     intent.launch();
@@ -1001,7 +1001,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.LENGTH': _travelModel.timeLeft! - _travelTimerAhead,
         // 'android.intent.extra.alarm.LENGTH': 5,    // DEBUG
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.MESSAGE': 'TORN PDA Travel',
+        'android.intent.extra.alarm.MESSAGE': _settingsProvider!.discreetNotifications ? "T" : 'TORN PDA Travel',
       },
     );
     intent.launch();

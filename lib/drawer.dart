@@ -139,7 +139,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // preferences take time to load
   final Completer _preferencesCompleter = Completer();
   // Used for the main UI loading (FutureBuilder)
-  Future? _finishedWithPreferences;
+  Future? _finishedWithPreferencesAndDialogs;
 
   int _activeDrawerIndex = 0;
   int _selected = 0;
@@ -229,7 +229,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _aboutPosition,
     ];
 
-    _finishedWithPreferences = _loadPreferencesAsync();
+    _finishedWithPreferencesAndDialogs = _loadPreferencesAndDialogs();
 
     // Live Activities
     if (Platform.isIOS) {
@@ -385,25 +385,29 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
         remoteConfig.onConfigUpdated.listen((event) async {
           await remoteConfig.activate();
-          _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-          _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
-          _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
-          _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
-          _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
-          _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
-          _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
-              remoteConfig.getBool("browser_center_editing_text_field_allowed");
-          // Revives
-          _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
-          _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
-          _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
-          _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
-          _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
-          // Sendbird
-          sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
-          sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
-          // Torn API
-          apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
+
+          // Ensure all platform channel communications happen on the main thread
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+            _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+            _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+            _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
+            _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+            _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+            _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
+                remoteConfig.getBool("browser_center_editing_text_field_allowed");
+            // Revives
+            _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
+            _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
+            _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
+            _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
+            _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
+            // Sendbird
+            sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
+            sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
+            // Torn API
+            apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
+          });
         });
       });
     }
@@ -429,6 +433,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     });
   }
 
+  Future<void> _loadPreferencesAndDialogs() async {
+    await _loadPreferencesAsync();
+
+    if (mounted) {
+      await _handleChangelogAndOtherDialogs();
+    }
+
+    // Depending on user preferences, launch the WebView if needed
+    await _checkAndLaunchWebViewIfNeeded();
+  }
+
   Future<void> _loadPreferencesAsync() async {
     if (appHasBeenUpdated) {
       // Will trigger an extra upload to Firebase when version changes
@@ -448,17 +463,66 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _preferencesCompleter.complete();
     }
 
+    // Configure high refresh rate based on user preferences
+    _preferencesCompleter.future.whenComplete(() async {
+      await _configureHighRefreshRate();
+    });
+
     // Force OC2 check when changelog is shown
     // (we also do this once a day with [_updateLastActiveTime])
     // (we shouldn't need to check the completer, as it's checked in initState, but just in case)
     _preferencesCompleter.future.whenComplete(() async {
       _settingsProvider.checkIfUserIsOnOCv2();
     });
+  }
 
+  Future<void> _handleChangelogAndOtherDialogs() async {
     try {
-      await _handleChangelogAndOtherDialogs();
-    } catch (e) {
-      log("Error loading changelog: $e");
+      if (appHasBeenUpdated || lastSavedAppCompilation.isEmpty) {
+        await _showChangeLogDialog(context);
+      } else {
+        // Other dialogs we need to show when the dialog is not being displayed
+        bool dialogWasShown = false;
+
+        // Appwidget dialog
+        if (Platform.isAndroid) {
+          if (!await Prefs().getAppwidgetExplanationShown()) {
+            if ((await pdaWidget_numberInstalled()).isNotEmpty) {
+              if (mounted) {
+                await _showAppwidgetExplanationDialog(context);
+              }
+              Prefs().setAppwidgetExplanationShown(true);
+              dialogWasShown = true;
+            }
+          }
+        }
+
+        // Stats Announcement dialog
+        if (mounted && !dialogWasShown) {
+          bool statsShown = await _showAppStatsAnnouncementDialog();
+          if (mounted && !statsShown) {
+            await _showBugsAnnouncementDialog();
+          }
+        }
+
+        // Other dialogs
+        //...
+      }
+    } catch (e, s) {
+      log('Error showing initial dialogs: $e', error: e, stackTrace: s);
+    }
+  }
+
+  Future<void> _checkAndLaunchWebViewIfNeeded() async {
+    if (!_userProvider!.basic!.userApiKeyValid!) return;
+
+    String defaultSection = await Prefs().getDefaultSection();
+    if (defaultSection == "browser" || defaultSection == "browser_full") {
+      _webViewProvider.browserShowInForeground = true;
+
+      if (defaultSection == "browser_full") {
+        _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
+      }
     }
   }
 
@@ -1253,7 +1317,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (BuildContext context) => UserScriptsPage(),
+            builder: (BuildContext context) => const UserScriptsPage(),
           ),
         );
       } else if (payload.contains('400-')) {
@@ -1529,6 +1593,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  bool changelog = false;
   @override
   Widget build(BuildContext context) {
     super.build(context);
@@ -1540,7 +1605,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     _s.callbackBrowser = _openBrowserFromToast;
     return FutureBuilder(
-      future: _finishedWithPreferences,
+      future: _finishedWithPreferencesAndDialogs,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         if (snapshot.connectionState == ConnectionState.done) {
           // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
@@ -2050,17 +2115,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _activeDrawerIndex = _settingsPosition;
     } else {
       String defaultSection = await Prefs().getDefaultSection();
+
+      // If user wants to load the browser, change the default section to Profile
       if (defaultSection == "browser" || defaultSection == "browser_full") {
-        // If the preferred section is the Browser, we will open it as soon as the preferences are loaded
-        _webViewProvider.browserShowInForeground = true;
-
-        if (defaultSection == "browser_full") {
-          _webViewProvider.setCurrentUiMode(UiMode.fullScreen, context);
-        }
-
-        // Change to Profile as a base for loading the browser
-        defaultSection = "0";
+        defaultSection = "0"; // Cambiar a Profile como base
       }
+
       _selected = int.parse(defaultSection);
       _activeDrawerIndex = int.parse(defaultSection);
 
@@ -2307,59 +2367,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     if (success) {
       _settingsProvider.updateLastUsed = now;
     }
-  }
-
-  Future<void> _handleChangelogAndOtherDialogs() async {
-    final dialogCompleter = Completer<void>();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) {
-        dialogCompleter.complete();
-        return;
-      }
-
-      try {
-        if (appHasBeenUpdated || lastSavedAppCompilation.isEmpty) {
-          await _showChangeLogDialog(context);
-        } else {
-          // Other dialogs we need to show when the dialog is not being displayed
-          bool dialogWasShown = false;
-
-          // Appwidget dialog
-          if (Platform.isAndroid) {
-            if (!await Prefs().getAppwidgetExplanationShown()) {
-              if ((await pdaWidget_numberInstalled()).isNotEmpty) {
-                if (mounted) {
-                  await _showAppwidgetExplanationDialog(context);
-                }
-                Prefs().setAppwidgetExplanationShown(true);
-                dialogWasShown = true;
-              }
-            }
-          }
-
-          // Stats Announcement dialog
-          if (mounted && !dialogWasShown) {
-            bool statsShown = await _showAppStatsAnnouncementDialog();
-            if (mounted && !statsShown) {
-              await _showBugsAnnouncementDialog();
-            }
-          }
-
-          // Other dialogs
-          //...
-        }
-
-        if (!dialogCompleter.isCompleted) {
-          dialogCompleter.complete();
-        }
-      } catch (e, s) {
-        log('Error showing initial dialogs: $e', error: e, stackTrace: s);
-        dialogCompleter.completeError(e, s);
-      }
-    });
-
-    return dialogCompleter.future;
   }
 
   Future<void> _showChangeLogDialog(BuildContext context) async {
@@ -2688,6 +2695,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       bridgeController.initializeHandler();
       await travelController.activate();
     });
+  }
+
+  Future<void> _configureHighRefreshRate() async {
+    try {
+      await _settingsProvider.configureRefreshRate();
+    } catch (e) {
+      log('Error configuring refresh rate: $e');
+    }
   }
 
   void changeUID(String uid) {

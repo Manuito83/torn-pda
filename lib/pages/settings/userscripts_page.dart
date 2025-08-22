@@ -24,6 +24,10 @@ import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UserScriptsPage extends StatefulWidget {
+  final bool? fromWebview;
+
+  const UserScriptsPage({super.key, this.fromWebview});
+
   @override
   UserScriptsPageState createState() => UserScriptsPageState();
 }
@@ -468,7 +472,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               _goBack();
             },
           ),
-          if (!_webViewProvider.webViewSplitActive) const PdaBrowserIcon() else Container(),
+          if (!_webViewProvider.webViewSplitActive && widget.fromWebview != true)
+            const PdaBrowserIcon()
+          else
+            Container(),
         ],
       ),
       actions: [

@@ -39,7 +39,6 @@ import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart' as bars_model;
 import 'package:torn_pda/models/profile/user_v2_selections/property_v2_model.dart';
-import 'package:torn_pda/models/property_model.dart';
 import 'package:torn_pda/pages/profile/profile_options_page.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -329,7 +328,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _apiFetched = _fetchApi();
     });
 
-    // Initialise periodic API refresh
+    // Initialize periodic API refresh
     _resetApiTimer();
 
     // Join a stream that will notify when the browser closes (a browser initiated in Profile or elsewhere)
@@ -959,7 +958,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           itemBuilder: (context, index) {
             final thisShortcut = _shortcutsProv.activeShortcuts[index];
             return Semantics(
-              label: "Shorcut to ${thisShortcut.name}",
+              label: "Shortcut to ${thisShortcut.name}",
               child: ExcludeSemantics(child: shortcutTile(thisShortcut)),
             );
           },
@@ -981,7 +980,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
           wrapItems.add(
             Semantics(
-              label: "Shorcut to ${thisShortcut.name}",
+              label: "Shortcut to ${thisShortcut.name}",
               child: SizedBox(
                 height: h,
                 width: w,
@@ -3546,8 +3545,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int strengthModifier = 0;
     double strengthModifiedTotal = 0;
     String strengthString = '';
-    if (_miscModel!.strengthInfo != null && _miscModel!.strength != null) {
-      strengthModifiedTotal = _miscModel!.strength!.toDouble();
+    if (_miscModel!.strengthInfo != null && _miscModel!.battleStats?.strength?.value != null) {
+      strengthModifiedTotal = _miscModel!.battleStats?.strength?.value.toDouble() ?? 0.0;
       for (final strengthMod in _miscModel!.strengthInfo!) {
         final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
         final matches = strRaw.allMatches(strengthMod);
@@ -3574,7 +3573,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } else {
-      strengthString = 'error';
+      strengthString = '(error)';
       strengthColor = _themeProvider!.getTextColor(Colors.red);
     }
 
@@ -3584,8 +3583,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int defenseModifier = 0;
     double defenseModifiedTotal = 0;
     String defenseString = '';
-    if (_miscModel!.defenseInfo != null && _miscModel!.defense != null) {
-      defenseModifiedTotal = _miscModel!.defense!.toDouble();
+    if (_miscModel!.defenseInfo != null && _miscModel!.battleStats?.defense?.value != null) {
+      defenseModifiedTotal = _miscModel!.battleStats?.defense?.value.toDouble() ?? 0.0;
       for (final defenseMod in _miscModel!.defenseInfo!) {
         final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
         final matches = strRaw.allMatches(defenseMod);
@@ -3612,7 +3611,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } else {
-      defenseString = 'error';
+      defenseString = '(error)';
       defenseColor = _themeProvider!.getTextColor(Colors.red);
     }
 
@@ -3622,8 +3621,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int speedModifier = 0;
     double speedModifiedTotal = 0;
     String speedString = '';
-    if (_miscModel!.speedInfo != null && _miscModel!.speed != null) {
-      speedModifiedTotal = _miscModel!.speed!.toDouble();
+    if (_miscModel!.speedInfo != null && _miscModel!.battleStats?.speed != null) {
+      speedModifiedTotal = _miscModel!.battleStats?.speed?.value.toDouble() ?? 0.0;
       for (final speedMod in _miscModel!.speedInfo!) {
         final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
         final matches = strRaw.allMatches(speedMod);
@@ -3650,7 +3649,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } else {
-      speedString = 'error';
+      speedString = '(error)';
       speedColor = _themeProvider!.getTextColor(Colors.red);
     }
 
@@ -3660,8 +3659,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     int dexModifier = 0;
     double dexModifiedTotal = 0;
     String dexString = '';
-    if (_miscModel!.dexterityInfo != null && _miscModel!.dexterity != null) {
-      dexModifiedTotal = _miscModel!.dexterity!.toDouble();
+    if (_miscModel!.dexterityInfo != null && _miscModel!.battleStats?.dexterity?.value != null) {
+      dexModifiedTotal = _miscModel!.battleStats?.dexterity?.value.toDouble() ?? 0.0;
       for (final dexMod in _miscModel!.dexterityInfo!) {
         final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
         final matches = strRaw.allMatches(dexMod);
@@ -3688,19 +3687,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } else {
-      dexString = 'error';
+      dexString = '(error)';
       dexColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     final double totalEffective = strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal;
 
     int? totalEffectiveModifier;
-    if (_miscModel!.total != null) {
-      totalEffectiveModifier = ((totalEffective - _miscModel!.total!) * 100 / _miscModel!.total!).round();
+    if (_miscModel!.battleStats?.total != null) {
+      totalEffectiveModifier =
+          ((totalEffective - _miscModel!.battleStats!.total!) * 100 / _miscModel!.battleStats!.total!).round();
     }
 
     String formatStatsPercent(int? stat, int? total) {
-      if (total == null || total <= 0) return 'error';
+      if (total == null || total <= 0) return '(error)';
       final pct = decimalFormat.format(stat! * 100 / total);
       return ' ($pct%)';
     }
@@ -3709,36 +3709,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     bool skillsExist = false;
     bool crimesExist = false;
 
-    var hunting = "";
-    var racing = "";
-    var reviving = "";
-    var searchForCash = "";
-    var bootlegging = "";
-    var pickpocketing = "";
-    var graffiti = "";
-    var burglary = "";
-    var shoplifting = "";
-    var cardSkimming = "";
-    var hustling = "";
-    var disposal = "";
-    var cracking = "";
-    var forgery = "";
-    var scamming = "";
-    hunting = _miscModel!.hunting ?? "";
-    racing = _miscModel!.racing ?? "";
-    reviving = _miscModel!.reviving ?? "";
-    searchForCash = _miscModel!.searchForCash ?? "";
-    bootlegging = _miscModel!.bootlegging ?? "";
-    pickpocketing = _miscModel!.pickpocketing ?? "";
-    graffiti = _miscModel!.graffiti ?? "";
-    burglary = _miscModel!.burglary ?? "";
-    shoplifting = _miscModel!.shoplifting ?? "";
-    cardSkimming = _miscModel!.cardSkimming ?? "";
-    hustling = _miscModel!.hustling ?? "";
-    disposal = _miscModel!.disposal ?? "";
-    cracking = _miscModel!.cracking ?? "";
-    forgery = _miscModel!.forgery ?? "";
-    scamming = _miscModel!.scamming ?? "";
+    var hunting = getSkillValueSafe("hunting");
+    var racing = getSkillValueSafe("racing");
+    var reviving = getSkillValueSafe("reviving");
+    var searchForCash = getSkillValueSafe("search_for_cash");
+    var bootlegging = getSkillValueSafe("bootlegging");
+    var pickpocketing = getSkillValueSafe("pickpocketing");
+    var graffiti = getSkillValueSafe("graffiti");
+    var burglary = getSkillValueSafe("burglary");
+    var shoplifting = getSkillValueSafe("shoplifting");
+    var cardSkimming = getSkillValueSafe("card_skimming");
+    var hustling = getSkillValueSafe("hustling");
+    var disposal = getSkillValueSafe("disposal");
+    var cracking = getSkillValueSafe("cracking");
+    var forgery = getSkillValueSafe("forgery");
+    var scamming = getSkillValueSafe("scamming");
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -3802,7 +3787,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   _cashWallet(dense: false),
                   const SizedBox(height: 4),
                   Semantics(
-                    label: "${_miscModel!.points} Torn Points, tap to open",
+                    label: "${_miscModel!.money?.points ?? '?'} Torn Points, tap to open",
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -3819,7 +3804,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                         ),
                         const SizedBox(width: 5),
-                        Text('${_miscModel!.points}'),
+                        Text('${_miscModel!.money?.points ?? '?'}'),
                       ],
                     ),
                   ),
@@ -3831,35 +3816,44 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Row(
                     children: [
                       Flexible(
-                        child: SelectableText(
-                          'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
+                        child: SelectionArea(
+                          child: Text(
+                            'Battle Stats (eff.): ${decimalFormat.format(totalEffective)}',
+                          ),
                         ),
                       ),
                       if (totalEffectiveModifier == null)
-                        SelectableText(
-                          'error',
-                          style: TextStyle(
-                            color: _themeProvider!.getTextColor(Colors.red),
+                        SelectionArea(
+                          child: Text(
+                            '(error)',
+                            style: TextStyle(
+                              color: _themeProvider!.getTextColor(Colors.red),
+                            ),
                           ),
                         )
                       else if (totalEffectiveModifier < 0)
-                        SelectableText(
-                          ' ($totalEffectiveModifier%)',
-                          style: TextStyle(
-                            color: _themeProvider!.getTextColor(Colors.red),
+                        SelectionArea(
+                          child: Text(
+                            ' ($totalEffectiveModifier%)',
+                            style: TextStyle(
+                              color: _themeProvider!.getTextColor(Colors.red),
+                            ),
                           ),
                         )
                       else if (totalEffectiveModifier > 0)
-                        SelectableText(
-                          ' (+$totalEffectiveModifier%)',
-                          style: TextStyle(
-                            color: _themeProvider!.getTextColor(Colors.green),
+                        SelectionArea(
+                          child: Text(
+                            ' (+$totalEffectiveModifier%)',
+                            style: TextStyle(
+                              color: _themeProvider!.getTextColor(Colors.green),
+                            ),
                           ),
                         )
                     ],
                   ),
                   const SizedBox(height: 2),
-                  SelectableText('Battle Stats: ${decimalFormat.format(_miscModel!.total)}'),
+                  SelectionArea(
+                      child: Text('Battle Stats: ${decimalFormat.format(_miscModel!.battleStats?.total ?? 0)}')),
                   if (_settingsProvider!.tornStatsChartEnabled && _settingsProvider!.tornStatsChartInCollapsedMiscCard)
                     FutureBuilder(
                       future: _statsChartDataFetched,
@@ -3892,9 +3886,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     )
                   else
                     const SizedBox(height: 8),
-                  SelectableText('MAN: ${decimalFormat.format(_miscModel!.manualLabor)}'),
-                  SelectableText('INT: ${decimalFormat.format(_miscModel!.intelligence)}'),
-                  SelectableText('END: ${decimalFormat.format(_miscModel!.endurance)}'),
+                  SelectionArea(child: Text('MAN: ${decimalFormat.format(_miscModel!.workStats?.manualLabor ?? 0)}')),
+                  SelectionArea(child: Text('INT: ${decimalFormat.format(_miscModel!.workStats?.intelligence ?? 0)}')),
+                  SelectionArea(child: Text('END: ${decimalFormat.format(_miscModel!.workStats?.endurance ?? 0)}')),
                 ],
               ),
             ),
@@ -3910,8 +3904,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          SelectableText('Rank: ${_user!.rank}'),
-                          SelectableText('Age: ${_user!.age}'),
+                          SelectionArea(child: Text('Rank: ${_user!.rank}')),
+                          SelectionArea(child: Text('Age: ${_user!.age}')),
                         ],
                       ),
                     ),
@@ -3940,7 +3934,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ),
                           ),
                           const SizedBox(width: 5),
-                          SelectableText('${_miscModel!.points}'),
+                          SelectionArea(child: Text('${_miscModel!.money?.points ?? '?'}')),
                         ],
                       ),
                     ),
@@ -3990,7 +3984,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Strength: '),
                               ),
-                              SelectableText(decimalFormat.format(strengthModifiedTotal)),
+                              SelectionArea(child: Text(decimalFormat.format(strengthModifiedTotal))),
                               if (strengthModified)
                                 Text(
                                   " $strengthString",
@@ -4006,7 +4000,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Defense: '),
                               ),
-                              SelectableText(decimalFormat.format(defenseModifiedTotal)),
+                              SelectionArea(child: Text(decimalFormat.format(defenseModifiedTotal))),
                               if (defenseModified)
                                 Text(
                                   " $defenseString",
@@ -4022,7 +4016,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Speed: '),
                               ),
-                              SelectableText(decimalFormat.format(speedModifiedTotal)),
+                              SelectionArea(child: Text(decimalFormat.format(speedModifiedTotal))),
                               if (speedModified)
                                 Text(
                                   " $speedString",
@@ -4038,7 +4032,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Dexterity: '),
                               ),
-                              SelectableText(decimalFormat.format(dexModifiedTotal)),
+                              SelectionArea(child: Text(decimalFormat.format(dexModifiedTotal))),
                               if (dexModified)
                                 Text(
                                   " $dexString",
@@ -4060,8 +4054,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   'Total: ',
                                 ),
                               ),
-                              SelectableText(
-                                decimalFormat.format(totalEffective),
+                              SelectionArea(
+                                child: Text(
+                                  decimalFormat.format(totalEffective),
+                                ),
                               ),
                             ],
                           ),
@@ -4101,9 +4097,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Row(
                             children: [
                               const SizedBox(width: 80, child: Text('Strength: ')),
-                              SelectableText(decimalFormat.format(_miscModel!.strength)),
+                              SelectionArea(
+                                  child: Text(decimalFormat.format(_miscModel!.battleStats?.strength?.value ?? 0))),
                               Text(
-                                formatStatsPercent(_miscModel!.strength, _miscModel!.total),
+                                formatStatsPercent(
+                                    _miscModel!.battleStats?.strength?.value.toInt(), _miscModel!.battleStats?.total),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -4111,9 +4109,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Row(
                             children: [
                               const SizedBox(width: 80, child: Text('Defense: ')),
-                              SelectableText(decimalFormat.format(_miscModel!.defense)),
+                              SelectionArea(
+                                  child: Text(decimalFormat.format(_miscModel!.battleStats?.defense?.value ?? 0))),
                               Text(
-                                formatStatsPercent(_miscModel!.defense, _miscModel!.total),
+                                formatStatsPercent(
+                                    _miscModel!.battleStats?.defense?.value.toInt(), _miscModel!.battleStats?.total),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -4121,9 +4121,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Row(
                             children: [
                               const SizedBox(width: 80, child: Text('Speed: ')),
-                              SelectableText(decimalFormat.format(_miscModel!.speed)),
+                              SelectionArea(
+                                  child: Text(decimalFormat.format(_miscModel!.battleStats?.speed?.value ?? 0))),
                               Text(
-                                formatStatsPercent(_miscModel!.speed, _miscModel!.total),
+                                formatStatsPercent(
+                                    _miscModel!.battleStats?.speed?.value.toInt(), _miscModel!.battleStats?.total),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -4131,9 +4133,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           Row(
                             children: [
                               const SizedBox(width: 80, child: Text('Dexterity: ')),
-                              SelectableText(decimalFormat.format(_miscModel!.dexterity)),
+                              SelectionArea(
+                                  child: Text(decimalFormat.format(_miscModel!.battleStats?.dexterity?.value ?? 0))),
                               Text(
-                                formatStatsPercent(_miscModel!.dexterity, _miscModel!.total),
+                                formatStatsPercent(
+                                    _miscModel!.battleStats?.dexterity?.value.toInt(), _miscModel!.battleStats?.total),
                                 style: const TextStyle(fontSize: 12),
                               ),
                             ],
@@ -4148,7 +4152,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Total: '),
                               ),
-                              SelectableText(decimalFormat.format(_miscModel!.total)),
+                              SelectionArea(child: Text(decimalFormat.format(_miscModel!.battleStats?.total ?? 0))),
                             ],
                           ),
                         ],
@@ -4218,7 +4222,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 100,
                                 child: Text('Manual labor: '),
                               ),
-                              SelectableText(decimalFormat.format(_miscModel!.manualLabor)),
+                              SelectionArea(child: Text(decimalFormat.format(_miscModel!.workStats?.manualLabor ?? 0))),
                             ],
                           ),
                           Row(
@@ -4227,7 +4231,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 100,
                                 child: Text('Intelligence: '),
                               ),
-                              SelectableText(decimalFormat.format(_miscModel!.intelligence)),
+                              SelectionArea(
+                                  child: Text(decimalFormat.format(_miscModel!.workStats?.intelligence ?? 0))),
                             ],
                           ),
                           Row(
@@ -4236,7 +4241,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 100,
                                 child: Text('Endurance: '),
                               ),
-                              SelectableText(decimalFormat.format(_miscModel!.endurance)),
+                              SelectionArea(child: Text(decimalFormat.format(_miscModel!.workStats?.endurance ?? 0))),
                             ],
                           ),
                         ],
@@ -4280,7 +4285,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 80,
                                         child: Text('Racing: '),
                                       ),
-                                      SelectableText(racing),
+                                      SelectionArea(
+                                        child: Text(racing),
+                                      ),
                                     ],
                                   ),
                                 if (reviving.isNotEmpty)
@@ -4290,7 +4297,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 80,
                                         child: Text('Reviving: '),
                                       ),
-                                      SelectableText(reviving),
+                                      SelectionArea(
+                                        child: Text(reviving),
+                                      ),
                                     ],
                                   ),
                                 if (hunting.isNotEmpty)
@@ -4300,7 +4309,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 80,
                                         child: Text('Hunting: '),
                                       ),
-                                      SelectableText(hunting),
+                                      SelectionArea(child: Text(hunting)),
                                     ],
                                   ),
                                 if (crimesExist)
@@ -4318,7 +4327,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                       width: 130,
                                       child: Text('Search for Cash: '),
                                     ),
-                                    SelectableText(searchForCash),
+                                    SelectionArea(
+                                      child: Text(
+                                        searchForCash,
+                                        style: TextStyle(
+                                          color: searchForCash == "100"
+                                              ? _themeProvider!.getTextColor(Colors.green)
+                                              : null,
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                                 if (bootlegging.isNotEmpty)
@@ -4328,7 +4346,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Bootlegging: '),
                                       ),
-                                      SelectableText(bootlegging),
+                                      SelectionArea(
+                                        child: Text(
+                                          bootlegging,
+                                          style: TextStyle(
+                                            color: bootlegging == "100"
+                                                ? _themeProvider!.getTextColor(Colors.green)
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (graffiti.isNotEmpty)
@@ -4338,7 +4365,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Graffiti: '),
                                       ),
-                                      SelectableText(graffiti),
+                                      SelectionArea(
+                                        child: Text(
+                                          graffiti,
+                                          style: TextStyle(
+                                            color:
+                                                graffiti == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (shoplifting.isNotEmpty)
@@ -4348,7 +4383,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Shoplifting: '),
                                       ),
-                                      SelectableText(shoplifting),
+                                      SelectionArea(
+                                        child: Text(
+                                          shoplifting,
+                                          style: TextStyle(
+                                            color: shoplifting == "100"
+                                                ? _themeProvider!.getTextColor(Colors.green)
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (pickpocketing.isNotEmpty)
@@ -4358,7 +4402,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Pickpocketing: '),
                                       ),
-                                      SelectableText(pickpocketing),
+                                      SelectionArea(
+                                        child: Text(
+                                          pickpocketing,
+                                          style: TextStyle(
+                                            color: pickpocketing == "100"
+                                                ? _themeProvider!.getTextColor(Colors.green)
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (cardSkimming.isNotEmpty)
@@ -4368,7 +4421,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Card Skimming: '),
                                       ),
-                                      SelectableText(cardSkimming),
+                                      SelectionArea(
+                                        child: Text(
+                                          cardSkimming,
+                                          style: TextStyle(
+                                            color: cardSkimming == "100"
+                                                ? _themeProvider!.getTextColor(Colors.green)
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (burglary.isNotEmpty)
@@ -4378,7 +4440,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Burglary: '),
                                       ),
-                                      SelectableText(burglary),
+                                      SelectionArea(
+                                        child: Text(
+                                          burglary,
+                                          style: TextStyle(
+                                            color:
+                                                burglary == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (hustling.isNotEmpty)
@@ -4388,7 +4458,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Hustling: '),
                                       ),
-                                      SelectableText(hustling),
+                                      SelectionArea(
+                                        child: Text(
+                                          hustling,
+                                          style: TextStyle(
+                                            color:
+                                                hustling == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (disposal.isNotEmpty)
@@ -4398,7 +4476,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Disposal: '),
                                       ),
-                                      SelectableText(disposal),
+                                      SelectionArea(
+                                        child: Text(
+                                          disposal,
+                                          style: TextStyle(
+                                            color:
+                                                disposal == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (cracking.isNotEmpty)
@@ -4408,7 +4494,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Cracking: '),
                                       ),
-                                      SelectableText(cracking),
+                                      SelectionArea(
+                                        child: Text(
+                                          cracking,
+                                          style: TextStyle(
+                                            color:
+                                                cracking == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (forgery.isNotEmpty)
@@ -4418,7 +4512,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Forgery: '),
                                       ),
-                                      SelectableText(forgery),
+                                      SelectionArea(
+                                        child: Text(
+                                          forgery,
+                                          style: TextStyle(
+                                            color: forgery == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                                 if (scamming.isNotEmpty)
@@ -4428,7 +4529,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                         width: 130,
                                         child: Text('Scamming: '),
                                       ),
-                                      SelectableText(scamming),
+                                      SelectionArea(
+                                        child: Text(
+                                          scamming,
+                                          style: TextStyle(
+                                            color:
+                                                scamming == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
                                     ],
                                   ),
                               ],
@@ -4469,14 +4578,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           ),
           const SizedBox(width: 5),
-          SelectableText(
-            '\$${moneyFormat.format(_user!.moneyOnHand)}',
-            style: TextStyle(
-              fontSize: dense ? 13 : 14,
-              fontWeight: dense ? FontWeight.bold : FontWeight.normal,
-              color: dense ? _themeProvider!.getTextColor(Colors.green) : _themeProvider!.mainText,
+          SelectionArea(
+            child: Text(
+              '\$${moneyFormat.format(_user!.moneyOnHand)}',
+              style: TextStyle(
+                fontSize: dense ? 13 : 14,
+                fontWeight: dense ? FontWeight.bold : FontWeight.normal,
+                color: dense ? _themeProvider!.getTextColor(Colors.green) : _themeProvider!.mainText,
+              ),
             ),
-          )
+          ),
         ],
       );
     } else {
@@ -4496,7 +4607,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // DEBUG ******************************
     //_user.icons.icon57 = "Test addiction -" + " long string " * 6;
     //_user.icons.icon17 = "Test racing -" + " long string " * 6;
-    //_miscModel.cityBank.timeLeft = 6000;
+    //_miscModel!.money!.cityBank!.until = 6000;
     //_miscModel.educationTimeleft = 6000;
     // DEBUG ******************************
 
@@ -4740,12 +4851,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // BANK
     Widget bankWidget = const SizedBox.shrink();
-    if (_miscModel!.cityBank != null && _miscModel!.cityBank?.timeLeft != null) {
-      if (_miscModel!.cityBank!.timeLeft! > 0) {
+    if (_miscModel!.money?.cityBank != null && _miscModel!.money?.cityBank.until != null) {
+      if (_miscModel!.money!.cityBank.until > 0) {
         showMisc = true;
         bankActive = true;
         final moneyFormat = NumberFormat("#,##0", "en_US");
-        final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.cityBank!.timeLeft!));
+        final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.money!.cityBank.until));
         final timeDifference = timeExpiry.difference(DateTime.now());
         Color? expiryColor = _themeProvider!.getTextColor(Colors.orange[800]);
         String expiryString;
@@ -4756,11 +4867,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
           expiryString = '${timeDifference.inHours} hours';
         } else if (timeDifference.inDays == 1) {
-          expiryString = '1 day and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
+          expiryString = '1 day and ${(_miscModel!.money!.cityBank.until / 60 / 60 % 24).floor()} hours';
           expiryColor = _themeProvider!.mainText;
         } else {
           expiryString =
-              '${timeDifference.inDays} days and ${(_miscModel!.cityBank!.timeLeft! / 60 / 60 % 24).floor()} hours';
+              '${timeDifference.inDays} days and ${(_miscModel!.money!.cityBank.until / 60 / 60 % 24).floor()} hours';
           expiryColor = _themeProvider!.mainText;
         }
 
@@ -4777,7 +4888,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     style: DefaultTextStyle.of(context).style,
                     children: <TextSpan>[
                       TextSpan(
-                        text: "\$${moneyFormat.format(_miscModel!.cityBank!.amount)}",
+                        text: "\$${moneyFormat.format(_miscModel!.money?.cityBank.amount)}",
                         style: TextStyle(
                           color: _themeProvider!.getTextColor(Colors.green),
                         ),
@@ -5037,8 +5148,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
 
       Widget pointsPrice = const SizedBox.shrink();
-      if (v.key == "points" && _miscModel != null && (_miscModel?.points ?? 0) > 0) {
-        String price = formatBigNumbers(((v.value!.round()) / _miscModel!.points!).round());
+      if (v.key == "points" && _miscModel != null && (_miscModel?.money?.points ?? 0) > 0) {
+        String price = formatBigNumbers(((v.value!.round()) / _miscModel!.money!.points).round());
 
         pointsPrice = Text(
           " @ \$$price",
@@ -6513,29 +6624,47 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
+  String getSkillValueSafe(String slug) {
+    try {
+      if (_miscModel?.skills?.skillList != null) {
+        final skill = _miscModel!.skills!.skillList.firstWhere(
+          (s) => s.slug == slug,
+          orElse: () => throw StateError('Skill not found'),
+        );
+
+        String skillString = skill.level.toString();
+        if (skillString == "100.0") skillString = "100";
+        return skillString;
+      }
+      return "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   void _shareMisc({String? shareType}) {
     final decimalFormat = NumberFormat("#,##0", "en_US");
     var playerString = "${_user!.name} [${_user!.playerId}]";
 
     String getBattle() {
-      if (_miscModel!.total == null ||
-          _miscModel!.strength == null ||
-          _miscModel!.defense == null ||
-          _miscModel!.speed == null ||
-          _miscModel!.dexterity == null) {
+      if (_miscModel!.battleStats?.total == null ||
+          _miscModel!.battleStats?.strength?.value == null ||
+          _miscModel!.battleStats?.defense?.value == null ||
+          _miscModel!.battleStats?.speed?.value == null ||
+          _miscModel!.battleStats?.dexterity?.value == null) {
         return "No battle stats available";
       }
       var battleString = "\n\nBATTLE STATS";
-      battleString += '\nStrength: ${decimalFormat.format(_miscModel!.strength)} '
-          '(${decimalFormat.format(_miscModel!.strength! * 100 / _miscModel!.total!)}%)';
-      battleString += '\nDefense: ${decimalFormat.format(_miscModel!.defense)} '
-          '(${decimalFormat.format(_miscModel!.defense! * 100 / _miscModel!.total!)}%)';
-      battleString += '\nSpeed: ${decimalFormat.format(_miscModel!.speed)} '
-          '(${decimalFormat.format(_miscModel!.speed! * 100 / _miscModel!.total!)}%)';
-      battleString += '\nDexterity: ${decimalFormat.format(_miscModel!.dexterity)} '
-          '(${decimalFormat.format(_miscModel!.dexterity! * 100 / _miscModel!.total!)}%)';
+      battleString += '\nStrength: ${decimalFormat.format(_miscModel!.battleStats!.strength!.value)} '
+          '(${decimalFormat.format(_miscModel!.battleStats!.strength!.value * 100 / _miscModel!.battleStats!.total!)}%)';
+      battleString += '\nDefense: ${decimalFormat.format(_miscModel!.battleStats!.defense!.value)} '
+          '(${decimalFormat.format(_miscModel!.battleStats!.defense!.value * 100 / _miscModel!.battleStats!.total!)}%)';
+      battleString += '\nSpeed: ${decimalFormat.format(_miscModel!.battleStats!.speed!.value)} '
+          '(${decimalFormat.format(_miscModel!.battleStats!.speed!.value * 100 / _miscModel!.battleStats!.total!)}%)';
+      battleString += '\nDexterity: ${decimalFormat.format(_miscModel!.battleStats!.dexterity!.value)} '
+          '(${decimalFormat.format(_miscModel!.battleStats!.dexterity!.value * 100 / _miscModel!.battleStats!.total!)}%)';
       battleString += '\n-------';
-      battleString += '\nTotal: ${decimalFormat.format(_miscModel!.total)}';
+      battleString += '\nTotal: ${decimalFormat.format(_miscModel!.battleStats!.total)}';
       return battleString;
     }
 
@@ -6552,25 +6681,30 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     String getWork() {
       var workString = "\n\nWORK STATS";
-      workString += '\nManual labor: ${decimalFormat.format(_miscModel!.manualLabor)}';
-      workString += '\nIntelligence: ${decimalFormat.format(_miscModel!.intelligence)}';
-      workString += '\nEndurance: ${decimalFormat.format(_miscModel!.endurance)}';
+      workString += '\nManual labor: ${decimalFormat.format(_miscModel!.workStats?.manualLabor)}';
+      workString += '\nIntelligence: ${decimalFormat.format(_miscModel!.workStats?.intelligence)}';
+      workString += '\nEndurance: ${decimalFormat.format(_miscModel!.workStats?.endurance)}';
       return workString;
     }
 
     String getSkills() {
       var skillExist = false;
       var skillsString = "\n\nSKILLS";
-      if (_miscModel!.hunting != null) {
-        skillsString += '\nRacing: ${_miscModel!.racing}';
+
+      final hunting = getSkillValueSafe("hunting");
+      final racing = getSkillValueSafe("racing");
+      final reviving = getSkillValueSafe("reviving");
+
+      if (racing.isNotEmpty) {
+        skillsString += '\nRacing: $racing';
         skillExist = true;
       }
-      if (_miscModel!.reviving != null) {
-        skillsString += '\nReviving: ${_miscModel!.reviving}';
+      if (reviving.isNotEmpty) {
+        skillsString += '\nReviving: $reviving';
         skillExist = true;
       }
-      if (_miscModel!.hunting != null) {
-        skillsString += '\nHunting: ${_miscModel!.hunting}';
+      if (hunting.isNotEmpty) {
+        skillsString += '\nHunting: $hunting';
         skillExist = true;
       }
       if (!skillExist) skillsString = "";
@@ -6580,52 +6714,66 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     String getCrimes() {
       var crimesExist = false;
       var crimesString = "\n\nCRIMES";
-      if (_miscModel!.searchForCash != null) {
-        crimesString += '\nSearch for Cash: ${_miscModel!.searchForCash}';
+
+      final searchForCash = getSkillValueSafe("search_for_cash");
+      final bootlegging = getSkillValueSafe("bootlegging");
+      final graffiti = getSkillValueSafe("graffiti");
+      final shoplifting = getSkillValueSafe("shoplifting");
+      final pickpocketing = getSkillValueSafe("pickpocketing");
+      final cardSkimming = getSkillValueSafe("card_skimming");
+      final burglary = getSkillValueSafe("burglary");
+      final hustling = getSkillValueSafe("hustling");
+      final disposal = getSkillValueSafe("disposal");
+      final cracking = getSkillValueSafe("cracking");
+      final forgery = getSkillValueSafe("forgery");
+      final scamming = getSkillValueSafe("scamming");
+
+      if (searchForCash.isNotEmpty) {
+        crimesString += '\nSearch for Cash: $searchForCash';
         crimesExist = true;
       }
-      if (_miscModel!.bootlegging != null) {
-        crimesString += '\nBootlegging: ${_miscModel!.bootlegging}';
+      if (bootlegging.isNotEmpty) {
+        crimesString += '\nBootlegging: $bootlegging';
         crimesExist = true;
       }
-      if (_miscModel!.graffiti != null) {
-        crimesString += '\nGraffiti: ${_miscModel!.graffiti}';
+      if (graffiti.isNotEmpty) {
+        crimesString += '\nGraffiti: $graffiti';
         crimesExist = true;
       }
-      if (_miscModel!.shoplifting != null) {
-        crimesString += '\nShoplifting: ${_miscModel!.shoplifting}';
+      if (shoplifting.isNotEmpty) {
+        crimesString += '\nShoplifting: $shoplifting';
         crimesExist = true;
       }
-      if (_miscModel!.pickpocketing != null) {
-        crimesString += '\nPickpocketing: ${_miscModel!.pickpocketing}';
+      if (pickpocketing.isNotEmpty) {
+        crimesString += '\nPickpocketing: $pickpocketing';
         crimesExist = true;
       }
-      if (_miscModel!.cardSkimming != null) {
-        crimesString += '\nCard Skimming: ${_miscModel!.cardSkimming}';
+      if (cardSkimming.isNotEmpty) {
+        crimesString += '\nCard Skimming: $cardSkimming';
         crimesExist = true;
       }
-      if (_miscModel!.burglary != null) {
-        crimesString += '\nBurglary: ${_miscModel!.burglary}';
+      if (burglary.isNotEmpty) {
+        crimesString += '\nBurglary: $burglary';
         crimesExist = true;
       }
-      if (_miscModel!.hustling != null) {
-        crimesString += '\nHustling: ${_miscModel!.hustling}';
+      if (hustling.isNotEmpty) {
+        crimesString += '\nHustling: $hustling';
         crimesExist = true;
       }
-      if (_miscModel!.disposal != null) {
-        crimesString += '\nDisposal: ${_miscModel!.disposal}';
+      if (disposal.isNotEmpty) {
+        crimesString += '\nDisposal: $disposal';
         crimesExist = true;
       }
-      if (_miscModel!.cracking != null) {
-        crimesString += '\nCracking: ${_miscModel!.cracking}';
+      if (cracking.isNotEmpty) {
+        crimesString += '\nCracking: $cracking';
         crimesExist = true;
       }
-      if (_miscModel!.forgery != null) {
-        crimesString += '\nForgery: ${_miscModel!.forgery}';
+      if (forgery.isNotEmpty) {
+        crimesString += '\nForgery: $forgery';
         crimesExist = true;
       }
-      if (_miscModel!.scamming != null) {
-        crimesString += '\nScamming: ${_miscModel!.scamming}';
+      if (scamming.isNotEmpty) {
+        crimesString += '\nScamming: $scamming';
         crimesExist = true;
       }
 
@@ -6654,7 +6802,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       default:
         var all = playerString;
         all += "\n\nCash: ${decimalFormat.format(_user!.networth!["wallet"])}";
-        all += "\nPoints: ${_miscModel!.points}";
+        all += "\nPoints: ${_miscModel!.money?.points ?? '?'}";
         all += "\n$_sharedJobPoints";
         all += getBattle();
         all += getEffective();
@@ -7069,7 +7217,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         'android.intent.extra.alarm.SKIP_UI': true,
         'android.intent.extra.alarm.VIBRATE': alarmVibration,
         'android.intent.extra.alarm.RINGTONE': thisSound,
-        'android.intent.extra.alarm.MESSAGE': message,
+        'android.intent.extra.alarm.MESSAGE':
+            _settingsProvider!.discreetNotifications ? _getDiscreetAlarmMessage(profileNotification) : message,
       },
     );
     intent.launch();
@@ -7120,10 +7269,65 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       arguments: <String, dynamic>{
         'android.intent.extra.alarm.LENGTH': totalSeconds,
         'android.intent.extra.alarm.SKIP_UI': true,
-        'android.intent.extra.alarm.MESSAGE': message,
+        'android.intent.extra.alarm.MESSAGE':
+            _settingsProvider!.discreetNotifications ? _getDiscreetTimerMessage(profileNotification) : message,
       },
     );
     intent.launch();
+  }
+
+  String _getDiscreetAlarmMessage(ProfileNotification profileNotification) {
+    switch (profileNotification) {
+      case ProfileNotification.travel:
+        return "T";
+      case ProfileNotification.energy:
+        return "E";
+      case ProfileNotification.nerve:
+        return "N";
+      case ProfileNotification.life:
+        return "Lf";
+      case ProfileNotification.drugs:
+        return "D";
+      case ProfileNotification.medical:
+        return "Med";
+      case ProfileNotification.booster:
+        return "B";
+      case ProfileNotification.hospital:
+        return "H";
+      case ProfileNotification.jail:
+        return "J";
+      case ProfileNotification.rankedWar:
+        return "W";
+      case ProfileNotification.raceStart:
+        return "R";
+    }
+  }
+
+  String _getDiscreetTimerMessage(ProfileNotification profileNotification) {
+    switch (profileNotification) {
+      case ProfileNotification.travel:
+        return "T";
+      case ProfileNotification.energy:
+        return "E";
+      case ProfileNotification.nerve:
+        return "N";
+      case ProfileNotification.life:
+        return "Lf";
+      case ProfileNotification.drugs:
+        return "D";
+      case ProfileNotification.medical:
+        return "Med";
+      case ProfileNotification.booster:
+        return "B";
+      case ProfileNotification.hospital:
+        return "H";
+      case ProfileNotification.jail:
+        return "J";
+      case ProfileNotification.rankedWar:
+        return "W";
+      case ProfileNotification.raceStart:
+        return "R";
+    }
   }
 
   Future<void> _callBackFromNotificationOptions() async {
@@ -7451,8 +7655,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } else {
-      final companyKey = userJob.companyType.toString();
-      currentPoints = companyJobPoints[companyKey]?.jobpoints ?? 0;
+      final companyKey = int.tryParse(userJob.companyType.toString());
+      if (companyKey != null) {
+        currentPoints = companyJobPoints.where((company) => company.company.id == companyKey).first.points;
+      } else {
+        currentPoints = 0;
+      }
     }
 
     final headerString = unemployed ? 'Unemployed' : '$currentPoints job point${currentPoints == 1 ? '' : 's'}';
@@ -7472,7 +7680,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           ),
         ),
         const SizedBox(width: 6),
-        Semantics(label: headerString, child: SelectableText(headerString)),
+        Semantics(label: headerString, child: SelectionArea(child: Text(headerString))),
         const SizedBox(width: 10),
         GestureDetector(
           onTap: () => showDialog(
@@ -7696,14 +7904,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     return sectionSort;
   }
 
-  // Check whethere we actually need to call the API (we call every 10 minutes for properties to easy API usage)
+  // Check whether we actually need to call the API (we call every 10 minutes for properties to easy API usage)
   Future<void> _checkProperties(OwnProfileMisc miscApiResponse, bool forcedUpdate) async {
     final now = DateTime.now();
 
-    final propertyInfoIsAbsolete =
+    final propertyInfoIsObsolete =
         _rentedPropertiesLastChecked == null || now.difference(_rentedPropertiesLastChecked!).inMinutes >= 10;
 
-    if (forcedUpdate || propertyInfoIsAbsolete) {
+    if (forcedUpdate || propertyInfoIsObsolete) {
       _rentedPropertiesLastChecked = now;
       await _fetchAndUpdateProperties(miscApiResponse);
     }
@@ -7713,7 +7921,12 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final thisRented = <String, Map<String, String>>{};
     final propertyModel = miscApiResponse.properties;
 
-    final List<PropertyV2> rentedProperties = propertyModel.where((p) => p.status == "Currently being rented").toList();
+    final List<PropertyV2> rentedProperties = propertyModel.where((p) {
+      if (p.status != null && p.status!.contains("rented")) {
+        return true;
+      }
+      return false;
+    }).toList();
 
     if (rentedProperties.isEmpty) {
       if (mounted) {
@@ -7729,15 +7942,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     for (final property in rentedProperties) {
       futures.add(() async {
         try {
-          final rentDetails = await ApiCallsV1.getProperty(propertyId: property.id.toString());
-
-          if (rentDetails is PropertyModel && rentDetails.property?.rented?.daysLeft != null) {
-            final timeLeft = rentDetails.property!.rented!.daysLeft!;
+          if (property.rentalPeriodRemaining != null && property.id != null && property.property?.name != null) {
+            final timeLeft = property.rentalPeriodRemaining!;
             final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
             if (timeLeft > 0) {
               thisRented[property.id.toString()] = {
                 "time": timeLeft.toString(),
-                "text": "Your ${property.propertyInfo.name.toLowerCase()}'s "
+                "text": "Your ${property.property!.name!.toLowerCase()}'s "
                     "rent will end in $daysString!",
               };
             }
@@ -7753,7 +7964,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final propertyLines = <Widget>[];
     var currentItem = 0;
     thisRented.forEach((key, value) {
-      final int numberDays = int.parse(value["time"]!);
+      final int? numberDays = int.tryParse(value["time"]!);
+      if (numberDays == null) return; // Skip if can't parse days
+
       final Widget prop = Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

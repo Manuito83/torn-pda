@@ -8,6 +8,7 @@ import 'dart:developer';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_refresh_rate_control/flutter_refresh_rate_control.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/config/webview_config.dart';
 import 'package:torn_pda/main.dart';
@@ -46,6 +47,8 @@ enum BrowserRefreshSetting {
 class SettingsProvider extends ChangeNotifier {
   StreamController willPopShouldOpenDrawerStream = StreamController.broadcast();
   StreamController willPopShouldGoBackStream = StreamController.broadcast();
+
+  final FlutterRefreshRateControl _refreshRateControl = FlutterRefreshRateControl();
 
   String deviceBrand = "";
   String deviceModel = "";
@@ -1204,6 +1207,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _highRefreshRateEnabled = false;
+  bool get highRefreshRateEnabled => _highRefreshRateEnabled;
+  set changeHighRefreshRateEnabled(bool value) {
+    _highRefreshRateEnabled = value;
+    Prefs().setHighRefreshRateEnabled(_highRefreshRateEnabled);
+    configureRefreshRate();
+    notifyListeners();
+  }
+
   bool _iosLiveActivitiesTravelEnabled = true;
   bool get iosLiveActivityTravelEnabled => _iosLiveActivitiesTravelEnabled;
   set iosLiveActivityTravelEnabled(bool enabled) {
@@ -1252,6 +1264,7 @@ class SettingsProvider extends ChangeNotifier {
     _browserCenterEditingTextField = await Prefs().getBrowserCenterEditingTextField();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
+    _highRefreshRateEnabled = await Prefs().getHighRefreshRateEnabled();
 
     _useTabsFullBrowser = await Prefs().getUseTabsFullBrowser();
     _useTabsHideFeature = await Prefs().getUseTabsHideFeature();
@@ -1597,6 +1610,37 @@ class SettingsProvider extends ChangeNotifier {
       }
 
       log("Can't verify if player is in OC v2, keeping OC v1");
+    }
+  }
+
+  Future<void> configureRefreshRate() async {
+    try {
+      if (_highRefreshRateEnabled) {
+        final success = await _refreshRateControl.requestHighRefreshRate();
+        if (success) {
+          log('High refresh rate enabled successfully');
+        } else {
+          log('Failed to enable high refresh rate');
+        }
+      } else {
+        final success = await _refreshRateControl.stopHighRefreshRate();
+        if (success) {
+          log('High refresh rate disabled successfully');
+        } else {
+          log('Failed to disable high refresh rate');
+        }
+      }
+    } catch (e) {
+      log('Error configuring refresh rate: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getRefreshRateInfo() async {
+    try {
+      return await _refreshRateControl.getRefreshRateInfo();
+    } catch (e) {
+      log('Error getting refresh rate info: $e');
+      return {};
     }
   }
 }

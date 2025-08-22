@@ -50,19 +50,16 @@ class _DevToolsTerminalTabState extends State<DevToolsTerminalTab> {
 
     final terminalProvider = context.read<TerminalProvider>();
 
-    terminalProvider.addInstruction(widget.webviewKey, "[IN]  > $source");
-    if (_commandHistory.isEmpty || _commandHistory.last != source) {
-      _commandHistory.add(source);
+    String jsCode = source.replaceAll(RegExp(r'[“”]'), '"').replaceAll(RegExp(r'[‘’]'), "'");
+
+    terminalProvider.addInstruction(widget.webviewKey, "[IN]  > $jsCode");
+    if (_commandHistory.isEmpty || _commandHistory.last != jsCode) {
+      _commandHistory.add(jsCode);
     }
     _historyIndex = _commandHistory.length;
     _scrollToTop();
 
-    try {
-      final result = await widget.webViewController!.evaluateJavascript(source: source);
-      terminalProvider.addInstruction(widget.webviewKey, "[OUT] < ${result?.toString() ?? 'null'}");
-    } catch (e) {
-      terminalProvider.addInstruction(widget.webviewKey, "[ERR] ! ${e.toString()}");
-    }
+    widget.webViewController!.evaluateJavascript(source: jsCode);
 
     _commandController.clear();
     _scrollToTop();
@@ -78,44 +75,75 @@ class _DevToolsTerminalTabState extends State<DevToolsTerminalTab> {
       children: [
         const SizedBox(height: 10),
         Expanded(
-          child: ListView.builder(
-            controller: _scrollController,
-            itemCount: lines.length,
-            itemBuilder: (context, index) {
-              final line = lines[index];
-              final isInput = line.startsWith("[IN]  >");
-              final isError = line.startsWith("[ERR] !");
+          child: SelectionArea(
+            child: ListView.builder(
+              controller: _scrollController,
+              itemCount: lines.length,
+              itemBuilder: (context, index) {
+                final line = lines[index];
+                final isInput = line.startsWith("[IN]");
+                final isError = line.startsWith("[ERR]");
 
-              IconData iconData = Icons.keyboard_arrow_left;
-              Color iconColor = Colors.grey.shade600;
-              if (isInput) {
-                iconData = Icons.keyboard_arrow_right;
-                iconColor = Colors.blue;
-              } else if (isError) {
-                iconData = Icons.error_outline;
-                iconColor = Colors.red;
-              }
+                String symbol = "◀";
+                Color symbolColor = Colors.grey.shade600;
 
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(iconData, size: 16, color: iconColor),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: SelectableText(
-                        line.substring(7),
-                        style: TextStyle(
-                          fontFamily: 'monospace',
-                          color: isError ? Colors.red : context.read<ThemeProvider>().mainText,
+                if (isInput) {
+                  symbol = "▶";
+                  symbolColor = Colors.blue;
+                } else if (isError) {
+                  symbol = "!";
+                  symbolColor = Colors.red;
+                }
+
+                final cleanText = line.replaceFirst(RegExp(r'^\[(IN|OUT|ERR)\]\s*[><!]\s*'), '');
+
+                return IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectionContainer.disabled(
+                          child: Container(
+                            width: 24,
+                            decoration: BoxDecoration(
+                              border: Border(
+                                right: BorderSide(
+                                  color: symbolColor.withValues(alpha: 0.2),
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            child: Align(
+                              alignment: Alignment.topLeft,
+                              child: Text(
+                                symbol,
+                                style: TextStyle(
+                                  color: symbolColor,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            cleanText,
+                            style: TextStyle(
+                              fontFamily: 'monospace',
+                              color: isError ? Colors.red : context.read<ThemeProvider>().mainText,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              );
-            },
+                  ),
+                );
+              },
+            ),
           ),
         ),
         const Divider(height: 1),

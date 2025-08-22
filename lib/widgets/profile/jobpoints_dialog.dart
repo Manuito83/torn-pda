@@ -219,16 +219,16 @@ class JobPointsDialogState extends State<JobPointsDialog> {
 
     if (widget.jobpoints!.companies != null) {
       jobs.add(const Divider());
-      widget.jobpoints!.companies!.forEach((type, details) {
+      for (var details in widget.jobpoints!.companies!) {
         jobs.add(
           Text(
-            '${details.name}: ${details.jobpoints}',
+            '${details.company.name}: ${details.points}',
             style: const TextStyle(
               fontSize: 12,
             ),
           ),
         );
-      });
+      }
     }
 
     return Column(children: jobs);

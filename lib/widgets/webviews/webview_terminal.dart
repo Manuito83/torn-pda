@@ -41,32 +41,109 @@ class WebviewTerminalState extends State<WebviewTerminal> {
           return Stack(
             alignment: Alignment.topRight,
             children: [
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(width: 2, color: Colors.green[900]!),
-                ),
-                height: containerHeight,
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(5),
-                    child: Row(
-                      children: [
-                        Flexible(
+              SelectionArea(
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(width: 2, color: Colors.green[900]!),
+                  ),
+                  height: containerHeight,
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 25),
+                      Expanded(
+                        child: SingleChildScrollView(
                           child: Padding(
-                            padding: const EdgeInsets.only(top: 15),
-                            child: Consumer<TerminalProvider>(
-                              builder: (context, provider, child) {
-                                return SelectableText(
-                                  provider.getTerminal(widget.webviewKey!),
-                                  style: const TextStyle(color: Colors.green, fontSize: 13),
-                                  textAlign: TextAlign.left,
-                                );
-                              },
+                            padding: const EdgeInsets.only(
+                              left: 5,
+                              right: 5,
+                              bottom: 5,
+                              top: 5,
+                            ),
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Consumer<TerminalProvider>(
+                                    builder: (context, provider, child) {
+                                      final terminalText = provider.getTerminal(widget.webviewKey!);
+                                      final lines =
+                                          terminalText.split('\n\n').where((line) => line.isNotEmpty).toList();
+
+                                      return Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: lines.map((line) {
+                                          final isInput = line.startsWith("[IN]");
+                                          final isError = line.startsWith("[ERR]");
+
+                                          String symbol = "◀";
+                                          Color symbolColor = Colors.grey.shade400;
+
+                                          if (isInput) {
+                                            symbol = "▶";
+                                            symbolColor = Colors.blue;
+                                          } else if (isError) {
+                                            symbol = "!";
+                                            symbolColor = Colors.red;
+                                          }
+
+                                          final cleanText =
+                                              line.replaceFirst(RegExp(r'^\[(IN|OUT|ERR)\]\s*[><!]\s*'), '');
+
+                                          return IntrinsicHeight(
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(vertical: 1.0),
+                                              child: Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  SelectionContainer.disabled(
+                                                    child: Container(
+                                                      width: 20,
+                                                      decoration: BoxDecoration(
+                                                        border: Border(
+                                                          right: BorderSide(
+                                                            color: symbolColor.withValues(alpha: 0.2),
+                                                            width: 2,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      child: Align(
+                                                        alignment: Alignment.topLeft,
+                                                        child: Text(
+                                                          symbol,
+                                                          style: TextStyle(
+                                                            color: symbolColor,
+                                                            fontWeight: FontWeight.bold,
+                                                            fontSize: 14,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: Text(
+                                                      cleanText,
+                                                      style: TextStyle(
+                                                        color: isError ? Colors.red : Colors.green,
+                                                        fontSize: 13,
+                                                      ),
+                                                      textAlign: TextAlign.left,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -205,18 +282,81 @@ class TerminalDialog extends StatelessWidget {
         child: Column(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                child: Consumer<TerminalProvider>(
-                  builder: (context, provider, child) {
-                    return Align(
-                      alignment: Alignment.topLeft,
-                      child: SelectableText(
-                        provider.getTerminal(widget.webviewKey!),
-                        style: const TextStyle(color: Colors.green, fontSize: 13),
-                        textAlign: TextAlign.left,
-                      ),
-                    );
-                  },
+              child: SelectionArea(
+                child: SingleChildScrollView(
+                  child: Consumer<TerminalProvider>(
+                    builder: (context, provider, child) {
+                      final terminalText = provider.getTerminal(widget.webviewKey!);
+                      final lines = terminalText.split('\n\n').where((line) => line.isNotEmpty).toList();
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: lines.map((line) {
+                          final isInput = line.startsWith("[IN]");
+                          final isError = line.startsWith("[ERR]");
+
+                          String symbol = "◀";
+                          Color symbolColor = Colors.grey.shade400;
+
+                          if (isInput) {
+                            symbol = "▶";
+                            symbolColor = Colors.blue;
+                          } else if (isError) {
+                            symbol = "!";
+                            symbolColor = Colors.red;
+                          }
+
+                          final cleanText = line.replaceFirst(RegExp(r'^\[(IN|OUT|ERR)\]\s*[><!]\s*'), '');
+
+                          return IntrinsicHeight(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 1.0),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SelectionContainer.disabled(
+                                    child: Container(
+                                      width: 20,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          right: BorderSide(
+                                            color: symbolColor.withValues(alpha: 0.2),
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Align(
+                                        alignment: Alignment.topLeft,
+                                        child: Text(
+                                          symbol,
+                                          style: TextStyle(
+                                            color: symbolColor,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      cleanText,
+                                      style: TextStyle(
+                                        color: isError ? Colors.red : Colors.green,
+                                        fontSize: 13,
+                                      ),
+                                      textAlign: TextAlign.left,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      );
+                    },
+                  ),
                 ),
               ),
             ),

@@ -7,21 +7,6 @@ allprojects {
 
 rootProject.buildDir = '../build'
 
-// TODO: delete? https://github.com/livekit/client-sdk-flutter/issues/569
-/*
-subprojects {
-    afterEvaluate { project ->
-        if (project.plugins.hasPlugin("com.android.application") ||
-                project.plugins.hasPlugin("com.android.library")) {
-            project.android {
-                compileSdkVersion 36
-                buildToolsVersion "36.0.0"
-            }
-        }
-    }
-}
-*/
-
 // Needed for sendbird_chat 4.2.26 to build with no namespace issues
 subprojects {
     afterEvaluate { project ->
