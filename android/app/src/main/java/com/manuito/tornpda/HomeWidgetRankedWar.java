@@ -70,7 +70,12 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
         view.setViewVisibility(R.id.rw_icon_reload, reloadingNow ? View.GONE : View.VISIBLE);
         int reloadIconColor = isDarkMode ? Color.parseColor("#9E9E9E") : Color.parseColor("#888888");
         view.setInt(R.id.rw_icon_reload, "setColorFilter", reloadIconColor);
+
         int playerChain = prefs.getInt("rw_player_chain", 0);
+        view.setTextViewText(R.id.rw_header_center_text, "CHAINING");
+        view.setTextColor(R.id.rw_header_center_text, Color.parseColor("#F44336"));
+        view.setInt(R.id.rw_chaining_indicator, "setBackgroundResource", R.drawable.chaining_indicator_background);
+
         view.setViewVisibility(R.id.rw_chaining_indicator, playerChain >= 10 ? View.VISIBLE : View.GONE);
     }
 
@@ -99,9 +104,10 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
 
         if (upcomingSoon) {
             view.setTextColor(R.id.rw_upcoming_countdown, Color.parseColor("#FFA500"));
-            view.setInt(R.id.rw_upcoming_layout, "setBackgroundColor", Color.parseColor("#FFA500"));
+            view.setInt(R.id.rw_upcoming_border_box, "setBackgroundColor", Color.parseColor("#FFA500"));
         } else {
-            view.setInt(R.id.rw_upcoming_layout, "setBackgroundColor", Color.TRANSPARENT);
+            view.setInt(R.id.rw_upcoming_border_box, "setBackgroundColor", Color.TRANSPARENT);
+            view.setTextColor(R.id.rw_upcoming_countdown, Color.parseColor("#000000"));
         }
     }
 
@@ -130,7 +136,7 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
 
     private void setupFinishedWarLayout(RemoteViews view, SharedPreferences prefs) {
         view.setViewVisibility(R.id.rw_finished_layout, View.VISIBLE);
-        String winner = decodeHtml(prefs.getString("rw_winner", ""));
+
         int playerScore = prefs.getInt("rw_player_score", 0);
         int enemyScore = prefs.getInt("rw_enemy_score", 0);
         String playerTag = decodeHtml(prefs.getString("rw_player_faction_tag", ""));
@@ -139,19 +145,28 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
         boolean playerWon = playerScore >= enemyScore;
         int resultColor = playerWon ? Color.parseColor("#4CAF50") : Color.parseColor("#F44336");
 
-        view.setInt(R.id.rw_finished_layout, "setBackgroundColor", resultColor);
-        
-        view.setTextViewText(R.id.rw_finished_winner_name, winner);
+        String resultText = playerWon ? "Won" : "Lost";
+        String finalDisplayText = resultText + " " + endDate;
+
+        view.setInt(R.id.rw_finished_border_box, "setBackgroundColor", resultColor);
+
+        view.setTextViewText(R.id.rw_finished_winner_name, finalDisplayText);
         view.setTextColor(R.id.rw_finished_winner_name, resultColor);
+
         view.setImageViewResource(R.id.rw_finished_icon, R.drawable.trophy);
         view.setInt(R.id.rw_finished_icon, "setColorFilter", resultColor);
-        view.setTextViewText(R.id.rw_finished_end_date, "Ended " + endDate);
+
         view.setTextViewText(R.id.rw_finished_player_tag, playerTag);
+        view.setTextColor(R.id.rw_finished_player_tag, Color.parseColor("#0D47A1"));
+
         view.setTextViewText(R.id.rw_finished_enemy_name, enemyName);
+        view.setTextColor(R.id.rw_finished_enemy_name, Color.parseColor("#B71C1C"));
+
         view.setTextViewText(R.id.rw_finished_player_score, String.format("%,d", playerScore));
+        view.setTextColor(R.id.rw_finished_player_score, playerWon ? resultColor : Color.parseColor("#666666"));
+
         view.setTextViewText(R.id.rw_finished_enemy_score, String.format("%,d", enemyScore));
-        view.setTextColor(R.id.rw_finished_player_score, playerWon ? resultColor : Color.parseColor("#F44336"));
-        view.setTextColor(R.id.rw_finished_enemy_score, !playerWon ? resultColor : Color.parseColor("#F44336"));
+        view.setTextColor(R.id.rw_finished_enemy_score, !playerWon ? resultColor : Color.parseColor("#666666"));
     }
 
     private void setupNoWarLayout(RemoteViews view, String message) {

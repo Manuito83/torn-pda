@@ -101,12 +101,13 @@ class ChangeLogState extends State<ChangeLog> {
     final itemList = <ChangeLogItem>[];
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
+
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.5'
-        ..date = '01 SEP 2025'
+        ..date = '15 SEP 2025'
         ..features = [
-          "Added new update dialog",
+          "Added home screen widget with War information",
         ],
     );
 

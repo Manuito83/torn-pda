@@ -1054,10 +1054,10 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _pdaUpdateDetails = "";
-  String get pdaUpdateDetails => _pdaUpdateDetails;
-  set pdaUpdateDetails(String value) {
-    _pdaUpdateDetails = value;
+  String _pdaUpdateDetailsRC = "";
+  String get pdaUpdateDetailsRC => _pdaUpdateDetailsRC;
+  set pdaUpdateDetailsRC(String value) {
+    _pdaUpdateDetailsRC = value;
     notifyListeners();
   }
 

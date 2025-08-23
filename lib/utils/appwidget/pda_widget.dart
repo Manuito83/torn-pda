@@ -362,17 +362,31 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
             final timeDifference = DateTime.fromMillisecondsSinceEpoch(warStarts).difference(DateTime.now());
             String countdown;
             if (timeDifference.inMinutes < 15) {
-              countdown = "About to start!";
+              if (Platform.isIOS) {
+                countdown = "About to start!";
+              } else {
+                countdown = "about to start!";
+              }
             } else if (timeDifference.inMinutes < 45) {
-              countdown = "About 30 minutes!";
-            } else if (timeDifference.inHours < 1) {
-              countdown = "Less than an hour!";
+              if (Platform.isIOS) {
+                countdown = "Less than 1h!";
+              } else {
+                countdown = "in less than 1h!";
+              }
             } else {
               String twoDigits(int n) => n.toString().padLeft(2, "0");
               if (timeDifference.inDays > 0) {
-                countdown = '${timeDifference.inDays}d ${twoDigits(timeDifference.inHours.remainder(24))}h';
+                if (Platform.isIOS) {
+                  countdown = '${timeDifference.inDays}d ${twoDigits(timeDifference.inHours.remainder(24))}h';
+                } else {
+                  countdown = 'in ${timeDifference.inDays}d ${twoDigits(timeDifference.inHours.remainder(24))}h';
+                }
               } else {
-                countdown = '${twoDigits(timeDifference.inHours)}h';
+                if (Platform.isIOS) {
+                  countdown = '${twoDigits(timeDifference.inHours)}h';
+                } else {
+                  countdown = 'in ${twoDigits(timeDifference.inHours)}h';
+                }
               }
               countdown = countdown.replaceAll("0d ", "");
             }

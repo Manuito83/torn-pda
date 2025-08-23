@@ -599,7 +599,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
 
       // PDA Update Details
-      _settingsProvider.pdaUpdateDetails = remoteConfig.getString("pda_update_details");
+      _settingsProvider.pdaUpdateDetailsRC = remoteConfig.getString("pda_update_details");
     } catch (e) {
       log('Error updating Remote Config values: $e');
     }
@@ -2524,7 +2524,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future _showPdaUpdateDialog() async {
-    final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetails;
+    final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetailsRC;
     if (pdaUpdateDetailsString.isEmpty) return;
 
     final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
@@ -2537,9 +2537,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Check if there's an update available for the current platform
     bool hasUpdate = false;
     if (Platform.isAndroid && updateDetails.isAndroidUpdate) {
-      hasUpdate = updateDetails.latestVersionCode != currentCompilationInt;
+      hasUpdate = updateDetails.latestVersionCode > currentCompilationInt;
     } else if (Platform.isIOS && updateDetails.isIosUpdate) {
-      hasUpdate = updateDetails.latestVersionCode != currentCompilationInt;
+      hasUpdate = updateDetails.latestVersionCode > currentCompilationInt;
     }
 
     if (!hasUpdate) return;
