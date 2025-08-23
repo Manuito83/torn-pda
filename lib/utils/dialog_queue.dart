@@ -93,7 +93,7 @@ class DialogQueue {
     log("DialogQueue: Showing dialog '${request.dialogName}'");
 
     request.dialogFunction().then((wasShown) {
-      log("DialogQueue: Dialog '${request.dialogName}' completed successfully");
+      log("DialogQueue: Dialog '${request.dialogName}' processed successfully");
       _isDialogActive = false;
 
       // Next dialog after a small delay

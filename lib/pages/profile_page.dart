@@ -7922,7 +7922,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final propertyModel = miscApiResponse.properties;
 
     final List<PropertyV2> rentedProperties = propertyModel.where((p) {
-      if (p.status != null && p.status!.contains("rented")) {
+      if (p.status != null && p.status!.contains("rented") && p.rentedBy != null && p.rentedBy!.id == _user!.playerId) {
         return true;
       }
       return false;
