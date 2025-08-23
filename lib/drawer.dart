@@ -74,9 +74,11 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'utils/dialog_queue.dart';
 import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/memory_widget_drawer.dart';
 import 'package:torn_pda/widgets/drawer/stats_announcement_dialog.dart';
+import 'package:torn_pda/widgets/drawer/pda_update_dialog.dart';
 import 'package:torn_pda/widgets/drawer/wiki_menu.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -171,6 +173,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   StreamSubscription<Uri>? _deepLinkSubscription;
   late Stream _willPopShouldOpenDrawer;
   StreamSubscription? _willPopSubscription;
+
+  // DEBUG ## DEBUG
+  // Force all dialogs to show during development
+  static const bool _debugShowAllDialogs = kDebugMode && false;
+  // DEBUG ## DEBUG
 
   @override
   void initState() {
@@ -323,92 +330,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _initIntentReceiverOnLaunch();
     }
 
-    // Remote Config settings
+    // Initialize Remote Config after first frame
     if (!Platform.isWindows) {
-      remoteConfig.setConfigSettings(
-        RemoteConfigSettings(
-          fetchTimeout: const Duration(minutes: 30),
-          minimumFetchInterval: const Duration(minutes: kDebugMode ? 1 : 1440),
-        ),
-      );
-
-      // Remote Config defaults
-      remoteConfig.setDefaults(const {
-        "tsc_enabled": true,
-        "yata_stats_enabled": true,
-        "prefs_backup_enabled": true,
-        "tornexchange_enabled": true,
-        "use_browser_cache": "user", // user, on, off
-        "dynamic_appIcon_enabled": "false",
-        "browser_center_editing_text_field_allowed": true,
-        // Revives
-        "revive_hela": "1 million or 1 Xanax",
-        "revive_revive": "1 million or 1 Xanax",
-        "revive_nuke": "1 million or 1 Xanax",
-        "revive_uhc": "1 million or 1 Xanax",
-        "revive_wtf": "1 million or 1 Xanax",
-        // Torn API
-        "apiV2LegacyRequests": "",
-      });
-
-      // Remote Config first fetch and live update
-      _preferencesCompleter.future.whenComplete(() async {
-        await remoteConfig.fetchAndActivate();
-        _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-        _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
-        _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
-        _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
-        _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
-        _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
-        _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
-            remoteConfig.getBool("browser_center_editing_text_field_allowed");
-
-        // Revives
-        _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
-        _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
-        _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
-        _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
-        _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
-
-        // Sendbird
-        final sb = Get.find<SendbirdController>();
-        sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
-        sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
-
-        // Torn API
-        apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
-
-        // Dynamic App Icon depends on Remote Config
-        if (Platform.isIOS) {
-          _setDynamicAppIcon();
-        }
-
-        remoteConfig.onConfigUpdated.listen((event) async {
-          await remoteConfig.activate();
-
-          // Ensure all platform channel communications happen on the main thread
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
-            _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
-            _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
-            _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
-            _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
-            _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
-            _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
-                remoteConfig.getBool("browser_center_editing_text_field_allowed");
-            // Revives
-            _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
-            _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
-            _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
-            _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
-            _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
-            // Sendbird
-            sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
-            sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
-            // Torn API
-            apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
-          });
-        });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _initializeRemoteConfig();
       });
     }
 
@@ -437,11 +362,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     await _loadPreferencesAsync();
 
     if (mounted) {
+      // Start collectingdialogs for 500ms before processing
+      // This ensures proper priority ordering during app startup
+      DialogQueue.startCollectingDialogs();
+
+      // Set callback to launch WebView when all dialogs are done
+      // if the user wants webview to show in foreground
+      DialogQueue.setOnQueueEmptyCallback(() async {
+        await _checkAndLaunchWebViewIfNeeded();
+      });
+
       await _handleChangelogAndOtherDialogs();
     }
-
-    // Depending on user preferences, launch the WebView if needed
-    await _checkAndLaunchWebViewIfNeeded();
   }
 
   Future<void> _loadPreferencesAsync() async {
@@ -478,38 +410,81 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _handleChangelogAndOtherDialogs() async {
     try {
-      if (appHasBeenUpdated || lastSavedAppCompilation.isEmpty) {
-        await _showChangeLogDialog(context);
-      } else {
-        // Other dialogs we need to show when the dialog is not being displayed
-        bool dialogWasShown = false;
+      bool hasChangelog = appHasBeenUpdated || lastSavedAppCompilation.isEmpty;
 
-        // Appwidget dialog
-        if (Platform.isAndroid) {
-          if (!await Prefs().getAppwidgetExplanationShown()) {
-            if ((await pdaWidget_numberInstalled()).isNotEmpty) {
-              if (mounted) {
-                await _showAppwidgetExplanationDialog(context);
-              }
-              Prefs().setAppwidgetExplanationShown(true);
-              dialogWasShown = true;
-            }
-          }
-        }
-
-        // Stats Announcement dialog
-        if (mounted && !dialogWasShown) {
-          bool statsShown = await _showAppStatsAnnouncementDialog();
-          if (mounted && !statsShown) {
-            await _showBugsAnnouncementDialog();
-          }
-        }
-
-        // Other dialogs
-        //...
+      // Enqueue the changelog first with highest priority
+      if (hasChangelog) {
+        DialogQueue.enqueue(
+          dialogFunction: () async {
+            await _showChangeLogDialog(context);
+            return true;
+          },
+          dialogName: "Changelog",
+          context: context,
+          priority: 100,
+        );
       }
+
+      // Enqueue all other dialogs to be shown sequentially
+      // NOTE: the update-available-dialog is in remote config with priority 90!
+
+      // 1. Appwidget dialog (Android only) - Priority 300
+      if (Platform.isAndroid) {
+        if (_debugShowAllDialogs || !await Prefs().getAppwidgetExplanationShown()) {
+          if ((await pdaWidget_numberInstalled()).isNotEmpty && mounted) {
+            DialogQueue.enqueue(
+              dialogFunction: () async {
+                await _showAppwidgetExplanationDialog(context);
+                if (!_debugShowAllDialogs) {
+                  await Prefs().setAppwidgetExplanationShown(true);
+                }
+                return true;
+              },
+              dialogName: "Appwidget Explanation",
+              context: context,
+              priority: 3,
+            );
+          }
+        }
+      }
+
+      // 2. Stats Announcement dialog - Priority 200
+      if (mounted) {
+        DialogQueue.enqueue(
+          dialogFunction: () async {
+            await _showAppStatsAnnouncementDialog();
+            return true;
+          },
+          dialogName: "Stats Announcement",
+          context: context,
+          priority: 2,
+        );
+      }
+
+      // 3. Bugs Announcement dialog - Priority 100
+      if (mounted) {
+        DialogQueue.enqueue(
+          dialogFunction: () async {
+            await _showBugsAnnouncementDialog();
+            return true;
+          },
+          dialogName: "Bugs Announcement",
+          context: context,
+          priority: 1,
+        );
+      }
+
+      // 4. Add new dialogs here with appropriate priorities
+      // DialogQueue.enqueue(
+      //   dialogFunction: () async {
+      //     return await _showMyNewDialog();
+      //   },
+      //   dialogName: "My New Dialog",
+      //   context: context,
+      //   priority: 50,
+      // );
     } catch (e, s) {
-      log('Error showing initial dialogs: $e', error: e, stackTrace: s);
+      log('Error enqueuing initial dialogs: $e', error: e, stackTrace: s);
     }
   }
 
@@ -526,11 +501,113 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  Future<void> _initializeRemoteConfig() async {
+    try {
+      // Remote Config settings
+      remoteConfig.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(minutes: 30),
+          minimumFetchInterval: const Duration(minutes: kDebugMode ? 0 : 1440),
+        ),
+      );
+
+      // Remote Config defaults
+      remoteConfig.setDefaults(const {
+        "tsc_enabled": true,
+        "yata_stats_enabled": true,
+        "prefs_backup_enabled": true,
+        "tornexchange_enabled": true,
+        "use_browser_cache": "user", // user, on, off
+        "dynamic_appIcon_enabled": "false",
+        "browser_center_editing_text_field_allowed": true,
+        // Revives
+        "revive_hela": "1 million or 1 Xanax",
+        "revive_midnight": "1 million or 1 Xanax",
+        "revive_nuke": "1 million or 1 Xanax",
+        "revive_uhc": "1 million or 1 Xanax",
+        "revive_wtf": "1 million or 1 Xanax",
+        // Torn API
+        "apiV2LegacyRequests": "",
+        // PDA Update Details
+        "pda_update_details": "",
+      });
+
+      // Wait for preferences to be loaded before fetching Remote Config
+      await _preferencesCompleter.future;
+
+      // Initial fetch and activation
+      await remoteConfig.fetchAndActivate();
+      _updateRemoteConfigValues();
+
+      // Check for PDA updates after initial Remote Config fetch
+      _showPdaUpdateDialog();
+
+      // Dynamic App Icon depends on Remote Config
+      if (Platform.isIOS) {
+        _setDynamicAppIcon();
+      }
+
+      // Set up listener for live updates
+      remoteConfig.onConfigUpdated.listen((event) async {
+        try {
+          await remoteConfig.activate();
+
+          // Ensure all updates happen on the main thread
+          if (mounted) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _updateRemoteConfigValues();
+
+              // Check for PDA updates after Remote Config is updated
+              _showPdaUpdateDialog();
+            });
+          }
+        } catch (e) {
+          log('Error processing Remote Config update: $e');
+        }
+      });
+    } catch (e) {
+      log('Error initializing Remote Config: $e');
+    }
+  }
+
+  void _updateRemoteConfigValues() {
+    if (!mounted) return;
+
+    try {
+      _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
+      _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+      _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
+      _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
+      _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
+      _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
+      _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
+          remoteConfig.getBool("browser_center_editing_text_field_allowed");
+
+      // Revives
+      _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
+      _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
+      _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
+      _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
+      _settingsProvider.reviveWtfPrice = remoteConfig.getString("revive_wtf");
+
+      // Sendbird
+      final sb = Get.find<SendbirdController>();
+      sb.sendBirdPushAndroidRemoteConfigEnabled = remoteConfig.getBool("sendbird_android_notifications_enabled");
+      sb.sendBirdPushIOSRemoteConfigEnabled = remoteConfig.getBool("sendbird_ios_notifications_enabled");
+
+      // Torn API
+      apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
+
+      // PDA Update Details
+      _settingsProvider.pdaUpdateDetails = remoteConfig.getString("pda_update_details");
+    } catch (e) {
+      log('Error updating Remote Config values: $e');
+    }
+  }
+
   void _setDynamicAppIcon() {
     // Dynamic app icon
-    _preferencesCompleter.future.whenComplete(() async {
-      _settingsProvider.appIconChangeBasedOnCondition();
-    });
+    _settingsProvider.appIconChangeBasedOnCondition();
   }
 
   @override
@@ -2391,65 +2468,133 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     );
   }
 
-  Future<bool> _showAppStatsAnnouncementDialog() async {
+  Future<void> _showAppStatsAnnouncementDialog() async {
     // Version hardcoded - only allow users with version 0
-    if ((await Prefs().getAppStatsAnnouncementDialogVersion()) <= 0) {
-      // For version 1, user needs to have 24 hours of app use
-      final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
-      if (savedSeconds < 86400) return false;
+    if (!_debugShowAllDialogs && (await Prefs().getAppStatsAnnouncementDialogVersion()) > 0) return;
 
-      // If we are still in an old dialog version, get DB to see if we can are free to show it
-      try {
-        int? databaseDialogAllowed =
-            (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
-        if (databaseDialogAllowed == 1) {
-          // If we are allowed to proceed, show the dialog
-          await showDialog(
-            useRootNavigator: false,
-            context: context,
-            barrierDismissible: false,
-            builder: (context) {
-              return StatsAnnouncementDialog(themeProvider: _themeProvider);
-            },
-          );
-
-          // Then update the version to the current one
-          Prefs().setAppStatsAnnouncementDialogVersion(1);
-          return true; // Do not show more dialogs below
-        }
-      } catch (e) {
-        log("Error while checking if stats announcement dialog is allowed: $e");
-      }
-    }
-
-    return false;
-  }
-
-  Future<bool> _showBugsAnnouncementDialog() async {
+    // For version 1, user needs to have 24 hours of app use
     final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
-    // Do not show version 0 (user scripts bugs) to new users
-    // 43200 seconds = 12 hours
-    if (savedSeconds < 43200) return false;
-    if ((await Prefs().getBugsAnnouncementDialogVersion()) <= 0) {
-      try {
+    if (!_debugShowAllDialogs && savedSeconds < 86400) return;
+
+    // If we are still in an old dialog version, get DB to see if we can are free to show it
+    try {
+      int? databaseDialogAllowed =
+          (await FirebaseDatabase.instance.ref().child("announcement/version").once()).snapshot.value as int?;
+      if (_debugShowAllDialogs || databaseDialogAllowed == 1) {
+        // If we are allowed to proceed, show the dialog
         await showDialog(
           useRootNavigator: false,
           context: context,
           barrierDismissible: false,
           builder: (context) {
-            return const BugsAnnouncementDialog();
+            return StatsAnnouncementDialog(themeProvider: _themeProvider);
           },
         );
 
         // Then update the version to the current one
-        Prefs().setBugsAnnouncementDialogVersion(1);
-        return true; // Do not show more dialogs below
-      } catch (e) {
-        log("Error while checking if bugs announcement dialog is allowed: $e");
+        if (!_debugShowAllDialogs) {
+          Prefs().setAppStatsAnnouncementDialogVersion(1);
+        }
       }
+    } catch (e) {
+      log("Error while checking if stats announcement dialog is allowed: $e");
+    }
+  }
+
+  Future<void> _showBugsAnnouncementDialog() async {
+    final int savedSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+    // Do not show version 0 (user scripts bugs) to new users
+    // 43200 seconds = 12 hours
+    if (!_debugShowAllDialogs && savedSeconds < 43200) return;
+    if (!_debugShowAllDialogs && (await Prefs().getBugsAnnouncementDialogVersion()) > 0) return;
+
+    try {
+      await showDialog(
+        useRootNavigator: false,
+        context: context,
+        barrierDismissible: false,
+        builder: (context) {
+          return const BugsAnnouncementDialog();
+        },
+      );
+
+      // Then update the version to the current one
+      if (!_debugShowAllDialogs) {
+        Prefs().setBugsAnnouncementDialogVersion(1);
+      }
+    } catch (e) {
+      log("Error while checking if bugs announcement dialog is allowed: $e");
+    }
+  }
+
+  Future _showPdaUpdateDialog() async {
+    final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetails;
+    if (pdaUpdateDetailsString.isEmpty) return;
+
+    final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
+    if (updateDetails == null) return;
+
+    final currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+    final currentCompilationInt = int.tryParse(currentCompilation) ?? 0;
+    if (currentCompilationInt == 0) return;
+
+    // Check if there's an update available for the current platform
+    bool hasUpdate = false;
+    if (Platform.isAndroid && updateDetails.isAndroidUpdate) {
+      hasUpdate = updateDetails.latestVersionCode != currentCompilationInt;
+    } else if (Platform.isIOS && updateDetails.isIosUpdate) {
+      hasUpdate = updateDetails.latestVersionCode != currentCompilationInt;
     }
 
-    return false;
+    if (!hasUpdate) return;
+
+    // Check if we already showed this update version dialog
+    final lastShownVersion = await Prefs().getPdaUpdateDialogVersion();
+    if (!_debugShowAllDialogs && lastShownVersion >= updateDetails.latestVersionCode) return false;
+
+    if (mounted) {
+      DialogQueue.enqueue(
+        dialogFunction: () async {
+          try {
+            final shouldUpdate = await showDialog<bool>(
+              useRootNavigator: false,
+              context: context,
+              barrierDismissible: false,
+              builder: (context) {
+                return PdaUpdateDialog(
+                  updateDetails: updateDetails,
+                  themeProvider: _themeProvider,
+                );
+              },
+            );
+
+            // Mark this version as shown
+            if (!_debugShowAllDialogs) {
+              await Prefs().setPdaUpdateDialogVersion(updateDetails.latestVersionCode);
+            }
+
+            if (shouldUpdate == true) {
+              // Open store
+              final storeUrl = Platform.isIOS
+                  ? 'https://apps.apple.com/app/torn-pda/id1510138514'
+                  : 'https://play.google.com/store/apps/details?id=com.manuito.tornpda';
+
+              if (await canLaunchUrl(Uri.parse(storeUrl))) {
+                await launchUrl(Uri.parse(storeUrl), mode: LaunchMode.externalApplication);
+              }
+            }
+
+            return true;
+          } catch (e) {
+            log("Error while showing PDA update dialog: $e");
+            return false;
+          }
+        },
+        dialogName: "PDA Update",
+        context: context,
+        priority: 90,
+      );
+    }
   }
 
   void _callSectionFromOutside(int section) {

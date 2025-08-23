@@ -16,6 +16,7 @@ class Prefs {
   final String _kAppVersion = "pda_appVersion";
   final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
   final String _kBugsAnnouncementDialogVersion = "pda_bugsAnnouncementDialogVersion";
+  final String _kPdaUpdateDialogVersion = "pda_updateDialogVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
 
@@ -491,6 +492,14 @@ class Prefs {
 
   Future setBugsAnnouncementDialogVersion(int value) async {
     await _asyncPrefs.setInt(_kBugsAnnouncementDialogVersion, value);
+  }
+
+  Future<int> getPdaUpdateDialogVersion() async {
+    return await _asyncPrefs.getInt(_kPdaUpdateDialogVersion) ?? 0;
+  }
+
+  Future setPdaUpdateDialogVersion(int value) async {
+    await _asyncPrefs.setInt(_kPdaUpdateDialogVersion, value);
   }
 
   /// ----------------------------
