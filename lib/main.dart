@@ -70,14 +70,13 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
-import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.8.4';
-const String androidCompilation = '572';
-const String iosCompilation = '572';
+const String appVersion = '3.8.5';
+const String androidCompilation = '573';
+const String iosCompilation = '573';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
@@ -405,15 +404,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   late Widget _mainBrowser;
 
-  final upgrader = Upgrader(
-    debugDisplayAlways: kDebugMode ? false : false, // True for debugging if necessary
-    willDisplayUpgrade: ({required display, installedVersion, versionInfo}) {
-      if (display) {
-        log(versionInfo.toString());
-      }
-    },
-  );
-
   @override
   void initState() {
     super.initState();
@@ -490,10 +480,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final homeDrawer = Navigator(
       onGenerateRoute: (_) {
         return MaterialPageRoute(
-          builder: (BuildContext _) => UpgradeAlert(
-            upgrader: upgrader,
-            child: DrawerPage(),
-          ),
+          builder: (BuildContext _) => DrawerPage(),
         );
       },
     );
