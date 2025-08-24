@@ -2529,10 +2529,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future _showPdaUpdateDialog() async {
     final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetails;
-    if (pdaUpdateDetailsString.isEmpty) return;
 
     final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
-    if (updateDetails == null) return;
+    if (updateDetails == null || updateDetails.latestVersionCode == 0) return;
 
     final currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
     final currentCompilationInt = int.tryParse(currentCompilation) ?? 0;
@@ -2550,7 +2549,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Check if we already showed this update version dialog
     final lastShownVersion = await Prefs().getPdaUpdateDialogVersion();
-    if (!_debugShowAllDialogs && lastShownVersion >= updateDetails.latestVersionCode) return false;
+    if (!_debugShowAllDialogs && lastShownVersion == updateDetails.latestVersionCode) return false;
 
     if (mounted) {
       DialogQueue.enqueue(
