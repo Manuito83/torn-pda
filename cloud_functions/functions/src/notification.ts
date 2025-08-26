@@ -1,5 +1,5 @@
 import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
+import { logger } from "firebase-functions/v2";
 
 // Using non-ESM string-strip-html@8.5.0
 import { stripHtml } from "string-strip-html";
@@ -62,7 +62,7 @@ export function sendEnergyNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR ENERGY \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR ENERGY \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -110,7 +110,7 @@ export function sendNerveNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR NERVE \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR NERVE \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -158,7 +158,7 @@ export function sendLifeNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR LIFE \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR LIFE \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -186,7 +186,7 @@ export function logTravelArrival(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR TRAVEL LOG\n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR TRAVEL LOG\n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -312,7 +312,7 @@ export function sendHospitalNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR HOSPITAL \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR HOSPITAL \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -360,7 +360,7 @@ export function sendDrugsNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR DRUGS \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR DRUGS \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -408,7 +408,7 @@ export function sendMedicalNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR MEDICAL \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR MEDICAL \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -456,7 +456,7 @@ export function sendBoosterNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR BOOSTER \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR BOOSTER \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -504,7 +504,7 @@ export function sendRacingNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR RACING \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR RACING \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -621,7 +621,7 @@ export function sendMessagesNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR MESSAGES \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR MESSAGES \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -922,7 +922,7 @@ export function sendEventsNotification(userStats: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR EVENTS \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR EVENTS \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -947,7 +947,7 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
       console.log("Only current country alerts: " + subscriber.foreignRestockNotificationOnlyCurrentCountry);
       */
 
-      let databaseCountryName = dbStocks[userCodeName].country;
+      const databaseCountryName = dbStocks[userCodeName].country;
       let playerDestination = userStats.travel.destination;
 
       // If the user has activated the option in Torn PDA only to be notified if the restock is happening
@@ -1012,7 +1012,7 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR RESTOCKS \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR RESTOCKS \n${subscriber.uid} \n${error}`);
   }
 
   return result;
@@ -1035,7 +1035,7 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
       const match = alert.match(regexp);
 
       if (match === null) {
-        functions.logger.warn(`Stock Market regex error \n${subscriber.uid}`);
+        logger.warn(`Stock Market regex error \n${subscriber.uid}`);
         continue;
       }
 
@@ -1050,7 +1050,7 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
           if (alertHigh !== "n") {
             alertHigh = +alertHigh; // Parse to int
             if (value["current_price"] > alertHigh) {
-              stocksMarketUpdates.push(`${acronym} above \$${alertHigh}!`);
+              stocksMarketUpdates.push(`${acronym} above $${alertHigh}!`);
               alertHigh = "n";
               updates++;
             }
@@ -1059,7 +1059,7 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
           if (alertLow !== "n") {
             alertLow = +alertLow; // Parse to int
             if (value["current_price"] < alertLow) {
-              stocksMarketUpdates.push(`${acronym} below \$${alertLow}!`);
+              stocksMarketUpdates.push(`${acronym} below $${alertLow}!`);
               alertLow = "n";
               updates++;
             }
@@ -1111,7 +1111,7 @@ export function sendStockMarketNotification(tornStocks: any, subscriber: any) {
     }
 
   } catch (error) {
-    functions.logger.warn(`ERROR STOCK MARKET \n${subscriber.uid} \n${error}`);
+    logger.warn(`ERROR STOCK MARKET \n${subscriber.uid} \n${error}`);
   }
 
   return result;

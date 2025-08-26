@@ -1,6 +1,6 @@
 // la_apns_helper.ts
 
-import * as functions from "firebase-functions";
+import { logger } from "firebase-functions/v2";
 import * as apn from "@parse/node-apn";
 
 const apnsConfig = require("../key/apns_key");
@@ -64,7 +64,7 @@ export async function sendTravelPushToStart(
   notification.payload = {};
 
   try {
-    functions.logger.info(
+    logger.info(
       `Sending LA push via @parse/node-apn to token: ${pushToStartToken.substring(0, 10)}...`,
       { payload: notification.payload }
     );
@@ -72,7 +72,7 @@ export async function sendTravelPushToStart(
     const result = await apnProvider.send(notification, pushToStartToken);
 
     if (result.failed.length > 0) {
-      functions.logger.error(
+      logger.error(
         `@parse/node-apn - APNs push failed`,
         result.failed[0].response
       );
@@ -80,13 +80,13 @@ export async function sendTravelPushToStart(
     }
 
     if (result.sent.length > 0) {
-      functions.logger.info(`@parse/node-apn - Successfully sent push`);
+      logger.info(`@parse/node-apn - Successfully sent push`);
       return true;
     }
 
     return false;
   } catch (error) {
-    functions.logger.error("@parse/node-apn - An unexpected error occurred:", error);
+    logger.error("@parse/node-apn - An unexpected error occurred:", error);
     return false;
   }
 }

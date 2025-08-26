@@ -1,35 +1,38 @@
-import * as functions from "firebase-functions";
+import { onSchedule } from "firebase-functions/v2/scheduler";
+import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { FactionModel, Attack, State } from "./interfaces/faction_interface";
 import { sendNotificationToUser } from "./notification";
 const fetch = require("node-fetch");
 
-export const retalsGroup = {
+export const evaluateRetals = onSchedule(
+    {
+        schedule: "*/2 * * * *",
+        region: "us-east4",
+        memory: "512MiB",
+        timeoutSeconds: 120,
+    },
+    async () => {
+        const promisesGlobal: Promise<any>[] = [];
 
-    evaluateRetals: functions.region('us-east4').pubsub
-        .schedule("*/2 * * * *")
-        .onRun(async () => {
-            const promisesGlobal: Promise<any>[] = [];
+        // Get factions that have at least one member signed-up for retals
+        const firebaseAdmin = require("firebase-admin");
+        const db = firebaseAdmin.database();
+        const refFactions = db.ref("retals/factions");
 
-            // Get factions that have at least one member signed-up for retals
-            const firebaseAdmin = require("firebase-admin");
-            const db = firebaseAdmin.database();
-            const refFactions = db.ref("retals/factions");
+        let factionsList;
+        await refFactions.once("value", async function (snapshot) {
+            factionsList = snapshot.val() || "";
+        });
 
-            let factionsList;
-            await refFactions.once("value", async function (snapshot) {
-                factionsList = snapshot.val() || "";
-            });
+        // Get recent attacks for each faction
+        for (const id in factionsList) {
+            promisesGlobal.push(checkFaction(id, factionsList, db, refFactions));
+        }
 
-
-            // Get recent attacks for each faction
-            for (const id in factionsList) {
-                promisesGlobal.push(checkFaction(id, factionsList, db, refFactions));
-            }
-
-            await Promise.all(promisesGlobal);
-        }),
-}
+        await Promise.all(promisesGlobal);
+    }
+);
 
 async function checkFaction(id: any, factionsList: any, db: any, refFactions: any) {
     const promisesFaction: Promise<any>[] = [];
@@ -119,7 +122,7 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
                                     sound: "sword_clash.aiff"
                                 })
                             );
-                        } catch (e) {
+                        } catch {
                             // Entity not found?
                         }
                     }
@@ -423,12 +426,12 @@ async function checkFaction(id: any, factionsList: any, db: any, refFactions: an
             );
         }
 
-        functions.logger.info(`Retals faction ${ownFactionId}: ${subscribers.length} players`);
+        logger.info(`Retals faction ${ownFactionId}: ${subscribers.length} players`);
         await Promise.all(promisesFaction);
 
     } catch (e) {
 
-        functions.logger.warn(`Subscriber ${lastSubscriber}\nERROR RETALS:\n${e}`);
+        logger.warn(`Subscriber ${lastSubscriber}\nERROR RETALS:\n${e}`);
         if (e.toString().includes("Requested entity was not found")) {
             /*
             await admin
