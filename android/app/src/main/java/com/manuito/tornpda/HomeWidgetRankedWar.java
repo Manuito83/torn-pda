@@ -80,7 +80,7 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
     }
 
     private void setupClickListeners(RemoteViews view, Context context) {
-        PendingIntent reloadIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context, Uri.parse("pdaWidget://reload_clicked"));
+        PendingIntent reloadIntent = HomeWidgetBackgroundIntent.INSTANCE.getBroadcast(context, Uri.parse("pdaWidget://reload_clicked"), "Reloading...");
         view.setOnClickPendingIntent(R.id.rw_reload_box, reloadIntent);
         Intent openAppIntent = new Intent(context, MainActivity.class);
         openAppIntent.setData(Uri.parse("pdaWidget://open:app"));

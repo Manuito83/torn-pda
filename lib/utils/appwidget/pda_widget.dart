@@ -324,7 +324,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
 
   // --- DEBUG: RANKED WAR WIDGET ---
   if (kDebugMode) {
-    //factionIdForCheck = 1234;
+    //factionIdForCheck = 12345;
   }
   // --- END DEBUG ---
 
