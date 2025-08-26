@@ -60,14 +60,7 @@ class OwnProfileMisc {
     return OwnProfileMisc(
       education: EducationV2.fromJson(json["education"] ?? {}),
       properties: json['properties'] != null && json['properties'] is List
-          ? (() {
-              try {
-                return List<PropertyV2>.from(json['properties'].map((x) => PropertyV2.fromJson(x)));
-              } catch (e) {
-                log('Error parsing properties: $e');
-                return <PropertyV2>[];
-              }
-            })()
+          ? List<PropertyV2>.from(json['properties'].map((x) => PropertyV2.fromJson(x)))
           : [],
       workStats: WorkStats.fromJson(json),
       battleStats: BattleStats.fromJson(json),
@@ -127,7 +120,9 @@ class Bazaar {
     this.uid,
   });
 
-  factory Bazaar.fromJson(Map<String, dynamic> json) => Bazaar(
+  factory Bazaar.fromJson(Map<String, dynamic> json) {
+    try {
+      return Bazaar(
         id: json["ID"],
         name: json["name"],
         type: json["type"],
@@ -136,6 +131,11 @@ class Bazaar {
         marketPrice: json["market_price"],
         uid: json["UID"],
       );
+    } catch (e) {
+      log('Error parsing Bazaar: $e');
+      return Bazaar();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "ID": id,
@@ -157,10 +157,17 @@ class CityBank {
     this.timeLeft,
   });
 
-  factory CityBank.fromJson(Map<String, dynamic> json) => CityBank(
+  factory CityBank.fromJson(Map<String, dynamic> json) {
+    try {
+      return CityBank(
         amount: json["amount"],
         timeLeft: json["time_left"],
       );
+    } catch (e) {
+      log('Error parsing CityBank: $e');
+      return CityBank();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "amount": amount,
@@ -187,7 +194,9 @@ class Itemmarket {
     this.item,
   });
 
-  factory Itemmarket.fromJson(Map<String, dynamic> json) => Itemmarket(
+  factory Itemmarket.fromJson(Map<String, dynamic> json) {
+    try {
+      return Itemmarket(
         id: json["id"],
         price: json["price"],
         averagePrice: json["average_price"],
@@ -196,6 +205,11 @@ class Itemmarket {
         available: json["available"],
         item: json["item"] == null ? null : Item.fromJson(json["item"]),
       );
+    } catch (e) {
+      log('Error parsing Itemmarket: $e');
+      return Itemmarket();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -227,7 +241,9 @@ class Item {
     required this.bonuses,
   });
 
-  factory Item.fromJson(Map<String, dynamic> json) => Item(
+  factory Item.fromJson(Map<String, dynamic> json) {
+    try {
+      return Item(
         id: json["id"],
         name: json["name"],
         type: json["type"],
@@ -236,6 +252,11 @@ class Item {
         rarity: json["rarity"],
         bonuses: (json["bonuses"] as List<dynamic>?) ?? [],
       );
+    } catch (e) {
+      log('Error parsing Item: $e');
+      return Item(bonuses: []);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -321,10 +342,20 @@ class CompanyJobpoints {
     required this.points,
   });
 
-  factory CompanyJobpoints.fromJson(Map<String, dynamic> json) => CompanyJobpoints(
+  factory CompanyJobpoints.fromJson(Map<String, dynamic> json) {
+    try {
+      return CompanyJobpoints(
         company: CompanyInfo.fromJson(json['company']),
         points: json['points'] ?? 0,
       );
+    } catch (e) {
+      log('Error parsing CompanyJobpoints: $e');
+      return CompanyJobpoints(
+        company: CompanyInfo(id: 0, name: ''),
+        points: 0,
+      );
+    }
+  }
 
   // TODO: Remove when legacy API is discontinued
   factory CompanyJobpoints.legacy(int id, String name, int jobpoints) => CompanyJobpoints(
@@ -347,10 +378,17 @@ class CompanyInfo {
     required this.name,
   });
 
-  factory CompanyInfo.fromJson(Map<String, dynamic> json) => CompanyInfo(
+  factory CompanyInfo.fromJson(Map<String, dynamic> json) {
+    try {
+      return CompanyInfo(
         id: json['id'],
         name: json['name'],
       );
+    } catch (e) {
+      log('Error parsing CompanyInfo: $e');
+      return CompanyInfo(id: 0, name: '');
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -368,10 +406,17 @@ class Company {
     this.jobpoints,
   });
 
-  factory Company.fromJson(Map<String, dynamic> json) => Company(
+  factory Company.fromJson(Map<String, dynamic> json) {
+    try {
+      return Company(
         name: json["name"],
         jobpoints: json["jobpoints"],
       );
+    } catch (e) {
+      log('Error parsing Company: $e');
+      return Company();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "name": name,
@@ -396,7 +441,9 @@ class Jobs {
     this.grocer,
   });
 
-  factory Jobs.fromJson(Map<String, dynamic> json) => Jobs(
+  factory Jobs.fromJson(Map<String, dynamic> json) {
+    try {
+      return Jobs(
         army: json["army"],
         medical: json["medical"],
         casino: json["casino"],
@@ -404,6 +451,11 @@ class Jobs {
         law: json["law"],
         grocer: json["grocer"],
       );
+    } catch (e) {
+      log('Error parsing Jobs: $e');
+      return Jobs();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "army": army,
@@ -420,8 +472,14 @@ class Metadata {
 
   Metadata({this.links});
 
-  factory Metadata.fromJson(Map<String, dynamic> json) =>
-      Metadata(links: json["links"] == null ? null : Links.fromJson(json["links"]));
+  factory Metadata.fromJson(Map<String, dynamic> json) {
+    try {
+      return Metadata(links: json["links"] == null ? null : Links.fromJson(json["links"]));
+    } catch (e) {
+      log('Error parsing Metadata: $e');
+      return Metadata();
+    }
+  }
   Map<String, dynamic> toJson() => {"links": links?.toJson()};
 }
 
@@ -434,10 +492,17 @@ class Links {
     this.next,
   });
 
-  factory Links.fromJson(Map<String, dynamic> json) => Links(
+  factory Links.fromJson(Map<String, dynamic> json) {
+    try {
+      return Links(
         prev: json["prev"],
         next: json["next"],
       );
+    } catch (e) {
+      log('Error parsing Links: $e');
+      return Links();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "prev": prev,
@@ -577,13 +642,20 @@ class BattleStat {
     this.modifiers,
   });
 
-  factory BattleStat.fromJson(Map<String, dynamic> json) => BattleStat(
+  factory BattleStat.fromJson(Map<String, dynamic> json) {
+    try {
+      return BattleStat(
         value: json['value'],
         modifier: json['modifier'],
         modifiers: json['modifiers'] != null
             ? List<BattleStatModifier>.from(json['modifiers'].map((x) => BattleStatModifier.fromJson(x)))
             : null,
       );
+    } catch (e) {
+      log('Error parsing BattleStat: $e');
+      return BattleStat(value: 0, modifier: 0);
+    }
+  }
 
   // TODO: Remove when legacy API is discontinued
   factory BattleStat.legacy(int value, int modifier) => BattleStat(
@@ -610,11 +682,18 @@ class BattleStatModifier {
     required this.type,
   });
 
-  factory BattleStatModifier.fromJson(Map<String, dynamic> json) => BattleStatModifier(
+  factory BattleStatModifier.fromJson(Map<String, dynamic> json) {
+    try {
+      return BattleStatModifier(
         effect: json['effect'] ?? '',
         value: json['value'] != null ? json['value'].toDouble() : 0.0,
         type: json['type'] ?? '',
       );
+    } catch (e) {
+      log('Error parsing BattleStatModifier: $e');
+      return BattleStatModifier(effect: '', value: 0.0, type: '');
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "effect": effect,
@@ -722,10 +801,17 @@ class CityBankV2 {
     this.until = 0,
   });
 
-  factory CityBankV2.fromJson(Map<String, dynamic> json) => CityBankV2(
+  factory CityBankV2.fromJson(Map<String, dynamic> json) {
+    try {
+      return CityBankV2(
         amount: json['amount'] ?? 0,
         until: json['until'] ?? 0,
       );
+    } catch (e) {
+      log('Error parsing CityBankV2: $e');
+      return CityBankV2();
+    }
+  }
 
   // TODO: Remove when legacy API is discontinued
   factory CityBankV2.legacy(Map<String, dynamic> json) => CityBankV2(
@@ -748,10 +834,17 @@ class FactionMoney {
     required this.points,
   });
 
-  factory FactionMoney.fromJson(Map<String, dynamic> json) => FactionMoney(
+  factory FactionMoney.fromJson(Map<String, dynamic> json) {
+    try {
+      return FactionMoney(
         money: json['money'] ?? 0,
         points: json['points'] ?? 0,
       );
+    } catch (e) {
+      log('Error parsing FactionMoney: $e');
+      return FactionMoney(money: 0, points: 0);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "money": money,
@@ -837,11 +930,18 @@ class Skill {
     required this.level,
   });
 
-  factory Skill.fromJson(Map<String, dynamic> json) => Skill(
+  factory Skill.fromJson(Map<String, dynamic> json) {
+    try {
+      return Skill(
         slug: json['slug'] ?? '',
         name: json['name'] ?? '',
         level: (json['level'] ?? 0).toDouble(),
       );
+    } catch (e) {
+      log('Error parsing Skill: $e');
+      return Skill(slug: '', name: '', level: 0.0);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "slug": slug,
