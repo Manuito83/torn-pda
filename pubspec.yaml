@@ -33,7 +33,7 @@ dependencies:
   cloud_firestore: 5.6.11
   cloud_functions: 5.6.1
   collection: 1.19.1
-  connectivity_plus: 6.1.4
+  connectivity_plus: 6.1.5
   cookie_jar: 4.0.8
   crypto: 3.0.6
   csv: 6.0.0
@@ -79,11 +79,12 @@ dependencies:
       ref: 8ecac9ede8c4a06a9409848da339f181169300db
   html: 0.15.6
   http: 1.4.0
-  json_annotation: 4.9.0 # Used by swagger_dart_code_generator
-  lints: 6.0.0
   ## flutter pub run import_sorter:main
   import_sorter: 4.6.0
+  internet_connection_checker_plus: 2.7.2
   intl: 0.20.2
+  json_annotation: 4.9.0 # Used by swagger_dart_code_generator
+  lints: 6.0.0
   flutter_material_design_icons: 1.1.7447
   path_provider: 2.1.5
   ## Bug submitted for v4.2.5 (plane icon out of place)

@@ -19,6 +19,7 @@ class Prefs {
   final String _kPdaUpdateDialogVersion = "pda_updateDialogVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  final String _kPdaConnectivityCheckRC = "pda_connectivityCheckRC";
 
   final String _kLastKnownFaction = "pfa_lastKnownFaction";
   final String _kLastKnownCompany = "pfa_lastKnownCompany";
@@ -522,6 +523,17 @@ class Prefs {
 
   Future setLastAppUse(int value) async {
     return await _asyncPrefs.setInt(_kLastAppUse, value);
+  }
+
+  /// ----------------------------
+  /// Methods for connectivity check in Drawer (RC)
+  /// ----------------------------
+  Future<bool> getPdaConnectivityCheckRC() async {
+    return await _asyncPrefs.getBool(_kPdaConnectivityCheckRC) ?? false;
+  }
+
+  Future setPdaConnectivityCheck(bool value) async {
+    return await _asyncPrefs.setBool(_kPdaConnectivityCheckRC, value);
   }
 
   /// ----------------------------

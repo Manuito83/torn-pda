@@ -66,6 +66,7 @@ import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/changelog.dart';
+import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
@@ -173,6 +174,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   StreamSubscription<Uri>? _deepLinkSubscription;
   late Stream _willPopShouldOpenDrawer;
   StreamSubscription? _willPopSubscription;
+
+  // Connectivity delay tracking
+  bool _hasWaitedInitialDelay = false;
 
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
@@ -356,9 +360,33 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         Prefs().setBringBrowserForwardOnStart(false);
       }
     });
+
+    // Listen to connectivity changes to update UI on start up
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      ConnectivityHandler.instance.hasConnection.addListener(() {
+        if (mounted) {
+          setState(() {});
+        }
+      });
+
+      // Set an initial delay flag after 1 second
+      // so that we don't show the connectivity UI right away
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) {
+          setState(() {
+            _hasWaitedInitialDelay = true;
+          });
+        }
+      });
+    });
   }
 
   Future<void> _loadPreferencesAndDialogs() async {
+    // Wait for initial connectivity check to complete
+    if (ConnectivityHandler.instance.connectivityCheckEnabled) {
+      await _ensureConnectivity();
+    }
+
     await _loadPreferencesAsync();
 
     if (mounted) {
@@ -373,6 +401,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       });
 
       await _handleChangelogAndOtherDialogs();
+    }
+  }
+
+  Future<void> _ensureConnectivity() async {
+    await ConnectivityHandler.instance.initializationFuture;
+    if (!ConnectivityHandler.instance.hasConnection.value) {
+      try {
+        await ConnectivityHandler.instance.waitForInternetConnection(
+          timeout: const Duration(seconds: 10),
+        );
+      } catch (e) {
+        log(name: "CONNECTIVITY DRAWER", 'Connectivity time out or errored, continuing...');
+      }
     }
   }
 
@@ -530,6 +571,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "apiV2LegacyRequests": "",
         // PDA Update Details
         "pda_update_details": "",
+        // Connectivity check
+        "pda_connectivity_check": false
       });
 
       // Wait for preferences to be loaded before fetching Remote Config
@@ -600,6 +643,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // PDA Update Details
       _settingsProvider.pdaUpdateDetails = remoteConfig.getString("pda_update_details");
+
+      // Connectivity check
+      Prefs().setPdaConnectivityCheck(remoteConfig.getBool("pda_connectivity_check"));
     } catch (e) {
       log('Error updating Remote Config values: $e');
     }
@@ -1684,6 +1730,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     return FutureBuilder(
       future: _finishedWithPreferencesAndDialogs,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        // While the Future is running (loading preferences AND waiting for connectivity)
+        if (snapshot.connectionState != ConnectionState.done) {
+          // Always show default loading first, then check connectivity with delay
+          return SafeArea(
+            child: Scaffold(
+              body: Container(
+                color: _themeProvider!.canvas,
+                child: Center(
+                  child: _buildConnectivityUI(),
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Future completed - show main app
         if (snapshot.connectionState == ConnectionState.done) {
           // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
           // safe area will be black
@@ -1749,6 +1811,59 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               ),
             ),
           );
+        }
+      },
+    );
+  }
+
+  Widget _buildConnectivityUI() {
+    // During the first second, show basic container
+    if (!_hasWaitedInitialDelay) {
+      return const SizedBox.shrink();
+    }
+
+    // After 1 second, check connectivity status using ValueListenableBuilder
+    return ValueListenableBuilder<bool>(
+      valueListenable: ConnectivityHandler.instance.hasConnection,
+      builder: (context, isConnected, child) {
+        if (!isConnected) {
+          // No connectivity after 1 second - show the message
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              const Text(
+                '📡',
+                style: TextStyle(fontSize: 40),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 8),
+                  Text(
+                    'No connection found, please wait!',
+                    style: TextStyle(
+                      color: _themeProvider!.mainText,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Torn PDA needs Internet access to continue',
+                style: TextStyle(
+                  color: _themeProvider!.mainText.withValues(alpha: 0.7),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          );
+        } else {
+          // Connectivity is fine, show normal loading
+          return const SizedBox.shrink();
         }
       },
     );
@@ -2187,7 +2302,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // User Provider was started in Main
     // If key is empty, redirect to the Settings page.
-    if (!_userProvider!.basic!.userApiKeyValid!) {
+    if (_userProvider?.basic?.userApiKeyValid != null && !_userProvider!.basic!.userApiKeyValid!) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
