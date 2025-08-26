@@ -12,6 +12,11 @@ export const onPlayerAdded = onDocumentCreated(
     const promises: Promise<any>[] = [];
     const beforeStat = event.data?.data();
 
+    if (!beforeStat) {
+      console.log("Document had no data. Exiting.");
+      return;
+    }
+
     promises.push(manageStats("totalUsers", 1));
 
     if (beforeStat?.platform === "ios") {
@@ -36,6 +41,11 @@ export const onPlayerDeleted = onDocumentDeleted(
   async (event) => {
     const promises: Promise<any>[] = [];
     const beforeStat = event.data?.data();
+
+    if (!beforeStat) {
+      console.log("Document had no data. Exiting.");
+      return;
+    }
 
     promises.push(manageStats("totalUsers", -1));
 
@@ -140,6 +150,11 @@ export const onPlayerUpdated = onDocumentUpdated({
   const promises: Promise<any>[] = [];
   const beforeStat = event.data?.before?.data();
   const afterStat = event.data?.after?.data();
+
+  if (!beforeStat || !afterStat) {
+    console.log("Document had no data. Exiting.");
+    return;
+  }
 
   if (beforeStat.active !== afterStat.active)
     promises.push(manageStats("activeUsers", afterStat.active ? 1 : -1));

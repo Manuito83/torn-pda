@@ -1,4 +1,13 @@
+// index.ts
+
 import * as admin from "firebase-admin";
+
+const serviceAccount = require("../key/serviceAccountKey.json");
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://torn-pda-manuito.firebaseio.com",
+});
+
 import {
   checkIOS,
   checkAndroidLow,
@@ -12,7 +21,6 @@ import { deactivateStale, deleteStale } from "./stale_users";
 import { sendTravelNotifications } from "./travel_check";
 import { sendRefillNotifications } from "./refills";
 import { evaluateRetals } from "./retals";
-import { onPlayerAdded, onPlayerDeleted, onPlayerUpdated } from "./players";
 import { checkStocks, fillRestocks, oneTimeClean, deleteOldStocks } from "./foreign_stocks";
 import { sendLootRangersNotification } from "./loot_rangers";
 import { sendAssistMessage } from "./faction_assist";
@@ -21,16 +29,6 @@ import { sendTroubleshootingAutoNotification } from "./troubleshooting_notificat
 import { sendForumsSubscription } from "./forums";
 import { registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
 
-//import { helperGroup } from "./helpers";
-
-const serviceAccount = require("../key/serviceAccountKey.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://torn-pda-manuito.firebaseio.com",
-});
-
-// Export individual alert functions instead of groups
 export const alerts = {
   checkIOS: checkIOS,
   checkAndroidLow: checkAndroidLow,
@@ -65,11 +63,7 @@ export const retals = {
   evaluateRetals: evaluateRetals
 };
 
-export const players = {
-  onPlayerAdded: onPlayerAdded,
-  onPlayerDeleted: onPlayerDeleted,
-  onPlayerUpdated: onPlayerUpdated
-};
+export * from "./players";
 
 export const stocks = {
   checkStocks: checkStocks,
@@ -81,12 +75,11 @@ export const stocks = {
 export const lootRangers = {
   sendLootRangersNotification: sendLootRangersNotification
 };
-// Faction Assist group
+
 export const factionAssist = {
   sendAssistMessage: sendAssistMessage
 };
 
-// Prefs Backup group
 export const prefsBackup = {
   saveUserPrefs: saveUserPrefs,
   getUserPrefs: getUserPrefs,
@@ -95,12 +88,10 @@ export const prefsBackup = {
   getImportShare: getImportShare
 };
 
-// Troubleshooting group
 export const troubleshooting = {
   sendTroubleshootingAutoNotification: sendTroubleshootingAutoNotification
 };
 
-// Forums group  
 export const forums = {
   sendForumsSubscription: sendForumsSubscription
 };
@@ -109,5 +100,3 @@ export const liveActivities = {
   registerPushToStartToken: registerPushToStartToken,
   sendTestTravelPushToManuito: sendTestTravelPushToManuito,
 };
-
-//export const helper = helperGroup;
