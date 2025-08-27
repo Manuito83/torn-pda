@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class PropertyV2 {
   final int? id;
   final Owner? owner;
@@ -40,24 +42,29 @@ class PropertyV2 {
   });
 
   factory PropertyV2.fromJson(Map<String, dynamic> json) {
-    return PropertyV2(
-      id: json["id"],
-      owner: json["owner"] != null ? Owner.fromJson(json["owner"]) : null,
-      property: json["property"] != null ? PropertyInfo.fromJson(json["property"]) : null,
-      happy: json["happy"],
-      upkeep: json["upkeep"] != null ? Upkeep.fromJson(json["upkeep"]) : null,
-      marketPrice: json["market_price"],
-      modifications: json["modifications"] != null ? List<String>.from(json["modifications"]) : null,
-      staff: json["staff"] != null ? List<StaffMember>.from(json["staff"].map((x) => StaffMember.fromJson(x))) : null,
-      usedBy: json["used_by"] != null ? List<UsedBy>.from(json["used_by"].map((x) => UsedBy.fromJson(x))) : null,
-      status: json["status"],
-      cost: json["cost"],
-      costPerDay: json["cost_per_day"],
-      rentalPeriod: json["rental_period"],
-      rentalPeriodRemaining: json["rental_period_remaining"],
-      rentedBy: json["rented_by"] != null ? RentedBy.fromJson(json["rented_by"]) : null,
-      renterAsked: json["renter_asked"] != null ? RenterAsked.fromJson(json["renter_asked"]) : null,
-    );
+    try {
+      return PropertyV2(
+        id: json["id"],
+        owner: json["owner"] != null ? Owner.fromJson(json["owner"]) : null,
+        property: json["property"] != null ? PropertyInfo.fromJson(json["property"]) : null,
+        happy: json["happy"],
+        upkeep: json["upkeep"] != null ? Upkeep.fromJson(json["upkeep"]) : null,
+        marketPrice: json["market_price"],
+        modifications: json["modifications"] != null ? List<String>.from(json["modifications"]) : null,
+        staff: json["staff"] != null ? List<StaffMember>.from(json["staff"].map((x) => StaffMember.fromJson(x))) : null,
+        usedBy: json["used_by"] != null ? List<UsedBy>.from(json["used_by"].map((x) => UsedBy.fromJson(x))) : null,
+        status: json["status"],
+        cost: json["cost"],
+        costPerDay: json["cost_per_day"],
+        rentalPeriod: json["rental_period"],
+        rentalPeriodRemaining: json["rental_period_remaining"],
+        rentedBy: json["rented_by"] != null ? RentedBy.fromJson(json["rented_by"]) : null,
+        renterAsked: json["renter_asked"] != null ? RenterAsked.fromJson(json["renter_asked"]) : null,
+      );
+    } catch (e) {
+      log('Error parsing PropertyV2: $e');
+      return PropertyV2(); // Con valores por defecto null
+    }
   }
 
   Map<String, dynamic> toJson() => {

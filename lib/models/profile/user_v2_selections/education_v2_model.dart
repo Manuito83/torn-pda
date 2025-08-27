@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 class EducationV2 {
   final List<int> complete;
   final CurrentEducation? current;
@@ -7,10 +9,17 @@ class EducationV2 {
     this.current,
   });
 
-  factory EducationV2.fromJson(Map<String, dynamic> json) => EducationV2(
+  factory EducationV2.fromJson(Map<String, dynamic> json) {
+    try {
+      return EducationV2(
         complete: List<int>.from((json['complete'] ?? []).map((x) => x)),
         current: json['current'] != null ? CurrentEducation.fromJson(json['current']) : null,
       );
+    } catch (e) {
+      log('Error parsing EducationV2: $e');
+      return EducationV2(complete: <int>[], current: null);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "complete": List<dynamic>.from(complete.map((x) => x)),

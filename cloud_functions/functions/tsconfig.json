@@ -8,7 +8,8 @@
     "target": "es2017",
     "esModuleInterop": true,
     "lib": [
-      "esnext.asynciterable"
+      "es2021",
+      "dom"
     ]
   },
   "compileOnSave": true,

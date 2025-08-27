@@ -1,7 +1,7 @@
 // la_travel_handler.ts
 
 import * as admin from "firebase-admin";
-import * as functions from "firebase-functions";
+import { logger } from "firebase-functions/v2";
 import { FieldValue } from "firebase-admin/firestore";
 import { sendTravelPushToStart } from "./la_apns_helper";
 
@@ -29,7 +29,7 @@ export async function handleTravelLiveActivity(
   if (!travel || !travel.destination || travel.time_left <= 0) {
     // ... and RTDB has active LA, we remove it
     if (activeLA) {
-      //functions.logger.info(`API travel ended for user ${uid}. Cleaning up RTDB state.`);
+      //logger.info(`API travel ended for user ${uid}. Cleaning up RTDB state.`);
       await laStatusRef.remove();
     }
     return;
@@ -43,7 +43,7 @@ export async function handleTravelLiveActivity(
     // from the one we last started an LA for. This prevents duplicate pushes
     if (travel.timestamp !== lastLAArrivalTimestamp) {
       /*
-      functions.logger.info(
+      logger.info(
         `New travel detected for user ${uid}. (API: ${travel.timestamp}, RTDB: ${lastLAArrivalTimestamp}). Starting Live Activity.`
       );
       */
@@ -133,13 +133,13 @@ export async function handleTravelLiveActivity(
       }
     } else {
       /*
-      functions.logger.info(
+      logger.info(
         `Travel for user ${uid} already has an active LA in RTDB (Timestamp: ${lastLAArrivalTimestamp}). No action taken.`
       );
       */
     }
   } catch (error) {
-    functions.logger.error(`ERROR in handleTravelLiveActivity for user ${subscriber.uid}:`, error);
+    logger.error(`ERROR in handleTravelLiveActivity for user ${subscriber.uid}:`, error);
   }
 }
 

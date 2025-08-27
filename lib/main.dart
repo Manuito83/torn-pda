@@ -68,6 +68,7 @@ import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -75,8 +76,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.8.5';
-const String androidCompilation = '573';
-const String iosCompilation = '573';
+const String androidCompilation = '574';
+const String iosCompilation = '574';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
@@ -360,6 +361,14 @@ Future<void> main() async {
       android: const AudioContextAndroid(audioFocus: AndroidAudioFocus.gainTransientMayDuck),
     ),
   );
+
+  // Initialize connectivity monitoring for Drawer
+  if (await Prefs().getPdaConnectivityCheckRC()) {
+    ConnectivityHandler.instance.initialize();
+    ConnectivityHandler.instance.connectivityCheckEnabled = true;
+  } else {
+    ConnectivityHandler.instance.connectivityCheckEnabled = false;
+  }
 
   runApp(
     MultiProvider(
