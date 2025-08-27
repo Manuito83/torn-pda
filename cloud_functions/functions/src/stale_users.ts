@@ -2,7 +2,8 @@ import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
-import { aDayInMilliseconds } from "./constants";
+
+const aDayInMilliseconds = 24 * 60 * 60 * 1000;
 
 export const deactivateStale = onSchedule(
   {

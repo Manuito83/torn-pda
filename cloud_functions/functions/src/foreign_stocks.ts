@@ -12,41 +12,37 @@
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
-const fetch = require("node-fetch");
 
 // API URLs
 const YATA_API_URL = "https://yata.yt/api/v1/travel/export/";
 const PROMETHEUS_API_URL = "https://api.prombot.co.uk/api/travel";
 
-// Enable/disable debug logs
-const DEBUG_MODE = false;
-
-function debugLog(message: string) {
-  if (DEBUG_MODE) {
-    console.log(message);
-  }
-}
-
 // Define max entries allowed in periodicMap
 const MAX_ENTRIES = 216;
 
 // Helper function to perform fetch with a timeout
-async function fetchWithTimeout(url, options = {}, timeout = 8000) {
+async function fetchWithTimeout(url, options = {}, timeout = 15000) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetch(url, { ...options, signal: controller.signal })
-    .finally(() => clearTimeout(id));
-  return response;
+
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return response;
+  } catch (error) {
+    clearTimeout(id);
+    throw error;
+  }
 }
 
 // Function to get data from YATA API
 async function getYataStocks() {
   try {
-    const response = await fetchWithTimeout(YATA_API_URL, {}, 8000);
-    const data = await response.json();
+    const response = await fetchWithTimeout(YATA_API_URL, {}, 15000);
+    const data = await response.json() as any;
     return data.stocks;
   } catch (e) {
-    logger.warn(`ERROR fetching from YATA API: \n${e}`);
+    logger.warn(`⚠️ YATA API failed: ${e.message || e}`);
     return null;
   }
 }
@@ -54,11 +50,11 @@ async function getYataStocks() {
 // Function to get data from Prometheus API
 async function getPrometheusStocks() {
   try {
-    const response = await fetchWithTimeout(PROMETHEUS_API_URL, {}, 5000);
-    const data = await response.json();
+    const response = await fetchWithTimeout(PROMETHEUS_API_URL, {}, 12000);
+    const data = await response.json() as any;
     return data.stocks;
   } catch (e) {
-    logger.warn(`ERROR fetching from Prometheus API: \n${e}`);
+    logger.warn(`⚠️ Prometheus API failed: ${e.message || e}`);
     return null;
   }
 }
@@ -81,11 +77,8 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
 
       // Update only if the new timestamp is more recent
       if (timestamp < (dbStockData.update || 0)) {
-        debugLog(`Stock ${codeName} already has this or a newer timestamp`);
         return;
       }
-
-      debugLog(`Updating stock in Firestore (transaction): ${codeName} from ${source}`);
 
       // Retrieve or initialize the periodicMap
       let newPeriodicMap = dbStockData.periodicMap || {};
@@ -104,7 +97,6 @@ async function updateStock(currentStockData: any, timestamp: number, source: str
           filteredMap[k] = newPeriodicMap[k];
         }
         newPeriodicMap = filteredMap;
-        debugLog(`PeriodicMap for ${codeName} trimmed to ${MAX_ENTRIES} entries`);
       }
 
       // Save the timestamp of lastEmpty if this item just transitioned to 0 quantity
@@ -177,16 +169,10 @@ async function updateRestock(currentStockData: any, timestamp: number, source: s
       // we can detect restocks in the next calls in the future)
       if (savedData.quantity === 0 && currentStockData.quantity > 0) {
         restockTimestamp = timestamp;
-        debugLog(`Restock detected for ${codeName} at ${restockTimestamp}`);
-      } else {
-        debugLog(
-          `No restock detected for ${codeName}, keeping restock time at ${restockTimestamp}`
-        );
       }
     }
     // If the stock is not known yet (new stock)
     else {
-      debugLog(`New stock found in Realtime DB: ${codeName} from ${source}`);
       restockTimestamp = timestamp;
     }
 
@@ -270,36 +256,37 @@ export const checkStocks = onSchedule({
   memory: "1GiB",
   timeoutSeconds: 240
 }, async () => {
-  try {
-    debugLog("----- Starting checkStocks -----");
+  logger.info("🔍 CHECKSTOCKS STARTING");
 
+  try {
     const yataStocks = await getYataStocks();
     const prometheusStocks = await getPrometheusStocks();
 
+    logger.info(`📊 Data sources - YATA: ${!!yataStocks}, Prometheus: ${!!prometheusStocks}`);
+
     if (!yataStocks && !prometheusStocks) {
-      debugLog("No data available from either YATA or Prometheus.");
+      logger.warn("❌ No data available from either YATA or Prometheus");
       return;
     }
 
-    // Process each country concurrently
+    // Collect all countries
     const allCountries = new Set<string>();
+    if (yataStocks) Object.keys(yataStocks).forEach((c) => allCountries.add(c));
+    if (prometheusStocks) Object.keys(prometheusStocks).forEach((c) => allCountries.add(c));
 
-    // Collect country names from both sources, if they exist
-    if (yataStocks) {
-      Object.keys(yataStocks).forEach((c) => allCountries.add(c));
-    }
-    if (prometheusStocks) {
-      Object.keys(prometheusStocks).forEach((c) => allCountries.add(c));
-    }
+    logger.info(`🌍 Processing ${allCountries.size} countries: ${Array.from(allCountries).join(', ')}`);
+
+    // Counters for summary
+    let totalStocksProcessed = 0;
+    let newItemsAdded = 0;
+    let countriesFromYATA = 0;
+    let countriesFromPrometheus = 0;
 
     const countryPromises = Array.from(allCountries).map(async (countryName) => {
       const yataCountryData = yataStocks ? yataStocks[countryName] : null;
       const prometheusCountryData = prometheusStocks ? prometheusStocks[countryName] : null;
 
-      if (!yataCountryData && !prometheusCountryData) {
-        debugLog(`No data for ${countryName} from either source.`);
-        return;
-      }
+      if (!yataCountryData && !prometheusCountryData) return { processed: 0, newItems: 0 };
 
       let mostRecentSource: string;
       let mostRecentData: any;
@@ -307,16 +294,10 @@ export const checkStocks = onSchedule({
       let lessRecentData: any = null;
 
       if (yataCountryData && prometheusCountryData) {
-        mostRecentSource =
-          yataCountryData.update > prometheusCountryData.update
-            ? "YATA"
-            : "Prometheus";
-        mostRecentData =
-          mostRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
-        lessRecentSource =
-          mostRecentSource === "YATA" ? "Prometheus" : "YATA";
-        lessRecentData =
-          lessRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
+        mostRecentSource = yataCountryData.update > prometheusCountryData.update ? "YATA" : "Prometheus";
+        mostRecentData = mostRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
+        lessRecentSource = mostRecentSource === "YATA" ? "Prometheus" : "YATA";
+        lessRecentData = lessRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
       } else if (yataCountryData) {
         mostRecentSource = "YATA";
         mostRecentData = yataCountryData;
@@ -325,10 +306,16 @@ export const checkStocks = onSchedule({
         mostRecentData = prometheusCountryData;
       }
 
-      debugLog(`Most recent data source for ${countryName}: ${mostRecentSource}`);
+      // Count by source
+      if (mostRecentSource === "YATA") countriesFromYATA++;
+      if (mostRecentSource === "Prometheus") countriesFromPrometheus++;
 
-      // Process data from the most recent source (Firestore updates)
+      let countryProcessed = 0;
+      let countryNewItems = 0;
+
+      // Process most recent data (Firestore updates)
       if (mostRecentData && mostRecentData.stocks) {
+        countryProcessed += mostRecentData.stocks.length;
         const updatePromises = mostRecentData.stocks.map((stock: any) => {
           stock.country = countryName;
           return updateStock(stock, mostRecentData.update, mostRecentSource);
@@ -336,33 +323,36 @@ export const checkStocks = onSchedule({
         await Promise.all(updatePromises);
       }
 
-      // Process data from the less recent source to add any missing items
+      // Process less recent data for missing items
       if (lessRecentData && lessRecentData.stocks && lessRecentSource) {
-        debugLog(`----- Checking for missing stocks in ${lessRecentSource} -----`);
-        let itemsAdded = 0;
-
         const missingPromises = lessRecentData.stocks.map(async (stock: any) => {
           const codeName = `${countryName}-${stock.name}`;
           const existingData = await getExistingStockData(codeName, "Firestore");
           if (!existingData) {
             stock.country = countryName;
             await updateStock(stock, lessRecentData.update, lessRecentSource!);
-            itemsAdded++;
-            debugLog(`Added missing stock ${codeName} from ${lessRecentSource}`);
+            countryNewItems++;
           }
         });
         await Promise.all(missingPromises);
-
-        if (itemsAdded === 0) {
-          debugLog(`No new items found in ${lessRecentSource} for ${countryName}`);
-        }
       }
+
+      return { processed: countryProcessed, newItems: countryNewItems };
     });
 
-    await Promise.all(countryPromises);
+    // Wait for all countries and sum up results
+    const results = await Promise.all(countryPromises);
+    results.forEach(result => {
+      totalStocksProcessed += result.processed;
+      newItemsAdded += result.newItems;
+    });
+
+    // Summary log
+    logger.info(`✅ Completed: ${totalStocksProcessed} stocks processed across ${allCountries.size} countries. Sources: YATA(${countriesFromYATA}), Prometheus(${countriesFromPrometheus}). New items: ${newItemsAdded}`);
 
   } catch (e) {
-    logger.warn(`ERROR in checkStocks: \n${e}`);
+    logger.error(`❌ ERROR in checkStocks: ${e}`);
+    logger.error(`❌ Stack trace: ${e.stack}`);
   }
 });
 
@@ -372,36 +362,35 @@ export const fillRestocks = onSchedule({
   memory: "512MiB",
   timeoutSeconds: 540
 }, async () => {
-  try {
-    debugLog("----- Starting fillRestocks -----");
+  logger.info("🚀 FILLRESTOCKS STARTING");
 
+  try {
     const yataStocks = await getYataStocks();
     const prometheusStocks = await getPrometheusStocks();
 
+    logger.info(`📊 Data sources - YATA: ${!!yataStocks}, Prometheus: ${!!prometheusStocks}`);
+
     if (!yataStocks && !prometheusStocks) {
-      debugLog("No data available from either YATA or Prometheus.");
+      logger.warn("❌ No data available from either YATA or Prometheus");
       return;
-    }
-
-    // Process each country concurrently
+    }    // Collect all countries
     const allCountries = new Set<string>();
+    if (yataStocks) Object.keys(yataStocks).forEach((c) => allCountries.add(c));
+    if (prometheusStocks) Object.keys(prometheusStocks).forEach((c) => allCountries.add(c));
 
-    // Collect country names from both sources
-    if (yataStocks) {
-      Object.keys(yataStocks).forEach((c) => allCountries.add(c));
-    }
-    if (prometheusStocks) {
-      Object.keys(prometheusStocks).forEach((c) => allCountries.add(c));
-    }
+    logger.info(`🌍 Processing ${allCountries.size} countries: ${Array.from(allCountries).join(', ')}`);
+
+    // Counters for summary
+    let totalStocksProcessed = 0;
+    let newItemsAdded = 0;
+    let countriesFromYATA = 0;
+    let countriesFromPrometheus = 0;
 
     const countryPromises = Array.from(allCountries).map(async (countryName) => {
       const yataCountryData = yataStocks ? yataStocks[countryName] : null;
       const prometheusCountryData = prometheusStocks ? prometheusStocks[countryName] : null;
 
-      if (!yataCountryData && !prometheusCountryData) {
-        debugLog(`No data for ${countryName} from either source.`);
-        return;
-      }
+      if (!yataCountryData && !prometheusCountryData) return { processed: 0, restocks: 0, newItems: 0 };
 
       let mostRecentSource: string;
       let mostRecentData: any;
@@ -409,16 +398,10 @@ export const fillRestocks = onSchedule({
       let lessRecentData: any = null;
 
       if (yataCountryData && prometheusCountryData) {
-        mostRecentSource =
-          yataCountryData.update > prometheusCountryData.update
-            ? "YATA"
-            : "Prometheus";
-        mostRecentData =
-          mostRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
-        lessRecentSource =
-          mostRecentSource === "YATA" ? "Prometheus" : "YATA";
-        lessRecentData =
-          lessRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
+        mostRecentSource = yataCountryData.update > prometheusCountryData.update ? "YATA" : "Prometheus";
+        mostRecentData = mostRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
+        lessRecentSource = mostRecentSource === "YATA" ? "Prometheus" : "YATA";
+        lessRecentData = lessRecentSource === "YATA" ? yataCountryData : prometheusCountryData;
       } else if (yataCountryData) {
         mostRecentSource = "YATA";
         mostRecentData = yataCountryData;
@@ -427,10 +410,17 @@ export const fillRestocks = onSchedule({
         mostRecentData = prometheusCountryData;
       }
 
-      debugLog(`Most recent data source for ${countryName}: ${mostRecentSource}`);
+      // Count by source
+      if (mostRecentSource === "YATA") countriesFromYATA++;
+      if (mostRecentSource === "Prometheus") countriesFromPrometheus++;
 
-      // Process data from the most recent source (Realtime DB restocks)
+      let countryProcessed = 0;
+      const countryRestocks = 0;
+      let countryNewItems = 0;
+
+      // Process most recent data
       if (mostRecentData && mostRecentData.stocks) {
+        countryProcessed += mostRecentData.stocks.length;
         const updatePromises = mostRecentData.stocks.map((stock: any) => {
           stock.country = countryName;
           return updateRestock(stock, mostRecentData.update, mostRecentSource);
@@ -438,33 +428,36 @@ export const fillRestocks = onSchedule({
         await Promise.all(updatePromises);
       }
 
-      // Process data from the less recent source to add any missing items
+      // Process less recent data for missing items
       if (lessRecentData && lessRecentData.stocks && lessRecentSource) {
-        debugLog(`----- Checking for missing restocks in ${lessRecentSource} -----`);
-        let itemsAdded = 0;
-
         const missingPromises = lessRecentData.stocks.map(async (stock: any) => {
           const codeName = `${countryName}-${stock.name}`;
           const existingData = await getExistingStockData(codeName, "RealtimeDB");
           if (!existingData) {
             stock.country = countryName;
             await updateRestock(stock, lessRecentData.update, lessRecentSource!);
-            itemsAdded++;
-            debugLog(`Added missing restock ${codeName} from ${lessRecentSource}`);
+            countryNewItems++;
           }
         });
         await Promise.all(missingPromises);
-
-        if (itemsAdded === 0) {
-          debugLog(`No new restock items found in ${lessRecentSource} for ${countryName}`);
-        }
       }
+
+      return { processed: countryProcessed, restocks: countryRestocks, newItems: countryNewItems };
     });
 
-    await Promise.all(countryPromises);
+    // Wait for all countries and sum up results
+    const results = await Promise.all(countryPromises);
+    results.forEach(result => {
+      totalStocksProcessed += result.processed;
+      newItemsAdded += result.newItems;
+    });
+
+    // Summary log
+    logger.info(`✅ Completed: ${totalStocksProcessed} stocks processed across ${allCountries.size} countries. Sources: YATA(${countriesFromYATA}), Prometheus(${countriesFromPrometheus}). New items: ${newItemsAdded}`);
 
   } catch (e) {
-    logger.warn(`ERROR STOCKS FILL \n${e}`);
+    logger.error(`❌ ERROR in fillRestocks: ${e}`);
+    logger.error(`❌ Stack trace: ${e.stack}`);
   }
 });
 
@@ -476,9 +469,12 @@ export const oneTimeClean = onSchedule({
   memory: "256MiB",
   timeoutSeconds: 300
 }, async () => {
+  logger.info("🧹 ONETIMECLEAN STARTING");
 
   const db = admin.firestore();
   const snapshot = await db.collection("stocks-main").get();
+
+  logger.info(`📊 Analyzing ${snapshot.size} stock documents for periodicMap cleanup`);
 
   let numberCleared = 0;
 
@@ -500,21 +496,15 @@ export const oneTimeClean = onSchedule({
 
         await doc.ref.set({ periodicMap: filteredMap }, { merge: true });
 
-        logger.info(`Document ${doc.id}: reduced periodicMap to 200 entries`);
+        logger.info(`🔧 Cleaned ${doc.id}: reduced from ${allKeys.length} to 200 entries`);
         numberCleared++;
-      } else {
-        //logger.info(`Document ${doc.id}: periodicMap has ${allKeys.length} entries, no cleanup needed`);
       }
-    } else {
-      logger.info(`Document ${doc.id}: No periodicMap or not an object, no cleanup needed`);
     }
   });
 
-  logger.info(`Cleaned up ${numberCleared} documents`);
-
   await Promise.all(cleanupPromises);
 
-  logger.info('cleanup_completed');
+  logger.info(`✅ Cleanup completed: ${numberCleared} documents cleaned out of ${snapshot.size} total`);
 });
 
 // UTIL FUNCTION
@@ -525,15 +515,17 @@ export const deleteOldStocks = onSchedule({
   memory: "256MiB",
   timeoutSeconds: 300
 }, async () => {
+  logger.info("🗑️ DELETEOLDSTOCKS STARTING");
+
   // DEBUG
   // true: only prints
   // false: will delete
   const IS_DRY_RUN = false;
 
   if (IS_DRY_RUN) {
-    logger.warn("deleteOldStocks: RUNNING IN DRY RUN MODE, NO DELETIONS");
+    logger.warn("⚠️ Running in DRY RUN mode - no deletions will be performed");
   } else {
-    logger.warn("deleteOldStocks: NOT RUNNING IN DRY RUN MODE, DELETIONS WILL BE PERFORMED");
+    logger.info("🔥 Running in DELETION mode - old stocks will be removed");
   }
 
   const db = admin.firestore();
@@ -547,7 +539,7 @@ export const deleteOldStocks = onSchedule({
   const nowTimestamp = Math.floor(Date.now() / 1000);
   const cutoffTimestamp = nowTimestamp - (daysThreshold * secondsInADay);
 
-  logger.info(`Looking for stocks with 'update' timestamp older than ${cutoffTimestamp} (approx. ${daysThreshold} days ago).`);
+  logger.info(`📊 Searching for stocks older than ${daysThreshold} days (${totalStocksCount} total stocks)`);
 
   const oldStocksQuery = stocksRef.where("update", "<", cutoffTimestamp);
 
@@ -555,9 +547,11 @@ export const deleteOldStocks = onSchedule({
     const snapshot = await oldStocksQuery.get();
 
     if (snapshot.empty) {
-      logger.info("No old stocks found to delete. Task finished.");
+      logger.info("✅ No old stocks found to delete - task completed");
       return null;
     }
+
+    logger.info(`📋 Found ${snapshot.size} old stocks to process`);
 
     // --- DRY RUN ---
     if (IS_DRY_RUN) {
@@ -567,9 +561,9 @@ export const deleteOldStocks = onSchedule({
         const ageInSeconds = nowTimestamp - updateTimestamp;
         const ageInMonths = (ageInSeconds / (secondsInADay * 30.44)).toFixed(1);
 
-        logger.log(`Would delete doc ID: ${doc.id}, Last update: ${new Date(updateTimestamp * 1000).toISOString()}, Age: ~${ageInMonths} months`);
+        logger.info(`Would delete: ${doc.id} (${ageInMonths} months old)`);
       }
-      logger.log(`Dry run summary: Would delete ${snapshot.size} out of ${totalStocksCount} total stocks.`);
+      logger.info(`✅ Dry run completed - would delete ${snapshot.size} out of ${totalStocksCount} stocks`);
       return null;
     }
 
@@ -596,10 +590,11 @@ export const deleteOldStocks = onSchedule({
 
     await Promise.all(batches.map(batch => batch.commit()));
 
-    logger.info(`Successfully deleted ${snapshot.size} old stocks out of a total of ${totalStocksCount}.`);
+    logger.info(`✅ Successfully deleted ${snapshot.size} old stocks (${totalStocksCount - snapshot.size} remaining)`);
 
   } catch (error) {
-    logger.error("Error during deleteOldStocks task:", error);
+    logger.error(`❌ Error during deleteOldStocks: ${error}`);
+    logger.error(`❌ Stack trace: ${error.stack}`);
     throw new Error("Failed to delete old stocks.");
   }
 

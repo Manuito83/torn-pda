@@ -38,10 +38,10 @@ Shell:
 alertsTest.runForUser({})
 ```
 
-### DOther user
+### Other user
 
 ```
-# Ejecutar para un usuario específico (ej. "Kwack")
+# Specific user (eg. "Kwack")
 curl -X POST http://127.0.0.1:5002/torn-pda-manuito/us-east4/alertsTest-runForUser \
 -H "Content-Type: application/json" \
 -d '{"data": {"userName": "Kwack"}}'
