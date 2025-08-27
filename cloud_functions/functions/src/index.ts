@@ -1,46 +1,102 @@
-import * as admin from "firebase-admin";
-import { alertsGroup } from "./alerts";
-import { alertsTestGroup } from "./alerts";
-import { travelGroup } from "./travel_check";
-import { staleGroup } from "./stale_users";
-import { playersGroup } from "./players";
-import { foreignStocksGroup } from "./foreign_stocks";
-import { lootGroup } from "./loot";
-import { lootRangersGroup } from "./loot_rangers";
-import { refillsGroup } from "./refills";
-import { factionAssistGroup } from "./faction_assist";
-import { retalsGroup } from "./retals";
-import { prefsBackupGroup } from "./prefs_backup";
-import { troubleshootingGroup } from "./troubleshooting_notification";
-import { forumsGroup } from "./forums";
-import { registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
+// index.ts
 
-//import { helperGroup } from "./helpers";
+import * as admin from "firebase-admin";
 
 const serviceAccount = require("../key/serviceAccountKey.json");
-
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://torn-pda-manuito.firebaseio.com",
 });
 
-export const alerts = alertsGroup;
-export const alertsTest = alertsTestGroup;
-export const travel = travelGroup;
-export const stale = staleGroup;
-export const players = playersGroup;
-export const stocks = foreignStocksGroup;
-export const loot = lootGroup;
-export const lootRangers = lootRangersGroup;
-export const refills = refillsGroup;
-export const factionAssist = factionAssistGroup;
-export const retals = retalsGroup;
-export const prefsBackup = prefsBackupGroup;
-export const troubleshooting = troubleshootingGroup;
-export const forums = forumsGroup;
+import {
+  checkIOS,
+  checkAndroidLow,
+  checkAndroidHigh,
+  runForUser,
+  sendTestNotification,
+  sendMassNotification
+} from "./alerts";
+import { updateNpcs, lootAlerts } from "./loot";
+import { deactivateStale, deleteStale } from "./stale_users";
+import { sendTravelNotifications } from "./travel_check";
+import { sendRefillNotifications } from "./refills";
+import { evaluateRetals } from "./retals";
+import { checkStocks, fillRestocks, oneTimeClean, deleteOldStocks } from "./foreign_stocks";
+import { sendLootRangersNotification } from "./loot_rangers";
+import { sendAssistMessage } from "./faction_assist";
+import { saveUserPrefs, getUserPrefs, deleteUserPrefs, setOwnSharePrefs, getImportShare } from "./prefs_backup";
+import { sendTroubleshootingAutoNotification } from "./troubleshooting_notification";
+import { sendForumsSubscription } from "./forums";
+import { registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
+
+export const alerts = {
+  checkIOS: checkIOS,
+  checkAndroidLow: checkAndroidLow,
+  checkAndroidHigh: checkAndroidHigh
+};
+
+export const alertsTest = {
+  runForUser: runForUser,
+  sendTestNotification: sendTestNotification,
+  sendMassNotification: sendMassNotification
+};
+
+export const loot = {
+  updateNpcs: updateNpcs,
+  lootAlerts: lootAlerts
+};
+
+export const stale = {
+  deactivateStale: deactivateStale,
+  deleteStale: deleteStale
+};
+
+export const travel = {
+  sendTravelNotifications: sendTravelNotifications
+};
+
+export const refills = {
+  sendRefillNotifications: sendRefillNotifications
+};
+
+export const retals = {
+  evaluateRetals: evaluateRetals
+};
+
+export * from "./players";
+
+export const stocks = {
+  checkStocks: checkStocks,
+  fillRestocks: fillRestocks,
+  oneTimeClean: oneTimeClean,
+  deleteOldStocks: deleteOldStocks
+};
+
+export const lootRangers = {
+  sendLootRangersNotification: sendLootRangersNotification
+};
+
+export const factionAssist = {
+  sendAssistMessage: sendAssistMessage
+};
+
+export const prefsBackup = {
+  saveUserPrefs: saveUserPrefs,
+  getUserPrefs: getUserPrefs,
+  deleteUserPrefs: deleteUserPrefs,
+  setOwnSharePrefs: setOwnSharePrefs,
+  getImportShare: getImportShare
+};
+
+export const troubleshooting = {
+  sendTroubleshootingAutoNotification: sendTroubleshootingAutoNotification
+};
+
+export const forums = {
+  sendForumsSubscription: sendForumsSubscription
+};
+
 export const liveActivities = {
   registerPushToStartToken: registerPushToStartToken,
   sendTestTravelPushToManuito: sendTestTravelPushToManuito,
 };
-
-//export const helper = helperGroup;

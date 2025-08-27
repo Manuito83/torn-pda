@@ -1,52 +1,54 @@
-import * as functions from "firebase-functions";
+import { onCall } from "firebase-functions/v2/https";
+import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
 
-export const troubleshootingGroup = {
+export const sendTroubleshootingAutoNotification = onCall({
+    region: 'us-east4',
+    memory: "512MiB",
+    timeoutSeconds: 540
+}, async (request) => {
 
-    sendTroubleshootingAutoNotification: functions.region('us-east4').https.onCall(async (data, context) => {
+    let success = true;
+    let name = "";
+    let id = 0;
 
-        let success = true;
-        let name = "";
-        let id = 0;
+    const promises: Promise<any>[] = [];
 
-        const promises: Promise<any>[] = [];
+    try {
 
-        try {
+        // Get user's faction from Firestore
+        const callingUser = await admin
+            .firestore()
+            .collection("players")
+            .doc(request.auth.uid)
+            .get();
 
-            // Get user's faction from Firestore
-            const callingUser = await admin
-                .firestore()
-                .collection("players")
-                .doc(context.auth.uid)
-                .get();
+        const userData = callingUser.data();
+        name = userData.name;
+        id = userData.id;
 
-            const userData = callingUser.data();
-            name = userData.name;
-            id = userData.id;
+        promises.push(
+            sendNotificationToUser({
+                token: userData.token,
+                title: "Test notification",
+                body: "This is a test from the server to assess if Torn PDA alerts can reach you",
+                icon: "notification_icon",
+                color: "#FFFFFF",
+                channelId: "Alerts test",
+                vibration: "medium",
+            })
+        );
 
-            promises.push(
-                sendNotificationToUser({
-                    token: userData.token,
-                    title: "Test notification",
-                    body: "This is a test from the server to assess if Torn PDA alerts can reach you",
-                    icon: "notification_icon",
-                    color: "#FFFFFF",
-                    channelId: "Alerts test",
-                    vibration: "medium",
-                })
-            );
+        logger.info(`Test notification sent to ${name} [${callingUser.data().playerId}]`);
 
-            functions.logger.info(`Test notification sent to ${name} [${callingUser.data().playerId}]`);
+    } catch (e) {
+        success = false;
+        logger.info(`Test notification error to ${name} [${id}]: ${e}`);
+    }
 
-        } catch (e) {
-            success = false;
-            functions.logger.info(`Test notification error to ${name} [${id}]: ${e}`);
-        }
+    await Promise.all(promises);
 
-        await Promise.all(promises);
+    return success;
 
-        return success;
-
-    }),
-};
+});
