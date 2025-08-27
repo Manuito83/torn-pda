@@ -642,10 +642,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       apiV2LegacyRequests = remoteConfig.getString("apiV2LegacyRequests");
 
       // PDA Update Details
-      _settingsProvider.pdaUpdateDetails = remoteConfig.getString("pda_update_details");
+      _settingsProvider.pdaUpdateDetailsRC = remoteConfig.getString("pda_update_details");
 
       // Connectivity check
       Prefs().setPdaConnectivityCheck(remoteConfig.getBool("pda_connectivity_check"));
+
     } catch (e) {
       log('Error updating Remote Config values: $e');
     }
@@ -710,10 +711,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _statsController.logCheckOut();
 
       // Refresh widget to have up to date info when we exit
-      if (Platform.isAndroid) {
-        if ((await pdaWidget_numberInstalled()).isNotEmpty) {
-          pdaWidget_startBackgroundUpdate();
-        }
+      if ((await getInstalledHomeWidgets()).isNotEmpty) {
+        startBackgroundRefresh();
       }
     } else if (state == AppLifecycleState.resumed) {
       // Update Firebase active parameter
@@ -734,9 +733,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _statsController.logCheckIn();
 
       // App widget - reset background updater
-      if (Platform.isAndroid) {
-        pdaWidget_handleBackgroundUpdateStatus();
-      }
+      syncBackgroundRefreshWithWidgetInstallation();
 
       checkForScriptUpdates();
 
@@ -2643,7 +2640,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future _showPdaUpdateDialog() async {
-    final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetails;
+    final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetailsRC;
+    if (pdaUpdateDetailsString.isEmpty) return;
 
     final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
     if (updateDetails == null || updateDetails.latestVersionCode == 0) return;
@@ -2655,9 +2653,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Check if there's an update available for the current platform
     bool hasUpdate = false;
     if (Platform.isAndroid && updateDetails.isAndroidUpdate) {
-      hasUpdate = updateDetails.latestVersionCode != currentCompilationInt;
+      hasUpdate = updateDetails.latestVersionCode > currentCompilationInt;
     } else if (Platform.isIOS && updateDetails.isIosUpdate) {
-      hasUpdate = updateDetails.latestVersionCode != currentCompilationInt;
+      hasUpdate = updateDetails.latestVersionCode > currentCompilationInt;
     }
 
     if (!hasUpdate) return;

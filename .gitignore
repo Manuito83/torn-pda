@@ -60,6 +60,7 @@ firebase.json
 **/android/local.properties
 **/android/**/GeneratedPluginRegistrant.java
 **/android/app/.cxx/
+**/android/build/
 
 # iOS/XCode related
 **/ios/**/*.mode1v3

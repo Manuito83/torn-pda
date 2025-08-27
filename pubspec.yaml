@@ -75,8 +75,9 @@ dependencies:
   home_widget:
     git:
       url: https://github.com/Manuito83/home_widget.git
-      ## TODO: merge pda-dev into pda-stable and change ref
-      ref: 8ecac9ede8c4a06a9409848da339f181169300db
+      ## branch pda-dev-0.8.0
+      ref: 85c37faa6cc62cd237264a82602eafd4eef937b1
+      path: packages/home_widget
   html: 0.15.6
   http: 1.4.0
   ## flutter pub run import_sorter:main
