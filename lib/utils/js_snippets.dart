@@ -43,122 +43,196 @@ String easyCrimesJS({
 
 String buyMaxAbroadJS() {
   return '''
-    function addFillMaxButtons(){
+// @ts-check
 
-      const doc = document;
-      let market = doc.querySelector(".travel-agency-market");
+addFillMaxButtons();
 
-      if(!market){
-        return;
-      }
+function addFillMaxButtons() {
+  /** @type {NodeListOf<HTMLLIElement>} */
+  const tableRows = document.querySelectorAll("ul.users-list > li");
+  if (!tableRows.length)
+    return console.error("Could not find table rows for addFillMaxButtons()");
 
-      // Assess whether buy buttons are visible when page loads, in which
-      // case screen is wide and perhaps we are on a tablet. Then, just
-      // load the FILL button TornTools style (below the buy button).
-      if(\$('.buy').is(":visible")){
-        function addStyle(styleString) {
-          const style = document.createElement('style');
-          style.textContent = styleString;
-          document.head.append(style);
-        }
+  for (const row of tableRows) {
+    /** @type {(e: MouseEvent) => void} */
+    const cb = generateCallback(row);
+    addButton(row, cb);
+  }
 
-        addStyle(`
-          .deal {
-            position: relative;
-          }
-        `);
+  addStyle(`
+	body.pda-hide-item-info div.show-item-info {
+		display: none !important;
+	}
 
-        addStyle(`
-          .deal .buy {
-            margin-top: -14px !important;
-            line-height: 20px !important;
-          }
-        `);
-        
-        addStyle(`
-          .max-buy {
-            position: absolute;
-            width: 36px;
-            text-align: center;
-            border-left: 2px solid #ccc;
-            height: 14px;
-            line-height: 13px;
-            bottom: -15px;
-            right: -1px;
-            font-size: 10px;
-          }
-        `);
-        
-        for(let buy_btn of market.querySelectorAll(".buy")){
-          if (buy_btn.parentElement.querySelector(".max-buy") !== null) continue;
-          let max_span = doc.createElement('span');
-          max_span.innerHTML = '<a class="max-buy">FILL</a>';
-          buy_btn.parentElement.appendChild(max_span);
-          
-          max_span.addEventListener("click", function(event){
-          event.stopPropagation();
-            let max = parseInt(buy_btn.parentElement.parentElement.querySelector(".stck-amount").innerText.replace(/,/g, ""));
-            let price = parseInt(buy_btn.parentElement.parentElement.querySelector(".c-price").innerText.replace(/,/g, "").replace("\$",""));
-            let user_money = doc.querySelector(".user-info .msg .bold:nth-of-type(2)").innerText.replace(/,/g, "").replace("\$","");
-            let bought = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(3)").innerText);
-            let limit = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(4)").innerText) - bought;
-            
-            let max_can_buy = Math.round(user_money / price);
+	span.item-info-wrap > .deal {
+		position: relative;
+	}
 
-            let current = max_span.innerHTML;
-            if (current.includes('class="max-buy"')) {
-              dispatchClick(buy_btn.parentElement.querySelector("input[name='amount']"), max_can_buy);
-            }
-        });
-      }
-      
-      // If screen is narrow, load a MAX button in the expandable box
-      } else {
-        for(let buy_btn of market.querySelectorAll(".torn-btn")){
-          let max_span = doc.createElement('a');
-          max_span.innerHTML = '<button class="torn-btn">MAX</button>';
-          buy_btn.parentElement.appendChild(max_span);
-        
-          max_span.addEventListener("click", function(event){
-            event.stopPropagation();
+	span.item-info-wrap > .deal > .buy {
+		margin-top: -14px !important;
+		line-height: 20px !important;
+	}
 
-            let max = parseInt(buy_btn.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.querySelector(".stck-amount").innerText.replace(/,/g, ""));
-            let price = parseInt(buy_btn.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.querySelector(".c-price").innerText.replace(/,/g, "").replace("\$",""));
-            let user_money = doc.querySelector(".user-info .msg .bold:nth-of-type(2)").innerText.replace(/,/g, "").replace("\$","");
-            let bought = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(3)").innerText);
-            let limit = parseInt(doc.querySelector(".user-info .msg .bold:nth-of-type(4)").innerText) - bought;
-            
-			let max_can_buy = Math.round(user_money / price);
-            
-            let current = max_span.innerHTML;
-            if (current.includes('class="torn-btn"') && current.includes('MAX')) {
-              dispatchClick(buy_btn.parentElement.parentElement.parentElement.parentElement.querySelector("input[name='amount']"), max_can_buy);
-            } 
-          });
-        }
-      }
+	span.item-info-wrap > .deal > .pda-fill-max-btn {
+		position: absolute;
+		width: 36px;
+		text-align: center;
+		border-left: 2px solid #ccc;
+		height: 14px;
+		line-height: 13px;
+		bottom: -15px;
+		right: -1px;
+		font-size: 10px;
+	}
+	`)
+
+  /**
+   * @param {HTMLInputElement} element
+   * @param {string} newValue
+   * @returns {void}
+   */
+  function dispatchEvent(element, newValue) {
+    const oldValue = element.value;
+    element.value = newValue;
+    const ev = new Event("blur", { bubbles: true });
+    // @ts-expect-error
+    ev.simulated = true;
+    // @ts-expect-error
+    const tracker = element._valueTracker;
+    if (tracker) tracker.setValue(oldValue);
+    element.dispatchEvent(ev);
+  }
+
+  /**
+   * @param {number} available Available items count
+   * @param {number} capacity Available item capacity
+   * @param {number} price Price per item
+   * @param {number} userMoney Money on hand
+   * @returns {number}
+   */
+  function calcMax(available, capacity, price, userMoney) {
+    return Math.min(available, capacity, Math.floor(userMoney / price));
+  }
+
+  /**
+   * @param {HTMLLIElement} row
+   * @param {number} capacity
+   * @param {number} userMoney
+   * @returns {number}
+   */
+  function calcMaxFromRow(row, capacity, userMoney) {
+    /** @type {HTMLSpanElement | null} */
+    const \$available = row.querySelector("span.stock > span.stck-amount");
+    /** @type {HTMLSpanElement | null} */
+    const \$cost = row.querySelector("span.cost > span.c-price");
+
+    if (!\$available || !\$cost) return 0;
+    const availableInt = Number.parseInt(
+      \$available.innerText.replaceAll(/,/g, "")
+    );
+    const costInt = Number.parseInt(\$cost.innerText.replaceAll(/[\$,]/g, ""));
+    return calcMax(availableInt, capacity, costInt, userMoney);
+  }
+
+  /**
+   * @param {HTMLLIElement} row
+   * @param {(e: MouseEvent) => void} callback
+   * @returns {void}
+   */
+  function addButton(row, callback) {
+    const existingMiniButton = row.querySelector(
+      "span.buy > a.pda-fill-max-btn"
+    );
+    const existingMainButton = row.querySelector(
+      "span.travel-info-btn button.pda-fill-max-btn"
+    );
+
+    if (!existingMiniButton) {
+      /** @type {HTMLSpanElement | null} */
+      const \$container = row.querySelector("span.item-info-wrap > span.deal");
+      if (!\$container)
+        return console.error(
+          "Could not find button container for addFillMaxButtons()"
+        );
+      const \$miniButton = document.createElement("a");
+      \$miniButton.innerText = "FILL";
+      \$miniButton.classList.add("pda-fill-max-btn", "buy", "t-blue");
+	  \$miniButton.addEventListener("click", callback);
+      \$container.appendChild(\$miniButton);
     }
 
-    function dispatchClick(element, newValue) {
-      let input = element; 
-      let lastValue = input.value;
-      input.value = newValue;
-      // "input" is not working for foreign stock wide, instead use "blur"
-      let event = new Event('blur', { bubbles: true });
-      // hack React15 (Torn seems to be using React 16)
-      event.simulated = true;
-      // hack React16 (This is what Torn uses)
-      let tracker = input._valueTracker;
-      if (tracker) {
-        tracker.setValue(lastValue);
-      }
-      input.dispatchEvent(event);
+    if (!existingMainButton) {
+      /** @type {HTMLSpanElement | null} */
+      const \$container = row.querySelector(
+        "div.confirm-buy span.travel-buttons > span.travel-info-btn"
+      );
+      if (!\$container)
+        return console.error(
+          "Could not find button container for addFillMaxButtons()"
+        );
+      const \$mainButton = document.createElement("button");
+      \$mainButton.innerText = "MAX";
+      \$mainButton.classList.add("torn-btn", "pda-fill-max-btn");
+	  \$mainButton.addEventListener("click", callback);
+      \$container.appendChild(\$mainButton);
+    }
+  }
+
+  /**
+   * @returns {{ capacity: number, userMoney: number }}
+   */
+  function getCapacityAndUserMoney() {
+    /** @type {HTMLSpanElement | null} */
+    const \$capacityParent = document.querySelector(
+      "div.info-msg-cont.user-info div.msg"
+    );
+    if (!\$capacityParent) {
+      console.error("Could not find capacity parent for addFillMaxButtons()");
+      console.error(\$capacityParent);
+      throw new Error("Capacity information not found");
     }
 
-    addFillMaxButtons();
+    const matches =
+      /and\\shave\\s\\\$([\\d,]+)\\.\\sYou\\shave\\spurchased\\s(\\d+)\\s\\/\\s(\\d+)\\sitems\\sso\\sfar\\./.exec(
+        \$capacityParent.innerText
+      );
+    if (!matches) {
+      console.error(
+        "Could not parse capacity information for addFillMaxButtons()"
+      );
+      console.error(\$capacityParent.innerText, \$capacityParent);
+      throw new Error("Capacity information not found");
+    }
+    const [, userMoneyStr, capUsed, capTotal] = matches;
+    const capacity = Number.parseInt(capTotal) - Number.parseInt(capUsed);
+	const userMoney = Number.parseInt(userMoneyStr.replaceAll(/,/g, ""));
+	return { capacity, userMoney }
+  }
 
-    // Return to avoid iOS WKErrorDomain
-    123;
+  /**
+   *
+   * @param {HTMLLIElement} row
+   * @returns {(e: MouseEvent) => void}
+   */
+  function generateCallback(row) {
+    return (e) => {
+      e.preventDefault();
+	  const { capacity, userMoney } = getCapacityAndUserMoney();
+      const max = calcMaxFromRow(row, capacity, userMoney);
+      /** @type {HTMLInputElement | null} */
+      const input = row.querySelector("input[name='amount']");
+      if (input) dispatchEvent(input, max.toString());
+    };
+  }
+
+  function addStyle(cssText) {
+    const stylesheet = document.createElement("style");
+    stylesheet.type = "text/css";
+    stylesheet.appendChild(document.createTextNode(cssText));
+    document.head.appendChild(stylesheet);
+  }
+}
+
   ''';
 }
 
