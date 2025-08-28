@@ -106,7 +106,7 @@ class ChangeLogState extends State<ChangeLog> {
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.5'
-        ..date = '15 SEP 2025'
+        ..date = '05 SEP 2025'
         ..features = [
           if (Platform.isAndroid) "Added home screen widget with War information",
           if (Platform.isIOS) "[iOS 17+] Added home screen widget with War information",
