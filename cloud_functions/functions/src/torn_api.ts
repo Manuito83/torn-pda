@@ -1,14 +1,15 @@
 import { ForumsApiResponse } from './interfaces/forums_interface';
+const { tornParam } = require('../key/torn_key.js');
 
 export async function getUsersStat(apiKey: string) {
-  const response = await fetch(`https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents&key=${apiKey}&comment=PDA-Alerts`);
+  const response = await fetch(`https://api.torn.com/user/?selections=profile,bars,travel,icons,cooldowns,newmessages,newevents&key=${apiKey}&comment=PDA-Alerts&${tornParam}`);
   const data = await response.json() as any;
   return data;
 
 }
 
 export async function getUsersRefills(apiKey: string) {
-  const response = await fetch(`https://api.torn.com/user/?selections=refills&key=${apiKey}&comment=PDA-Alerts`);
+  const response = await fetch(`https://api.torn.com/user/?selections=refills&key=${apiKey}&comment=PDA-Alerts&${tornParam}`);
   const data = await response.json() as any;
   return data;
 }
@@ -30,7 +31,7 @@ export async function getUsersForums(apiKey: string): Promise<ForumsApiResponse>
 
 
 export async function checkUserIdKey(apiKey: string, userId: number) {
-  const response = await fetch(`https://api.torn.com/user/?selections=profile&key=${apiKey}`);
+  const response = await fetch(`https://api.torn.com/user/?selections=profile&key=${apiKey}&comment=PDA-Alerts&${tornParam}`);
   const data = await response.json() as any;
 
   if (data.error) {
