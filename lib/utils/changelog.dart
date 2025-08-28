@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.8.4 - Build 574 - 28/08/2025
+    // v3.8.5 - Build 574 - 28/08/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.8.5'
@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           if (Platform.isAndroid) "Added home screen widget with War information",
           if (Platform.isIOS) "[iOS 17+] Added home screen widget with War information",
+          "Added double-click on Torn's header bar to exit full screen mode",
           "Fixed several bugs and improved performance",
         ],
     );

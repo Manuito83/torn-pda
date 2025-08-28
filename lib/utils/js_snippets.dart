@@ -1467,6 +1467,80 @@ String barsDoubleClickRedirect({bool isIOS = false}) {
   ''';
 }
 
+/// Exit fullscreen on double click on header banner
+String exitFullScreenOnHeaderDoubleClick({bool isIOS = false}) {
+  return '''
+    (function() {
+      // Use a more robust check to prevent multiple executions
+      if (window.pdaHeaderListenerAdded) {
+        return;
+      }
+      
+      function addHeaderListener() {
+        function onHeaderDoubleClick() {
+          if (window.flutter_inappwebview && window.flutter_inappwebview.callHandler) {
+            window.flutter_inappwebview.callHandler('tornPDAExitFullScreen', 'exit');
+          }
+        }
+        
+        // Get the header banner element
+        let headerElement = document.querySelector('#topHeaderBanner > div.header-wrapper-top');
+
+        if (headerElement !== null) {
+          // Mark that we've added the listener
+          window.pdaHeaderListenerAdded = true;
+
+          if ($isIOS) {
+            let headerClickCount = 0;
+            let headerClickTimeout = null;
+
+            // Set time interval in milliseconds for detecting double click
+            const doubleClickInterval = 1500;
+
+            headerElement.addEventListener('click', () => {
+              headerClickCount++;
+
+              if (headerClickCount === 1) {
+                headerClickTimeout = setTimeout(() => {
+                  headerClickCount = 0; // Reset click count after timeout
+                }, doubleClickInterval);
+              } else if (headerClickCount >= 2) {
+                // Clear the timeout since we got the second click
+                if (headerClickTimeout) {
+                  clearTimeout(headerClickTimeout);
+                  headerClickTimeout = null;
+                }
+                headerClickCount = 0; // Reset immediately
+                onHeaderDoubleClick();
+              }
+            });
+          } else {
+            headerElement.addEventListener('dblclick', () => {
+              onHeaderDoubleClick();
+            });
+          }
+        }
+      }
+
+      let pass = 0;
+      let waitForHeaderAndRun = setInterval(() => {
+        if (document.querySelector('#topHeaderBanner > div.header-wrapper-top')) {
+          addHeaderListener();
+          return clearInterval(waitForHeaderAndRun);
+        } else {
+          pass++;
+        }
+
+        // End the interval after a few unsuccessful seconds
+        if (pass > 20) {
+          return clearInterval(waitForHeaderAndRun);
+        }
+
+      }, 300);
+    })();
+  ''';
+}
+
 String greasyForkMockVM(String scripts) {
   // Imitate ViolentMonkey on GreasyFork for identifying version numbers and removing the install warning
   return """

@@ -315,6 +315,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
   bool _findInPageActive = false;
   bool _wasFullScreenActiveWhenFindActivated = false;
+  UiMode? _previousUiMode;
   final _findController = TextEditingController();
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
@@ -650,64 +651,74 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         left: assessSafeAreaSide(dialog, "left"),
         right: assessSafeAreaSide(dialog, "right"),
         child: Consumer<WebViewProvider>(
-          builder: (context, wv, child) => Scaffold(
-            resizeToAvoidBottomInset:
-                // Dialog displaces the webview up by default
-                !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
-            backgroundColor: _themeProvider.canvas,
-            appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
-                // Show appBar only if we are not showing the webView in a dialog style
-                ? null
-                : _settingsProvider.appBarTop
-                    ? buildCustomAppBar()
-                    : null,
-            bottomNavigationBar: _webViewProvider.bottomBarStyleEnabled
-                ? null
-                :
-                // With appbar bottom, add appbar and some space for tabs
-                !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            height: AppBar().preferredSize.height,
-                            child: buildCustomAppBar(),
-                          ),
-                          SizedBox(
-                            height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
-                          ),
-                        ],
-                      )
-                    :
-                    // With appbar top, still add some space below for tabs
+          builder: (context, wv, child) {
+            // Execute exit fullscreen script when entering fullscreen mode
+            if (_previousUiMode != wv.currentUiMode && wv.currentUiMode == UiMode.fullScreen) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _assessExitFullScreenScript(dom.Document());
+              });
+            }
+            _previousUiMode = wv.currentUiMode;
+
+            return Scaffold(
+              resizeToAvoidBottomInset:
+                  // Dialog displaces the webview up by default
+                  !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+              backgroundColor: _themeProvider.canvas,
+              appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
+                  // Show appBar only if we are not showing the webView in a dialog style
+                  ? null
+                  : _settingsProvider.appBarTop
+                      ? buildCustomAppBar()
+                      : null,
+              bottomNavigationBar: _webViewProvider.bottomBarStyleEnabled
+                  ? null
+                  :
+                  // With appbar bottom, add appbar and some space for tabs
+                  !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: AppBar().preferredSize.height,
+                              child: buildCustomAppBar(),
+                            ),
+                            SizedBox(
+                              height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
+                            ),
+                          ],
+                        )
+                      :
+                      // With appbar top, still add some space below for tabs
+                      SizedBox(
+                          height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
+                        ),
+              body: Container(
+                // Background color for all browser widgets
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+                child: Column(
+                  children: [
+                    Expanded(child: mainWebViewColumn()),
+                    if (_webViewProvider.currentUiMode == UiMode.window &&
+                        _webViewProvider.bottomBarStyleEnabled &&
+                        _webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
+                      _bottomBarStyleBottomBar(),
                     SizedBox(
-                        height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
-                      ),
-            body: Container(
-              // Background color for all browser widgets
-              color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
-              child: Column(
-                children: [
-                  Expanded(child: mainWebViewColumn()),
-                  if (_webViewProvider.currentUiMode == UiMode.window &&
-                      _webViewProvider.bottomBarStyleEnabled &&
-                      _webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
-                    _bottomBarStyleBottomBar(),
-                  SizedBox(
-                    height: !_webViewProvider.bottomBarStyleEnabled
-                        ? 0
-                        : _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser
-                            ? 0
-                            : 40,
-                  ),
-                  if (_webViewProvider.currentUiMode == UiMode.window &&
-                      _webViewProvider.bottomBarStyleEnabled &&
-                      !_webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
-                    _bottomBarStyleBottomBar(),
-                ],
+                      height: !_webViewProvider.bottomBarStyleEnabled
+                          ? 0
+                          : _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser
+                              ? 0
+                              : 40,
+                    ),
+                    if (_webViewProvider.currentUiMode == UiMode.window &&
+                        _webViewProvider.bottomBarStyleEnabled &&
+                        !_webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
+                      _bottomBarStyleBottomBar(),
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -1284,6 +1295,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             WebviewHandlers.addToastHandler(webview: webViewController!);
 
             WebviewHandlers.addLaunchIntentHandler(webview: webViewController!);
+
+            WebviewHandlers.addExitFullScreenHandler(
+              webview: webViewController!,
+              exitFullScreenCallback: _exitFullScreenFromJS,
+            );
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
@@ -2849,6 +2865,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
     _assessBarsRedirect(document);
+    _assessExitFullScreenScript(document);
     _assessProfileAgeToWords();
     _assessBugReportsWarning();
   }
@@ -4289,6 +4306,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (inTorn) {
       webViewController?.evaluateJavascript(
         source: barsDoubleClickRedirect(
+          isIOS: Platform.isIOS,
+        ),
+      );
+    }
+  }
+
+  Future _assessExitFullScreenScript(dom.Document document) async {
+    final inTorn = _currentUrl.contains("torn.com");
+    final isFullScreen = _webViewProvider.currentUiMode == UiMode.fullScreen;
+
+    if (inTorn && isFullScreen) {
+      webViewController?.evaluateJavascript(
+        source: exitFullScreenOnHeaderDoubleClick(
           isIOS: Platform.isIOS,
         ),
       );
@@ -6206,6 +6236,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         _webViewProvider.browserShowInForeground = false;
       }
       _checkIfTargetsAttackedAndRevertChaining();
+    }
+  }
+
+  void _exitFullScreenFromJS() {
+    log('[_exitFullScreenFromJS] Called');
+    // Only exit fullscreen if we are currently in fullscreen mode
+    if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
+      log('[_exitFullScreenFromJS] Currently in fullscreen, exiting');
+      _webViewProvider.setCurrentUiMode(UiMode.window, context);
+    } else {
+      log('[_exitFullScreenFromJS] Not in fullscreen mode, current mode: ${_webViewProvider.currentUiMode}');
     }
   }
 

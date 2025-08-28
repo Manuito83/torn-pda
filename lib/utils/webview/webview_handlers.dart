@@ -549,4 +549,24 @@ class WebviewHandlers {
       },
     );
   }
+
+  static void addExitFullScreenHandler({
+    required InAppWebViewController webview,
+    required Function() exitFullScreenCallback,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'tornPDAExitFullScreen',
+      callback: (args) async {
+        try {
+          if (args.isNotEmpty && args[0] == 'exit') {
+            exitFullScreenCallback();
+            return {'success': true};
+          }
+          return {'success': false, 'error': 'Invalid command'};
+        } catch (e) {
+          return {'success': false, 'error': e.toString()};
+        }
+      },
+    );
+  }
 }
