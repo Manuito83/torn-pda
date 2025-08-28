@@ -49,7 +49,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -152,7 +152,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
-  UserDetailsProvider? _userProv;
   final _chainController = Get.find<ChainStatusController>();
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
@@ -321,8 +320,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _retrievePendingNotifications();
-
-    _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -909,13 +906,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           if (thisShortcut.addPlayerId != null) {
             // Avoid null objects coming before the introduction of this replacement (v2.9.4)
             if (thisShortcut.addPlayerId!) {
-              url = url!.replaceAll("##P##", _userProv!.basic!.playerId.toString());
+              url = url!.replaceAll("##P##", UserHelper.playerId.toString());
             }
             if (thisShortcut.addFactionId!) {
-              url = url!.replaceAll("##F##", _userProv!.basic!.faction!.factionId.toString());
+              url = url!.replaceAll("##F##", UserHelper.factionId.toString());
             }
             if (thisShortcut.addCompanyId!) {
-              url = url!.replaceAll("##C##", _userProv!.basic!.job!.companyId.toString());
+              url = url!.replaceAll("##C##", UserHelper.companyId.toString());
             }
           }
 
@@ -926,13 +923,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           if (thisShortcut.addPlayerId != null) {
             // Avoid null objects coming before the introduction of this replacement (v2.9.4)
             if (thisShortcut.addPlayerId!) {
-              url = url!.replaceAll("##P##", _userProv!.basic!.playerId.toString());
+              url = url!.replaceAll("##P##", UserHelper.playerId.toString());
             }
             if (thisShortcut.addFactionId!) {
-              url = url!.replaceAll("##F##", _userProv!.basic!.faction!.factionId.toString());
+              url = url!.replaceAll("##F##", UserHelper.factionId.toString());
             }
             if (thisShortcut.addCompanyId!) {
-              url = url!.replaceAll("##C##", _userProv!.basic!.job!.companyId.toString());
+              url = url!.replaceAll("##C##", UserHelper.companyId.toString());
             }
           }
 
@@ -1597,7 +1594,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               const SizedBox(width: 20),
               ForeignStockButton(
-                userProv: _userProv,
                 settingsProv: _settingsProvider,
                 launchBrowser: _launchBrowser,
                 updateCallback: _updateCallback,
@@ -1723,7 +1719,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               const SizedBox(width: 20),
               ForeignStockButton(
-                userProv: _userProv,
                 settingsProv: _settingsProvider,
                 launchBrowser: _launchBrowser,
                 updateCallback: _updateCallback,
@@ -1818,7 +1813,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Row(
             children: [
               ForeignStockButton(
-                userProv: _userProv,
                 settingsProv: _settingsProvider,
                 launchBrowser: _launchBrowser,
                 updateCallback: _updateCallback,
@@ -1835,7 +1829,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             themeProvider: _themeProvider,
             user: _user,
             settingsProv: _settingsProvider,
-            userProv: _userProv,
             launchBrowser: _launchBrowser,
             updateCallback: _updateCallback,
           ),
@@ -4769,7 +4762,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         explicitChildNodes: true,
         child: OrganizedCrimeWidget(
           crimeResponse: _oc2Model!,
-          playerId: _userProv!.basic!.playerId!,
+          playerId: UserHelper.playerId,
         ),
       );
 
@@ -5732,7 +5725,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 }
               });
 
-              if (participant.containsKey(_userProv!.basic!.playerId.toString())) {
+              if (participant.containsKey(UserHelper.playerId.toString())) {
                 complexString = crime.crimeName;
                 complexTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady! * 1000);
               }
@@ -5876,7 +5869,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _getFactionCrimesV2() async {
     // If we are in OCv1, we don't need to get v2 crimes
     if (!_settingsProvider!.playerInOCv2) return;
-    if (_userProv!.basic!.faction!.factionId == 0) return;
+    if (UserHelper.factionId == 0) return;
 
     final dynamic apiResponse = await ApiCallsV2.getUserOC2Crime_v2();
     if (apiResponse != null) {

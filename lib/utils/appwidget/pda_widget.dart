@@ -171,7 +171,11 @@ Future<void> fetchAndPersistWidgetData() async {
     String apiKey = "";
     var savedUserRaw = await Prefs().getOwnDetails();
     if (savedUserRaw.isNotEmpty) {
-      apiKey = ownProfileBasicFromJson(savedUserRaw).userApiKey ?? "";
+      try {
+        apiKey = ownProfileBasicFromJson(savedUserRaw).userApiKey ?? "";
+      } catch (e) {
+        apiKey = "";
+      }
     }
 
     // Set last updated time globally for all widgets that might need it
@@ -316,7 +320,12 @@ Future<void> cancelAllWidgetBackgroundTasks() async {
 /// - fetchAndPersistWidgetData (only if the Ranked War widget is installed)
 /// Purpose: Find a relevant upcoming/active war for the user’s faction and store a compact snapshot.
 Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) async {
-  var user = ownProfileBasicFromJson(savedUserRaw);
+  OwnProfileBasic user;
+  try {
+    user = ownProfileBasicFromJson(savedUserRaw);
+  } catch (e) {
+    user = OwnProfileBasic();
+  }
   final dynamic warResponse = await ApiCallsV1.getAppWidgetRankedWars(forcedApiKey: apiKey);
 
   // Get the faction ID to be used for the check

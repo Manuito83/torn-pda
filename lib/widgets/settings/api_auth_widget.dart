@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
@@ -27,7 +28,6 @@ class ApiKeySectionWidget extends StatefulWidget {
   final Future<void> Function({required bool userTriggered, required String currentKey}) getApiDetails;
   final Function changeUID;
   final void Function() setStateOnParent;
-  final void Function() removeUserProvider;
 
   final void Function(bool) changeApiError;
   final void Function(dynamic) changeUserProfile;
@@ -46,7 +46,6 @@ class ApiKeySectionWidget extends StatefulWidget {
     required this.getApiDetails,
     required this.changeUID,
     required this.setStateOnParent,
-    required this.removeUserProvider,
     required this.changeApiError,
     required this.changeUserProfile,
   });
@@ -56,7 +55,7 @@ class ApiKeySectionWidget extends StatefulWidget {
 }
 
 class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
-  ExpandableController _tosExpandableController = ExpandableController();
+  final ExpandableController _tosExpandableController = ExpandableController();
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +172,7 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
                                     // Removes the form error
                                     widget.formKey.currentState!.reset();
                                     widget.apiKeyInputController.clear();
-                                    widget.removeUserProvider();
+                                    UserHelper.removeUser();
                                     widget.setStateOnParent();
                                     widget.changeUserProfile(null);
                                     widget.changeApiError(false);

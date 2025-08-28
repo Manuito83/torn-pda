@@ -11,7 +11,7 @@ import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -34,14 +34,14 @@ class WebviewShortcutsDialog extends StatefulWidget {
 class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
   late ThemeProvider _themeProvider;
   late ShortcutsProvider _shortcutsProvider;
-  late UserDetailsProvider _userProv;
+  
   late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
 
-    _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
+    
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
@@ -179,13 +179,13 @@ class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
 
         if (thisShortcut.addPlayerId != null) {
           if (thisShortcut.addPlayerId!) {
-            url = url!.replaceAll("##P##", _userProv.basic!.playerId.toString());
+            url = url!.replaceAll("##P##", UserHelper.playerId.toString());
           }
           if (thisShortcut.addFactionId!) {
-            url = url!.replaceAll("##F##", _userProv.basic!.faction!.factionId.toString());
+            url = url!.replaceAll("##F##", UserHelper.factionId.toString());
           }
           if (thisShortcut.addCompanyId!) {
-            url = url!.replaceAll("##C##", _userProv.basic!.job!.companyId.toString());
+            url = url!.replaceAll("##C##", UserHelper.companyId.toString());
           }
         }
 
@@ -206,13 +206,13 @@ class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
 
         if (thisShortcut.addPlayerId != null) {
           if (thisShortcut.addPlayerId!) {
-            url = url!.replaceAll("##P##", _userProv.basic!.playerId.toString());
+            url = url!.replaceAll("##P##", UserHelper.playerId.toString());
           }
           if (thisShortcut.addFactionId!) {
-            url = url!.replaceAll("##F##", _userProv.basic!.faction!.factionId.toString());
+            url = url!.replaceAll("##F##", UserHelper.factionId.toString());
           }
           if (thisShortcut.addCompanyId!) {
-            url = url!.replaceAll("##C##", _userProv.basic!.job!.companyId.toString());
+            url = url!.replaceAll("##C##", UserHelper.companyId.toString());
           }
         }
 

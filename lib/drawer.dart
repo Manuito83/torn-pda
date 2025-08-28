@@ -59,7 +59,7 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
@@ -75,6 +75,7 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'utils/dialog_queue.dart';
 import 'package:torn_pda/widgets/drawer/bugs_announcement_dialog.dart';
 import 'package:torn_pda/widgets/drawer/memory_widget_drawer.dart';
@@ -126,7 +127,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   final StatsController _statsController = StatsController();
 
   ThemeProvider? _themeProvider;
-  UserDetailsProvider? _userProvider;
+
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
   late WebViewProvider _webViewProvider;
@@ -530,7 +531,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _checkAndLaunchWebViewIfNeeded() async {
-    if (!_userProvider!.basic!.userApiKeyValid!) return;
+    if (!UserHelper.isApiKeyValid) return;
 
     String defaultSection = await Prefs().getDefaultSection();
     if (defaultSection == "browser" || defaultSection == "browser_full") {
@@ -646,7 +647,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Connectivity check
       Prefs().setPdaConnectivityCheck(remoteConfig.getBool("pda_connectivity_check"));
-
     } catch (e) {
       log('Error updating Remote Config values: $e');
     }
@@ -1718,7 +1718,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Widget build(BuildContext context) {
     super.build(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    _userProvider = Provider.of<UserDetailsProvider>(context);
     // Listen actively to [_webViewProvider] even if was already assigned in [_loadInitPreferences]
     // so that the drawer is properly configured based on split/rotation preferences
     _webViewProvider = Provider.of<WebViewProvider>(context);
@@ -2099,7 +2098,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final drawerOptions = <Widget>[];
     // If API key is not valid, we just show the Settings + About pages
     // (just don't add the other sections to the list)
-    if (!_userProvider!.basic!.userApiKeyValid!) {
+    if (!UserHelper.isApiKeyValid) {
       for (final position in _allowSectionsWithoutKey) {
         drawerOptions.add(
           ListTileTheme(
@@ -2292,14 +2291,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _openDrawer();
     });
 
-    // Set up UserProvider. If key is empty, redirect to the Settings page.
+    // Set up UserController. If key is empty, redirect to the Settings page.
     // Else, open the default
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    await _userProvider!.loadPreferences();
+    final userController = Get.find<UserController>();
+    try {
+      await userController.loadPreferences();
+    } catch (e) {
+      // UserController handles its own initialization
+    }
 
-    // User Provider was started in Main
     // If key is empty, redirect to the Settings page.
-    if (_userProvider?.basic?.userApiKeyValid != null && !_userProvider!.basic!.userApiKeyValid!) {
+    if (!userController.isApiKeyValid) {
       _selected = _settingsPosition;
       _activeDrawerIndex = _settingsPosition;
     } else {
@@ -2350,7 +2352,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // NOTE: we have already checked this before, but it's important!
     // (so be leave this as a reminder)
-    if (_userProvider?.basic?.userApiKeyValid != true) return;
+    if (!UserHelper.isApiKeyValid) return;
 
     // Case 1: Post-import user creation
     if (justImportedFromLocalBackup) {
@@ -2471,7 +2473,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         name: "Drawer AUTH",
       );
 
-      final String fullApiKey = _userProvider?.basic?.userApiKey ?? 'API Key not available';
+      final String fullApiKey = UserHelper.apiKey;
 
       await FirebaseCrashlytics.instance.recordError(
         Exception('Auth Restoration: Timeout after 20 seconds'),
@@ -2513,8 +2515,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future<void> _updateLastActiveTime() async {
     _preferencesCompleter.future.whenComplete(() async {
       // Prevents update on first load
-      final api = _userProvider?.basic?.userApiKey;
-      if (api == null || api.isEmpty) return;
+      final api = UserHelper.apiKey;
+      if (api.isEmpty) return;
 
       // Calculate difference between last recorded use and current time
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -2539,7 +2541,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future<void> _updateFirebaseDetails() async {
     // We save the key because the API call will reset it
     // Then get user's profile and update
-    final savedKey = _userProvider!.basic!.userApiKey;
+    final savedKey = UserHelper.apiKey;
+    if (savedKey.isEmpty) return;
     final dynamic prof = await ApiCallsV1.getOwnProfileBasic();
     if (prof is OwnProfileBasic) {
       // Update profile with the two fields it does not contain

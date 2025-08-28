@@ -19,7 +19,7 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
@@ -63,7 +63,6 @@ class WebViewPanic extends StatefulWidget {
 class WebViewPanicState extends State<WebViewPanic> {
   WebViewController? _webViewController;
 
-  UserDetailsProvider? _userProv;
   final _chainStatusProvider = Get.find<ChainStatusController>();
   late SettingsProvider _settingsProvider;
   ThemeProvider? _themeProvider;
@@ -104,7 +103,7 @@ class WebViewPanicState extends State<WebViewPanic> {
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
     _loadPreferences();
-    _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
+
     _initialUrl = 'https://www.torn.com/loader.php?sid=attack&user2ID=${widget.attackIdList[0]}';
     _currentPageTitle = '${widget.attackNameList[0]}';
     _attackedIds.add(widget.attackIdList[0]);
@@ -249,7 +248,7 @@ class WebViewPanicState extends State<WebViewPanic> {
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
     final senderColor =
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
-    final String hlMap = '[ "${_userProv!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String hlMap = '[ "${UserHelper.playerName}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
@@ -402,7 +401,6 @@ class WebViewPanicState extends State<WebViewPanic> {
           title: _currentPageTitle,
           url: url.toString(),
           stockWebView: _webViewController,
-          userProvider: _userProv,
         );
       },
     );
@@ -524,7 +522,7 @@ class WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await ApiCallsV1.getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: UserHelper.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -647,7 +645,7 @@ class WebViewPanicState extends State<WebViewPanic> {
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await ApiCallsV1.getTarget(playerId: _userProv!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: UserHelper.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -912,7 +910,7 @@ class WebViewPanicState extends State<WebViewPanic> {
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProv!.basic!.userApiKey,
+              apiKey: UserHelper.apiKey,
               profileCheckType: ProfileCheckType.profile,
               themeProvider: _themeProvider,
             );
@@ -935,7 +933,7 @@ class WebViewPanicState extends State<WebViewPanic> {
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProv!.basic!.userApiKey,
+              apiKey: UserHelper.apiKey,
               profileCheckType: ProfileCheckType.attack,
               themeProvider: _themeProvider,
             );

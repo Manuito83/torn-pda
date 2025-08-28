@@ -57,7 +57,6 @@ import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -373,8 +372,6 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // UserDetailsProvider has to go first to initialize the others!
-        ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
         ChangeNotifierProvider<TargetsProvider>(create: (context) => TargetsProvider()),
         ChangeNotifierProvider<AttacksProvider>(create: (context) => AttacksProvider()),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),

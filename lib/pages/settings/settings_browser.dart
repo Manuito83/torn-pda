@@ -20,10 +20,10 @@ import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/pages/settings_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/settings/chat_highlight_word_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/pages/settings/locked_tab_exceptions_page.dart';
@@ -31,9 +31,7 @@ import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class SettingsBrowserPage extends StatefulWidget {
-  final UserDetailsProvider userDetailsProvider;
-
-  const SettingsBrowserPage({required this.userDetailsProvider, super.key});
+  const SettingsBrowserPage({super.key});
 
   @override
   SettingsBrowserPageState createState() => SettingsBrowserPageState();
@@ -431,7 +429,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => UserScriptsPage(),
+                        builder: (BuildContext context) => const UserScriptsPage(),
                       ),
                     );
                   },
@@ -2054,9 +2052,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
   }
 
   Widget _travelExpenditureWarning() {
-    final currentEnergyMax = widget.userDetailsProvider.basic?.energy?.maximum ?? -1;
-    final currentNerveMax = widget.userDetailsProvider.basic?.nerve?.maximum ?? -1;
-    final currentLifeMax = widget.userDetailsProvider.basic?.life?.maximum ?? -1;
+    final currentEnergyMax = UserHelper.basic?.energy?.maximum ?? -1;
+    final currentNerveMax = UserHelper.basic?.nerve?.maximum ?? -1;
+    final currentLifeMax = UserHelper.basic?.life?.maximum ?? -1;
     List<SearchableRow> rows = [
       SearchableRow(
         label: "Energy excess warning",

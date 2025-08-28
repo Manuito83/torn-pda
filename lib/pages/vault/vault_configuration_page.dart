@@ -10,21 +10,19 @@ import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/vault/vault_configuration_dialog.dart';
 
 class VaultConfigurationPage extends StatefulWidget {
   final Function callback;
-  final UserDetailsProvider? userProvider;
   final VaultStatusModel vaultStatus;
   final VaultTransactionModel lastTransaction;
 
   const VaultConfigurationPage({
     required this.callback,
-    required this.userProvider,
     required this.vaultStatus,
     required this.lastTransaction,
   });
@@ -125,8 +123,7 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
     Widget share = const SizedBox.shrink();
     Widget options = const SizedBox.shrink();
 
-    final spouseName =
-        widget.userProvider!.basic!.married?.spouseId == 0 ? "Spouse" : widget.userProvider!.basic!.married!.spouseName;
+    final spouseName = UserHelper.spouseId == 0 ? "Spouse" : UserHelper.spouseName;
 
     // If we have never initialise (or we deleted) the share
     if (widget.vaultStatus.player == null) {
@@ -135,7 +132,7 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
         children: [
           Text("Total: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
           const SizedBox(height: 10),
-          Text("${widget.userProvider!.basic!.name}: ?"),
+          Text("${UserHelper.playerName}: ?"),
           Text("$spouseName: ?"),
         ],
       );
@@ -160,7 +157,7 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
           children: [
             Text("Total: \$${_moneyFormat.format(widget.vaultStatus.total)}"),
             const SizedBox(height: 10),
-            Text("${widget.userProvider!.basic!.name}: "
+            Text("${UserHelper.playerName}: "
                 "${_moneyFormat.format(widget.vaultStatus.player)}"),
             Text("$spouseName: "
                 "${_moneyFormat.format(widget.vaultStatus.spouse)}"),
@@ -185,7 +182,7 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
             ),
             const SizedBox(height: 10),
             Text(
-              "${widget.userProvider!.basic!.name}: "
+              "${UserHelper.playerName}: "
               "${_moneyFormat.format(widget.vaultStatus.player)}",
               style: TextStyle(
                 color: Colors.orange[800],
@@ -211,7 +208,7 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
               const SizedBox(height: 20),
               Text("In the vault now: \$${_moneyFormat.format(widget.lastTransaction.balance)}"),
               const SizedBox(height: 10),
-              Text("${widget.userProvider!.basic!.name}: ?"),
+              Text("${UserHelper.playerName}: ?"),
               Text("$spouseName: ?"),
             ],
           ),
@@ -278,7 +275,6 @@ class VaultConfigurationPageState extends State<VaultConfigurationPage> {
           content: VaultConfigurationDialog(
             lastTransaction: widget.lastTransaction,
             vaultStatus: widget.vaultStatus,
-            userProvider: widget.userProvider,
             callbackShares: _onDialogSendData,
           ),
         );

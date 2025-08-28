@@ -19,18 +19,16 @@ import 'package:torn_pda/models/trades/trade_item_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/trades/trades_receipt_widget.dart';
 import 'package:torn_pda/widgets/webviews/webview_full_awh.dart';
 
 class TradesWidget extends StatefulWidget {
   final ThemeProvider? themeProv;
-  final UserDetailsProvider? userProv;
   final InAppWebViewController? webView;
 
   const TradesWidget({
     required this.themeProv,
-    required this.userProv,
     required this.webView,
   });
 
@@ -976,7 +974,7 @@ class TradesWidgetState extends State<TradesWidget> {
     }
 
     awhContainer
-      ..me = widget.userProv!.basic!.playerId
+      ..me = UserHelper.playerId
       ..them = _tradesProv.container.sellerName
       ..tradeId = _tradesProv.container.tradeId
       ..version = 1

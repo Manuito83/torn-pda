@@ -6,9 +6,9 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/external/tsc_comm.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 
 import '../../models/faction/faction_model.dart';
 
@@ -315,9 +315,8 @@ class ShareAttackDialogState extends State<ShareAttackDialog> {
                     _saveSettings();
                     final text = _buildShareText();
                     final sb = Get.find<SendbirdController>();
-                    final userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-                    final faction = userProvider.basic?.faction?.factionId;
-                    if (faction != null) {
+                    final faction = UserHelper.factionId;
+                    if (faction != 0) {
                       sb.sendMessage(channelUrl: 'faction-$faction', message: text);
                       debugPrint(text);
                     }

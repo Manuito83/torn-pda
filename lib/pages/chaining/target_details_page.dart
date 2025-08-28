@@ -12,7 +12,7 @@ import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 
@@ -26,7 +26,7 @@ class TargetDetailsPage extends StatefulWidget {
 }
 
 class TargetDetailsPageState extends State<TargetDetailsPage> {
-  late UserDetailsProvider _userDetails;
+  
   late SettingsProvider _settingsProvider;
   late ThemeProvider _themeProvider;
 
@@ -36,7 +36,7 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
+    
 
     routeWithDrawer = false;
     routeName = "target_details";
@@ -134,7 +134,7 @@ class TargetDetailsPageState extends State<TargetDetailsPage> {
                       _returnStatus(),
                       const SizedBox(height: 20),
                       Text('Awards: ${widget.target!.awards} '
-                          '(you have ${_userDetails.basic!.awards})'),
+                          '(you have ${UserHelper.awards})'),
                       const SizedBox(height: 20),
                       Text('Donator: ${widget.target!.donator == 0 ? 'NO' : 'YES'}'),
                       Text('Friends/Enemies: ${widget.target!.friends}'

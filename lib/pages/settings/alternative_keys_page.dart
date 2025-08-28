@@ -139,6 +139,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       if (!enabled) {
                         w.alternativeYataKey = w.apiKey!;
                       }
+                      w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
                     activeColor: Colors.green,
@@ -169,6 +170,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           }
                           w.alternativeYataKey = key;
                           Prefs().setAlternativeYataKey(key);
+                          w.update(); // Notify GetBuilder observers
                         },
                       ),
                     ),
@@ -209,6 +211,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       if (!enabled) {
                         w.alternativeTornStatsKey = w.apiKey!;
                       }
+                      w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
                     activeColor: Colors.green,
@@ -239,6 +242,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           }
                           w.alternativeTornStatsKey = key;
                           Prefs().setAlternativeTornStatsKey(key);
+                          w.update(); // Notify GetBuilder observers
                         },
                       ),
                     ),
@@ -279,6 +283,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       if (!enabled) {
                         w.alternativeTSCKey = w.apiKey!;
                       }
+                      w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
                     activeColor: Colors.green,
@@ -309,6 +314,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                           }
                           w.alternativeTSCKey = key;
                           Prefs().setAlternativeTSCKey(key);
+                          w.update(); // Notify GetBuilder observers
                         },
                       ),
                     ),

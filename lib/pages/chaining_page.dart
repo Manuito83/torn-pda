@@ -18,9 +18,9 @@ import 'package:torn_pda/pages/chaining/war_page.dart';
 import 'package:torn_pda/providers/retals_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/bounce_tabbar.dart';
 //import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -37,7 +37,6 @@ class ChainingPageState extends State<ChainingPage> {
   ThemeProvider? _themeProvider;
   Future? _preferencesLoaded;
   late SettingsProvider _settingsProvider;
-  late UserDetailsProvider _userProvider;
   late RetalsController _r;
 
   int _currentPage = 0;
@@ -51,7 +50,6 @@ class ChainingPageState extends State<ChainingPage> {
   void initState() {
     super.initState();
     _isAppBarTop = context.read<SettingsProvider>().appBarTop;
-    _userProvider = context.read<UserDetailsProvider>();
     _r = Get.put(RetalsController());
     _preferencesLoaded = _restorePreferences();
 
@@ -86,7 +84,7 @@ class ChainingPageState extends State<ChainingPage> {
                       ),
                       const AttacksPage(),
                       const WarPage(),
-                      if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
+                      if (UserHelper.factionId != 0 && _retaliationEnabled)
                         RetalsPage(
                           retalsController: _r,
                         ),
@@ -126,7 +124,7 @@ class ChainingPageState extends State<ChainingPage> {
                               width: 17,
                               color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                             ),
-                            if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
+                            if (UserHelper.factionId != 0 && _retaliationEnabled)
                               FaIcon(
                                 FontAwesomeIcons.personWalkingArrowLoopLeft,
                                 color: isThemeLight ? Colors.white : _themeProvider!.mainText,
@@ -177,7 +175,7 @@ class ChainingPageState extends State<ChainingPage> {
                         width: 17,
                         color: isThemeLight ? Colors.white : _themeProvider!.mainText,
                       ),
-                      if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled)
+                      if (UserHelper.factionId != 0 && _retaliationEnabled)
                         FaIcon(
                           FontAwesomeIcons.personWalkingArrowLoopLeft,
                           color: isThemeLight ? Colors.white : _themeProvider!.mainText,
@@ -205,7 +203,7 @@ class ChainingPageState extends State<ChainingPage> {
   Future _restorePreferences() async {
     //_tacEnabled = await Prefs().getTACEnabled();
 
-    if (widget.retalsRedirection && (_userProvider.basic!.faction!.factionId != 0 || !_retaliationEnabled)) {
+    if (widget.retalsRedirection && (UserHelper.factionId != 0 || !_retaliationEnabled)) {
       _currentPage = 3;
     } else {
       _currentPage = await Prefs().getChainingCurrentPage();
@@ -226,7 +224,7 @@ class ChainingPageState extends State<ChainingPage> {
           _settingsProvider.addShowCase = "war";
         }
       case 3:
-        if (_userProvider.basic!.faction!.factionId != 0 && _retaliationEnabled) {
+        if (UserHelper.factionId != 0 && _retaliationEnabled) {
           analytics?.logScreenView(screenName: 'retals');
           _r.retrieveRetals(context);
         }

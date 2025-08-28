@@ -14,7 +14,7 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/ranked_war_card.dart';
@@ -32,7 +32,7 @@ class RankedWarsPage extends StatefulWidget {
 class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProviderStateMixin {
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
-  late UserDetailsProvider _userProvider;
+  
   late WebViewProvider _webViewProvider;
 
   RankedWarsModel _rankedWarsModel = RankedWarsModel();
@@ -73,8 +73,8 @@ class RankedWarsPageState extends State<RankedWarsPage> with SingleTickerProvide
 
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
 
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-    _ownFaction = _userProvider.basic!.faction!.factionId ?? 0;
+    
+    _ownFaction = UserHelper.factionId;
 
     _rankedWarsFetchedAndPrefsLoaded = _loadPrefsAndFetchData();
 

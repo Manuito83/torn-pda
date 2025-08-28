@@ -30,7 +30,6 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
@@ -38,6 +37,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -60,7 +60,6 @@ class WarCardState extends State<WarCard> {
   late Member _member;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
-  late UserDetailsProvider _userProvider;
   final _chainProvider = Get.find<ChainStatusController>();
   late WebViewProvider _webViewProvider;
 
@@ -79,7 +78,6 @@ class WarCardState extends State<WarCard> {
     _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
   }
 
   @override
@@ -819,10 +817,10 @@ class WarCardState extends State<WarCard> {
 
     if (_member.statsExactTotalKnown != -1) {
       Color? exactColor = Colors.green;
-      if (_userProvider.basic!.total! < _member.statsExactTotalKnown! - _member.statsExactTotalKnown! * 0.1) {
+      if (UserHelper.totalStats < _member.statsExactTotalKnown! - _member.statsExactTotalKnown! * 0.1) {
         exactColor = Colors.red[700];
-      } else if ((_userProvider.basic!.total! >= _member.statsExactTotalKnown! - _member.statsExactTotalKnown! * 0.1) &&
-          (_userProvider.basic!.total! <= _member.statsExactTotalKnown! + _member.statsExactTotalKnown! * 0.1)) {
+      } else if ((UserHelper.totalStats >= _member.statsExactTotalKnown! - _member.statsExactTotalKnown! * 0.1) &&
+          (UserHelper.totalStats <= _member.statsExactTotalKnown! + _member.statsExactTotalKnown! * 0.1)) {
         exactColor = Colors.orange[700];
       }
 
@@ -889,7 +887,6 @@ class WarCardState extends State<WarCard> {
                     name: _member.name!,
                     factionName: _member.factionName!,
                     themeProvider: _themeProvider,
-                    userDetailsProvider: _userProvider,
                   );
 
                   final estimatedStatsPayload = EstimatedStatsPayload(

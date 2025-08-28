@@ -7,19 +7,17 @@ import 'package:torn_pda/models/vault/vault_status_model.dart';
 // Project imports:
 import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 import 'package:torn_pda/pages/vault/vault_configuration_page.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 
 class VaultWidget extends StatefulWidget {
   final List<dom.Element>? vaultHtml;
   final int? playerId;
-  final UserDetailsProvider? userProvider;
 
   const VaultWidget({
     super.key,
     required this.vaultHtml,
     required this.playerId,
-    required this.userProvider,
   });
 
   @override
@@ -148,7 +146,7 @@ class VaultWidgetState extends State<VaultWidget> {
                   child: Column(
                     children: [
                       Text(
-                        widget.userProvider!.basic!.name!,
+                        UserHelper.playerName,
                         style: const TextStyle(color: Colors.orange, fontSize: 12),
                       ),
                       Text(
@@ -170,9 +168,7 @@ class VaultWidgetState extends State<VaultWidget> {
                   child: Column(
                     children: [
                       Text(
-                        widget.userProvider!.basic!.married?.spouseId == 0
-                            ? "Spouse"
-                            : widget.userProvider!.basic!.married!.spouseName!,
+                        UserHelper.spouseId == 0 ? "Spouse" : UserHelper.spouseName,
                         style: const TextStyle(color: Colors.orange, fontSize: 12),
                       ),
                       Text(
@@ -375,7 +371,6 @@ class VaultWidgetState extends State<VaultWidget> {
             builder: (context) {
               return VaultConfigurationPage(
                 callback: _configurationCallback,
-                userProvider: widget.userProvider,
                 vaultStatus: _vaultStatus,
                 lastTransaction: _lastTransaction,
               );

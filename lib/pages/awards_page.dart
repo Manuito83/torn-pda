@@ -17,7 +17,7 @@ import 'package:torn_pda/pages/awards/awards_graphs.dart';
 import 'package:torn_pda/providers/awards_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/external/yata_comm.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -59,7 +59,7 @@ class AwardsPageState extends State<AwardsPage> {
   String? _errorReason = "";
 
   late SettingsProvider _settingsProvider;
-  late UserDetailsProvider _userProvider;
+  
   late ThemeProvider _themeProvider;
   late AwardsProvider _pinProvider;
   late WebViewProvider _webViewProvider;
@@ -94,7 +94,7 @@ class AwardsPageState extends State<AwardsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    
     _pinProvider = Provider.of<AwardsProvider>(context, listen: false);
     _getAwardsPayload = _fetchYataAndPopulate();
 
@@ -719,7 +719,7 @@ class AwardsPageState extends State<AwardsPage> {
   Future _fetchYataAndPopulate() async {
     await _restorePrefs();
 
-    final reply = await YataComm.getAwards(_userProvider.basic!.userApiKey);
+    final reply = await YataComm.getAwards(UserHelper.apiKey);
     if (reply is YataError) {
       _errorReason = reply.reason;
     } else {

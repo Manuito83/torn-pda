@@ -23,11 +23,11 @@ import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
@@ -1672,7 +1672,6 @@ class WebViewProvider extends ChangeNotifier {
   Future<String?> _assessNativeAuth({required String? inputUrl, required BuildContext context}) async {
     final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
     final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
-    final UserDetailsProvider userProvider = context.read<UserDetailsProvider>();
 
     if (nativeUser.playerLastLoginMethod == NativeLoginType.none) {
       log("No native user enabled, skipping auth!");
@@ -1699,7 +1698,7 @@ class WebViewProvider extends ChangeNotifier {
           final TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
             context: context,
             loginData: GetInitDataModel(
-              playerId: userProvider.basic!.playerId,
+              playerId: UserHelper.playerId,
               sToken: nativeUser.playerSToken,
             ),
           );

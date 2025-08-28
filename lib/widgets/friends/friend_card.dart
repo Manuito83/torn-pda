@@ -14,9 +14,9 @@ import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/pages/friends/friend_details_page.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
@@ -33,7 +33,6 @@ class FriendCardState extends State<FriendCard> {
   FriendModel? _friend;
   late FriendsProvider _friendsProvider;
   late ThemeProvider _themeProvider;
-  late UserDetailsProvider _userProvider;
 
   Timer? _ticker;
 
@@ -57,7 +56,6 @@ class FriendCardState extends State<FriendCard> {
     _returnLastUpdated();
     _friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Slidable(
       startActionPane: ActionPane(
         extentRatio: 0.25,
@@ -394,12 +392,12 @@ class FriendCardState extends State<FriendCard> {
     if (_friend!.hasFaction!) {
       Color? borderColor = Colors.transparent;
       Color? iconColor = _themeProvider.mainText;
-      if (_friend!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
+      if (_friend!.faction!.factionId == UserHelper.factionId) {
         borderColor = iconColor = Colors.green[500];
       }
 
       void showFactionToast() {
-        if (_friend!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
+        if (_friend!.faction!.factionId == UserHelper.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_friend!.name} belongs to your same faction "
                 "(${_friend!.faction!.factionName}) as "
@@ -476,7 +474,7 @@ class FriendCardState extends State<FriendCard> {
       );
     }
 
-    if (_friend!.job!.companyId == _userProvider.basic!.job!.companyId) {
+    if (_friend!.job!.companyId == UserHelper.companyId) {
       final Widget companyIcon = Material(
         type: MaterialType.transparency,
         child: Ink(

@@ -27,7 +27,7 @@ import 'package:torn_pda/models/chaining/tac/tac_target_model.dart';
 //import 'package:torn_pda/private/tac_config.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/api_caller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
@@ -50,7 +50,6 @@ class TacPageState extends State<TacPage> {
   TacProvider _tacProvider;
   ThemeProvider _themeProvider;
   SettingsProvider _settingsProvider;
-  UserDetailsProvider _userProvider;
 
   final _chainWidgetKey = GlobalKey();
 
@@ -105,7 +104,7 @@ class TacPageState extends State<TacPage> {
     super.initState();
     _tacProvider = Provider.of<TacProvider>(context, listen: false);
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+    
     _preferencesLoaded = _restorePreferences();
 
     analytics?.logScreenView(screenName: 'tac');
@@ -677,7 +676,7 @@ class TacPageState extends State<TacPage> {
 
     var url = 'https://tornattackcentral.eu/pdaintegration.php?'
         //'password=${TacConfig.password}'
-        '&userid=${_userProvider.basic.playerId}'
+        '&userid=${UserHelper.playerId}'
         '&optimallevel=${_tacFilters.optimalLevel}'
         '&optimal=$optimal'
         '&rank=${_tacFilters.rank}'
@@ -685,10 +684,10 @@ class TacPageState extends State<TacPage> {
         '&minlevel=${_tacFilters.minLevel}'
         '&maxlevel=${_tacFilters.maxLevel}'
         '&maxlife=${_tacFilters.maxLife}'
-        '&strength=${_userProvider.basic.strength}'
-        '&speed=${_userProvider.basic.speed}'
-        '&dexterity=${_userProvider.basic.dexterity}'
-        '&defense=${_userProvider.basic.defense}'
+        '&strength=${UserHelper.strength}'
+        '&speed=${UserHelper.speed}'
+        '&dexterity=${UserHelper.dexterity}'
+        '&defense=${UserHelper.defense}'
         '&chainnumber=$currentChainHit';
 
     try {

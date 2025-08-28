@@ -25,9 +25,9 @@ import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
@@ -1010,8 +1010,7 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
   }
 
   Future _restorePreferences() async {
-    final userDetails = Provider.of<UserDetailsProvider>(context, listen: false);
-    _myCurrentKey = userDetails.basic!.userApiKey;
+    _myCurrentKey = UserHelper.apiKey;
     if (_myCurrentKey != '') {
       await _fetchTornApi();
     }

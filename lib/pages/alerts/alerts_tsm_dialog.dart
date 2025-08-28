@@ -2,15 +2,14 @@ import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 
 class AlertsTsmDialog extends StatefulWidget {
   final FirebaseUserModel? firebaseUserModel;
@@ -156,10 +155,8 @@ class _AlertsTsmDialogState extends State<AlertsTsmDialog> {
                       });
 
                       try {
-                        final userProv = context.read<UserDetailsProvider>();
-
                         // We save the key because the API call will reset it
-                        final savedKey = userProv.basic!.userApiKey;
+                        final savedKey = UserHelper.apiKey;
 
                         final dynamic myProfile = await ApiCallsV1.getOwnProfileBasic();
 

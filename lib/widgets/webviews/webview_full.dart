@@ -1,4 +1,6 @@
 // Dart imports:
+// ignore_for_file: overridden_fields
+
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -55,7 +57,6 @@ import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -67,6 +68,7 @@ import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
 import 'package:torn_pda/utils/webview/webview_utils.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
@@ -281,7 +283,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   final List<String> _lastAttackedTargets = <String>[];
   final List<String> _lastAttackedMembers = <String>[];
 
-  UserDetailsProvider? _userProvider;
   final UserController _u = Get.find<UserController>();
   late TerminalProvider _terminalProvider;
 
@@ -411,7 +412,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
     _localChatRemovalActive = widget.chatRemovalActive;
 
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
     _nativeUser = context.read<NativeUserProvider>();
@@ -936,7 +936,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                             ),
                           if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-                              _userProvider!.basic?.faction?.factionId != 0)
+                              UserHelper.factionId != 0)
                             Text(
                               "ASSIST",
                               textAlign: TextAlign.center,
@@ -1230,13 +1230,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             // Userscripts initial load
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
-                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1344,13 +1344,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
-                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1605,7 +1605,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
-                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.end,
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
@@ -2275,7 +2275,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
           context: context,
           loginData: GetInitDataModel(
-            playerId: _userProvider!.basic!.playerId,
+            playerId: UserHelper.playerId,
             sToken: _nativeUser.playerSToken,
           ),
         );
@@ -2342,7 +2342,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
     final senderColor =
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
-    final String hlMap = '[ "${_userProvider!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String hlMap = '[ "${UserHelper.playerName}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
@@ -2487,7 +2487,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
     final bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-        _userProvider!.basic?.faction?.factionId != 0;
+        UserHelper.factionId != 0;
 
     // Leading width calculation
     final bool hasBackIcon = !(_backButtonPopsContext && _webViewProvider.webViewSplitActive);
@@ -3511,7 +3511,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         final RegExp regId = RegExp("XID=([0-9]+)");
         final matches = regId.allMatches(html.attributes["href"]!);
         final id = int.parse(matches.elementAt(0).group(1)!);
-        if (id != _userProvider!.basic!.playerId) {
+        if (id != UserHelper.playerId) {
           sellerId = id;
           break;
         }
@@ -3536,8 +3536,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (!mounted) return;
     final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
-      playerId: _userProvider!.basic!.playerId!,
-      playerName: _userProvider!.basic!.name!,
+      playerId: UserHelper.playerId,
+      playerName: UserHelper.playerName,
       sellerName: sellerName,
       sellerId: sellerId,
       tradeId: tradeId,
@@ -3560,7 +3560,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           _tradesFullActive = true;
           _tradesExpandable = TradesWidget(
             themeProv: _themeProvider,
-            userProv: _userProvider,
             webView: webViewController,
           );
         });
@@ -3638,7 +3637,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           transitionType: ContainerTransitionType.fadeThrough,
           openBuilder: (BuildContext context, VoidCallback _) {
             return TradesOptions(
-              playerId: _userProvider!.basic!.playerId,
+              playerId: UserHelper.playerId,
               callback: _tradesPreferencesLoad,
             );
           },
@@ -3763,8 +3762,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       _vaultExpandable = VaultWidget(
         key: UniqueKey(),
         vaultHtml: allTransactions,
-        playerId: _userProvider!.basic!.playerId,
-        userProvider: _userProvider,
+        playerId: UserHelper.playerId,
       );
     });
   }
@@ -4219,7 +4217,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               _profileAttackWidget = ProfileAttackCheckWidget(
                 key: UniqueKey(),
                 profileId: userId,
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
                 profileCheckType: ProfileCheckType.profile,
                 themeProvider: _themeProvider,
               );
@@ -4248,7 +4246,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               _profileAttackWidget = ProfileAttackCheckWidget(
                 key: UniqueKey(),
                 profileId: userId,
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
                 profileCheckType: ProfileCheckType.profile,
                 themeProvider: _themeProvider,
               );
@@ -4274,7 +4272,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProvider?.basic?.userApiKey ?? "",
+              apiKey: UserHelper.apiKey,
               profileCheckType: ProfileCheckType.attack,
               themeProvider: _themeProvider,
             );
@@ -4385,7 +4383,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (Platform.isAndroid || Platform.isWindows) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: webViewController!.getUrl().toString(),
-        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
       await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -4435,7 +4433,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           url: url.toString(),
           inAppWebview: webViewController,
           callFindInPage: _activateFindInPage,
-          userProvider: _userProvider,
           webviewKey: widget.key,
           openDevTools: _openDevTools,
         );
@@ -4996,7 +4993,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         _jailExpandable = JailWidget(
           webview: webViewController,
           fireScriptCallback: _fireJailScriptCallback,
-          playerName: _userProvider!.basic!.name!.toUpperCase(),
+          playerName: UserHelper.playerName.toUpperCase(),
         );
       });
     }
@@ -5269,7 +5266,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
-        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
       await webViewController?.addUserScripts(userScripts: scriptsToAdd);
@@ -5817,7 +5814,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await ApiCallsV1.getTarget(playerId: _userProvider!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: UserHelper.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -5954,7 +5951,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await ApiCallsV1.getTarget(playerId: _userProvider!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: UserHelper.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;

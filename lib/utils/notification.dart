@@ -982,7 +982,11 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
     // Don't show own messages
     final savedUser = await Prefs().getOwnDetails();
     if (savedUser != '') {
-      ownName = ownProfileBasicFromJson(savedUser).name ?? "";
+      try {
+        ownName = ownProfileBasicFromJson(savedUser).name ?? "";
+      } catch (e) {
+        ownName = "";
+      }
     }
 
     // Filter faction

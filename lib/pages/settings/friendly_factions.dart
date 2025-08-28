@@ -15,9 +15,9 @@ import 'package:torn_pda/models/faction/friendly_faction_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 
 class FriendlyFactionsPage extends StatefulWidget {
   @override
@@ -541,8 +541,6 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
       var inputId = _addIdController.text;
       _addIdController.text = '';
 
-      final userProv = context.read<UserDetailsProvider>();
-
       // If an user ID was inserted, we need to transform it first
       if (_addFromUserId) {
         final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
@@ -571,7 +569,7 @@ class AddFriendlyFactionDialogState extends State<AddFriendlyFactionDialog> {
         }
       }
 
-      if (inputId == userProv.basic!.faction!.factionId.toString()) {
+      if (inputId == UserHelper.factionId.toString()) {
         BotToast.showText(
           text: 'There is no need to add your own faction, you will be '
               'alerted about it by default!',
