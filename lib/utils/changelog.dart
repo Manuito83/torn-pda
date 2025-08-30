@@ -102,15 +102,46 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.8.5 - Build 574 - 28/08/2025
+    // v3.9.0 - Build 575 - 30/08/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.8.5'
+        ..version = 'Torn PDA v3.9.0'
         ..date = '05 SEP 2025'
         ..features = [
           if (Platform.isAndroid) "Added home screen widget with War information",
           if (Platform.isIOS) "[iOS 17+] Added home screen widget with War information",
-          "Added double-click on Torn's header bar to exit full screen mode",
+          "Added double-tap on Torn's header bar to exit full screen mode",
+          "Added option to hide foreign items info (details and large picture) when abroad",
+          Consumer<SettingsProvider>(
+            builder: (context, settings, child) {
+              return Padding(
+                padding: const EdgeInsets.only(left: 45.0, right: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "(disabled by default)",
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: settings.removeForeignItemsDetails,
+                      onChanged: (bool value) {
+                        settings.removeForeignItemsDetails = value;
+                      },
+                      activeColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          "Fixed duplicated fill-max buttons whilst abroad [Kwack]",
           "Fixed several bugs and improved performance",
         ],
     );

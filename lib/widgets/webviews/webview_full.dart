@@ -3158,7 +3158,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future _insertTravelFillMaxButtons() async {
-    await webViewController!.evaluateJavascript(source: buyMaxAbroadJS());
+    final shouldHideInfo = await Prefs().getRemoveForeignItemsDetails();
+    await webViewController!.evaluateJavascript(source: buyMaxAbroadJS(hideItemInfoPanel: shouldHideInfo));
   }
 
   Future _sendStockInformation(dom.Document document) async {

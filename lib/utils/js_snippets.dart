@@ -41,13 +41,17 @@ String easyCrimesJS({
   ''';
 }
 
-String buyMaxAbroadJS() {
+String buyMaxAbroadJS({required bool hideItemInfoPanel}) {
   return '''
 // @ts-check
 
 addFillMaxButtons();
 
 function addFillMaxButtons() {
+  if ($hideItemInfoPanel) {
+    document.body.classList.add('pda-hide-item-info');
+  }
+
   /** @type {NodeListOf<HTMLLIElement>} */
   const tableRows = document.querySelectorAll("ul.users-list > li");
   if (!tableRows.length)
