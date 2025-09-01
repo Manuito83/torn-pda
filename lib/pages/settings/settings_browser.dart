@@ -1938,6 +1938,42 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Hide foreign items details",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Hide foreign items details")),
+                  Switch(
+                    value: _settingsProvider.removeForeignItemsDetails,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.removeForeignItemsDetails = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "This will hide foreign items information (details such as description, value, circulation and its picture) when abroad, so that it's quicker ti",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
     return buildSectionWithRows(
       title: 'TRAVEL',
