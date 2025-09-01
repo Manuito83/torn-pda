@@ -19,6 +19,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/member_details_page.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/chaining/share_attack_options.dart';
@@ -300,7 +301,8 @@ class WarCardState extends State<WarCard> {
                             ),
                             Flexible(
                               child: Text(
-                                '${_member.personalNote}',
+                                Get.find<PlayerNotesController>().getNoteForPlayer(_member.memberId.toString())?.note ??
+                                    '',
                                 style: TextStyle(
                                   color: _returnTargetNoteColor(),
                                   fontSize: 12,
@@ -1001,7 +1003,8 @@ class WarCardState extends State<WarCard> {
   }
 
   Color? _returnTargetNoteColor() {
-    switch (_member.personalNoteColor) {
+    final noteColor = Get.find<PlayerNotesController>().getNoteForPlayer(_member.memberId.toString())?.color ?? '';
+    switch (noteColor) {
       case 'red':
         return Colors.red[600];
       case 'orange':
@@ -1025,9 +1028,9 @@ class WarCardState extends State<WarCard> {
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
-            child: PersonalNotesDialog(
-              memberModel: _member,
-              noteType: PersonalNoteType.factionMember,
+            child: PlayerNotesDialog(
+              playerId: _member.memberId.toString(),
+              playerName: _member.name ?? '',
             ),
           ),
         );
@@ -1079,8 +1082,9 @@ class WarCardState extends State<WarCard> {
         for (final tar in myTargetList) {
           attacksIds.add(tar.memberId.toString());
           attacksNames.add(tar.name);
-          attackNotes.add(tar.personalNote);
-          attacksNotesColor.add(tar.personalNoteColor);
+          final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(tar.memberId.toString());
+          attackNotes.add(playerNote?.note);
+          attacksNotesColor.add(playerNote?.color);
         }
 
         final bool showNotes = await Prefs().getShowTargetsNotes();

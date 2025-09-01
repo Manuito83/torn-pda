@@ -15,6 +15,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/stakeouts/stakeout_model.dart';
 // Project imports:
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -331,7 +332,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                     ),
                     Flexible(
                       child: Text(
-                        _stakeout!.personalNote,
+                        Get.find<PlayerNotesController>().getNoteForPlayer(_stakeout!.id!)?.note ?? '',
                         style: TextStyle(fontSize: 12, color: _returnTargetNoteColor()),
                       ),
                     ),
@@ -603,9 +604,9 @@ class StakeoutCardState extends State<StakeoutCard> {
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
-            child: PersonalNotesDialog(
-              stakeoutModel: _stakeout,
-              noteType: PersonalNoteType.stakeout,
+            child: PlayerNotesDialog(
+              playerId: _stakeout?.id ?? '',
+              playerName: _stakeout?.name ?? '',
             ),
           ),
         );
@@ -614,7 +615,8 @@ class StakeoutCardState extends State<StakeoutCard> {
   }
 
   Color? _returnTargetNoteColor() {
-    switch (_stakeout!.personalNoteColor) {
+    final noteColor = Get.find<PlayerNotesController>().getNoteForPlayer(_stakeout!.id!)?.color ?? '';
+    switch (noteColor) {
       case 'red':
         return Colors.red[600];
       case 'orange':

@@ -672,6 +672,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _notesWidgetEnabledProfileWhenEmpty = true;
+  bool get notesWidgetEnabledProfileWhenEmpty => _notesWidgetEnabledProfileWhenEmpty;
+  set changeNotesWidgetEnabledProfileWhenEmpty(bool value) {
+    _notesWidgetEnabledProfileWhenEmpty = value;
+    Prefs().setNotesWidgetEnabledProfileWhenEmpty(_notesWidgetEnabledProfileWhenEmpty);
+    notifyListeners();
+  }
+
   var _extraPlayerNetworth = false;
   bool get extraPlayerNetworth => _extraPlayerNetworth;
   set changeExtraPlayerNetworth(bool value) {
@@ -1389,6 +1397,7 @@ class SettingsProvider extends ChangeNotifier {
     }
 
     _notesWidgetEnabledProfile = await Prefs().getNotesWidgetEnabledProfile();
+    _notesWidgetEnabledProfileWhenEmpty = await Prefs().getNotesWidgetEnabledProfileWhenEmpty();
     _extraPlayerNetworth = await Prefs().getExtraPlayerNetworth();
 
     _hitInMiniProfileOpensNewTab = await Prefs().getHitInMiniProfileOpensNewTab();

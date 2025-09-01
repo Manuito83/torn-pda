@@ -25,8 +25,12 @@ class TargetModel {
   double? respectGain;
   double? fairFight;
   bool? userWonOrDefended;
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNote;
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNoteColor;
+  String? noteBackup;
+  String? colorBackup;
   DateTime? lastUpdated;
   bool? hasFaction;
   int? hospitalSort;
@@ -69,6 +73,8 @@ class TargetModel {
     this.userWonOrDefended,
     this.personalNote,
     this.personalNoteColor,
+    this.noteBackup,
+    this.colorBackup,
     this.lastUpdated,
     this.hasFaction,
     this.hospitalSort = 0,
@@ -112,6 +118,8 @@ class TargetModel {
         userWonOrDefended: json["userWonOrDefended"] ?? false,
         personalNote: json["personalNote"] ?? '',
         personalNoteColor: json["personalNoteColor"] ?? '',
+        noteBackup: json["noteBackup"],
+        colorBackup: json["colorBackup"],
         lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
         hasFaction: json["hasFaction"] ?? false,
         hospitalSort: json["hospitalSort"] ?? 0,
@@ -151,6 +159,8 @@ class TargetModel {
         "userWonOrDefended": userWonOrDefended,
         "personalNote": personalNote,
         "personalNoteColor": personalNoteColor,
+        "noteBackup": noteBackup,
+        "colorBackup": colorBackup,
         "lastUpdated": lastUpdated!.toIso8601String(),
         "hasFaction": hasFaction,
         "hospitalSort": hospitalSort,

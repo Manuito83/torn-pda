@@ -150,6 +150,9 @@ class Prefs {
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
   final String _kNotesWidgetEnabledProfile = "pda_notesWidgetEnabledProfile";
+  final String _kNotesWidgetEnabledProfileWhenEmpty = "pda_notesWidgetEnabledProfileWhenEmpty";
+  final String _kPlayerNotes = "pda_playerNotes";
+  final String _kPlayerNotesMigrationCompleted = "pda_playerNotesMigrationCompleted";
   final String _kExtraPlayerNetworth = "pda_extraPlayerNetworth";
   final String _kHitInMiniProfileOpensNewTab = "pda__hitInMiniProfileOpensNewTab";
   final String _kHitInMiniProfileOpensNewTabAndChangeTab = "pda__hitInMiniProfileOpensNewTabAndChangeTab";
@@ -1625,6 +1628,14 @@ class Prefs {
 
   Future setNotesWidgetEnabledProfile(bool value) async {
     return await _asyncPrefs.setBool(_kNotesWidgetEnabledProfile, value);
+  }
+
+  Future setNotesWidgetEnabledProfileWhenEmpty(bool value) async {
+    return await _asyncPrefs.setBool(_kNotesWidgetEnabledProfileWhenEmpty, value);
+  }
+
+  Future<bool> getNotesWidgetEnabledProfileWhenEmpty() async {
+    return await _asyncPrefs.getBool(_kNotesWidgetEnabledProfileWhenEmpty) ?? false;
   }
 
   // *************
@@ -3695,5 +3706,39 @@ class Prefs {
 
   Future setIosLiveActivityTravelEnabled(bool value) async {
     return await _asyncPrefs.setBool(_kIosLiveActivityTravelEnabled, value);
+  }
+
+  /// ----------------------------
+  /// Methods for player notes
+  /// ----------------------------
+  Future<List<Map<String, dynamic>>> getPlayerNotes() async {
+    final String? notesString = await _asyncPrefs.getString(_kPlayerNotes);
+    if (notesString == null || notesString.isEmpty) {
+      return [];
+    }
+
+    try {
+      final List<dynamic> notesList = json.decode(notesString);
+      return notesList.cast<Map<String, dynamic>>();
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future setPlayerNotes(List<Map<String, dynamic>> notes) async {
+    final String notesString = json.encode(notes);
+    return await _asyncPrefs.setString(_kPlayerNotes, notesString);
+  }
+
+  /// ----------------------------
+  /// Methods for NOTES migration status
+  /// ----------------------------
+  // TODO: remove next version when migration to PlayerNotesProvider is removed in Drawer
+  Future<bool> getMigrationCompleted() async {
+    return await _asyncPrefs.getBool(_kPlayerNotesMigrationCompleted) ?? false;
+  }
+
+  Future setMigrationCompleted(bool completed) async {
+    return await _asyncPrefs.setBool(_kPlayerNotesMigrationCompleted, completed);
   }
 }

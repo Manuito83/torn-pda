@@ -55,6 +55,7 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
@@ -235,6 +236,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     });
     // ENDS QUICK ACTIONS
+
+    // Initialize player notes migration v3.9.0
+    // TODO: remove
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final playerNotesController = Get.find<PlayerNotesController>();
+        playerNotesController.initializeMigration();
+      } catch (e) {
+        log('Could not initialize player notes migration: $e');
+      }
+    });
 
     _allowSectionsWithoutKey = [
       _settingsPosition,

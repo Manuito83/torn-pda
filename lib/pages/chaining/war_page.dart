@@ -24,6 +24,7 @@ import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -1776,12 +1777,15 @@ class WarTargetsListState extends State<WarTargetsList> {
 
     widget.warController.orderedCardsDetails.clear();
     for (int i = 0; i < filteredCards.length; i++) {
+      final playerNotesController = Get.find<PlayerNotesController>();
+      final playerNote = playerNotesController.getNoteForPlayer(filteredCards[i].memberModel.memberId.toString());
+
       final WarCardDetails details = WarCardDetails()
         ..cardPosition = i + 1
         ..memberId = filteredCards[i].memberModel.memberId
         ..name = filteredCards[i].memberModel.name
-        ..personalNote = filteredCards[i].memberModel.personalNote
-        ..personalNoteColor = filteredCards[i].memberModel.personalNoteColor;
+        ..personalNote = playerNote?.note ?? ''
+        ..personalNoteColor = playerNote?.color ?? 'z';
 
       widget.warController.orderedCardsDetails.add(details);
     }

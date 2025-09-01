@@ -25,7 +25,9 @@ class Stakeout {
   String? name;
   Status? status;
   LastAction? lastAction;
+  @Deprecated('Use PlayerNotesController instead')
   String personalNote;
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNoteColor;
 
   bool okayLast;

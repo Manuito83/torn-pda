@@ -18,7 +18,9 @@ class StakeoutCardDetails {
   int? cardPosition;
   int? playerId;
   String? name;
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNote;
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNoteColor;
 }
 
@@ -564,12 +566,9 @@ class StakeoutsController extends GetxController {
     );
   }
 
-  void setStakeoutNote(Stakeout? stakeout, String note, String? noteColor) {
-    final Stakeout s = stakeouts.firstWhere((element) => stakeout == element);
-    s.personalNote = note;
-    s.personalNoteColor = noteColor;
-    savePreferences();
-    update();
+  /// Check if a player ID is in the stakeouts list
+  bool isPlayerInStakeouts(String playerId) {
+    return stakeouts.any((stakeout) => stakeout.id == playerId);
   }
 }
 

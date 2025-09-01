@@ -3,6 +3,7 @@ import 'dart:async';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
+import 'package:get/get.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -21,6 +22,7 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
@@ -752,13 +754,15 @@ class TargetsPageState extends State<TargetsPage> {
         for (final localTarget in _targetsProvider.allTargets) {
           if (!foundLocally) {
             if (key == localTarget.playerId.toString()) {
+              final playerNotesController = Get.find<PlayerNotesController>();
+              final playerNote = playerNotesController.getNoteForPlayer(localTarget.playerId.toString());
               bothSides.add(
                 TargetsBothSides()
                   ..id = key
                   ..name = yataTarget.name
                   ..noteYata = yataTarget.note
-                  ..noteLocal = localTarget.personalNote
-                  ..colorLocal = _yataColorCode(localTarget.personalNoteColor)
+                  ..noteLocal = playerNote?.note ?? ''
+                  ..colorLocal = _yataColorCode(playerNote?.color)
                   ..colorYata = yataTarget.color,
               );
               foundLocally = true;
@@ -786,12 +790,14 @@ class TargetsPageState extends State<TargetsPage> {
           }
         });
         if (!foundInYata) {
+          final playerNotesController = Get.find<PlayerNotesController>();
+          final playerNote = playerNotesController.getNoteForPlayer(localTarget.playerId.toString());
           onlyLocal.add(
             TargetsOnlyLocal()
               ..id = localTarget.playerId.toString()
               ..name = localTarget.name
-              ..noteLocal = localTarget.personalNote
-              ..colorLocal = _yataColorCode(localTarget.personalNoteColor),
+              ..noteLocal = playerNote?.note ?? ''
+              ..colorLocal = _yataColorCode(playerNote?.color),
           );
         }
       }

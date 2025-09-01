@@ -44,6 +44,7 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
@@ -233,6 +234,7 @@ Future<void> main() async {
   Get.put(ApiCallerController(), permanent: true);
   Get.put(WarController(), permanent: true);
   Get.put(StakeoutsController(), permanent: true);
+  Get.put(PlayerNotesController(), permanent: true);
   Get.put(PeriodicExecutionController(), permanent: true);
   Get.put(ChainStatusController(), permanent: true);
   if (Platform.isIOS && kSdkIos >= 16.2) {

@@ -5,11 +5,13 @@ import 'dart:developer';
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/pages/chaining/yata/yata_targets_distribution.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
@@ -41,7 +43,7 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
 
   @override
   Widget build(BuildContext context) {
-    _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
+    _targetsProvider = Provider.of<TargetsProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
     return AlertDialog(
       shape: RoundedRectangleBorder(
@@ -342,16 +344,12 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
 
       // Those target that we already have, only see their notes updated
       for (final bothSidesTarget in widget.bothSides) {
-        for (final localTarget in _targetsProvider.allTargets) {
-          if (bothSidesTarget.id == localTarget.playerId.toString()) {
-            _targetsProvider.setTargetNote(
-              localTarget,
-              bothSidesTarget.noteYata,
-              _localColorCode(bothSidesTarget.colorYata),
-            );
-            break;
-          }
-        }
+        final notesController = Get.find<PlayerNotesController>();
+        await notesController.setPlayerNote(
+          bothSidesTarget.id.toString(),
+          bothSidesTarget.noteYata ?? '',
+          _localColorCode(bothSidesTarget.colorYata),
+        );
       }
 
       // Only to look good

@@ -25,6 +25,7 @@ import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
+import 'package:torn_pda/pages/settings/player_notes_manager_page.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
@@ -1295,8 +1296,56 @@ class SettingsPageState extends State<SettingsPage> {
       );
     }
 
+    // Player Notes Manager
+    rows.add(
+      SearchableRow(
+        label: "Player Notes",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 10, right: 20, bottom: 5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Player notes in one place',
+                      style: TextStyle(
+                        color: _themeProvider.mainText,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const PlayerNotesManagerPage(),
+                        ),
+                      );
+                    },
+                    child: const Text('Manage Notes'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'View and edit all your player notes, including those from targets, friends, stakeouts, and war members.',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
     return buildSectionWithRows(
-      title: "STATS",
+      title: "STATS and PLAYER NOTES",
       rows: rows,
       searchText: _searchText,
     );
