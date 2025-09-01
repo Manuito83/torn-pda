@@ -1729,12 +1729,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         // While the Future is running (loading preferences AND waiting for connectivity)
         if (snapshot.connectionState != ConnectionState.done) {
           // Always show default loading first, then check connectivity with delay
-          return SafeArea(
-            child: Scaffold(
-              body: Container(
-                color: _themeProvider!.canvas,
-                child: Center(
-                  child: _buildConnectivityUI(),
+          return Container(
+            color: _themeProvider!.currentTheme == AppTheme.light
+                ? MediaQuery.orientationOf(context) == Orientation.portrait
+                    ? Colors.blueGrey
+                    : isStatusBarShown
+                        ? _themeProvider!.statusBar
+                        : _themeProvider!.canvas
+                : _themeProvider!.canvas,
+            child: SafeArea(
+              child: Scaffold(
+                body: Container(
+                  color: _themeProvider!.canvas,
+                  child: Center(
+                    child: _buildConnectivityUI(),
+                  ),
                 ),
               ),
             ),
