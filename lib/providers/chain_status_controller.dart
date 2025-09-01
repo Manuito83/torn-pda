@@ -496,8 +496,8 @@ class ChainStatusController extends GetxController {
         //
         /*
         chainModel!.chain!
-          ..timeout = 20
-          ..current = 52
+          ..timeout = 95
+          ..current = 55
           ..max = 2500
           ..start = 1230000
           ..modifier = 1.23
@@ -679,7 +679,7 @@ class ChainStatusController extends GetxController {
               _vibrate(3);
             }
             if (_notificationsEnabled) {
-              showNotification(555, "", "RED CHAIN CAUTION!", "Less than $_currentChainTimeString remaining!");
+              showNotification(555, "", "RED CHAIN ALERT!", "Less than $_currentChainTimeString remaining!");
             }
           } else {
             _borderColor = Colors.red;
@@ -695,6 +695,9 @@ class ChainStatusController extends GetxController {
             if (_vibrationEnabled) {
               _vibrate(3);
             }
+            if (_notificationsEnabled) {
+              showNotification(555, "", "RED CHAIN CAUTION!", "Less than $_currentChainTimeString remaining!");
+            }
           } else {
             _borderColor == Colors.transparent ? _borderColor = Colors.orange : _borderColor = Colors.transparent;
           }
@@ -708,6 +711,9 @@ class ChainStatusController extends GetxController {
             }
             if (_vibrationEnabled) {
               _vibrate(3);
+            }
+            if (_notificationsEnabled) {
+              showNotification(555, "", "RED CHAIN CAUTION!", "Less than $_currentChainTimeString remaining!");
             }
           } else {
             _borderColor = Colors.orange;
