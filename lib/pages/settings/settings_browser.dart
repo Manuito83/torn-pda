@@ -1963,7 +1963,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
               Text(
-                "This will hide foreign items information (details such as description, value, circulation and its picture) when abroad, so that it's quicker ti",
+                "This will hide foreign items information (details such as description, value, circulation and its picture) when abroad, so that buying is quicker.",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
