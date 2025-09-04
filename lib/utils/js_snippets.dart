@@ -569,7 +569,11 @@ String addOthersBazaarFillButtonsJS() {
         // Not needed for wide screen
         if (narrow_screen) {
           let moreItemsObserver = new MutationObserver(renewButtons);
-          moreItemsObserver.observe(doc.querySelector(".ReactVirtualized__Grid__innerScrollContainer"), { childList: true });
+          moreItemsObserver.observe(
+            // The div's class is itemsContainner___xxxx, yes with a typo. Leaving it as Contain in case they fix the typo later
+            doc.querySelector("div[class*='itemsContain'] div[data-testid*='bazaar-items']"),
+            { childList: true }
+          );
           function renewButtons() {
             var existing_list = doc.querySelectorAll(".max-buy");
             for(let item of existing_list){
@@ -577,6 +581,7 @@ String addOthersBazaarFillButtonsJS() {
             }
             addFillMaxButtons();
           }
+          
         }
         
         // Launch main function at the start
