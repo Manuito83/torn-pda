@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.0 - Build 575 - 30/08/2025
+    // v3.9.0 - Build 575 - 01/09/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.0'
@@ -142,7 +142,7 @@ class ChangeLogState extends State<ChangeLog> {
             },
           ),
           "Fixed duplicated fill-max buttons whilst abroad [Kwack]",
-          "Fixed several bugs and improved performance",
+          "Fixed chain watcher notifications",
         ],
     );
 
