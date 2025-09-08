@@ -75,8 +75,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.9.0';
-const String androidCompilation = '575';
-const String iosCompilation = '575';
+const String androidCompilation = '576';
+const String iosCompilation = '576';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
