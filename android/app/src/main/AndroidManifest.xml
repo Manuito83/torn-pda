@@ -21,8 +21,6 @@
     <application android:name="${applicationName}"
         android:label="Torn PDA"
         android:icon="@mipmap/ic_launcher"
-        android:allowBackup="false"
-        android:fullBackupOnly="false"
         android:networkSecurityConfig="@xml/network_security_config"
         android:usesCleartextTraffic="true"
         android:largeHeap="true">
@@ -105,14 +103,25 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <!-- Widget -->
+        <!-- Widgets -->
         <receiver android:name="HomeWidgetTornPda"
-            android:exported="false">
+            android:exported="false"
+            android:label="@string/home_widget_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/home_widget" />
+        </receiver>
+
+        <receiver android:name=".HomeWidgetRankedWar"
+            android:exported="false"
+            android:label="@string/ranked_war_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider"
+                android:resource="@xml/ranked_war_widget_info" />
         </receiver>
 
         <!-- Widget Background Work -->

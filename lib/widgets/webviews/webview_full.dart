@@ -1,4 +1,6 @@
 // Dart imports:
+// ignore_for_file: overridden_fields
+
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
@@ -55,7 +57,6 @@ import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -67,6 +68,7 @@ import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
 import 'package:torn_pda/utils/webview/webview_utils.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
@@ -281,7 +283,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   final List<String> _lastAttackedTargets = <String>[];
   final List<String> _lastAttackedMembers = <String>[];
 
-  UserDetailsProvider? _userProvider;
   final UserController _u = Get.find<UserController>();
   late TerminalProvider _terminalProvider;
 
@@ -314,6 +315,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
   bool _findInPageActive = false;
   bool _wasFullScreenActiveWhenFindActivated = false;
+  UiMode? _previousUiMode;
   final _findController = TextEditingController();
   final _findFocus = FocusNode();
   var _findFirstSubmitted = false;
@@ -411,7 +413,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
     _localChatRemovalActive = widget.chatRemovalActive;
 
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
 
     _nativeUser = context.read<NativeUserProvider>();
@@ -650,64 +651,74 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         left: assessSafeAreaSide(dialog, "left"),
         right: assessSafeAreaSide(dialog, "right"),
         child: Consumer<WebViewProvider>(
-          builder: (context, wv, child) => Scaffold(
-            resizeToAvoidBottomInset:
-                // Dialog displaces the webview up by default
-                !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
-            backgroundColor: _themeProvider.canvas,
-            appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
-                // Show appBar only if we are not showing the webView in a dialog style
-                ? null
-                : _settingsProvider.appBarTop
-                    ? buildCustomAppBar()
-                    : null,
-            bottomNavigationBar: _webViewProvider.bottomBarStyleEnabled
-                ? null
-                :
-                // With appbar bottom, add appbar and some space for tabs
-                !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(
-                            height: AppBar().preferredSize.height,
-                            child: buildCustomAppBar(),
-                          ),
-                          SizedBox(
-                            height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
-                          ),
-                        ],
-                      )
-                    :
-                    // With appbar top, still add some space below for tabs
+          builder: (context, wv, child) {
+            // Execute exit fullscreen script when entering fullscreen mode
+            if (_previousUiMode != wv.currentUiMode && wv.currentUiMode == UiMode.fullScreen) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _assessExitFullScreenScript(dom.Document());
+              });
+            }
+            _previousUiMode = wv.currentUiMode;
+
+            return Scaffold(
+              resizeToAvoidBottomInset:
+                  // Dialog displaces the webview up by default
+                  !(_webViewProvider.bottomBarStyleEnabled && _webViewProvider.bottomBarStyleType == 2),
+              backgroundColor: _themeProvider.canvas,
+              appBar: _webViewProvider.bottomBarStyleEnabled || wv.currentUiMode == UiMode.fullScreen
+                  // Show appBar only if we are not showing the webView in a dialog style
+                  ? null
+                  : _settingsProvider.appBarTop
+                      ? buildCustomAppBar()
+                      : null,
+              bottomNavigationBar: _webViewProvider.bottomBarStyleEnabled
+                  ? null
+                  :
+                  // With appbar bottom, add appbar and some space for tabs
+                  !_settingsProvider.appBarTop && _webViewProvider.currentUiMode == UiMode.window
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: AppBar().preferredSize.height,
+                              child: buildCustomAppBar(),
+                            ),
+                            SizedBox(
+                              height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
+                            ),
+                          ],
+                        )
+                      :
+                      // With appbar top, still add some space below for tabs
+                      SizedBox(
+                          height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
+                        ),
+              body: Container(
+                // Background color for all browser widgets
+                color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
+                child: Column(
+                  children: [
+                    Expanded(child: mainWebViewColumn()),
+                    if (_webViewProvider.currentUiMode == UiMode.window &&
+                        _webViewProvider.bottomBarStyleEnabled &&
+                        _webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
+                      _bottomBarStyleBottomBar(),
                     SizedBox(
-                        height: _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser ? 0 : 40,
-                      ),
-            body: Container(
-              // Background color for all browser widgets
-              color: _themeProvider.currentTheme == AppTheme.extraDark ? Colors.black : Colors.grey[900],
-              child: Column(
-                children: [
-                  Expanded(child: mainWebViewColumn()),
-                  if (_webViewProvider.currentUiMode == UiMode.window &&
-                      _webViewProvider.bottomBarStyleEnabled &&
-                      _webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
-                    _bottomBarStyleBottomBar(),
-                  SizedBox(
-                    height: !_webViewProvider.bottomBarStyleEnabled
-                        ? 0
-                        : _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser
-                            ? 0
-                            : 40,
-                  ),
-                  if (_webViewProvider.currentUiMode == UiMode.window &&
-                      _webViewProvider.bottomBarStyleEnabled &&
-                      !_webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
-                    _bottomBarStyleBottomBar(),
-                ],
+                      height: !_webViewProvider.bottomBarStyleEnabled
+                          ? 0
+                          : _webViewProvider.hideTabs || !_settingsProvider.useTabsFullBrowser
+                              ? 0
+                              : 40,
+                    ),
+                    if (_webViewProvider.currentUiMode == UiMode.window &&
+                        _webViewProvider.bottomBarStyleEnabled &&
+                        !_webViewProvider.browserBottomBarStylePlaceTabsAtBottom)
+                      _bottomBarStyleBottomBar(),
+                  ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         ),
       ),
     );
@@ -936,7 +947,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
                             ),
                           if ((_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
                                   _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-                              _userProvider!.basic?.faction?.factionId != 0)
+                              UserHelper.factionId != 0)
                             Text(
                               "ASSIST",
                               textAlign: TextAlign.center,
@@ -1230,13 +1241,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             // Userscripts initial load
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: _initialUrl!.url.toString(),
-                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1284,6 +1295,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             WebviewHandlers.addToastHandler(webview: webViewController!);
 
             WebviewHandlers.addLaunchIntentHandler(webview: webViewController!);
+
+            WebviewHandlers.addExitFullScreenHandler(
+              webview: webViewController!,
+              exitFullScreenCallback: _exitFullScreenFromJS,
+            );
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
@@ -1344,13 +1360,13 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: incomingUrl,
-                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.start,
               );
               await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -1605,7 +1621,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               // Userscripts add those that inject at the end
               UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
                 url: uri.toString(),
-                pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+                pdaApiKey: UserHelper.apiKey,
                 time: UserScriptTime.end,
               );
               // We need to inject directly, otherwise these scripts will only load in the next page visit
@@ -2275,7 +2291,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         final TornLoginResponseContainer loginResponse = await _nativeAuth.requestTornRecurrentInitData(
           context: context,
           loginData: GetInitDataModel(
-            playerId: _userProvider!.basic!.playerId,
+            playerId: UserHelper.playerId,
             sToken: _nativeUser.playerSToken,
           ),
         );
@@ -2342,7 +2358,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, ${intColor.a})';
     final senderColor =
         'rgba(${(intColor.r * 255).round()}, ${(intColor.g * 255).round()}, ${(intColor.b * 255).round()}, 1)';
-    final String hlMap = '[ "${_userProvider!.basic!.name}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
+    final String hlMap = '[ "${UserHelper.playerName}", ...${jsonEncode(_settingsProvider.highlightWordList)} ]';
     final String css = chatHighlightCSS(background: background, senderColor: senderColor);
 
     if (_settingsProvider.highlightChat) {
@@ -2487,7 +2503,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
     final bool assistPossible = (_currentUrl.contains("www.torn.com/loader.php?sid=attack&user2ID=") ||
             _currentUrl.contains("www.torn.com/loader2.php?sid=getInAttack&user2ID=")) &&
-        _userProvider!.basic?.faction?.factionId != 0;
+        UserHelper.factionId != 0;
 
     // Leading width calculation
     final bool hasBackIcon = !(_backButtonPopsContext && _webViewProvider.webViewSplitActive);
@@ -2849,6 +2865,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     _assessBazaarOwn(document);
     _assessBazaarOthers(document);
     _assessBarsRedirect(document);
+    _assessExitFullScreenScript(document);
     _assessProfileAgeToWords();
     _assessBugReportsWarning();
   }
@@ -3141,7 +3158,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   }
 
   Future _insertTravelFillMaxButtons() async {
-    await webViewController!.evaluateJavascript(source: buyMaxAbroadJS());
+    final shouldHideInfo = await Prefs().getRemoveForeignItemsDetails();
+    await webViewController!.evaluateJavascript(source: buyMaxAbroadJS(hideItemInfoPanel: shouldHideInfo));
   }
 
   Future _sendStockInformation(dom.Document document) async {
@@ -3511,7 +3529,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         final RegExp regId = RegExp("XID=([0-9]+)");
         final matches = regId.allMatches(html.attributes["href"]!);
         final id = int.parse(matches.elementAt(0).group(1)!);
-        if (id != _userProvider!.basic!.playerId) {
+        if (id != UserHelper.playerId) {
           sellerId = id;
           break;
         }
@@ -3536,8 +3554,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (!mounted) return;
     final tradesProvider = Provider.of<TradesProvider>(context, listen: false);
     tradesProvider.updateTrades(
-      playerId: _userProvider!.basic!.playerId!,
-      playerName: _userProvider!.basic!.name!,
+      playerId: UserHelper.playerId,
+      playerName: UserHelper.playerName,
       sellerName: sellerName,
       sellerId: sellerId,
       tradeId: tradeId,
@@ -3560,7 +3578,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           _tradesFullActive = true;
           _tradesExpandable = TradesWidget(
             themeProv: _themeProvider,
-            userProv: _userProvider,
             webView: webViewController,
           );
         });
@@ -3638,7 +3655,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           transitionType: ContainerTransitionType.fadeThrough,
           openBuilder: (BuildContext context, VoidCallback _) {
             return TradesOptions(
-              playerId: _userProvider!.basic!.playerId,
+              playerId: UserHelper.playerId,
               callback: _tradesPreferencesLoad,
             );
           },
@@ -3763,8 +3780,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       _vaultExpandable = VaultWidget(
         key: UniqueKey(),
         vaultHtml: allTransactions,
-        playerId: _userProvider!.basic!.playerId,
-        userProvider: _userProvider,
+        playerId: UserHelper.playerId,
       );
     });
   }
@@ -4219,7 +4235,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               _profileAttackWidget = ProfileAttackCheckWidget(
                 key: UniqueKey(),
                 profileId: userId,
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
                 profileCheckType: ProfileCheckType.profile,
                 themeProvider: _themeProvider,
               );
@@ -4248,7 +4264,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               _profileAttackWidget = ProfileAttackCheckWidget(
                 key: UniqueKey(),
                 profileId: userId,
-                apiKey: _userProvider?.basic?.userApiKey ?? "",
+                apiKey: UserHelper.apiKey,
                 profileCheckType: ProfileCheckType.profile,
                 themeProvider: _themeProvider,
               );
@@ -4274,7 +4290,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             _profileAttackWidget = ProfileAttackCheckWidget(
               key: UniqueKey(),
               profileId: userId,
-              apiKey: _userProvider?.basic?.userApiKey ?? "",
+              apiKey: UserHelper.apiKey,
               profileCheckType: ProfileCheckType.attack,
               themeProvider: _themeProvider,
             );
@@ -4291,6 +4307,19 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (inTorn) {
       webViewController?.evaluateJavascript(
         source: barsDoubleClickRedirect(
+          isIOS: Platform.isIOS,
+        ),
+      );
+    }
+  }
+
+  Future _assessExitFullScreenScript(dom.Document document) async {
+    final inTorn = _currentUrl.contains("torn.com");
+    final isFullScreen = _webViewProvider.currentUiMode == UiMode.fullScreen;
+
+    if (inTorn && isFullScreen) {
+      webViewController?.evaluateJavascript(
+        source: exitFullScreenOnHeaderDoubleClick(
           isIOS: Platform.isIOS,
         ),
       );
@@ -4385,7 +4414,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (Platform.isAndroid || Platform.isWindows) {
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: webViewController!.getUrl().toString(),
-        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
       await webViewController!.addUserScripts(userScripts: scriptsToAdd);
@@ -4435,7 +4464,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           url: url.toString(),
           inAppWebview: webViewController,
           callFindInPage: _activateFindInPage,
-          userProvider: _userProvider,
           webviewKey: widget.key,
           openDevTools: _openDevTools,
         );
@@ -4996,7 +5024,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         _jailExpandable = JailWidget(
           webview: webViewController,
           fireScriptCallback: _fireJailScriptCallback,
-          playerName: _userProvider!.basic!.name!.toUpperCase(),
+          playerName: UserHelper.playerName.toUpperCase(),
         );
       });
     }
@@ -5269,7 +5297,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       // (e.g.: when reloading a page or navigating back/forward)
       UnmodifiableListView<UserScript> scriptsToAdd = _userScriptsProvider.getCondSources(
         url: inputUrl,
-        pdaApiKey: _userProvider?.basic?.userApiKey ?? "",
+        pdaApiKey: UserHelper.apiKey,
         time: UserScriptTime.start,
       );
       await webViewController?.addUserScripts(userScripts: scriptsToAdd);
@@ -5817,7 +5845,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await ApiCallsV1.getTarget(playerId: _userProvider!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: UserHelper.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -5954,7 +5982,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           // If flying, we need to see if he is in a different country (if we are in the same
           // place, we can attack him)
           else if (nextTarget.status!.color == "blue") {
-            final user = await ApiCallsV1.getTarget(playerId: _userProvider!.basic!.playerId.toString());
+            final user = await ApiCallsV1.getTarget(playerId: UserHelper.playerId.toString());
             if (user is TargetModel) {
               if (user.status!.description != nextTarget.status!.description) {
                 targetsSkipped++;
@@ -6209,6 +6237,17 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         _webViewProvider.browserShowInForeground = false;
       }
       _checkIfTargetsAttackedAndRevertChaining();
+    }
+  }
+
+  void _exitFullScreenFromJS() {
+    log('[_exitFullScreenFromJS] Called');
+    // Only exit fullscreen if we are currently in fullscreen mode
+    if (_webViewProvider.currentUiMode == UiMode.fullScreen) {
+      log('[_exitFullScreenFromJS] Currently in fullscreen, exiting');
+      _webViewProvider.setCurrentUiMode(UiMode.window, context);
+    } else {
+      log('[_exitFullScreenFromJS] Not in fullscreen mode, current mode: ${_webViewProvider.currentUiMode}');
     }
   }
 

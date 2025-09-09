@@ -22,12 +22,12 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_open_button.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -39,7 +39,6 @@ class WebviewUrlDialog extends StatefulWidget {
   final String url;
   final InAppWebViewController? inAppWebview;
   final WebViewController? stockWebView;
-  final UserDetailsProvider? userProvider;
   final Key? webviewKey;
   final Function? openDevTools;
 
@@ -49,7 +48,6 @@ class WebviewUrlDialog extends StatefulWidget {
     required this.url,
     this.inAppWebview,
     this.stockWebView,
-    required this.userProvider,
     this.webviewKey,
     this.openDevTools,
   });
@@ -124,8 +122,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                       ),
                     ),
                     const SizedBox(height: 15),
-                    if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") &&
-                        widget.userProvider!.basic!.faction!.factionId != 0)
+                    if (widget.url.contains("www.torn.com/loader.php?sid=attack&user2ID=") && UserHelper.factionId != 0)
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         child: ElevatedButton(

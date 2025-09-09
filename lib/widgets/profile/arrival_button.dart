@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 
 import 'package:torn_pda/widgets/profile/foreign_stock_button.dart';
 
 class ArrivalButton extends StatefulWidget {
   final OwnProfileExtended? user;
   final ThemeProvider? themeProvider;
-  final UserDetailsProvider? userProv;
   final SettingsProvider? settingsProv;
   final Function launchBrowser;
   final Function updateCallback;
@@ -17,7 +15,6 @@ class ArrivalButton extends StatefulWidget {
   const ArrivalButton({
     required this.user,
     required this.themeProvider,
-    required this.userProv,
     required this.settingsProv,
     required this.launchBrowser({required String? url, required bool? shortTap}),
     required this.updateCallback,
@@ -116,7 +113,6 @@ class ArrivalButtonState extends State<ArrivalButton> with TickerProviderStateMi
         ),
         const SizedBox(width: 20),
         ForeignStockButton(
-          userProv: widget.userProv,
           settingsProv: widget.settingsProv,
           launchBrowser: _launchBrowser,
           updateCallback: widget.updateCallback,

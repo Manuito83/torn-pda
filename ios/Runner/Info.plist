@@ -37,6 +37,16 @@
 			<dict>
 				<key>CFBundleTypeRole</key>
 				<string>Editor</string>
+				<key>CFBundleURLName</key>
+				<string>pdaWidget</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>pdaWidget</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>$(GOOGLE_REVERSED_CLIENT_ID)</string>
@@ -76,6 +86,11 @@
 		<array>
 			<string>fetch</string>
 			<string>remote-notification</string>
+			<string>processing</string>
+		</array>
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>com.manuito.tornpda.ranked_widget_refresh</string>
 		</array>
 		<key>UIFileSharingEnabled</key>
 		<true />

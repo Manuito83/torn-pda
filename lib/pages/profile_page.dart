@@ -49,7 +49,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -152,7 +152,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   SettingsProvider? _settingsProvider;
   ThemeProvider? _themeProvider;
-  UserDetailsProvider? _userProv;
   final _chainController = Get.find<ChainStatusController>();
   late ShortcutsProvider _shortcutsProv;
   late WebViewProvider _webViewProvider;
@@ -321,8 +320,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
 
     _retrievePendingNotifications();
-
-    _userProv = Provider.of<UserDetailsProvider>(context, listen: false);
 
     _loadPreferences().whenComplete(() {
       _apiFetched = _fetchApi();
@@ -909,13 +906,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           if (thisShortcut.addPlayerId != null) {
             // Avoid null objects coming before the introduction of this replacement (v2.9.4)
             if (thisShortcut.addPlayerId!) {
-              url = url!.replaceAll("##P##", _userProv!.basic!.playerId.toString());
+              url = url!.replaceAll("##P##", UserHelper.playerId.toString());
             }
             if (thisShortcut.addFactionId!) {
-              url = url!.replaceAll("##F##", _userProv!.basic!.faction!.factionId.toString());
+              url = url!.replaceAll("##F##", UserHelper.factionId.toString());
             }
             if (thisShortcut.addCompanyId!) {
-              url = url!.replaceAll("##C##", _userProv!.basic!.job!.companyId.toString());
+              url = url!.replaceAll("##C##", UserHelper.companyId.toString());
             }
           }
 
@@ -926,13 +923,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           if (thisShortcut.addPlayerId != null) {
             // Avoid null objects coming before the introduction of this replacement (v2.9.4)
             if (thisShortcut.addPlayerId!) {
-              url = url!.replaceAll("##P##", _userProv!.basic!.playerId.toString());
+              url = url!.replaceAll("##P##", UserHelper.playerId.toString());
             }
             if (thisShortcut.addFactionId!) {
-              url = url!.replaceAll("##F##", _userProv!.basic!.faction!.factionId.toString());
+              url = url!.replaceAll("##F##", UserHelper.factionId.toString());
             }
             if (thisShortcut.addCompanyId!) {
-              url = url!.replaceAll("##C##", _userProv!.basic!.job!.companyId.toString());
+              url = url!.replaceAll("##C##", UserHelper.companyId.toString());
             }
           }
 
@@ -1597,7 +1594,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               const SizedBox(width: 20),
               ForeignStockButton(
-                userProv: _userProv,
                 settingsProv: _settingsProvider,
                 launchBrowser: _launchBrowser,
                 updateCallback: _updateCallback,
@@ -1723,7 +1719,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               ),
               const SizedBox(width: 20),
               ForeignStockButton(
-                userProv: _userProv,
                 settingsProv: _settingsProvider,
                 launchBrowser: _launchBrowser,
                 updateCallback: _updateCallback,
@@ -1818,7 +1813,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           child: Row(
             children: [
               ForeignStockButton(
-                userProv: _userProv,
                 settingsProv: _settingsProvider,
                 launchBrowser: _launchBrowser,
                 updateCallback: _updateCallback,
@@ -1835,7 +1829,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             themeProvider: _themeProvider,
             user: _user,
             settingsProv: _settingsProvider,
-            userProv: _userProv,
             launchBrowser: _launchBrowser,
             updateCallback: _updateCallback,
           ),
@@ -3700,7 +3693,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     String formatStatsPercent(int? stat, int? total) {
-      if (total == null || total <= 0) return '(error)';
+      if (total == null || total <= 0) return ' (error)';
       final pct = decimalFormat.format(stat! * 100 / total);
       return ' ($pct%)';
     }
@@ -3787,7 +3780,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   _cashWallet(dense: false),
                   const SizedBox(height: 4),
                   Semantics(
-                    label: "${_miscModel!.money?.points ?? '?'} Torn Points, tap to open",
+                    label: "${_miscModel!.money?.points ?? '(error)'} Torn Points, tap to open",
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -3804,7 +3797,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                           ),
                         ),
                         const SizedBox(width: 5),
-                        Text('${_miscModel!.money?.points ?? '?'}'),
+                        Text('${_miscModel!.money?.points ?? '(error)'}'),
                       ],
                     ),
                   ),
@@ -3934,7 +3927,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                             ),
                           ),
                           const SizedBox(width: 5),
-                          SelectionArea(child: Text('${_miscModel!.money?.points ?? '?'}')),
+                          SelectionArea(child: Text('${_miscModel!.money?.points ?? '(error)'}')),
                         ],
                       ),
                     ),
@@ -3984,7 +3977,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Strength: '),
                               ),
-                              SelectionArea(child: Text(decimalFormat.format(strengthModifiedTotal))),
+                              SelectionArea(
+                                child: Text(
+                                  strengthString.contains("error")
+                                      ? '(error)'
+                                      : decimalFormat.format(strengthModifiedTotal),
+                                ),
+                              ),
                               if (strengthModified)
                                 Text(
                                   " $strengthString",
@@ -4000,7 +3999,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Defense: '),
                               ),
-                              SelectionArea(child: Text(decimalFormat.format(defenseModifiedTotal))),
+                              SelectionArea(
+                                child: Text(
+                                  defenseString.contains("error")
+                                      ? '(error)'
+                                      : decimalFormat.format(defenseModifiedTotal),
+                                ),
+                              ),
                               if (defenseModified)
                                 Text(
                                   " $defenseString",
@@ -4016,7 +4021,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Speed: '),
                               ),
-                              SelectionArea(child: Text(decimalFormat.format(speedModifiedTotal))),
+                              SelectionArea(
+                                child: Text(
+                                  speedString.contains("error") ? '(error)' : decimalFormat.format(speedModifiedTotal),
+                                ),
+                              ),
                               if (speedModified)
                                 Text(
                                   " $speedString",
@@ -4032,7 +4041,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 width: 80,
                                 child: Text('Dexterity: '),
                               ),
-                              SelectionArea(child: Text(decimalFormat.format(dexModifiedTotal))),
+                              SelectionArea(
+                                child: Text(
+                                  dexString.contains("error") ? '(error)' : decimalFormat.format(dexModifiedTotal),
+                                ),
+                              ),
                               if (dexModified)
                                 Text(
                                   " $dexString",
@@ -4749,7 +4762,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         explicitChildNodes: true,
         child: OrganizedCrimeWidget(
           crimeResponse: _oc2Model!,
-          playerId: _userProv!.basic!.playerId!,
+          playerId: UserHelper.playerId,
         ),
       );
 
@@ -4851,14 +4864,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     // BANK
     Widget bankWidget = const SizedBox.shrink();
-    if (_miscModel!.money?.cityBank != null && _miscModel!.money?.cityBank.until != null) {
-      if (_miscModel!.money!.cityBank.until > 0) {
+    if (_miscModel?.money?.cityBank?.until != null) {
+      final bankUntil = _miscModel!.money!.cityBank!.until;
+      if (bankUntil > 0) {
         showMisc = true;
         bankActive = true;
         final moneyFormat = NumberFormat("#,##0", "en_US");
-        final timeExpiry = DateTime.now().add(Duration(seconds: _miscModel!.money!.cityBank.until));
+        final timeExpiry = DateTime.now().add(Duration(seconds: bankUntil));
         final timeDifference = timeExpiry.difference(DateTime.now());
-        Color? expiryColor = _themeProvider!.getTextColor(Colors.orange[800]);
+        Color? expiryColor = _themeProvider?.getTextColor(Colors.orange[800]);
         String expiryString;
         if (timeDifference.inHours < 1) {
           expiryString = 'less than an hour';
@@ -4867,14 +4881,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
           expiryString = '${timeDifference.inHours} hours';
         } else if (timeDifference.inDays == 1) {
-          expiryString = '1 day and ${(_miscModel!.money!.cityBank.until / 60 / 60 % 24).floor()} hours';
-          expiryColor = _themeProvider!.mainText;
+          expiryString = '1 day and ${(bankUntil / 60 / 60 % 24).floor()} hours';
+          expiryColor = _themeProvider?.mainText;
         } else {
-          expiryString =
-              '${timeDifference.inDays} days and ${(_miscModel!.money!.cityBank.until / 60 / 60 % 24).floor()} hours';
-          expiryColor = _themeProvider!.mainText;
+          expiryString = '${timeDifference.inDays} days and ${(bankUntil / 60 / 60 % 24).floor()} hours';
+          expiryColor = _themeProvider?.mainText;
         }
 
+        final bankAmount = _miscModel?.money?.cityBank?.amount;
         bankWidget = Semantics(
           explicitChildNodes: true,
           child: Row(
@@ -4888,9 +4902,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     style: DefaultTextStyle.of(context).style,
                     children: <TextSpan>[
                       TextSpan(
-                        text: "\$${moneyFormat.format(_miscModel!.money?.cityBank.amount)}",
+                        text: bankAmount != null ? "\$${moneyFormat.format(bankAmount)}" : "(error)",
                         style: TextStyle(
-                          color: _themeProvider!.getTextColor(Colors.green),
+                          color: bankAmount != null
+                              ? _themeProvider?.getTextColor(Colors.green)
+                              : _themeProvider?.getTextColor(Colors.red),
                         ),
                       ),
                       const TextSpan(text: " will expire in "),
@@ -5149,15 +5165,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       Widget pointsPrice = const SizedBox.shrink();
       if (v.key == "points" && _miscModel != null && (_miscModel?.money?.points ?? 0) > 0) {
-        String price = formatBigNumbers(((v.value!.round()) / _miscModel!.money!.points).round());
+        final points = _miscModel!.money!.points;
+        if (points != null && points > 0) {
+          String price = formatBigNumbers(((v.value!.round()) / points).round());
 
-        pointsPrice = Text(
-          " @ \$$price",
-          style: const TextStyle(
-            fontSize: 11,
-            fontStyle: FontStyle.italic,
-          ),
-        );
+          pointsPrice = Text(
+            " @ \$$price",
+            style: const TextStyle(
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+            ),
+          );
+        }
       }
 
       moneySources.add(
@@ -5706,7 +5725,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                 }
               });
 
-              if (participant.containsKey(_userProv!.basic!.playerId.toString())) {
+              if (participant.containsKey(UserHelper.playerId.toString())) {
                 complexString = crime.crimeName;
                 complexTime = DateTime.fromMillisecondsSinceEpoch(crime.timeReady! * 1000);
               }
@@ -5850,7 +5869,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   Future<void> _getFactionCrimesV2() async {
     // If we are in OCv1, we don't need to get v2 crimes
     if (!_settingsProvider!.playerInOCv2) return;
-    if (_userProv!.basic!.faction!.factionId == 0) return;
+    if (UserHelper.factionId == 0) return;
 
     final dynamic apiResponse = await ApiCallsV2.getUserOC2Crime_v2();
     if (apiResponse != null) {
@@ -6627,7 +6646,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   String getSkillValueSafe(String slug) {
     try {
       if (_miscModel?.skills?.skillList != null) {
-        final skill = _miscModel!.skills!.skillList.firstWhere(
+        final skill = _miscModel!.skills!.skillList!.firstWhere(
           (s) => s.slug == slug,
           orElse: () => throw StateError('Skill not found'),
         );
@@ -6802,7 +6821,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       default:
         var all = playerString;
         all += "\n\nCash: ${decimalFormat.format(_user!.networth!["wallet"])}";
-        all += "\nPoints: ${_miscModel!.money?.points ?? '?'}";
+        all += "\nPoints: ${_miscModel!.money?.points ?? '(error)'}";
         all += "\n$_sharedJobPoints";
         all += getBattle();
         all += getEffective();
@@ -7657,9 +7676,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else {
       final companyKey = int.tryParse(userJob.companyType.toString());
       if (companyKey != null) {
-        currentPoints = companyJobPoints.where((company) => company.company.id == companyKey).first.points;
-      } else {
-        currentPoints = 0;
+        final currentCompany = companyJobPoints.firstWhereOrNull((company) => company.company.id == companyKey);
+        if (currentCompany != null) {
+          currentPoints = currentCompany.points;
+        }
       }
     }
 
@@ -7922,7 +7942,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final propertyModel = miscApiResponse.properties;
 
     final List<PropertyV2> rentedProperties = propertyModel.where((p) {
-      if (p.status != null && p.status!.contains("rented")) {
+      if (p.status != null && p.status!.contains("rented") && p.rentedBy != null && p.rentedBy!.id == _user!.playerId) {
         return true;
       }
       return false;

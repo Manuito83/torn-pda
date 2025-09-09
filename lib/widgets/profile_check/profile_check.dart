@@ -21,9 +21,9 @@ import 'package:torn_pda/providers/friends_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_notes.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
@@ -61,7 +61,6 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   late SettingsProvider _settingsProvider;
   final SpiesController _spyController = Get.find<SpiesController>();
 
-  late UserDetailsProvider _userDetails;
   final _expandableController = ExpandableController();
 
   Widget? _statsWidget; // Has to be null at the beginning
@@ -96,7 +95,6 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
   @override
   void initState() {
     super.initState();
-    _userDetails = context.read<UserDetailsProvider>();
     _settingsProvider = context.read<SettingsProvider>();
     _checkedPerson = _fetchAndAssess();
   }
@@ -239,16 +237,15 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           _isTornPda = true;
         }
 
-        if (otherProfile.married!.spouseId == _userDetails.basic!.playerId) {
+        if (otherProfile.married!.spouseId == UserHelper.playerId) {
           _isPartner = true;
         }
 
-        if (otherProfile.playerId == _userDetails.basic!.playerId) {
+        if (otherProfile.playerId == UserHelper.playerId) {
           _isOwnPlayer = true;
         }
 
-        if (_userDetails.basic!.faction!.factionId != 0 &&
-            otherProfile.faction!.factionId == _userDetails.basic!.faction!.factionId) {
+        if (UserHelper.factionId != 0 && otherProfile.faction!.factionId == UserHelper.factionId) {
           _isOwnFaction = true;
         }
 
@@ -260,9 +257,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           }
         }
 
-        if (!_isOwnPlayer &&
-            otherProfile.job!.companyId != 0 &&
-            otherProfile.job!.companyId == _userDetails.basic!.job!.companyId) {
+        if (!_isOwnPlayer && otherProfile.job!.companyId != 0 && otherProfile.job!.companyId == UserHelper.companyId) {
           _isWorkColleague = true;
         }
 
@@ -784,9 +779,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       // STR
       var strColor = Colors.white;
       if (strength != -1) {
-        if (_userDetails.basic!.strength! >= strength!) {
+        if (UserHelper.strength >= strength!) {
           strColor = Colors.green;
-        } else if (_userDetails.basic!.strength! * 1.15 > strength) {
+        } else if (UserHelper.strength * 1.15 > strength) {
           strColor = Colors.orange;
         } else {
           strColor = Colors.red;
@@ -820,9 +815,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       // SPD
       var spdColor = Colors.white;
       if (speed != -1) {
-        if (_userDetails.basic!.speed! >= speed!) {
+        if (UserHelper.speed >= speed!) {
           spdColor = Colors.green;
-        } else if (_userDetails.basic!.speed! * 1.15 > speed) {
+        } else if (UserHelper.speed * 1.15 > speed) {
           spdColor = Colors.orange;
         } else {
           spdColor = Colors.red;
@@ -856,9 +851,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       // DEF
       var defColor = Colors.white;
       if (defense != -1) {
-        if (_userDetails.basic!.defense! >= defense!) {
+        if (UserHelper.defense >= defense!) {
           defColor = Colors.green;
-        } else if (_userDetails.basic!.defense! * 1.15 > defense) {
+        } else if (UserHelper.defense * 1.15 > defense) {
           defColor = Colors.orange;
         } else {
           defColor = Colors.red;
@@ -892,9 +887,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       // DEX
       var dexColor = Colors.white;
       if (dexterity != -1) {
-        if (_userDetails.basic!.dexterity! >= dexterity!) {
+        if (UserHelper.dexterity >= dexterity!) {
           dexColor = Colors.green;
-        } else if (_userDetails.basic!.dexterity! * 1.15 > dexterity) {
+        } else if (UserHelper.dexterity * 1.15 > dexterity) {
           dexColor = Colors.orange;
         } else {
           dexColor = Colors.red;
@@ -923,9 +918,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       Color infoColorStats = Colors.white;
       if (total != -1) {
         infoColorStats = Colors.red;
-        if (_userDetails.basic!.total! >= total!) {
+        if (UserHelper.totalStats >= total!) {
           infoColorStats = Colors.green;
-        } else if (_userDetails.basic!.total! * 1.15 > total) {
+        } else if (UserHelper.totalStats * 1.15 > total) {
           infoColorStats = Colors.orange;
         }
       }
@@ -982,7 +977,6 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 name: _playerName!,
                                 factionName: _factionName!,
                                 themeProvider: widget.themeProvider!,
-                                userDetailsProvider: _userDetails,
                               );
 
                               final estimatedStatsPayload = EstimatedStatsPayload(

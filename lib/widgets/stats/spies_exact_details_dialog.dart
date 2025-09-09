@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
 
 class SpiesExactDetailsDialog extends StatelessWidget {
@@ -48,7 +49,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var strDiff = "";
       Color strColor;
-      final result = spiesPayload.userDetailsProvider.basic!.strength! - spiesPayload.strength!;
+      final result = UserHelper.strength - spiesPayload.strength!;
       if (result == 0) {
         strDiff = "Same as you";
         strColor = Colors.orange;
@@ -90,7 +91,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var spdDiff = "";
       Color spdColor;
-      final result = spiesPayload.userDetailsProvider.basic!.speed! - spiesPayload.speed!;
+      final result = UserHelper.speed - spiesPayload.speed!;
       if (result == 0) {
         spdDiff = "Same as you";
         spdColor = Colors.orange;
@@ -132,7 +133,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var defDiff = "";
       Color defColor;
-      final result = spiesPayload.userDetailsProvider.basic!.defense! - spiesPayload.defense!;
+      final result = UserHelper.defense - spiesPayload.defense!;
       if (result == 0) {
         defDiff = "Same as you";
         defColor = Colors.orange;
@@ -174,7 +175,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var dexDiff = "";
       Color dexColor;
-      final result = spiesPayload.userDetailsProvider.basic!.dexterity! - spiesPayload.dexterity!;
+      final result = UserHelper.dexterity - spiesPayload.dexterity!;
       if (result == 0) {
         dexDiff = "Same as you";
         dexColor = Colors.orange;
@@ -216,7 +217,7 @@ class SpiesExactDetailsDialog extends StatelessWidget {
     } else {
       var totalDiff = "";
       Color totalColor;
-      final result = spiesPayload.userDetailsProvider.basic!.total! - spiesPayload.total!;
+      final result = UserHelper.totalStats - spiesPayload.total!;
       if (result == 0) {
         totalDiff = "Same as you";
         totalColor = Colors.orange;

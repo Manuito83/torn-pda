@@ -37,7 +37,7 @@ import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_login_widget.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
@@ -98,7 +98,7 @@ class SettingsPageState extends State<SettingsPage> {
   late bool _removeNotificationsLaunch;
 
   late SettingsProvider _settingsProvider;
-  late UserDetailsProvider _userProvider;
+
   late ThemeProvider _themeProvider;
   late ShortcutsProvider _shortcutsProvider;
   late WebViewProvider _webViewProvider;
@@ -179,7 +179,7 @@ class SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
@@ -327,7 +327,6 @@ class SettingsPageState extends State<SettingsPage> {
                           getApiDetails: _getApiDetails,
                           changeUID: (value) => widget.changeUID(value),
                           setStateOnParent: () => setState(() {}),
-                          removeUserProvider: () => _userProvider.removeUser(),
                           changeApiError: (val) => setState(() => _apiError = val),
                           changeUserProfile: (val) => setState(() => _userProfile = val),
                         ),
@@ -402,7 +401,7 @@ class SettingsPageState extends State<SettingsPage> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (BuildContext context) => SettingsBrowserPage(userDetailsProvider: _userProvider),
+                        builder: (BuildContext context) => const SettingsBrowserPage(),
                       ),
                     );
                   },
@@ -3563,7 +3562,7 @@ class SettingsPageState extends State<SettingsPage> {
         myProfile
           ..userApiKey = currentKey
           ..userApiKeyValid = true;
-        _userProvider.setUserDetails(userDetails: myProfile);
+        UserHelper.setUserDetails(userDetails: myProfile);
 
         setState(() {
           _apiIsLoading = false;
@@ -3621,7 +3620,7 @@ class SettingsPageState extends State<SettingsPage> {
           // Update the home widget if it's installed
           if (Platform.isAndroid) {
             if ((await pdaWidget_numberInstalled()).isNotEmpty) {
-              pdaWidget_fetchData();
+              fetchAndPersistWidgetData();
             }
           }
         }
@@ -3638,7 +3637,7 @@ class SettingsPageState extends State<SettingsPage> {
         // risk removing it if we access the Settings page with no internet
         // connectivity
         if (myProfile.errorId == 2) {
-          _userProvider.removeUser();
+          UserHelper.removeUser();
         }
       }
     } catch (e, stack) {
@@ -3668,10 +3667,10 @@ class SettingsPageState extends State<SettingsPage> {
       });
     });
 
-    if (_userProvider.basic!.userApiKeyValid!) {
-      String savedKey = _userProvider.basic!.userApiKey!;
+    if (UserHelper.isApiKeyValid) {
+      String savedKey = UserHelper.apiKey;
       setState(() {
-        _apiKeyInputController.text = _userProvider.basic!.userApiKey!;
+        _apiKeyInputController.text = UserHelper.apiKey;
         _apiIsLoading = true;
       });
       _getApiDetails(userTriggered: false, currentKey: savedKey);

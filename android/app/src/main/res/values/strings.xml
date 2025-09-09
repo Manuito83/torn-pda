@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="example_appwidget_description">"Torn PDA home widget"</string>
+    <string name="example_appwidget_description">Main status widget</string>
+    <string name="home_widget_label">Main status, including shortcuts and clickable links</string>
+    <string name="ranked_war_widget_description">See upcoming, current and finished ranked wars information</string>
+    <string name="ranked_war_widget_label">Ranked War</string>
 </resources>

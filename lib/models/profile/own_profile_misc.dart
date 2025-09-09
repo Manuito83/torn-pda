@@ -60,14 +60,7 @@ class OwnProfileMisc {
     return OwnProfileMisc(
       education: EducationV2.fromJson(json["education"] ?? {}),
       properties: json['properties'] != null && json['properties'] is List
-          ? (() {
-              try {
-                return List<PropertyV2>.from(json['properties'].map((x) => PropertyV2.fromJson(x)));
-              } catch (e) {
-                log('Error parsing properties: $e');
-                return <PropertyV2>[];
-              }
-            })()
+          ? List<PropertyV2>.from(json['properties'].map((x) => PropertyV2.fromJson(x)))
           : [],
       workStats: WorkStats.fromJson(json),
       battleStats: BattleStats.fromJson(json),
@@ -95,7 +88,7 @@ class OwnProfileMisc {
         "battlestats": battleStats?.toJson(),
         "jobpoints": jobpoints?.toJson(),
         "money": money?.toJson(),
-        "skills": skills?.skillList.map((x) => x.toJson()).toList() ?? [],
+        "skills": skills?.skillList?.map((x) => x.toJson()).toList() ?? [],
         "player_id": playerId,
         "city_bank": cityBank?.toJson(),
         "strength_info": strengthInfo == null ? [] : List<dynamic>.from(strengthInfo!.map((x) => x)),
@@ -127,7 +120,9 @@ class Bazaar {
     this.uid,
   });
 
-  factory Bazaar.fromJson(Map<String, dynamic> json) => Bazaar(
+  factory Bazaar.fromJson(Map<String, dynamic> json) {
+    try {
+      return Bazaar(
         id: json["ID"],
         name: json["name"],
         type: json["type"],
@@ -136,6 +131,11 @@ class Bazaar {
         marketPrice: json["market_price"],
         uid: json["UID"],
       );
+    } catch (e) {
+      log('Error parsing Bazaar: $e');
+      return Bazaar();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "ID": id,
@@ -157,10 +157,17 @@ class CityBank {
     this.timeLeft,
   });
 
-  factory CityBank.fromJson(Map<String, dynamic> json) => CityBank(
+  factory CityBank.fromJson(Map<String, dynamic> json) {
+    try {
+      return CityBank(
         amount: json["amount"],
         timeLeft: json["time_left"],
       );
+    } catch (e) {
+      log('Error parsing CityBank: $e');
+      return CityBank();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "amount": amount,
@@ -187,7 +194,9 @@ class Itemmarket {
     this.item,
   });
 
-  factory Itemmarket.fromJson(Map<String, dynamic> json) => Itemmarket(
+  factory Itemmarket.fromJson(Map<String, dynamic> json) {
+    try {
+      return Itemmarket(
         id: json["id"],
         price: json["price"],
         averagePrice: json["average_price"],
@@ -196,6 +205,11 @@ class Itemmarket {
         available: json["available"],
         item: json["item"] == null ? null : Item.fromJson(json["item"]),
       );
+    } catch (e) {
+      log('Error parsing Itemmarket: $e');
+      return Itemmarket();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -227,7 +241,9 @@ class Item {
     required this.bonuses,
   });
 
-  factory Item.fromJson(Map<String, dynamic> json) => Item(
+  factory Item.fromJson(Map<String, dynamic> json) {
+    try {
+      return Item(
         id: json["id"],
         name: json["name"],
         type: json["type"],
@@ -236,6 +252,11 @@ class Item {
         rarity: json["rarity"],
         bonuses: (json["bonuses"] as List<dynamic>?) ?? [],
       );
+    } catch (e) {
+      log('Error parsing Item: $e');
+      return Item(bonuses: []);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -258,23 +279,10 @@ class Jobpoints {
   });
 
   factory Jobpoints.fromJson(Map<String, dynamic> json) {
-    // TODO: Once legacy API is removed, only use this
-    /*
-      if (json.containsKey('jobpoints') && json['jobpoints'] != null) {
-        final jobpointsData = json['jobpoints'] as Map<String, dynamic>;
-        return Jobpoints(
-          jobs: jobpointsData['jobs'] != null ? Jobs.fromJson(jobpointsData['jobs']) : null,
-          companies: jobpointsData['companies'] != null && jobpointsData['companies'] is List
-              ? List<CompanyJobpoints>.from(jobpointsData['companies'].map((x) => CompanyJobpoints.fromJson(x)))
-              : null,
-        );
-      }
-      return Jobpoints();
-    */
-
-    // Handle both legacy and new API structures
+    try {
+      // TODO: Once legacy API is removed, only use this
+      /*
     if (json.containsKey('jobpoints') && json['jobpoints'] != null) {
-      // New API: jobpoints is a separate object with companies as List
       final jobpointsData = json['jobpoints'] as Map<String, dynamic>;
       return Jobpoints(
         jobs: jobpointsData['jobs'] != null ? Jobs.fromJson(jobpointsData['jobs']) : null,
@@ -282,21 +290,41 @@ class Jobpoints {
             ? List<CompanyJobpoints>.from(jobpointsData['companies'].map((x) => CompanyJobpoints.fromJson(x)))
             : null,
       );
-    } else {
-      // Legacy API: jobpoints at root with companies as Map
-      return Jobpoints(
-        jobs: json['jobs'] != null ? Jobs.fromJson(json['jobs']) : null,
-        companies: json['companies'] != null && json['companies'] is Map
-            ? (json['companies'] as Map<String, dynamic>).entries.map((entry) {
-                return CompanyJobpoints.legacy(
-                  int.parse(entry.key),
-                  entry.value['name'] ?? '',
-                  entry.value['jobpoints'] ?? 0,
-                );
-              }).toList()
-            : null,
-      );
     }
+    return Jobpoints();
+    */
+
+      // Handle both legacy and new API structures
+      if (json.containsKey('jobpoints') && json['jobpoints'] != null) {
+        final jobpointsData = json['jobpoints'] as Map<String, dynamic>;
+
+        // New API: companies as List
+        if (jobpointsData['companies'] != null && jobpointsData['companies'] is List) {
+          return Jobpoints(
+            jobs: jobpointsData['jobs'] != null ? Jobs.fromJson(jobpointsData['jobs']) : null,
+            companies: List<CompanyJobpoints>.from(jobpointsData['companies'].map((x) => CompanyJobpoints.fromJson(x))),
+          );
+        } else {
+          // Old API: companies as Map within jobpoints object
+          return Jobpoints(
+            jobs: jobpointsData['jobs'] != null ? Jobs.fromJson(jobpointsData['jobs']) : null,
+            companies: jobpointsData['companies'] != null && jobpointsData['companies'] is Map
+                ? (jobpointsData['companies'] as Map<String, dynamic>).entries.map((entry) {
+                    return CompanyJobpoints.legacy(
+                      int.parse(entry.key),
+                      entry.value['name'] ?? '',
+                      entry.value['jobpoints'] ?? 0,
+                    );
+                  }).toList()
+                : null,
+          );
+        }
+      }
+    } catch (e) {
+      log('Error parsing jobpoints: $e');
+    }
+
+    return Jobpoints();
   }
 
   Map<String, dynamic> toJson() => {
@@ -314,10 +342,20 @@ class CompanyJobpoints {
     required this.points,
   });
 
-  factory CompanyJobpoints.fromJson(Map<String, dynamic> json) => CompanyJobpoints(
+  factory CompanyJobpoints.fromJson(Map<String, dynamic> json) {
+    try {
+      return CompanyJobpoints(
         company: CompanyInfo.fromJson(json['company']),
         points: json['points'] ?? 0,
       );
+    } catch (e) {
+      log('Error parsing CompanyJobpoints: $e');
+      return CompanyJobpoints(
+        company: CompanyInfo(id: 0, name: ''),
+        points: 0,
+      );
+    }
+  }
 
   // TODO: Remove when legacy API is discontinued
   factory CompanyJobpoints.legacy(int id, String name, int jobpoints) => CompanyJobpoints(
@@ -340,10 +378,17 @@ class CompanyInfo {
     required this.name,
   });
 
-  factory CompanyInfo.fromJson(Map<String, dynamic> json) => CompanyInfo(
+  factory CompanyInfo.fromJson(Map<String, dynamic> json) {
+    try {
+      return CompanyInfo(
         id: json['id'],
         name: json['name'],
       );
+    } catch (e) {
+      log('Error parsing CompanyInfo: $e');
+      return CompanyInfo(id: 0, name: '');
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -361,10 +406,17 @@ class Company {
     this.jobpoints,
   });
 
-  factory Company.fromJson(Map<String, dynamic> json) => Company(
+  factory Company.fromJson(Map<String, dynamic> json) {
+    try {
+      return Company(
         name: json["name"],
         jobpoints: json["jobpoints"],
       );
+    } catch (e) {
+      log('Error parsing Company: $e');
+      return Company();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "name": name,
@@ -389,7 +441,9 @@ class Jobs {
     this.grocer,
   });
 
-  factory Jobs.fromJson(Map<String, dynamic> json) => Jobs(
+  factory Jobs.fromJson(Map<String, dynamic> json) {
+    try {
+      return Jobs(
         army: json["army"],
         medical: json["medical"],
         casino: json["casino"],
@@ -397,6 +451,11 @@ class Jobs {
         law: json["law"],
         grocer: json["grocer"],
       );
+    } catch (e) {
+      log('Error parsing Jobs: $e');
+      return Jobs();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "army": army,
@@ -413,8 +472,14 @@ class Metadata {
 
   Metadata({this.links});
 
-  factory Metadata.fromJson(Map<String, dynamic> json) =>
-      Metadata(links: json["links"] == null ? null : Links.fromJson(json["links"]));
+  factory Metadata.fromJson(Map<String, dynamic> json) {
+    try {
+      return Metadata(links: json["links"] == null ? null : Links.fromJson(json["links"]));
+    } catch (e) {
+      log('Error parsing Metadata: $e');
+      return Metadata();
+    }
+  }
   Map<String, dynamic> toJson() => {"links": links?.toJson()};
 }
 
@@ -427,10 +492,17 @@ class Links {
     this.next,
   });
 
-  factory Links.fromJson(Map<String, dynamic> json) => Links(
+  factory Links.fromJson(Map<String, dynamic> json) {
+    try {
+      return Links(
         prev: json["prev"],
         next: json["next"],
       );
+    } catch (e) {
+      log('Error parsing Links: $e');
+      return Links();
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "prev": prev,
@@ -439,19 +511,20 @@ class Links {
 }
 
 class WorkStats {
-  final int manualLabor;
-  final int intelligence;
-  final int endurance;
+  final int? manualLabor;
+  final int? intelligence;
+  final int? endurance;
 
   WorkStats({
-    required this.manualLabor,
-    required this.intelligence,
-    required this.endurance,
+    this.manualLabor,
+    this.intelligence,
+    this.endurance,
   });
 
   factory WorkStats.fromJson(Map<String, dynamic> json) {
-    // TODO: Once legacy API is removed, only use this
-    /*
+    try {
+      // TODO: Once legacy API is removed, only use this
+      /*
       if (json.containsKey('workstats') && json['workstats'] != null) {
         final workstatsData = json['workstats'] as Map<String, dynamic>;
         return WorkStats(
@@ -461,18 +534,23 @@ class WorkStats {
         );
       }
       return WorkStats(manualLabor: 0, intelligence: 0, endurance: 0);
-    */
+      */
 
-    // Handle both legacy and new API structures
-    final workstatsData = (json.containsKey('workstats') && json['workstats'] != null)
-        ? json['workstats'] as Map<String, dynamic> // New API
-        : json; // Legacy API
+      // Handle both legacy and new API structures
+      final workstatsData = (json.containsKey('workstats') && json['workstats'] != null)
+          ? json['workstats'] as Map<String, dynamic> // New API
+          : json; // Legacy API
 
-    return WorkStats(
-      manualLabor: workstatsData['manual_labor'] ?? 0,
-      intelligence: workstatsData['intelligence'] ?? 0,
-      endurance: workstatsData['endurance'] ?? 0,
-    );
+      return WorkStats(
+        manualLabor: workstatsData['manual_labor'] ?? 0,
+        intelligence: workstatsData['intelligence'] ?? 0,
+        endurance: workstatsData['endurance'] ?? 0,
+      );
+    } catch (e) {
+      log("Error parsing WorkStats: $e");
+    }
+
+    return WorkStats();
   }
 
   Map<String, dynamic> toJson() => {
@@ -498,8 +576,9 @@ class BattleStats {
   });
 
   factory BattleStats.fromJson(Map<String, dynamic> json) {
-    // TODO: Once legacy API is removed, only use this
-    /*
+    try {
+      // TODO: Once legacy API is removed, only use this
+      /*
       if (json.containsKey('battlestats') && json['battlestats'] != null) {
         final battlestatsData = json['battlestats'] as Map<String, dynamic>;
         return BattleStats(
@@ -511,30 +590,36 @@ class BattleStats {
         );
       }
       return BattleStats();
-    */
+      */
 
-    // Handle both legacy and new API structures
-    if (json.containsKey('battlestats') && json['battlestats'] != null) {
-      // New API: battlestats is a separate object with rich structure
-      final battlestatsData = json['battlestats'] as Map<String, dynamic>;
-      return BattleStats(
-        strength: battlestatsData['strength'] != null ? BattleStat.fromJson(battlestatsData['strength']) : null,
-        defense: battlestatsData['defense'] != null ? BattleStat.fromJson(battlestatsData['defense']) : null,
-        speed: battlestatsData['speed'] != null ? BattleStat.fromJson(battlestatsData['speed']) : null,
-        dexterity: battlestatsData['dexterity'] != null ? BattleStat.fromJson(battlestatsData['dexterity']) : null,
-        total: battlestatsData['total'],
-      );
-    } else {
-      // Legacy API: battlestats are at the root with simple structure
-      return BattleStats(
-        strength: json['strength'] != null ? BattleStat.legacy(json['strength'], json['strength_modifier'] ?? 0) : null,
-        defense: json['defense'] != null ? BattleStat.legacy(json['defense'], json['defense_modifier'] ?? 0) : null,
-        speed: json['speed'] != null ? BattleStat.legacy(json['speed'], json['speed_modifier'] ?? 0) : null,
-        dexterity:
-            json['dexterity'] != null ? BattleStat.legacy(json['dexterity'], json['dexterity_modifier'] ?? 0) : null,
-        total: json['total'],
-      );
+      // Handle both legacy and new API structures
+      if (json.containsKey('battlestats') && json['battlestats'] != null) {
+        // New API: battlestats is a separate object with rich structure
+        final battlestatsData = json['battlestats'] as Map<String, dynamic>;
+        return BattleStats(
+          strength: battlestatsData['strength'] != null ? BattleStat.fromJson(battlestatsData['strength']) : null,
+          defense: battlestatsData['defense'] != null ? BattleStat.fromJson(battlestatsData['defense']) : null,
+          speed: battlestatsData['speed'] != null ? BattleStat.fromJson(battlestatsData['speed']) : null,
+          dexterity: battlestatsData['dexterity'] != null ? BattleStat.fromJson(battlestatsData['dexterity']) : null,
+          total: battlestatsData['total'],
+        );
+      } else {
+        // Legacy API: battlestats are at the root with simple structure
+        return BattleStats(
+          strength:
+              json['strength'] != null ? BattleStat.legacy(json['strength'], json['strength_modifier'] ?? 0) : null,
+          defense: json['defense'] != null ? BattleStat.legacy(json['defense'], json['defense_modifier'] ?? 0) : null,
+          speed: json['speed'] != null ? BattleStat.legacy(json['speed'], json['speed_modifier'] ?? 0) : null,
+          dexterity:
+              json['dexterity'] != null ? BattleStat.legacy(json['dexterity'], json['dexterity_modifier'] ?? 0) : null,
+          total: json['total'],
+        );
+      }
+    } catch (e) {
+      log("Error parsing BattleStats: $e");
     }
+
+    return BattleStats();
   }
 
   Map<String, dynamic> toJson() => {
@@ -557,13 +642,20 @@ class BattleStat {
     this.modifiers,
   });
 
-  factory BattleStat.fromJson(Map<String, dynamic> json) => BattleStat(
+  factory BattleStat.fromJson(Map<String, dynamic> json) {
+    try {
+      return BattleStat(
         value: json['value'],
         modifier: json['modifier'],
         modifiers: json['modifiers'] != null
             ? List<BattleStatModifier>.from(json['modifiers'].map((x) => BattleStatModifier.fromJson(x)))
             : null,
       );
+    } catch (e) {
+      log('Error parsing BattleStat: $e');
+      return BattleStat(value: 0, modifier: 0);
+    }
+  }
 
   // TODO: Remove when legacy API is discontinued
   factory BattleStat.legacy(int value, int modifier) => BattleStat(
@@ -581,7 +673,7 @@ class BattleStat {
 
 class BattleStatModifier {
   final String effect;
-  final int value;
+  final double value;
   final String type;
 
   BattleStatModifier({
@@ -590,11 +682,18 @@ class BattleStatModifier {
     required this.type,
   });
 
-  factory BattleStatModifier.fromJson(Map<String, dynamic> json) => BattleStatModifier(
-        effect: json['effect'],
-        value: json['value'],
-        type: json['type'],
+  factory BattleStatModifier.fromJson(Map<String, dynamic> json) {
+    try {
+      return BattleStatModifier(
+        effect: json['effect'] ?? '',
+        value: json['value'] != null ? json['value'].toDouble() : 0.0,
+        type: json['type'] ?? '',
       );
+    } catch (e) {
+      log('Error parsing BattleStatModifier: $e');
+      return BattleStatModifier(effect: '', value: 0.0, type: '');
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "effect": effect,
@@ -604,29 +703,30 @@ class BattleStatModifier {
 }
 
 class Money {
-  final int points;
-  final int wallet;
-  final int company;
-  final int vault;
-  final int caymanBank;
-  final CityBankV2 cityBank;
+  final int? points;
+  final int? wallet;
+  final int? company;
+  final int? vault;
+  final int? caymanBank;
+  final CityBankV2? cityBank;
   final FactionMoney? faction;
-  final int dailyNetworth;
+  final int? dailyNetworth;
 
   Money({
-    required this.points,
-    required this.wallet,
-    required this.company,
-    required this.vault,
-    required this.caymanBank,
-    required this.cityBank,
+    this.points,
+    this.wallet,
+    this.company,
+    this.vault,
+    this.caymanBank,
+    this.cityBank,
     this.faction,
-    required this.dailyNetworth,
+    this.dailyNetworth,
   });
 
   factory Money.fromJson(Map<String, dynamic> json) {
-    // TODO: Once legacy API is removed, only use this
-    /*
+    try {
+      // TODO: Once legacy API is removed, only use this
+      /*
       if (json.containsKey('money') && json['money'] != null) {
         final moneyData = json['money'] as Map<String, dynamic>;
         return Money(
@@ -646,33 +746,38 @@ class Money {
       );
     */
 
-    // Handle both legacy and new API structures
-    if (json.containsKey('money') && json['money'] != null) {
-      // New API: money is a unified object
-      final moneyData = json['money'] as Map<String, dynamic>;
-      return Money(
-        points: moneyData['points'] ?? 0,
-        wallet: moneyData['wallet'] ?? 0,
-        company: moneyData['company'] ?? 0,
-        vault: moneyData['vault'] ?? 0,
-        caymanBank: moneyData['cayman_bank'] ?? 0,
-        cityBank: CityBankV2.fromJson(moneyData['city_bank'] ?? {}),
-        faction: moneyData['faction'] != null ? FactionMoney.fromJson(moneyData['faction']) : null,
-        dailyNetworth: moneyData['daily_networth'] ?? 0,
-      );
-    } else {
-      // Legacy API: money fields scattered at root level
-      return Money(
-        points: json['points'] ?? 0,
-        wallet: json['money_onhand'] ?? 0,
-        company: json['company_funds'] ?? 0,
-        vault: json['vault_amount'] ?? 0,
-        caymanBank: json['cayman_bank'] ?? 0,
-        cityBank: json['city_bank'] != null ? CityBankV2.legacy(json['city_bank']) : CityBankV2(),
-        faction: null,
-        dailyNetworth: json['daily_networth'] ?? 0,
-      );
+      // Handle both legacy and new API structures
+      if (json.containsKey('money') && json['money'] != null) {
+        // New API: money is a unified object
+        final moneyData = json['money'] as Map<String, dynamic>;
+        return Money(
+          points: moneyData['points'] ?? 0,
+          wallet: moneyData['wallet'] ?? 0,
+          company: moneyData['company'] ?? 0,
+          vault: moneyData['vault'] ?? 0,
+          caymanBank: moneyData['cayman_bank'] ?? 0,
+          cityBank: CityBankV2.fromJson(moneyData['city_bank'] ?? {}),
+          faction: moneyData['faction'] != null ? FactionMoney.fromJson(moneyData['faction']) : null,
+          dailyNetworth: moneyData['daily_networth'] ?? 0,
+        );
+      } else {
+        // Legacy API: money fields scattered at root level
+        return Money(
+          points: json['points'] ?? 0,
+          wallet: json['money_onhand'] ?? 0,
+          company: json['company_funds'] ?? 0,
+          vault: json['vault_amount'] ?? 0,
+          caymanBank: json['cayman_bank'] ?? 0,
+          cityBank: json['city_bank'] != null ? CityBankV2.legacy(json['city_bank']) : CityBankV2(),
+          faction: null,
+          dailyNetworth: json['daily_networth'] ?? 0,
+        );
+      }
+    } catch (e) {
+      log("Error parsing Money: $e");
     }
+
+    return Money();
   }
 
   Map<String, dynamic> toJson() => {
@@ -681,7 +786,7 @@ class Money {
         "company": company,
         "vault": vault,
         "cayman_bank": caymanBank,
-        "city_bank": cityBank.toJson(),
+        "city_bank": cityBank?.toJson(),
         "faction": faction?.toJson(),
         "daily_networth": dailyNetworth,
       };
@@ -696,10 +801,17 @@ class CityBankV2 {
     this.until = 0,
   });
 
-  factory CityBankV2.fromJson(Map<String, dynamic> json) => CityBankV2(
+  factory CityBankV2.fromJson(Map<String, dynamic> json) {
+    try {
+      return CityBankV2(
         amount: json['amount'] ?? 0,
         until: json['until'] ?? 0,
       );
+    } catch (e) {
+      log('Error parsing CityBankV2: $e');
+      return CityBankV2();
+    }
+  }
 
   // TODO: Remove when legacy API is discontinued
   factory CityBankV2.legacy(Map<String, dynamic> json) => CityBankV2(
@@ -722,10 +834,17 @@ class FactionMoney {
     required this.points,
   });
 
-  factory FactionMoney.fromJson(Map<String, dynamic> json) => FactionMoney(
+  factory FactionMoney.fromJson(Map<String, dynamic> json) {
+    try {
+      return FactionMoney(
         money: json['money'] ?? 0,
         points: json['points'] ?? 0,
       );
+    } catch (e) {
+      log('Error parsing FactionMoney: $e');
+      return FactionMoney(money: 0, points: 0);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "money": money,
@@ -734,63 +853,69 @@ class FactionMoney {
 }
 
 class Skills {
-  final List<Skill> skillList;
+  final List<Skill>? skillList;
 
-  Skills({required this.skillList});
+  Skills({this.skillList});
 
   factory Skills.fromJson(Map<String, dynamic> json) {
-    // TODO: Once legacy API is removed, only use this
-    /*
+    try {
+      // TODO: Once legacy API is removed, only use this
+      /*
       if (json.containsKey('skills') && json['skills'] != null && json['skills'] is List) {
         return Skills(
           skillList: List<Skill>.from(json['skills'].map((x) => Skill.fromJson(x))),
         );
       }
       return Skills(skillList: []);
-    */
+      */
 
-    // Handle both legacy and new API structures
-    if (json.containsKey('skills') && json['skills'] != null && json['skills'] is List) {
-      // New API: skills is a List of Skill objects
-      return Skills(
-        skillList: List<Skill>.from(json['skills'].map((x) => Skill.fromJson(x))),
-      );
-    } else {
-      // Legacy API: skills are individual fields at root level
-      final List<Skill> skills = [];
+      // Handle both legacy and new API structures
+      if (json.containsKey('skills') && json['skills'] != null && json['skills'] is List) {
+        // New API: skills is a List of Skill objects
+        return Skills(
+          skillList: List<Skill>.from(json['skills'].map((x) => Skill.fromJson(x))),
+        );
+      } else {
+        // Legacy API: skills are individual fields at root level
+        final List<Skill> skills = [];
 
-      // Map all known skill fields from legacy to new structure
-      final Map<String, String> skillMap = {
-        'forgery': 'Forgery',
-        'search_for_cash': 'Search for Cash',
-        'bootlegging': 'Bootlegging',
-        'card_skimming': 'Card Skimming',
-        'reviving': 'Reviving',
-        'graffiti': 'Graffiti',
-        'hunting': 'Hunting',
-        'burglary': 'Burglary',
-        'shoplifting': 'Shoplifting',
-        'cracking': 'Cracking',
-        'scamming': 'Scamming',
-        'pickpocketing': 'Pickpocketing',
-        'racing': 'Racing',
-        'hustling': 'Hustling',
-        'disposal': 'Disposal',
-      };
+        // Map all known skill fields from legacy to new structure
+        final Map<String, String> skillMap = {
+          'forgery': 'Forgery',
+          'search_for_cash': 'Search for Cash',
+          'bootlegging': 'Bootlegging',
+          'card_skimming': 'Card Skimming',
+          'reviving': 'Reviving',
+          'graffiti': 'Graffiti',
+          'hunting': 'Hunting',
+          'burglary': 'Burglary',
+          'shoplifting': 'Shoplifting',
+          'cracking': 'Cracking',
+          'scamming': 'Scamming',
+          'pickpocketing': 'Pickpocketing',
+          'racing': 'Racing',
+          'hustling': 'Hustling',
+          'disposal': 'Disposal',
+        };
 
-      skillMap.forEach((slug, name) {
-        if (json[slug] != null) {
-          final level = double.tryParse(json[slug].toString()) ?? 0.0;
-          skills.add(Skill(slug: slug, name: name, level: level));
-        }
-      });
+        skillMap.forEach((slug, name) {
+          if (json[slug] != null) {
+            final level = double.tryParse(json[slug].toString()) ?? 0.0;
+            skills.add(Skill(slug: slug, name: name, level: level));
+          }
+        });
 
-      return Skills(skillList: skills);
+        return Skills(skillList: skills);
+      }
+    } catch (e) {
+      log("Error parsing Skills: $e");
     }
+
+    return Skills();
   }
 
   Map<String, dynamic> toJson() => {
-        "skills": skillList.map((x) => x.toJson()).toList(),
+        "skills": skillList == null ? [] : skillList!.map((x) => x.toJson()).toList(),
       };
 }
 
@@ -805,11 +930,18 @@ class Skill {
     required this.level,
   });
 
-  factory Skill.fromJson(Map<String, dynamic> json) => Skill(
+  factory Skill.fromJson(Map<String, dynamic> json) {
+    try {
+      return Skill(
         slug: json['slug'] ?? '',
         name: json['name'] ?? '',
         level: (json['level'] ?? 0).toDouble(),
       );
+    } catch (e) {
+      log('Error parsing Skill: $e');
+      return Skill(slug: '', name: '', level: 0.0);
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "slug": slug,

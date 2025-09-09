@@ -17,7 +17,7 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -42,7 +42,6 @@ class TargetCardState extends State<TargetCard> {
   late TargetsProvider _targetsProvider;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
-  late UserDetailsProvider _userProvider;
   final _chainProvider = Get.find<ChainStatusController>();
   late WebViewProvider _webViewProvider;
 
@@ -59,7 +58,7 @@ class TargetCardState extends State<TargetCard> {
     _webViewProvider = context.read<WebViewProvider>();
     _updatedTicker = Timer.periodic(const Duration(seconds: 60), (Timer t) => _timerUpdateInformation());
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
+
     _targetsProvider = Provider.of<TargetsProvider>(context, listen: false);
   }
 
@@ -386,12 +385,12 @@ class TargetCardState extends State<TargetCard> {
     if (_target!.hasFaction!) {
       Color? borderColor = Colors.transparent;
       Color? iconColor = _themeProvider.mainText;
-      if (_target!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
+      if (_target!.faction!.factionId == UserHelper.factionId) {
         borderColor = iconColor = Colors.green[500];
       }
 
       void showFactionToast() {
-        if (_target!.faction!.factionId == _userProvider.basic!.faction!.factionId) {
+        if (_target!.faction!.factionId == UserHelper.factionId) {
           BotToast.showText(
             text: HtmlParser.fix("${_target!.name} belongs to your same faction "
                 "(${_target!.faction!.factionName}) as "

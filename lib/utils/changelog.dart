@@ -100,6 +100,53 @@ class ChangeLogState extends State<ChangeLog> {
   void _createItems() {
     final itemList = <ChangeLogItem>[];
 
+    // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
+
+    // v3.9.0 - Build 576 - 07/09/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.0'
+        ..date = '08 SEP 2025'
+        ..features = [
+          if (Platform.isAndroid) "Added home screen widget with War information",
+          if (Platform.isIOS) "[iOS 17+] Added home screen widget with War information",
+          "Added double-tap on Torn's header bar to exit full screen mode",
+          "Added option to hide foreign items info (details and large picture) when abroad",
+          Consumer<SettingsProvider>(
+            builder: (context, settings, child) {
+              return Padding(
+                padding: const EdgeInsets.only(left: 45.0, right: 5),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "(disabled by default)",
+                          ),
+                        ],
+                      ),
+                    ),
+                    Switch(
+                      value: settings.removeForeignItemsDetails,
+                      onChanged: (bool value) {
+                        settings.removeForeignItemsDetails = value;
+                      },
+                      activeColor: Theme.of(context).colorScheme.primary,
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          "Fixed duplicated fill-max buttons whilst abroad [Kwack]",
+          "Fixed bazaar fill-max buttons [Kwack]",
+          "Fixed chain watcher notifications",
+        ],
+    );
+
     // v3.8.4 - Build 572 - 20/08/2025
     itemList.add(
       ChangeLogItem()
@@ -139,7 +186,7 @@ class ChangeLogState extends State<ChangeLog> {
             explanation: "You can now access additional developer tools directly within the app\n\n"
                 "To open them, tap the browser's title bar to open the URL Menu (or long-press the 'CLOSE' button in dialog mode) and select 'Open Dev Tools'.\n\n"
                 "This new screen provides three essential utilities for inspecting the WebView:\n\n"
-                "1. Terminal: another place to acces the terminal, and execute JavaScript commands. Includes command history.\n\n"
+                "1. Terminal: another place to access the terminal, and execute JavaScript commands. Includes command history.\n\n"
                 "2. Network: list of all network resources (scripts, images, APIs) loaded by the current page, including their type and load time.\n\n"
                 "3. Storage: inspect and manage Cookies, Local Storage, and Session Storage. You can view, edit, and delete individual items.\n\n"
                 "A special 'hide' timer is also included (see the appbar icon), allowing you to temporarily close the Dev Tools to interact with the underlying WebView and then automatically reopen them to see the results.",
@@ -150,7 +197,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed chat notifications resetting after switching faction or company",
           "Fixed missing Print Store shortcut",
           "Fixed Wiki references",
-          "Fixed userscrips persistence",
+          "Fixed user scrips persistence",
           "Fixed sliding up panel layout in split screen mode",
           "Fixed wrong OC v2 activation when not migrated",
         ],

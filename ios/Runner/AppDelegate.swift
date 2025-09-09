@@ -5,6 +5,8 @@ import Flutter
 import MachO  // for task_info APIs
 import UIKit
 import UserNotifications  // for UNUserNotificationCenter
+import home_widget
+import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -37,6 +39,29 @@ import UserNotifications  // for UNUserNotificationCenter
     }
 
     GeneratedPluginRegistrant.register(with: self)
+
+    if #available(iOS 17, *) {
+      HomeWidgetBackgroundWorker.setPluginRegistrantCallback { registry in
+        GeneratedPluginRegistrant.register(with: registry)
+      }
+    }
+
+    if #available(iOS 17.0, *) {
+      HomeWidgetPlugin.setConfigurationLookup(to: [
+        "RankedWarWidget": PdaWidgetMainIntent.self
+      ])
+    }
+
+    WorkmanagerPlugin.setPluginRegistrantCallback { registry in
+      GeneratedPluginRegistrant.register(with: registry)
+    }
+
+    WorkmanagerPlugin.registerPeriodicTask(
+      withIdentifier: "com.manuito.tornpda.ranked_widget_refresh",
+      frequency: NSNumber(value: 15 * 60)
+    )
+
+    WorkmanagerDebug.setCurrent(LoggingDebugHandler())
 
     let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
 

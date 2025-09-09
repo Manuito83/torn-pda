@@ -2,17 +2,15 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/pages/travel/foreign_stock_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ForeignStockButton extends StatelessWidget {
-  final UserDetailsProvider? userProv;
   final SettingsProvider? settingsProv;
   final Function launchBrowser;
   final Function updateCallback;
 
   const ForeignStockButton({
-    required this.userProv,
     required this.settingsProv,
     required this.launchBrowser({required String? url, required bool? shortTap}),
     required this.updateCallback,
@@ -28,7 +26,7 @@ class ForeignStockButton extends StatelessWidget {
         transitionDuration: const Duration(seconds: 1),
         transitionType: ContainerTransitionType.fadeThrough,
         openBuilder: (BuildContext context, VoidCallback _) {
-          return ForeignStockPage(apiKey: userProv!.basic!.userApiKey);
+          return ForeignStockPage(apiKey: UserHelper.apiKey);
         },
         closedElevation: 3,
         closedShape: const RoundedRectangleBorder(

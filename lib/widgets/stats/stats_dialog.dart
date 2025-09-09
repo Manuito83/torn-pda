@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/widgets/stats/estimated_stats_dialog.dart';
 import 'package:torn_pda/widgets/stats/spies_exact_details_dialog.dart';
 import 'package:torn_pda/widgets/stats/tcs_stats_dialog.dart';
@@ -29,7 +28,6 @@ class SpiesPayload {
     required this.name,
     required this.factionName,
     required this.themeProvider,
-    required this.userDetailsProvider,
   });
 
   final SpiesController spyController;
@@ -48,7 +46,6 @@ class SpiesPayload {
   final String? name;
   final String? factionName;
   final ThemeProvider themeProvider;
-  final UserDetailsProvider userDetailsProvider;
 }
 
 class EstimatedStatsPayload {

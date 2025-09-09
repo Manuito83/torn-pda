@@ -19,7 +19,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -50,7 +50,7 @@ class RetalCardState extends State<RetalCard> {
   Retal? _retal;
   late ThemeProvider _themeProvider;
   late SettingsProvider _settingsProvider;
-  late UserDetailsProvider _userProvider;
+
   final _chainProvider = Get.find<ChainStatusController>();
   late WebViewProvider _webViewProvider;
 
@@ -68,7 +68,6 @@ class RetalCardState extends State<RetalCard> {
     super.initState();
     _webViewProvider = context.read<WebViewProvider>();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
   }
 
   @override
@@ -815,10 +814,10 @@ class RetalCardState extends State<RetalCard> {
 
     if (_retal!.statsExactTotalKnown != -1) {
       Color? exactColor = Colors.green;
-      if (_userProvider.basic!.total! < _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) {
+      if (UserHelper.totalStats < _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) {
         exactColor = Colors.red[700];
-      } else if ((_userProvider.basic!.total! >= _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) &&
-          (_userProvider.basic!.total! <= _retal!.statsExactTotalKnown + _retal!.statsExactTotalKnown * 0.1)) {
+      } else if ((UserHelper.totalStats >= _retal!.statsExactTotalKnown - _retal!.statsExactTotalKnown * 0.1) &&
+          (UserHelper.totalStats <= _retal!.statsExactTotalKnown + _retal!.statsExactTotalKnown * 0.1)) {
         exactColor = Colors.orange[700];
       }
 
@@ -885,7 +884,6 @@ class RetalCardState extends State<RetalCard> {
                     name: _retal!.name!,
                     factionName: _retal!.factionName!,
                     themeProvider: _themeProvider,
-                    userDetailsProvider: _userProvider,
                   );
 
                   final estimatedStatsPayload = EstimatedStatsPayload(

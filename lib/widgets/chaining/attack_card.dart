@@ -9,9 +9,9 @@ import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class AttackCard extends StatefulWidget {
@@ -26,7 +26,6 @@ class AttackCard extends StatefulWidget {
 class AttackCardState extends State<AttackCard> {
   late Attack _attack;
   late ThemeProvider _themeProvider;
-  late UserDetailsProvider _userProvider;
 
   bool _addButtonActive = true;
 
@@ -34,7 +33,6 @@ class AttackCardState extends State<AttackCard> {
   Widget build(BuildContext context) {
     _attack = widget.attackModel;
     _themeProvider = Provider.of<ThemeProvider>(context);
-    _userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 5),
       child: Card(
@@ -461,12 +459,12 @@ class AttackCardState extends State<AttackCard> {
 
     Color? borderColor = Colors.transparent;
     Color? iconColor = _themeProvider.mainText;
-    if (factionId == _userProvider.basic!.faction!.factionId) {
+    if (factionId == UserHelper.factionId) {
       borderColor = iconColor = Colors.green[500];
     }
 
     void showFactionToast() {
-      if (factionId == _userProvider.basic!.faction!.factionId) {
+      if (factionId == UserHelper.factionId) {
         BotToast.showText(
           text: HtmlParser.fix("${_attack.targetName} belongs to your same faction ($factionName)"),
           textStyle: const TextStyle(

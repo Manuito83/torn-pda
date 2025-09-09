@@ -4,7 +4,6 @@ import 'dart:math';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart' as am;
 import 'package:torn_pda/models/chaining/retal_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
@@ -17,7 +16,7 @@ import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 
 class RetalsCardDetails {
@@ -295,8 +294,7 @@ class RetalsController extends GetxController {
         }
 
         bool validFaction = false;
-        final userProvider = Provider.of<UserDetailsProvider>(context, listen: false);
-        if (value.attackerFaction != userProvider.basic!.faction!.factionId) {
+        if (value.attackerFaction != UserHelper.factionId) {
           validFaction = true;
         }
 

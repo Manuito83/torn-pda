@@ -16,8 +16,10 @@ class Prefs {
   final String _kAppVersion = "pda_appVersion";
   final String _kAppAnnouncementDialogVersion = "pda_appAnnouncementDialogVersion";
   final String _kBugsAnnouncementDialogVersion = "pda_bugsAnnouncementDialogVersion";
+  final String _kPdaUpdateDialogVersion = "pda_updateDialogVersion";
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
+  final String _kPdaConnectivityCheckRC = "pda_connectivityCheckRC";
 
   final String _kLastKnownFaction = "pfa_lastKnownFaction";
   final String _kLastKnownCompany = "pfa_lastKnownCompany";
@@ -143,6 +145,7 @@ class Prefs {
   final String _kTravelAlarmAhead = "pda_travelAlarmAhead";
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
+  final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
@@ -493,6 +496,14 @@ class Prefs {
     await _asyncPrefs.setInt(_kBugsAnnouncementDialogVersion, value);
   }
 
+  Future<int> getPdaUpdateDialogVersion() async {
+    return await _asyncPrefs.getInt(_kPdaUpdateDialogVersion) ?? 0;
+  }
+
+  Future setPdaUpdateDialogVersion(int value) async {
+    await _asyncPrefs.setInt(_kPdaUpdateDialogVersion, value);
+  }
+
   /// ----------------------------
   /// Methods for identification
   /// ----------------------------
@@ -513,6 +524,17 @@ class Prefs {
 
   Future setLastAppUse(int value) async {
     return await _asyncPrefs.setInt(_kLastAppUse, value);
+  }
+
+  /// ----------------------------
+  /// Methods for connectivity check in Drawer (RC)
+  /// ----------------------------
+  Future<bool> getPdaConnectivityCheckRC() async {
+    return await _asyncPrefs.getBool(_kPdaConnectivityCheckRC) ?? false;
+  }
+
+  Future setPdaConnectivityCheck(bool value) async {
+    return await _asyncPrefs.setBool(_kPdaConnectivityCheckRC, value);
   }
 
   /// ----------------------------
@@ -1510,6 +1532,14 @@ class Prefs {
 
   Future setRemoveAirplane(bool value) async {
     return await _asyncPrefs.setBool(_kRemoveAirplane, value);
+  }
+
+  Future<bool> getRemoveForeignItemsDetails() async {
+    return await _asyncPrefs.getBool(_kRemoveForeignItemsDetails) ?? false;
+  }
+
+  Future setRemoveForeignItemsDetails(bool value) async {
+    return await _asyncPrefs.setBool(_kRemoveForeignItemsDetails, value);
   }
 
   Future<bool> getRemoveTravelQuickReturnButton() async {

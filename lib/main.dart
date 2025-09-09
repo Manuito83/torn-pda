@@ -57,7 +57,6 @@ import 'package:torn_pda/providers/terminal_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/trades_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -68,16 +67,16 @@ import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
-import 'package:upgrader/upgrader.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.8.4';
-const String androidCompilation = '572';
-const String iosCompilation = '572';
+const String appVersion = '3.9.0';
+const String androidCompilation = '576';
+const String iosCompilation = '576';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
@@ -217,8 +216,16 @@ Future<void> main() async {
   }
 
   // Initialise Workmanager for app widget
-  // [isInDebugMode] sends notifications each time a task is performed
-  if (Platform.isAndroid) Workmanager().initialize(pdaWidget_backgroundUpdate);
+  Workmanager().initialize(widgetBackgroundTaskDispatcher);
+
+  // Handle home widget
+  if (Platform.isAndroid) {
+    HomeWidget.setAppGroupId('torn_pda');
+  } else if (Platform.isIOS) {
+    HomeWidget.setAppGroupId('group.com.manuito.tornpda');
+  }
+  HomeWidget.registerInteractivityCallback(onWidgetInteractivityCallback);
+  syncBackgroundRefreshWithWidgetInstallation();
 
   Get.put(UserController(), permanent: true);
   Get.put(AudioController(), permanent: true);
@@ -354,11 +361,17 @@ Future<void> main() async {
     ),
   );
 
+  // Initialize connectivity monitoring for Drawer
+  if (await Prefs().getPdaConnectivityCheckRC()) {
+    ConnectivityHandler.instance.initialize();
+    ConnectivityHandler.instance.connectivityCheckEnabled = true;
+  } else {
+    ConnectivityHandler.instance.connectivityCheckEnabled = false;
+  }
+
   runApp(
     MultiProvider(
       providers: [
-        // UserDetailsProvider has to go first to initialize the others!
-        ChangeNotifierProvider<UserDetailsProvider>(create: (context) => UserDetailsProvider()),
         ChangeNotifierProvider<TargetsProvider>(create: (context) => TargetsProvider()),
         ChangeNotifierProvider<AttacksProvider>(create: (context) => AttacksProvider()),
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
@@ -397,28 +410,12 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   late Widget _mainBrowser;
 
-  final upgrader = Upgrader(
-    debugDisplayAlways: kDebugMode ? false : false, // True for debugging if necessary
-    willDisplayUpgrade: ({required display, installedVersion, versionInfo}) {
-      if (display) {
-        log(versionInfo.toString());
-      }
-    },
-  );
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
     _mainBrowserPreferencesLoaded = _loadMainBrowserPreferences();
-
-    // Handle home widget
-    if (Platform.isAndroid) {
-      HomeWidget.setAppGroupId('torn_pda');
-      HomeWidget.registerInteractivityCallback(pdaWidget_callback);
-      pdaWidget_handleBackgroundUpdateStatus();
-    }
 
     // Callback to force the browser back to full screen if there is a system request to revert
     // Might happen when app is on the background or when only the top is being extended
@@ -489,10 +486,7 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     final homeDrawer = Navigator(
       onGenerateRoute: (_) {
         return MaterialPageRoute(
-          builder: (BuildContext _) => UpgradeAlert(
-            upgrader: upgrader,
-            child: DrawerPage(),
-          ),
+          builder: (BuildContext _) => DrawerPage(),
         );
       },
     );

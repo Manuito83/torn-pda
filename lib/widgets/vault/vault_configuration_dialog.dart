@@ -10,18 +10,16 @@ import 'package:torn_pda/models/vault/vault_status_model.dart';
 import 'package:torn_pda/models/vault/vault_transaction_model.dart';
 // Project imports:
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/providers/user_details_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 
 class VaultConfigurationDialog extends StatefulWidget {
   final VaultStatusModel vaultStatus;
   final VaultTransactionModel lastTransaction;
-  final UserDetailsProvider? userProvider;
   final Function callbackShares;
 
   const VaultConfigurationDialog({
     required this.lastTransaction,
     required this.vaultStatus,
-    required this.userProvider,
     required this.callbackShares,
   });
 
@@ -93,7 +91,7 @@ class VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 3),
                       child: Text(
-                        "${widget.userProvider!.basic!.name}'s share",
+                        "${UserHelper.playerName}'s share",
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),
@@ -145,9 +143,7 @@ class VaultConfigurationDialogState extends State<VaultConfigurationDialog> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 3),
                       child: Text(
-                        widget.userProvider!.basic!.married?.spouseId == 0
-                            ? "Spouse's share"
-                            : "${widget.userProvider!.basic!.married!.spouseName}'s share",
+                        UserHelper.spouseId == 0 ? "Spouse's share" : "${UserHelper.spouseName}'s share",
                         style: const TextStyle(fontSize: 13),
                       ),
                     ),

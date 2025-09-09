@@ -229,9 +229,9 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                       const Text("HOME SCREEN WIDGET"),
                       const SizedBox(height: 10),
                       tipsPanels(TipClass.appwidget),
+                      const SizedBox(height: 25),
                     ],
                   ),
-                const SizedBox(height: 25),
                 const Text("TRAVEL SECTION"),
                 const SizedBox(height: 10),
                 tipsPanels(TipClass.travel),
@@ -692,6 +692,28 @@ class TipsPageState extends State<TipsPage> with WidgetsBindingObserver {
                   text: "!",
                 ),
               ],
+            ),
+          );
+        },
+      ),
+    );
+
+    tips.add(
+      ComplexExpandableTip(
+        headerValue: "How to exit full screen mode",
+        buildExpandedWidget: () {
+          return const Text.rich(
+            TextSpan(
+              text: "There are several ways to exit full screen mode:\n\n"
+                  "• Long-press the ellipsis (...) button in the tab bar (when visible) - it will be shown circled and with an orange color\n\n"
+                  "• Use the Floating Action Button if enabled in settings\n\n"
+                  "• Swipe down from the top of the screen (not available on all devices)\n\n"
+                  "• Double-click on Torn's top header bar. This is a convenient alternative method that works by double-clicking "
+                  "on the black bar at the top of Torn's page (where the Torn logo is shown). This can be particularly "
+                  "useful when you don't have tabs or the Floating Action Button enabled, or when the swipe gesture doesn't work on your device.",
+              style: TextStyle(
+                fontSize: 13,
+              ),
             ),
           );
         },

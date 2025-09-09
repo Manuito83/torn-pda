@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
 import 'package:torn_pda/utils/settings/backup_online/backup_online_prefs_groups.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -249,7 +251,7 @@ class BackupSaveDialogState extends State<BackupSaveDialog> with TickerProviderS
 
       // Userscripts
       if (_selectedItems.contains("userscripts")) {
-        final activeUserscriptsList = await Prefs().getUserScriptsList();
+        final activeUserscriptsList = await context.read<UserScriptsProvider>().getUserScriptsAsJsonString();
         prefs.addEntries([
           MapEntry("pda_userScriptsList", activeUserscriptsList),
         ]);
