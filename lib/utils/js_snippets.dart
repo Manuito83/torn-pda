@@ -208,7 +208,8 @@ function addFillMaxButtons() {
       throw new Error("Capacity information not found");
     }
     const [, userMoneyStr, capUsed, capTotal] = matches;
-    const capacity = Number.parseInt(capTotal) - Number.parseInt(capUsed);
+    // const capacity = Number.parseInt(capTotal) - Number.parseInt(capUsed);
+    const capacity = 999; // Let torn handle capacity due to toy shop 7* special `Over Capacity` - it will automatically reduce
 	const userMoney = Number.parseInt(userMoneyStr.replaceAll(/,/g, ""));
 	return { capacity, userMoney }
   }
