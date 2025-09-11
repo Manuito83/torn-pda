@@ -99,6 +99,7 @@ class FabSettings {
   static void showLockedTabWarning(BuildContext context, WebViewProvider webviewProvider) {
     toastification.show(
       alignment: Alignment.bottomCenter,
+      margin: const EdgeInsets.only(bottom: 50),
       title: Icon(
         Icons.lock,
         color: webviewProvider.tabList[webviewProvider.currentTab].isLockFull ? Colors.red : Colors.orange,
@@ -228,6 +229,7 @@ class WebviewFab extends StatelessWidget {
   void _showLockedTabWarning(BuildContext context, WebViewProvider webviewProvider) {
     toastification.show(
       alignment: Alignment.bottomCenter,
+      margin: const EdgeInsets.only(bottom: 50),
       title: Icon(
         Icons.lock,
         color: webviewProvider.tabList[webviewProvider.currentTab].isLockFull ? Colors.red : Colors.orange,

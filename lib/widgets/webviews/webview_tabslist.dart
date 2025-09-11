@@ -239,6 +239,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
+                                margin: const EdgeInsets.only(bottom: 50),
                                 title: const Column(
                                   children: [
                                     Icon(
@@ -279,6 +280,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                               toastification.show(
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
+                                margin: const EdgeInsets.only(bottom: 50),
                                 title: Column(
                                   children: [
                                     Icon(
@@ -432,6 +434,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
           toastification.show(
             closeOnClick: true,
             alignment: Alignment.bottomCenter,
+            margin: const EdgeInsets.only(bottom: 50),
             title: SizedBox(
               child: Column(
                 children: [

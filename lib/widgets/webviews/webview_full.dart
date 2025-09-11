@@ -2045,6 +2045,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             toastification.show(
               closeOnClick: true,
               alignment: Alignment.bottomCenter,
+              margin: const EdgeInsets.only(bottom: 50),
               title: Container(
                 color: Colors.transparent,
                 child: Column(
