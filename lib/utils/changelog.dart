@@ -102,6 +102,18 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.9.1 - Build 577 - 10/09/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.1'
+        ..date = '20 SEP 2025'
+        ..features = [
+          "Fixed capacity calculation for max buy buttons abroad [Kwack]",
+          "Fixed war widget colors in dark mode",
+          "Fixed locked navigation toast location",
+        ],
+    );
+
     // v3.9.0 - Build 576 - 07/09/2025
     itemList.add(
       ChangeLogItem()
