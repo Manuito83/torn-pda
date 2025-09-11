@@ -233,6 +233,7 @@ class CircularMenuTabsState extends State<CircularMenuTabs> with SingleTickerPro
           if (context.read<SettingsProvider>().showTabLockWarnings) {
             toastification.show(
               alignment: Alignment.bottomCenter,
+              margin: const EdgeInsets.only(bottom: 50),
               title: Icon(
                 Icons.lock,
                 color: widget.webViewProvider!.tabList[widget.tabIndex].isLockFull ? Colors.red : Colors.orange,

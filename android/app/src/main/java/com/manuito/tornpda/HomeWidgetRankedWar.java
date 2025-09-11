@@ -47,13 +47,13 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
         String state = prefs.getString("rw_state", "none");
         switch (state) {
             case "upcoming":
-                setupUpcomingWarLayout(view, prefs);
+                setupUpcomingWarLayout(view, prefs, isDarkMode);
                 break;
             case "active":
                 setupActiveWarLayout(view, prefs);
                 break;
             case "finished":
-                setupFinishedWarLayout(view, prefs);
+                setupFinishedWarLayout(view, prefs, isDarkMode);
                 break;
             default:
                 setupNoWarLayout(view, "No ranked war data");
@@ -88,7 +88,7 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
         view.setOnClickPendingIntent(R.id.rw_widget_container, pendingIntent);
     }
 
-    private void setupUpcomingWarLayout(RemoteViews view, SharedPreferences prefs) {
+    private void setupUpcomingWarLayout(RemoteViews view, SharedPreferences prefs, boolean isDarkMode) {
         view.setViewVisibility(R.id.rw_upcoming_layout, View.VISIBLE);
         String countdown = prefs.getString("rw_countdown_string", "Loading...");
         String date = prefs.getString("rw_date_string", "");
@@ -107,7 +107,8 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
             view.setInt(R.id.rw_upcoming_border_box, "setBackgroundColor", Color.parseColor("#FFA500"));
         } else {
             view.setInt(R.id.rw_upcoming_border_box, "setBackgroundColor", Color.TRANSPARENT);
-            view.setTextColor(R.id.rw_upcoming_countdown, Color.parseColor("#000000"));
+            String countdownColor = isDarkMode ? "#E0E0E0" : "#000000";
+            view.setTextColor(R.id.rw_upcoming_countdown, Color.parseColor(countdownColor));
         }
     }
 
@@ -134,7 +135,7 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
         view.setProgressBar(R.id.rw_active_progress_bar, targetScore, progress, false);
     }
 
-    private void setupFinishedWarLayout(RemoteViews view, SharedPreferences prefs) {
+    private void setupFinishedWarLayout(RemoteViews view, SharedPreferences prefs, boolean isDarkMode) {
         view.setViewVisibility(R.id.rw_finished_layout, View.VISIBLE);
 
         int playerScore = prefs.getInt("rw_player_score", 0);
@@ -157,16 +158,20 @@ public class HomeWidgetRankedWar extends HomeWidgetProvider {
         view.setInt(R.id.rw_finished_icon, "setColorFilter", resultColor);
 
         view.setTextViewText(R.id.rw_finished_player_tag, playerTag);
-        view.setTextColor(R.id.rw_finished_player_tag, Color.parseColor("#0D47A1"));
+        String playerTagColor = isDarkMode ? "#42A5F5" : "#0D47A1";
+        view.setTextColor(R.id.rw_finished_player_tag, Color.parseColor(playerTagColor));
 
         view.setTextViewText(R.id.rw_finished_enemy_name, enemyName);
-        view.setTextColor(R.id.rw_finished_enemy_name, Color.parseColor("#B71C1C"));
+        String enemyNameColor = isDarkMode ? "#EF5350" : "#B71C1C";
+        view.setTextColor(R.id.rw_finished_enemy_name, Color.parseColor(enemyNameColor));
 
         view.setTextViewText(R.id.rw_finished_player_score, String.format("%,d", playerScore));
-        view.setTextColor(R.id.rw_finished_player_score, playerWon ? resultColor : Color.parseColor("#666666"));
+        String playerScoreColor = isDarkMode ? "#BDBDBD" : "#666666";
+        view.setTextColor(R.id.rw_finished_player_score, playerWon ? resultColor : Color.parseColor(playerScoreColor));
 
         view.setTextViewText(R.id.rw_finished_enemy_score, String.format("%,d", enemyScore));
-        view.setTextColor(R.id.rw_finished_enemy_score, !playerWon ? resultColor : Color.parseColor("#666666"));
+        String enemyScoreColor = isDarkMode ? "#BDBDBD" : "#666666";
+        view.setTextColor(R.id.rw_finished_enemy_score, !playerWon ? resultColor : Color.parseColor(enemyScoreColor));
     }
 
     private void setupNoWarLayout(RemoteViews view, String message) {

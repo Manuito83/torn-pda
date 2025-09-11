@@ -102,11 +102,23 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.0 - Build 575 - 30/08/2025
+    // v3.9.1 - Build 577 - 10/09/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.1'
+        ..date = '20 SEP 2025'
+        ..features = [
+          "Fixed capacity calculation for max buy buttons abroad [Kwack]",
+          "Fixed war widget colors in dark mode",
+          "Fixed locked navigation toast location",
+        ],
+    );
+
+    // v3.9.0 - Build 576 - 07/09/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.0'
-        ..date = '05 SEP 2025'
+        ..date = '08 SEP 2025'
         ..features = [
           if (Platform.isAndroid) "Added home screen widget with War information",
           if (Platform.isIOS) "[iOS 17+] Added home screen widget with War information",
@@ -142,7 +154,8 @@ class ChangeLogState extends State<ChangeLog> {
             },
           ),
           "Fixed duplicated fill-max buttons whilst abroad [Kwack]",
-          "Fixed several bugs and improved performance",
+          "Fixed bazaar fill-max buttons [Kwack]",
+          "Fixed chain watcher notifications",
         ],
     );
 
@@ -185,7 +198,7 @@ class ChangeLogState extends State<ChangeLog> {
             explanation: "You can now access additional developer tools directly within the app\n\n"
                 "To open them, tap the browser's title bar to open the URL Menu (or long-press the 'CLOSE' button in dialog mode) and select 'Open Dev Tools'.\n\n"
                 "This new screen provides three essential utilities for inspecting the WebView:\n\n"
-                "1. Terminal: another place to acces the terminal, and execute JavaScript commands. Includes command history.\n\n"
+                "1. Terminal: another place to access the terminal, and execute JavaScript commands. Includes command history.\n\n"
                 "2. Network: list of all network resources (scripts, images, APIs) loaded by the current page, including their type and load time.\n\n"
                 "3. Storage: inspect and manage Cookies, Local Storage, and Session Storage. You can view, edit, and delete individual items.\n\n"
                 "A special 'hide' timer is also included (see the appbar icon), allowing you to temporarily close the Dev Tools to interact with the underlying WebView and then automatically reopen them to see the results.",
@@ -196,7 +209,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed chat notifications resetting after switching faction or company",
           "Fixed missing Print Store shortcut",
           "Fixed Wiki references",
-          "Fixed userscrips persistence",
+          "Fixed user scrips persistence",
           "Fixed sliding up panel layout in split screen mode",
           "Fixed wrong OC v2 activation when not migrated",
         ],

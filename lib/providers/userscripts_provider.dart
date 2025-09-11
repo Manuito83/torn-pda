@@ -37,7 +37,7 @@ class UserScriptsProvider extends ChangeNotifier {
   set setUserScriptsEnabled(bool enabled) {
     _userScriptsEnabled = enabled;
     Prefs().setUserScriptsEnabled(enabled);
-    _saveUserScriptsListSharedPrefs();
+    _saveUserScriptsToStorage();
     notifyListeners();
   }
 
@@ -141,15 +141,14 @@ class UserScriptsProvider extends ChangeNotifier {
   String adaptSource({required String source, required String scriptFinalApiKey}) {
     final String withApiKey = source.replaceAll("###PDA-APIKEY###", scriptFinalApiKey);
     String anonFunction = "(function() {$withApiKey}());";
-    anonFunction = anonFunction.replaceAll('“', '"');
-    anonFunction = anonFunction.replaceAll('”', '"');
+    anonFunction = anonFunction.replaceAll(RegExp(r'[“”]'), '"').replaceAll(RegExp(r'[‘’]'), "'");
     return anonFunction;
   }
 
   void addUserScriptByModel(UserScriptModel model) {
     userScriptList.add(model);
     _sort();
-    _saveUserScriptsListSharedPrefs();
+    _saveUserScriptsToStorage();
     notifyListeners();
   }
 
@@ -185,7 +184,7 @@ class UserScriptsProvider extends ChangeNotifier {
     _userScriptList.add(newScript);
 
     _sort();
-    await _saveUserScriptsListSharedPrefs();
+    await _saveUserScriptsToStorage();
     notifyListeners();
   }
 
@@ -232,14 +231,14 @@ class UserScriptsProvider extends ChangeNotifier {
           }(),
         );
     notifyListeners();
-    _saveUserScriptsListSharedPrefs();
+    _saveUserScriptsToStorage();
     return couldParseHeader;
   }
 
   void removeUserScript(UserScriptModel removedModel) {
     _userScriptList.remove(removedModel);
     notifyListeners();
-    _saveUserScriptsListSharedPrefs();
+    _saveUserScriptsToStorage();
   }
 
   void changeUserScriptEnabled(UserScriptModel changedModel, bool enabled) {
@@ -250,18 +249,18 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     }
     notifyListeners();
-    _saveUserScriptsListSharedPrefs();
+    _saveUserScriptsToStorage();
   }
 
   void wipe() {
     _userScriptList.clear();
     notifyListeners();
-    _saveUserScriptsListSharedPrefs();
+    _saveUserScriptsToStorage();
   }
 
   /// [defaultToDisabled] makes all scripts inactive, if we can trust them 100% because they come from a shared backup
   Future<void> restoreScriptsFromServerSave({
-    required bool overwrite, // Renamed for clarity, Dart convention
+    required bool overwrite,
     required String scriptsList,
     bool defaultToDisabled = false,
   }) async {
@@ -329,14 +328,50 @@ class UserScriptsProvider extends ChangeNotifier {
 
     // Perform final operations once, after the list has been fully manipulated
     _sort();
-    await _saveUserScriptsListSharedPrefs();
+    await _saveUserScriptsToStorage();
     notifyListeners();
   }
 
-  Future<void> _saveUserScriptsListSharedPrefs() async {
+  /// Save userscripts list with proper encoding
+  Future<void> _saveUserScriptsToStorage() async {
     _checkForCustomApiKeyCandidates();
     final saveString = json.encode(_userScriptList);
-    await Prefs().setUserScriptsList(saveString);
+    // Encode to Base64 with prefix to prevent character encoding issues
+    final encodedString = "PDA_B64:${base64Encode(utf8.encode(saveString))}";
+    await Prefs().setUserScriptsList(encodedString);
+  }
+
+  /// Load userscripts list with automatic format detection
+  Future<String?> _loadUserScriptsFromStorage() async {
+    String? savedScripts = await Prefs().getUserScriptsList();
+    if (savedScripts == null) return null;
+
+    if (savedScripts.startsWith("PDA_B64:")) {
+      try {
+        // New format: Base64 encoded
+        final base64Data = savedScripts.substring(8); // Remove "PDA_B64:" prefix
+        final decodedBytes = base64Decode(base64Data);
+        final decodedString = utf8.decode(decodedBytes);
+        log("UserScripts loaded from new Base64 format");
+        return decodedString;
+      } catch (e, trace) {
+        if (!Platform.isWindows) {
+          FirebaseCrashlytics.instance.log("PDA error decoding Base64 userscripts. Error: $e");
+        }
+        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
+        logToUser("PDA error decoding Base64 userscripts. Error: $e");
+        return null;
+      }
+    } else {
+      // Old format: direct JSON string
+      log("UserScripts loaded from legacy format");
+      return savedScripts;
+    }
+  }
+
+  /// Get userscripts as JSON string for external use (backups, etc.)
+  Future<String?> getUserScriptsAsJsonString() async {
+    return await _loadUserScriptsFromStorage();
   }
 
   void _sort() {
@@ -359,24 +394,22 @@ class UserScriptsProvider extends ChangeNotifier {
 
       // #### RETRY LOGIC START
       // (mainly because of numerous user reports of empty scripts)
-      String? savedScripts = await Prefs().getUserScriptsList();
-      if (savedScripts == null) {
-        const int maxRetries = 2;
-        for (int i = 0; i <= maxRetries; i++) {
-          savedScripts = await Prefs().getUserScriptsList();
-          if (savedScripts != null) {
-            if (i > 0) {
-              log("UserScripts load attempt ${i + 1} succeeded");
-            }
-            break;
+      String? savedScripts;
+      const int maxRetries = 2;
+      for (int i = 0; i <= maxRetries; i++) {
+        savedScripts = await _loadUserScriptsFromStorage();
+        if (savedScripts != null) {
+          if (i > 0) {
+            log("UserScripts load attempt ${i + 1} succeeded");
           }
+          break;
+        }
 
-          if (i < maxRetries) {
-            log("UserScripts load attempt ${i + 1} failed, retrying...");
-            await Future.delayed(const Duration(seconds: 1));
-          } else {
-            log("UserScripts load failed after ${maxRetries + 1} attempts");
-          }
+        if (i < maxRetries) {
+          log("UserScripts load attempt ${i + 1} failed, retrying...");
+          await Future.delayed(const Duration(seconds: 1));
+        } else {
+          log("UserScripts load failed after ${maxRetries + 1} attempts");
         }
       }
       // #### RETRY LOGIC END
@@ -471,7 +504,7 @@ class UserScriptsProvider extends ChangeNotifier {
       });
     }));
 
-    _saveUserScriptsListSharedPrefs(); // Only save once all scripts are updated, so that we don't save the "updating" status
+    _saveUserScriptsToStorage(); // Only save once all scripts are updated, so that we don't save the "updating" status
     return updates;
   }
 
@@ -505,7 +538,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
     if (added > 0 || removed > 0) {
       _sort();
-      await _saveUserScriptsListSharedPrefs();
+      await _saveUserScriptsToStorage();
       notifyListeners();
     }
 
@@ -526,7 +559,7 @@ class UserScriptsProvider extends ChangeNotifier {
       }
       userScriptList.add(response.model!);
       _sort();
-      _saveUserScriptsListSharedPrefs();
+      _saveUserScriptsToStorage();
       notifyListeners();
       return (success: true, message: null);
     } else {
