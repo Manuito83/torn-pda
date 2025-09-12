@@ -123,6 +123,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed capacity calculation for max buy buttons abroad [Kwack]",
           "Fixed war widget colors in dark mode",
           "Fixed locked navigation toast location",
+          "Updated app engine",
         ],
     );
 
