@@ -192,8 +192,8 @@ class FriendsProvider extends ChangeNotifier {
     for (final fri in _friends) {
       final notesController = Get.find<PlayerNotesController>();
       final centralizedNote = notesController.getNoteForPlayer(fri.playerId.toString());
-      fri.noteBackup = centralizedNote?.note;
-      fri.colorBackup = centralizedNote?.color;
+      fri.noteBackup = centralizedNote?.note ?? "";
+      fri.colorBackup = centralizedNote?.color ?? "";
 
       final export = FriendBackup();
       export.id = fri.playerId;

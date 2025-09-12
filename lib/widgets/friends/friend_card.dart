@@ -19,7 +19,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/user_helper.dart';
-import 'package:torn_pda/widgets/notes_dialog.dart';
+import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class FriendCard extends StatefulWidget {

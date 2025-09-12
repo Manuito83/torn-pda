@@ -11,12 +11,16 @@ class PlayerNote {
   String note;
   String? color;
   String? playerName;
+  DateTime? createdAt;
+  DateTime? updatedAt;
 
   PlayerNote({
     required this.playerId,
     required this.note,
     this.color,
     this.playerName,
+    this.createdAt,
+    this.updatedAt,
   });
 
   Map<String, dynamic> toJson() {
@@ -25,6 +29,8 @@ class PlayerNote {
       'note': note,
       'color': color,
       'playerName': playerName,
+      'createdAt': createdAt?.millisecondsSinceEpoch,
+      'updatedAt': updatedAt?.millisecondsSinceEpoch,
     };
   }
 
@@ -34,6 +40,8 @@ class PlayerNote {
       note: json['note'] as String,
       color: json['color'] as String?,
       playerName: json['playerName'] as String?,
+      createdAt: json['createdAt'] != null ? DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int) : null,
+      updatedAt: json['updatedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] as int) : null,
     );
   }
 }
@@ -66,16 +74,20 @@ class PlayerNotesController extends GetxController {
   /// Set or update note for a player
   Future<void> setPlayerNote(String playerId, String note, [String? color, String? playerName]) async {
     if (note.isEmpty) {
-      // If note is empty, remove it
       await removePlayerNote(playerId);
       return;
     }
 
+    final now = DateTime.now();
+    final existingNote = _notes[playerId];
+
     _notes[playerId] = PlayerNote(
       playerId: playerId,
       note: note,
-      color: color ?? 'z', // Default to no color
+      color: color ?? 'z',
       playerName: playerName,
+      createdAt: existingNote?.createdAt ?? now,
+      updatedAt: now,
     );
 
     await _saveNotes();
@@ -106,10 +118,30 @@ class PlayerNotesController extends GetxController {
   Future<void> _loadNotes() async {
     final notesJson = await Prefs().getPlayerNotes();
     _notes = {};
+    bool needsResave = false;
 
     for (final noteJson in notesJson) {
       final note = PlayerNote.fromJson(noteJson);
-      _notes[note.playerId] = note;
+
+      if (note.createdAt == null || note.updatedAt == null) {
+        final now = DateTime.now();
+        final migratedNote = PlayerNote(
+          playerId: note.playerId,
+          note: note.note,
+          color: note.color,
+          playerName: note.playerName,
+          createdAt: note.createdAt ?? now,
+          updatedAt: note.updatedAt ?? now,
+        );
+        _notes[note.playerId] = migratedNote;
+        needsResave = true;
+      } else {
+        _notes[note.playerId] = note;
+      }
+    }
+
+    if (needsResave) {
+      await _saveNotes();
     }
 
     update();

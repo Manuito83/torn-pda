@@ -439,7 +439,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void sortTargets(TargetSortType? sortType) async {
-    currentSort = sortType;
+    currentSort = sortType ?? TargetSortType.nameAsc;
     switch (sortType!) {
       case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level!.compareTo(a.level!));
@@ -553,8 +553,8 @@ class TargetsProvider extends ChangeNotifier {
     for (final tar in _targets) {
       final notesController = Get.find<PlayerNotesController>();
       final centralizedNote = notesController.getNoteForPlayer(tar.playerId.toString());
-      tar.noteBackup = centralizedNote?.note;
-      tar.colorBackup = centralizedNote?.color;
+      tar.noteBackup = centralizedNote?.note ?? "";
+      tar.colorBackup = centralizedNote?.color ?? "";
 
       final export = TargetBackup();
       export.id = tar.playerId;

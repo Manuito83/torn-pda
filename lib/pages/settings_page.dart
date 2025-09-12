@@ -25,7 +25,7 @@ import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/pages/profile/shortcuts_page.dart';
 import 'package:torn_pda/pages/settings/alternative_keys_page.dart';
-import 'package:torn_pda/pages/settings/player_notes_manager_page.dart';
+import 'package:torn_pda/widgets/player_notes_list_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_section.dart';
 import 'package:torn_pda/pages/settings/settings_browser.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
@@ -1310,7 +1310,7 @@ class SettingsPageState extends State<SettingsPage> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Player notes in one place',
+                      'Player notes database',
                       style: TextStyle(
                         color: _themeProvider.mainText,
                       ),
@@ -1318,11 +1318,9 @@ class SettingsPageState extends State<SettingsPage> {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const PlayerNotesManagerPage(),
-                        ),
+                      showDialog(
+                        context: context,
+                        builder: (context) => const PlayerNotesListDialog(),
                       );
                     },
                     child: const Text('Manage Notes'),

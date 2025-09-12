@@ -108,6 +108,18 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.9.1'
         ..date = '20 SEP 2025'
         ..features = [
+          ComplexFeature(
+            "Player notes system overhauled",
+            explanation: "The player notes system has been completely redesigned so that all notes "
+                "are now shared between targets, war targets, stakeouts, friends and profile pages.\n\n"
+                "For this last item, a new widget can be enabled in the player profile page to show or allow to take "
+                "notes directly in the browser (see Settings / Advanced Browser Settings / Player Profiles)\n\n"
+                "Notes can be accessed and edited from any of these sections, and will be reflected "
+                "in all other sections.\n\n"
+                "Please note that existing notes have been migrated to the new system, but you may "
+                "want to review them to ensure they are still relevant.\n\n"
+                "You can access all notes from the Settings / Stats and Player Notes section.",
+          ),
           "Fixed capacity calculation for max buy buttons abroad [Kwack]",
           "Fixed war widget colors in dark mode",
           "Fixed locked navigation toast location",
