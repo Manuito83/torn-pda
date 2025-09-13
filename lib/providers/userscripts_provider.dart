@@ -1,4 +1,5 @@
 // Dart imports:
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
@@ -20,6 +21,9 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptsProvider extends ChangeNotifier {
+  final _initializationCompleter = Completer<void>();
+  Future<void> get onInitialized => _initializationCompleter.future;
+
   final List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
 
@@ -334,11 +338,21 @@ class UserScriptsProvider extends ChangeNotifier {
 
   /// Save userscripts list with proper encoding
   Future<void> _saveUserScriptsToStorage() async {
-    _checkForCustomApiKeyCandidates();
-    final saveString = json.encode(_userScriptList);
-    // Encode to Base64 with prefix to prevent character encoding issues
-    final encodedString = "PDA_B64:${base64Encode(utf8.encode(saveString))}";
-    await Prefs().setUserScriptsList(encodedString);
+    if (!_initializationCompleter.isCompleted) return;
+
+    try {
+      _checkForCustomApiKeyCandidates();
+      final saveString = json.encode(_userScriptList);
+      // Encode to Base64 with prefix to prevent character encoding issues
+      final encodedString = "PDA_B64:${base64Encode(utf8.encode(saveString))}";
+      await Prefs().setUserScriptsList(encodedString);
+    } catch (e, trace) {
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error saving userscripts. Error: $e");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+      logToUser("PDA error saving userscripts. Error: $e");
+    }
   }
 
   /// Load userscripts list with automatic format detection
@@ -458,6 +472,14 @@ class UserScriptsProvider extends ChangeNotifier {
         FirebaseCrashlytics.instance.recordError(e, trace);
       }
       logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
+    } finally {
+      // We complete the init after 2 seconds:
+      // - Any tries to save the scripts before initialisation completes are ignored immediately
+      // - Checks for updates can proceed will wait for the completer and then proceed
+      await Future.delayed(const Duration(seconds: 2));
+      if (!_initializationCompleter.isCompleted) {
+        _initializationCompleter.complete();
+      }
     }
   }
 
@@ -481,30 +503,74 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   Future<int> checkForUpdates() async {
+    // Wait until provider is initialized (+ a couple of seconds)
+    await onInitialized;
+
+    // If no scripts exist, don't execute
+    if (_userScriptList.isEmpty) return 0;
+
+    // Filter scripts that need checking
+    final scriptsToCheck = _userScriptList
+        .where((s) =>
+            s.updateStatus != UserScriptUpdateStatus.localModified &&
+            s.updateStatus != UserScriptUpdateStatus.noRemote &&
+            s.url != null)
+        .toList();
+
+    // If no scripts need checking, return
+    if (scriptsToCheck.isEmpty) return 0;
+
     int updates = 0;
-    await Future.wait<void>(_userScriptList.map((s) {
-      // Only check for updates on relevant scripts
-      if (s.updateStatus == UserScriptUpdateStatus.localModified || s.updateStatus == UserScriptUpdateStatus.noRemote) {
-        return Future.value();
+    bool hasChanges = false;
+
+    // Update process
+    try {
+      await Future.wait<void>(scriptsToCheck.map((s) {
+        s.updateStatus = UserScriptUpdateStatus.updating;
+        // Notify listeners of the change to show updating, but **do not save this to shared prefs**
+        notifyListeners();
+
+        return s.checkUpdateStatus().then((updateStatus) {
+          if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
+
+          if (s.updateStatus != updateStatus) {
+            s.updateStatus = updateStatus;
+            hasChanges = true;
+          }
+          // Notify listeners of the change after every row
+          notifyListeners();
+        }).catchError((e) {
+          log(e);
+          if (s.updateStatus != UserScriptUpdateStatus.error) {
+            s.updateStatus = UserScriptUpdateStatus.error;
+            hasChanges = true;
+          }
+          // Notify listeners of the change after every row
+          notifyListeners();
+        });
+      }));
+
+      // Only save if we have actual changes and at the end of all updates
+      // so that we don't save the "updating" status
+      if (hasChanges) {
+        await _saveUserScriptsToStorage();
       }
-      // Ensure script has a valid URL
-      if (s.url == null) return Future.value();
+    } catch (e, trace) {
+      // Log the error but don't save corrupted state
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("SCRIPTS PROVIDER: error during checkForUpdates. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+      logToUser("SCRIPTS PROVIDER: error during script updates. Error: $e");
+      // Reset any scripts that might be stuck in "updating" state
+      for (final script in scriptsToCheck) {
+        if (script.updateStatus == UserScriptUpdateStatus.updating) {
+          script.updateStatus = UserScriptUpdateStatus.error;
+        }
+      }
+      notifyListeners();
+    }
 
-      s.updateStatus = UserScriptUpdateStatus.updating;
-      notifyListeners(); // Notify listeners of the change to show updating, but **do not save this to shared prefs**
-
-      return s.checkUpdateStatus().then((updateStatus) {
-        if (updateStatus == UserScriptUpdateStatus.updateAvailable) updates++;
-        s.updateStatus = updateStatus;
-        notifyListeners(); // Notify listeners of the change after every row
-      }).catchError((e) {
-        log(e);
-        s.updateStatus = UserScriptUpdateStatus.error;
-        notifyListeners(); // Notify listeners of the change after every row
-      });
-    }));
-
-    _saveUserScriptsToStorage(); // Only save once all scripts are updated, so that we don't save the "updating" status
     return updates;
   }
 

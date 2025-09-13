@@ -199,6 +199,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
+
     // Start stats counting
     _statsController.logCheckIn();
 
@@ -2277,14 +2281,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future _loadInitPreferences() async {
     // Set up SettingsProvider so that user preferences are applied
     // ## Leave this first as other options below need this to be initialized ##
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
 
     // Set up UserScriptsProvider so that user preferences are applied
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferencesAndScripts();
 
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
     _willPopShouldOpenDrawer = _settingsProvider.willPopShouldOpenDrawerStream.stream;
     _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
