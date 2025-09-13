@@ -161,7 +161,7 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
       case 'green':
         return Colors.green;
       default:
-        return Colors.transparent;
+        return Colors.grey;
     }
   }
 
@@ -180,7 +180,6 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
     return Dialog(
       backgroundColor: _themeProvider.secondBackground,
       child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
         height: MediaQuery.of(context).size.height * 0.8,
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -202,10 +201,19 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
               style: TextStyle(color: _themeProvider.mainText),
               decoration: InputDecoration(
                 hintText: 'Search by name or ID...',
-                hintStyle: TextStyle(color: _themeProvider.buttonText),
+                hintStyle: TextStyle(color: _themeProvider.mainText.withValues(alpha: 0.6)),
                 prefixIcon: Icon(Icons.search, color: _themeProvider.mainText),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: _themeProvider.mainText.withValues(alpha: 0.3)),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: _themeProvider.mainText.withValues(alpha: 0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: _themeProvider.mainText, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
@@ -230,7 +238,7 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
                       child: Text(
                         _searchQuery.isEmpty ? 'No notes available' : 'No notes found',
                         style: TextStyle(
-                          color: _themeProvider.buttonText,
+                          color: _themeProvider.mainText,
                           fontSize: 16,
                         ),
                       ),
@@ -251,7 +259,10 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Close'),
+                  child: Text(
+                    'Close',
+                    style: TextStyle(color: _themeProvider.mainText),
+                  ),
                 ),
               ],
             ),
@@ -271,7 +282,7 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
           color: isSelected ? _themeProvider.navSelected : Colors.transparent,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isSelected ? _themeProvider.navSelected : _themeProvider.buttonText,
+            color: isSelected ? _themeProvider.navSelected : _themeProvider.mainText.withValues(alpha: 0.3),
           ),
         ),
         child: Row(
@@ -280,13 +291,13 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : _themeProvider.mainText,
+              color: _themeProvider.mainText,
             ),
             const SizedBox(width: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : _themeProvider.mainText,
+                color: _themeProvider.mainText,
                 fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
@@ -296,7 +307,7 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
               Icon(
                 _isAscending ? Icons.arrow_upward : Icons.arrow_downward,
                 size: 12,
-                color: Colors.white,
+                color: _themeProvider.mainText,
               ),
             ],
           ],
@@ -308,8 +319,17 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
   Widget _buildNoteCard(PlayerNote note) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
-      color: _themeProvider.secondBackground,
+      color: _themeProvider.cardColor,
       elevation: 2,
+      shape: _themeProvider.currentTheme == AppTheme.extraDark
+          ? RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+              side: BorderSide(
+                color: _themeProvider.mainText.withValues(alpha: 0.2),
+                width: 1,
+              ),
+            )
+          : null,
       child: InkWell(
         onTap: () => _editNote(note),
         borderRadius: BorderRadius.circular(4),
@@ -327,7 +347,7 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
                       color: _getColorByCode(note.color),
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: _themeProvider.buttonText,
+                        color: _themeProvider.mainText.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -355,7 +375,7 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
                             Text(
                               '[${note.playerId}]',
                               style: TextStyle(
-                                color: _themeProvider.buttonText,
+                                color: _themeProvider.mainText.withValues(alpha: 0.6),
                                 fontSize: 12,
                               ),
                             ),
@@ -363,7 +383,7 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
                               Text(
                                 _formatDate(note.updatedAt ?? note.createdAt),
                                 style: TextStyle(
-                                  color: _themeProvider.buttonText,
+                                  color: _themeProvider.mainText.withValues(alpha: 0.6),
                                   fontSize: 10,
                                 ),
                               ),
