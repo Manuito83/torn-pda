@@ -43,6 +43,7 @@ class ForeignStockCard extends StatefulWidget {
   final Function(ForeignStock) memberHiddenCallback;
   final TravelTicket? ticket;
   final Map<String, dynamic>? activeRestocks;
+  final String? providerName;
 
   final int? travelingTimeStamp;
   final CountryName travelingCountry;
@@ -68,6 +69,7 @@ class ForeignStockCard extends StatefulWidget {
     required this.travelingCountryFullName,
     required this.displayShowcase,
     required this.isDataFromCache,
+    required this.providerName,
     required Key key,
   }) : super(key: key);
 
@@ -277,7 +279,12 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                 ],
               ),
             ),
-            _countryFlagAndArrow(widget.foreignStock),
+            SizedBox(
+              width: 50,
+              child: _countryFlagAndArrow(
+                widget.foreignStock,
+              ),
+            ),
           ],
         ),
       ],
@@ -638,6 +645,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
 
   Row _firstRow(ForeignStock stock) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
         Image.asset(
           'images/torn_items/small/${stock.id}_small.png',
@@ -659,9 +667,6 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             );
           },
         ),
-        const Padding(
-          padding: EdgeInsets.only(right: 10),
-        ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -680,9 +685,6 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             if (widget.showArrivalTime) _arrivalTime(),
           ],
         ),
-        const Padding(
-          padding: EdgeInsets.only(right: 15),
-        ),
         SizedBox(
           width: 55,
           child: Text(
@@ -695,8 +697,9 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             ),
           ),
         ),
-        const SizedBox(width: 15),
+        const SizedBox(width: 10),
         _returnLastUpdated(),
+        const SizedBox(width: 10),
       ],
     );
   }
@@ -1009,19 +1012,20 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           // Simple info for cached data
           BotToast.showText(
             text: "Main providers cannot be reached!"
-                "\n\nThis is cached data ${timeString == 'now' ? 'updated just now' : 'from $timeString'}",
+                "\n\nThis is cached data ${timeString == 'now' ? 'updated seconds now' : 'last updated $timeString ago'}\n\n"
+                "IMPORTANT: quantity and restock information might have changed since then!",
             textStyle: const TextStyle(
               fontSize: 14,
-              color: Colors.white,
             ),
-            contentColor: Colors.orange.shade800,
-            duration: const Duration(seconds: 3),
+            contentColor: Colors.orange.shade600,
+            duration: const Duration(seconds: 5),
             contentPadding: const EdgeInsets.all(12),
           );
         } else {
           // Show normal update info
           BotToast.showText(
-            text: "Live data updated ${timeString == 'now' ? 'just now' : '$timeString ago'}",
+            text:
+                "${widget.providerName ?? 'Live'} data recorded ${timeString == 'now' ? 'seconds ago' : '$timeString ago'}",
             textStyle: const TextStyle(
               fontSize: 14,
               color: Colors.white,

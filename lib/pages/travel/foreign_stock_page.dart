@@ -35,7 +35,10 @@ import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
 // Debug flag to force timeout on external APIs (YATA/Prometheus) for testing fallback
-const bool kForceExternalApiTimeout = kDebugMode && false;
+const bool kForceExternalApiTimeoutForeignStocks = kDebugMode && false;
+
+// Debug flag to force Tourism Day for testing
+const bool kForceTourismDay = kDebugMode && false;
 
 class ReturnFlagPressed {
   bool flagPressed = false;
@@ -89,7 +92,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   bool _showArrivalTime = true;
   bool _showBarsCooldownAnalysis = true;
   InventoryModel? _inventory;
-  //OwnProfileExtended _travelModel;
   OwnProfileExtended? _profile;
   int _capacity = 1;
 
@@ -97,6 +99,21 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   final _filteredFlags = List<bool>.filled(12, true);
 
   bool _alphabeticalFilter = false;
+
+  // Tourism Day detection (26-28 September each year, 10:30 UTC)
+  bool _isTourismDay() {
+    if (kForceTourismDay) return true;
+
+    final now = DateTime.now().toUtc();
+    final currentYear = now.year;
+    final tourismStart = DateTime.utc(currentYear, 9, 26, 10, 30); // 26 Sept 10:30 UTC
+    final tourismEnd = DateTime.utc(currentYear, 9, 28, 10, 30); // 28 Sept 10:30 UTC
+
+    return now.isAfter(tourismStart) && now.isBefore(tourismEnd);
+  }
+
+  // Effective capacity (doubled during Tourism Day)
+  int get _effectiveCapacity => _isTourismDay() ? _capacity * 2 : _capacity;
 
   String _countriesFilteredText = '';
   final List<String> _countryCodesAlphabetical = [
@@ -842,12 +859,41 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       ],
     );
 
-    /*
-    thisStockList.add(lastUpdateDetails);
-    thisStockList.add(countriesFilterDetails);
-    thisStockList.add(typesFilterDetails);
-    thisStockList.add(hiddenDetails);
-    */
+    // Tourism Day banner
+    if (_isTourismDay()) {
+      thisStockList.add(
+        Container(
+          margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.orange, width: 1),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.transparent,
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.card_travel, color: Colors.orange, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Tourism Day: capacity doubled ($_capacity → $_effectiveCapacity)\n',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                    const Text(
+                      '(affects total cost and profit calculations)',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     thisStockList.add(header);
 
@@ -866,7 +912,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       thisStockList.add(
         ForeignStockCard(
           foreignStock: stock,
-          capacity: _capacity,
+          capacity: _effectiveCapacity,
           inventoryEnabled: _inventoryEnabled,
           showArrivalTime: _showArrivalTime,
           showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
@@ -881,6 +927,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           travelingCountryFullName: _profile!.travel!.destination,
           displayShowcase: displayShowcase,
           isDataFromCache: _isDataFromCache,
+          providerName: _yataSuccess
+              ? "YATA"
+              : _prometheusSuccess
+                  ? "Prometheus"
+                  : null,
           key: UniqueKey(),
         ),
       );
@@ -1033,7 +1084,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   /// Get data from external API providers (YATA/Prometheus)
   Future<({bool apiSuccess, String apiMessage})> _getFromExternalProvider({required String provider}) async {
     // Debug mode: Force timeout to test Torn PDA Database fallback
-    if (kForceExternalApiTimeout) {
+    if (kForceExternalApiTimeoutForeignStocks) {
       log("🚨 DEBUG MODE: Forcing timeout for $provider API to test fallback");
       return (apiSuccess: false, apiMessage: "DEBUG: Forced timeout for testing fallback");
     }
