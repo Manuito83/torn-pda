@@ -49,6 +49,7 @@ class ForeignStockCard extends StatefulWidget {
   final String? travelingCountryFullName;
 
   final bool displayShowcase;
+  final bool isDataFromCache;
 
   const ForeignStockCard({
     required this.foreignStock,
@@ -66,6 +67,7 @@ class ForeignStockCard extends StatefulWidget {
     required this.travelingCountry,
     required this.travelingCountryFullName,
     required this.displayShowcase,
+    required this.isDataFromCache,
     required Key key,
   }) : super(key: key);
 
@@ -637,7 +639,26 @@ class ForeignStockCardState extends State<ForeignStockCard> {
   Row _firstRow(ForeignStock stock) {
     return Row(
       children: <Widget>[
-        Image.asset('images/torn_items/small/${stock.id}_small.png'),
+        Image.asset(
+          'images/torn_items/small/${stock.id}_small.png',
+          width: 24,
+          height: 24,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: _themeProvider.getTextColor(Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Icon(
+                Icons.image_not_supported,
+                size: 16,
+                color: _themeProvider.getTextColor(Colors.grey.shade600),
+              ),
+            );
+          },
+        ),
         const Padding(
           padding: EdgeInsets.only(right: 10),
         ),
@@ -674,6 +695,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
             ),
           ),
         ),
+        const SizedBox(width: 15),
         _returnLastUpdated(),
       ],
     );
@@ -953,51 +975,88 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     );
   }
 
-  Row _returnLastUpdated() {
+  Widget _returnLastUpdated() {
     final inputTime = DateTime.fromMillisecondsSinceEpoch(widget.foreignStock.timestamp! * 1000);
     final timeDifference = DateTime.now().difference(inputTime);
-    String timeString;
+
+    // Format time string using helper method
+    final timeString = _formatTimeDifference(timeDifference);
+
     Color color;
-    if (timeDifference.inMinutes < 1) {
-      timeString = 'now';
+    IconData icon = Icons.satellite_alt_outlined;
+    bool isCached = false;
+
+    // Check if data is from cache (Torn PDA Database)
+    if (widget.isDataFromCache) {
+      color = _themeProvider.getTextColor(Colors.red);
+      icon = MdiIcons.database;
+      isCached = true;
+    } else if (timeDifference.inMinutes < 1) {
       color = _themeProvider.getTextColor(Colors.green);
-    } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
-      timeString = '1 min';
-      color = _themeProvider.getTextColor(Colors.green);
-    } else if (timeDifference.inMinutes > 1 && timeDifference.inMinutes < 30) {
-      timeString = '${timeDifference.inMinutes} min';
+    } else if (timeDifference.inMinutes >= 1 && timeDifference.inMinutes < 30) {
       color = _themeProvider.getTextColor(Colors.green);
     } else if (timeDifference.inMinutes >= 30 && timeDifference.inHours < 1) {
-      timeString = '${timeDifference.inMinutes} min';
       color = _themeProvider.getTextColor(Colors.orange);
-    } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
-      timeString = '1 hour';
-      color = _themeProvider.getTextColor(Colors.orange);
-    } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
-      timeString = '${timeDifference.inHours} hours';
-      color = _themeProvider.getTextColor(Colors.red);
-    } else if (timeDifference.inDays == 1) {
-      timeString = '1 day';
-      color = _themeProvider.getTextColor(Colors.red);
+    } else if (timeDifference.inHours >= 1 && timeDifference.inDays < 1) {
+      color = _themeProvider.getTextColor(timeDifference.inHours == 1 ? Colors.orange : Colors.red);
     } else {
-      timeString = '${timeDifference.inDays} days';
       color = _themeProvider.getTextColor(Colors.red);
     }
-    return Row(
-      children: <Widget>[
-        Icon(
-          Icons.access_time,
-          size: 14,
-          color: color,
+
+    return GestureDetector(
+      onTap: () {
+        if (isCached) {
+          // Simple info for cached data
+          BotToast.showText(
+            text: "Main providers cannot be reached!"
+                "\n\nThis is cached data ${timeString == 'now' ? 'updated just now' : 'from $timeString'}",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.orange.shade800,
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(12),
+          );
+        } else {
+          // Show normal update info
+          BotToast.showText(
+            text: "Live data updated ${timeString == 'now' ? 'just now' : '$timeString ago'}",
+            textStyle: const TextStyle(
+              fontSize: 14,
+              color: Colors.white,
+            ),
+            contentColor: Colors.blue.shade800,
+            duration: const Duration(seconds: 3),
+            contentPadding: const EdgeInsets.all(12),
+          );
+        }
+      },
+      child: Container(
+        decoration: isCached
+            ? BoxDecoration(
+                border: Border.all(color: Colors.red, width: 1.5),
+                borderRadius: BorderRadius.circular(4),
+              )
+            : null,
+        padding: isCached ? const EdgeInsets.symmetric(horizontal: 4, vertical: 2) : null,
+        child: Row(
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 14,
+              color: color,
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 5),
+              child: Text(
+                timeString,
+                style: TextStyle(color: color),
+              ),
+            ),
+          ],
         ),
-        Padding(
-          padding: const EdgeInsets.only(left: 5),
-          child: Text(
-            timeString,
-            style: TextStyle(color: color),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -2116,6 +2175,27 @@ class ForeignStockCardState extends State<ForeignStockCard> {
     await Future.delayed(const Duration(seconds: 20));
     if (mounted) {
       widget.requestMoneyRefresh();
+    }
+  }
+
+  /// Helper method to format time difference consistently
+  String _formatTimeDifference(Duration timeDifference) {
+    if (timeDifference.inMinutes < 1) {
+      return 'now';
+    } else if (timeDifference.inMinutes == 1 && timeDifference.inHours < 1) {
+      return '1 min';
+    } else if (timeDifference.inMinutes > 1 && timeDifference.inMinutes < 60) {
+      return '${timeDifference.inMinutes} min';
+    } else if (timeDifference.inHours == 1 && timeDifference.inDays < 1) {
+      return '1 hour';
+    } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
+      return '${timeDifference.inHours} hours';
+    } else if (timeDifference.inDays == 1) {
+      return '1 day';
+    } else if (timeDifference.inDays > 1) {
+      return '${timeDifference.inDays} days';
+    } else {
+      return 'cached';
     }
   }
 }

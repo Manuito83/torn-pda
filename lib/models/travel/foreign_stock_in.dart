@@ -86,6 +86,7 @@ class ForeignStock {
   String? name;
   int? quantity;
   int? cost;
+  String? codeName;
 
   factory ForeignStock.fromJson(Map<String, dynamic> json) => ForeignStock(
         id: json["id"],
