@@ -338,7 +338,10 @@ class UserScriptsProvider extends ChangeNotifier {
 
   /// Save userscripts list with proper encoding
   Future<void> _saveUserScriptsToStorage() async {
-    if (!_initializationCompleter.isCompleted) return;
+    if (!_initializationCompleter.isCompleted) {
+      log("❌ Rejected userscripts save");
+      return;
+    }
 
     try {
       _checkForCustomApiKeyCandidates();
@@ -476,10 +479,11 @@ class UserScriptsProvider extends ChangeNotifier {
       // We complete the init after 2 seconds:
       // - Any tries to save the scripts before initialisation completes are ignored immediately
       // - Checks for updates can proceed will wait for the completer and then proceed
-      await Future.delayed(const Duration(seconds: 2));
-      if (!_initializationCompleter.isCompleted) {
-        _initializationCompleter.complete();
-      }
+      Future.delayed(const Duration(seconds: 2)).then((_) {
+        if (!_initializationCompleter.isCompleted) {
+          _initializationCompleter.complete();
+        }
+      });
     }
   }
 
