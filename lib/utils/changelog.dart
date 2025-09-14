@@ -120,6 +120,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "want to review them to ensure they are still relevant.\n\n"
                 "You can access all notes from the Settings / Stats and Player Notes section.",
           ),
+          "Added cache for foreign stock data as a fallback when providers are unreachable",
           "Fixed capacity calculation for max buy buttons abroad [Kwack]",
           "Fixed war widget colors in dark mode",
           "Fixed locked navigation toast location",
