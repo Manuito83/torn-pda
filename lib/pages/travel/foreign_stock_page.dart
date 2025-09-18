@@ -456,11 +456,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                     onTap: () {
                       var orderType = "";
                       if (!_alphabeticalFilter) {
-                        orderType = "Sorting countries alphabetically";
+                        orderType = "Showing countries alphabetically";
                       }
                       // We are changing to time
                       else {
-                        orderType = "Sorting countries by flight time";
+                        orderType = "Showing countries by flight time";
                       }
 
                       _transformAlphabeticalTime();
@@ -662,7 +662,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           color: _themeProvider!.mainText,
         ),
         Icon(
-          Icons.add_to_photos,
+          MdiIcons.packageVariantClosed,
           color: _themeProvider!.mainText,
         ),
       ].asMap().entries.map((widget) {
@@ -986,8 +986,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           if (itemMatch != null) {
             // Calculate value as market_value - cost
             stock.value = (itemMatch.marketValue ?? 1) - (stock.cost ?? 1);
+
+            // Assign item type based on Torn API data
+            stock.itemType = itemMatch.type ?? ItemType.OTHER;
           } else {
             stock.value = 0;
+            stock.itemType = ItemType.OTHER;
           }
 
           // Assign actual profit depending on country (+ the country)

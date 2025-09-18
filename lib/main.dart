@@ -75,9 +75,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.9.1';
-const String androidCompilation = '579';
-const String iosCompilation = '579';
+const String appVersion = '3.9.2';
+const String androidCompilation = '580';
+const String iosCompilation = '580';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
