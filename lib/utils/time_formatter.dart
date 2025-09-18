@@ -11,6 +11,13 @@ class TimeFormatter {
 
   TimeFormatter({required this.inputTime, required this.timeFormatSetting, required this.timeZoneSetting});
 
+  /// Returns the formatted hour with timezone identifier
+  ///
+  /// Examples:
+  /// - 24h format + Local Time: "14:35 LT"
+  /// - 12h format + Local Time: "02:35 PM LT"
+  /// - 24h format + Torn Time: "19:35 TCT"
+  /// - 12h format + Torn Time: "07:35 PM TCT"
   String? get formatHour {
     late DateTime timeZonedTime;
     String? hourFormatted;
@@ -36,6 +43,15 @@ class TimeFormatter {
     return hourFormatted;
   }
 
+  /// Returns the formatted hour with relative day information
+  ///
+  /// Examples:
+  /// - Same day: "14:35 LT" (no suffix by default)
+  /// - Same day with includeToday: "14:35 LT today"
+  /// - Next day: "14:35 LT tomorrow"
+  /// - Future days: "14:35 LT in 3 days"
+  /// - Previous day with includeYesterday: "14:35 LT yesterday"
+  /// - Past days: "14:35 LT" (no suffix by default)
   String formatHourWithDaysElapsed({bool includeToday = false, bool includeYesterday = false}) {
     late DateTime timeZonedTime;
     late DateTime now;
@@ -106,6 +122,13 @@ class TimeFormatter {
   }
 
   String? _dayWeekFormatted;
+
+  /// Returns the day of the week with "on" prefix
+  ///
+  /// Examples:
+  /// - Monday: "on Monday"
+  /// - Wednesday: "on Wednesday"
+  /// - Sunday: "on Sunday"
   String? get formatDayWeek {
     late DateTime timeZonedTime;
     switch (timeZoneSetting) {
@@ -122,6 +145,13 @@ class TimeFormatter {
   }
 
   String? _monthDayFormatted;
+
+  /// Returns the month and day in abbreviated format
+  ///
+  /// Examples:
+  /// - January 5th: "Jan 05"
+  /// - March 15th: "Mar 15"
+  /// - December 25th: "Dec 25"
   String? get formatMonthDay {
     late DateTime timeZonedTime;
     switch (timeZoneSetting) {
@@ -137,6 +167,13 @@ class TimeFormatter {
     return _monthDayFormatted;
   }
 
+  /// Returns the formatted hour with timezone (same as formatHour but different method)
+  ///
+  /// Examples:
+  /// - 24h format + Local Time: "14:35 LT"
+  /// - 12h format + Local Time: "02:35 PM LT"
+  /// - 24h format + Torn Time: "19:35 TCT"
+  /// - 12h format + Torn Time: "07:35 PM TCT"
   String get formatHourWithDate {
     late DateTime timeZonedTime;
     String? hourFormatted;
@@ -166,6 +203,12 @@ class TimeFormatter {
     return hourFormatted;
   }
 
+  /// Returns the day and month in DD MMM format
+  ///
+  /// Examples:
+  /// - January 5th: "05 Jan"
+  /// - March 15th: "15 Mar"
+  /// - December 25th: "25 Dec"
   String? get formatDayMonth {
     late DateTime timeZonedTime;
     switch (timeZoneSetting) {
@@ -179,9 +222,67 @@ class TimeFormatter {
     return formatter.format(timeZonedTime);
   }
 
+  /// Returns the formatted hour combined with day and month
+  ///
+  /// Examples:
+  /// - 24h format + Local Time: "14:35 LT, 15 Mar"
+  /// - 12h format + Local Time: "02:35 PM LT, 05 Jan"
+  /// - 24h format + Torn Time: "19:35 TCT, 25 Dec"
+  /// - 12h format + Torn Time: "07:35 PM TCT, 01 Apr"
   String get formatHourAndDayMonth {
     final hourPart = formatHourWithDate;
     final dayMonthPart = formatDayMonth;
     return '$hourPart, $dayMonthPart';
+  }
+
+  /// Returns the time elapsed since the input time in human-readable format
+  ///
+  /// Examples:
+  /// - Less than 1 minute: "seconds"
+  /// - Exactly 1 minute: "1 minute"
+  /// - Multiple minutes: "15 minutes"
+  /// - Exactly 1 hour: "1 hour"
+  /// - Hour + minutes: "2 hours, 30 minutes"
+  /// - Exactly 1 day: "1 day"
+  /// - Day + hours: "3 days, 5 hours"
+  /// - Day + hours + minutes: "2 days, 4 hours, 15 minutes"
+  /// - Large periods: "45 days, 12 hours, 30 minutes"
+  String get formatTimeAgo {
+    late DateTime now;
+    late DateTime timeToCompare;
+
+    switch (timeZoneSetting) {
+      case TimeZoneSetting.localTime:
+        now = DateTime.now();
+        timeToCompare = inputTime!.toLocal();
+        break;
+      case TimeZoneSetting.tornTime:
+        now = DateTime.now().toUtc();
+        timeToCompare = inputTime!.toUtc();
+        break;
+    }
+
+    final Duration difference = now.difference(timeToCompare);
+
+    if (difference.inSeconds < 60) {
+      return "seconds";
+    }
+
+    List<String> parts = [];
+    int days = difference.inDays;
+    int hours = difference.inHours % 24;
+    int minutes = difference.inMinutes % 60;
+
+    if (days > 0) {
+      parts.add("$days ${days == 1 ? 'day' : 'days'}");
+    }
+    if (hours > 0) {
+      parts.add("$hours ${hours == 1 ? 'hour' : 'hours'}");
+    }
+    if (minutes > 0) {
+      parts.add("$minutes ${minutes == 1 ? 'minute' : 'minutes'}");
+    }
+
+    return parts.isEmpty ? "seconds" : parts.join(", ");
   }
 }

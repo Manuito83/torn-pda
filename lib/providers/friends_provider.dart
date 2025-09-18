@@ -3,6 +3,7 @@ import 'dart:collection';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
@@ -10,6 +11,7 @@ import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class AddFriendResult {
@@ -59,8 +61,14 @@ class FriendsProvider extends ChangeNotifier {
 
     if (myNewFriendModel is FriendModel) {
       _getFriendFaction(myNewFriendModel);
-      myNewFriendModel.personalNote = notes;
-      myNewFriendModel.personalNoteColor = notesColor;
+
+      // Save to centralized notes
+      if (notes != null && notes.isNotEmpty) {
+        final notesController = Get.find<PlayerNotesController>();
+        await notesController.setPlayerNote(
+            friendId, notes, notesColor ?? '', myNewFriendModel.name ?? 'Unknown Player');
+      }
+
       _friends.add(myNewFriendModel);
       //sortFriends(_currentSort);
       notifyListeners();
@@ -105,8 +113,6 @@ class FriendsProvider extends ChangeNotifier {
         _friends[_friends.indexOf(oldFriend)] = myUpdatedFriendModel;
         final newFriend = _friends[_friends.indexOf(myUpdatedFriendModel)];
         _updateResultAnimation(newFriend, true);
-        newFriend.personalNote = oldFriend.personalNote;
-        newFriend.personalNoteColor = oldFriend.personalNoteColor;
         newFriend.lastUpdated = DateTime.now();
         _saveFriendsSharedPrefs();
         return true;
@@ -138,12 +144,8 @@ class FriendsProvider extends ChangeNotifier {
         final dynamic myUpdatedFriendModel = await ApiCallsV1.getFriends(playerId: _friends[i].playerId.toString());
         if (myUpdatedFriendModel is FriendModel) {
           _getFriendFaction(myUpdatedFriendModel);
-          final notes = _friends[i].personalNote;
-          final notesColor = _friends[i].personalNoteColor;
           _friends[i] = myUpdatedFriendModel;
           _updateResultAnimation(_friends[i], true);
-          _friends[i].personalNote = notes;
-          _friends[i].personalNoteColor = notesColor;
           _friends[i].lastUpdated = DateTime.now();
           _saveFriendsSharedPrefs();
           numberSuccessful++;
@@ -180,24 +182,24 @@ class FriendsProvider extends ChangeNotifier {
     }
   }
 
-  void setFriendNote(FriendModel friend, String note, String? color) {
-    friend.personalNote = note;
-    friend.personalNoteColor = color;
-    _saveFriendsSharedPrefs();
-    notifyListeners();
-  }
-
   int getFriendNumber() {
     return _friends.length;
   }
 
   String exportFriends() {
     final output = <FriendBackup>[];
+
     for (final fri in _friends) {
+      final notesController = Get.find<PlayerNotesController>();
+      final centralizedNote = notesController.getNoteForPlayer(fri.playerId.toString());
+      fri.noteBackup = centralizedNote?.note ?? "";
+      fri.colorBackup = centralizedNote?.color ?? "";
+
       final export = FriendBackup();
       export.id = fri.playerId;
-      export.notes = fri.personalNote;
-      export.notesColor = fri.personalNoteColor;
+      export.notes = fri.noteBackup;
+      export.notesColor = fri.colorBackup;
+
       output.add(export);
     }
     return friendsBackupModelToJson(FriendsBackupModel(friendBackup: output));
@@ -279,23 +281,10 @@ class FriendsProvider extends ChangeNotifier {
 
   Future<void> initFriends() async {
     // Friends list
-    bool needToSave = false;
     List<String> jsonFriends = await Prefs().getFriendsList();
     for (final jFri in jsonFriends) {
       final thisFriend = friendModelFromJson(jFri);
-
-      // In v1.8.5 we change from blue to orange and we need to do the conversion
-      // here. This can be later removed safely at some point.
-      if (thisFriend.personalNoteColor == "blue") {
-        thisFriend.personalNoteColor = "orange";
-        needToSave = true;
-      }
-
       _friends.add(thisFriend);
-    }
-
-    if (needToSave) {
-      _saveFriendsSharedPrefs();
     }
 
     // Friends sort
@@ -321,5 +310,10 @@ class FriendsProvider extends ChangeNotifier {
 
     // Notification
     notifyListeners();
+  }
+
+  /// Check if a player ID is in the friends list
+  bool isPlayerInFriends(String playerId) {
+    return _friends.any((friend) => friend.playerId.toString() == playerId);
   }
 }

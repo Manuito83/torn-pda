@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // Flutter imports:
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
@@ -26,11 +27,18 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/sliding_up_panel.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
+
+// Debug flag to force timeout on external APIs (YATA/Prometheus) for testing fallback
+const bool kForceExternalApiTimeoutForeignStocks = kDebugMode && false;
+
+// Debug flag to force Tourism Day for testing
+const bool kForceTourismDay = kDebugMode && false;
 
 class ReturnFlagPressed {
   bool flagPressed = false;
@@ -62,6 +70,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   late bool _apiSuccess;
   bool _yataSuccess = false;
   bool _prometheusSuccess = false;
+  bool _isDataFromCache = false;
 
   Map<String, dynamic>? _activeRestocks = <String, dynamic>{};
 
@@ -75,7 +84,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   final _filteredStocksCards = <ForeignStock>[];
   // This is the model as it comes from YATA. There is some complexity as it consist on several
   // arrays and some details need to be filled in for the stocks as we fetch from the API
-  var _stocksYataModel = ForeignStockInModel();
+  var _stocksModel = ForeignStockInModel();
   // This is the official items model from Torn
   ItemsModel? _allTornItems;
 
@@ -83,7 +92,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   bool _showArrivalTime = true;
   bool _showBarsCooldownAnalysis = true;
   InventoryModel? _inventory;
-  //OwnProfileExtended _travelModel;
   OwnProfileExtended? _profile;
   int _capacity = 1;
 
@@ -91,6 +99,21 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   final _filteredFlags = List<bool>.filled(12, true);
 
   bool _alphabeticalFilter = false;
+
+  // Tourism Day detection (26-28 September each year, 10:30 UTC)
+  bool _isTourismDay() {
+    if (kForceTourismDay) return true;
+
+    final now = DateTime.now().toUtc();
+    final currentYear = now.year;
+    final tourismStart = DateTime.utc(currentYear, 9, 26, 10, 30); // 26 Sept 10:30 UTC
+    final tourismEnd = DateTime.utc(currentYear, 9, 28, 10, 30); // 28 Sept 10:30 UTC
+
+    return now.isAfter(tourismStart) && now.isBefore(tourismEnd);
+  }
+
+  // Effective capacity (doubled during Tourism Day)
+  int get _effectiveCapacity => _isTourismDay() ? _capacity * 2 : _capacity;
 
   String _countriesFilteredText = '';
   final List<String> _countryCodesAlphabetical = [
@@ -687,7 +710,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                 const SizedBox(width: 2),
                 Flexible(
                   child: Text(
-                    _timeStampToString(_stocksYataModel.timestamp!),
+                    _timeStampToString(_stocksModel.timestamp!),
                     style: const TextStyle(fontSize: 11),
                   ),
                 ),
@@ -836,12 +859,41 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       ],
     );
 
-    /*
-    thisStockList.add(lastUpdateDetails);
-    thisStockList.add(countriesFilterDetails);
-    thisStockList.add(typesFilterDetails);
-    thisStockList.add(hiddenDetails);
-    */
+    // Tourism Day banner
+    if (_isTourismDay()) {
+      thisStockList.add(
+        Container(
+          margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.orange, width: 1),
+            borderRadius: BorderRadius.circular(8),
+            color: Colors.transparent,
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.card_travel, color: Colors.orange, size: 18),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Tourism Day: capacity doubled ($_capacity → $_effectiveCapacity)\n',
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                    ),
+                    const Text(
+                      '(affects total cost and profit calculations)',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     thisStockList.add(header);
 
@@ -860,7 +912,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       thisStockList.add(
         ForeignStockCard(
           foreignStock: stock,
-          capacity: _capacity,
+          capacity: _effectiveCapacity,
           inventoryEnabled: _inventoryEnabled,
           showArrivalTime: _showArrivalTime,
           showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
@@ -874,6 +926,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           travelingCountry: _returnCountryName(_profile!.travel!.destination),
           travelingCountryFullName: _profile!.travel!.destination,
           displayShowcase: displayShowcase,
+          isDataFromCache: _isDataFromCache,
+          providerName: _yataSuccess
+              ? "YATA"
+              : _prometheusSuccess
+                  ? "Prometheus"
+                  : null,
           key: UniqueKey(),
         ),
       );
@@ -890,29 +948,17 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
   Future<void> _fetchApiInformation() async {
     try {
-      // Get all APIs
+      // Get all APIs with fallback system
       var apiReturn = await fetchApiProviders();
       if (!apiReturn.providersSuccess) {
-        BotToast.showText(
-          text: apiReturn.providersMessage,
-          textStyle: const TextStyle(
-            fontSize: 13,
-            color: Colors.white,
-          ),
-          contentColor: Colors.red[800]!,
-          clickClose: true,
-          duration: const Duration(seconds: 6),
-          contentPadding: const EdgeInsets.all(10),
-        );
         return;
       } else {
-        // If debug messages are enabled, returned which provider contributed to the result
-        // (this would also return any error with YATA if Prometheus is successful)
+        // Show success message for debugging if needed
         logToUser(
           apiReturn.providersMessage,
-          duration: 4,
-          backgroundcolor: Colors.blue.shade600,
-          borderColor: Colors.blue.shade800,
+          duration: 3,
+          backgroundcolor: Colors.green.shade600,
+          borderColor: Colors.green.shade800,
         );
       }
 
@@ -922,27 +968,27 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         profileMisc(),
       ]);
 
-      if (!_apiSuccess) {
+      if (_isDataFromCache && !_apiSuccess) {
+        // Allow rendering with cached data
+        _apiSuccess = true;
+        log("Using cached data");
+      } else if (!_apiSuccess) {
+        // Both external APIs and Torn APIs failed
         log("Unsuccessful Torn API replies");
         return;
       }
 
-      // We need to calculate several additional values before sorting the list
-      // for the first time, as this values don't come straight
-      // in every stock from the API (but can be deducted)
-
-      // NOTE: some of this values (i.e. profit and arrival time) will later be
-      // recalculate in real time in the card widget. This first calculation is
-      // only to compare ones with the others and sort.
-
-      _stocksYataModel.countries!.forEach((countryKey, countryDetails) {
+      _stocksModel.countries!.forEach((countryKey, countryDetails) {
         for (final stock in countryDetails.stocks!) {
-          // Match with Torn by using the incoming provider's stock id to locate keys (id) in Torn's items
-          // ! Not all Torn items have concurrent ids (there are gaps)
-          final itemMatch = _allTornItems!.items![stock.id!.toString()];
+          // Match with Torn by ID
+          final itemMatch = _allTornItems?.items?[stock.id!.toString()];
 
-          // Complete fields we need for value and profit
-          stock.value = itemMatch!.marketValue! - stock.cost!;
+          if (itemMatch != null) {
+            // Calculate value as market_value - cost
+            stock.value = (itemMatch.marketValue ?? 1) - (stock.cost ?? 1);
+          } else {
+            stock.value = 0;
+          }
 
           // Assign actual profit depending on country (+ the country)
           stock.countryCode = countryKey;
@@ -992,8 +1038,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       60))
               .round();
 
-          stock.timestamp = countryDetails.update;
-          stock.itemType = itemMatch.type;
+          // For live data: use country timestamp; for cached data: preserve individual timestamps
+          if (!_isDataFromCache) {
+            stock.timestamp = countryDetails.update;
+          }
 
           stock.arrivalTime = DateTime.now().add(
             Duration(
@@ -1033,88 +1081,325 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
   }
 
+  /// Get data from external API providers (YATA/Prometheus)
+  Future<({bool apiSuccess, String apiMessage})> _getFromExternalProvider({required String provider}) async {
+    // Debug mode: Force timeout to test Torn PDA Database fallback
+    if (kForceExternalApiTimeoutForeignStocks) {
+      log("🚨 DEBUG MODE: Forcing timeout for $provider API to test fallback");
+      return (apiSuccess: false, apiMessage: "DEBUG: Forced timeout for testing fallback");
+    }
+
+    try {
+      String url = "https://yata.yt/api/v1/travel/export/";
+      if (provider == "prometheus") url = "https://api.prombot.co.uk/api/travel";
+
+      final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 8));
+      if (responseDB.statusCode == 200) {
+        _stocksModel = foreignStockInModelFromJson(responseDB.body);
+        if (provider == "yata") _yataSuccess = true;
+        if (provider == "prometheus") _prometheusSuccess = true;
+        return (apiSuccess: true, apiMessage: "");
+      }
+    } catch (e, trace) {
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Issue fetching Foreign Stocks");
+      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("Provider: $provider, Error: $e", trace);
+      logToUser("Provider: $provider, Error: $e, Trace: $trace");
+      return (apiSuccess: false, apiMessage: e.toString());
+    }
+    return (apiSuccess: false, apiMessage: "");
+  }
+
+  /// Get data from Torn PDA Database (Firebase fallback)
+  Future<({bool apiSuccess, String apiMessage})> _getFromTornPDADatabase() async {
+    try {
+      final tornPDAData = await FirebaseRtdbHelper().getTornPDAStocksData();
+      if (tornPDAData != null && tornPDAData.isNotEmpty) {
+        // Convert Torn PDA Database format to expected model
+        _stocksModel = _convertTornPDADataToModel(tornPDAData);
+
+        if (_stocksModel.countries != null && _stocksModel.countries!.isNotEmpty) {
+          return (apiSuccess: true, apiMessage: "Valid cached data retrieved from Torn PDA Database");
+        } else {
+          return (apiSuccess: false, apiMessage: "Torn PDA Database contains no valid stock data");
+        }
+      }
+      return (apiSuccess: false, apiMessage: "No data available in Torn PDA Database");
+    } catch (e) {
+      return (apiSuccess: false, apiMessage: "Torn PDA Database error: $e");
+    }
+  }
+
+  /// Show backup provider notification
+  void _showBackupProviderNotification(String primary, String backup) {
+    BotToast.showText(
+      text: "$primary API temporarily unavailable, using $backup API",
+      textStyle: const TextStyle(fontSize: 14),
+      contentColor: Colors.amber[700]!,
+      duration: const Duration(seconds: 3),
+      contentPadding: const EdgeInsets.all(10),
+    );
+  }
+
+  /// Show cached data notification
+  void _showCachedDataNotification() {
+    BotToast.showCustomText(
+      duration: const Duration(seconds: 15),
+      onlyOne: true,
+      clickClose: false,
+      crossPage: false,
+      animationDuration: const Duration(milliseconds: 300),
+      animationReverseDuration: const Duration(milliseconds: 300),
+      toastBuilder: (_) => Align(
+        alignment: Alignment.center,
+        child: Card(
+          margin: const EdgeInsets.all(20),
+          color: Colors.orange.shade600,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.warning_amber_outlined,
+                      size: 24,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'SHOWING CACHED DATA',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                const Text(
+                  'Main providers could not be reached. Showing cached data from Torn PDA Database.\n\n'
+                  '⚠️ Stock quantities may be outdated\n'
+                  '⚠️ Restock information (charts, flight suggestions) may be incorrect\n\n'
+                  'Please refresh to get live data when APIs are available again.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                ElevatedButton.icon(
+                  onPressed: () => BotToast.cleanAll(),
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  label: const Text('Got it', style: TextStyle(color: Colors.black)),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.orange.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Show all sources failed dialog
+  void _showAllSourcesFailedDialog() {
+    BotToast.showCustomText(
+      duration: const Duration(seconds: 8),
+      onlyOne: true,
+      clickClose: false,
+      crossPage: false,
+      animationDuration: const Duration(milliseconds: 300),
+      animationReverseDuration: const Duration(milliseconds: 300),
+      toastBuilder: (_) => Align(
+        alignment: Alignment.center,
+        child: Card(
+          margin: const EdgeInsets.all(20),
+          color: Colors.orange.shade600,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 24,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'ALL SOURCES UNAVAILABLE',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                const Text(
+                  'All data sources (YATA, Prometheus, and Torn PDA Database) are currently unavailable.\n\nPlease try again later.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                ElevatedButton.icon(
+                  onPressed: () => BotToast.cleanAll(),
+                  icon: const Icon(Icons.close, size: 18, color: Colors.black),
+                  label: const Text('Got it', style: TextStyle(color: Colors.black)),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.orange.shade600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Try providers with fallback system
+  Future<({bool providersSuccess, String providersMessage})> _tryProvidersWithFallback({
+    required String primary,
+    required String backup,
+  }) async {
+    // 1. Try primary provider first
+    final primaryResult = await _getFromExternalProvider(provider: primary);
+    if (primaryResult.apiSuccess) {
+      _apiSuccess = true;
+      return (providersSuccess: true, providersMessage: "Live data from ${primary.toUpperCase()} API");
+    }
+
+    // 2. Try backup external provider
+    final backupResult = await _getFromExternalProvider(provider: backup);
+    if (backupResult.apiSuccess) {
+      _apiSuccess = true;
+      _showBackupProviderNotification(primary.toUpperCase(), backup.toUpperCase());
+      return (providersSuccess: true, providersMessage: "Live data from ${backup.toUpperCase()} API ($primary backup)");
+    }
+
+    // 3. Try Torn PDA Database as final fallback
+    final tornPDAResult = await _getFromTornPDADatabase();
+    if (tornPDAResult.apiSuccess) {
+      _apiSuccess = true;
+      _isDataFromCache = true; // MARK AS CACHED - data comes from Firebase
+      _showCachedDataNotification();
+      return (providersSuccess: true, providersMessage: "Cached data from Torn PDA Database");
+    }
+
+    // All three sources failed
+    _showAllSourcesFailedDialog();
+    return (
+      providersSuccess: false,
+      providersMessage:
+          "${primary.toUpperCase()}: ${primaryResult.apiMessage}\n${backup.toUpperCase()}: ${backupResult.apiMessage}\nTorn PDA DB: ${tornPDAResult.apiMessage}",
+    );
+  }
+
   Future<({bool providersSuccess, String providersMessage})> fetchApiProviders() async {
     _apiSuccess = false;
     _yataSuccess = false;
     _prometheusSuccess = false;
+    _isDataFromCache = false;
 
-    // Both providers use the same model
-    Future<({bool apiSuccess, String apiMessage})> getFromProvider({required String provider}) async {
-      try {
-        String url = "https://yata.yt/api/v1/travel/export/";
-        if (provider == "prometheus") url = "https://api.prombot.co.uk/api/travel";
+    // Determine provider order based on user settings
+    final preferYata = _settingsProvider!.foreignStocksDataProvider == "yata";
 
-        final responseDB = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 6));
-        if (responseDB.statusCode == 200) {
-          _stocksYataModel = foreignStockInModelFromJson(responseDB.body);
-          if (provider == "yata") _yataSuccess = true;
-          if (provider == "prometheus") _prometheusSuccess = true;
-          return (apiSuccess: true, apiMessage: "");
-        }
-      } catch (e, trace) {
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Issue fetching Foreign Stocks");
-        if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("Provider: $provider, Error: $e", trace);
-        logToUser("Provider: $provider, Error: $e, Trace: $trace");
-        return (apiSuccess: false, apiMessage: e.toString());
-      }
-      return (apiSuccess: false, apiMessage: "");
-    }
+    return await _tryProvidersWithFallback(
+      primary: preferYata ? "yata" : "prometheus",
+      backup: preferYata ? "prometheus" : "yata",
+    );
+  }
 
-    if (_settingsProvider!.foreignStocksDataProvider == "yata") {
-      // Try YATA first
-      final yataResult = await getFromProvider(provider: "yata");
-      if (yataResult.apiSuccess) {
-        _apiSuccess = true;
-        return (providersSuccess: true, providersMessage: "Fetched YATA successfully");
-      }
+  /// Convert Torn PDA Database format to ForeignStockInModel format
+  /// Now uses real data from Realtime Database: id, cost, lastUpdated
+  ForeignStockInModel _convertTornPDADataToModel(Map<String, dynamic> tornPDAData) {
+    final countryMapping = {
+      'Argentina': 'arg',
+      'Canada': 'can',
+      'Cayman Islands': 'cay',
+      'China': 'chi',
+      'Hawaii': 'haw',
+      'Japan': 'jap',
+      'Mexico': 'mex',
+      'South Africa': 'sou',
+      'Switzerland': 'swi',
+      'UAE': 'uae',
+      'UK': 'uni', // Firebase might store it as 'UK'
+    };
 
-      // As a backup, try Prometheus
-      if (!yataResult.apiSuccess) {
-        final prometheusResult = await getFromProvider(provider: "prometheus");
-        if (prometheusResult.apiSuccess) {
-          _apiSuccess = true;
-          return (
-            providersSuccess: true,
-            providersMessage: "YATA failed: ${yataResult.apiMessage}\n\nFetched Prometheus successfully"
+    Map<String, CountryDetails> countries = {};
+    Map<String, List<ForeignStock>> stocksByCountry = {};
+
+    try {
+      tornPDAData.forEach((key, value) {
+        if (value is Map) {
+          final stockData = Map<String, dynamic>.from(value.cast<String, dynamic>());
+
+          final country = stockData['country']?.toString() ?? '';
+          final name = stockData['name']?.toString() ?? 'Unknown Item';
+          final quantity = stockData['quantity'] is int ? stockData['quantity'] : 0;
+
+          // Skip items without valid id, cost, or lastUpdated (obsolete data)
+          if (stockData['id'] is! int || stockData['cost'] is! int || stockData['lastUpdated'] is! int) {
+            return;
+          }
+
+          final id = stockData['id'] as int;
+          final cost = stockData['cost'] as int;
+          final lastUpdated = stockData['lastUpdated'] as int;
+
+          // Skip if no country or name
+          if (country.isEmpty || name.isEmpty || name == 'Unknown Item') return;
+
+          final countryCode = countryMapping[country] ?? country.toLowerCase().replaceAll(' ', '');
+
+          final stock = ForeignStock(
+            id: id,
+            name: name,
+            quantity: quantity,
+            cost: cost,
+            countryCode: countryCode,
           );
+
+          // Use real timestamp from Firebase cache
+          stock.timestamp = lastUpdated;
+
+          // Will be calculated later with Torn API data
+          stock.value = 0;
+
+          if (!stocksByCountry.containsKey(countryCode)) {
+            stocksByCountry[countryCode] = [];
+          }
+          stocksByCountry[countryCode]!.add(stock);
         }
+      });
 
-        // In case both failed
-        return (
-          providersSuccess: false,
-          providersMessage: "YATA failed: ${yataResult.apiMessage}\n\n"
-              "Prometheus failed: ${prometheusResult.apiMessage}",
-        );
+      // Convert to CountryDetails format only if we have data
+      if (stocksByCountry.isNotEmpty) {
+        stocksByCountry.forEach((countryCode, stocks) {
+          if (stocks.isNotEmpty) {
+            countries[countryCode] = CountryDetails(
+              update: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+              stocks: stocks,
+            );
+          }
+        });
       }
+    } catch (e) {
+      countries = {};
     }
 
-    // Else, try Promethus first
-    final prometheusResult = await getFromProvider(provider: "prometheus");
-    if (prometheusResult.apiSuccess) {
-      _apiSuccess = true;
-      return (providersSuccess: true, providersMessage: "Fetched Prometheus successfully");
-    }
-
-    // As a backup, try YATA
-    String yataError = "";
-    if (!prometheusResult.apiSuccess) {
-      final yataResult = await getFromProvider(provider: "yata");
-      if (yataResult.apiSuccess) {
-        _apiSuccess = true;
-        return (
-          providersSuccess: true,
-          providersMessage: "Prometheus failed: ${prometheusResult.apiMessage}\n\nFetched YATA successfully"
-        );
-      } else {
-        yataError = yataResult.apiMessage;
-      }
-    }
-
-    // In case both failed
-    return (
-      providersSuccess: false,
-      providersMessage: "Prometheus failed: ${prometheusResult.apiMessage}\n\n"
-          "YATA failed: $yataError",
+    return ForeignStockInModel(
+      countries: countries,
+      timestamp: DateTime.now().millisecondsSinceEpoch ~/ 1000,
     );
   }
 
@@ -1299,7 +1584,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
 
     final countryMap = <String, CountryDetails>{};
-    _stocksYataModel.countries!.forEach((countryKey, countryDetails) {
+    _stocksModel.countries!.forEach((countryKey, countryDetails) {
       final stockList = CountryDetails()..stocks = <ForeignStock>[];
       stockList.update = countryDetails.update;
 

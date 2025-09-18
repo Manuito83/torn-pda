@@ -8,16 +8,18 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/pages/friends/friend_details_page.dart';
 import 'package:torn_pda/providers/friends_provider.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/user_helper.dart';
-import 'package:torn_pda/widgets/notes_dialog.dart';
+import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 
 class FriendCard extends StatefulWidget {
@@ -263,7 +265,10 @@ class FriendCardState extends State<FriendCard> {
                             const Text('Notes: '),
                             Flexible(
                               child: Text(
-                                '${_friend!.personalNote}',
+                                Get.find<PlayerNotesController>()
+                                        .getNoteForPlayer(_friend!.playerId.toString())
+                                        ?.note ??
+                                    '',
                                 style: TextStyle(
                                   color: _returnFriendNoteColor(),
                                 ),
@@ -575,7 +580,8 @@ class FriendCardState extends State<FriendCard> {
   }
 
   Color? _returnFriendNoteColor() {
-    switch (_friend!.personalNoteColor) {
+    final noteColor = Get.find<PlayerNotesController>().getNoteForPlayer(_friend!.playerId.toString())?.color ?? '';
+    switch (noteColor) {
       case 'red':
         return Colors.red;
       case 'orange':
@@ -599,9 +605,9 @@ class FriendCardState extends State<FriendCard> {
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
-            child: PersonalNotesDialog(
-              noteType: PersonalNoteType.friend,
-              friendModel: _friend,
+            child: PlayerNotesDialog(
+              playerId: _friend?.playerId.toString() ?? '',
+              playerName: _friend?.name ?? '',
             ),
           ),
         );

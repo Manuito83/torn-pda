@@ -14,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/pages/chaining/target_details_page.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -22,7 +23,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/widgets/notes_dialog.dart';
+import 'package:torn_pda/widgets/player_notes_dialog.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -294,7 +295,10 @@ class TargetCardState extends State<TargetCard> {
                             const Text('Notes: '),
                             Flexible(
                               child: Text(
-                                '${_target!.personalNote}',
+                                Get.find<PlayerNotesController>()
+                                        .getNoteForPlayer(_target!.playerId.toString())
+                                        ?.note ??
+                                    '',
                                 style: TextStyle(
                                   color: _returnTargetNoteColor(),
                                 ),
@@ -750,7 +754,8 @@ class TargetCardState extends State<TargetCard> {
   }
 
   Color? _returnTargetNoteColor() {
-    switch (_target!.personalNoteColor) {
+    final noteColor = Get.find<PlayerNotesController>().getNoteForPlayer(_target!.playerId.toString())?.color ?? '';
+    switch (noteColor) {
       case 'red':
         return _themeProvider.getTextColor(Colors.red[600]);
       case 'orange':
@@ -774,9 +779,9 @@ class TargetCardState extends State<TargetCard> {
           elevation: 0.0,
           backgroundColor: Colors.transparent,
           content: SingleChildScrollView(
-            child: PersonalNotesDialog(
-              targetModel: _target,
-              noteType: PersonalNoteType.target,
+            child: PlayerNotesDialog(
+              playerId: _target?.playerId.toString() ?? '',
+              playerName: _target?.name ?? '',
             ),
           ),
         );
@@ -889,8 +894,9 @@ class TargetCardState extends State<TargetCard> {
         for (final tar in myTargetList) {
           attacksIds.add(tar.playerId.toString());
           attacksNames.add(tar.name);
-          attackNotes.add(tar.personalNote);
-          attacksNotesColor.add(tar.personalNoteColor);
+          final playerNote = Get.find<PlayerNotesController>().getNoteForPlayer(tar.playerId.toString());
+          attackNotes.add(playerNote?.note);
+          attacksNotesColor.add(playerNote?.color);
         }
 
         final bool showNotes = await Prefs().getShowTargetsNotes();

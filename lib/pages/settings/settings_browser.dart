@@ -2561,6 +2561,51 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
             ),
           ),
         ),
+      if (_settingsProvider.extraPlayerInformation && _settingsProvider.notesWidgetEnabledProfile)
+        SearchableRow(
+          label: "Show player notes",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Row(
+              children: [
+                const Icon(Icons.keyboard_arrow_right_outlined),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Flexible(child: Text("Also if notes are empty")),
+                          Switch(
+                            value: _settingsProvider.notesWidgetEnabledProfileWhenEmpty,
+                            onChanged: (value) {
+                              setState(() {
+                                _settingsProvider.changeNotesWidgetEnabledProfileWhenEmpty = value;
+                              });
+                            },
+                            activeTrackColor: Colors.lightGreenAccent,
+                            activeColor: Colors.green,
+                          ),
+                        ],
+                      ),
+                      Text(
+                        "If enabled, this will show the notebook icon even if there are no notes present, so that you quickly add new ones.",
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       if (_settingsProvider.extraPlayerInformation)
         SearchableRow(
           label: "Show networth",

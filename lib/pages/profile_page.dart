@@ -599,32 +599,144 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   onLongPressHint: "Copy ID to clipboard",
                   child: GestureDetector(
                     onTap: () {
-                      final String status = _user!.lastAction!.status == 'Offline'
-                          ? 'Offline (${_user!.lastAction!.relative!.replaceAll(" ago", "")})'
-                          : _user!.lastAction!.status == 'Online'
-                              ? 'Online now'
-                              : 'Online ${_user!.lastAction!.relative}';
-                      BotToast.showText(
-                        text: status,
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
+                      String status;
+                      Color backgroundColor;
+                      Color textColor = Colors.white;
+                      IconData statusIcon;
+
+                      final DateTime lastActionTime =
+                          DateTime.fromMillisecondsSinceEpoch(_user!.lastAction!.timestamp! * 1000);
+
+                      final timeFormatter = TimeFormatter(
+                        inputTime: lastActionTime,
+                        timeFormatSetting: _settingsProvider!.currentTimeFormat,
+                        timeZoneSetting: _settingsProvider!.currentTimeZone,
+                      );
+
+                      final String formattedTime = timeFormatter.formatHour!;
+                      final String detailedTimeDiff = timeFormatter.formatTimeAgo;
+
+                      if (_user!.lastAction!.status == 'Offline') {
+                        status = 'Offline for $detailedTimeDiff\n\n($formattedTime)';
+                        backgroundColor = Colors.grey[700]!;
+                        statusIcon = Icons.remove_circle;
+                      } else if (_user!.lastAction!.status == 'Online') {
+                        status = 'Online now';
+                        backgroundColor = const Color(0xFF2E7D32);
+                        statusIcon = Icons.circle;
+                      } else {
+                        status = 'Idle for $detailedTimeDiff\n\n($formattedTime)';
+                        backgroundColor = Colors.orange[600]!;
+                        statusIcon = Icons.adjust;
+                      }
+
+                      BotToast.showCustomText(
+                        duration: const Duration(seconds: 4),
+                        onlyOne: true,
+                        toastBuilder: (cancelFunc) => Material(
+                          type: MaterialType.transparency,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            margin: const EdgeInsets.symmetric(horizontal: 20),
+                            decoration: BoxDecoration(
+                              color: backgroundColor,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                const BoxShadow(
+                                  color: Color.fromRGBO(0, 0, 0, 0.3),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: GestureDetector(
+                              onTap: cancelFunc,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _user!.lastAction!.status == 'Online'
+                                      ? Container(
+                                          padding: const EdgeInsets.all(2),
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(color: Colors.white, width: 2),
+                                          ),
+                                          child: Icon(
+                                            statusIcon,
+                                            color: textColor,
+                                            size: 16,
+                                          ),
+                                        )
+                                      : Icon(
+                                          statusIcon,
+                                          color: textColor,
+                                          size: 20,
+                                        ),
+                                  const SizedBox(width: 12),
+                                  Flexible(
+                                    child: Text(
+                                      status,
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        color: textColor,
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.3,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        contentColor: Colors.blue,
-                        duration: const Duration(seconds: 3),
-                        contentPadding: const EdgeInsets.all(10),
                       );
                     },
                     onLongPress: () {
                       Clipboard.setData(ClipboardData(text: _user!.playerId.toString()));
-                      BotToast.showText(
-                        text: "ID copied to the clipboard!",
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
+                      BotToast.showCustomText(
+                        duration: const Duration(seconds: 3),
+                        onlyOne: true,
+                        toastBuilder: (cancelFunc) => Material(
+                          type: MaterialType.transparency,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            margin: const EdgeInsets.symmetric(horizontal: 20),
+                            decoration: BoxDecoration(
+                              color: Colors.indigo[600],
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                const BoxShadow(
+                                  color: Color.fromRGBO(0, 0, 0, 0.3),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: GestureDetector(
+                              onTap: cancelFunc,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(
+                                    Icons.content_copy,
+                                    color: Colors.white,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    "ID ${_user!.playerId} copied!",
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
-                        contentColor: Colors.blue,
-                        contentPadding: const EdgeInsets.all(10),
                       );
                     },
                     child: ExcludeSemantics(

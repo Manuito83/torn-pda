@@ -157,7 +157,9 @@ class Member {
   double? respectGain = -1;
   double? fairFight = -1;
   bool? userWonOrDefended = false;
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNote = "";
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNoteColor = "";
   bool? hidden = false;
   bool pinned = false;

@@ -217,8 +217,11 @@ async function updateRestock(currentStockData: any, timestamp: number, source: s
       country: country,
       name: currentStockData.name,
       codeName: codeName,
+      id: currentStockData.id,
+      cost: currentStockData.cost,
       restock: restockTimestamp,
       quantity: currentStockData.quantity,
+      lastUpdated: timestamp,
       source: source,
     };
 
@@ -464,7 +467,7 @@ export const fillRestocks = onSchedule({
 // UTIL FUNCTION
 // Cleans up any periodicMap with more than 200 entries in case we have a leak in any other methods
 export const oneTimeClean = onSchedule({
-  schedule: "0 3 * * 0", // At 03:00 on Sunday
+  schedule: "0 3 * * *", // At 03:00 every day
   region: "us-east4",
   memory: "256MiB",
   timeoutSeconds: 300
@@ -596,6 +599,66 @@ export const deleteOldStocks = onSchedule({
     logger.error(`❌ Error during deleteOldStocks: ${error}`);
     logger.error(`❌ Stack trace: ${error.stack}`);
     throw new Error("Failed to delete old stocks.");
+  }
+
+  return null;
+});
+
+// Scheduled function to clean up obsolete restock entries
+export const cleanupObsoleteRestocks = onSchedule("0 2 * * *", async () => {
+  logger.info("🧹 Starting cleanup of obsolete restock entries...");
+
+  const firebaseAdmin = require("firebase-admin");
+  const db = firebaseAdmin.database();
+
+  try {
+    const ref = db.ref('stocks/restocks');
+    const snapshot = await ref.get();
+
+    if (!snapshot.exists()) {
+      logger.info("No restock data found in Realtime Database");
+      return null;
+    }
+
+    const restockData = snapshot.val();
+    const now = Math.floor(Date.now() / 1000);
+    const fifteenDaysAgo = now - (15 * 24 * 60 * 60);
+
+    const keysToDelete: string[] = [];
+    let totalEntries = 0;
+    let obsoleteEntries = 0;
+
+    Object.keys(restockData).forEach(codeNameKey => {
+      totalEntries++;
+      const stockData = restockData[codeNameKey];
+
+      // Delete if: no lastUpdated field OR lastUpdated is older than 15 days
+      if (!stockData.lastUpdated ||
+        typeof stockData.lastUpdated !== 'number' ||
+        stockData.lastUpdated < fifteenDaysAgo) {
+        keysToDelete.push(codeNameKey);
+        obsoleteEntries++;
+      }
+    });
+
+    if (keysToDelete.length > 0) {
+      const updates: { [key: string]: null } = {};
+      keysToDelete.forEach(key => {
+        updates[`stocks/restocks/${key}`] = null;
+      });
+
+      await db.ref().update(updates);
+
+      logger.info(`🧹 Cleanup completed: Deleted ${obsoleteEntries} obsolete entries out of ${totalEntries} total entries`);
+      logger.info(`📊 Remaining entries: ${totalEntries - obsoleteEntries}`);
+    } else {
+      logger.info(`✅ No obsolete entries found. All ${totalEntries} entries are up to date.`);
+    }
+
+    logger.info("✅ Cleanup completed successfully");
+  } catch (error) {
+    logger.error(`❌ Error during Realtime Database cleanup: ${error}`);
+    throw error;
   }
 
   return null;

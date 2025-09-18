@@ -21,6 +21,7 @@ import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/utils/country_check.dart';
 import 'package:torn_pda/utils/html_parser.dart';
@@ -180,10 +181,6 @@ class WarController extends GetxController {
       for (final t in targets) {
         // Try to match information with pre-existing targets
         if (t.playerId.toString() == memberId) {
-          member.personalNoteColor = t.personalNoteColor;
-          if (t.personalNote!.isNotEmpty) {
-            member.personalNote = t.personalNote;
-          }
           if (t.respectGain != -1) {
             member.respectGain = t.respectGain;
             member.fairFight = t.fairFight;
@@ -663,22 +660,6 @@ class WarController extends GetxController {
       member!.userWonOrDefended = userWonOrDefended.first;
     } else {
       member!.userWonOrDefended = true; // Placeholder
-    }
-  }
-
-  void setMemberNote(Member? changedMember, String note, String? color) {
-    // We are not updating the target directly, but instead looping for the correct one because
-    // after an attack the targets get updated several times: if the user wants to change the note
-    // right after the attack, the good target might have been replaced and the note does not get
-    // updated. Therefore, we just loop whenever the user submits the new text.
-    for (final f in factions) {
-      if (f.members!.keys.contains(changedMember!.memberId.toString())) {
-        f.members![changedMember.memberId.toString()]!.personalNote = note;
-        f.members![changedMember.memberId.toString()]!.personalNoteColor = color;
-        savePreferences();
-        update();
-        break;
-      }
     }
   }
 
@@ -1267,6 +1248,15 @@ class WarController extends GetxController {
 
   // Sorting function for MemberModel lists to be used in shareStats
   int compareMembers(Member a, Member b, WarSortType sortType) {
+    // Get the notes controller once for all note/color related operations
+    PlayerNotesController? notesProvider;
+    if (sortType == WarSortType.colorDes ||
+        sortType == WarSortType.colorAsc ||
+        sortType == WarSortType.notesDes ||
+        sortType == WarSortType.notesAsc) {
+      notesProvider = Get.find<PlayerNotesController>();
+    }
+
     switch (sortType) {
       case WarSortType.levelDes:
         return b.level!.compareTo(a.level!);
@@ -1305,20 +1295,36 @@ class WarController extends GetxController {
       case WarSortType.onlineAsc:
         return a.lastAction!.timestamp!.compareTo(b.lastAction!.timestamp!);
       case WarSortType.colorDes:
-        return b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase());
+        final aNote = notesProvider!.getNoteForPlayer(a.memberId.toString());
+        final bNote = notesProvider.getNoteForPlayer(b.memberId.toString());
+        final aColor = aNote?.color ?? '';
+        final bColor = bNote?.color ?? '';
+        return bColor.toLowerCase().compareTo(aColor.toLowerCase());
       case WarSortType.colorAsc:
-        return a.personalNoteColor!.toLowerCase().compareTo(b.personalNoteColor!.toLowerCase());
+        final aNote = notesProvider!.getNoteForPlayer(a.memberId.toString());
+        final bNote = notesProvider.getNoteForPlayer(b.memberId.toString());
+        final aColor = aNote?.color ?? '';
+        final bColor = bNote?.color ?? '';
+        return aColor.toLowerCase().compareTo(bColor.toLowerCase());
       case WarSortType.notesDes:
-        return b.personalNote!.toLowerCase().compareTo(a.personalNote!.toLowerCase());
+        final aNote = notesProvider!.getNoteForPlayer(a.memberId.toString());
+        final bNote = notesProvider.getNoteForPlayer(b.memberId.toString());
+        final aNoteText = aNote?.note ?? '';
+        final bNoteText = bNote?.note ?? '';
+        return bNoteText.toLowerCase().compareTo(aNoteText.toLowerCase());
       case WarSortType.notesAsc:
-        if (a.personalNote!.isEmpty && b.personalNote!.isNotEmpty) {
+        final aNote = notesProvider!.getNoteForPlayer(a.memberId.toString());
+        final bNote = notesProvider.getNoteForPlayer(b.memberId.toString());
+        final aNoteText = aNote?.note ?? '';
+        final bNoteText = bNote?.note ?? '';
+        if (aNoteText.isEmpty && bNoteText.isNotEmpty) {
           return 1;
-        } else if (a.personalNote!.isNotEmpty && b.personalNote!.isEmpty) {
+        } else if (aNoteText.isNotEmpty && bNoteText.isEmpty) {
           return -1;
-        } else if (a.personalNote!.isEmpty && b.personalNote!.isEmpty) {
+        } else if (aNoteText.isEmpty && bNoteText.isEmpty) {
           return 0;
         } else {
-          return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
+          return aNoteText.toLowerCase().compareTo(bNoteText.toLowerCase());
         }
       case WarSortType.bounty:
         int aBounty = a.bountyAmount ?? 0;
@@ -1650,5 +1656,15 @@ class WarController extends GetxController {
       default:
         return 9999;
     }
+  }
+
+  /// Check if a player ID is in any faction members list
+  bool isPlayerInWarFactions(String playerId) {
+    for (final faction in factions) {
+      if (faction.members!.containsKey(playerId)) {
+        return true;
+      }
+    }
+    return false;
   }
 }

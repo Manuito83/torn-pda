@@ -20,6 +20,7 @@ import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
@@ -89,8 +90,14 @@ class TargetsProvider extends ChangeNotifier {
       if (myNewTargetModel is TargetModel) {
         _getRespectFF(attacks, myNewTargetModel);
         _getTargetFaction(myNewTargetModel);
-        myNewTargetModel.personalNote = notes;
-        myNewTargetModel.personalNoteColor = notesColor;
+
+        // Save to centralized notes
+        if (notes != null && notes.isNotEmpty) {
+          final notesController = Get.find<PlayerNotesController>();
+          await notesController.setPlayerNote(
+              targetId!, notes, notesColor ?? '', myNewTargetModel.name ?? 'Unknown Player');
+        }
+
         myNewTargetModel.hospitalSort = targetsSortHospitalTime(myNewTargetModel);
         myNewTargetModel.timeAdded = DateTime.now().millisecondsSinceEpoch;
 
@@ -207,22 +214,6 @@ class TargetsProvider extends ChangeNotifier {
     }
   }
 
-  void setTargetNote(TargetModel? changedTarget, String? note, String? color) async {
-    // We are not updating the target directly, but instead looping for the correct one because
-    // after an attack the targets get updated several times: if the user wants to change the note
-    // right after the attack, the good target might have been replaced and the note does not get
-    // updated. Therefore, we just loop whenever the user submits the new text.
-    for (final tar in _targets) {
-      if (tar.playerId == changedTarget!.playerId) {
-        tar.personalNote = note;
-        tar.personalNoteColor = color;
-        await _saveTargetsSharedPrefs();
-        notifyListeners();
-        break;
-      }
-    }
-  }
-
   Future<bool> updateTarget({
     required TargetModel targetToUpdate,
     required dynamic attacks,
@@ -243,8 +234,6 @@ class TargetsProvider extends ChangeNotifier {
         _targets[_targets.indexOf(targetToUpdate)] = myUpdatedTargetModel;
         final newTarget = _targets[_targets.indexOf(myUpdatedTargetModel)];
         _updateResultAnimation(newTarget, true);
-        newTarget.personalNote = targetToUpdate.personalNote;
-        newTarget.personalNoteColor = targetToUpdate.personalNoteColor;
         newTarget.lastUpdated = DateTime.now();
         newTarget.hospitalSort = targetsSortHospitalTime(targetToUpdate);
 
@@ -290,12 +279,8 @@ class TargetsProvider extends ChangeNotifier {
             oldFF: _targets[i].fairFight,
           );
           _getTargetFaction(myUpdatedTargetModel);
-          final notes = _targets[i].personalNote;
-          final notesColor = _targets[i].personalNoteColor;
           _targets[i] = myUpdatedTargetModel;
           _updateResultAnimation(_targets[i], true);
-          _targets[i].personalNote = notes;
-          _targets[i].personalNoteColor = notesColor;
           _targets[i].lastUpdated = DateTime.now();
           _targets[i].hospitalSort = targetsSortHospitalTime(_targets[i]);
 
@@ -361,8 +346,6 @@ class TargetsProvider extends ChangeNotifier {
 
               // Update the existing target directly
               _targets[targetIndex] = attackedTarget;
-              _targets[targetIndex].personalNote = tar.personalNote;
-              _targets[targetIndex].personalNoteColor = tar.personalNoteColor;
               _targets[targetIndex].lastUpdated = DateTime.now();
               _targets[targetIndex].hospitalSort = targetsSortHospitalTime(attackedTarget);
 
@@ -456,7 +439,7 @@ class TargetsProvider extends ChangeNotifier {
   }
 
   void sortTargets(TargetSortType? sortType) async {
-    currentSort = sortType;
+    currentSort = sortType ?? TargetSortType.nameAsc;
     switch (sortType!) {
       case TargetSortType.levelDes:
         _targets.sort((a, b) => b.level!.compareTo(a.level!));
@@ -497,25 +480,46 @@ class TargetsProvider extends ChangeNotifier {
           }
         });
       case TargetSortType.colorDes:
-        _targets.sort((a, b) => b.personalNoteColor!.toLowerCase().compareTo(a.personalNoteColor!.toLowerCase()));
+        _targets.sort((a, b) {
+          final notesController = Get.find<PlayerNotesController>();
+          final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+          final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+          return (bNote?.color ?? '').toLowerCase().compareTo((aNote?.color ?? '').toLowerCase());
+        });
       case TargetSortType.colorAsc:
-        _targets.sort((a, b) => a.personalNoteColor!.toLowerCase().compareTo(b.personalNoteColor!.toLowerCase()));
+        _targets.sort((a, b) {
+          final notesController = Get.find<PlayerNotesController>();
+          final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+          final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+          return (aNote?.color ?? '').toLowerCase().compareTo((bNote?.color ?? '').toLowerCase());
+        });
       case TargetSortType.onlineDes:
         _targets.sort((a, b) => b.lastAction!.timestamp!.compareTo(a.lastAction!.timestamp!));
       case TargetSortType.onlineAsc:
         _targets.sort((a, b) => a.lastAction!.timestamp!.compareTo(b.lastAction!.timestamp!));
       case TargetSortType.notesDes:
-        _targets.sort((a, b) => b.personalNote!.toLowerCase().compareTo(a.personalNote!.toLowerCase()));
+        _targets.sort((a, b) {
+          final notesController = Get.find<PlayerNotesController>();
+          final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+          final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+          return (bNote?.note ?? '').toLowerCase().compareTo((aNote?.note ?? '').toLowerCase());
+        });
       case TargetSortType.notesAsc:
         _targets.sort((a, b) {
-          if (a.personalNote!.isEmpty && b.personalNote!.isNotEmpty) {
+          final notesController = Get.find<PlayerNotesController>();
+          final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+          final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+          final aText = aNote?.note ?? '';
+          final bText = bNote?.note ?? '';
+
+          if (aText.isEmpty && bText.isNotEmpty) {
             return 1;
-          } else if (a.personalNote!.isNotEmpty && b.personalNote!.isEmpty) {
+          } else if (aText.isNotEmpty && bText.isEmpty) {
             return -1;
-          } else if (a.personalNote!.isEmpty && b.personalNote!.isEmpty) {
+          } else if (aText.isEmpty && bText.isEmpty) {
             return 0;
           } else {
-            return a.personalNote!.toLowerCase().compareTo(b.personalNote!.toLowerCase());
+            return aText.toLowerCase().compareTo(bText.toLowerCase());
           }
         });
       case TargetSortType.bounty:
@@ -545,11 +549,18 @@ class TargetsProvider extends ChangeNotifier {
 
   String exportTargets() {
     final output = <TargetBackup>[];
+
     for (final tar in _targets) {
+      final notesController = Get.find<PlayerNotesController>();
+      final centralizedNote = notesController.getNoteForPlayer(tar.playerId.toString());
+      tar.noteBackup = centralizedNote?.note ?? "";
+      tar.colorBackup = centralizedNote?.color ?? "";
+
       final export = TargetBackup();
       export.id = tar.playerId;
-      export.notes = tar.personalNote;
-      export.notesColor = tar.personalNoteColor;
+      export.notes = tar.noteBackup;
+      export.notesColor = tar.colorBackup;
+
       output.add(export);
     }
     return targetsBackupModelToJson(TargetsBackupModel(targetBackup: output));
@@ -614,30 +625,10 @@ class TargetsProvider extends ChangeNotifier {
 
   Future<void> restorePreferences() async {
     // Target list
-    bool needToSave = false;
     List<String> jsonTargets = await Prefs().getTargetsList();
     for (final jTar in jsonTargets) {
       final thisTarget = targetModelFromJson(jTar);
-
-      // In v1.8.5 we change from blue to orange and we need to do the conversion
-      // here. This can be later removed safely at some point.
-      if (thisTarget.personalNoteColor == "blue") {
-        thisTarget.personalNoteColor = "orange";
-        needToSave = true;
-      }
-
-      // In v2.3.0 we adapt colors to be as per YATA, with black/white sorting at the end.
-      // This can be later removed safely at some point.
-      if (thisTarget.personalNoteColor == "") {
-        thisTarget.personalNoteColor = "z";
-        needToSave = true;
-      }
-
       _targets.add(thisTarget);
-    }
-
-    if (needToSave) {
-      await _saveTargetsSharedPrefs();
     }
 
     // Target sort
@@ -701,7 +692,15 @@ class TargetsProvider extends ChangeNotifier {
     }).toList();
 
     for (var lala in filteredBackup) {
-      _targets.add(targetModelFromJson(lala));
+      final target = targetModelFromJson(lala);
+      _targets.add(target);
+
+      // Also restore notes to centralized repository
+      if (target.noteBackup != null && target.noteBackup!.isNotEmpty) {
+        final notesController = Get.find<PlayerNotesController>();
+        await notesController.setPlayerNote(
+            target.playerId.toString(), target.noteBackup!, target.colorBackup ?? '', target.name ?? 'Unknown Player');
+      }
     }
 
     await _saveTargetsSharedPrefs();
@@ -819,5 +818,10 @@ class TargetsProvider extends ChangeNotifier {
       return myNewTargetModel.status!.until!;
     }
     return 0;
+  }
+
+  /// Check if a player ID is in the targets list
+  bool isPlayerInTargets(String playerId) {
+    return _targets.any((target) => target.playerId.toString() == playerId);
   }
 }

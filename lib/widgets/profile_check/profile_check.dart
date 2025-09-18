@@ -146,7 +146,11 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
               ],
             ),
           ),
-        if (_settingsProvider.notesWidgetEnabledProfile) ProfileCheckNotes(profileId: widget.profileId.toString()),
+        if (_settingsProvider.notesWidgetEnabledProfile)
+          ProfileCheckNotes(
+            profileId: widget.profileId.toString(),
+            playerName: _playerName,
+          ),
         if (_networthWidgetEnabled) _networthWidget,
         if (_isTornPda) _tornPdaWidget,
         // Container so that the background color can be changed for certain widgets

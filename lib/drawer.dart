@@ -8,6 +8,7 @@ import 'dart:math' as math;
 // Package imports:
 import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -55,6 +56,7 @@ import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/periodic_execution_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/sendbird_controller.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/stakeouts_controller.dart';
@@ -74,6 +76,9 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
+import 'package:torn_pda/widgets/drawer/authentication_loading_widget.dart';
+import 'package:torn_pda/widgets/drawer/authentication_timeout_widget.dart';
+import 'package:torn_pda/widgets/drawer/connectivity_ui.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'utils/dialog_queue.dart';
@@ -179,6 +184,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // Connectivity delay tracking
   bool _hasWaitedInitialDelay = false;
 
+  // Authentication error control (similar to connectivity)
+  bool _hasAuthenticationError = false;
+  bool _authenticationTimedOut = false;
+  final Completer<void> _authenticationTimeoutCompleter = Completer<void>();
+
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
   static const bool _debugShowAllDialogs = kDebugMode && false;
@@ -188,6 +198,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
+    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
     // Start stats counting
     _statsController.logCheckIn();
@@ -235,6 +249,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     });
     // ENDS QUICK ACTIONS
+
+    // Initialize player notes migration v3.9.1
+    // TODO: remove
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final playerNotesController = Get.find<PlayerNotesController>();
+        playerNotesController.initializeMigration();
+      } catch (e) {
+        log('Could not initialize player notes migration: $e');
+      }
+    });
 
     _allowSectionsWithoutKey = [
       _settingsPosition,
@@ -1742,7 +1767,30 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                 body: Container(
                   color: _themeProvider!.canvas,
                   child: Center(
-                    child: _buildConnectivityUI(),
+                    child: _authenticationTimedOut
+                        ? AuthenticationTimeoutWidget(
+                            themeProvider: _themeProvider!,
+                            webViewProvider: _webViewProvider,
+                            onUnderstoodPressed: () {
+                              setState(() {
+                                _authenticationTimedOut = false;
+                                _hasAuthenticationError = false;
+                              });
+                              // Complete to allow _initializeAndHandleFirebaseAuth to continue
+                              if (!_authenticationTimeoutCompleter.isCompleted) {
+                                _authenticationTimeoutCompleter.complete();
+                              }
+                            },
+                          )
+                        : _hasAuthenticationError
+                            ? AuthenticationLoadingWidget(
+                                themeProvider: _themeProvider!,
+                                webViewProvider: _webViewProvider,
+                              )
+                            : ConnectivityUI(
+                                themeProvider: _themeProvider!,
+                                hasWaitedInitialDelay: _hasWaitedInitialDelay,
+                              ),
                   ),
                 ),
               ),
@@ -1816,59 +1864,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               ),
             ),
           );
-        }
-      },
-    );
-  }
-
-  Widget _buildConnectivityUI() {
-    // During the first second, show basic container
-    if (!_hasWaitedInitialDelay) {
-      return const SizedBox.shrink();
-    }
-
-    // After 1 second, check connectivity status using ValueListenableBuilder
-    return ValueListenableBuilder<bool>(
-      valueListenable: ConnectivityHandler.instance.hasConnection,
-      builder: (context, isConnected, child) {
-        if (!isConnected) {
-          // No connectivity after 1 second - show the message
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 20),
-              const Text(
-                '📡',
-                style: TextStyle(fontSize: 40),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 8),
-                  Text(
-                    'No connection found, please wait!',
-                    style: TextStyle(
-                      color: _themeProvider!.mainText,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                'Torn PDA needs Internet access to continue',
-                style: TextStyle(
-                  color: _themeProvider!.mainText.withValues(alpha: 0.7),
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          );
-        } else {
-          // Connectivity is fine, show normal loading
-          return const SizedBox.shrink();
         }
       },
     );
@@ -2286,14 +2281,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   Future _loadInitPreferences() async {
     // Set up SettingsProvider so that user preferences are applied
     // ## Leave this first as other options below need this to be initialized ##
-    _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     await _settingsProvider.loadPreferences();
 
     // Set up UserScriptsProvider so that user preferences are applied
-    _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     await _userScriptsProvider.loadPreferencesAndScripts();
 
-    _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
     // Join a stream which will receive a callback from main if applicable whenever the back button is pressed
     _willPopShouldOpenDrawer = _settingsProvider.willPopShouldOpenDrawerStream.stream;
     _willPopSubscription = _willPopShouldOpenDrawer.listen((event) {
@@ -2429,6 +2421,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         name: "Drawer AUTH",
       );
 
+      // Analytics: Auth success immediately
+      FirebaseAnalytics.instance.logEvent(
+        name: 'auth_restoration_success',
+        parameters: {
+          'method': 'immediate',
+          'time_ms': 0,
+          'success': 'true',
+          'platform': Platform.isIOS ? 'iOS' : 'Android',
+        },
+      );
+
       _userUID = user.uid;
       FirestoreHelper().setUID(_userUID);
       _drawerUserChecked = true;
@@ -2436,71 +2439,123 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
 
     log(
-      "Drawer: No user found. Listening to authStateChanges...",
+      "Drawer: No user found on first attempt. Waiting 2 seconds before second attempt...",
       name: "Drawer AUTH",
     );
 
+    // Second attempt after 2 seconds
+    await Future.delayed(const Duration(seconds: 2));
+    user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      log(
+        "Drawer: Session restored on second attempt. UID: ${user.uid}",
+        name: "Drawer AUTH",
+      );
+
+      // Analytics: Auth success after 2 seconds
+      FirebaseAnalytics.instance.logEvent(
+        name: 'auth_restoration_success',
+        parameters: {
+          'method': 'second_attempt',
+          'time_ms': 2000,
+          'success': 'true',
+          'platform': Platform.isIOS ? 'iOS' : 'Android',
+        },
+      );
+
+      _userUID = user.uid;
+      FirestoreHelper().setUID(_userUID);
+      _drawerUserChecked = true;
+      return;
+    }
+
+    log(
+      "Drawer: No user found after second attempt. Listening to authStateChanges...",
+      name: "Drawer AUTH",
+    );
+
+    // Activate authentication error UI and start the 60-second process
+    if (mounted) {
+      setState(() {
+        _hasAuthenticationError = true;
+      });
+    }
+
     final stopwatch = Stopwatch()..start();
-    Timer? waitingMessageTimer;
 
     try {
-      waitingMessageTimer = Timer(const Duration(seconds: 2), () {
-        BotToast.showText(
-          clickClose: true,
-          text: "Authentication with Firebase is taking longer than expected.\n\n"
-              "Please wait, Torn PDA will try for another 15 seconds.",
-          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-          contentColor: Colors.orange,
-          duration: const Duration(seconds: 15),
-          contentPadding: const EdgeInsets.all(10),
-        );
-      });
-
       user = await FirebaseAuth.instance
           .authStateChanges()
           .firstWhere((user) => user != null)
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 60));
 
       log(
         "Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
         name: "Drawer AUTH",
       );
 
+      // Analytics: Auth success via slow path with timing
+      FirebaseAnalytics.instance.logEvent(
+        name: 'auth_restoration_success',
+        parameters: {
+          'method': 'auth_state_changes',
+          'time_ms': stopwatch.elapsedMilliseconds,
+          'success': 'true',
+          'platform': Platform.isIOS ? 'iOS' : 'Android',
+        },
+      );
+
       await FirebaseCrashlytics.instance.recordError(
-        Exception('Auth Restoration: Slow path success'),
+        Exception('Auth Restoration: slow path success'),
         null,
-        reason: 'Auth Restoration: Slow path success',
+        reason: 'Auth Restoration: slow path success',
         information: ['Restoration time: ${stopwatch.elapsedMilliseconds} ms', 'Final UID: ${user.uid}'],
         fatal: false,
       );
 
       _userUID = user.uid;
       FirestoreHelper().setUID(_userUID);
+
+      // Reset authentication error UI on success
+      if (mounted) {
+        setState(() {
+          _hasAuthenticationError = false;
+        });
+      }
     } on TimeoutException {
       log(
-        "Drawer: Timeout reached after 20 seconds. Firebase session not restored. Informing user.",
+        "Drawer: Timeout reached after 60 seconds. Firebase session not restored. Informing user.",
         name: "Drawer AUTH",
       );
 
-      final String fullApiKey = UserHelper.apiKey;
+      // Analytics: Auth timeout failure
+      FirebaseAnalytics.instance.logEvent(
+        name: 'auth_restoration_failure',
+        parameters: {
+          'method': 'timeout',
+          'time_ms': 60000,
+          'success': 'false',
+          'reason': 'timeout_60s',
+          'platform': Platform.isIOS ? 'iOS' : 'Android',
+        },
+      );
 
       await FirebaseCrashlytics.instance.recordError(
-        Exception('Auth Restoration: Timeout after 20 seconds'),
+        Exception('Auth Restoration: Timeout after 60 seconds'),
         StackTrace.current,
         reason: 'Auth Restoration: Timeout',
-        information: ['Torn API Key: $fullApiKey'], // Sending full key
+        information: ['API: ${UserHelper.apiKey}'],
         fatal: true,
       );
 
-      BotToast.showText(
-        clickClose: true,
-        text: "A problem was found with your Firebase user.\n\n"
-            "Please reload your API key in Settings, then kill and restart the app.",
-        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: Colors.red,
-        duration: const Duration(seconds: 8),
-        contentPadding: const EdgeInsets.all(10),
-      );
+      // Activate final timeout UI
+      if (mounted) {
+        setState(() {
+          _authenticationTimedOut = true;
+          _hasAuthenticationError = false;
+        });
+      }
     } catch (e, s) {
       log(
         "Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
@@ -2513,9 +2568,21 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         reason: 'Auth Restoration: Unexpected error',
         fatal: true,
       );
+
+      // Activate final timeout UI for unexpected errors
+      if (mounted) {
+        setState(() {
+          _authenticationTimedOut = true;
+          _hasAuthenticationError = false;
+        });
+      }
     } finally {
-      waitingMessageTimer?.cancel();
       stopwatch.stop();
+    }
+
+    // If authentication timed out, wait for user to press "Understood" button
+    if (_authenticationTimedOut) {
+      await _authenticationTimeoutCompleter.future;
     }
 
     _drawerUserChecked = true;

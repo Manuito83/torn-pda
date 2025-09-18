@@ -21,7 +21,7 @@ import { deactivateStale, deleteStale } from "./stale_users";
 import { sendTravelNotifications } from "./travel_check";
 import { sendRefillNotifications } from "./refills";
 import { evaluateRetals } from "./retals";
-import { checkStocks, fillRestocks, oneTimeClean, deleteOldStocks } from "./foreign_stocks";
+import { checkStocks, fillRestocks, oneTimeClean, deleteOldStocks, cleanupObsoleteRestocks } from "./foreign_stocks";
 import { sendLootRangersNotification } from "./loot_rangers";
 import { sendAssistMessage } from "./faction_assist";
 import { saveUserPrefs, getUserPrefs, deleteUserPrefs, setOwnSharePrefs, getImportShare } from "./prefs_backup";
@@ -69,7 +69,8 @@ export const stocks = {
   checkStocks: checkStocks,
   fillRestocks: fillRestocks,
   oneTimeClean: oneTimeClean,
-  deleteOldStocks: deleteOldStocks
+  deleteOldStocks: deleteOldStocks,
+  cleanupObsoleteRestocks: cleanupObsoleteRestocks
 };
 
 export const lootRangers = {

@@ -22,8 +22,12 @@ class FriendModel {
   bool justUpdatedWithSuccess = false;
 
   // External, exported/imported to Shared Preferences!
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNote;
+  @Deprecated('Use PlayerNotesController instead')
   String? personalNoteColor;
+  String? noteBackup;
+  String? colorBackup;
   DateTime? lastUpdated;
   bool? hasFaction;
 
@@ -32,6 +36,8 @@ class FriendModel {
     // so we also have to initialize them below
     this.personalNote,
     this.personalNoteColor,
+    this.noteBackup,
+    this.colorBackup,
     this.lastUpdated,
     this.hasFaction,
     /////////////////
@@ -92,6 +98,8 @@ class FriendModel {
   factory FriendModel.fromJson(Map<String, dynamic> json) => FriendModel(
         personalNote: json["personalNote"] ?? '',
         personalNoteColor: json["personalNoteColor"] ?? '',
+        noteBackup: json["noteBackup"],
+        colorBackup: json["colorBackup"],
         lastUpdated: json["lastUpdated"] == null ? DateTime.now() : DateTime.parse(json["lastUpdated"]),
         hasFaction: json["hasFaction"] ?? false,
         rank: json["rank"],
@@ -124,6 +132,8 @@ class FriendModel {
   Map<String, dynamic> toJson() => {
         "personalNote": personalNote,
         "personalNoteColor": personalNoteColor,
+        "noteBackup": noteBackup,
+        "colorBackup": colorBackup,
         "lastUpdated": lastUpdated!.toIso8601String(),
         "hasFaction": hasFaction,
         "rank": rank,

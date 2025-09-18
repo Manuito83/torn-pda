@@ -35,7 +35,7 @@ android {
 
     defaultConfig {
         applicationId "com.manuito.tornpda"
-        minSdkVersion 23
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion 36 // See android/build.gradle when updating as well, for packages bug fix (if still needed)
         multiDexEnabled true
         versionCode flutterVersionCode.toInteger()
