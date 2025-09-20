@@ -3639,7 +3639,12 @@ class SettingsPageState extends State<SettingsPage> {
             final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
             // Only sign in if there is currently no user registered (to avoid duplicates)
             if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
-              final User newFirebaseUser = await (firebaseAuth.signInAnon());
+              final User? newFirebaseUser = await (firebaseAuth.signInAnon());
+
+              if (newFirebaseUser == null) {
+                throw Exception("Firebase anonymous sign-in failed");
+              }
+
               await FirestoreHelper().setUID(newFirebaseUser.uid);
               // Returns UID to Drawer so that it can be passed to settings
               widget.changeUID(newFirebaseUser.uid);

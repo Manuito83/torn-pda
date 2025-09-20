@@ -10,6 +10,7 @@ import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -29,6 +30,7 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:receive_intent/receive_intent.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 // Project imports:
+import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -2352,6 +2354,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  // ## Firebase Auth Restoration Process ##
+  // - Post-import case: Create new anonymous user if needed after local backup import
+  // - Immediate check: Try to get current Firebase user (fastest path)
+  // - App update re-init: For updates, try Firebase.initializeApp again to fix initialization issues
+  // - Start retries UI
+  // - Retries: 4 attempts with exponential increase (2s, 4s, 8s, 16s) + Firebase re-init + auth state refresh
+  // - Final attempt: Listen to authStateChanges for remaining 30s timeout period
+  // - Show timeout UI
   Future<void> _initializeAndHandleFirebaseAuth() async {
     if (Platform.isWindows || _drawerUserChecked) {
       return;
@@ -2361,37 +2371,69 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // (so be leave this as a reminder)
     if (!UserHelper.isApiKeyValid) return;
 
+    // Add extra delay for app updates to ensure Firebase is fully initialized
+    if (appHasBeenUpdated) {
+      await Future.delayed(const Duration(seconds: 1));
+    }
+
     // Case 1: Post-import user creation
     if (justImportedFromLocalBackup) {
       if (FirebaseAuth.instance.currentUser == null) {
         log(
-          "Drawer: Post-import check. Firebase user is null, proceeding with new anonymous sign-in.",
-          name: "Drawer AUTH",
+          "🔒 Drawer: Post-import check. Firebase user is null, proceeding with new anonymous sign-in.",
+          name: "AUTH CHECKS",
         );
 
         try {
-          final User newAnonUser = await (firebaseAuth.signInAnon());
-          _userUID = newAnonUser.uid;
-          FirestoreHelper().setUID(_userUID);
-          await _updateFirebaseDetails();
+          final User? newAnonUser = await (firebaseAuth.signInAnon(
+            isAppUpdate: appHasBeenUpdated,
+            maxRetries: appHasBeenUpdated ? 5 : 3,
+          ));
 
-          // This dialog can be shown here with no postframe callback as it is inside
-          // of the Preferences Completer, so the main FutureBuilder hasn't loaded
-          await showDialog(
-            useRootNavigator: false,
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => const PrefsLocalAfterImportDialog(),
-          );
+          if (newAnonUser != null) {
+            _userUID = newAnonUser.uid;
+            FirestoreHelper().setUID(_userUID);
+            await _updateFirebaseDetails();
 
-          log(
-            "Drawer: Firebase user created successfully after local import. UID: ${newAnonUser.uid}",
-            name: "Drawer AUTH",
-          );
+            // This dialog can be shown here with no postframe callback as it is inside
+            // of the Preferences Completer, so the main FutureBuilder hasn't loaded
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const PrefsLocalAfterImportDialog(),
+            );
+
+            log(
+              "🔒 Drawer: Firebase user created successfully after local import. UID: ${newAnonUser.uid}",
+              name: "AUTH CHECKS",
+            );
+          } else {
+            log(
+              "🔒 Drawer: CRITICAL - signInAnon returned null after local backup import.",
+              name: "AUTH CHECKS",
+            );
+
+            await FirebaseCrashlytics.instance.recordError(
+              Exception('Auth Restoration: signInAnon returned null after import'),
+              StackTrace.current,
+              reason: 'Auth Restoration: Post-import sign-in returned null',
+            );
+
+            BotToast.showText(
+              clickClose: true,
+              text: "A critical error occurred while creating your profile after the import.\n\n"
+                  "Please check your internet connection, restart the app, and reload your API key in Settings.",
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.red,
+              duration: const Duration(seconds: 10),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
         } catch (e, s) {
           log(
-            "Drawer: CRITICAL - Failed to sign-in anonymously after local backup import. Error: $e",
-            name: "Drawer AUTH",
+            "🔒 Drawer: CRITICAL - Failed to sign-in anonymously after local backup import. Error: $e",
+            name: "AUTH CHECKS",
           );
 
           await FirebaseCrashlytics.instance.recordError(e, s, reason: 'Auth Restoration: Post-import sign-in failed');
@@ -2407,8 +2449,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       } else {
         log(
-          "Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
-          name: "Drawer AUTH",
+          "🔒 Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
+          name: "AUTH CHECKS",
         );
         _userUID = FirebaseAuth.instance.currentUser!.uid;
         FirestoreHelper().setUID(_userUID);
@@ -2423,8 +2465,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (user != null) {
       log(
-        "Drawer: Session restored immediately. UID: ${user.uid}",
-        name: "Drawer AUTH",
+        "🔒 Drawer: Session restored immediately. UID: ${user.uid}",
+        name: "AUTH CHECKS",
       );
 
       // Analytics: Auth success immediately
@@ -2435,6 +2477,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           'time_ms': 0,
           'success': 'true',
           'platform': Platform.isIOS ? 'iOS' : 'Android',
+          'app_updated': appHasBeenUpdated.toString(),
         },
       );
 
@@ -2444,49 +2487,129 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       return;
     }
 
-    log(
-      "Drawer: No user found on first attempt. Waiting 2 seconds before second attempt...",
-      name: "Drawer AUTH",
-    );
-
-    // Second attempt after 2 seconds
-    await Future.delayed(const Duration(seconds: 2));
-    user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
+    // For app updates, try Firebase.initializeApp again to ensure proper initialization
+    if (appHasBeenUpdated) {
       log(
-        "Drawer: Session restored on second attempt. UID: ${user.uid}",
-        name: "Drawer AUTH",
+        "🔒 Drawer: App updated and no immediate user found, re-initializing Firebase...",
+        name: "AUTH CHECKS",
       );
+      try {
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+        user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          log(
+            "🔒 Drawer: Session restored after Firebase re-initialization. UID: ${user.uid}",
+            name: "AUTH CHECKS",
+          );
 
-      // Analytics: Auth success after 2 seconds
-      FirebaseAnalytics.instance.logEvent(
-        name: 'auth_restoration_success',
-        parameters: {
-          'method': 'second_attempt',
-          'time_ms': 2000,
-          'success': 'true',
-          'platform': Platform.isIOS ? 'iOS' : 'Android',
-        },
-      );
+          FirebaseAnalytics.instance.logEvent(
+            name: 'auth_restoration_success',
+            parameters: {
+              'method': 'firebase_reinit',
+              'time_ms': 0,
+              'success': 'true',
+              'platform': Platform.isIOS ? 'iOS' : 'Android',
+              'app_updated': 'true',
+            },
+          );
 
-      _userUID = user.uid;
-      FirestoreHelper().setUID(_userUID);
-      _drawerUserChecked = true;
-      return;
+          _userUID = user.uid;
+          FirestoreHelper().setUID(_userUID);
+          _drawerUserChecked = true;
+          return;
+        }
+      } catch (e) {
+        log(
+          "🔒 Drawer: Firebase re-initialization failed: $e",
+          name: "AUTH CHECKS",
+        );
+        // Continue with normal flow
+      }
     }
 
     log(
-      "Drawer: No user found after second attempt. Listening to authStateChanges...",
-      name: "Drawer AUTH",
+      "🔒 Drawer: No user found on first attempt. Trying enhanced retry with exponential backoff...",
+      name: "AUTH CHECKS",
     );
 
-    // Activate authentication error UI and start the 60-second process
     if (mounted) {
       setState(() {
         _hasAuthenticationError = true;
       });
     }
+
+    // Retry with exponential increase for Firebase Auth
+    const int maxRetries = 4;
+    final retryStopwatch = Stopwatch()..start();
+
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      final delaySeconds = math.pow(2, attempt).toInt();
+
+      log(
+        "🔒 Drawer: Retry attempt $attempt/$maxRetries after ${delaySeconds}s delay (app_updated: $appHasBeenUpdated)",
+        name: "AUTH CHECKS",
+      );
+
+      await Future.delayed(Duration(seconds: delaySeconds));
+
+      // Try Firebase.initializeApp on each retry attempt
+      try {
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      } catch (e) {
+        log("🔒 Drawer: Firebase re-initialization failed on retry attempt $attempt: $e", name: "AUTH CHECKS");
+      }
+
+      // Force refresh auth state
+      try {
+        await FirebaseAuth.instance.authStateChanges().first.timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => null,
+            );
+      } catch (e) {
+        log("🔒 Drawer: Auth state refresh failed on attempt $attempt: $e", name: "AUTH CHECKS");
+      }
+
+      user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        final elapsedMs = retryStopwatch.elapsedMilliseconds;
+        log(
+          "🔒 Drawer: Session restored after ${elapsedMs}ms on attempt $attempt. UID: ${user.uid}",
+          name: "AUTH CHECKS",
+        );
+
+        FirebaseAnalytics.instance.logEvent(
+          name: 'auth_restoration_success',
+          parameters: {
+            'method': 'retry_exponential_backoff',
+            'time_ms': elapsedMs,
+            'attempt': attempt,
+            'success': 'true',
+            'platform': Platform.isIOS ? 'iOS' : 'Android',
+            'app_updated': appHasBeenUpdated.toString(),
+          },
+        );
+
+        _userUID = user.uid;
+        FirestoreHelper().setUID(_userUID);
+        _drawerUserChecked = true;
+        retryStopwatch.stop();
+
+        // Reset authentication error UI on success durante retry
+        if (mounted) {
+          setState(() {
+            _hasAuthenticationError = false;
+          });
+        }
+
+        return;
+      }
+    }
+
+    log(
+      "🔒 Drawer: No user found after enhanced retry. Continuing with authStateChanges for remaining time...",
+      name: "AUTH CHECKS",
+    );
 
     final stopwatch = Stopwatch()..start();
 
@@ -2494,11 +2617,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       user = await FirebaseAuth.instance
           .authStateChanges()
           .firstWhere((user) => user != null)
-          .timeout(const Duration(seconds: 60));
+          .timeout(const Duration(seconds: 30));
 
       log(
-        "Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
-        name: "Drawer AUTH",
+        "🔒 Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
+        name: "AUTH CHECKS",
       );
 
       // Analytics: Auth success via slow path with timing
@@ -2509,6 +2632,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           'time_ms': stopwatch.elapsedMilliseconds,
           'success': 'true',
           'platform': Platform.isIOS ? 'iOS' : 'Android',
+          'app_updated': appHasBeenUpdated.toString(),
         },
       );
 
@@ -2531,8 +2655,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     } on TimeoutException {
       log(
-        "Drawer: Timeout reached after 60 seconds. Firebase session not restored. Informing user.",
-        name: "Drawer AUTH",
+        "🔒 Drawer: Timeout reached after 60 seconds total (30s retry + 30s authStateChanges). Firebase session not restored. Informing user.",
+        name: "AUTH CHECKS",
       );
 
       // Analytics: Auth timeout failure
@@ -2540,15 +2664,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         name: 'auth_restoration_failure',
         parameters: {
           'method': 'timeout',
-          'time_ms': 60000,
+          'time_ms': 60000, // Total time (30s retry + 30s authStateChanges)
           'success': 'false',
-          'reason': 'timeout_60s',
+          'reason': 'timeout_60s_total',
           'platform': Platform.isIOS ? 'iOS' : 'Android',
+          'app_updated': appHasBeenUpdated.toString(),
         },
       );
 
       await FirebaseCrashlytics.instance.recordError(
-        Exception('Auth Restoration: Timeout after 60 seconds'),
+        Exception('Auth Restoration: Timeout after 60 seconds total (30s retry + 30s authStateChanges)'),
         StackTrace.current,
         reason: 'Auth Restoration: Timeout',
         information: ['API: ${UserHelper.apiKey}'],
@@ -2564,8 +2689,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     } catch (e, s) {
       log(
-        "Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
-        name: "Drawer AUTH",
+        "🔒 Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
+        name: "AUTH CHECKS",
       );
 
       await FirebaseCrashlytics.instance.recordError(
