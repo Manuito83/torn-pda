@@ -25,12 +25,10 @@ import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shared_preferences/util/legacy_to_async_migration_util.dart';
+import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:toastification/toastification.dart';
 // Project imports:
@@ -76,12 +74,13 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.9.2';
-const String androidCompilation = '580';
-const String iosCompilation = '580';
+const String androidCompilation = '581';
+const String iosCompilation = '581';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
 bool appHasBeenUpdated = false;
+bool showEmergencyDataRecoveryToast = false;
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -167,30 +166,8 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  // ==================== MIGRRATION TO SHARED PREFS ASYNC v3.8.3 ====================
-  const SharedPreferencesOptions sharedPreferencesOptions = SharedPreferencesOptions();
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  await migrateLegacySharedPreferencesToSharedPreferencesAsyncIfNecessary(
-    legacySharedPreferencesInstance: prefs,
-    sharedPreferencesAsyncOptions: sharedPreferencesOptions,
-    migrationCompletedKey: 'pda_prefs_migrationCompleted',
-  );
-  // ================================ END MIGRATION ==================================
-
-  lastSavedAppCompilation = await Prefs().getAppCompilation();
-  final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
-  if (lastSavedAppCompilation.isNotEmpty) {
-    if (lastSavedAppCompilation != currentCompilation) {
-      appHasBeenUpdated = true;
-      log("App has been updated from $lastSavedAppCompilation to $currentCompilation");
-
-      // Save the new compilation
-      await Prefs().setAppCompilation(currentCompilation);
-    }
-  } else {
-    // Save the new compilation
-    await Prefs().setAppCompilation(currentCompilation);
-  }
+  // Robust initialization of app compilation with backup fallback
+  await _initializeAppCompilation();
 
   if (Platform.isIOS) {
     final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
@@ -202,11 +179,7 @@ Future<void> main() async {
   // Check for a pending local backup and import it
   justImportedFromLocalBackup = await PrefsBackupService.importIfScheduled();
 
-  // START ## Force splash screen to stay on until we get essential start-up data
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
   await _shouldSyncDeviceTheme(widgetsBinding);
-  FlutterNativeSplash.remove();
-  // END ## Release splash screen
 
   // Avoid screen lock when testing in real device
   if ((kDebugMode || kProfileMode) && enableWakelockForDebug) {
@@ -379,7 +352,6 @@ Future<void> main() async {
         ChangeNotifierProvider<ThemeProvider>(create: (context) => ThemeProvider()),
         ChangeNotifierProvider<SettingsProvider>(create: (context) => SettingsProvider()),
         ChangeNotifierProvider<FriendsProvider>(create: (context) => FriendsProvider()),
-        ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
         ChangeNotifierProvider<CrimesProvider>(create: (context) => CrimesProvider()),
         ChangeNotifierProvider<QuickItemsProvider>(create: (context) => QuickItemsProvider()),
         ChangeNotifierProvider<QuickItemsProviderFaction>(create: (context) => QuickItemsProviderFaction()),
@@ -389,6 +361,7 @@ Future<void> main() async {
         ChangeNotifierProvider<TacProvider>(create: (context) => TacProvider()),
         ChangeNotifierProvider<TerminalProvider>(create: (context) => TerminalProvider()),
         ChangeNotifierProvider<WebViewProvider>(create: (context) => WebViewProvider()),
+        ChangeNotifierProvider<UserScriptsProvider>(create: (context) => UserScriptsProvider()),
 
         // Native login
         ChangeNotifierProvider<NativeAuthProvider>(create: (context) => NativeAuthProvider()),
@@ -728,6 +701,86 @@ class AppBorderState extends State<AppBorder> {
         ),
       );
     });
+  }
+}
+
+/// Initialization of app compilation with backup fallback
+/// (we are trying to avoid issues with SharedPreferences corruption/loss after app updates,
+///  as it is difficult to discern if shared prefs take longer if it's really a new install)
+///    1. Attempt multiple retries with SharedPreferences
+///    2. If the retrieved compilation is empty, check the backup db (Sembast db)
+///    2a. If backup db has a value, it's not a first install, but Prefs are failing >> show a warning
+///        but still mark save the lastSavedAppCompilation with the old or new value if we can identify
+///        that the app has been updated (this way, at least scripts won't be lost)
+///    3. If this is the first app run, save the current compilation (auto-initializes Sembast db)
+Future<void> _initializeAppCompilation() async {
+  final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+
+  // 1. Retry logic for SharedPrefs (we use [lastSavedAppCompilation] as it's one of the first things we need
+  //    from Prefs, to assess whether SharedPrefs are working)
+  const int maxRetries = 10;
+  const Duration retryDelay = Duration(milliseconds: 200);
+
+  for (int attempt = 1; attempt <= maxRetries; attempt++) {
+    lastSavedAppCompilation = await Prefs().getAppCompilation();
+    if (lastSavedAppCompilation.isNotEmpty) {
+      log("📜 App compilation retrieved successfully on attempt $attempt: '$lastSavedAppCompilation'");
+      break;
+    }
+
+    if (attempt < maxRetries) {
+      log("📜 App compilation empty on attempt $attempt, retrying in ${retryDelay.inMilliseconds}ms...");
+      await Future.delayed(retryDelay);
+    } else {
+      log("📜 WARNING: App compilation retrieval failed after $maxRetries attempts");
+    }
+  }
+
+  // 2. If empty, check for discrepancies between SharedPrefs and backup
+  if (lastSavedAppCompilation.isEmpty) {
+    final String? backupCompilation = await SembastDatabase.getAppCompilation();
+
+    if (backupCompilation != null && backupCompilation.isNotEmpty) {
+      log("📜 DISCREPANCY: SharedPrefs empty but backup has '$backupCompilation'");
+
+      // Show recovery toast in Drawer
+      showEmergencyDataRecoveryToast = true;
+
+      // Save in both storages
+      await _setAppCompilation(backupCompilation);
+    }
+  }
+
+  // 3. Handle app updates and first run
+  // App update:
+  if (lastSavedAppCompilation.isNotEmpty) {
+    if (lastSavedAppCompilation != currentCompilation) {
+      appHasBeenUpdated = true;
+      log("📜 App updated: $lastSavedAppCompilation → $currentCompilation");
+      await _setAppCompilation(currentCompilation);
+    }
+  }
+  // First app run:
+  else {
+    await _setAppCompilation(currentCompilation);
+  }
+}
+
+Future<void> _setAppCompilation(String value) async {
+  try {
+    // Save to both storages
+    await Future.wait([
+      Prefs().setAppCompilation(value), // SharedPreferences
+      SembastDatabase.saveAppCompilation(value), // Sembast db
+    ]);
+
+    // Update global variable
+    lastSavedAppCompilation = value;
+    log("📜 App compilation saved to both storages: '$value'");
+  } catch (e) {
+    log("📜 Error saving app compilation: $e");
+    // Still update the global variable even if storage fails
+    lastSavedAppCompilation = value;
   }
 }
 

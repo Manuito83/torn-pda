@@ -415,6 +415,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     await _loadPreferencesAsync();
 
+    // Show data recovery toast if needed
+    if (showEmergencyDataRecoveryToast) {
+      showEmergencyDataRecoveryToast = false;
+      _showDataRecoveryToast();
+    }
+
     if (mounted) {
       // Start collectingdialogs for 500ms before processing
       // This ensures proper priority ordering during app startup
@@ -3043,5 +3049,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void changeUID(String uid) {
     _userUID = uid;
+  }
+
+  void _showDataRecoveryToast() {
+    BotToast.showText(
+      text: "⚠️"
+          "\n\nIt took longer than usual to retrieve settings from backup."
+          "\n\nConsider restarting the app to ensure that no data is lost!",
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentColor: Colors.orange.shade800,
+      duration: const Duration(seconds: 8),
+    );
   }
 }
