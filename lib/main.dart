@@ -741,6 +741,16 @@ Future<void> _initializeAppCompilation() async {
     final String? backupCompilation = await SembastDatabase.getAppCompilation();
 
     if (backupCompilation != null && backupCompilation.isNotEmpty) {
+      // Report to Crashlytics
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PREFS DISCREPANCY: SharedPrefs empty but backup has '$backupCompilation'");
+        FirebaseCrashlytics.instance.recordError(
+          "PREFS DISCREPANCY: SharedPrefs empty but backup has '$backupCompilation'",
+          null,
+          reason: "SharedPrefs empty but backup has '$backupCompilation'",
+        );
+      }
+
       log("📜 DISCREPANCY: SharedPrefs empty but backup has '$backupCompilation'");
 
       // Show recovery toast in Drawer
