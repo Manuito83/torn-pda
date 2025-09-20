@@ -6,6 +6,7 @@ import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
 
@@ -150,10 +151,11 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void addUserScriptByModel(UserScriptModel model) {
-    userScriptList.add(model);
-    _sort();
-    _saveUserScriptsToStorage();
-    notifyListeners();
+    if (_addScript(_userScriptList, model, "addUserScriptByModel")) {
+      _sort();
+      _saveUserScriptsToStorage();
+      notifyListeners();
+    }
   }
 
   Future<void> addUserScript(
@@ -185,11 +187,11 @@ class UserScriptsProvider extends ChangeNotifier {
       customApiKeyCandidate: customApiKeyCandidate ?? false,
     );
 
-    _userScriptList.add(newScript);
-
-    _sort();
-    await _saveUserScriptsToStorage();
-    notifyListeners();
+    if (_addScript(_userScriptList, newScript, "addUserScript")) {
+      _sort();
+      await _saveUserScriptsToStorage();
+      notifyListeners();
+    }
   }
 
   /// Returns a bool indicating if the header could be parsed
@@ -275,7 +277,8 @@ class UserScriptsProvider extends ChangeNotifier {
       for (final dec in decoded) {
         try {
           // Create and add the model
-          _userScriptList.add(UserScriptModel.fromJson(dec));
+          final scriptModel = UserScriptModel.fromJson(dec);
+          _addScript(_userScriptList, scriptModel, "restoreScriptsFromServerSave-overwrite");
         } catch (e, trace) {
           // Log if a single script in the backup is corrupt, but continue
           if (!Platform.isWindows) {
@@ -306,7 +309,7 @@ class UserScriptsProvider extends ChangeNotifier {
 
           if (scriptExists) continue;
 
-          _userScriptList.add(UserScriptModel(
+          final newScriptModel = UserScriptModel(
               name: decodedModel.name,
               time: decodedModel.time,
               source: decodedModel.source,
@@ -319,7 +322,9 @@ class UserScriptsProvider extends ChangeNotifier {
               matches: decodedModel.matches,
               // Custom API key fields are already part of fromJson, but explicitly listing them is fine.
               customApiKey: decodedModel.customApiKey,
-              customApiKeyCandidate: decodedModel.customApiKeyCandidate));
+              customApiKeyCandidate: decodedModel.customApiKeyCandidate);
+
+          _addScript(_userScriptList, newScriptModel, "restoreScriptsFromServerSave-merge");
         } catch (e, trace) {
           if (!Platform.isWindows) {
             FirebaseCrashlytics.instance.log("PDA error at adding server userscript. Error: $e. Stack: $trace");
@@ -339,7 +344,7 @@ class UserScriptsProvider extends ChangeNotifier {
   /// Save userscripts list with proper encoding
   Future<void> _saveUserScriptsToStorage() async {
     if (!_initializationCompleter.isCompleted) {
-      log("❌ Rejected userscripts save");
+      log("📜❌ Rejected userscripts save");
       return;
     }
 
@@ -369,7 +374,7 @@ class UserScriptsProvider extends ChangeNotifier {
         final base64Data = savedScripts.substring(8); // Remove "PDA_B64:" prefix
         final decodedBytes = base64Decode(base64Data);
         final decodedString = utf8.decode(decodedBytes);
-        log("UserScripts loaded from new Base64 format");
+        log("📜 UserScripts loaded from new Base64 format");
         return decodedString;
       } catch (e, trace) {
         if (!Platform.isWindows) {
@@ -381,7 +386,7 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     } else {
       // Old format: direct JSON string
-      log("UserScripts loaded from legacy format");
+      log("📜 UserScripts loaded from legacy format");
       return savedScripts;
     }
   }
@@ -395,86 +400,116 @@ class UserScriptsProvider extends ChangeNotifier {
     _userScriptList.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
   }
 
+  bool _addScript(List<UserScriptModel> targetList, UserScriptModel script, String context) {
+    try {
+      final String scriptName = script.name.toLowerCase();
+      if (targetList.any((existingScript) => existingScript.name.toLowerCase() == scriptName)) {
+        log("📜 UserScripts: Script '${script.name}' already exists in list, skipping (context: $context)");
+        return false;
+      }
+
+      targetList.add(script);
+      return true;
+    } catch (e, trace) {
+      final errorMessage = "Error adding userscript '${script.name}' in context: $context. Error: $e";
+      log("📜 UserScripts ERROR: $errorMessage");
+
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error at _addScript. $errorMessage");
+        FirebaseCrashlytics.instance.recordError(e, trace, reason: "UserScript add failure in $context");
+      }
+
+      BotToast.showText(
+        text: "Error adding script: ${script.name}",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.red[800]!,
+        duration: const Duration(seconds: 4),
+      );
+
+      return false;
+    }
+  }
+
   Future<void> loadPreferencesAndScripts() async {
     _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
 
-    // GET SAVED SCRIPTS
+    // 1. Always try to load existing scripts first (regardless of app version)
+    // 2. Only check if it's "first time" if no scripts exist
+
     try {
-      // First time we run the app
-      if (lastSavedAppCompilation.isEmpty) {
-        // Only seed with defaults scripts if it's the first app run
-        // Here we modify [addDefaultScripts()] directly, as it is the first time loading scripts
+      // If scripts exist, load them regardless of what lastSavedAppCompilation says
+      String? savedScripts;
+      const int maxRetries = 5;
+
+      for (int attempt = 1; attempt <= maxRetries; attempt++) {
+        savedScripts = await _loadUserScriptsFromStorage();
+        if (savedScripts != null) {
+          if (attempt > 1) {
+            log("📜 UserScripts: Load succeeded on attempt $attempt");
+          }
+          break;
+        }
+
+        if (attempt < maxRetries) {
+          await Future.delayed(const Duration(milliseconds: 500));
+        } else {
+          log("📜 UserScripts: Load failed after $maxRetries attempts");
+        }
+      }
+
+      // If we found saved scripts, decode and load them
+      if (savedScripts != null) {
+        final List<UserScriptModel> tempList = <UserScriptModel>[];
+        final decoded = json.decode(savedScripts);
+        if (decoded is List) {
+          for (final dec in decoded) {
+            final decodedModel = UserScriptModel.fromJson(dec);
+            _addScript(tempList, decodedModel, "loadPreferencesAndScripts-existing");
+          }
+        }
+
+        // Apply loaded scripts
+        _userScriptList.clear();
+        _userScriptList.addAll(tempList);
+        _sort();
+        _checkForCustomApiKeyCandidates();
+        notifyListeners();
+
+        log("📜 UserScripts: Successfully loaded ${_userScriptList.length} existing scripts");
+        return;
+      }
+
+      // Check if it's the first run based on app update status
+      // Scripts == null and app never updated -> should be first run
+      if (!appHasBeenUpdated) {
+        log("📜 UserScripts: First app run detected, loading default scripts");
+        // NOTE: this will probably get a rejected save (and a log message) as the completer is not completed,
+        // but it's fine (and it will keep happening) for several app starts while scripts are untouched)
+        // since we have no custom scripts yet and any user action (a save, deletion, etc.)
+        // will save them eventually
         await addDefaultScripts();
         notifyListeners();
         return;
       }
 
-      // #### RETRY LOGIC START
-      // (mainly because of numerous user reports of empty scripts)
-      String? savedScripts;
-      const int maxRetries = 2;
-      for (int i = 0; i <= maxRetries; i++) {
-        savedScripts = await _loadUserScriptsFromStorage();
-        if (savedScripts != null) {
-          if (i > 0) {
-            log("UserScripts load attempt ${i + 1} succeeded");
-          }
-          break;
-        }
-
-        if (i < maxRetries) {
-          log("UserScripts load attempt ${i + 1} failed, retrying...");
-          await Future.delayed(const Duration(seconds: 1));
-        } else {
-          log("UserScripts load failed after ${maxRetries + 1} attempts");
-        }
-      }
-      // #### RETRY LOGIC END
-
-      // If loading failed do nothing
-      if (savedScripts == null) {
-        log("UserScripts load failed, no scripts found");
-        return;
-      }
-
-      // Here, we have a valid savedScripts string. We decode it and add each script to the tempList.
-      // (we use a temporary list to load the data into until we are sure the load was successful)
-      final List<UserScriptModel> tempList = <UserScriptModel>[];
-      final decoded = json.decode(savedScripts);
-      if (decoded is List) {
-        for (final dec in decoded) {
-          try {
-            final decodedModel = UserScriptModel.fromJson(dec);
-
-            // Check if the script with the same name already exists in the list
-            // (user-reported bug)
-            final String name = decodedModel.name.toLowerCase();
-            if (tempList.any((script) => script.name.toLowerCase() == name)) continue;
-            tempList.add(decodedModel);
-          } catch (e, trace) {
-            if (!Platform.isWindows) {
-              FirebaseCrashlytics.instance.log("PDA error at adding one userscript. Error: $e. Stack: $trace");
-            }
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
-            logToUser("PDA error at adding one userscript. Error: $e. Stack: $trace");
-          }
-        }
-      }
-
-      // Swap lists
-      _userScriptList.clear();
-      _userScriptList.addAll(tempList);
-
-      _sort();
-      _checkForCustomApiKeyCandidates();
-
-      notifyListeners();
+      // If we reach here, scripts are null but the app has been updated
+      // It does not make sense. If anything, scripts could be empty but not null.
+      // This should not happen take place and we should not load defaults
+      // just in case the user can recover them by resetting the app
+      throw Exception("PDA error in loadPreferencesAndScripts. Scripts are null after app update.");
     } catch (e, trace) {
       if (!Platform.isWindows) {
-        FirebaseCrashlytics.instance.log("PDA error at userscripts first load. Error: $e. Stack: $trace");
+        FirebaseCrashlytics.instance.log("PDA error in loadPreferencesAndScripts. Error: $e");
         FirebaseCrashlytics.instance.recordError(e, trace);
       }
-      logToUser("PDA error at userscript first load. Error: $e. Stack: $trace");
+      BotToast.showText(
+        text: "⚠️"
+            "\n\nThere was a problem retrieving userscripts: $e"
+            "\n\nConsider restarting the app to ensure that no data is lost!",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.orange.shade800,
+        duration: const Duration(seconds: 8),
+      );
     } finally {
       // We complete the init after 2 seconds:
       // - Any tries to save the scripts before initialisation completes are ignored immediately
@@ -598,8 +633,9 @@ class UserScriptsProvider extends ChangeNotifier {
 
       if (response.success && response.model != null) {
         if (!existingScriptNames.contains(response.model!.name.toLowerCase())) {
-          _userScriptList.add(response.model!);
-          added++;
+          if (_addScript(_userScriptList, response.model!, "addDefaultScripts")) {
+            added++;
+          }
         }
       } else {
         failed++;
@@ -627,11 +663,15 @@ class UserScriptsProvider extends ChangeNotifier {
       if (_userScriptList.any((script) => script.name == response.model!.name)) {
         return (success: false, message: "Script with same name already exists");
       }
-      userScriptList.add(response.model!);
-      _sort();
-      _saveUserScriptsToStorage();
-      notifyListeners();
-      return (success: true, message: null);
+
+      if (_addScript(_userScriptList, response.model!, "addUserScriptFromURL")) {
+        _sort();
+        _saveUserScriptsToStorage();
+        notifyListeners();
+        return (success: true, message: null);
+      } else {
+        return (success: false, message: "Failed to add script safely");
+      }
     } else {
       return (success: false, message: response.message);
     }

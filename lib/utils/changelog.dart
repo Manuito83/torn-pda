@@ -102,11 +102,12 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.1 - Build 579 - 14/09/2025
+    // v3.9.2 - Build 581 - 19/09/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.9.1'
+        ..version = 'Torn PDA v3.9.2'
         ..date = '20 SEP 2025'
+        ..infoString = 'Hotfix: resolved issues with foreign stocks filtering'
         ..features = [
           ComplexFeature(
             "Player notes system overhauled",
