@@ -2022,7 +2022,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       Row(
                         children: <Widget>[
                           const SizedBox(
-                            width: 50,
+                            width: 60,
                             child: Text('Energy'),
                           ),
                           const SizedBox(width: 10),
@@ -2102,7 +2102,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       Row(
                         children: <Widget>[
                           const SizedBox(
-                            width: 50,
+                            width: 60,
                             child: Text('Nerve'),
                           ),
                           const SizedBox(width: 10),
@@ -2149,7 +2149,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Row(
                     children: <Widget>[
                       const SizedBox(
-                        width: 50,
+                        width: 60,
                         child: Text('Happy'),
                       ),
                       const SizedBox(width: 10),
@@ -2197,7 +2197,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           const SizedBox(
-                            width: 50,
+                            width: 60,
                             child: Text('Life'),
                           ),
                           const SizedBox(width: 10),
