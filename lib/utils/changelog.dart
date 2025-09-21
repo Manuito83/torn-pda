@@ -102,6 +102,17 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.9.3 - Build 582 - 21/09/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.3'
+        ..date = '10 OCT 2025'
+        ..features = [
+          "Fixed war widget time zone settings",
+          "Fixed several other reported issues",
+        ],
+    );
+
     // v3.9.2 - Build 581 - 19/09/2025
     itemList.add(
       ChangeLogItem()
