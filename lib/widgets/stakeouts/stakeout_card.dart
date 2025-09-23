@@ -316,9 +316,15 @@ class StakeoutCardState extends State<StakeoutCard> {
                       child: IconButton(
                         padding: const EdgeInsets.all(0),
                         iconSize: 20,
-                        icon: const Icon(
-                          MdiIcons.notebookEditOutline,
-                          size: 18,
+                        icon: GetBuilder<PlayerNotesController>(
+                          builder: (ctrl) {
+                            final note = ctrl.getNoteForPlayer(_stakeout!.id!);
+                            final rawColorCode = note?.color;
+                            final effectiveColor = PlayerNoteColor.isNone(rawColorCode)
+                                ? _themeProvider.mainText
+                                : PlayerNoteColor.toTextColor(code: rawColorCode, fallback: _themeProvider.mainText);
+                            return Icon(MdiIcons.notebookEditOutline, size: 18, color: effectiveColor);
+                          },
                         ),
                         onPressed: () {
                           _showNotesDialog();
@@ -330,11 +336,27 @@ class StakeoutCardState extends State<StakeoutCard> {
                       'Notes: ',
                       style: TextStyle(fontSize: 12),
                     ),
-                    Flexible(
-                      child: Text(
-                        Get.find<PlayerNotesController>().getNoteForPlayer(_stakeout!.id!)?.note ?? '',
-                        style: TextStyle(fontSize: 12, color: _returnTargetNoteColor()),
-                      ),
+                    GetBuilder<PlayerNotesController>(
+                      builder: (ctrl) {
+                        final note = ctrl.getNoteForPlayer(_stakeout!.id!);
+                        final hasColorOnly = note?.hasColorOnly ?? false;
+                        final text = hasColorOnly ? '' : (note?.effectiveDisplayText ?? '');
+                        final rawColorCode = note?.color;
+                        final effectiveColor = PlayerNoteColor.isNone(rawColorCode)
+                            ? _themeProvider.mainText
+                            : PlayerNoteColor.toTextColor(code: rawColorCode, fallback: _themeProvider.mainText);
+                        return Flexible(
+                          child: Text(
+                            text,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: effectiveColor,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 2,
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -375,7 +397,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   _s.setOkay(stakeout: _stakeout, okayEnabled: value);
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -403,7 +425,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   _s.setHospital(stakeout: _stakeout, hospitalEnabled: value);
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -430,7 +452,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   _s.setRevivable(stakeout: _stakeout, revivableEnabled: value);
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -457,7 +479,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   _s.setLanded(stakeout: _stakeout, landedEnabled: value);
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -484,7 +506,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   _s.setOnline(stakeout: _stakeout, onlineEnabled: value);
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -511,7 +533,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   _s.setLifePercentageEnabled(stakeout: _stakeout, lifePercentageEnabled: value);
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -560,7 +582,7 @@ class StakeoutCardState extends State<StakeoutCard> {
                   _s.setOfflineLongerThanEnabled(stakeout: _stakeout, offlineLongerThanEnabled: value);
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -593,39 +615,12 @@ class StakeoutCardState extends State<StakeoutCard> {
   }
 
   Future<void> _showNotesDialog() {
-    return showDialog<void>(
+    return showPlayerNotesDialog(
       context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: PlayerNotesDialog(
-              playerId: _stakeout?.id ?? '',
-              playerName: _stakeout?.name ?? '',
-            ),
-          ),
-        );
-      },
+      barrierDismissible: false,
+      playerId: _stakeout?.id ?? '',
+      playerName: _stakeout?.name ?? '',
     );
-  }
-
-  Color? _returnTargetNoteColor() {
-    final noteColor = Get.find<PlayerNotesController>().getNoteForPlayer(_stakeout!.id!)?.color ?? '';
-    switch (noteColor) {
-      case 'red':
-        return Colors.red[600];
-      case 'orange':
-        return Colors.orange[600];
-      case 'green':
-        return Colors.green[600];
-      default:
-        return _themeProvider.mainText;
-    }
   }
 
   Future<void> _openBrowser({required bool shortTap}) async {

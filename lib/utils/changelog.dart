@@ -108,6 +108,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.9.3'
         ..date = '10 OCT 2025'
         ..features = [
+          "Player notes now support color-only entries",
+          "Improved player notes dialog interface",
           "Fixed war widget time zone settings",
           "Fixed several other reported issues",
         ],

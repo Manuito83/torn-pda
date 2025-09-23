@@ -22,11 +22,9 @@ class ProfileCheckNotes extends StatefulWidget {
 }
 
 class _ProfileCheckNotesState extends State<ProfileCheckNotes> {
-  late ThemeProvider _themeProvider;
-
   @override
   Widget build(BuildContext context) {
-    _themeProvider = context.read<ThemeProvider>();
+    context.read<ThemeProvider>();
     final settingsProvider = context.read<SettingsProvider>();
 
     return GetBuilder<PlayerNotesController>(
@@ -34,15 +32,17 @@ class _ProfileCheckNotesState extends State<ProfileCheckNotes> {
         final playerId = widget.profileId.toString();
         final playerNote = playerNotesController.getNoteForPlayer(playerId);
 
-        final hasNote = playerNote != null && playerNote.note.isNotEmpty;
-        final shouldShow = hasNote || settingsProvider.notesWidgetEnabledProfileWhenEmpty;
+        final hasNoteText = playerNote != null && playerNote.effectiveDisplayText.isNotEmpty;
+        final hasColorOnly = playerNote?.hasColorOnly ?? false;
+        final shouldShow = hasNoteText || hasColorOnly || settingsProvider.notesWidgetEnabledProfileWhenEmpty;
 
         if (!shouldShow) {
           return const SizedBox.shrink();
         }
 
-        final noteColor =
+        final rawColor =
             playerNote != null ? playerNotesController.getDisplayColor(playerNote.color) : Colors.transparent;
+        final effectiveTextColor = rawColor == Colors.transparent ? Colors.grey.shade200 : rawColor;
 
         return Container(
           color: Colors.grey[900],
@@ -52,41 +52,31 @@ class _ProfileCheckNotesState extends State<ProfileCheckNotes> {
               children: [
                 GestureDetector(
                   onTap: () async {
-                    await showDialog<void>(
+                    await showPlayerNotesDialog(
                       context: context,
                       barrierDismissible: false,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0.0,
-                          backgroundColor: Colors.transparent,
-                          content: SingleChildScrollView(
-                            child: PlayerNotesDialog(
-                              playerId: playerId,
-                              playerName: widget.playerName,
-                            ),
-                          ),
-                        );
-                      },
+                      playerId: playerId,
+                      playerName: widget.playerName,
                     );
                   },
                   child: Icon(
                     MdiIcons.notebookEditOutline,
-                    color: noteColor == Colors.transparent ? Colors.grey : noteColor,
+                    color: rawColor == Colors.transparent ? Colors.grey : rawColor,
                     size: 15,
                   ),
                 ),
-                if (hasNote) ...[
+                if (hasNoteText || hasColorOnly) ...[
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
-                      playerNote.note,
+                      hasColorOnly ? '' : playerNote!.effectiveDisplayText,
                       style: TextStyle(
-                        color: _themeProvider.accesibilityNoTextColors ? Colors.white : noteColor,
+                        color: effectiveTextColor,
                         fontSize: 12,
+                        fontStyle: FontStyle.normal,
                       ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 3,
                     ),
                   ),
                 ],

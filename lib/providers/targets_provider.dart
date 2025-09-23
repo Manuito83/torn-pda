@@ -95,7 +95,11 @@ class TargetsProvider extends ChangeNotifier {
         if (notes != null && notes.isNotEmpty) {
           final notesController = Get.find<PlayerNotesController>();
           await notesController.setPlayerNote(
-              targetId!, notes, notesColor ?? '', myNewTargetModel.name ?? 'Unknown Player');
+            playerId: targetId!,
+            note: notes,
+            color: notesColor ?? '',
+            playerName: myNewTargetModel.name ?? 'Unknown Player',
+          );
         }
 
         myNewTargetModel.hospitalSort = targetsSortHospitalTime(myNewTargetModel);
@@ -284,7 +288,7 @@ class TargetsProvider extends ChangeNotifier {
           _targets[i].lastUpdated = DateTime.now();
           _targets[i].hospitalSort = targetsSortHospitalTime(_targets[i]);
 
-          // Parse bounty ammount if it exists
+          // Parse bounty amount if it exists
           if (myUpdatedTargetModel.basicicons?.icon13 != null) {
             _targets[i].bountyAmount = _getBountyAmount(myUpdatedTargetModel);
           }
@@ -699,7 +703,11 @@ class TargetsProvider extends ChangeNotifier {
       if (target.noteBackup != null && target.noteBackup!.isNotEmpty) {
         final notesController = Get.find<PlayerNotesController>();
         await notesController.setPlayerNote(
-            target.playerId.toString(), target.noteBackup!, target.colorBackup ?? '', target.name ?? 'Unknown Player');
+          playerId: target.playerId.toString(),
+          note: target.noteBackup!,
+          color: target.colorBackup ?? '',
+          playerName: target.name ?? 'Unknown Player',
+        );
       }
     }
 

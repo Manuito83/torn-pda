@@ -12,6 +12,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/pages/chaining/yata/yata_targets_distribution.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
@@ -346,9 +347,9 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
       for (final bothSidesTarget in widget.bothSides) {
         final notesController = Get.find<PlayerNotesController>();
         await notesController.setPlayerNote(
-          bothSidesTarget.id.toString(),
-          bothSidesTarget.noteYata ?? '',
-          _localColorCode(bothSidesTarget.colorYata),
+          playerId: bothSidesTarget.id.toString(),
+          note: bothSidesTarget.noteYata ?? '',
+          color: _localColorCode(bothSidesTarget.colorYata),
         );
       }
 
@@ -378,7 +379,7 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
   String _localColorCode(int? colorInt) {
     switch (colorInt) {
       case 0:
-        return 'z';
+        return PlayerNoteColor.none;
       case 1:
         return 'green';
       case 2:

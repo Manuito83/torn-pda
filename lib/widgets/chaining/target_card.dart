@@ -293,16 +293,19 @@ class TargetCardState extends State<TargetCard> {
                             ),
                             const SizedBox(width: 4),
                             const Text('Notes: '),
-                            Flexible(
-                              child: Text(
-                                Get.find<PlayerNotesController>()
-                                        .getNoteForPlayer(_target!.playerId.toString())
-                                        ?.note ??
-                                    '',
-                                style: TextStyle(
-                                  color: _returnTargetNoteColor(),
-                                ),
-                              ),
+                            GetBuilder<PlayerNotesController>(
+                              builder: (ctrl) {
+                                final note = ctrl.getNoteForPlayer(_target!.playerId.toString());
+                                final noteText = note?.effectiveDisplayText ?? '';
+                                return Flexible(
+                                  child: Text(
+                                    noteText,
+                                    style: TextStyle(
+                                      color: _returnTargetNoteColor(),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -768,24 +771,11 @@ class TargetCardState extends State<TargetCard> {
   }
 
   Future<void> _showNotesDialog() {
-    return showDialog<void>(
+    return showPlayerNotesDialog(
       context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: PlayerNotesDialog(
-              playerId: _target?.playerId.toString() ?? '',
-              playerName: _target?.name ?? '',
-            ),
-          ),
-        );
-      },
+      barrierDismissible: false,
+      playerId: _target?.playerId.toString() ?? '',
+      playerName: _target?.name ?? '',
     );
   }
 

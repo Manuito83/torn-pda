@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check.dart';
@@ -788,7 +789,7 @@ class WebViewPanicState extends State<WebViewPanic> {
   void _showNoteToast() {
     Color? cardColor;
     switch (widget.attackNotesColorList[_attackNumber]) {
-      case 'z':
+      case PlayerNoteColor.none:
         cardColor = Colors.grey[700];
       case 'green':
         cardColor = Colors.green[900];

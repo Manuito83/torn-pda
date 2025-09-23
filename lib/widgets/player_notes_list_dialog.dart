@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // Package imports:
 import 'package:get/get.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -93,11 +94,25 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
         });
         break;
       case NoteSortType.color:
+        // Custom order: red > orange > green > none (none last) when ascending
+        int rank(String? code) {
+          if (PlayerNoteColor.isNone(code)) return 4; // last
+          switch (code) {
+            case PlayerNoteColor.red:
+              return 1;
+            case PlayerNoteColor.orange:
+              return 2;
+            case PlayerNoteColor.green:
+              return 3;
+            default:
+              return 5;
+          }
+        }
         _filteredNotes.sort((a, b) {
-          final colorA = a.color ?? 'z';
-          final colorB = b.color ?? 'z';
-          final result = colorA.compareTo(colorB);
-          return _isAscending ? result : -result;
+          final rA = rank(a.color);
+          final rB = rank(b.color);
+          final cmp = rA.compareTo(rB);
+          return _isAscending ? cmp : -cmp;
         });
         break;
     }
@@ -177,96 +192,104 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
     _settingsProvider = Provider.of<SettingsProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
+    final screenSize = MediaQuery.of(context).size;
+    final dialogWidth = (screenSize.width - 40) > 600 ? 600.0 : (screenSize.width - 40);
+    final dialogHeight = screenSize.height * 0.85;
+
     return Dialog(
       backgroundColor: _themeProvider.secondBackground,
-      child: Container(
-        height: MediaQuery.of(context).size.height * 0.8,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            // Title
-            Text(
-              'Player Notes',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: _themeProvider.mainText,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      child: SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              // Title
+              Text(
+                'Player Notes',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: _themeProvider.mainText,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-            // Search bar
-            TextField(
-              controller: _searchController,
-              style: TextStyle(color: _themeProvider.mainText),
-              decoration: InputDecoration(
-                hintText: 'Search by name or ID...',
-                hintStyle: TextStyle(color: _themeProvider.mainText.withValues(alpha: 0.6)),
-                prefixIcon: Icon(Icons.search, color: _themeProvider.mainText),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: _themeProvider.mainText.withValues(alpha: 0.3)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: _themeProvider.mainText.withValues(alpha: 0.3)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide(color: _themeProvider.mainText, width: 2),
-                ),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Sort options
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildSortButton('Name', NoteSortType.name, Icons.person),
-                _buildSortButton('Date', NoteSortType.date, Icons.access_time),
-                _buildSortButton('Color', NoteSortType.color, Icons.palette),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Notes list
-            Expanded(
-              child: _filteredNotes.isEmpty
-                  ? Center(
-                      child: Text(
-                        _searchQuery.isEmpty ? 'No notes available' : 'No notes found',
-                        style: TextStyle(
-                          color: _themeProvider.mainText,
-                          fontSize: 16,
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: _filteredNotes.length,
-                      itemBuilder: (context, index) {
-                        final note = _filteredNotes[index];
-                        return _buildNoteCard(note);
-                      },
-                    ),
-            ),
-
-            // Close button
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    'Close',
-                    style: TextStyle(color: _themeProvider.mainText),
+              // Search bar
+              TextField(
+                controller: _searchController,
+                style: TextStyle(color: _themeProvider.mainText),
+                decoration: InputDecoration(
+                  hintText: 'Search by name or ID...',
+                  hintStyle: TextStyle(color: _themeProvider.mainText.withValues(alpha: 0.6)),
+                  prefixIcon: Icon(Icons.search, color: _themeProvider.mainText),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: _themeProvider.mainText.withValues(alpha: 0.3)),
                   ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: _themeProvider.mainText.withValues(alpha: 0.3)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: BorderSide(color: _themeProvider.mainText, width: 2),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
-              ],
-            ),
-          ],
+              ),
+              const SizedBox(height: 12),
+
+              // Sort options
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildSortButton('Name', NoteSortType.name, Icons.person),
+                  _buildSortButton('Date', NoteSortType.date, Icons.access_time),
+                  _buildSortButton('Color', NoteSortType.color, Icons.palette),
+                ],
+              ),
+              const SizedBox(height: 12),
+
+              // Notes list
+              Expanded(
+                child: _filteredNotes.isEmpty
+                    ? Center(
+                        child: Text(
+                          _searchQuery.isEmpty ? 'No notes available' : 'No notes found',
+                          style: TextStyle(
+                            color: _themeProvider.mainText,
+                            fontSize: 16,
+                          ),
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: _filteredNotes.length,
+                        itemBuilder: (context, index) {
+                          final note = _filteredNotes[index];
+                          return _buildNoteCard(note);
+                        },
+                      ),
+              ),
+
+              // Close button
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(
+                      'Close',
+                      style: TextStyle(color: _themeProvider.mainText),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -317,119 +340,157 @@ class PlayerNotesListDialogState extends State<PlayerNotesListDialog> {
   }
 
   Widget _buildNoteCard(PlayerNote note) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      color: _themeProvider.cardColor,
-      elevation: 2,
-      shape: _themeProvider.currentTheme == AppTheme.extraDark
-          ? RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-              side: BorderSide(
-                color: _themeProvider.mainText.withValues(alpha: 0.2),
-                width: 1,
+    return Slidable(
+      key: ValueKey('note-${note.playerId}'),
+      endActionPane: ActionPane(
+        motion: const DrawerMotion(),
+        extentRatio: 0.25,
+        children: [
+          SlidableAction(
+            onPressed: (_) => _deleteNote(note),
+            icon: Icons.delete,
+            label: 'Delete',
+            backgroundColor: Colors.red[700]!,
+            foregroundColor: Colors.white,
+          ),
+        ],
+      ),
+      child: Card(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        color: _themeProvider.cardColor,
+        elevation: 2,
+        shape: _themeProvider.currentTheme == AppTheme.extraDark
+            ? RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(4),
+                side: BorderSide(
+                  color: _themeProvider.mainText.withValues(alpha: 0.2),
+                  width: 1,
+                ),
+              )
+            : null,
+        child: InkWell(
+          onTap: () => _editNote(note),
+          borderRadius: BorderRadius.circular(4),
+          child: Container(
+            // Right red indicator
+            decoration: BoxDecoration(
+              border: Border(
+                right: BorderSide(color: Colors.red[700]!, width: 4),
               ),
-            )
-          : null,
-      child: InkWell(
-        onTap: () => _editNote(note),
-        borderRadius: BorderRadius.circular(4),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            children: [
-              Row(
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
                 children: [
-                  // Small color dot
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: _getColorByCode(note.color),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: _themeProvider.mainText.withValues(alpha: 0.3),
-                        width: 1,
+                  Row(
+                    children: [
+                      // Small color dot
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: _getColorByCode(note.color),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: _themeProvider.mainText.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-
-                  // Player info
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      const SizedBox(width: 12),
+                      // Player info
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Flexible(
-                              child: Text(
-                                note.playerName ?? 'Player ${note.playerId}',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: _themeProvider.mainText,
-                                  fontSize: 14,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    note.displayNameFallback,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: _themeProvider.mainText,
+                                      fontSize: 14,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ),
-                            Text(
-                              '[${note.playerId}]',
-                              style: TextStyle(
-                                color: _themeProvider.mainText.withValues(alpha: 0.6),
-                                fontSize: 12,
-                              ),
-                            ),
-                            if (note.updatedAt != null || note.createdAt != null)
-                              Text(
-                                _formatDate(note.updatedAt ?? note.createdAt),
-                                style: TextStyle(
-                                  color: _themeProvider.mainText.withValues(alpha: 0.6),
-                                  fontSize: 10,
+                                Text(
+                                  '[${note.playerId}]',
+                                  style: TextStyle(
+                                    color: _themeProvider.mainText.withValues(alpha: 0.6),
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
+                                if (note.updatedAt != null || note.createdAt != null)
+                                  Text(
+                                    _formatDate(note.updatedAt ?? note.createdAt),
+                                    style: TextStyle(
+                                      color: _themeProvider.mainText.withValues(alpha: 0.6),
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          (note.note.isEmpty && !PlayerNoteColor.isNone(note.color)) ? 'blank' : note.note,
+                          style: TextStyle(
+                            fontStyle: note.note.isEmpty && !PlayerNoteColor.isNone(note.color)
+                                ? FontStyle.italic
+                                : FontStyle.normal,
+                            color: _themeProvider.mainText,
+                            fontSize: 13,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 3,
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.open_in_browser,
+                          color: _themeProvider.mainText,
+                          size: 20,
+                        ),
+                        onPressed: () => _openBrowser(note.playerId),
+                        tooltip: 'Open profile',
+                      ),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    note.note,
-                    style: TextStyle(
-                      color: _themeProvider.mainText,
-                      fontSize: 13,
-                    ),
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.open_in_browser,
-                      color: _themeProvider.mainText,
-                      size: 20,
-                    ),
-                    onPressed: () => _openBrowser(note.playerId),
-                    tooltip: 'Open profile',
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
       ),
     );
   }
 
+  void _deleteNote(PlayerNote note) async {
+    await _playerNotesController.removePlayerNote(note.playerId);
+    if (mounted) {
+      setState(() {
+        _updateFilteredNotes();
+      });
+    }
+  }
+
   void _editNote(PlayerNote note) {
-    showDialog(
+    showPlayerNotesDialog(
       context: context,
-      builder: (context) => PlayerNotesDialog(
-        playerId: note.playerId,
-        playerName: note.playerName,
-      ),
+      barrierDismissible: false,
+      playerId: note.playerId,
+      playerName: note.playerName,
     ).then((_) {
       setState(() {
         _updateFilteredNotes();

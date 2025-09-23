@@ -263,16 +263,19 @@ class FriendCardState extends State<FriendCard> {
                         child: Row(
                           children: <Widget>[
                             const Text('Notes: '),
-                            Flexible(
-                              child: Text(
-                                Get.find<PlayerNotesController>()
-                                        .getNoteForPlayer(_friend!.playerId.toString())
-                                        ?.note ??
-                                    '',
-                                style: TextStyle(
-                                  color: _returnFriendNoteColor(),
-                                ),
-                              ),
+                            GetBuilder<PlayerNotesController>(
+                              builder: (ctrl) {
+                                final note = ctrl.getNoteForPlayer(_friend!.playerId.toString());
+                                final text = note?.effectiveDisplayText ?? '';
+                                return Flexible(
+                                  child: Text(
+                                    text,
+                                    style: TextStyle(
+                                      color: _returnFriendNoteColor(),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -594,24 +597,11 @@ class FriendCardState extends State<FriendCard> {
   }
 
   Future<void> _showNotesDialog() {
-    return showDialog<void>(
+    return showPlayerNotesDialog(
       context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: PlayerNotesDialog(
-              playerId: _friend?.playerId.toString() ?? '',
-              playerName: _friend?.name ?? '',
-            ),
-          ),
-        );
-      },
+      barrierDismissible: false,
+      playerId: _friend?.playerId.toString() ?? '',
+      playerName: _friend?.name ?? '',
     );
   }
 

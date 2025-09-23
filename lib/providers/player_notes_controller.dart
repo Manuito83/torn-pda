@@ -44,6 +44,53 @@ class PlayerNote {
       updatedAt: json['updatedAt'] != null ? DateTime.fromMillisecondsSinceEpoch(json['updatedAt'] as int) : null,
     );
   }
+
+  /// True when the note has a color selected but no text content
+  bool get hasColorOnly => note.isEmpty && !PlayerNoteColor.isNone(color);
+
+  /// Text to display inline (blank if it's a pure color-only note)
+  String get effectiveDisplayText => hasColorOnly ? '' : note;
+
+  /// Fallback name for display purposes when playerName is null/empty
+  String get displayNameFallback =>
+      (playerName == null || playerName!.trim().isEmpty) ? 'Player $playerId' : playerName!;
+}
+
+/// Centralized color sentinel definitions for player notes
+/// 'z' represents "no color" (legacy)
+class PlayerNoteColor {
+  static const String none = 'z';
+  static const String red = 'red';
+  static const String orange = 'orange';
+  static const String green = 'green';
+
+  static const List<String> all = [none, red, orange, green];
+
+  static bool isNone(String? v) => v == none || v == null; // treat null
+  static bool isValid(String? v) => v != null && all.contains(v);
+
+  /// Map stored color code to a base [Color]
+  static Color toColor(String? code) {
+    switch (code) {
+      case red:
+        return Colors.red;
+      case orange:
+        return Colors.orange;
+      case green:
+        return Colors.green;
+      case none:
+      default:
+        return Colors.transparent;
+    }
+  }
+
+  /// Map stored color code to a color safe for text on dark backgrounds
+  /// If none, returns [fallback] (themeProvider's mainText)
+  static Color toTextColor({required String? code, required Color fallback}) {
+    if (isNone(code)) return fallback;
+    final base = toColor(code);
+    return base;
+  }
 }
 
 class PlayerNotesController extends GetxController {
@@ -71,21 +118,33 @@ class PlayerNotesController extends GetxController {
     return _notes[playerId];
   }
 
-  /// Set or update note for a player
-  Future<void> setPlayerNote(String playerId, String note, [String? color, String? playerName]) async {
-    if (note.isEmpty) {
-      await removePlayerNote(playerId);
+  Future<void> setPlayerNote({
+    required String playerId,
+    required String note,
+    String? color,
+    String? playerName,
+  }) async {
+    final existingNote = _notes[playerId];
+    // Null => clear color; sentinel or null collapse to none
+    final String finalColor = (color == null || PlayerNoteColor.isNone(color)) ? PlayerNoteColor.none : color;
+
+    // Removal check: both empty text AND no color after resolution
+    if (note.isEmpty && PlayerNoteColor.isNone(finalColor)) {
+      if (existingNote != null) {
+        await removePlayerNote(playerId);
+      }
       return;
     }
 
     final now = DateTime.now();
-    final existingNote = _notes[playerId];
+    final effectivePlayerName =
+        (playerName != null && playerName.trim().isNotEmpty) ? playerName.trim() : existingNote?.playerName;
 
     _notes[playerId] = PlayerNote(
       playerId: playerId,
       note: note,
-      color: color ?? 'z',
-      playerName: playerName,
+      color: finalColor,
+      playerName: effectivePlayerName,
       createdAt: existingNote?.createdAt ?? now,
       updatedAt: now,
     );
@@ -123,12 +182,19 @@ class PlayerNotesController extends GetxController {
     for (final noteJson in notesJson) {
       final note = PlayerNote.fromJson(noteJson);
 
+      // Migration: null color to sentinel 'z'
+      String? migratedColor = note.color;
+      if (migratedColor == null) {
+        migratedColor = PlayerNoteColor.none;
+        needsResave = true;
+      }
+
       if (note.createdAt == null || note.updatedAt == null) {
         final now = DateTime.now();
         final migratedNote = PlayerNote(
           playerId: note.playerId,
           note: note.note,
-          color: note.color,
+          color: migratedColor,
           playerName: note.playerName,
           createdAt: note.createdAt ?? now,
           updatedAt: note.updatedAt ?? now,
@@ -136,7 +202,19 @@ class PlayerNotesController extends GetxController {
         _notes[note.playerId] = migratedNote;
         needsResave = true;
       } else {
-        _notes[note.playerId] = note;
+        if (note.color != migratedColor) {
+          _notes[note.playerId] = PlayerNote(
+            playerId: note.playerId,
+            note: note.note,
+            color: migratedColor,
+            playerName: note.playerName,
+            createdAt: note.createdAt,
+            updatedAt: note.updatedAt,
+          );
+          needsResave = true;
+        } else {
+          _notes[note.playerId] = note;
+        }
       }
     }
 
@@ -148,15 +226,6 @@ class PlayerNotesController extends GetxController {
   }
 
   Color getDisplayColor(String? colorString) {
-    switch (colorString) {
-      case 'red':
-        return Colors.red;
-      case 'orange':
-        return Colors.orange;
-      case 'green':
-        return Colors.green;
-      default:
-        return Colors.transparent;
-    }
+    return PlayerNoteColor.toColor(colorString);
   }
 }

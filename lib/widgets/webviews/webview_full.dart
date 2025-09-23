@@ -34,6 +34,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
@@ -6095,7 +6096,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   void _showNoteToast() {
     Color? cardColor;
     switch (_chainingPayload!.attackNotesColorList[_attackNumber]) {
-      case 'z':
+      case PlayerNoteColor.none:
         cardColor = Colors.grey[700];
       case 'green':
         cardColor = Colors.green[900];

@@ -30,10 +30,10 @@ class PlayerNotesMigrationService {
           final target = targetModelFromJson(targetJsonString);
           if (target.personalNote != null && target.personalNote!.isNotEmpty) {
             await playerNotesController.setPlayerNote(
-              target.playerId.toString(),
-              target.personalNote!,
-              target.personalNoteColor,
-              target.name,
+              playerId: target.playerId.toString(),
+              note: target.personalNote!,
+              color: target.personalNoteColor,
+              playerName: target.name,
             );
             migratedCount++;
           }
@@ -51,10 +51,10 @@ class PlayerNotesMigrationService {
             final existingNote = playerNotesController.getNoteForPlayer(friend.playerId.toString());
             if (existingNote == null) {
               await playerNotesController.setPlayerNote(
-                friend.playerId.toString(),
-                friend.personalNote!,
-                friend.personalNoteColor,
-                friend.name,
+                playerId: friend.playerId.toString(),
+                note: friend.personalNote!,
+                color: friend.personalNoteColor,
+                playerName: friend.name,
               );
               migratedCount++;
             }
@@ -73,10 +73,10 @@ class PlayerNotesMigrationService {
             final existingNote = playerNotesController.getNoteForPlayer(stakeout.id!);
             if (existingNote == null) {
               await playerNotesController.setPlayerNote(
-                stakeout.id!,
-                stakeout.personalNote,
-                stakeout.personalNoteColor,
-                stakeout.name,
+                playerId: stakeout.id!,
+                note: stakeout.personalNote,
+                color: stakeout.personalNoteColor,
+                playerName: stakeout.name,
               );
               migratedCount++;
             }
@@ -100,10 +100,10 @@ class PlayerNotesMigrationService {
                 final existingNote = playerNotesController.getNoteForPlayer(member.memberId.toString());
                 if (existingNote == null) {
                   await playerNotesController.setPlayerNote(
-                    member.memberId.toString(),
-                    member.personalNote!,
-                    member.personalNoteColor,
-                    member.name,
+                    playerId: member.memberId.toString(),
+                    note: member.personalNote!,
+                    color: member.personalNoteColor,
+                    playerName: member.name,
                   );
                   migratedCount++;
                 }

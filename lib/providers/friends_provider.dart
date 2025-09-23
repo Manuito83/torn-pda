@@ -66,7 +66,11 @@ class FriendsProvider extends ChangeNotifier {
       if (notes != null && notes.isNotEmpty) {
         final notesController = Get.find<PlayerNotesController>();
         await notesController.setPlayerNote(
-            friendId, notes, notesColor ?? '', myNewFriendModel.name ?? 'Unknown Player');
+          playerId: friendId,
+          note: notes,
+          color: notesColor ?? '',
+          playerName: myNewFriendModel.name ?? 'Unknown Player',
+        );
       }
 
       _friends.add(myNewFriendModel);
