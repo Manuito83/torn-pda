@@ -1515,14 +1515,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               final html = await webViewController!.getHtml();
               final document = parse(html);
 
-              // Checks URL for [_assessGeneral]
-              logToUser(
-                "URL on Load Start: $_currentUrl",
-                backgroundcolor: Colors.blue,
-                borderColor: Colors.white,
-                duration: 8,
-              );
-
               _assessGeneral(document);
 
               assessGymAndHuntingEnergyWarning(uri.toString());

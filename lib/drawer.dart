@@ -596,6 +596,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "dynamic_appIcon_enabled": "false",
         "browser_center_editing_text_field_allowed": true,
         // Revives
+        "revive_wolverines": "1 million or 1 Xanax",
         "revive_hela": "1 million or 1 Xanax",
         "revive_midnight": "1 million or 1 Xanax",
         "revive_nuke": "1 million or 1 Xanax",
@@ -661,6 +662,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           remoteConfig.getBool("browser_center_editing_text_field_allowed");
 
       // Revives
+      _settingsProvider.reviveWolverinesPrice = remoteConfig.getString("revive_wolverines");
       _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
       _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
       _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");

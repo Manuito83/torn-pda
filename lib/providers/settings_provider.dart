@@ -1197,6 +1197,13 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   // REVIVES
+  String _reviveWolverinesPrice = "1 million or 1 Xanax each";
+  String get reviveWolverinesPrice => _reviveWolverinesPrice;
+  set reviveWolverinesPrice(String value) {
+    _reviveWolverinesPrice = value;
+    notifyListeners();
+  }
+
   String _reviveHelaPrice = "1 million or 1 Xanax each";
   String get reviveHelaPrice => _reviveHelaPrice;
   set reviveHelaPrice(String value) {

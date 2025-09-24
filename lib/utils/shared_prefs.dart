@@ -294,6 +294,7 @@ class Prefs {
   final String _kUseHelaRevive = "pda_useHelaRevive";
   final String _kUseWtfRevive = "pda_useWtfRevive";
   final String _kUseMidnightXRevive = "pda_useMidnightXRevive";
+  final String _kUseWolverinesRevive = "pda_useWolverinesRevive";
 
   // Chaining stats sharing
   final String _kStatsShareIncludeHiddenTargets = "pda_statsShareIncludeHiddenTargets";
@@ -2305,6 +2306,14 @@ class Prefs {
 
   Future setUseMidnightXevive(bool value) async {
     return await _asyncPrefs.setBool(_kUseMidnightXRevive, value);
+  }
+
+  Future<bool> getUseWolverinesRevive() async {
+    return await _asyncPrefs.getBool(_kUseWolverinesRevive) ?? false;
+  }
+
+  Future setUseWolverinesRevive(bool value) async {
+    return await _asyncPrefs.setBool(_kUseWolverinesRevive, value);
   }
 
   /// ---------------------------------------

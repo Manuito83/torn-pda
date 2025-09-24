@@ -111,6 +111,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Player notes now support color-only entries",
           "Improved player notes dialog interface",
           "Improved tab icons handling",
+          "Added The Wolverines revive services",
           "Fixed war widget time zone settings",
           "Fixed several other reported issues",
         ],

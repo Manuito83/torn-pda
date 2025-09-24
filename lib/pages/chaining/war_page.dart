@@ -25,7 +25,6 @@ import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
-import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/targets_provider.dart';
@@ -41,6 +40,7 @@ import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
+import 'package:torn_pda/widgets/revive/wolverines_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/spies/spies_management_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
@@ -70,6 +70,9 @@ class WarOptions {
         // Own icon in widget
         break;
       case "Midnight X revive":
+        // Own icon in widget
+        break;
+      case "The Wolverines revive":
         // Own icon in widget
         break;
     }
@@ -141,6 +144,7 @@ class WarPageState extends State<WarPage> {
     WarOptions(description: "HeLa revive"),
     WarOptions(description: "WTF revive"),
     WarOptions(description: "Midnight X revive"),
+    WarOptions(description: "The Wolverines revive"),
   ];
 
   @override
@@ -835,6 +839,8 @@ class WarPageState extends State<WarPage> {
                 openWtfReviveDialog(context, _themeProvider!, null);
               case "Midnight X revive":
                 openMidnightXReviveDialog(context, _themeProvider!, null);
+              case "The Wolverines revive":
+                openWolverinesReviveDialog(context, _themeProvider!, null);
             }
           },
           itemBuilder: (BuildContext context) {
@@ -880,6 +886,9 @@ class WarPageState extends State<WarPage> {
                 return false;
               }
               if (choice.description!.contains("Midnight X") && !_w.midnightXReviveActive) {
+                return false;
+              }
+              if (choice.description!.contains("The Wolverines") && !_w.wolverinesReviveActive) {
                 return false;
               }
               return true;
@@ -1021,6 +1030,21 @@ class WarPageState extends State<WarPage> {
                       ),
                       const SizedBox(width: 10),
                       const Flexible(child: Text("Request a revive (Midnight X)")),
+                    ],
+                  ),
+                );
+              }
+              if (choice.description!.contains("The Wolverines")) {
+                return PopupMenuItem<WarOptions>(
+                  value: choice,
+                  child: Row(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 13),
+                        child: Image.asset('images/icons/wolverines_revive.png', width: 24),
+                      ),
+                      const SizedBox(width: 10),
+                      const Flexible(child: Text("Request a revive (The Wolverines)")),
                     ],
                   ),
                 );
