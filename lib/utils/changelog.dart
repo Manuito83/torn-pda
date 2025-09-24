@@ -112,6 +112,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Improved player notes dialog interface",
           "Improved tab icons handling",
           "Added The Wolverines revive services",
+          "Fixed notifications getting cleared when opening the app even if disabled",
           "Fixed war widget time zone settings",
           "Fixed several other reported issues",
         ],

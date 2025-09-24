@@ -459,7 +459,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
     // Deletes current channels and create new ones
-    if (Platform.isAndroid) {
+    //
+    // NOTE: as this cleans all notifications when the app is launched from a killed state,
+    // regardless of the user preference in Settings (in regards to clearing notifications),
+    // we only do this when the app has been updated
+    if (Platform.isAndroid && appHasBeenUpdated) {
       final vibration = await Prefs().getVibrationPattern();
       await reconfigureNotificationChannels(mod: vibration);
     }
