@@ -262,6 +262,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   BountiesModel? _bountiesModel;
 
   DateTime? _urlTriggerTime;
+  DateTime? _lastReportTabLoadUrlTime; // Track when reportTabLoadUrl was last called
 
   DateTime? _foreignStocksSentTime;
 
@@ -1480,7 +1481,21 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             _webViewProvider.removeTab(calledFromTab: true);
           },
           onLoadStart: (c, uri) async {
-            log("Start URL: $uri");
+            log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
+
+            // FALLBACK: Always try to force update if reportTabLoadUrl wasn't called recently
+            if (uri != null) {
+              final now = DateTime.now();
+              final lastCallAgo =
+                  _lastReportTabLoadUrlTime != null ? now.difference(_lastReportTabLoadUrlTime!).inSeconds : 999;
+
+              if (lastCallAgo > 0.5) {
+                // If reportTabLoadUrl wasn't called in the last 0.5 seconds
+                _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+                _lastReportTabLoadUrlTime = now;
+              }
+            }
+
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
             _webViewProvider.updateLastTabUse();
@@ -1525,6 +1540,20 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           onProgressChanged: (c, progress) async {
             if (!mounted) return;
 
+            // Check for URL changes during progress
+            if (progress > 10) {
+              // Wait for some progress to avoid initial load noise
+              final currentUri = await c.getUrl();
+              if (currentUri != null && _currentUrl != currentUri.toString()) {
+                log(
+                  "🔄 onProgressChanged URL change detected: $_currentUrl -> ${currentUri.toString()}",
+                  name: "WEBVIEW FULL",
+                );
+                _currentUrl = currentUri.toString();
+                _reportUrlVisit(currentUri);
+              }
+            }
+
             try {
               _removeTravelAirplaneIfEnabled(c);
 
@@ -1552,6 +1581,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             }
           },
           onLoadStop: (c, uri) async {
+            log("🏁 onLoadStop: $uri", name: 'WEBVIEW FULL');
             if (!mounted) return;
 
             if (_settingsProvider.browserCenterEditingTextField &&
@@ -2343,6 +2373,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (!_omitTabHistory) {
       // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
       _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+      _lastReportTabLoadUrlTime = DateTime.now();
     } else {
       _omitTabHistory = false;
     }

@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Player notes now support color-only entries",
           "Improved player notes dialog interface",
+          "Improved tab icons handling",
           "Fixed war widget time zone settings",
           "Fixed several other reported issues",
         ],
