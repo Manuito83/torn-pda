@@ -234,8 +234,8 @@ class WarCardState extends State<WarCard> {
                             const SizedBox(width: 3),
                             _factionName(),
                             OpenContainer(
-                              transitionDuration: const Duration(milliseconds: 500),
-                              transitionType: ContainerTransitionType.fadeThrough,
+                              transitionDuration: const Duration(milliseconds: 300),
+                              transitionType: ContainerTransitionType.fade,
                               openBuilder: (BuildContext context, VoidCallback _) {
                                 return MemberDetailsPage(memberId: _member.memberId.toString());
                               },

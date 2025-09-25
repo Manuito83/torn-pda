@@ -23,8 +23,8 @@ class ForeignStockButton extends StatelessWidget {
       container: true,
       label: "Open Foreign Stocks page",
       child: OpenContainer(
-        transitionDuration: const Duration(seconds: 1),
-        transitionType: ContainerTransitionType.fadeThrough,
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
           return ForeignStockPage(apiKey: UserHelper.apiKey);
         },

@@ -165,8 +165,8 @@ class TargetCardState extends State<TargetCard> {
                               children: [
                                 const SizedBox(width: 5),
                                 OpenContainer(
-                                  transitionDuration: const Duration(milliseconds: 500),
-                                  transitionType: ContainerTransitionType.fadeThrough,
+                                  transitionDuration: const Duration(milliseconds: 300),
+                                  transitionType: ContainerTransitionType.fade,
                                   openBuilder: (BuildContext context, VoidCallback _) {
                                     return TargetDetailsPage(target: _target);
                                   },

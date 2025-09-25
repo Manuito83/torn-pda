@@ -987,8 +987,8 @@ class TradesWidgetState extends State<TradesWidget> {
     final ticketURL = awhBaseUrl + jsonEncoded;
 
     return OpenContainer(
-      transitionDuration: const Duration(seconds: 1),
-      transitionType: ContainerTransitionType.fadeThrough,
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionType: ContainerTransitionType.fade,
       openBuilder: (BuildContext context, VoidCallback _) {
         return WebViewFullAwh(
           customUrl: ticketURL,

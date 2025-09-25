@@ -146,8 +146,8 @@ class YataTargetsDialogState extends State<YataTargetsDialog> {
               ),
               const SizedBox(width: 10),
               OpenContainer(
-                transitionDuration: const Duration(milliseconds: 500),
-                transitionType: ContainerTransitionType.fadeThrough,
+                transitionDuration: const Duration(milliseconds: 300),
+                transitionType: ContainerTransitionType.fade,
                 openBuilder: (BuildContext context, VoidCallback _) {
                   return YataTargetsDistribution(
                     bothSides: widget.bothSides,

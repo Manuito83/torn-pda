@@ -1677,6 +1677,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       _typesFilteredText = 'ALL';
     }
 
+    if (!mounted) return;
     setState(() {
       _filteredStocksCards.clear();
       countryMap.forEach((countryKey, countryDetails) {
