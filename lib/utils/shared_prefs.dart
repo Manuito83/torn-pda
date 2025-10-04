@@ -10,7 +10,11 @@ import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class Prefs {
-  final SharedPreferencesAsync _asyncPrefs = SharedPreferencesAsync();
+  static final Prefs _instance = Prefs._internal();
+  factory Prefs() => _instance;
+  Prefs._internal();
+
+  final _asyncPrefs = SharedPreferencesAsync();
 
   // General
   final String _kAppVersion = "pda_appVersion";
