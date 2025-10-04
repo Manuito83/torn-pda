@@ -1885,29 +1885,115 @@ class WebViewProvider extends ChangeNotifier {
       "sid=getInAttack&user2ID=": {'type': 'icon', 'icon': MdiIcons.pistol},
       "sid=attackLog&ID=": {'type': 'icon', 'icon': MdiIcons.notebookOutline},
 
-      // Profile pages
+      "index.php?page=hunting": {'type': 'icon', 'icon': MdiIcons.target, 'size': 20.0},
+
+      "messages.php": {'type': 'asset', 'path': 'images/icons/home/messages.png'},
+      "sid=messages": {'type': 'asset', 'path': 'images/icons/home/messages.png'},
+
+      "events.php": {'type': 'asset', 'path': 'images/icons/home/events.png'},
+      "sid=events": {'type': 'asset', 'path': 'images/icons/home/events.png'},
+
+      "awards.php": {'type': 'asset', 'path': 'images/icons/home/awards.png'},
+      "sid=awards": {'type': 'asset', 'path': 'images/icons/home/awards.png'},
+      "calendar.php": {'type': 'icon', 'icon': MdiIcons.calendar, 'size': 20.0},
+
       "profiles.php": {'type': 'icon', 'icon': Icons.person},
 
-      // Job and company pages
+      "laptop.php": {'type': 'asset', 'path': 'images/icons/home/laptop.png'},
+      "sid=laptop": {'type': 'asset', 'path': 'images/icons/home/laptop.png'},
+
+      "personalstats.php": {'type': 'asset', 'path': 'images/icons/home/stats.png'},
+      "sid=personalstats": {'type': 'asset', 'path': 'images/icons/home/stats.png'},
+
+      "halloffame.php": {'type': 'asset', 'path': 'images/icons/home/hall_fame.png'},
+      "sid=halloffame": {'type': 'asset', 'path': 'images/icons/home/hall_fame.png'},
+
+      "friendlist.php": {'type': 'asset', 'path': 'images/icons/home/friends.png'},
+      "sid=friends": {'type': 'asset', 'path': 'images/icons/home/friends.png'},
+
+      "blacklist.php": {'type': 'asset', 'path': 'images/icons/home/enemies.png'},
+      "sid=enemies": {'type': 'asset', 'path': 'images/icons/home/enemies.png'},
+
+      "city.php": {'type': 'asset', 'path': 'images/icons/home/city.png'},
+      "sid=city": {'type': 'asset', 'path': 'images/icons/home/city.png'},
+
       "companies.php": {'type': 'asset', 'path': 'images/icons/home/job.png'},
       "joblist.php": {'type': 'asset', 'path': 'images/icons/home/job.png'},
+      "jobs.php": {'type': 'asset', 'path': 'images/icons/home/job.png'},
+      "sid=jobs": {'type': 'asset', 'path': 'images/icons/home/job.png'},
 
-      // Forum pages
-      "https://www.torn.com/forums.php": {'type': 'asset', 'path': 'images/icons/home/forums.png'},
+      "gym.php": {'type': 'asset', 'path': 'images/icons/map/gym.png'},
+      "sid=gym": {'type': 'asset', 'path': 'images/icons/map/gym.png'},
 
-      // Other Torn pages
-      "jailview.php": {'type': 'asset', 'path': 'images/icons/map/jail.png'},
-      "hospitalview.php": {'type': 'asset', 'path': 'images/icons/map/hospital.png'},
       "properties.php": {'type': 'asset', 'path': 'images/icons/map/property.png'},
-      "sid=ItemMarket": {'type': 'asset', 'path': 'images/icons/map/item_market.png'},
-      "sid=travel": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
-      "events.php": {'type': 'asset', 'path': 'images/icons/home/events.png'},
-      "page.php?sid=events": {'type': 'asset', 'path': 'images/icons/home/events.png'},
-      "torn.com/loader.php?sid=crimes#": {'type': 'asset', 'path': 'images/icons/home/crimes.png'},
+      "sid=properties": {'type': 'asset', 'path': 'images/icons/map/property.png'},
+
+      "education.php": {'type': 'asset', 'path': 'images/icons/map/education.png'},
+      "sid=education": {'type': 'asset', 'path': 'images/icons/map/education.png'},
+
       "crimes.php": {'type': 'asset', 'path': 'images/icons/home/crimes.png'},
-      "index.php?page=hunting": {'type': 'icon', 'icon': MdiIcons.target, 'size': 20.0},
-      "index.php": {'type': 'imageicon', 'path': 'images/icons/home/home.png'},
+      "sid=crimes": {'type': 'asset', 'path': 'images/icons/home/crimes.png'},
+
+      "loader.php?sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
+      "sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
+
+      "bounties.php": {'type': 'asset', 'path': 'images/icons/home/bounty.png'},
+      "sid=bounties": {'type': 'asset', 'path': 'images/icons/home/bounty.png'},
+
+      "newspaper.php": {'type': 'asset', 'path': 'images/icons/home/newspaper.png'},
+      "sid=newspaper": {'type': 'asset', 'path': 'images/icons/home/newspaper.png'},
+
+      "jailview.php": {'type': 'asset', 'path': 'images/icons/map/jail.png'},
+      "sid=jail": {'type': 'asset', 'path': 'images/icons/map/jail.png'},
+
+      "hospitalview.php": {'type': 'asset', 'path': 'images/icons/map/hospital.png'},
+      "sid=hospital": {'type': 'asset', 'path': 'images/icons/map/hospital.png'},
+
+      "forums.php": {'type': 'asset', 'path': 'images/icons/home/forums.png'},
+      "sid=forums": {'type': 'asset', 'path': 'images/icons/home/forums.png'},
+
+      "factions.php": {'type': 'asset', 'path': 'images/icons/home/faction.png'},
+      "sid=factions": {'type': 'asset', 'path': 'images/icons/home/faction.png'},
+
+      "trade.php": {'type': 'asset', 'path': 'images/icons/inventory/trades.png'},
+      "sid=trade": {'type': 'asset', 'path': 'images/icons/inventory/trades.png'},
+
       "bazaar.php": {'type': 'asset', 'path': 'images/icons/inventory/bazaar.png'},
+      "sid=bazaar": {'type': 'asset', 'path': 'images/icons/inventory/bazaar.png'},
+
+      "item.php": {'type': 'asset', 'path': 'images/icons/home/items.png'},
+      "sid=items": {'type': 'asset', 'path': 'images/icons/home/items.png'},
+
+      "imarket.php": {'type': 'asset', 'path': 'images/icons/map/item_market.png'},
+      "sid=imarket": {'type': 'asset', 'path': 'images/icons/map/item_market.png'},
+      "sid=ItemMarket": {'type': 'asset', 'path': 'images/icons/map/item_market.png'},
+
+      "amarket.php": {'type': 'asset', 'path': 'images/icons/map/auction_house.png'},
+      "sid=amarket": {'type': 'asset', 'path': 'images/icons/map/auction_house.png'},
+
+      "pmarket.php": {'type': 'asset', 'path': 'images/icons/map/points_market.png'},
+      "sid=pmarket": {'type': 'asset', 'path': 'images/icons/map/points_market.png'},
+
+      "casino.php": {'type': 'asset', 'path': 'images/icons/map/casino.png'},
+      "sid=casino": {'type': 'asset', 'path': 'images/icons/map/casino.png'},
+
+      "points.php": {'type': 'asset', 'path': 'images/icons/map/points_building.png'},
+      "sid=points": {'type': 'asset', 'path': 'images/icons/map/points_building.png'},
+
+      "dump.php": {'type': 'asset', 'path': 'images/icons/map/dump.png'},
+      "sid=dump": {'type': 'asset', 'path': 'images/icons/map/dump.png'},
+
+      "bank.php": {'type': 'asset', 'path': 'images/icons/map/bank.png'},
+      "sid=bank": {'type': 'asset', 'path': 'images/icons/map/bank.png'},
+
+      "page.php?sid=stocks": {'type': 'asset', 'path': 'images/icons/map/stock_exchange.png'},
+      "sid=stocks": {'type': 'asset', 'path': 'images/icons/map/stock_exchange.png'},
+
+      "travelagency.php": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
+      "sid=travel": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
+
+      "loader.php?sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
+      "sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
     };
 
     // Check each URL pattern
@@ -1930,8 +2016,8 @@ class WebViewProvider extends ChangeNotifier {
       }
     }
 
-    // Special case when adding new tab before the webview handles it
-    if (url == "https://www.torn.com" || url == "https://www.torn.com/") {
+    // Special case for home page URLs that were not caught by a more specific rule
+    if (url == "https://www.torn.com" || url == "https://www.torn.com/" || url == "https://www.torn.com/index.php") {
       return ImageIcon(const AssetImage('images/icons/home/home.png'), color: iconColor);
     }
 
