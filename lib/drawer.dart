@@ -205,208 +205,292 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
-    // Start stats counting
-    _statsController.logCheckIn();
+    _initializeStats();
+    _initializeQuickActions();
+    _initializePlayerNotesMigration();
+    _initializeConfig();
+    _initializeLiveActivities();
+    _initializeDeepLinks();
+    _initializeNotifications();
+    _initializeFirebaseMessaging();
+    _initializeBackgroundNotifications();
+    _initializeIntentListeners();
+    _initializeRemoteConfigInit();
+    _initializeChainStatus();
+    _initializeSendbird();
+    _initializeBrowserPreferences();
+    _initializeConnectivity();
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  void _initializeStats() {
+    try {
+      _statsController.logCheckIn();
+    } catch (e, stackTrace) {
+      log("Error initializing stats: $e");
+      logErrorToCrashlytics("Error initializing stats", e, stackTrace);
+    }
+  }
+
+  void _initializeQuickActions() {
+    try {
+      const QuickActions quickActions = QuickActions();
+
+      quickActions.initialize((String shortcutType) async {
+        if (shortcutType == 'open_torn') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_gym') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/gym.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_crimes') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/crimes.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_travel') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/travelagency.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        }
+      });
+
+      quickActions.setShortcutItems(<ShortcutItem>[
+        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
+        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
+        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
+        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
+      ]);
+    } catch (e, stackTrace) {
+      log("Error initializing quick actions: $e");
+      logErrorToCrashlytics("Error initializing quick actions", e, stackTrace);
+    }
+  }
+
+  void _initializePlayerNotesMigration() {
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          final playerNotesController = Get.find<PlayerNotesController>();
+          playerNotesController.initializeMigration();
+        } catch (e) {
+          log('Could not initialize player notes migration: $e');
+        }
+      });
+    } catch (e, stackTrace) {
+      log("Error initializing player notes migration: $e");
+      logErrorToCrashlytics("Error initializing player notes migration", e, stackTrace);
+    }
+  }
+
+  void _initializeConfig() {
+    try {
+      _allowSectionsWithoutKey = [
+        _settingsPosition,
+        _aboutPosition,
+      ];
+
+      _finishedWithPreferencesAndDialogs = _loadPreferencesAndDialogs();
+    } catch (e, stackTrace) {
+      log("Error initializing config: $e");
+      logErrorToCrashlytics("Error initializing config", e, stackTrace);
+    }
+  }
+
+  void _initializeLiveActivities() {
+    try {
+      if (Platform.isIOS) {
+        _initialiseLiveActivitiesBridgeService();
+      }
+    } catch (e, stackTrace) {
+      log("Error initializing live activities: $e");
+      logErrorToCrashlytics("Error initializing live activities", e, stackTrace);
+    }
+  }
+
+  void _initializeDeepLinks() {
+    try {
+      _deepLinksInit();
+    } catch (e, stackTrace) {
+      log("Error initializing deep links: $e");
+      logErrorToCrashlytics("Error initializing deep links", e, stackTrace);
+    }
+  }
+
+  void _initializeNotifications() {
+    try {
+      _onForegroundNotification();
+
+      if (Platform.isAndroid) {
+        configureNotificationChannels();
+      }
+
+      if (Platform.isIOS) {
+        _messaging.setForegroundNotificationPresentationOptions();
+      }
+    } catch (e, stackTrace) {
+      log("Error initializing notifications: $e");
+      logErrorToCrashlytics("Error initializing notifications", e, stackTrace);
+    }
+  }
+
+  void _initializeFirebaseMessaging() {
+    try {
+      _lastMessageReceived = DateTime.now();
+      _lastBody = "";
+
       if (!Platform.isWindows) {
-        // STARTS QUICK ACTIONS
-        const QuickActions quickActions = QuickActions();
+        _messaging.getInitialMessage().then((RemoteMessage? message) {
+          if (message != null && message.data.isNotEmpty) {
+            _onFirebaseBackgroundNotification(message.data);
+          }
+        });
 
-        quickActions.setShortcutItems(<ShortcutItem>[
-          // NOTE: keep the same file name for both platforms
-          const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
-          const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
-          const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
-          const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
-        ]);
+        FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+          if (message.data.isNotEmpty) {
+            _onFirebaseBackgroundNotification(message.data);
+          }
+        });
 
-        quickActions.initialize((String shortcutType) async {
-          if (shortcutType == 'open_torn') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com",
-                  browserTapType: BrowserTapType.quickItem,
-                );
-          } else if (shortcutType == 'open_gym') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com/gym.php",
-                  browserTapType: BrowserTapType.quickItem,
-                );
-          } else if (shortcutType == 'open_crimes') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com/crimes.php",
-                  browserTapType: BrowserTapType.quickItem,
-                );
-          } else if (shortcutType == 'open_travel') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com/travelagency.php",
-                  browserTapType: BrowserTapType.quickItem,
-                );
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+          if (message.data.isEmpty) {
+            message.data["title"] = message.notification!.title;
+            message.data["body"] = message.notification!.body;
+          }
+
+          bool skip = false;
+          if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
+            if (message.data["body"] == _lastBody) {
+              skip = true;
+            } else {
+              concurrent++;
+              await Future.delayed(Duration(seconds: 8 * concurrent));
+            }
+          } else {
+            concurrent = 0;
+          }
+
+          if (!skip) {
+            _lastMessageReceived = DateTime.now();
+            _lastBody = message.data["body"] as String?;
+            notId++;
+            if (notId > 990) notId = 900;
+            showNotification(message.data, notId);
+          } else {
+            return;
           }
         });
       }
-    });
-    // ENDS QUICK ACTIONS
+    } catch (e, stackTrace) {
+      log("Error initializing Firebase messaging: $e");
+      logErrorToCrashlytics("Error initializing Firebase messaging", e, stackTrace);
+    }
+  }
 
-    // Initialize player notes migration v3.9.1
-    // TODO: remove
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        final playerNotesController = Get.find<PlayerNotesController>();
-        playerNotesController.initializeMigration();
-      } catch (e) {
-        log('Could not initialize player notes migration: $e');
+  void _initializeBackgroundNotifications() {
+    try {
+      _getBackgroundNotificationSavedData();
+      _removeExistingNotifications();
+    } catch (e, stackTrace) {
+      log("Error initializing background notifications: $e");
+      logErrorToCrashlytics("Error initializing background notifications", e, stackTrace);
+    }
+  }
+
+  void _initializeIntentListeners() {
+    try {
+      if (Platform.isAndroid) {
+        _initIntentListenerSubscription();
+        _initIntentReceiverOnLaunch();
       }
-    });
-
-    _allowSectionsWithoutKey = [
-      _settingsPosition,
-      _aboutPosition,
-    ];
-
-    _finishedWithPreferencesAndDialogs = _loadPreferencesAndDialogs();
-
-    // Live Activities
-    if (Platform.isIOS) {
-      _initialiseLiveActivitiesBridgeService();
+    } catch (e, stackTrace) {
+      log("Error initializing intent listeners: $e");
+      logErrorToCrashlytics("Error initializing intent listeners", e, stackTrace);
     }
+  }
 
-    // Deep Linking
-    _deepLinksInit();
-
-    // This starts a stream that listens for tap on local notifications (i.e.:
-    // when the app is open)
-    _onForegroundNotification();
-
-    // Configure all notifications channels so that Firebase alerts have already
-    // and assign channel where to land
-    if (Platform.isAndroid) {
-      configureNotificationChannels();
+  void _initializeRemoteConfigInit() {
+    try {
+      if (!Platform.isWindows) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _initializeRemoteConfig();
+        });
+      }
+    } catch (e, stackTrace) {
+      log("Error initializing remote config: $e");
+      logErrorToCrashlytics("Error initializing remote config", e, stackTrace);
     }
+  }
 
-    // Defaulted to false so that onMessage is the entry point on iOS as it happens on Android (
-    // otherwise we get duplicated notifications). Choose one or the other for iOS.
-    // On Android we have no option since Firebase Android SDK will block displaying any FCM
-    // notification no matter what Notification Channel has been set
-    // See https://firebase.flutter.dev/docs/messaging/notifications/
-    if (Platform.isIOS) {
-      _messaging.setForegroundNotificationPresentationOptions();
+  void _initializeChainStatus() {
+    try {
+      Get.find<ChainStatusController>().initialiseProvider();
+    } catch (e, stackTrace) {
+      log("Error initializing chain status: $e");
+      logErrorToCrashlytics("Error initializing chain status", e, stackTrace);
     }
+  }
 
-    _lastMessageReceived = DateTime.now();
-    _lastBody = "";
+  void _initializeSendbird() {
+    try {
+      _preferencesCompleter.future.whenComplete(() async {
+        final sbController = Get.find<SendbirdController>();
+        await sbController.register();
+      });
+    } catch (e, stackTrace) {
+      log("Error initializing Sendbird: $e");
+      logErrorToCrashlytics("Error initializing Sendbird", e, stackTrace);
+    }
+  }
 
-    if (!Platform.isWindows) {
-      _messaging.getInitialMessage().then((RemoteMessage? message) {
-        if (message != null && message.data.isNotEmpty) {
-          _onFirebaseBackgroundNotification(message.data);
+  void _initializeBrowserPreferences() {
+    try {
+      _preferencesCompleter.future.whenComplete(() async {
+        final fwd = await Prefs().getBringBrowserForwardOnStart();
+        if (fwd) {
+          _webViewProvider.browserShowInForeground = true;
+          Prefs().setBringBrowserForwardOnStart(false);
         }
       });
+    } catch (e, stackTrace) {
+      log("Error initializing browser preferences: $e");
+      logErrorToCrashlytics("Error initializing browser preferences", e, stackTrace);
+    }
+  }
 
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-        if (message.data.isNotEmpty) {
-          _onFirebaseBackgroundNotification(message.data);
-        }
-      });
-
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-        // This allows for notifications other than predefined ones in functions
-        if (message.data.isEmpty) {
-          message.data["title"] = message.notification!.title;
-          message.data["body"] = message.notification!.body;
-        }
-
-        // Space messages and skip repeated
-        bool skip = false;
-        if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
-          if (message.data["body"] == _lastBody) {
-            // Skips messages with the same body that come repeated in less than 2 seconds, which is
-            // a glitch for some mobile devices with the app in the foreground!
-            skip = true;
-          } else {
-            // Spaces out several notifications so that all of them show if
-            // the app is open (otherwise only 1 of them shows)
-            concurrent++;
-            await Future.delayed(Duration(seconds: 8 * concurrent));
+  void _initializeConnectivity() {
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        ConnectivityHandler.instance.hasConnection.addListener(() {
+          if (mounted) {
+            setState(() {});
           }
-        } else {
-          concurrent = 0;
-        }
+        });
 
-        if (!skip) {
-          _lastMessageReceived = DateTime.now();
-          _lastBody = message.data["body"] as String?;
-          // Assigns a different id two alerts that come together (otherwise one
-          // deletes the previous one)
-          notId++;
-          if (notId > 990) notId = 900;
-          // This will eventually fire a local notification
-          showNotification(message.data, notId);
-        } else {
-          return;
-        }
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            setState(() {
+              _hasWaitedInitialDelay = true;
+            });
+          }
+        });
       });
+    } catch (e, stackTrace) {
+      log("Error initializing connectivity: $e");
+      logErrorToCrashlytics("Error initializing connectivity", e, stackTrace);
     }
-
-    // Handle notifications
-    _getBackgroundNotificationSavedData();
-    _removeExistingNotifications();
-
-    // Init intent listener (for appWidget)
-    if (Platform.isAndroid) {
-      _initIntentListenerSubscription();
-      _initIntentReceiverOnLaunch();
-    }
-
-    // Initialize Remote Config after first frame
-    if (!Platform.isWindows) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _initializeRemoteConfig();
-      });
-    }
-
-    // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
-    Get.find<ChainStatusController>().initialiseProvider();
-
-    // Initialise Sendbird notifications
-    _preferencesCompleter.future.whenComplete(() async {
-      // Sendbird notifications
-      final sbController = Get.find<SendbirdController>();
-      // After app install, this will trigger an invalid playerId until the user loads the API
-      await sbController.register();
-    });
-
-    // Should bring browser forward?
-    _preferencesCompleter.future.whenComplete(() async {
-      final fwd = await Prefs().getBringBrowserForwardOnStart();
-      if (fwd) {
-        _webViewProvider.browserShowInForeground = true;
-        Prefs().setBringBrowserForwardOnStart(false);
-      }
-    });
-
-    // Listen to connectivity changes to update UI on start up
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ConnectivityHandler.instance.hasConnection.addListener(() {
-        if (mounted) {
-          setState(() {});
-        }
-      });
-
-      // Set an initial delay flag after 1 second
-      // so that we don't show the connectivity UI right away
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() {
-            _hasWaitedInitialDelay = true;
-          });
-        }
-      });
-    });
   }
 
   Future<void> _loadPreferencesAndDialogs() async {
