@@ -5004,10 +5004,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
           expiryString = '${timeDifference.inHours} hours';
         } else if (timeDifference.inDays == 1) {
-          expiryString = '1 day and ${(bankUntil / 60 / 60 % 24).floor()} hours';
+          expiryString = '1 day and ${timeDifference.inHours % 24} hours';
           expiryColor = _themeProvider?.mainText;
         } else {
-          expiryString = '${timeDifference.inDays} days and ${(bankUntil / 60 / 60 % 24).floor()} hours';
+          expiryString = '${timeDifference.inDays} days and ${timeDifference.inHours % 24} hours';
           expiryColor = _themeProvider?.mainText;
         }
 
