@@ -74,8 +74,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.9.3';
-const String androidCompilation = '582';
-const String iosCompilation = '582';
+const String androidCompilation = '583';
+const String iosCompilation = '583';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
@@ -763,7 +763,7 @@ Future<void> _initializeFirebase() async {
 
       if (kDebugMode) {
         if (pointFunctionsEmulatorToLocal) {
-          FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('192.168.1.114', 5001);
+          FirebaseFunctions.instanceFor(region: 'us-east4').useFunctionsEmulator('192.168.1.172', 5001);
         }
         await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(false);
 

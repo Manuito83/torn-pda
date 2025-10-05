@@ -4,7 +4,7 @@
   },
   "emulators": {
     "functions": {
-      "host": "192.168.1.35",
+      "host": "192.168.1.172",
       "port": 5001
     },
     "firestore": {
