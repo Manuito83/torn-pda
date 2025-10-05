@@ -292,8 +292,9 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
     );
 
     // Inside of Navigator so that even if DrawerPage is replaced (we push another route), the
-    // reference to this widget is not lost
+    // reference to this widget is not lost. Key prevents unnecessary rebuilds.
     final homeDrawer = Navigator(
+      key: const ValueKey('main_drawer_navigator'),
       onGenerateRoute: (_) {
         return MaterialPageRoute(
           builder: (BuildContext _) => DrawerPage(),
@@ -350,63 +351,95 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
               return Container(color: _themeProvider.secondBackground);
             }
 
-            return Consumer2<SettingsProvider, WebViewProvider>(builder: (context, sProvider, wProvider, child) {
-              // Build standard or split-screen home
-              Widget home = Stack(
-                children: [
-                  homeDrawer,
-                  _mainBrowser,
-                  const AppBorder(),
-                ],
-              );
+            return Consumer2<SettingsProvider, WebViewProvider>(
+              builder: (context, sProvider, wProvider, child) {
+                final homeDrawerWidget = child!;
+                Widget home;
 
-              if (wProvider.splitScreenPosition == WebViewSplitPosition.right &&
-                  wProvider.webViewSplitActive &&
-                  screenIsWide) {
-                home = Stack(
-                  children: [
-                    Row(
+                // Use IndexedStack for normal mode (non-split screen)
+                if (!wProvider.webViewSplitActive) {
+                  // IndexedStack: drawer at index 0, browser placeholder at index 1
+                  home = IndexedStack(
+                    index: wProvider.browserShowInForeground ? 1 : 0,
+                    children: [
+                      // Index 0: Drawer visible
+                      Stack(
+                        children: [
+                          homeDrawerWidget,
+                          const AppBorder(),
+                        ],
+                      ),
+                      // Index 1: Browser mode - drawer hidden but maintains state
+                      Stack(
+                        children: [
+                          Offstage(
+                            // Drawer in memory but not rendered
+                            offstage: true,
+                            child: homeDrawerWidget,
+                          ),
+                          _mainBrowser,
+                          const AppBorder(),
+                        ],
+                      ),
+                    ],
+                  );
+                } else {
+                  // Split screen mode: normal rendering (both widgets visible)
+                  if (wProvider.splitScreenPosition == WebViewSplitPosition.right && screenIsWide) {
+                    home = Stack(
                       children: [
-                        Flexible(child: homeDrawer),
-                        Flexible(child: _mainBrowser),
+                        Row(
+                          children: [
+                            Flexible(child: homeDrawerWidget),
+                            Flexible(child: _mainBrowser),
+                          ],
+                        ),
+                        const AppBorder(),
                       ],
-                    ),
-                    const AppBorder(),
-                  ],
-                );
-              } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left &&
-                  wProvider.webViewSplitActive &&
-                  screenIsWide) {
-                home = Stack(
-                  children: [
-                    Row(
+                    );
+                  } else if (wProvider.splitScreenPosition == WebViewSplitPosition.left && screenIsWide) {
+                    home = Stack(
                       children: [
-                        Flexible(child: _mainBrowser),
-                        Flexible(child: homeDrawer),
+                        Row(
+                          children: [
+                            Flexible(child: _mainBrowser),
+                            Flexible(child: homeDrawerWidget),
+                          ],
+                        ),
+                        const AppBorder(),
                       ],
-                    ),
-                    const AppBorder(),
-                  ],
-                );
-              }
-
-              return PopScope(
-                // Only exit app if user allows and we are not in the browser
-                canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
-                onPopInvokedWithResult: (didPop, result) async {
-                  if (didPop) return;
-                  // If we can't pop, decide if we open the drawer or go backwards in the browser
-                  final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
-                  if (w.browserShowInForeground) {
-                    // Browser is in front, delegate the call
-                    w.tryGoBack();
+                    );
                   } else {
-                    _openDrawerIfPossible();
+                    // Fallback to normal stack if split screen conditions not met
+                    home = Stack(
+                      children: [
+                        homeDrawerWidget,
+                        _mainBrowser,
+                        const AppBorder(),
+                      ],
+                    );
                   }
-                },
-                child: home,
-              );
-            });
+                }
+
+                return PopScope(
+                  // Only exit app if user allows and we are not in the browser
+                  canPop: sProvider.onBackButtonAppExit == "exit" && !wProvider.browserShowInForeground,
+                  onPopInvokedWithResult: (didPop, result) async {
+                    if (didPop) return;
+                    // If we can't pop, decide if we open the drawer or go backwards in the browser
+                    final WebViewProvider w = Provider.of<WebViewProvider>(context, listen: false);
+                    if (w.browserShowInForeground) {
+                      // Browser is in front, delegate the call
+                      w.tryGoBack();
+                    } else {
+                      _openDrawerIfPossible();
+                    }
+                  },
+                  child: home,
+                );
+              },
+              child: homeDrawer,
+            );
           },
         ),
       ),
