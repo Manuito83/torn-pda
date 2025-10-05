@@ -3,6 +3,40 @@ import { logger } from "firebase-functions/v2";
 import { checkUserIdKey } from "./torn_api";
 import admin from "firebase-admin";
 
+/*
+ * USERSCRIPTS BACKUP MIGRATION
+ * ============================
+ * 
+ * PROBLEM: 
+ * - Original userscripts backup stores all scripts in single field: /prefs/pda_userScriptsList/prefKey
+ * - This can exceed Firestore's 1MB limit per field, causing backup failures
+ * 
+ * SOLUTION:
+ * - Migrate to subcollection: /userscripts/{scriptId}/scriptJson
+ * - Each script becomes individual document, no size limits
+ * 
+ * MIGRATION STRATEGY:
+ * 
+ * 1. LEGACY STRUCTURE (original):
+ *    /player_backup/{userId}/prefs/pda_userScriptsList/
+ *      └── prefKey: "[{script1}, {script2}, ...]" (single huge JSON string)
+ * 
+ * 2. NEW STRUCTURE (target):
+ *    /player_backup/{userId}/userscripts/
+ *      │   └── scriptJson: "{stringified individual script object}"
+ *      ├── script_1_SecondScript/
+ *      │   └── scriptJson: "{stringified individual script object}"
+ *      └── ...
+ * 
+ * 3. AUTOMATIC MIGRATION:
+ *    - saveUserPrefs: When receiving pda_userScriptsList → save to new subcollection
+ *    - getUserPrefs: Read from new subcollection first, fallback to legacy
+ *    - Gradual migration as users backup/restore
+ * 
+ * 4. MANUAL MIGRATION (future):
+ *    - migrateLegacyUserscripts() function available via functions:shell
+ */
+
 class UserPrefsSaveInput {
     key: string;
     id: number;
@@ -114,15 +148,59 @@ export const saveUserPrefs = onCall({
         for (const prefKey in inputDetails.prefs) {
             const prefValue = inputDetails.prefs[prefKey];
 
-            // Check if preference exists in preferences collection
-            const prefDoc = await prefsRef.doc(prefKey).get();
+            // Special handling for userscripts - save to subcollection instead
+            if (prefKey === 'pda_userScriptsList') {
+                try {
+                    // Parse the userscripts JSON
+                    const userscripts = JSON.parse(prefValue);
+                    const scriptNames = userscripts.map((script: any) => script.name);
 
-            if (!prefDoc.exists) {
-                // If the preference doesn't exist, create a new document
-                promises.push(prefsRef.doc(prefKey).set({ prefKey: prefValue }));
+                    // Reference to userscripts subcollection directly under player document
+                    const userscriptsRef = playerBackupRef.collection('userscripts');
+
+                    // Delete all existing userscripts first
+                    const existingScripts = await userscriptsRef.get();
+                    const deleteBatch = db.batch();
+                    existingScripts.docs.forEach(doc => deleteBatch.delete(doc.ref));
+                    await deleteBatch.commit();
+
+                    // Add each script as individual document (as JSON string)
+                    for (let i = 0; i < userscripts.length; i++) {
+                        const script = userscripts[i];
+                        const scriptId = `script_${i}_${script.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        await userscriptsRef.doc(scriptId).set({
+                            scriptJson: JSON.stringify(script)
+                        });
+                    }
+
+                    // Delete legacy pda_userScriptsList if it exists
+                    const legacyDoc = await prefsRef.doc(prefKey).get();
+                    if (legacyDoc.exists) {
+                        await prefsRef.doc(prefKey).delete();
+                    }
+
+                    logger.info(`Userscripts migration: ${userscripts.length} scripts [${scriptNames.join(', ')}] → subcollection (user: ${inputDetails.id})`);
+                } catch (parseError) {
+                    logger.warn(`Userscripts migration failed, using legacy (user: ${inputDetails.id}): ${parseError}`);
+                    // Fallback to legacy storage if parsing fails
+                    const prefDoc = await prefsRef.doc(prefKey).get();
+                    if (!prefDoc.exists) {
+                        promises.push(prefsRef.doc(prefKey).set({ prefKey: prefValue }));
+                    } else {
+                        promises.push(prefsRef.doc(prefKey).update({ prefKey: prefValue }));
+                    }
+                }
             } else {
-                // If the preference exists, update the document
-                promises.push(prefsRef.doc(prefKey).update({ prefKey: prefValue }));
+                // Normal handling for other preferences
+                const prefDoc = await prefsRef.doc(prefKey).get();
+
+                if (!prefDoc.exists) {
+                    // If the preference doesn't exist, create a new document
+                    promises.push(prefsRef.doc(prefKey).set({ prefKey: prefValue }));
+                } else {
+                    // If the preference exists, update the document
+                    promises.push(prefsRef.doc(prefKey).update({ prefKey: prefValue }));
+                }
             }
         }
 
@@ -186,6 +264,39 @@ export const getUserPrefs = onCall({
             dbPrefs[doc.id] = doc.data().prefKey;
         }
 
+        // Special handling for migration: try new structure first, then fallback to legacy
+        try {
+            const userscriptsRef = playerBackupDoc.ref.collection('userscripts');
+            const userscriptsSnapshot = await userscriptsRef.get();
+
+            if (!userscriptsSnapshot.empty) {
+                // New structure exists - reconstruct userscripts array
+                const userscripts = [];
+                userscriptsSnapshot.docs.forEach(doc => {
+                    const scriptJson = doc.data().scriptJson;
+                    if (scriptJson) {
+                        const scriptData = JSON.parse(scriptJson);
+                        userscripts.push(scriptData);
+                    }
+                });
+
+                // Store as JSON string in dbPrefs (same format as legacy)
+                dbPrefs['pda_userScriptsList'] = JSON.stringify(userscripts);
+
+                // Remove legacy entry if it exists (cleanup)
+                delete dbPrefs['pda_userScriptsList'];
+                dbPrefs['pda_userScriptsList'] = JSON.stringify(userscripts);
+
+                logger.info(`Retrieved ${userscripts.length} userscripts from new structure for user ${inputDetails.id}`);
+            } else if (dbPrefs['pda_userScriptsList']) {
+                // No new structure, but legacy exists - use legacy
+                logger.info(`Using legacy userscripts structure for user ${inputDetails.id}`);
+            }
+        } catch (userscriptsError) {
+            logger.warn(`Error retrieving userscripts for user ${inputDetails.id}: ${userscriptsError}`);
+            // If there's an error with new structure, legacy will be used automatically
+        }
+
         // Update the last_retrieved field in the parent document
         await playerBackupDoc.ref.update({ last_retrieved: Date.now() });
 
@@ -235,17 +346,25 @@ export const deleteUserPrefs = onCall({
             return JSON.stringify(new UserPrefsOutput(false, 'User preferences not found', null, null));
         }
 
-        // Delete the document (fields) and subcollections (prefs)
+        // Delete the document (fields) and subcollections (prefs and userscripts)
         promises.push((async () => {
             await playerBackupRef.delete();
 
             // Delete the "prefs" subcollection
             const prefsCollectionRef = playerBackupRef.collection('prefs');
             const prefsSnapshot = await prefsCollectionRef.get();
-            const batch = db.batch();
+            const prefsBatch = db.batch();
 
-            prefsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
+            prefsSnapshot.docs.forEach(doc => prefsBatch.delete(doc.ref));
+            await prefsBatch.commit();
+
+            // Delete the "userscripts" subcollection
+            const userscriptsCollectionRef = playerBackupRef.collection('userscripts');
+            const userscriptsSnapshot = await userscriptsCollectionRef.get();
+            const userscriptsBatch = db.batch();
+
+            userscriptsSnapshot.docs.forEach(doc => userscriptsBatch.delete(doc.ref));
+            await userscriptsBatch.commit();
         })());
 
         // Return UserPrefsOutput object
@@ -415,3 +534,130 @@ async function validateUserAuthAndReturnError(key: string, id: number): Promise<
 
     return null;
 }
+
+// Migration for Torn PDA v3.9.3
+// Call: prefsBackup.migrateLegacyUserscripts({"dryRun": true})
+// Uncomment in index.ts before use
+export const migrateLegacyUserscripts = onCall({
+    region: 'us-east4',
+    memory: "1GiB",
+    timeoutSeconds: 540
+}, async (request) => {
+    try {
+        const inputJson = JSON.parse(request.data);
+        const dryRun = inputJson.dryRun || false;
+
+        logger.info(`Starting legacy userscripts migration (dry-run: ${dryRun})`);
+
+        const db = admin.firestore();
+        let processedUsers = 0;
+        let migratedUsers = 0;
+        let errorUsers = 0;
+        let skippedUsers = 0;
+        const migrationResults: any[] = [];
+
+        // Get all player backup documents
+        const allPlayersSnapshot = await db.collection('player_backup').get();
+        logger.info(`Found ${allPlayersSnapshot.docs.length} total users to check`);
+
+        for (const playerDoc of allPlayersSnapshot.docs) {
+            const userId = playerDoc.id;
+            processedUsers++;
+
+            try {
+                // Check if user has legacy userscripts
+                const legacyUserscriptsDoc = await playerDoc.ref
+                    .collection('prefs')
+                    .doc('pda_userScriptsList')
+                    .get();
+
+                if (!legacyUserscriptsDoc.exists) {
+                    skippedUsers++;
+                    continue;
+                }
+
+                // Check if already migrated (has userscripts subcollection)
+                const userscriptsSubcollection = await playerDoc.ref.collection('userscripts').get();
+                if (!userscriptsSubcollection.empty) {
+                    logger.info(`User ${userId} already migrated, skipping`);
+                    skippedUsers++;
+                    continue;
+                }
+
+                // Parse legacy userscripts
+                const legacyData = legacyUserscriptsDoc.data().prefKey;
+                const userscripts = JSON.parse(legacyData);
+                const scriptNames = userscripts.map((script: any) => script.name);
+
+                const result = {
+                    userId,
+                    scriptCount: userscripts.length,
+                    scriptNames,
+                    migrated: false,
+                    error: null
+                };
+
+                if (!dryRun) {
+                    // Perform actual migration
+                    const userscriptsRef = playerDoc.ref.collection('userscripts');
+
+                    // Add each script as individual document (as JSON string)
+                    for (let i = 0; i < userscripts.length; i++) {
+                        const script = userscripts[i];
+                        const scriptId = `script_${i}_${script.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
+                        await userscriptsRef.doc(scriptId).set({
+                            scriptJson: JSON.stringify(script)
+                        });
+                    }
+
+                    // Delete legacy document
+                    await legacyUserscriptsDoc.ref.delete();
+
+                    result.migrated = true;
+                    migratedUsers++;
+
+                    logger.info(`Migrated user ${userId}: ${userscripts.length} scripts [${scriptNames.join(', ')}]`);
+                } else {
+                    logger.info(`[DRY-RUN] Would migrate user ${userId}: ${userscripts.length} scripts [${scriptNames.join(', ')}]`);
+                }
+
+                migrationResults.push(result);
+
+            } catch (error) {
+                errorUsers++;
+                logger.error(`Error processing user ${userId}: ${error}`);
+                migrationResults.push({
+                    userId,
+                    migrated: false,
+                    error: error.toString()
+                });
+            }
+        }
+
+        const summary = {
+            totalUsers: allPlayersSnapshot.docs.length,
+            processedUsers,
+            migratedUsers,
+            skippedUsers,
+            errorUsers,
+            dryRun,
+            results: migrationResults
+        };
+
+        logger.info(`Migration ${dryRun ? '[DRY-RUN] ' : ''}completed: ${migratedUsers} migrated, ${skippedUsers} skipped, ${errorUsers} errors`);
+
+        return JSON.stringify({
+            success: true,
+            message: `Migration ${dryRun ? '[DRY-RUN] ' : ''}completed successfully`,
+            summary
+        });
+
+    } catch (e) {
+        logger.error(`Migration failed: ${e}`);
+        return JSON.stringify({
+            success: false,
+            message: `Migration failed: ${e}`,
+            summary: null
+        });
+    }
+});
