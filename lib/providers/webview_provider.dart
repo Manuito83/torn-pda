@@ -77,9 +77,6 @@ class TabDetails {
   String customName = "";
   bool customNameInTitle = false;
   bool customNameInTab = true;
-
-  // Icon cache for this specific tab
-  Widget? cachedIcon;
 }
 
 class SleepingWebView {
@@ -107,9 +104,6 @@ class SleepingWebView {
 class WebViewProvider extends ChangeNotifier {
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
-
-  // Track tabs that have recently changed URLs to force icon regeneration
-  final Set<int> _recentlyChangedTabs = <int>{};
 
   int loginErrorRetrySeconds = 0;
 
@@ -1068,7 +1062,6 @@ class WebViewProvider extends ChangeNotifier {
 
   void reportTabLoadUrl(Key? reporterKey, String newUrl) {
     final tab = getTabFromKey(reporterKey)!;
-    final tabIndex = _tabList.indexOf(tab);
 
     // Tab initialised prevents the first URL (generic to Torn) to be inserted in the history and also forward history
     // from getting removed (first thing the webView does is to visit the generic URL)
@@ -1084,12 +1077,6 @@ class WebViewProvider extends ChangeNotifier {
       tab.initialised = true;
     }
     tab.currentUrl = newUrl;
-
-    // Invalidate icon cache for this tab since URL changed
-    if (tabIndex >= 0 && tabIndex < _tabList.length) {
-      _tabList[tabIndex].cachedIcon = null;
-      _recentlyChangedTabs.add(tabIndex); // Mark as recently changed to force regeneration
-    }
 
     notifyListeners();
     _callAssessMethods();
@@ -1813,26 +1800,17 @@ class WebViewProvider extends ChangeNotifier {
     return _specialUsers[userId];
   }
 
-  /// Get icon for specific tab index - uses cache and updates if necessary
+  /// Get icon for specific tab index - automatically updates when theme changes
   Widget getTabIcon(int index, BuildContext context) {
-    // Validate index bounds
-    if (index < 0 || index >= _tabList.length) {
-      return Icon(Icons.error, color: _getIconColor(context));
-    }
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        if (index < 0 || index >= _tabList.length) {
+          return Icon(Icons.error, color: _getIconColor(context));
+        }
 
-    final tab = _tabList[index];
-
-    // Always regenerate icon for recently changed tabs (ignore cache)
-    if (_recentlyChangedTabs.contains(index)) {
-      tab.cachedIcon = _generateIcon(index, context);
-      _recentlyChangedTabs.remove(index);
-      return tab.cachedIcon!;
-    }
-
-    // If icon is not cached, generate it
-    tab.cachedIcon ??= _generateIcon(index, context);
-
-    return tab.cachedIcon!;
+        return _generateIcon(index, context);
+      },
+    );
   }
 
   /// Generate icon for a specific tab (internal method)

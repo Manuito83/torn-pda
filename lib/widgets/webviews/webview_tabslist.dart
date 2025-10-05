@@ -254,17 +254,26 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
                                 margin: const EdgeInsets.only(bottom: 50),
-                                title: const Column(
+                                title: Column(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.lock,
                                       color: Colors.orange,
                                     ),
-                                    SizedBox(height: 10),
-                                    Text("Positional Lock"),
+                                    const SizedBox(height: 10),
+                                    Text("Positional Lock", style: TextStyle(color: _themeProvider.mainText)),
                                   ],
                                 ),
                                 autoCloseDuration: const Duration(milliseconds: 1500),
+                                backgroundColor: _themeProvider.canvas,
+                                closeButton: ToastCloseButton(
+                                  buttonBuilder: (context, onClose) {
+                                    return Icon(
+                                      Icons.close,
+                                      color: _themeProvider.mainText,
+                                    );
+                                  },
+                                ),
                                 animationDuration: const Duration(milliseconds: 0),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
@@ -302,11 +311,23 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                       color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red,
                                     ),
                                     const SizedBox(height: 10),
-                                    Text(_webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock"),
+                                    Text(
+                                      _webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock",
+                                      style: TextStyle(color: _themeProvider.mainText),
+                                    ),
                                   ],
                                 ),
                                 autoCloseDuration: const Duration(milliseconds: 1500),
                                 animationDuration: const Duration(milliseconds: 0),
+                                backgroundColor: _themeProvider.canvas,
+                                closeButton: ToastCloseButton(
+                                  buttonBuilder: (context, onClose) {
+                                    return Icon(
+                                      Icons.close,
+                                      color: _themeProvider.mainText,
+                                    );
+                                  },
+                                ),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
                                 borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
@@ -459,16 +480,26 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                         : Colors.orange,
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     "A locked tab cannot be exchanged with an unlocked one!",
                     maxLines: 5,
                     textAlign: TextAlign.center,
+                    style: TextStyle(color: _themeProvider.mainText),
                   ),
                 ],
               ),
             ),
             autoCloseDuration: const Duration(seconds: 3),
             animationDuration: const Duration(milliseconds: 0),
+            backgroundColor: _themeProvider.canvas,
+            closeButton: ToastCloseButton(
+              buttonBuilder: (context, onClose) {
+                return Icon(
+                  Icons.close,
+                  color: _themeProvider.mainText,
+                );
+              },
+            ),
             type: ToastificationType.info,
             style: ToastificationStyle.simple,
             borderSide: BorderSide(width: 1, color: Colors.grey[700]!),

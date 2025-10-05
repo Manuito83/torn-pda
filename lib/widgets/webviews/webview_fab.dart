@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/multitab_detector.dart';
 
@@ -106,6 +107,15 @@ class FabSettings {
       ),
       autoCloseDuration: const Duration(seconds: 2),
       animationDuration: const Duration(milliseconds: 0),
+      backgroundColor: context.read<ThemeProvider>().canvas,
+      closeButton: ToastCloseButton(
+        buttonBuilder: (context, onClose) {
+          return Icon(
+            Icons.close,
+            color: context.read<ThemeProvider>().mainText,
+          );
+        },
+      ),
       showProgressBar: false,
       style: ToastificationStyle.simple,
       borderSide: BorderSide(width: 1, color: Colors.grey[700]!),

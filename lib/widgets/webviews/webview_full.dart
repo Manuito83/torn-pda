@@ -2137,6 +2137,15 @@ class WebViewFullState extends State<WebViewFull>
               ),
               autoCloseDuration: const Duration(seconds: 3),
               animationDuration: const Duration(milliseconds: 0),
+              backgroundColor: _themeProvider.canvas,
+              closeButton: ToastCloseButton(
+                buttonBuilder: (context, onClose) {
+                  return Icon(
+                    Icons.close,
+                    color: _themeProvider.mainText,
+                  );
+                },
+              ),
               showProgressBar: false,
               style: ToastificationStyle.simple,
               borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
