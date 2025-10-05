@@ -5378,6 +5378,14 @@ class WebViewFullState extends State<WebViewFull>
     }
 
     final uri = WebUri(inputUrl);
+
+    // On Android, certain short cuts will revert to the main section (e.g. market search)
+    // If we want to load the same URL again, we need to reload instead of loadUrl
+    if (inputUrl == _currentUrl) {
+      webViewController!.reload();
+      return;
+    }
+
     webViewController!.loadUrl(urlRequest: URLRequest(url: uri));
   }
 

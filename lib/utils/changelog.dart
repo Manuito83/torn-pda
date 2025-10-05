@@ -115,8 +115,9 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed size limit for user scripts' cloud backup",
           "Fixed notifications getting cleared when opening the app even if disabled",
           "Fixed war widget time zone settings",
-          "Fixed several other reported issues",
+          "Fixed shortcuts to market items not loading the correct URL",
           "Fixed missing items icons",
+          "Fixed several other reported issues",
         ],
     );
 
