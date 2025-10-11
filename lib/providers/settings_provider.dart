@@ -1204,35 +1204,35 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _reviveHelaPrice = "1 million or 1 Xanax each";
+  String _reviveHelaPrice = "1.8 million or 2 Xanax each";
   String get reviveHelaPrice => _reviveHelaPrice;
   set reviveHelaPrice(String value) {
     _reviveHelaPrice = value;
     notifyListeners();
   }
 
-  String _reviveMidnightPrice = "1 million or 1 Xanax each";
+  String _reviveMidnightPrice = "1.8 million or 2 Xanax each";
   String get reviveMidnightPrice => _reviveMidnightPrice;
   set reviveMidnightPrice(String value) {
     _reviveMidnightPrice = value;
     notifyListeners();
   }
 
-  String _reviveNukePrice = "1 million or 1 Xanax each";
+  String _reviveNukePrice = "1.8 million or 2 Xanax each";
   String get reviveNukePrice => _reviveNukePrice;
   set reviveNukePrice(String value) {
     _reviveNukePrice = value;
     notifyListeners();
   }
 
-  String _reviveUhcPrice = "1 million or 1 Xanax each";
+  String _reviveUhcPrice = "1.8 million or 2 Xanax each";
   String get reviveUhcPrice => _reviveUhcPrice;
   set reviveUhcPrice(String value) {
     _reviveUhcPrice = value;
     notifyListeners();
   }
 
-  String _reviveWtfPrice = "1 million or 1 Xanax each";
+  String _reviveWtfPrice = "1.8 million or 2 Xanax each";
   String get reviveWtfPrice => _reviveWtfPrice;
   set reviveWtfPrice(String value) {
     _reviveWtfPrice = value;
