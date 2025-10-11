@@ -37,6 +37,19 @@ class OwnProfileMisc {
   List<Itemmarket>? itemmarket;
   Metadata? metadata;
 
+  // Battle Stats Getters
+  double get effectiveStrength => battleStats?.effectiveStrength ?? 0.0;
+  double get effectiveDefense => battleStats?.effectiveDefense ?? 0.0;
+  double get effectiveSpeed => battleStats?.effectiveSpeed ?? 0.0;
+  double get effectiveDexterity => battleStats?.effectiveDexterity ?? 0.0;
+  double get effectiveTotal => battleStats?.effectiveTotal ?? 0.0;
+
+  // Battle Stats Modifiers Getters
+  int get strengthModifierPercent => battleStats?.strengthModifierPercent ?? 0;
+  int get defenseModifierPercent => battleStats?.defenseModifierPercent ?? 0;
+  int get speedModifierPercent => battleStats?.speedModifierPercent ?? 0;
+  int get dexterityModifierPercent => battleStats?.dexterityModifierPercent ?? 0;
+
   OwnProfileMisc({
     required this.education,
     required this.properties,
@@ -575,6 +588,19 @@ class BattleStats {
     this.total,
   });
 
+  /// Valores efectivos calculados (con modificadores aplicados)
+  double get effectiveStrength => strength?.effectiveValue ?? 0.0;
+  double get effectiveDefense => defense?.effectiveValue ?? 0.0;
+  double get effectiveSpeed => speed?.effectiveValue ?? 0.0;
+  double get effectiveDexterity => dexterity?.effectiveValue ?? 0.0;
+  double get effectiveTotal => effectiveStrength + effectiveDefense + effectiveSpeed + effectiveDexterity;
+
+  /// Modificadores en porcentaje
+  int get strengthModifierPercent => strength?.totalModifierPercent ?? 0;
+  int get defenseModifierPercent => defense?.totalModifierPercent ?? 0;
+  int get speedModifierPercent => speed?.totalModifierPercent ?? 0;
+  int get dexterityModifierPercent => dexterity?.totalModifierPercent ?? 0;
+
   factory BattleStats.fromJson(Map<String, dynamic> json) {
     try {
       // TODO: Once legacy API is removed, only use this
@@ -605,13 +631,24 @@ class BattleStats {
         );
       } else {
         // Legacy API: battlestats are at the root with simple structure
+        // Create BattleStat objects from legacy data with strength_info, defense_info, etc.
+        final strengthInfo = json['strength_info'] != null ? List<String>.from(json['strength_info']) : <String>[];
+        final defenseInfo = json['defense_info'] != null ? List<String>.from(json['defense_info']) : <String>[];
+        final speedInfo = json['speed_info'] != null ? List<String>.from(json['speed_info']) : <String>[];
+        final dexterityInfo = json['dexterity_info'] != null ? List<String>.from(json['dexterity_info']) : <String>[];
+
         return BattleStats(
-          strength:
-              json['strength'] != null ? BattleStat.legacy(json['strength'], json['strength_modifier'] ?? 0) : null,
-          defense: json['defense'] != null ? BattleStat.legacy(json['defense'], json['defense_modifier'] ?? 0) : null,
-          speed: json['speed'] != null ? BattleStat.legacy(json['speed'], json['speed_modifier'] ?? 0) : null,
-          dexterity:
-              json['dexterity'] != null ? BattleStat.legacy(json['dexterity'], json['dexterity_modifier'] ?? 0) : null,
+          strength: json['strength'] != null
+              ? BattleStat.legacy(json['strength'], json['strength_modifier'] ?? 0, strengthInfo)
+              : null,
+          defense: json['defense'] != null
+              ? BattleStat.legacy(json['defense'], json['defense_modifier'] ?? 0, defenseInfo)
+              : null,
+          speed:
+              json['speed'] != null ? BattleStat.legacy(json['speed'], json['speed_modifier'] ?? 0, speedInfo) : null,
+          dexterity: json['dexterity'] != null
+              ? BattleStat.legacy(json['dexterity'], json['dexterity_modifier'] ?? 0, dexterityInfo)
+              : null,
           total: json['total'],
         );
       }
@@ -642,6 +679,56 @@ class BattleStat {
     this.modifiers,
   });
 
+  double get effectiveValue {
+    if (modifiers == null || modifiers!.isEmpty) {
+      return value.toDouble();
+    }
+
+    int totalModifierPercent = 0;
+    final RegExp percentRegex = RegExp(r"(\+|\-)([0-9]+)(%)");
+
+    for (final mod in modifiers!) {
+      final matches = percentRegex.allMatches(mod.effect);
+      for (final match in matches) {
+        final change = int.tryParse(match.group(2) ?? '0') ?? 0;
+        if (match.group(1) == '-') {
+          totalModifierPercent -= change;
+        } else if (match.group(1) == '+') {
+          totalModifierPercent += change;
+        }
+      }
+    }
+
+    return value + (value * totalModifierPercent / 100);
+  }
+
+  int get totalModifierPercent {
+    if (modifiers == null || modifiers!.isEmpty) {
+      return 0;
+    }
+
+    int totalModifierPercent = 0;
+    final RegExp percentRegex = RegExp(r"(\+|\-)([0-9]+)(%)");
+
+    for (final mod in modifiers!) {
+      final matches = percentRegex.allMatches(mod.effect);
+      for (final match in matches) {
+        final change = int.tryParse(match.group(2) ?? '0') ?? 0;
+        if (match.group(1) == '-') {
+          totalModifierPercent -= change;
+        } else if (match.group(1) == '+') {
+          totalModifierPercent += change;
+        }
+      }
+    }
+
+    return totalModifierPercent;
+  }
+
+  bool get hasModifiers {
+    return modifiers != null && modifiers!.isNotEmpty && totalModifierPercent != 0;
+  }
+
   factory BattleStat.fromJson(Map<String, dynamic> json) {
     try {
       return BattleStat(
@@ -658,11 +745,32 @@ class BattleStat {
   }
 
   // TODO: Remove when legacy API is discontinued
-  factory BattleStat.legacy(int value, int modifier) => BattleStat(
-        value: value,
-        modifier: modifier,
-        modifiers: null,
-      );
+  factory BattleStat.legacy(int value, int modifier, List<String> infoList) {
+    // Parse infoList to create modifiers
+    final List<BattleStatModifier> parsedModifiers = [];
+    final RegExp percentRegex = RegExp(r"(\+|\-)([0-9]+)(%)");
+
+    for (final info in infoList) {
+      final matches = percentRegex.allMatches(info);
+      for (final match in matches) {
+        final sign = match.group(1) ?? '';
+        final percentValue = int.tryParse(match.group(2) ?? '0') ?? 0;
+        final effect = '$sign$percentValue%';
+
+        parsedModifiers.add(BattleStatModifier(
+          effect: effect,
+          value: percentValue.toDouble(),
+          type: 'legacy',
+        ));
+      }
+    }
+
+    return BattleStat(
+      value: value,
+      modifier: modifier,
+      modifiers: parsedModifiers.isEmpty ? null : parsedModifiers,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         "value": value,

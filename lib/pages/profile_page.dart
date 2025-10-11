@@ -3656,158 +3656,74 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final decimalFormat = NumberFormat("#,##0", "en_US");
 
     // Strength modifiers
-    bool strengthModified = false;
-    Color strengthColor = Colors.white;
-    int strengthModifier = 0;
-    double strengthModifiedTotal = 0;
+    final strengthModifiedTotal = _miscModel!.effectiveStrength;
+    final strengthModifier = _miscModel!.strengthModifierPercent;
+    final strengthModified = strengthModifier != 0;
     String strengthString = '';
-    if (_miscModel!.strengthInfo != null && _miscModel!.battleStats?.strength?.value != null) {
-      strengthModifiedTotal = _miscModel!.battleStats?.strength?.value.toDouble() ?? 0.0;
-      for (final strengthMod in _miscModel!.strengthInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(strengthMod);
-        if (matches.isNotEmpty) {
-          strengthModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              strengthModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              strengthModifier += int.parse(change!);
-            }
-          }
-        }
+    Color strengthColor = Colors.white;
+
+    if (strengthModified) {
+      if (strengthModifier < 0) {
+        strengthString = "($strengthModifier%)";
+        strengthColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        strengthString = "(+$strengthModifier%)";
+        strengthColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (strengthModified) {
-        strengthModifiedTotal += strengthModifiedTotal * strengthModifier / 100;
-        if (strengthModifier < 0) {
-          strengthString = "($strengthModifier%)";
-          strengthColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          strengthString = "(+$strengthModifier%)";
-          strengthColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      strengthString = '(error)';
-      strengthColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Defense modifiers
-    bool defenseModified = false;
-    Color defenseColor = Colors.white;
-    int defenseModifier = 0;
-    double defenseModifiedTotal = 0;
+    final defenseModifiedTotal = _miscModel!.effectiveDefense;
+    final defenseModifier = _miscModel!.defenseModifierPercent;
+    final defenseModified = defenseModifier != 0;
     String defenseString = '';
-    if (_miscModel!.defenseInfo != null && _miscModel!.battleStats?.defense?.value != null) {
-      defenseModifiedTotal = _miscModel!.battleStats?.defense?.value.toDouble() ?? 0.0;
-      for (final defenseMod in _miscModel!.defenseInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(defenseMod);
-        if (matches.isNotEmpty) {
-          defenseModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              defenseModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              defenseModifier += int.parse(change!);
-            }
-          }
-        }
+    Color defenseColor = Colors.white;
+
+    if (defenseModified) {
+      if (defenseModifier < 0) {
+        defenseString = "($defenseModifier%)";
+        defenseColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        defenseString = "(+$defenseModifier%)";
+        defenseColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (defenseModified) {
-        defenseModifiedTotal += defenseModifiedTotal * defenseModifier / 100;
-        if (defenseModifier < 0) {
-          defenseString = "($defenseModifier%)";
-          defenseColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          defenseString = "(+$defenseModifier%)";
-          defenseColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      defenseString = '(error)';
-      defenseColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Speed modifiers
-    bool speedModified = false;
-    Color speedColor = Colors.white;
-    int speedModifier = 0;
-    double speedModifiedTotal = 0;
+    final speedModifiedTotal = _miscModel!.effectiveSpeed;
+    final speedModifier = _miscModel!.speedModifierPercent;
+    final speedModified = speedModifier != 0;
     String speedString = '';
-    if (_miscModel!.speedInfo != null && _miscModel!.battleStats?.speed != null) {
-      speedModifiedTotal = _miscModel!.battleStats?.speed?.value.toDouble() ?? 0.0;
-      for (final speedMod in _miscModel!.speedInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(speedMod);
-        if (matches.isNotEmpty) {
-          speedModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              speedModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              speedModifier += int.parse(change!);
-            }
-          }
-        }
+    Color speedColor = Colors.white;
+
+    if (speedModified) {
+      if (speedModifier < 0) {
+        speedString = "($speedModifier%)";
+        speedColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        speedString = "(+$speedModifier%)";
+        speedColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (speedModified) {
-        speedModifiedTotal += speedModifiedTotal * speedModifier / 100;
-        if (speedModifier < 0) {
-          speedString = "($speedModifier%)";
-          speedColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          speedString = "(+$speedModifier%)";
-          speedColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      speedString = '(error)';
-      speedColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Dex modifiers
-    bool dexModified = false;
-    Color dexColor = Colors.white;
-    int dexModifier = 0;
-    double dexModifiedTotal = 0;
+    final dexModifiedTotal = _miscModel!.effectiveDexterity;
+    final dexModifier = _miscModel!.dexterityModifierPercent;
+    final dexModified = dexModifier != 0;
     String dexString = '';
-    if (_miscModel!.dexterityInfo != null && _miscModel!.battleStats?.dexterity?.value != null) {
-      dexModifiedTotal = _miscModel!.battleStats?.dexterity?.value.toDouble() ?? 0.0;
-      for (final dexMod in _miscModel!.dexterityInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(dexMod);
-        if (matches.isNotEmpty) {
-          dexModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              dexModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              dexModifier += int.parse(change!);
-            }
-          }
-        }
+    Color dexColor = Colors.white;
+
+    if (dexModified) {
+      if (dexModifier < 0) {
+        dexString = "($dexModifier%)";
+        dexColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        dexString = "(+$dexModifier%)";
+        dexColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (dexModified) {
-        dexModifiedTotal += dexModifiedTotal * dexModifier / 100;
-        if (dexModifier < 0) {
-          dexString = "($dexModifier%)";
-          dexColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          dexString = "(+$dexModifier%)";
-          dexColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      dexString = '(error)';
-      dexColor = _themeProvider!.getTextColor(Colors.red);
     }
 
-    final double totalEffective = strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal;
+    final double totalEffective = _miscModel!.effectiveTotal;
 
     int? totalEffectiveModifier;
     if (_miscModel!.battleStats?.total != null) {
