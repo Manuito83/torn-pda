@@ -8,9 +8,9 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
 
 /// Local backup / restore section for app settings
@@ -238,8 +238,10 @@ class PrefsBackupWidget extends StatelessWidget {
 
     try {
       final decoded = _decodeBackup(file.bytes!, key);
-      final prefs = SharedPreferencesAsync();
-      final matched = (await prefs.getKeys()).intersection(decoded.keys.toSet()).length;
+
+      // Get current keys from Sembast
+      final currentKeys = await PrefsDatabase.getKeys();
+      final matched = currentKeys.toSet().intersection(decoded.keys.toSet()).length;
       final backupKeys = decoded.keys.length;
 
       if (matched == 0) {

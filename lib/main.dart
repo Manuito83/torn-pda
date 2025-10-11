@@ -28,7 +28,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get/get.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:toastification/toastification.dart';
 // Project imports:
@@ -74,13 +73,12 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.9.3';
-const String androidCompilation = '584';
-const String iosCompilation = '584';
+const String androidCompilation = '585';
+const String iosCompilation = '585';
 
 // This also saves as a mean to check if it's the first time the app is launched
 String lastSavedAppCompilation = "";
 bool appHasBeenUpdated = false;
-bool showEmergencyDataRecoveryToast = false;
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -166,6 +164,9 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+
+  // Migrate SharedPreferences to Sembast (runs once)
+  await Prefs().migratePrefsToSembast();
 
   // Core initialization
   await _initializeAppCompilation();
@@ -541,71 +542,22 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 }
 
-/// Initialization of app compilation with backup fallback
-/// (we are trying to avoid issues with SharedPreferences corruption/loss after app updates,
-///  as it is difficult to discern if shared prefs take longer if it's really a new install)
-///    1. Attempt multiple retries with SharedPreferences
-///    2. If the retrieved compilation is empty, check the backup db (Sembast db)
-///    2a. If backup db has a value, it's not a first install, but Prefs are failing >> show a warning
-///        but still mark save the lastSavedAppCompilation with the old or new value if we can identify
-///        that the app has been updated (this way, at least scripts won't be lost)
-///    3. If this is the first app run, save the current compilation (auto-initializes Sembast db)
+/// Initialize app compilation and detect updates
 Future<void> _initializeAppCompilation() async {
   final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
+  lastSavedAppCompilation = await Prefs().getAppCompilation();
 
-  // 1. Retry logic for SharedPrefs (we use [lastSavedAppCompilation] as it's one of the first things we need
-  //    from Prefs, to assess whether SharedPrefs are working)
-  const int maxRetries = 10;
-  const Duration retryDelay = Duration(milliseconds: 200);
-
-  for (int attempt = 1; attempt <= maxRetries; attempt++) {
-    lastSavedAppCompilation = await Prefs().getAppCompilation();
-    if (lastSavedAppCompilation.isNotEmpty) {
-      log("📜 App compilation retrieved successfully on attempt $attempt: '$lastSavedAppCompilation'");
-      break;
-    }
-
-    if (attempt < maxRetries) {
-      log("📜 App compilation empty on attempt $attempt, retrying in ${retryDelay.inMilliseconds}ms...");
-      await Future.delayed(retryDelay);
-    } else {
-      log("📜 WARNING: App compilation retrieval failed after $maxRetries attempts");
-    }
-  }
-
-  // 2. If empty, check for discrepancies between SharedPrefs and backup
-  if (lastSavedAppCompilation.isEmpty) {
-    final String? backupCompilation = await SembastDatabase.getAppCompilation();
-
-    if (backupCompilation != null && backupCompilation.isNotEmpty) {
-      logErrorToCrashlytics(
-        "PREFS DISCREPANCY: SharedPrefs empty but backup has '$backupCompilation'",
-        "PREFS DISCREPANCY: SharedPrefs empty but backup has '$backupCompilation'",
-        null,
-      );
-
-      log("📜 DISCREPANCY: SharedPrefs empty but backup has '$backupCompilation'");
-
-      // Show recovery toast in Drawer
-      showEmergencyDataRecoveryToast = true;
-
-      // Save in both storages
-      await _setAppCompilation(backupCompilation);
-    }
-  }
-
-  // 3. Handle app updates and first run
-  // App update:
-  if (lastSavedAppCompilation.isNotEmpty) {
-    if (lastSavedAppCompilation != currentCompilation) {
-      appHasBeenUpdated = true;
-      log("📜 App updated: $lastSavedAppCompilation → $currentCompilation");
-      await _setAppCompilation(currentCompilation);
-    }
-  }
-  // First app run:
-  else {
-    await _setAppCompilation(currentCompilation);
+  if (lastSavedAppCompilation.isNotEmpty && lastSavedAppCompilation != currentCompilation) {
+    // App has been updated
+    appHasBeenUpdated = true;
+    log("📜 App updated: $lastSavedAppCompilation → $currentCompilation");
+    await Prefs().setAppCompilation(currentCompilation);
+    lastSavedAppCompilation = currentCompilation;
+  } else if (lastSavedAppCompilation.isEmpty) {
+    // First app run
+    await Prefs().setAppCompilation(currentCompilation);
+    lastSavedAppCompilation = currentCompilation;
+    log("📜 First app run, saved compilation: $currentCompilation");
   }
 }
 
@@ -847,24 +799,6 @@ Future<void> _initializeAudioAndConnectivity() async {
     log("Error initializing audio and connectivity: $e");
     logErrorToCrashlytics(
         "Error initializing audio and connectivity", "Audio and connectivity initialization failed: $e", stackTrace);
-  }
-}
-
-Future<void> _setAppCompilation(String value) async {
-  try {
-    // Save to both storages
-    await Future.wait([
-      Prefs().setAppCompilation(value), // SharedPreferences
-      SembastDatabase.saveAppCompilation(value), // Sembast db
-    ]);
-
-    // Update global variable
-    lastSavedAppCompilation = value;
-    log("📜 App compilation saved to both storages: '$value'");
-  } catch (e) {
-    log("📜 Error saving app compilation: $e");
-    // Still update the global variable even if storage fails
-    lastSavedAppCompilation = value;
   }
 }
 

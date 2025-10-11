@@ -15,7 +15,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 class PlayerNotesMigrationService {
   /// Migrate all existing notes from different providers to the centralized notes system
   static Future<void> migrateNotesIfNeeded([BuildContext? context]) async {
-    final migrationCompleted = await Prefs().getMigrationCompleted();
+    final migrationCompleted = await Prefs().getPlayerNotesMigrationCompleted();
     if (migrationCompleted) {
       return;
     }
@@ -116,7 +116,7 @@ class PlayerNotesMigrationService {
         }
       }
 
-      await Prefs().setMigrationCompleted(true);
+      await Prefs().setPlayerNotesMigrationCompleted(true);
 
       debugPrint('Player notes migration completed. Migrated $migratedCount notes.');
     } catch (e) {

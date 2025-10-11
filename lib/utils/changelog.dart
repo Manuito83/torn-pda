@@ -102,11 +102,11 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.3 - Build 584 - 05/10/2025
+    // v3.9.3 - Build 585 - 10/10/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.3'
-        ..date = '15 OCT 2025'
+        ..date = '20 OCT 2025'
         ..features = [
           "Player notes now support color-only entries",
           "Improved player notes dialog interface",
@@ -118,6 +118,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed shortcuts to market items not loading the correct URL",
           "Fixed missing items icons",
           "Fixed several other reported issues",
+          "Migrated app settings to new local database",
         ],
     );
 

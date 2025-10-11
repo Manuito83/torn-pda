@@ -501,14 +501,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     await _loadPreferencesAsync();
 
-    // Show data recovery toast if needed
-    if (showEmergencyDataRecoveryToast) {
-      showEmergencyDataRecoveryToast = false;
-      _showDataRecoveryToast();
-    }
-
     if (mounted) {
-      // Start collectingdialogs for 500ms before processing
+      // Start collecting dialogs for 500ms before processing
       // This ensures proper priority ordering during app startup
       DialogQueue.startCollectingDialogs();
 
@@ -685,11 +679,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "browser_center_editing_text_field_allowed": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
-        "revive_hela": "1 million or 1 Xanax",
-        "revive_midnight": "1 million or 1 Xanax",
-        "revive_nuke": "1 million or 1 Xanax",
-        "revive_uhc": "1 million or 1 Xanax",
-        "revive_wtf": "1 million or 1 Xanax",
+        "revive_hela": "1.8 million or 2 Xanax",
+        "revive_midnight": "1.8 million or 2 Xanax",
+        "revive_nuke": "1.8 million or 2 Xanax",
+        "revive_uhc": "1.8 million or 2 Xanax",
+        "revive_wtf": "1.8 million or 2 Xanax",
         // Torn API
         "apiV2LegacyRequests": "",
         // PDA Update Details
@@ -3264,16 +3258,5 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void changeUID(String uid) {
     _userUID = uid;
-  }
-
-  void _showDataRecoveryToast() {
-    BotToast.showText(
-      text: "⚠️"
-          "\n\nIt took longer than usual to retrieve settings from backup."
-          "\n\nConsider restarting the app to ensure that no data is lost!",
-      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-      contentColor: Colors.orange.shade800,
-      duration: const Duration(seconds: 8),
-    );
   }
 }

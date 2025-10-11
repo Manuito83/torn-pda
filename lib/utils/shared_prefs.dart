@@ -1,12 +1,14 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:developer';
 
 // Package imports:
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
 
 class Prefs {
@@ -14,7 +16,10 @@ class Prefs {
   factory Prefs() => _instance;
   Prefs._internal();
 
-  final _asyncPrefs = SharedPreferencesAsync();
+  // Migration control
+  static bool _migrationInProgress = false;
+  static bool _migrationCompleted = false;
+  static const String _kSembastMigrationCompleted = "pda_sembast_migration_completed_v1";
 
   // General
   final String _kAppVersion = "pda_appVersion";
@@ -476,15 +481,154 @@ class Prefs {
   final String _kIosLiveActivityTravelEnabled = "pda_iosLiveActivityTravelEnabled";
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
 
+  /// =====================================
+  /// MIGRATION SharedPreferences > Sembast
+  /// =====================================
+  Future<void> migratePrefsToSembast() async {
+    if (_migrationCompleted) return;
+
+    if (_migrationInProgress) {
+      while (_migrationInProgress) {
+        await Future.delayed(const Duration(milliseconds: 100));
+      }
+      return;
+    }
+
+    try {
+      _migrationInProgress = true;
+
+      final alreadyMigrated = await PrefsDatabase.getBool(_kSembastMigrationCompleted, false);
+      if (alreadyMigrated) {
+        _migrationCompleted = true;
+        log(name: 'Prefs Migration', 'Migration already completed, skipping');
+        return;
+      }
+
+      log(name: 'Prefs Migration', 'Starting migration from SharedPreferences to Sembast...');
+
+      await _migrateFromSharedPrefs();
+
+      await PrefsDatabase.setBool(_kSembastMigrationCompleted, true);
+      _migrationCompleted = true;
+      log(name: 'Prefs Migration', 'Migration completed successfully');
+    } catch (e, stackTrace) {
+      log(
+        name: 'Prefs Migration',
+        'CRITICAL ERROR during migration: $e',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    } finally {
+      _migrationInProgress = false;
+    }
+  }
+
+  /// Migrates all data from SharedPreferences to Sembast
+  Future<void> _migrateFromSharedPrefs() async {
+    try {
+      // Check if migration already completed
+      final migrationCompleted = await PrefsDatabase.getBool(_kSembastMigrationCompleted, false);
+      if (migrationCompleted) {
+        log(name: 'Prefs Migration', 'Migration already completed previously - skipping');
+        return;
+      }
+
+      final prefs = SharedPreferencesAsync();
+      final keys = await prefs.getKeys();
+
+      log(name: 'Prefs Migration', 'Found ${keys.length} keys in SharedPreferences to migrate');
+
+      // Skip migration for new users (no data in SharedPreferences to migrate)
+      if (keys.isEmpty) {
+        log(name: 'Prefs Migration', 'No keys found in SharedPreferences - skipping migration (new installation)');
+        return;
+      }
+
+      int successCount = 0;
+      int errorCount = 0;
+
+      // Order matters: List MUST be checked before String
+      final migrationStrategies = [
+        (prefs, key) => prefs.getStringList(key),
+        (prefs, key) => prefs.getString(key),
+        (prefs, key) => prefs.getDouble(key),
+        (prefs, key) => prefs.getInt(key),
+        (prefs, key) => prefs.getBool(key),
+      ];
+
+      // Setters
+      final migrationSetters = [
+        (key, value) => PrefsDatabase.setStringList(key, value as List<String>),
+        (key, value) => PrefsDatabase.setString(key, value as String),
+        (key, value) => PrefsDatabase.setDouble(key, value as double),
+        (key, value) => PrefsDatabase.setInt(key, value as int),
+        (key, value) => PrefsDatabase.setBool(key, value as bool),
+      ];
+
+      for (final key in keys) {
+        try {
+          // Skip the migration flag itself
+          if (key == _kSembastMigrationCompleted) continue;
+
+          bool migrated = false;
+
+          for (int i = 0; i < migrationStrategies.length; i++) {
+            try {
+              final value = await migrationStrategies[i](prefs, key);
+              if (value != null) {
+                await migrationSetters[i](key, value);
+                migrated = true;
+                successCount++;
+                break;
+              }
+            } catch (_) {}
+          }
+
+          if (!migrated) {
+            log(name: 'Prefs Migration', 'Warning: Could not migrate key "$key" (unknown type or null)');
+            errorCount++;
+          }
+        } catch (e) {
+          log(name: 'Prefs Migration', 'Error migrating key "$key": $e');
+          errorCount++;
+        }
+      }
+
+      log(name: 'Prefs Migration', 'Migration complete: $successCount succeeded, $errorCount errors');
+
+      if (errorCount > 0) {
+        log(name: 'Prefs Migration', 'WARNING: $errorCount keys could not be migrated');
+      }
+
+      await PrefsDatabase.setBool(_kSembastMigrationCompleted, true);
+      log(name: 'Prefs Migration', 'Migration flag saved to Sembast');
+
+      // Clear SharedPreferences after successful migration to free up space
+      if (errorCount == 0 && successCount > 0) {
+        await prefs.clear();
+        log(name: 'Prefs Migration', 'SharedPreferences cleared after successful migration');
+      }
+    } catch (e, stackTrace) {
+      log(
+        name: 'Prefs Migration',
+        'FATAL ERROR during migration process: $e',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
+  }
+
   /// ----------------------------
   /// Methods for app version
   /// ----------------------------
   Future<String> getAppCompilation() async {
-    return await _asyncPrefs.getString(_kAppVersion) ?? "";
+    return await PrefsDatabase.getString(_kAppVersion, "");
   }
 
   Future setAppCompilation(String value) async {
-    return await _asyncPrefs.setString(_kAppVersion, value);
+    return await PrefsDatabase.setString(_kAppVersion, value);
   }
 
   /// -------------------------------
@@ -492,698 +636,698 @@ class Prefs {
   /// -------------------------------
 
   Future<int> getAppStatsAnnouncementDialogVersion() async {
-    return await _asyncPrefs.getInt(_kAppAnnouncementDialogVersion) ?? 0;
+    return await PrefsDatabase.getInt(_kAppAnnouncementDialogVersion, 0);
   }
 
   Future setAppStatsAnnouncementDialogVersion(int value) async {
-    await _asyncPrefs.setInt(_kAppAnnouncementDialogVersion, value);
+    await PrefsDatabase.setInt(_kAppAnnouncementDialogVersion, value);
   }
 
   Future<int> getBugsAnnouncementDialogVersion() async {
-    return await _asyncPrefs.getInt(_kBugsAnnouncementDialogVersion) ?? 0;
+    return await PrefsDatabase.getInt(_kBugsAnnouncementDialogVersion, 0);
   }
 
   Future setBugsAnnouncementDialogVersion(int value) async {
-    await _asyncPrefs.setInt(_kBugsAnnouncementDialogVersion, value);
+    await PrefsDatabase.setInt(_kBugsAnnouncementDialogVersion, value);
   }
 
   Future<int> getPdaUpdateDialogVersion() async {
-    return await _asyncPrefs.getInt(_kPdaUpdateDialogVersion) ?? 0;
+    return await PrefsDatabase.getInt(_kPdaUpdateDialogVersion, 0);
   }
 
   Future setPdaUpdateDialogVersion(int value) async {
-    await _asyncPrefs.setInt(_kPdaUpdateDialogVersion, value);
+    await PrefsDatabase.setInt(_kPdaUpdateDialogVersion, value);
   }
 
   /// ----------------------------
   /// Methods for identification
   /// ----------------------------
   Future<String> getOwnDetails() async {
-    return await _asyncPrefs.getString(_kOwnDetails) ?? "";
+    return await PrefsDatabase.getString(_kOwnDetails, "");
   }
 
   Future setOwnDetails(String value) async {
-    return await _asyncPrefs.setString(_kOwnDetails, value);
+    return await PrefsDatabase.setString(_kOwnDetails, value);
   }
 
   /// ----------------------------
   /// Methods for identification
   /// ----------------------------
   Future<int> getLastAppUse() async {
-    return await _asyncPrefs.getInt(_kLastAppUse) ?? 0;
+    return await PrefsDatabase.getInt(_kLastAppUse, 0);
   }
 
   Future setLastAppUse(int value) async {
-    return await _asyncPrefs.setInt(_kLastAppUse, value);
+    return await PrefsDatabase.setInt(_kLastAppUse, value);
   }
 
   /// ----------------------------
   /// Methods for connectivity check in Drawer (RC)
   /// ----------------------------
   Future<bool> getPdaConnectivityCheckRC() async {
-    return await _asyncPrefs.getBool(_kPdaConnectivityCheckRC) ?? false;
+    return await PrefsDatabase.getBool(_kPdaConnectivityCheckRC, false);
   }
 
   Future setPdaConnectivityCheck(bool value) async {
-    return await _asyncPrefs.setBool(_kPdaConnectivityCheckRC, value);
+    return await PrefsDatabase.setBool(_kPdaConnectivityCheckRC, value);
   }
 
   /// ----------------------------
   /// Methods for faction and company tracking
   /// ----------------------------
   Future<int> getLastKnownFaction() async {
-    return await _asyncPrefs.getInt(_kLastKnownFaction) ?? 0;
+    return await PrefsDatabase.getInt(_kLastKnownFaction, 0);
   }
 
   Future setLastKnownFaction(int value) async {
-    return await _asyncPrefs.setInt(_kLastKnownFaction, value);
+    return await PrefsDatabase.setInt(_kLastKnownFaction, value);
   }
 
   Future<int> getLastKnownCompany() async {
-    return await _asyncPrefs.getInt(_kLastKnownCompany) ?? 0;
+    return await PrefsDatabase.getInt(_kLastKnownCompany, 0);
   }
 
   Future setLastKnownCompany(int value) async {
-    return await _asyncPrefs.setInt(_kLastKnownCompany, value);
+    return await PrefsDatabase.setInt(_kLastKnownCompany, value);
   }
 
   /// ----------------------------
   /// Methods for native login
   /// ----------------------------
   Future<String> getNativePlayerEmail() async {
-    return await _asyncPrefs.getString(_kNativePlayerEmail) ?? '';
+    return await PrefsDatabase.getString(_kNativePlayerEmail, '');
   }
 
   Future setNativePlayerEmail(String value) async {
-    return await _asyncPrefs.setString(_kNativePlayerEmail, value);
+    return await PrefsDatabase.setString(_kNativePlayerEmail, value);
   }
 
   Future<int> getLastAuthRedirect() async {
-    return await _asyncPrefs.getInt(_kLastAuthRedirect) ?? 0;
+    return await PrefsDatabase.getInt(_kLastAuthRedirect, 0);
   }
 
   Future setLastAuthRedirect(int value) async {
-    return await _asyncPrefs.setInt(_kLastAuthRedirect, value);
+    return await PrefsDatabase.setInt(_kLastAuthRedirect, value);
   }
 
   Future<bool> getTryAutomaticLogins() async {
-    return await _asyncPrefs.getBool(_kTryAutomaticLogins) ?? true;
+    return await PrefsDatabase.getBool(_kTryAutomaticLogins, true);
   }
 
   Future setTryAutomaticLogins(bool value) async {
-    return await _asyncPrefs.setBool(_kTryAutomaticLogins, value);
+    return await PrefsDatabase.setBool(_kTryAutomaticLogins, value);
   }
 
   Future<String> getPlayerLastLoginMethod() async {
-    return await _asyncPrefs.getString(_kPlayerLastLoginMethod) ?? '';
+    return await PrefsDatabase.getString(_kPlayerLastLoginMethod, '');
   }
 
   Future setPlayerLastLoginMethod(String value) async {
-    return await _asyncPrefs.setString(_kPlayerLastLoginMethod, value);
+    return await PrefsDatabase.setString(_kPlayerLastLoginMethod, value);
   }
 
   /// ----------------------------
   /// Methods for profile section order
   /// ----------------------------
   Future<List<String>> getProfileSectionOrder() async {
-    return await _asyncPrefs.getStringList(_kProfileSectionOrder) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kProfileSectionOrder, <String>[]);
   }
 
   Future setProfileSectionOrder(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kProfileSectionOrder, value);
+    return await PrefsDatabase.setStringList(_kProfileSectionOrder, value);
   }
 
   /// ------------------------------
   /// Methods for colored status card
   /// --------------------------------
   Future<bool> getColorCodedStatusCard() async {
-    return await _asyncPrefs.getBool(_kColorCodedStatusCard) ?? true;
+    return await PrefsDatabase.getBool(_kColorCodedStatusCard, true);
   }
 
   Future setColorCodedStatusCard(bool value) async {
-    return await _asyncPrefs.setBool(_kColorCodedStatusCard, value);
+    return await PrefsDatabase.setBool(_kColorCodedStatusCard, value);
   }
 
   /// ----------------------------
   /// Methods for targets
   /// ----------------------------
   Future<List<String>> getTargetsList() async {
-    return await _asyncPrefs.getStringList(_kTargetsList) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kTargetsList, <String>[]);
   }
 
   Future setTargetsList(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kTargetsList, value);
+    return await PrefsDatabase.setStringList(_kTargetsList, value);
   }
 
   //**************
   Future<String> getTargetsSort() async {
-    return await _asyncPrefs.getString(_kTargetsSort) ?? '';
+    return await PrefsDatabase.getString(_kTargetsSort, '');
   }
 
   Future setTargetsSort(String value) async {
-    return await _asyncPrefs.setString(_kTargetsSort, value);
+    return await PrefsDatabase.setString(_kTargetsSort, value);
   }
 
   //**************
   Future<List<String>> getTargetsColorFilter() async {
-    return await _asyncPrefs.getStringList(_kTargetsColorFilter) ?? [];
+    return await PrefsDatabase.getStringList(_kTargetsColorFilter, []);
   }
 
   Future setTargetsColorFilter(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kTargetsColorFilter, value);
+    return await PrefsDatabase.setStringList(_kTargetsColorFilter, value);
   }
 
   //**************
   Future<List<String>> getWarFactions() async {
-    return await _asyncPrefs.getStringList(_kWarFactions) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kWarFactions, <String>[]);
   }
 
   Future setWarFactions(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kWarFactions, value);
+    return await PrefsDatabase.setStringList(_kWarFactions, value);
   }
 
   Future<List<String>> getFilterListInWars() async {
-    return await _asyncPrefs.getStringList(_kFilterListInWars) ?? [];
+    return await PrefsDatabase.getStringList(_kFilterListInWars, []);
   }
 
   Future setFilterListInWars(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kFilterListInWars, value);
+    return await PrefsDatabase.setStringList(_kFilterListInWars, value);
   }
 
   Future<int> getOnlineFilterInWars() async {
-    return await _asyncPrefs.getInt(_kOnlineFilterInWars) ?? 0;
+    return await PrefsDatabase.getInt(_kOnlineFilterInWars, 0);
   }
 
   Future setOnlineFilterInWars(int value) async {
-    return await _asyncPrefs.setInt(_kOnlineFilterInWars, value);
+    return await PrefsDatabase.setInt(_kOnlineFilterInWars, value);
   }
 
   Future<int> getOkayRedFilterInWars() async {
-    return await _asyncPrefs.getInt(_kOkayRedFilterInWars) ?? 0;
+    return await PrefsDatabase.getInt(_kOkayRedFilterInWars, 0);
   }
 
   Future setOkayRedFilterInWars(int value) async {
-    return await _asyncPrefs.setInt(_kOkayRedFilterInWars, value);
+    return await PrefsDatabase.setInt(_kOkayRedFilterInWars, value);
   }
 
   Future<bool> getCountryFilterInWars() async {
-    return await _asyncPrefs.getBool(_kCountryFilterInWars) ?? false;
+    return await PrefsDatabase.getBool(_kCountryFilterInWars, false);
   }
 
   Future setCountryFilterInWars(bool value) async {
-    return await _asyncPrefs.setBool(_kCountryFilterInWars, value);
+    return await PrefsDatabase.setBool(_kCountryFilterInWars, value);
   }
 
   Future<int> getTravelingFilterInWars() async {
-    return await _asyncPrefs.getInt(_kTravelingFilterInWars) ?? 0;
+    return await PrefsDatabase.getInt(_kTravelingFilterInWars, 0);
   }
 
   Future setTravelingFilterInWars(int value) async {
-    return await _asyncPrefs.setInt(_kTravelingFilterInWars, value);
+    return await PrefsDatabase.setInt(_kTravelingFilterInWars, value);
   }
 
   Future<bool> getShowChainWidgetInWars() async {
-    return await _asyncPrefs.getBool(_kShowChainWidgetInWars) ?? true;
+    return await PrefsDatabase.getBool(_kShowChainWidgetInWars, true);
   }
 
   Future setShowChainWidgetInWars(bool value) async {
-    return await _asyncPrefs.setBool(_kShowChainWidgetInWars, value);
+    return await PrefsDatabase.setBool(_kShowChainWidgetInWars, value);
   }
 
   Future<String> getWarMembersSort() async {
-    return await _asyncPrefs.getString(_kWarMembersSort) ?? '';
+    return await PrefsDatabase.getString(_kWarMembersSort, '');
   }
 
   Future setWarMembersSort(String value) async {
-    return await _asyncPrefs.setString(_kWarMembersSort, value);
+    return await PrefsDatabase.setString(_kWarMembersSort, value);
   }
 
   Future<String> getRankerWarSortPerTab() async {
-    return await _asyncPrefs.getString(_kRankedWarSortPerTab) ?? 'active#progressDes-upcoming#timeAsc-finished#timeAsc';
+    return await PrefsDatabase.getString(_kRankedWarSortPerTab, 'active#progressDes-upcoming#timeAsc-finished#timeAsc');
   }
 
   Future setRankerWarSortPerTab(String value) async {
-    return await _asyncPrefs.setString(_kRankedWarSortPerTab, value);
+    return await PrefsDatabase.setString(_kRankedWarSortPerTab, value);
   }
 
   Future<List<String>> getYataSpies() async {
-    return await _asyncPrefs.getStringList(_kYataSpies) ?? [];
+    return await PrefsDatabase.getStringList(_kYataSpies, []);
   }
 
   Future setYataSpies(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kYataSpies, value);
+    return await PrefsDatabase.setStringList(_kYataSpies, value);
   }
 
   Future<int> getYataSpiesTime() async {
-    return await _asyncPrefs.getInt(_kYataSpiesTime) ?? 0;
+    return await PrefsDatabase.getInt(_kYataSpiesTime, 0);
   }
 
   Future setYataSpiesTime(int value) async {
-    return await _asyncPrefs.setInt(_kYataSpiesTime, value);
+    return await PrefsDatabase.setInt(_kYataSpiesTime, value);
   }
 
   Future<String> getTornStatsSpies() async {
-    return await _asyncPrefs.getString(_kTornStatsSpies) ?? "";
+    return await PrefsDatabase.getString(_kTornStatsSpies, "");
   }
 
   Future setTornStatsSpies(String value) async {
-    return await _asyncPrefs.setString(_kTornStatsSpies, value);
+    return await PrefsDatabase.setString(_kTornStatsSpies, value);
   }
 
   Future<int> getTornStatsSpiesTime() async {
-    return await _asyncPrefs.getInt(_kTornStatsSpiesTime) ?? 0;
+    return await PrefsDatabase.getInt(_kTornStatsSpiesTime, 0);
   }
 
   Future setTornStatsSpiesTime(int value) async {
-    return await _asyncPrefs.setInt(_kTornStatsSpiesTime, value);
+    return await PrefsDatabase.setInt(_kTornStatsSpiesTime, value);
   }
 
   Future<int> getWarIntegrityCheckTime() async {
-    return await _asyncPrefs.getInt(_kWarIntegrityCheckTime) ?? 0;
+    return await PrefsDatabase.getInt(_kWarIntegrityCheckTime, 0);
   }
 
   Future setWarIntegrityCheckTime(int value) async {
-    return await _asyncPrefs.setInt(_kWarIntegrityCheckTime, value);
+    return await PrefsDatabase.setInt(_kWarIntegrityCheckTime, value);
   }
 
   //**************
   Future<int> getChainingCurrentPage() async {
-    return await _asyncPrefs.getInt(_kChainingCurrentPage) ?? 0;
+    return await PrefsDatabase.getInt(_kChainingCurrentPage, 0);
   }
 
   Future setChainingCurrentPage(int value) async {
-    return await _asyncPrefs.setInt(_kChainingCurrentPage, value);
+    return await PrefsDatabase.setInt(_kChainingCurrentPage, value);
   }
 
   Future<bool> getTargetSkippingAll() async {
-    return await _asyncPrefs.getBool(_kTargetSkipping) ?? true;
+    return await PrefsDatabase.getBool(_kTargetSkipping, true);
   }
 
   Future setTargetSkipping(bool value) async {
-    return await _asyncPrefs.setBool(_kTargetSkipping, value);
+    return await PrefsDatabase.setBool(_kTargetSkipping, value);
   }
 
   Future<bool> getTargetSkippingFirst() async {
-    return await _asyncPrefs.getBool(_kTargetSkippingFirst) ?? false;
+    return await PrefsDatabase.getBool(_kTargetSkippingFirst, false);
   }
 
   Future setTargetSkippingFirst(bool value) async {
-    return await _asyncPrefs.setBool(_kTargetSkippingFirst, value);
+    return await PrefsDatabase.setBool(_kTargetSkippingFirst, value);
   }
 
   Future<bool> getShowTargetsNotes() async {
-    return await _asyncPrefs.getBool(_kShowTargetsNotes) ?? true;
+    return await PrefsDatabase.getBool(_kShowTargetsNotes, true);
   }
 
   Future setShowTargetsNotes(bool value) async {
-    return await _asyncPrefs.setBool(_kShowTargetsNotes, value);
+    return await PrefsDatabase.setBool(_kShowTargetsNotes, value);
   }
 
   Future<bool> getShowBlankTargetsNotes() async {
-    return await _asyncPrefs.getBool(_kShowBlankTargetsNotes) ?? false;
+    return await PrefsDatabase.getBool(_kShowBlankTargetsNotes, false);
   }
 
   Future setShowBlankTargetsNotes(bool value) async {
-    return await _asyncPrefs.setBool(_kShowBlankTargetsNotes, value);
+    return await PrefsDatabase.setBool(_kShowBlankTargetsNotes, value);
   }
 
   Future<bool> getShowOnlineFactionWarning() async {
-    return await _asyncPrefs.getBool(_kShowOnlineFactionWarning) ?? true;
+    return await PrefsDatabase.getBool(_kShowOnlineFactionWarning, true);
   }
 
   Future setShowOnlineFactionWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kShowOnlineFactionWarning, value);
+    return await PrefsDatabase.setBool(_kShowOnlineFactionWarning, value);
   }
 
   Future<String> getChainWatcherSettings() async {
-    return await _asyncPrefs.getString(_kChainWatcherSettings) ?? '';
+    return await PrefsDatabase.getString(_kChainWatcherSettings, '');
   }
 
   Future setChainWatcherSettings(String value) async {
-    return await _asyncPrefs.setString(_kChainWatcherSettings, value);
+    return await PrefsDatabase.setString(_kChainWatcherSettings, value);
   }
 
   Future<List<String>> getChainWatcherPanicTargets() async {
-    return await _asyncPrefs.getStringList(_kChainWatcherPanicTargets) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kChainWatcherPanicTargets, <String>[]);
   }
 
   Future setChainWatcherPanicTargets(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kChainWatcherPanicTargets, value);
+    return await PrefsDatabase.setStringList(_kChainWatcherPanicTargets, value);
   }
 
   Future<bool> getChainWatcherSound() async {
-    return await _asyncPrefs.getBool(_kChainWatcherSound) ?? true;
+    return await PrefsDatabase.getBool(_kChainWatcherSound, true);
   }
 
   Future setChainWatcherSound(bool value) async {
-    return await _asyncPrefs.setBool(_kChainWatcherSound, value);
+    return await PrefsDatabase.setBool(_kChainWatcherSound, value);
   }
 
   Future<bool> getChainWatcherVibration() async {
-    return await _asyncPrefs.getBool(_kChainWatcherVibration) ?? true;
+    return await PrefsDatabase.getBool(_kChainWatcherVibration, true);
   }
 
   Future setChainWatcherVibration(bool value) async {
-    return await _asyncPrefs.setBool(_kChainWatcherVibration, value);
+    return await PrefsDatabase.setBool(_kChainWatcherVibration, value);
   }
 
   Future<bool> getChainWatcherNotificationsEnabled() async {
-    return await _asyncPrefs.getBool(_kChainWatcherNotifications) ?? true;
+    return await PrefsDatabase.getBool(_kChainWatcherNotifications, true);
   }
 
   Future setChainWatcherNotificationsEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kChainWatcherNotifications, value);
+    return await PrefsDatabase.setBool(_kChainWatcherNotifications, value);
   }
 
   Future<bool> getYataTargetsEnabled() async {
-    return await _asyncPrefs.getBool(_kYataTargetsEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kYataTargetsEnabled, true);
   }
 
   Future setYataTargetsEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kYataTargetsEnabled, value);
+    return await PrefsDatabase.setBool(_kYataTargetsEnabled, value);
   }
 
   Future<bool> getStatusColorWidgetEnabled() async {
-    return await _asyncPrefs.getBool(_kStatusColorWidgetEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kStatusColorWidgetEnabled, true);
   }
 
   Future setStatusColorWidgetEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kStatusColorWidgetEnabled, value);
+    return await PrefsDatabase.setBool(_kStatusColorWidgetEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for attacks
   /// ----------------------------
   Future<String> getAttackSort() async {
-    return await _asyncPrefs.getString(_kAttacksSort) ?? '';
+    return await PrefsDatabase.getString(_kAttacksSort, '');
   }
 
   Future setAttackSort(String value) async {
-    return await _asyncPrefs.setString(_kAttacksSort, value);
+    return await PrefsDatabase.setString(_kAttacksSort, value);
   }
 
   /// ----------------------------
   /// Methods for friends
   /// ----------------------------
   Future<List<String>> getFriendsList() async {
-    return await _asyncPrefs.getStringList(_kFriendsList) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kFriendsList, <String>[]);
   }
 
   Future setFriendsList(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kFriendsList, value);
+    return await PrefsDatabase.setStringList(_kFriendsList, value);
   }
 
   //**************
   Future<String> getFriendsSort() async {
-    return await _asyncPrefs.getString(_kFriendsSort) ?? '';
+    return await PrefsDatabase.getString(_kFriendsSort, '');
   }
 
   Future setFriendsSort(String value) async {
-    return await _asyncPrefs.setString(_kFriendsSort, value);
+    return await PrefsDatabase.setString(_kFriendsSort, value);
   }
 
   /// ----------------------------
   /// Methods for theme
   /// ----------------------------
   Future<String> getAppTheme() async {
-    return await _asyncPrefs.getString(_kTheme) ?? 'light';
+    return await PrefsDatabase.getString(_kTheme, 'light');
   }
 
   Future setAppTheme(String value) async {
-    return await _asyncPrefs.setString(_kTheme, value);
+    return await PrefsDatabase.setString(_kTheme, value);
   }
 
   Future<bool> getUseMaterial3() async {
-    return await _asyncPrefs.getBool(_kUseMaterial3Theme) ?? false;
+    return await PrefsDatabase.getBool(_kUseMaterial3Theme, false);
   }
 
   Future setUseMaterial3(bool value) async {
-    return await _asyncPrefs.setBool(_kUseMaterial3Theme, value);
+    return await PrefsDatabase.setBool(_kUseMaterial3Theme, value);
   }
 
   Future<bool> getAccesibilityNoTextColors() async {
-    return await _asyncPrefs.getBool(_kAccesibilityNoTextColors) ?? false;
+    return await PrefsDatabase.getBool(_kAccesibilityNoTextColors, false);
   }
 
   Future setAccesibilityNoTextColors(bool value) async {
-    return await _asyncPrefs.setBool(_kAccesibilityNoTextColors, value);
+    return await PrefsDatabase.setBool(_kAccesibilityNoTextColors, value);
   }
 
   /// ----------------------------
   /// Methods for theme sync with web and device
   /// ----------------------------
   Future<bool> getSyncTornWebTheme() async {
-    return await _asyncPrefs.getBool(_kSyncTornWebTheme) ?? true;
+    return await PrefsDatabase.getBool(_kSyncTornWebTheme, true);
   }
 
   Future setSyncTornWebTheme(bool value) async {
-    return await _asyncPrefs.setBool(_kSyncTornWebTheme, value);
+    return await PrefsDatabase.setBool(_kSyncTornWebTheme, value);
   }
 
   Future<bool> getSyncDeviceTheme() async {
-    return await _asyncPrefs.getBool(_kSyncDeviceTheme) ?? false;
+    return await PrefsDatabase.getBool(_kSyncDeviceTheme, false);
   }
 
   Future setSyncDeviceTheme(bool value) async {
-    return await _asyncPrefs.setBool(_kSyncDeviceTheme, value);
+    return await PrefsDatabase.setBool(_kSyncDeviceTheme, value);
   }
 
   Future<String> getDarkThemeToSync() async {
-    return await _asyncPrefs.getString(_kDarkThemeToSync) ?? 'dark';
+    return await PrefsDatabase.getString(_kDarkThemeToSync, 'dark');
   }
 
   Future setDarkThemeToSync(String value) async {
-    return await _asyncPrefs.setString(_kDarkThemeToSync, value);
+    return await PrefsDatabase.setString(_kDarkThemeToSync, value);
   }
 
   /// ----------------------------
   /// Methods for dynamic app icons
   /// ----------------------------
   Future<bool> getDynamicAppIcons() async {
-    return await _asyncPrefs.getBool(_kDynamicAppIcons) ?? true;
+    return await PrefsDatabase.getBool(_kDynamicAppIcons, true);
   }
 
   Future setDynamicAppIcons(bool value) async {
-    return await _asyncPrefs.setBool(_kDynamicAppIcons, value);
+    return await PrefsDatabase.setBool(_kDynamicAppIcons, value);
   }
 
   //--
 
   Future<String> getDynamicAppIconsManual() async {
-    return await _asyncPrefs.getString(_kDynamicAppIconsManual) ?? "off";
+    return await PrefsDatabase.getString(_kDynamicAppIconsManual, "off");
   }
 
   Future setDynamicAppIconsManual(String value) async {
-    return await _asyncPrefs.setString(_kDynamicAppIconsManual, value);
+    return await PrefsDatabase.setString(_kDynamicAppIconsManual, value);
   }
 
   /// ----------------------------
   /// Methods for vibration pattern
   /// ----------------------------
   Future<String> getVibrationPattern() async {
-    return await _asyncPrefs.getString(_kVibrationPattern) ?? 'medium';
+    return await PrefsDatabase.getString(_kVibrationPattern, 'medium');
   }
 
   Future setVibrationPattern(String value) async {
-    return await _asyncPrefs.setString(_kVibrationPattern, value);
+    return await PrefsDatabase.setString(_kVibrationPattern, value);
   }
 
   /// ----------------------------
   /// Methods for discreet notifications
   /// ----------------------------
   Future<bool> getDiscreetNotifications() async {
-    return await _asyncPrefs.getBool(_kDiscreetNotifications) ?? false;
+    return await PrefsDatabase.getBool(_kDiscreetNotifications, false);
   }
 
   Future setDiscreetNotifications(bool value) async {
-    return await _asyncPrefs.setBool(_kDiscreetNotifications, value);
+    return await PrefsDatabase.setBool(_kDiscreetNotifications, value);
   }
 
   /// ----------------------------
   /// Methods for default launch section
   /// ----------------------------
   Future<String> getDefaultSection() async {
-    return await _asyncPrefs.getString(_kDefaultSection) ?? '0';
+    return await PrefsDatabase.getString(_kDefaultSection, '0');
   }
 
   Future setDefaultSection(String value) async {
-    return await _asyncPrefs.setString(_kDefaultSection, value);
+    return await PrefsDatabase.setString(_kDefaultSection, value);
   }
 
   /// ----------------------------
   /// Methods for on app exit
   /// ----------------------------
   Future<String> getOnBackButtonAppExit() async {
-    return await _asyncPrefs.getString(_kOnBackButtonAppExit) ?? 'stay';
+    return await PrefsDatabase.getString(_kOnBackButtonAppExit, 'stay');
   }
 
   Future setOnAppExit(String value) async {
-    return await _asyncPrefs.setString(_kOnBackButtonAppExit, value);
+    return await PrefsDatabase.setString(_kOnBackButtonAppExit, value);
   }
 
   /// ----------------------------
   /// Methods for debug messages
   /// ----------------------------
   Future<bool> getDebugMessages() async {
-    return await _asyncPrefs.getBool(_kDebugMessages) ?? false;
+    return await PrefsDatabase.getBool(_kDebugMessages, false);
   }
 
   Future setDebugMessages(bool value) async {
-    return await _asyncPrefs.setBool(_kDebugMessages, value);
+    return await PrefsDatabase.setBool(_kDebugMessages, value);
   }
 
   /// ----------------------------
   /// Methods for default browser
   /// ----------------------------
   Future<String> getDefaultBrowser() async {
-    return await _asyncPrefs.getString(_kDefaultBrowser) ?? 'app';
+    return await PrefsDatabase.getString(_kDefaultBrowser, 'app');
   }
 
   Future setDefaultBrowser(String value) async {
-    return await _asyncPrefs.setString(_kDefaultBrowser, value);
+    return await PrefsDatabase.setString(_kDefaultBrowser, value);
   }
 
   Future<bool> getLoadBarBrowser() async {
-    return await _asyncPrefs.getBool(_kLoadBarBrowser) ?? true;
+    return await PrefsDatabase.getBool(_kLoadBarBrowser, true);
   }
 
   Future setLoadBarBrowser(bool value) async {
-    return await _asyncPrefs.setBool(_kLoadBarBrowser, value);
+    return await PrefsDatabase.setBool(_kLoadBarBrowser, value);
   }
 
   Future<String> getBrowserRefreshMethod() async {
-    return await _asyncPrefs.getString(_kBrowserRefreshMethod2) ?? "both";
+    return await PrefsDatabase.getString(_kBrowserRefreshMethod2, "both");
   }
 
   Future setBrowserRefreshMethod(String value) async {
-    return await _asyncPrefs.setString(_kBrowserRefreshMethod2, value);
+    return await PrefsDatabase.setString(_kBrowserRefreshMethod2, value);
   }
 
   Future<String> getBrowserShowNavArrowsAppbar() async {
-    return await _asyncPrefs.getString(_kBrowserShowNavArrowsAppbar) ?? "wide";
+    return await PrefsDatabase.getString(_kBrowserShowNavArrowsAppbar, "wide");
   }
 
   Future setBrowserShowNavArrowsAppbar(String value) async {
-    return await _asyncPrefs.setString(_kBrowserShowNavArrowsAppbar, value);
+    return await PrefsDatabase.setString(_kBrowserShowNavArrowsAppbar, value);
   }
 
   Future<bool> getBrowserBottomBarStyleEnabled() async {
-    return await _asyncPrefs.getBool(_kBrowserStyleBottomBarEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kBrowserStyleBottomBarEnabled, false);
   }
 
   Future setBrowserBottomBarStyleEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kBrowserStyleBottomBarEnabled, value);
+    return await PrefsDatabase.setBool(_kBrowserStyleBottomBarEnabled, value);
   }
 
   Future<int> getBrowserBottomBarStyleType() async {
-    return await _asyncPrefs.getInt(_kBrowserStyleBottomBarType) ?? 1;
+    return await PrefsDatabase.getInt(_kBrowserStyleBottomBarType, 1);
   }
 
   Future setBrowserBottomBarStyleType(int value) async {
-    return await _asyncPrefs.setInt(_kBrowserStyleBottomBarType, value);
+    return await PrefsDatabase.setInt(_kBrowserStyleBottomBarType, value);
   }
 
   Future<bool> getBrowserBottomBarStylePlaceTabsAtBottom() async {
-    return await _asyncPrefs.getBool(_kBrowserBottomBarStylePlaceTabsAtBottom) ?? false;
+    return await PrefsDatabase.getBool(_kBrowserBottomBarStylePlaceTabsAtBottom, false);
   }
 
   Future setBrowserBottomBarStylePlaceTabsAtBottom(bool value) async {
-    return await _asyncPrefs.setBool(_kBrowserBottomBarStylePlaceTabsAtBottom, value);
+    return await PrefsDatabase.setBool(_kBrowserBottomBarStylePlaceTabsAtBottom, value);
   }
 
   Future<String> getTMenuButtonLongPressBrowser() async {
-    return await _asyncPrefs.getString(_kUseQuickBrowser) ?? "quick";
+    return await PrefsDatabase.getString(_kUseQuickBrowser, "quick");
   }
 
   Future setTMenuButtonLongPressBrowser(String value) async {
-    return await _asyncPrefs.setString(_kUseQuickBrowser, value);
+    return await PrefsDatabase.setString(_kUseQuickBrowser, value);
   }
 
   Future<bool> getRestoreSessionCookie() async {
-    return await _asyncPrefs.getBool(_kRestoreSessionCookie) ?? false;
+    return await PrefsDatabase.getBool(_kRestoreSessionCookie, false);
   }
 
   Future setRestoreSessionCookie(bool value) async {
-    return await _asyncPrefs.setBool(_kRestoreSessionCookie, value);
+    return await PrefsDatabase.setBool(_kRestoreSessionCookie, value);
   }
 
   Future<bool> getWebviewCacheEnabled() async {
-    return await _asyncPrefs.getBool(_kWebviewCacheEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kWebviewCacheEnabled, true);
   }
 
   Future setWebviewCacheEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kWebviewCacheEnabled, value);
+    return await PrefsDatabase.setBool(_kWebviewCacheEnabled, value);
   }
 
   /*
   Future<bool> getClearBrowserCacheNextOpportunity() async {
     
-    return await _asyncPrefs.getBool(_kClearBrowserCacheNextOpportunity) ?? false;
+    return await PrefsDatabase.getBool(_kClearBrowserCacheNextOpportunity, false);
   }
   
   Future setClearBrowserCacheNextOpportunity(bool value) async {
     
-    return await _asyncPrefs.setBool(_kClearBrowserCacheNextOpportunity, value);
+    return await PrefsDatabase.setBool(_kClearBrowserCacheNextOpportunity, value);
   }
   */
 
   Future<int> getAndroidBrowserScale() async {
-    return await _asyncPrefs.getInt(_kAndroidBrowserScale) ?? 0;
+    return await PrefsDatabase.getInt(_kAndroidBrowserScale, 0);
   }
 
   Future setAndroidBrowserScale(int value) async {
-    return await _asyncPrefs.setInt(_kAndroidBrowserScale, value);
+    return await PrefsDatabase.setInt(_kAndroidBrowserScale, value);
   }
 
   Future<int> getAndroidBrowserTextScale() async {
-    return await _asyncPrefs.getInt(_kAndroidBrowserTextScale) ?? 8;
+    return await PrefsDatabase.getInt(_kAndroidBrowserTextScale, 8);
   }
 
   Future setAndroidBrowserTextScale(int value) async {
-    return await _asyncPrefs.setInt(_kAndroidBrowserTextScale, value);
+    return await PrefsDatabase.setInt(_kAndroidBrowserTextScale, value);
   }
 
   // Settings - Browser FAB
 
   Future<bool> getWebviewFabEnabled() async {
-    return await _asyncPrefs.getBool(_kWebviewFabEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kWebviewFabEnabled, false);
   }
 
   Future setWebviewFabEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kWebviewFabEnabled, value);
+    return await PrefsDatabase.setBool(_kWebviewFabEnabled, value);
   }
 
   // --
 
   Future<bool> getWebviewFabShownNow() async {
-    return await _asyncPrefs.getBool(_kWebviewFabShownNow) ?? true;
+    return await PrefsDatabase.getBool(_kWebviewFabShownNow, true);
   }
 
   Future setWebviewFabShownNow(bool value) async {
-    return await _asyncPrefs.setBool(_kWebviewFabShownNow, value);
+    return await PrefsDatabase.setBool(_kWebviewFabShownNow, value);
   }
 
   // --
 
   Future<String> getWebviewFabDirection() async {
-    return await _asyncPrefs.getString(_kWebviewFabDirection) ?? "center";
+    return await PrefsDatabase.getString(_kWebviewFabDirection, "center");
   }
 
   Future setWebviewFabDirection(String value) async {
-    return await _asyncPrefs.setString(_kWebviewFabDirection, value);
+    return await PrefsDatabase.setString(_kWebviewFabDirection, value);
   }
 
   // --
 
   Future setWebviewFabPositionXY(List<int> value) async {
     // Convert list to JSON string for storage
-    return await _asyncPrefs.setString(_kWebviewFabPositionXY, jsonEncode(value));
+    return await PrefsDatabase.setString(_kWebviewFabPositionXY, jsonEncode(value));
   }
 
   // Retrieve FAB position and decode JSON string to List<int>
   Future<List<int>> getWebviewFabPositionXY() async {
-    final jsonString = await _asyncPrefs.getString(_kWebviewFabPositionXY);
-    if (jsonString != null) {
+    final jsonString = await PrefsDatabase.getString(_kWebviewFabPositionXY, '');
+    if (jsonString.isNotEmpty) {
       try {
         // Decode JSON string back to List<int>
         return List<int>.from(jsonDecode(jsonString));
@@ -1197,37 +1341,37 @@ class Prefs {
   // --
 
   Future<bool> getWebviewFabOnlyFullScreen() async {
-    return await _asyncPrefs.getBool(_kWebviewFabOnlyFullScreen) ?? false;
+    return await PrefsDatabase.getBool(_kWebviewFabOnlyFullScreen, false);
   }
 
   Future setWebviewFabOnlyFullScreen(bool value) async {
-    return await _asyncPrefs.setBool(_kWebviewFabOnlyFullScreen, value);
+    return await PrefsDatabase.setBool(_kWebviewFabOnlyFullScreen, value);
   }
 
   // --
 
   Future setFabButtonCount(int value) async {
-    return await _asyncPrefs.setInt(_kFabButtonCount, value);
+    return await PrefsDatabase.setInt(_kFabButtonCount, value);
   }
 
   Future<int> getFabButtonCount() async {
-    return await _asyncPrefs.getInt(_kFabButtonCount) ?? 4; // Default to 4 buttons
+    return await PrefsDatabase.getInt(_kFabButtonCount, 4); // Default to 4 buttons
   }
 
 // --
 
   Future setFabButtonActions(List<WebviewFabAction> actions) async {
     final actionIndices = actions.map((action) => action.index).toList();
-    return await _asyncPrefs.setStringList(
+    return await PrefsDatabase.setStringList(
       _kFabButtonActions,
       actionIndices.map((e) => e.toString()).toList(),
     );
   }
 
   Future<List<WebviewFabAction>> getFabButtonActions() async {
-    final actionStrings = await _asyncPrefs.getStringList(_kFabButtonActions);
+    final actionStrings = await PrefsDatabase.getStringList(_kFabButtonActions, []);
 
-    if (actionStrings != null) {
+    if (actionStrings.isNotEmpty) {
       return actionStrings
           .map((actionIndex) => int.tryParse(actionIndex))
           .whereType<int>() // Eliminate null values
@@ -1249,12 +1393,12 @@ class Prefs {
 // --
 
   Future setFabDoubleTapAction(WebviewFabAction action) async {
-    return await _asyncPrefs.setInt(_kFabDoubleTapAction, action.index);
+    return await PrefsDatabase.setInt(_kFabDoubleTapAction, action.index);
   }
 
   Future<WebviewFabAction> getFabDoubleTapAction() async {
-    final actionIndex = await _asyncPrefs.getInt(_kFabDoubleTapAction);
-    return actionIndex != null
+    final actionIndex = await PrefsDatabase.getInt(_kFabDoubleTapAction, -1);
+    return actionIndex >= 0
         ? FabActionExtension.fromIndex(actionIndex)
         : WebviewFabAction.openTabsMenu; // Default to Open Tabs Menu
   }
@@ -1262,12 +1406,12 @@ class Prefs {
 // --
 
   Future setFabTripleTapAction(WebviewFabAction action) async {
-    return await _asyncPrefs.setInt(_kFabTripleTapAction, action.index);
+    return await PrefsDatabase.setInt(_kFabTripleTapAction, action.index);
   }
 
   Future<WebviewFabAction> getFabTripleTapAction() async {
-    final actionIndex = await _asyncPrefs.getInt(_kFabTripleTapAction);
-    return actionIndex != null
+    final actionIndex = await PrefsDatabase.getInt(_kFabTripleTapAction, -1);
+    return actionIndex >= 0
         ? FabActionExtension.fromIndex(actionIndex)
         : WebviewFabAction.closeCurrentTab; // Default to Close Current Tab
   }
@@ -1275,175 +1419,175 @@ class Prefs {
   // FAB ENDS ###
 
   Future<bool> getBrowserDoNotPauseWebviews() async {
-    return await _asyncPrefs.getBool(_kBrowserDoNotPauseWebviews) ?? false;
+    return await PrefsDatabase.getBool(_kBrowserDoNotPauseWebviews, false);
   }
 
   Future setBrowserDoNotPauseWebviews(bool value) async {
-    return await _asyncPrefs.setBool(_kBrowserDoNotPauseWebviews, value);
+    return await PrefsDatabase.setBool(_kBrowserDoNotPauseWebviews, value);
   }
 
   // Settings - Browser Gestures
 
   Future<bool> getIosBrowserPinch() async {
-    return await _asyncPrefs.getBool(_kIosBrowserPinch) ?? false;
+    return await PrefsDatabase.getBool(_kIosBrowserPinch, false);
   }
 
   Future setIosBrowserPinch(bool value) async {
-    return await _asyncPrefs.setBool(_kIosBrowserPinch, value);
+    return await PrefsDatabase.setBool(_kIosBrowserPinch, value);
   }
 
   Future<bool> getIosDisallowOverscroll() async {
-    return await _asyncPrefs.getBool(_kIosDisallowOverscroll) ?? false;
+    return await PrefsDatabase.getBool(_kIosDisallowOverscroll, false);
   }
 
   Future setIosDisallowOverscroll(bool value) async {
-    return await _asyncPrefs.setBool(_kIosDisallowOverscroll, value);
+    return await PrefsDatabase.setBool(_kIosDisallowOverscroll, value);
   }
 
   Future<bool> getBrowserReverseNavigationSwipe() async {
-    return await _asyncPrefs.getBool(_kBrowserReverseNavigationSwipe) ?? false;
+    return await PrefsDatabase.getBool(_kBrowserReverseNavigationSwipe, false);
   }
 
   Future setBrowserReverseNavigationSwipe(bool value) async {
-    return await _asyncPrefs.setBool(_kBrowserReverseNavigationSwipe, value);
+    return await PrefsDatabase.setBool(_kBrowserReverseNavigationSwipe, value);
   }
 
   Future<bool> getBrowserCenterEditingTextField() async {
-    return await _asyncPrefs.getBool(_kBrowserCenterEditingTextField) ?? true;
+    return await PrefsDatabase.getBool(_kBrowserCenterEditingTextField, true);
   }
 
   Future setBrowserCenterEditingTextField(bool value) async {
-    return await _asyncPrefs.setBool(_kBrowserCenterEditingTextField, value);
+    return await PrefsDatabase.setBool(_kBrowserCenterEditingTextField, value);
   }
 
   /// ----------------------------
   /// Methods for test browser
   /// ----------------------------
   Future<bool> getTestBrowserActive() async {
-    return await _asyncPrefs.getBool(_kTestBrowserActive) ?? false;
+    return await PrefsDatabase.getBool(_kTestBrowserActive, false);
   }
 
   Future setTestBrowserActive(bool value) async {
-    return await _asyncPrefs.setBool(_kTestBrowserActive, value);
+    return await PrefsDatabase.setBool(_kTestBrowserActive, value);
   }
 
   /// ----------------------------
   /// Methods for notifications on launch
   /// ----------------------------
   Future<bool> getRemoveNotificationsOnLaunch() async {
-    return await _asyncPrefs.getBool(_kRemoveNotificationsOnLaunch) ?? true;
+    return await PrefsDatabase.getBool(_kRemoveNotificationsOnLaunch, true);
   }
 
   Future setRemoveNotificationsOnLaunch(bool value) async {
-    return await _asyncPrefs.setBool(_kRemoveNotificationsOnLaunch, value);
+    return await PrefsDatabase.setBool(_kRemoveNotificationsOnLaunch, value);
   }
 
   /// ----------------------------
   /// Methods for clock
   /// ----------------------------
   Future<String> getDefaultTimeFormat() async {
-    return await _asyncPrefs.getString(_kDefaultTimeFormat) ?? '24';
+    return await PrefsDatabase.getString(_kDefaultTimeFormat, '24');
   }
 
   Future setDefaultTimeFormat(String value) async {
-    return await _asyncPrefs.setString(_kDefaultTimeFormat, value);
+    return await PrefsDatabase.setString(_kDefaultTimeFormat, value);
   }
 
   Future<String> getDefaultTimeZone() async {
-    return await _asyncPrefs.getString(_kDefaultTimeZone) ?? 'local';
+    return await PrefsDatabase.getString(_kDefaultTimeZone, 'local');
   }
 
   Future setDefaultTimeZone(String value) async {
-    return await _asyncPrefs.setString(_kDefaultTimeZone, value);
+    return await PrefsDatabase.setString(_kDefaultTimeZone, value);
   }
 
   Future<String> getShowDateInClock() async {
-    return await _asyncPrefs.getString(_kShowDateInClockString) ?? "dayfirst";
+    return await PrefsDatabase.getString(_kShowDateInClockString, "dayfirst");
   }
 
   Future setShowDateInClock(String value) async {
-    return await _asyncPrefs.setString(_kShowDateInClockString, value);
+    return await PrefsDatabase.setString(_kShowDateInClockString, value);
   }
 
   Future<bool> getShowSecondsInClock() async {
-    return await _asyncPrefs.getBool(_kShowSecondsInClock) ?? true;
+    return await PrefsDatabase.getBool(_kShowSecondsInClock, true);
   }
 
   Future setShowSecondsInClock(bool value) async {
-    return await _asyncPrefs.setBool(_kShowSecondsInClock, value);
+    return await PrefsDatabase.setBool(_kShowSecondsInClock, value);
   }
 
   /// ----------------------------
   /// Methods for spies source
   /// ----------------------------
   Future<String> getSpiesSource() async {
-    return await _asyncPrefs.getString(_kSpiesSource) ?? 'yata';
+    return await PrefsDatabase.getString(_kSpiesSource, 'yata');
   }
 
   Future setSpiesSource(String value) async {
-    return await _asyncPrefs.setString(_kSpiesSource, value);
+    return await PrefsDatabase.setString(_kSpiesSource, value);
   }
 
   Future<bool> getAllowMixedSpiesSources() async {
-    return await _asyncPrefs.getBool(_kAllowMixedSpiesSources) ?? true;
+    return await PrefsDatabase.getBool(_kAllowMixedSpiesSources, true);
   }
 
   Future setAllowMixedSpiesSources(bool value) async {
-    return await _asyncPrefs.setBool(_kAllowMixedSpiesSources, value);
+    return await PrefsDatabase.setBool(_kAllowMixedSpiesSources, value);
   }
 
   /// ----------------------------
   /// Methods for OC Crimes NNB Source
   /// ----------------------------
   Future<String> getNaturalNerveBarSource() async {
-    return await _asyncPrefs.getString(_kNaturalNerveBarSource) ?? 'yata';
+    return await PrefsDatabase.getString(_kNaturalNerveBarSource, 'yata');
   }
 
   Future setNaturalNerveBarSource(String value) async {
-    return await _asyncPrefs.setString(_kNaturalNerveBarSource, value);
+    return await PrefsDatabase.setString(_kNaturalNerveBarSource, value);
   }
 
   Future<int> getNaturalNerveYataTime() async {
-    return await _asyncPrefs.getInt(_kNaturalNerveYataTime) ?? 0;
+    return await PrefsDatabase.getInt(_kNaturalNerveYataTime, 0);
   }
 
   Future setNaturalNerveYataTime(int value) async {
-    return await _asyncPrefs.setInt(_kNaturalNerveYataTime, value);
+    return await PrefsDatabase.setInt(_kNaturalNerveYataTime, value);
   }
 
   Future<String> getNaturalNerveYataModel() async {
-    return await _asyncPrefs.getString(_kNaturalNerveYataModel) ?? '';
+    return await PrefsDatabase.getString(_kNaturalNerveYataModel, '');
   }
 
   Future setNaturalNerveYataModel(String value) async {
-    return await _asyncPrefs.setString(_kNaturalNerveYataModel, value);
+    return await PrefsDatabase.setString(_kNaturalNerveYataModel, value);
   }
 
   Future<int> getNaturalNerveTornStatsTime() async {
-    return await _asyncPrefs.getInt(_kNaturalNerveTornStatsTime) ?? 0;
+    return await PrefsDatabase.getInt(_kNaturalNerveTornStatsTime, 0);
   }
 
   Future setNaturalNerveTornStatsTime(int value) async {
-    return await _asyncPrefs.setInt(_kNaturalNerveTornStatsTime, value);
+    return await PrefsDatabase.setInt(_kNaturalNerveTornStatsTime, value);
   }
 
   Future<String> getNaturalNerveTornStatsModel() async {
-    return await _asyncPrefs.getString(_kNaturalNerveTornStatsModel) ?? '';
+    return await PrefsDatabase.getString(_kNaturalNerveTornStatsModel, '');
   }
 
   Future setNaturalNerveTornStatsModel(String value) async {
-    return await _asyncPrefs.setString(_kNaturalNerveTornStatsModel, value);
+    return await PrefsDatabase.setString(_kNaturalNerveTornStatsModel, value);
   }
 
   /// ----------------------------
   /// Methods for appBar position
   /// ----------------------------
   Future<String> getAppBarPosition() async {
-    return await _asyncPrefs.getString(_kAppBarPosition) ?? 'top';
+    return await PrefsDatabase.getString(_kAppBarPosition, 'top');
   }
 
   Future setAppBarPosition(String value) async {
-    return await _asyncPrefs.setString(_kAppBarPosition, value);
+    return await PrefsDatabase.setString(_kAppBarPosition, value);
   }
 
   /// ----------------------------
@@ -1451,11 +1595,11 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getAllowScreenRotation() async {
-    return await _asyncPrefs.getBool(_kAllowScreenRotation) ?? false;
+    return await PrefsDatabase.getBool(_kAllowScreenRotation, false);
   }
 
   Future setAllowScreenRotation(bool value) async {
-    return await _asyncPrefs.setBool(_kAllowScreenRotation, value);
+    return await PrefsDatabase.setBool(_kAllowScreenRotation, value);
   }
 
   /// ----------------------------
@@ -1463,11 +1607,11 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getIosAllowLinkPreview() async {
-    return await _asyncPrefs.getBool(_kIosAllowLinkPreview) ?? true;
+    return await PrefsDatabase.getBool(_kIosAllowLinkPreview, true);
   }
 
   Future setIosAllowLinkPreview(bool value) async {
-    return await _asyncPrefs.setBool(_kIosAllowLinkPreview, value);
+    return await PrefsDatabase.setBool(_kIosAllowLinkPreview, value);
   }
 
   /// ----------------------------
@@ -1475,11 +1619,11 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getExcessTabsAlerted() async {
-    return await _asyncPrefs.getBool(_kExcessTabsAlerted) ?? false;
+    return await PrefsDatabase.getBool(_kExcessTabsAlerted, false);
   }
 
   Future setExcessTabsAlerted(bool value) async {
-    return await _asyncPrefs.setBool(_kExcessTabsAlerted, value);
+    return await PrefsDatabase.setBool(_kExcessTabsAlerted, value);
   }
 
   /// ----------------------------
@@ -1487,89 +1631,89 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getFirstTabLockAlerted() async {
-    return await _asyncPrefs.getBool(_kFirstTabLockAlerted) ?? false;
+    return await PrefsDatabase.getBool(_kFirstTabLockAlerted, false);
   }
 
   Future setFirstTabLockAlerted(bool value) async {
-    return await _asyncPrefs.setBool(_kFirstTabLockAlerted, value);
+    return await PrefsDatabase.setBool(_kFirstTabLockAlerted, value);
   }
 
   /// ----------------------------
   /// Methods for travel options
   /// ----------------------------
   Future<String> getTravelNotificationTitle() async {
-    return await _asyncPrefs.getString(_kTravelNotificationTitle) ?? 'TORN TRAVEL';
+    return await PrefsDatabase.getString(_kTravelNotificationTitle, 'TORN TRAVEL');
   }
 
   Future setTravelNotificationTitle(String value) async {
-    return await _asyncPrefs.setString(_kTravelNotificationTitle, value);
+    return await PrefsDatabase.setString(_kTravelNotificationTitle, value);
   }
 
   Future<String> getTravelNotificationBody() async {
-    return await _asyncPrefs.getString(_kTravelNotificationBody) ?? 'Arriving at your destination!';
+    return await PrefsDatabase.getString(_kTravelNotificationBody, 'Arriving at your destination!');
   }
 
   Future setTravelNotificationBody(String value) async {
-    return await _asyncPrefs.setString(_kTravelNotificationBody, value);
+    return await PrefsDatabase.setString(_kTravelNotificationBody, value);
   }
 
   Future<String> getTravelNotificationAhead() async {
-    return await _asyncPrefs.getString(_kTravelNotificationAhead) ?? '0';
+    return await PrefsDatabase.getString(_kTravelNotificationAhead, '0');
   }
 
   Future setTravelNotificationAhead(String value) async {
-    return await _asyncPrefs.setString(_kTravelNotificationAhead, value);
+    return await PrefsDatabase.setString(_kTravelNotificationAhead, value);
   }
 
   Future<String> getTravelAlarmAhead() async {
-    return await _asyncPrefs.getString(_kTravelAlarmAhead) ?? '0';
+    return await PrefsDatabase.getString(_kTravelAlarmAhead, '0');
   }
 
   Future setTravelAlarmAhead(String value) async {
-    return await _asyncPrefs.setString(_kTravelAlarmAhead, value);
+    return await PrefsDatabase.setString(_kTravelAlarmAhead, value);
   }
 
   Future<String> getTravelTimerAhead() async {
-    return await _asyncPrefs.getString(_kTravelTimerAhead) ?? '0';
+    return await PrefsDatabase.getString(_kTravelTimerAhead, '0');
   }
 
   Future setTravelTimerAhead(String value) async {
-    return await _asyncPrefs.setString(_kTravelTimerAhead, value);
+    return await PrefsDatabase.setString(_kTravelTimerAhead, value);
   }
 
   Future<bool> getRemoveAirplane() async {
-    return await _asyncPrefs.getBool(_kRemoveAirplane) ?? false;
+    return await PrefsDatabase.getBool(_kRemoveAirplane, false);
   }
 
   Future setRemoveAirplane(bool value) async {
-    return await _asyncPrefs.setBool(_kRemoveAirplane, value);
+    return await PrefsDatabase.setBool(_kRemoveAirplane, value);
   }
 
   Future<bool> getRemoveForeignItemsDetails() async {
-    return await _asyncPrefs.getBool(_kRemoveForeignItemsDetails) ?? false;
+    return await PrefsDatabase.getBool(_kRemoveForeignItemsDetails, false);
   }
 
   Future setRemoveForeignItemsDetails(bool value) async {
-    return await _asyncPrefs.setBool(_kRemoveForeignItemsDetails, value);
+    return await PrefsDatabase.setBool(_kRemoveForeignItemsDetails, value);
   }
 
   Future<bool> getRemoveTravelQuickReturnButton() async {
-    return await _asyncPrefs.getBool(_kRemoveTravelQuickReturnButton) ?? false;
+    return await PrefsDatabase.getBool(_kRemoveTravelQuickReturnButton, false);
   }
 
   Future setRemoveTravelQuickReturnButton(bool value) async {
-    return await _asyncPrefs.setBool(_kRemoveTravelQuickReturnButton, value);
+    return await PrefsDatabase.setBool(_kRemoveTravelQuickReturnButton, value);
   }
 
   /// ----------------------------
   /// Methods for Profile Bars
   /// ----------------------------
   Future<String> getLifeBarOption() async {
-    return await _asyncPrefs.getString(_kLifeBarOption) ?? 'ask';
+    return await PrefsDatabase.getString(_kLifeBarOption, 'ask');
   }
 
   Future setLifeBarOption(String value) async {
-    return await _asyncPrefs.setString(_kLifeBarOption, value);
+    return await PrefsDatabase.setString(_kLifeBarOption, value);
   }
 
   /// ----------------------------
@@ -1577,695 +1721,696 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getExtraPlayerInformation() async {
-    return await _asyncPrefs.getBool(_kExtraPlayerInformation) ?? true;
+    return await PrefsDatabase.getBool(_kExtraPlayerInformation, true);
   }
 
   Future setExtraPlayerInformation(bool value) async {
-    return await _asyncPrefs.setBool(_kExtraPlayerInformation, value);
+    return await PrefsDatabase.setBool(_kExtraPlayerInformation, value);
   }
 
   // *************
   Future<String> getProfileStatsEnabled() async {
-    return await _asyncPrefs.getString(_kProfileStatsEnabled) ?? "0";
+    return await PrefsDatabase.getString(_kProfileStatsEnabled, "0");
   }
 
   Future setProfileStatsEnabled(String value) async {
-    return await _asyncPrefs.setString(_kProfileStatsEnabled, value);
+    return await PrefsDatabase.setString(_kProfileStatsEnabled, value);
   }
 
   // *************
   Future<List<String>> getShareAttackOptions() async {
-    return await _asyncPrefs.getStringList(_kShareAttackOptions) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kShareAttackOptions, <String>[]);
   }
 
   Future setShareAttackOptions(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kShareAttackOptions, value);
+    return await PrefsDatabase.setStringList(_kShareAttackOptions, value);
   }
 
   // *************
   Future<int> getTSCEnabledStatus() async {
-    return await _asyncPrefs.getInt(_kTSCEnabledStatus) ?? -1;
+    return await PrefsDatabase.getInt(_kTSCEnabledStatus, -1);
   }
 
   Future setTSCEnabledStatus(int value) async {
-    return await _asyncPrefs.setInt(_kTSCEnabledStatus, value);
+    return await PrefsDatabase.setInt(_kTSCEnabledStatus, value);
   }
 
   // *************
   Future<int> getYataStatsEnabledStatus() async {
-    return await _asyncPrefs.getInt(_kYataStatsEnabledStatus) ?? 1;
+    return await PrefsDatabase.getInt(_kYataStatsEnabledStatus, 1);
   }
 
   Future setYataStatsEnabledStatus(int value) async {
-    return await _asyncPrefs.setInt(_kYataStatsEnabledStatus, value);
+    return await PrefsDatabase.setInt(_kYataStatsEnabledStatus, value);
   }
 
   // *************
   Future<String> getFriendlyFactions() async {
-    return await _asyncPrefs.getString(_kFriendlyFactions) ?? "";
+    return await PrefsDatabase.getString(_kFriendlyFactions, "");
   }
 
   Future setFriendlyFactions(String value) async {
-    return await _asyncPrefs.setString(_kFriendlyFactions, value);
+    return await PrefsDatabase.setString(_kFriendlyFactions, value);
   }
 
   // *************
   Future<bool> getNotesWidgetEnabledProfile() async {
-    return await _asyncPrefs.getBool(_kNotesWidgetEnabledProfile) ?? true;
+    return await PrefsDatabase.getBool(_kNotesWidgetEnabledProfile, true);
   }
 
   Future setNotesWidgetEnabledProfile(bool value) async {
-    return await _asyncPrefs.setBool(_kNotesWidgetEnabledProfile, value);
+    return await PrefsDatabase.setBool(_kNotesWidgetEnabledProfile, value);
   }
 
   Future setNotesWidgetEnabledProfileWhenEmpty(bool value) async {
-    return await _asyncPrefs.setBool(_kNotesWidgetEnabledProfileWhenEmpty, value);
+    return await PrefsDatabase.setBool(_kNotesWidgetEnabledProfileWhenEmpty, value);
   }
 
   Future<bool> getNotesWidgetEnabledProfileWhenEmpty() async {
-    return await _asyncPrefs.getBool(_kNotesWidgetEnabledProfileWhenEmpty) ?? true;
+    return await PrefsDatabase.getBool(_kNotesWidgetEnabledProfileWhenEmpty, true);
   }
 
   // *************
   Future<bool> getExtraPlayerNetworth() async {
-    return await _asyncPrefs.getBool(_kExtraPlayerNetworth) ?? false;
+    return await PrefsDatabase.getBool(_kExtraPlayerNetworth, false);
   }
 
   Future setExtraPlayerNetworth(bool value) async {
-    return await _asyncPrefs.setBool(_kExtraPlayerNetworth, value);
+    return await PrefsDatabase.setBool(_kExtraPlayerNetworth, value);
   }
 
   // *************
   Future<bool> getHitInMiniProfileOpensNewTab() async {
-    return await _asyncPrefs.getBool(_kHitInMiniProfileOpensNewTab) ?? false;
+    return await PrefsDatabase.getBool(_kHitInMiniProfileOpensNewTab, false);
   }
 
   Future setHitInMiniProfileOpensNewTab(bool value) async {
-    return await _asyncPrefs.setBool(_kHitInMiniProfileOpensNewTab, value);
+    return await PrefsDatabase.setBool(_kHitInMiniProfileOpensNewTab, value);
   }
 
   Future<bool> getHitInMiniProfileOpensNewTabAndChangeTab() async {
-    return await _asyncPrefs.getBool(_kHitInMiniProfileOpensNewTabAndChangeTab) ?? true;
+    return await PrefsDatabase.getBool(_kHitInMiniProfileOpensNewTabAndChangeTab, true);
   }
 
   Future setHitInMiniProfileOpensNewTabAndChangeTab(bool value) async {
-    return await _asyncPrefs.setBool(_kHitInMiniProfileOpensNewTabAndChangeTab, value);
+    return await PrefsDatabase.setBool(_kHitInMiniProfileOpensNewTabAndChangeTab, value);
   }
 
   /// ----------------------------
   /// Methods for foreign stocks
   /// ----------------------------
   Future<List<String>> getStockCountryFilter() async {
-    return await _asyncPrefs.getStringList(_kStockCountryFilter) ?? List<String>.filled(12, '1');
+    return await PrefsDatabase.getStringList(_kStockCountryFilter, List<String>.filled(12, '1'));
   }
 
   Future setStockCountryFilter(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kStockCountryFilter, value);
+    return await PrefsDatabase.setStringList(_kStockCountryFilter, value);
   }
 
   Future<List<String>> getStockTypeFilter() async {
-    return await _asyncPrefs.getStringList(_kStockTypeFilter) ?? List<String>.filled(4, '1');
+    return await PrefsDatabase.getStringList(_kStockTypeFilter, List<String>.filled(4, '1'));
   }
 
   Future setStockTypeFilter(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kStockTypeFilter, value);
+    return await PrefsDatabase.setStringList(_kStockTypeFilter, value);
   }
 
   Future<String> getStockSort() async {
-    return await _asyncPrefs.getString(_kStockSort) ?? 'profit';
+    return await PrefsDatabase.getString(_kStockSort, 'profit');
   }
 
   Future setStockSort(String value) async {
-    return await _asyncPrefs.setString(_kStockSort, value);
+    return await PrefsDatabase.setString(_kStockSort, value);
   }
 
   Future<int> getStockCapacity() async {
-    return await _asyncPrefs.getInt(_kStockCapacity) ?? 1;
+    return await PrefsDatabase.getInt(_kStockCapacity, 1);
   }
 
   Future setStockCapacity(int value) async {
-    return await _asyncPrefs.setInt(_kStockCapacity, value);
+    return await PrefsDatabase.setInt(_kStockCapacity, value);
   }
 
   Future<bool> getShowForeignInventory() async {
-    return await _asyncPrefs.getBool(_kShowForeignInventory) ?? true;
+    return await PrefsDatabase.getBool(_kShowForeignInventory, true);
   }
 
   Future setShowForeignInventory(bool value) async {
-    return await _asyncPrefs.setBool(_kShowForeignInventory, value);
+    return await PrefsDatabase.setBool(_kShowForeignInventory, value);
   }
 
   Future<bool> getShowArrivalTime() async {
-    return await _asyncPrefs.getBool(_kShowArrivalTime) ?? true;
+    return await PrefsDatabase.getBool(_kShowArrivalTime, true);
   }
 
   Future setShowArrivalTime(bool value) async {
-    return await _asyncPrefs.setBool(_kShowArrivalTime, value);
+    return await PrefsDatabase.setBool(_kShowArrivalTime, value);
   }
 
   Future<bool> getShowBarsCooldownAnalysis() async {
-    return await _asyncPrefs.getBool(_kShowBarsCooldownAnalysis) ?? true;
+    return await PrefsDatabase.getBool(_kShowBarsCooldownAnalysis, true);
   }
 
   Future setShowBarsCooldownAnalysis(bool value) async {
-    return await _asyncPrefs.setBool(_kShowBarsCooldownAnalysis, value);
+    return await PrefsDatabase.setBool(_kShowBarsCooldownAnalysis, value);
   }
 
   Future<String> getTravelTicket() async {
-    return await _asyncPrefs.getString(_kTravelTicket) ?? "private";
+    return await PrefsDatabase.getString(_kTravelTicket, "private");
   }
 
   Future setTravelTicket(String value) async {
-    return await _asyncPrefs.setString(_kTravelTicket, value);
+    return await PrefsDatabase.setString(_kTravelTicket, value);
   }
 
   Future<String> getForeignStocksDataProvider() async {
-    return await _asyncPrefs.getString(_kForeignStocksDataProvider) ?? "yata";
+    return await PrefsDatabase.getString(_kForeignStocksDataProvider, "yata");
   }
 
   Future setForeignStocksDataProvider(String value) async {
-    return await _asyncPrefs.setString(_kForeignStocksDataProvider, value);
+    return await PrefsDatabase.setString(_kForeignStocksDataProvider, value);
   }
 
   Future<bool> getRestocksNotificationEnabled() async {
-    return await _asyncPrefs.getBool(_kRestocksEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kRestocksEnabled, false);
   }
 
   Future setRestocksNotificationEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kRestocksEnabled, value);
+    return await PrefsDatabase.setBool(_kRestocksEnabled, value);
   }
 
   Future<String> getActiveRestocks() async {
-    return await _asyncPrefs.getString(_kActiveRestocks) ?? "{}";
+    return await PrefsDatabase.getString(_kActiveRestocks, "{}");
   }
 
   Future setActiveRestocks(String value) async {
-    return await _asyncPrefs.setString(_kActiveRestocks, value);
+    return await PrefsDatabase.setString(_kActiveRestocks, value);
   }
 
   Future<List<String>> getHiddenForeignStocks() async {
-    return await _asyncPrefs.getStringList(_kHiddenForeignStocks) ?? [];
+    return await PrefsDatabase.getStringList(_kHiddenForeignStocks, []);
   }
 
   Future setHiddenForeignStocks(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kHiddenForeignStocks, value);
+    return await PrefsDatabase.setStringList(_kHiddenForeignStocks, value);
   }
 
   Future<bool> getCountriesAlphabeticalFilter() async {
-    return await _asyncPrefs.getBool(_kCountriesAlphabeticalFilter) ?? true;
+    return await PrefsDatabase.getBool(_kCountriesAlphabeticalFilter, true);
   }
 
   Future setCountriesAlphabeticalFilter(bool value) async {
-    return await _asyncPrefs.setBool(_kCountriesAlphabeticalFilter, value);
+    return await PrefsDatabase.setBool(_kCountriesAlphabeticalFilter, value);
   }
 
   /// ----------------------------
   /// Methods for notification types
   /// ----------------------------
   Future<String> getTravelNotificationType() async {
-    return await _asyncPrefs.getString(_kTravelNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kTravelNotificationType, '0');
   }
 
   Future setTravelNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kTravelNotificationType, value);
+    return await PrefsDatabase.setString(_kTravelNotificationType, value);
   }
 
   Future<String> getEnergyNotificationType() async {
-    return await _asyncPrefs.getString(_kEnergyNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kEnergyNotificationType, '0');
   }
 
   Future setEnergyNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kEnergyNotificationType, value);
+    return await PrefsDatabase.setString(_kEnergyNotificationType, value);
   }
 
   Future<int> getEnergyNotificationValue() async {
-    return await _asyncPrefs.getInt(_kEnergyNotificationValue) ?? 0;
+    return await PrefsDatabase.getInt(_kEnergyNotificationValue, 0);
   }
 
   Future setEnergyNotificationValue(int value) async {
-    return await _asyncPrefs.setInt(_kEnergyNotificationValue, value);
+    return await PrefsDatabase.setInt(_kEnergyNotificationValue, value);
   }
 
   Future setEnergyPercentageOverride(bool value) async {
-    return await _asyncPrefs.setBool(_kEnergyCustomOverride, value);
+    return await PrefsDatabase.setBool(_kEnergyCustomOverride, value);
   }
 
   Future<bool> getEnergyPercentageOverride() async {
-    return await _asyncPrefs.getBool(_kEnergyCustomOverride) ?? false;
+    return await PrefsDatabase.getBool(_kEnergyCustomOverride, false);
   }
 
   Future<String> getNerveNotificationType() async {
-    return await _asyncPrefs.getString(_kNerveNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kNerveNotificationType, '0');
   }
 
   Future setNerveNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kNerveNotificationType, value);
+    return await PrefsDatabase.setString(_kNerveNotificationType, value);
   }
 
   Future<int> getNerveNotificationValue() async {
-    return await _asyncPrefs.getInt(_kNerveNotificationValue) ?? 0;
+    return await PrefsDatabase.getInt(_kNerveNotificationValue, 0);
   }
 
   Future setNerveNotificationValue(int value) async {
-    return await _asyncPrefs.setInt(_kNerveNotificationValue, value);
+    return await PrefsDatabase.setInt(_kNerveNotificationValue, value);
   }
 
   Future setNervePercentageOverride(bool value) async {
-    return await _asyncPrefs.setBool(_kNerveCustomOverride, value);
+    return await PrefsDatabase.setBool(_kNerveCustomOverride, value);
   }
 
   Future<bool> getNervePercentageOverride() async {
-    return await _asyncPrefs.getBool(_kNerveCustomOverride) ?? false;
+    return await PrefsDatabase.getBool(_kNerveCustomOverride, false);
   }
 
   Future<String> getLifeNotificationType() async {
-    return await _asyncPrefs.getString(_kLifeNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kLifeNotificationType, '0');
   }
 
   Future setLifeNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kLifeNotificationType, value);
+    return await PrefsDatabase.setString(_kLifeNotificationType, value);
   }
 
   Future<String> getDrugNotificationType() async {
-    return await _asyncPrefs.getString(_kDrugNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kDrugNotificationType, '0');
   }
 
   Future setDrugNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kDrugNotificationType, value);
+    return await PrefsDatabase.setString(_kDrugNotificationType, value);
   }
 
   Future<String> getMedicalNotificationType() async {
-    return await _asyncPrefs.getString(_kMedicalNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kMedicalNotificationType, '0');
   }
 
   Future setMedicalNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kMedicalNotificationType, value);
+    return await PrefsDatabase.setString(_kMedicalNotificationType, value);
   }
 
   Future<String> getBoosterNotificationType() async {
-    return await _asyncPrefs.getString(_kBoosterNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kBoosterNotificationType, '0');
   }
 
   Future setBoosterNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kBoosterNotificationType, value);
+    return await PrefsDatabase.setString(_kBoosterNotificationType, value);
   }
 
   Future<String> getHospitalNotificationType() async {
-    return await _asyncPrefs.getString(_kHospitalNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kHospitalNotificationType, '0');
   }
 
   Future setHospitalNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kHospitalNotificationType, value);
+    return await PrefsDatabase.setString(_kHospitalNotificationType, value);
   }
 
   Future<int> getHospitalNotificationAhead() async {
-    return await _asyncPrefs.getInt(_kHospitalNotificationAhead) ?? 40;
+    return await PrefsDatabase.getInt(_kHospitalNotificationAhead, 40);
   }
 
   Future setHospitalNotificationAhead(int value) async {
-    return await _asyncPrefs.setInt(_kHospitalNotificationAhead, value);
+    return await PrefsDatabase.setInt(_kHospitalNotificationAhead, value);
   }
 
   Future<int> getHospitalAlarmAhead() async {
-    return await _asyncPrefs.getInt(_kHospitalAlarmAhead) ?? 1;
+    return await PrefsDatabase.getInt(_kHospitalAlarmAhead, 1);
   }
 
   Future setHospitalAlarmAhead(int value) async {
-    return await _asyncPrefs.setInt(_kHospitalAlarmAhead, value);
+    return await PrefsDatabase.setInt(_kHospitalAlarmAhead, value);
   }
 
   Future<int> getHospitalTimerAhead() async {
-    return await _asyncPrefs.getInt(_kHospitalTimerAhead) ?? 40;
+    return await PrefsDatabase.getInt(_kHospitalTimerAhead, 40);
   }
 
   Future setHospitalTimerAhead(int value) async {
-    return await _asyncPrefs.setInt(_kHospitalTimerAhead, value);
+    return await PrefsDatabase.setInt(_kHospitalTimerAhead, value);
   }
 
   Future<String> getJailNotificationType() async {
-    return await _asyncPrefs.getString(_kJailNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kJailNotificationType, '0');
   }
 
   Future setJailNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kJailNotificationType, value);
+    return await PrefsDatabase.setString(_kJailNotificationType, value);
   }
 
   Future<int> getJailNotificationAhead() async {
-    return await _asyncPrefs.getInt(_kJailNotificationAhead) ?? 40;
+    return await PrefsDatabase.getInt(_kJailNotificationAhead, 40);
   }
 
   Future setJailNotificationAhead(int value) async {
-    return await _asyncPrefs.setInt(_kJailNotificationAhead, value);
+    return await PrefsDatabase.setInt(_kJailNotificationAhead, value);
   }
 
   Future<int> getJailAlarmAhead() async {
-    return await _asyncPrefs.getInt(_kJailAlarmAhead) ?? 1;
+    return await PrefsDatabase.getInt(_kJailAlarmAhead, 1);
   }
 
   Future setJailAlarmAhead(int value) async {
-    return await _asyncPrefs.setInt(_kJailAlarmAhead, value);
+    return await PrefsDatabase.setInt(_kJailAlarmAhead, value);
   }
 
   Future<int> getJailTimerAhead() async {
-    return await _asyncPrefs.getInt(_kJailTimerAhead) ?? 40;
+    return await PrefsDatabase.getInt(_kJailTimerAhead, 40);
   }
 
   Future setJailTimerAhead(int value) async {
-    return await _asyncPrefs.setInt(_kJailTimerAhead, value);
+    return await PrefsDatabase.setInt(_kJailTimerAhead, value);
   }
 
   // Ranked War notification
   Future<String> getRankedWarNotificationType() async {
-    return await _asyncPrefs.getString(_kRankedWarNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kRankedWarNotificationType, '0');
   }
 
   Future setRankedWarNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kRankedWarNotificationType, value);
+    return await PrefsDatabase.setString(_kRankedWarNotificationType, value);
   }
 
   Future<int> getRankedWarNotificationAhead() async {
-    return await _asyncPrefs.getInt(_kRankedWarNotificationAhead) ?? 60;
+    return await PrefsDatabase.getInt(_kRankedWarNotificationAhead, 60);
   }
 
   Future setRankedWarNotificationAhead(int value) async {
-    return await _asyncPrefs.setInt(_kRankedWarNotificationAhead, value);
+    return await PrefsDatabase.setInt(_kRankedWarNotificationAhead, value);
   }
 
   Future<int> getRankedWarAlarmAhead() async {
-    return await _asyncPrefs.getInt(_kRankedWarAlarmAhead) ?? 1;
+    return await PrefsDatabase.getInt(_kRankedWarAlarmAhead, 1);
   }
 
   Future setRankedWarAlarmAhead(int value) async {
-    return await _asyncPrefs.setInt(_kRankedWarAlarmAhead, value);
+    return await PrefsDatabase.setInt(_kRankedWarAlarmAhead, value);
   }
 
   Future<int> getRankedWarTimerAhead() async {
-    return await _asyncPrefs.getInt(_kRankedWarTimerAhead) ?? 60;
+    return await PrefsDatabase.getInt(_kRankedWarTimerAhead, 60);
   }
 
   Future setRankedWarTimerAhead(int value) async {
-    return await _asyncPrefs.setInt(_kRankedWarTimerAhead, value);
+    return await PrefsDatabase.setInt(_kRankedWarTimerAhead, value);
   }
 
   //
 
   // Ranked War notification
   Future<String> getRaceStartNotificationType() async {
-    return await _asyncPrefs.getString(_kRaceStartNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kRaceStartNotificationType, '0');
   }
 
   Future setRaceStartNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kRaceStartNotificationType, value);
+    return await PrefsDatabase.setString(_kRaceStartNotificationType, value);
   }
 
   Future<int> getRaceStartNotificationAhead() async {
-    return await _asyncPrefs.getInt(_kRaceStartNotificationAhead) ?? 60;
+    return await PrefsDatabase.getInt(_kRaceStartNotificationAhead, 60);
   }
 
   Future setRaceStartNotificationAhead(int value) async {
-    return await _asyncPrefs.setInt(_kRaceStartNotificationAhead, value);
+    return await PrefsDatabase.setInt(_kRaceStartNotificationAhead, value);
   }
 
   Future<int> getRaceStartAlarmAhead() async {
-    return await _asyncPrefs.getInt(_kRaceStartAlarmAhead) ?? 1;
+    return await PrefsDatabase.getInt(_kRaceStartAlarmAhead, 1);
   }
 
   Future setRaceStartAlarmAhead(int value) async {
-    return await _asyncPrefs.setInt(_kRaceStartAlarmAhead, value);
+    return await PrefsDatabase.setInt(_kRaceStartAlarmAhead, value);
   }
 
   Future<int> getRaceStartTimerAhead() async {
-    return await _asyncPrefs.getInt(_kRaceStartTimerAhead) ?? 60;
+    return await PrefsDatabase.getInt(_kRaceStartTimerAhead, 60);
   }
 
   Future setRaceStartTimerAhead(int value) async {
-    return await _asyncPrefs.setInt(_kRaceStartTimerAhead, value);
+    return await PrefsDatabase.setInt(_kRaceStartTimerAhead, value);
   }
 
   //
 
   Future<bool> getManualAlarmVibration() async {
-    return await _asyncPrefs.getBool(_kManualAlarmVibration) ?? true;
+    return await PrefsDatabase.getBool(_kManualAlarmVibration, true);
   }
 
   Future setManualAlarmVibration(bool value) async {
-    return await _asyncPrefs.setBool(_kManualAlarmVibration, value);
+    return await PrefsDatabase.setBool(_kManualAlarmVibration, value);
   }
 
   Future<bool> getManualAlarmSound() async {
-    return await _asyncPrefs.getBool(_kManualAlarmSound) ?? true;
+    return await PrefsDatabase.getBool(_kManualAlarmSound, true);
   }
 
   Future setManualAlarmSound(bool value) async {
-    return await _asyncPrefs.setBool(_kManualAlarmSound, value);
+    return await PrefsDatabase.setBool(_kManualAlarmSound, value);
   }
 
   Future<bool> getShowHeaderWallet() async {
-    return await _asyncPrefs.getBool(_kShowHeaderWallet) ?? true;
+    return await PrefsDatabase.getBool(_kShowHeaderWallet, true);
   }
 
   Future setShowHeaderWallet(bool value) async {
-    return await _asyncPrefs.setBool(_kShowHeaderWallet, value);
+    return await PrefsDatabase.setBool(_kShowHeaderWallet, value);
   }
 
   Future<bool> getShowHeaderIcons() async {
-    return await _asyncPrefs.getBool(_kShowHeaderIcons) ?? true;
+    return await PrefsDatabase.getBool(_kShowHeaderIcons, true);
   }
 
   Future setShowHeaderIcons(bool value) async {
-    return await _asyncPrefs.setBool(_kShowHeaderIcons, value);
+    return await PrefsDatabase.setBool(_kShowHeaderIcons, value);
   }
 
   Future<List<String>> getIconsFiltered() async {
-    return await _asyncPrefs.getStringList(_kIconsFiltered) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kIconsFiltered, <String>[]);
   }
 
   Future setIconsFiltered(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kIconsFiltered, value);
+    return await PrefsDatabase.setStringList(_kIconsFiltered, value);
   }
 
   Future<bool> getDedicatedTravelCard() async {
-    return await _asyncPrefs.getBool(_kDedicatedTravelCard) ?? true;
+    return await PrefsDatabase.getBool(_kDedicatedTravelCard, true);
   }
 
   Future setDedicatedTravelCard(bool value) async {
-    return await _asyncPrefs.setBool(_kDedicatedTravelCard, value);
+    return await PrefsDatabase.setBool(_kDedicatedTravelCard, value);
   }
 
   Future<bool> getDisableTravelSection() async {
-    return await _asyncPrefs.getBool(_kDisableTravelSection) ?? false;
+    return await PrefsDatabase.getBool(_kDisableTravelSection, false);
   }
 
   Future setDisableTravelSection(bool value) async {
-    return await _asyncPrefs.setBool(_kDisableTravelSection, value);
+    return await PrefsDatabase.setBool(_kDisableTravelSection, value);
   }
 
   Future<bool> getWarnAboutChains() async {
-    return await _asyncPrefs.getBool(_kWarnAboutChains) ?? true;
+    return await PrefsDatabase.getBool(_kWarnAboutChains, true);
   }
 
   Future setWarnAboutChains(bool value) async {
-    return await _asyncPrefs.setBool(_kWarnAboutChains, value);
+    return await PrefsDatabase.setBool(_kWarnAboutChains, value);
   }
 
   Future<bool> getWarnAboutExcessEnergy() async {
-    return await _asyncPrefs.getBool(_kWarnAboutExcessEnergy) ?? true;
+    return await PrefsDatabase.getBool(_kWarnAboutExcessEnergy, true);
   }
 
   Future setWarnAboutExcessEnergy(bool value) async {
-    return await _asyncPrefs.setBool(_kWarnAboutExcessEnergy, value);
+    return await PrefsDatabase.setBool(_kWarnAboutExcessEnergy, value);
   }
 
   Future<int> getWarnAboutExcessEnergyThreshold() async {
-    return await _asyncPrefs.getInt(_kWarnAboutExcessEnergyThreshold) ?? 200;
+    return await PrefsDatabase.getInt(_kWarnAboutExcessEnergyThreshold, 200);
   }
 
   Future setWarnAboutExcessEnergyThreshold(int value) async {
-    return await _asyncPrefs.setInt(_kWarnAboutExcessEnergyThreshold, value);
+    return await PrefsDatabase.setInt(_kWarnAboutExcessEnergyThreshold, value);
   }
 
   // -- Travel Agency Warnings
 
   Future<bool> getTravelEnergyExcessWarning() async {
-    return await _asyncPrefs.getBool(_kTravelEnergyExcessWarning) ?? true;
+    return await PrefsDatabase.getBool(_kTravelEnergyExcessWarning, true);
   }
 
   Future setTravelEnergyExcessWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kTravelEnergyExcessWarning, value);
+    return await PrefsDatabase.setBool(_kTravelEnergyExcessWarning, value);
   }
 
   Future<RangeValues> getTravelEnergyRangeWarningRange() async {
-    final int min = await _asyncPrefs.getInt(_kTravelEnergyRangeWarningThresholdMin) ?? 10;
-    final int max = await _asyncPrefs.getInt(_kTravelEnergyRangeWarningThresholdMax) ?? 100;
+    final int min = await PrefsDatabase.getInt(_kTravelEnergyRangeWarningThresholdMin, 10);
+    final int max = await PrefsDatabase.getInt(_kTravelEnergyRangeWarningThresholdMax, 100);
     return RangeValues(min.toDouble(), max == 110 ? 110 : max.toDouble());
   }
 
   Future setTravelEnergyRangeWarningRange(int min, int max) async {
-    await _asyncPrefs.setInt(_kTravelEnergyRangeWarningThresholdMin, min);
-    await _asyncPrefs.setInt(_kTravelEnergyRangeWarningThresholdMax, max >= 110 ? 110 : max);
+    await PrefsDatabase.setInt(_kTravelEnergyRangeWarningThresholdMin, min);
+
+    await PrefsDatabase.setInt(_kTravelEnergyRangeWarningThresholdMax, max >= 110 ? 110 : max);
   }
 
   Future<bool> getTravelNerveExcessWarning() async {
-    return await _asyncPrefs.getBool(_kTravelNerveExcessWarning) ?? true;
+    return await PrefsDatabase.getBool(_kTravelNerveExcessWarning, true);
   }
 
   Future setTravelNerveExcessWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kTravelNerveExcessWarning, value);
+    return await PrefsDatabase.setBool(_kTravelNerveExcessWarning, value);
   }
 
   Future<int> getTravelNerveExcessWarningThreshold() async {
-    return await _asyncPrefs.getInt(_kTravelNerveExcessWarningThreshold) ?? 50;
+    return await PrefsDatabase.getInt(_kTravelNerveExcessWarningThreshold, 50);
   }
 
   Future setTravelNerveExcessWarningThreshold(int value) async {
-    return await _asyncPrefs.setInt(_kTravelNerveExcessWarningThreshold, value);
+    return await PrefsDatabase.setInt(_kTravelNerveExcessWarningThreshold, value);
   }
 
   Future<bool> getTravelLifeExcessWarning() async {
-    return await _asyncPrefs.getBool(_kTravelLifeExcessWarning) ?? true;
+    return await PrefsDatabase.getBool(_kTravelLifeExcessWarning, true);
   }
 
   Future setTravelLifeExcessWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kTravelLifeExcessWarning, value);
+    return await PrefsDatabase.setBool(_kTravelLifeExcessWarning, value);
   }
 
   Future<int> getTravelLifeExcessWarningThreshold() async {
-    return await _asyncPrefs.getInt(_kTravelLifeExcessWarningThreshold) ?? 50;
+    return await PrefsDatabase.getInt(_kTravelLifeExcessWarningThreshold, 50);
   }
 
   Future setTravelLifeExcessWarningThreshold(int value) async {
-    return await _asyncPrefs.setInt(_kTravelLifeExcessWarningThreshold, value);
+    return await PrefsDatabase.setInt(_kTravelLifeExcessWarningThreshold, value);
   }
 
   Future<bool> getTravelDrugCooldownWarning() async {
-    return await _asyncPrefs.getBool(_kTravelDrugCooldownWarning) ?? true;
+    return await PrefsDatabase.getBool(_kTravelDrugCooldownWarning, true);
   }
 
   Future setTravelDrugCooldownWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kTravelDrugCooldownWarning, value);
+    return await PrefsDatabase.setBool(_kTravelDrugCooldownWarning, value);
   }
 
   Future<bool> getTravelBoosterCooldownWarning() async {
-    return await _asyncPrefs.getBool(_kTravelBoosterCooldownWarning) ?? true;
+    return await PrefsDatabase.getBool(_kTravelBoosterCooldownWarning, true);
   }
 
   Future setTravelBoosterCooldownWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kTravelBoosterCooldownWarning, value);
+    return await PrefsDatabase.setBool(_kTravelBoosterCooldownWarning, value);
   }
 
   Future<bool> getTravelWalletMoneyWarning() async {
-    return await _asyncPrefs.getBool(_kTravelWalletMoneyWarning) ?? true;
+    return await PrefsDatabase.getBool(_kTravelWalletMoneyWarning, true);
   }
 
   Future setTravelWalletMoneyWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kTravelWalletMoneyWarning, value);
+    return await PrefsDatabase.setBool(_kTravelWalletMoneyWarning, value);
   }
 
   Future<int> getTravelWalletMoneyWarningThreshold() async {
-    return await _asyncPrefs.getInt(_kTravelWalletMoneyWarningThreshold) ?? 50000;
+    return await PrefsDatabase.getInt(_kTravelWalletMoneyWarningThreshold, 50000);
   }
 
   Future setTravelWalletMoneyWarningThreshold(int value) async {
-    return await _asyncPrefs.setInt(_kTravelWalletMoneyWarningThreshold, value);
+    return await PrefsDatabase.setInt(_kTravelWalletMoneyWarningThreshold, value);
   }
 
   // -- Terminal
 
   Future<bool> getTerminalEnabled() async {
-    return await _asyncPrefs.getBool(_kTerminalEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kTerminalEnabled, false);
   }
 
   Future setTerminalEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kTerminalEnabled, value);
+    return await PrefsDatabase.setBool(_kTerminalEnabled, value);
   }
 
   // -- Events
 
   Future<bool> getExpandEvents() async {
-    return await _asyncPrefs.getBool(_kExpandEvents) ?? false;
+    return await PrefsDatabase.getBool(_kExpandEvents, false);
   }
 
   Future setExpandEvents(bool value) async {
-    return await _asyncPrefs.setBool(_kExpandEvents, value);
+    return await PrefsDatabase.setBool(_kExpandEvents, value);
   }
 
   Future<int> getEventsShowNumber() async {
-    return await _asyncPrefs.getInt(_kEventsShowNumber) ?? 25;
+    return await PrefsDatabase.getInt(_kEventsShowNumber, 25);
   }
 
   Future setEventsShowNumber(int value) async {
-    return await _asyncPrefs.setInt(_kEventsShowNumber, value);
+    return await PrefsDatabase.setInt(_kEventsShowNumber, value);
   }
 
   Future<int> getEventsLastRetrieved() async {
-    return await _asyncPrefs.getInt(_kEventsLastRetrieved) ?? 0;
+    return await PrefsDatabase.getInt(_kEventsLastRetrieved, 0);
   }
 
   Future setEventsLastRetrieved(int value) async {
-    return await _asyncPrefs.setInt(_kEventsLastRetrieved, value);
+    return await PrefsDatabase.setInt(_kEventsLastRetrieved, value);
   }
 
   Future<List<String>> getEventsSave() async {
-    return await _asyncPrefs.getStringList(_kEventsSave) ?? [];
+    return await PrefsDatabase.getStringList(_kEventsSave, []);
   }
 
   Future setEventsSave(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kEventsSave, value);
+    return await PrefsDatabase.setStringList(_kEventsSave, value);
   }
 
   // --
 
   Future<bool> getExpandMessages() async {
-    return await _asyncPrefs.getBool(_kExpandMessages) ?? false;
+    return await PrefsDatabase.getBool(_kExpandMessages, false);
   }
 
   Future setExpandMessages(bool value) async {
-    return await _asyncPrefs.setBool(_kExpandMessages, value);
+    return await PrefsDatabase.setBool(_kExpandMessages, value);
   }
 
   Future<int> getMessagesShowNumber() async {
-    return await _asyncPrefs.getInt(_kMessagesShowNumber) ?? 25;
+    return await PrefsDatabase.getInt(_kMessagesShowNumber, 25);
   }
 
   Future setMessagesShowNumber(int value) async {
-    return await _asyncPrefs.setInt(_kMessagesShowNumber, value);
+    return await PrefsDatabase.setInt(_kMessagesShowNumber, value);
   }
 
   Future<bool> getExpandBasicInfo() async {
-    return await _asyncPrefs.getBool(_kExpandBasicInfo) ?? false;
+    return await PrefsDatabase.getBool(_kExpandBasicInfo, false);
   }
 
   Future setExpandBasicInfo(bool value) async {
-    return await _asyncPrefs.setBool(_kExpandBasicInfo, value);
+    return await PrefsDatabase.setBool(_kExpandBasicInfo, value);
   }
 
   Future<bool> getExpandNetworth() async {
-    return await _asyncPrefs.getBool(_kExpandNetworth) ?? false;
+    return await PrefsDatabase.getBool(_kExpandNetworth, false);
   }
 
   Future setExpandNetworth(bool value) async {
-    return await _asyncPrefs.setBool(_kExpandNetworth, value);
+    return await PrefsDatabase.setBool(_kExpandNetworth, value);
   }
 
   /// ----------------------------
   /// Methods job addiction in Profile
   /// ----------------------------
   Future<int> getJobAddictionValue() async {
-    return await _asyncPrefs.getInt(_kJobAddictionValue) ?? 0;
+    return await PrefsDatabase.getInt(_kJobAddictionValue, 0);
   }
 
   Future setJobAdditionValue(int value) async {
-    return await _asyncPrefs.setInt(_kJobAddictionValue, value);
+    return await PrefsDatabase.setInt(_kJobAddictionValue, value);
   }
 
   //--
 
   Future<int> getJobAddictionNextCallTime() async {
-    return await _asyncPrefs.getInt(_kJobAddictionNextCallTime) ?? 0;
+    return await PrefsDatabase.getInt(_kJobAddictionNextCallTime, 0);
   }
 
   Future setJobAddictionNextCallTime(int value) async {
-    return await _asyncPrefs.setInt(_kJobAddictionNextCallTime, value);
+    return await PrefsDatabase.setInt(_kJobAddictionNextCallTime, value);
   }
 
   /// ----------------------------
@@ -2273,405 +2418,405 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getUseNukeRevive() async {
-    return await _asyncPrefs.getBool(_kUseNukeRevive) ?? true;
+    return await PrefsDatabase.getBool(_kUseNukeRevive, true);
   }
 
   Future setUseNukeRevive(bool value) async {
-    return await _asyncPrefs.setBool(_kUseNukeRevive, value);
+    return await PrefsDatabase.setBool(_kUseNukeRevive, value);
   }
 
   Future<bool> getUseUhcRevive() async {
-    return await _asyncPrefs.getBool(_kUseUhcRevive) ?? false;
+    return await PrefsDatabase.getBool(_kUseUhcRevive, false);
   }
 
   Future setUseUhcRevive(bool value) async {
-    return await _asyncPrefs.setBool(_kUseUhcRevive, value);
+    return await PrefsDatabase.setBool(_kUseUhcRevive, value);
   }
 
   Future<bool> getUseHelaRevive() async {
-    return await _asyncPrefs.getBool(_kUseHelaRevive) ?? false;
+    return await PrefsDatabase.getBool(_kUseHelaRevive, false);
   }
 
   Future setUseHelaRevive(bool value) async {
-    return await _asyncPrefs.setBool(_kUseHelaRevive, value);
+    return await PrefsDatabase.setBool(_kUseHelaRevive, value);
   }
 
   Future<bool> getUseWtfRevive() async {
-    return await _asyncPrefs.getBool(_kUseWtfRevive) ?? false;
+    return await PrefsDatabase.getBool(_kUseWtfRevive, false);
   }
 
   Future setUseWtfRevive(bool value) async {
-    return await _asyncPrefs.setBool(_kUseWtfRevive, value);
+    return await PrefsDatabase.setBool(_kUseWtfRevive, value);
   }
 
   Future<bool> getUseMidnightXRevive() async {
-    return await _asyncPrefs.getBool(_kUseMidnightXRevive) ?? false;
+    return await PrefsDatabase.getBool(_kUseMidnightXRevive, false);
   }
 
   Future setUseMidnightXevive(bool value) async {
-    return await _asyncPrefs.setBool(_kUseMidnightXRevive, value);
+    return await PrefsDatabase.setBool(_kUseMidnightXRevive, value);
   }
 
   Future<bool> getUseWolverinesRevive() async {
-    return await _asyncPrefs.getBool(_kUseWolverinesRevive) ?? false;
+    return await PrefsDatabase.getBool(_kUseWolverinesRevive, false);
   }
 
   Future setUseWolverinesRevive(bool value) async {
-    return await _asyncPrefs.setBool(_kUseWolverinesRevive, value);
+    return await PrefsDatabase.setBool(_kUseWolverinesRevive, value);
   }
 
   /// ---------------------------------------
   /// Methods for stats sharing configuration
   /// ---------------------------------------
   Future<bool> getStatsShareIncludeHiddenTargets() async {
-    return await _asyncPrefs.getBool(_kStatsShareIncludeHiddenTargets) ?? true;
+    return await PrefsDatabase.getBool(_kStatsShareIncludeHiddenTargets, true);
   }
 
   Future setStatsShareIncludeHiddenTargets(bool value) async {
-    return await _asyncPrefs.setBool(_kStatsShareIncludeHiddenTargets, value);
+    return await PrefsDatabase.setBool(_kStatsShareIncludeHiddenTargets, value);
   }
 
   //
 
   Future<bool> getStatsShareShowOnlyTotals() async {
-    return await _asyncPrefs.getBool(_kStatsShareShowOnlyTotals) ?? false;
+    return await PrefsDatabase.getBool(_kStatsShareShowOnlyTotals, false);
   }
 
   Future setStatsShareShowOnlyTotals(bool value) async {
-    return await _asyncPrefs.setBool(_kStatsShareShowOnlyTotals, value);
+    return await PrefsDatabase.setBool(_kStatsShareShowOnlyTotals, value);
   }
 
   //
 
   Future<bool> getStatsShareShowEstimatesIfNoSpyAvailable() async {
-    return await _asyncPrefs.getBool(_kStatsShareShowEstimatesIfNoSpyAvailable) ?? true;
+    return await PrefsDatabase.getBool(_kStatsShareShowEstimatesIfNoSpyAvailable, true);
   }
 
   Future setStatsShareShowEstimatesIfNoSpyAvailable(bool value) async {
-    return await _asyncPrefs.setBool(_kStatsShareShowEstimatesIfNoSpyAvailable, value);
+    return await PrefsDatabase.setBool(_kStatsShareShowEstimatesIfNoSpyAvailable, value);
   }
 
   //
 
   Future<bool> getStatsShareIncludeTargetsWithNoStatsAvailable() async {
-    return await _asyncPrefs.getBool(_kStatsShareIncludeTargetsWithNoStatsAvailable) ?? false;
+    return await PrefsDatabase.getBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, false);
   }
 
   Future setStatsShareIncludeTargetsWithNoStatsAvailable(bool value) async {
-    return await _asyncPrefs.setBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, value);
+    return await PrefsDatabase.setBool(_kStatsShareIncludeTargetsWithNoStatsAvailable, value);
   }
 
   /// ----------------------------
   /// Methods for shortcuts
   /// ----------------------------
   Future<bool> getShortcutsEnabledProfile() async {
-    return await _asyncPrefs.getBool(_kEnableShortcuts) ?? true;
+    return await PrefsDatabase.getBool(_kEnableShortcuts, true);
   }
 
   Future setShortcutsEnabledProfile(bool value) async {
-    return await _asyncPrefs.setBool(_kEnableShortcuts, value);
+    return await PrefsDatabase.setBool(_kEnableShortcuts, value);
   }
 
   Future<String> getShortcutTile() async {
-    return await _asyncPrefs.getString(_kShortcutTile) ?? 'both';
+    return await PrefsDatabase.getString(_kShortcutTile, 'both');
   }
 
   Future setShortcutTile(String value) async {
-    return await _asyncPrefs.setString(_kShortcutTile, value);
+    return await PrefsDatabase.setString(_kShortcutTile, value);
   }
 
   Future<String> getShortcutMenu() async {
-    return await _asyncPrefs.getString(_kShortcutMenu) ?? 'carousel';
+    return await PrefsDatabase.getString(_kShortcutMenu, 'carousel');
   }
 
   Future setShortcutMenu(String value) async {
-    return await _asyncPrefs.setString(_kShortcutMenu, value);
+    return await PrefsDatabase.setString(_kShortcutMenu, value);
   }
 
   Future<List<String>> getActiveShortcutsList() async {
-    return await _asyncPrefs.getStringList(_kActiveShortcutsList) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kActiveShortcutsList, <String>[]);
   }
 
   Future setActiveShortcutsList(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kActiveShortcutsList, value);
+    return await PrefsDatabase.setStringList(_kActiveShortcutsList, value);
   }
 
   /// ----------------------------
   /// Methods for easy crimes
   /// ----------------------------
   Future<List<String>> getActiveCrimesList() async {
-    return await _asyncPrefs.getStringList(_kActiveCrimesList) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kActiveCrimesList, <String>[]);
   }
 
   Future setActiveCrimesList(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kActiveCrimesList, value);
+    return await PrefsDatabase.setStringList(_kActiveCrimesList, value);
   }
 
   /// ----------------------------
   /// Methods for quick items
   /// ----------------------------
   Future<List<String>> getQuickItemsList() async {
-    return await _asyncPrefs.getStringList(_kQuickItemsList) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kQuickItemsList, <String>[]);
   }
 
   Future setQuickItemsList(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kQuickItemsList, value);
+    return await PrefsDatabase.setStringList(_kQuickItemsList, value);
   }
 
   Future<List<String>> getQuickItemsListFaction() async {
-    return await _asyncPrefs.getStringList(_kQuickItemsListFaction) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kQuickItemsListFaction, <String>[]);
   }
 
   Future setQuickItemsListFaction(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kQuickItemsListFaction, value);
+    return await PrefsDatabase.setStringList(_kQuickItemsListFaction, value);
   }
 
   Future<int> getNumberOfLoadouts() async {
-    return await _asyncPrefs.getInt(_kQuickItemsLoadoutsNumber) ?? 3;
+    return await PrefsDatabase.getInt(_kQuickItemsLoadoutsNumber, 3);
   }
 
   Future setNumberOfLoadouts(int value) async {
-    return await _asyncPrefs.setInt(_kQuickItemsLoadoutsNumber, value);
+    return await PrefsDatabase.setInt(_kQuickItemsLoadoutsNumber, value);
   }
 
   /// ----------------------------
   /// Methods for loot
   /// ----------------------------
   Future<String> getLootTimerType() async {
-    return await _asyncPrefs.getString(_kLootTimerType) ?? 'timer';
+    return await PrefsDatabase.getString(_kLootTimerType, 'timer');
   }
 
   Future setLootTimerType(String value) async {
-    return await _asyncPrefs.setString(_kLootTimerType, value);
+    return await PrefsDatabase.setString(_kLootTimerType, value);
   }
 
   Future<String> getLootNotificationType() async {
-    return await _asyncPrefs.getString(_kLootNotificationType) ?? '0';
+    return await PrefsDatabase.getString(_kLootNotificationType, '0');
   }
 
   Future setLootNotificationType(String value) async {
-    return await _asyncPrefs.setString(_kLootNotificationType, value);
+    return await PrefsDatabase.setString(_kLootNotificationType, value);
   }
 
   Future<String> getLootNotificationAhead() async {
-    return await _asyncPrefs.getString(_kLootNotificationAhead) ?? '0';
+    return await PrefsDatabase.getString(_kLootNotificationAhead, '0');
   }
 
   Future setLootNotificationAhead(String value) async {
-    return await _asyncPrefs.setString(_kLootNotificationAhead, value);
+    return await PrefsDatabase.setString(_kLootNotificationAhead, value);
   }
 
   Future<String> getLootAlarmAhead() async {
-    return await _asyncPrefs.getString(_kLootAlarmAhead) ?? '0';
+    return await PrefsDatabase.getString(_kLootAlarmAhead, '0');
   }
 
   Future setLootAlarmAhead(String value) async {
-    return await _asyncPrefs.setString(_kLootAlarmAhead, value);
+    return await PrefsDatabase.setString(_kLootAlarmAhead, value);
   }
 
   Future<String> getLootTimerAhead() async {
-    return await _asyncPrefs.getString(_kLootTimerAhead) ?? '0';
+    return await PrefsDatabase.getString(_kLootTimerAhead, '0');
   }
 
   Future setLootTimerAhead(String value) async {
-    return await _asyncPrefs.setString(_kLootTimerAhead, value);
+    return await PrefsDatabase.setString(_kLootTimerAhead, value);
   }
 
   Future<List<String>> getLootFiltered() async {
-    return await _asyncPrefs.getStringList(_kLootFiltered) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kLootFiltered, <String>[]);
   }
 
   Future setLootFiltered(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kLootFiltered, value);
+    return await PrefsDatabase.setStringList(_kLootFiltered, value);
   }
 
   /// ----------------------------
   /// Methods for Trades Calculator
   /// ----------------------------
   Future<bool> getTradeCalculatorEnabled() async {
-    return await _asyncPrefs.getBool(_kTradeCalculatorEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kTradeCalculatorEnabled, true);
   }
 
   Future setTradeCalculatorEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kTradeCalculatorEnabled, value);
+    return await PrefsDatabase.setBool(_kTradeCalculatorEnabled, value);
   }
 
   Future<bool> getAWHEnabled() async {
-    return await _asyncPrefs.getBool(_kAWHEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kAWHEnabled, true);
   }
 
   Future setAWHEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kAWHEnabled, value);
+    return await PrefsDatabase.setBool(_kAWHEnabled, value);
   }
 
   Future<bool> getTornExchangeEnabled() async {
-    return await _asyncPrefs.getBool(_kTornExchangeEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kTornExchangeEnabled, true);
   }
 
   Future setTornExchangeEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kTornExchangeEnabled, value);
+    return await PrefsDatabase.setBool(_kTornExchangeEnabled, value);
   }
 
   Future<bool> getTornExchangeProfitEnabled() async {
-    return await _asyncPrefs.getBool(_kTornExchangeProfitEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kTornExchangeProfitEnabled, false);
   }
 
   Future setTornExchangeProfitEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kTornExchangeProfitEnabled, value);
+    return await PrefsDatabase.setBool(_kTornExchangeProfitEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for City Finder
   /// ----------------------------
   Future<bool> getCityEnabled() async {
-    return await _asyncPrefs.getBool(_kCityFinderEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kCityFinderEnabled, true);
   }
 
   Future setCityEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kCityFinderEnabled, value);
+    return await PrefsDatabase.setBool(_kCityFinderEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for Awards
   /// ----------------------------
   Future<String> getAwardsSort() async {
-    return await _asyncPrefs.getString(_kAwardsSort) ?? '';
+    return await PrefsDatabase.getString(_kAwardsSort, '');
   }
 
   Future setAwardsSort(String value) async {
-    return await _asyncPrefs.setString(_kAwardsSort, value);
+    return await PrefsDatabase.setString(_kAwardsSort, value);
   }
 
   Future<bool> getShowAchievedAwards() async {
-    return await _asyncPrefs.getBool(_kShowAchievedAwards) ?? true;
+    return await PrefsDatabase.getBool(_kShowAchievedAwards, true);
   }
 
   Future setShowAchievedAwards(bool value) async {
-    return await _asyncPrefs.setBool(_kShowAchievedAwards, value);
+    return await PrefsDatabase.setBool(_kShowAchievedAwards, value);
   }
 
   Future<List<String?>> getHiddenAwardCategories() async {
-    return await _asyncPrefs.getStringList(_kHiddenAwardCategories) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kHiddenAwardCategories, <String>[]);
   }
 
   Future setHiddenAwardCategories(List<String?> value) async {
-    return await _asyncPrefs.setStringList(_kHiddenAwardCategories, value as List<String>);
+    return await PrefsDatabase.setStringList(_kHiddenAwardCategories, value as List<String>);
   }
 
   /// ----------------------------
   /// Methods for Items
   /// ----------------------------
   Future<String> getItemsSort() async {
-    return await _asyncPrefs.getString(_kItemsSort) ?? '';
+    return await PrefsDatabase.getString(_kItemsSort, '');
   }
 
   Future setItemsSort(String value) async {
-    return await _asyncPrefs.setString(_kItemsSort, value);
+    return await PrefsDatabase.setString(_kItemsSort, value);
   }
 
   Future<int> getOnlyOwnedItemsFilter() async {
-    return await _asyncPrefs.getInt(_kOnlyOwnedItemsFilter) ?? 0;
+    return await PrefsDatabase.getInt(_kOnlyOwnedItemsFilter, 0);
   }
 
   Future setOnlyOwnedItemsFilter(int value) async {
-    return await _asyncPrefs.setInt(_kOnlyOwnedItemsFilter, value);
+    return await PrefsDatabase.setInt(_kOnlyOwnedItemsFilter, value);
   }
 
   Future<List<String>> getHiddenItemsCategories() async {
-    return await _asyncPrefs.getStringList(_kHiddenItemsCategories) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kHiddenItemsCategories, <String>[]);
   }
 
   Future setHiddenItemsCategories(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kHiddenItemsCategories, value);
+    return await PrefsDatabase.setStringList(_kHiddenItemsCategories, value);
   }
 
   Future<List<String>> getPinnedItems() async {
-    return await _asyncPrefs.getStringList(_kPinnedItems) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kPinnedItems, <String>[]);
   }
 
   Future setPinnedItems(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kPinnedItems, value);
+    return await PrefsDatabase.setStringList(_kPinnedItems, value);
   }
 
   /// ----------------------------
   /// Methods for Stakeouts
   /// ----------------------------
   Future<bool> getStakeoutsEnabled() async {
-    return await _asyncPrefs.getBool(_kStakeoutsEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kStakeoutsEnabled, true);
   }
 
   Future setStakeoutsEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kStakeoutsEnabled, value);
+    return await PrefsDatabase.setBool(_kStakeoutsEnabled, value);
   }
 
   Future<List<String>> getStakeouts() async {
-    return await _asyncPrefs.getStringList(_kStakeouts) ?? [];
+    return await PrefsDatabase.getStringList(_kStakeouts, []);
   }
 
   Future setStakeouts(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kStakeouts, value);
+    return await PrefsDatabase.setStringList(_kStakeouts, value);
   }
 
   Future<int> getStakeoutsSleepTime() async {
-    return await _asyncPrefs.getInt(_kStakeoutsSleepTime) ?? 0;
+    return await PrefsDatabase.getInt(_kStakeoutsSleepTime, 0);
   }
 
   Future setStakeoutsSleepTime(int value) async {
-    return await _asyncPrefs.setInt(_kStakeoutsSleepTime, value);
+    return await PrefsDatabase.setInt(_kStakeoutsSleepTime, value);
   }
 
   Future<int> getStakeoutsFetchDelayLimit() async {
-    return await _asyncPrefs.getInt(_kStakeoutsFetchDelayLimit) ?? 60;
+    return await PrefsDatabase.getInt(_kStakeoutsFetchDelayLimit, 60);
   }
 
   Future setStakeoutsFetchDelayLimit(int value) async {
-    return await _asyncPrefs.setInt(_kStakeoutsFetchDelayLimit, value);
+    return await PrefsDatabase.setInt(_kStakeoutsFetchDelayLimit, value);
   }
 
   /// ----------------------------
   /// Methods for Chat Removal
   /// ----------------------------
   Future<bool> getChatRemovalEnabled() async {
-    return await _asyncPrefs.getBool(_kChatRemovalEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kChatRemovalEnabled, true);
   }
 
   Future setChatRemovalEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kChatRemovalEnabled, value);
+    return await PrefsDatabase.setBool(_kChatRemovalEnabled, value);
   }
 
   Future<bool> getChatRemovalActive() async {
-    return await _asyncPrefs.getBool(_kChatRemovalActive) ?? false;
+    return await PrefsDatabase.getBool(_kChatRemovalActive, false);
   }
 
   Future setChatRemovalActive(bool value) async {
-    return await _asyncPrefs.setBool(_kChatRemovalActive, value);
+    return await PrefsDatabase.setBool(_kChatRemovalActive, value);
   }
 
   /// ----------------------------
   /// Methods for Chat Highlight
   /// ----------------------------
   Future<bool> getHighlightChat() async {
-    return await _asyncPrefs.getBool(_kHighlightChat) ?? true;
+    return await PrefsDatabase.getBool(_kHighlightChat, true);
   }
 
   Future setHighlightChat(bool value) async {
-    return await _asyncPrefs.setBool(_kHighlightChat, value);
+    return await PrefsDatabase.setBool(_kHighlightChat, value);
   }
 
   Future<List<String>> getHighlightWordList() async {
-    return await _asyncPrefs.getStringList(_kHighlightChatWordsList) ?? const [];
+    return await PrefsDatabase.getStringList(_kHighlightChatWordsList, const []);
   }
 
   Future setHighlightWordList(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kHighlightChatWordsList, value);
+    return await PrefsDatabase.setStringList(_kHighlightChatWordsList, value);
   }
 
   Future<int> getHighlightColor() async {
-    return await _asyncPrefs.getInt(_kHighlightColor) ?? 0x701397248;
+    return await PrefsDatabase.getInt(_kHighlightColor, 0x701397248);
   }
 
   Future setHighlightColor(int value) async {
-    return await _asyncPrefs.setInt(_kHighlightColor, value);
+    return await PrefsDatabase.setInt(_kHighlightColor, value);
   }
 
   /// -------------------
@@ -2680,53 +2825,53 @@ class Prefs {
 
   // YATA
   Future<bool> getAlternativeYataKeyEnabled() async {
-    return await _asyncPrefs.getBool(_kAlternativeYataKeyEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kAlternativeYataKeyEnabled, false);
   }
 
   Future setAlternativeYataKeyEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kAlternativeYataKeyEnabled, value);
+    return await PrefsDatabase.setBool(_kAlternativeYataKeyEnabled, value);
   }
 
   Future<String> getAlternativeYataKey() async {
-    return await _asyncPrefs.getString(_kAlternativeYataKey) ?? "";
+    return await PrefsDatabase.getString(_kAlternativeYataKey, "");
   }
 
   Future setAlternativeYataKey(String value) async {
-    return await _asyncPrefs.setString(_kAlternativeYataKey, value);
+    return await PrefsDatabase.setString(_kAlternativeYataKey, value);
   }
 
   // TORN STATS
   Future<bool> getAlternativeTornStatsKeyEnabled() async {
-    return await _asyncPrefs.getBool(_kAlternativeTornStatsKeyEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kAlternativeTornStatsKeyEnabled, false);
   }
 
   Future setAlternativeTornStatsKeyEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kAlternativeTornStatsKeyEnabled, value);
+    return await PrefsDatabase.setBool(_kAlternativeTornStatsKeyEnabled, value);
   }
 
   Future<String> getAlternativeTornStatsKey() async {
-    return await _asyncPrefs.getString(_kAlternativeTornStatsKey) ?? "";
+    return await PrefsDatabase.getString(_kAlternativeTornStatsKey, "");
   }
 
   Future setAlternativeTornStatsKey(String value) async {
-    return await _asyncPrefs.setString(_kAlternativeTornStatsKey, value);
+    return await PrefsDatabase.setString(_kAlternativeTornStatsKey, value);
   }
 
   // TORN SPIES CENTRAL
   Future<bool> getAlternativeTSCKeyEnabled() async {
-    return await _asyncPrefs.getBool(_kAlternativeTSCKeyEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kAlternativeTSCKeyEnabled, false);
   }
 
   Future setAlternativeTSCKeyEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kAlternativeTSCKeyEnabled, value);
+    return await PrefsDatabase.setBool(_kAlternativeTSCKeyEnabled, value);
   }
 
   Future<String> getAlternativeTSCKey() async {
-    return await _asyncPrefs.getString(_kAlternativeTSCKey) ?? "";
+    return await PrefsDatabase.getString(_kAlternativeTSCKey, "");
   }
 
   Future setAlternativeTSCKey(String value) async {
-    return await _asyncPrefs.setString(_kAlternativeTSCKey, value);
+    return await PrefsDatabase.setString(_kAlternativeTSCKey, value);
   }
 
   /// ---------------------
@@ -2734,125 +2879,126 @@ class Prefs {
   /// ---------------------
 
   Future<String> getTornStatsChartSave() async {
-    return await _asyncPrefs.getString(_kTornStatsChartSave) ?? "";
+    return await PrefsDatabase.getString(_kTornStatsChartSave, "");
   }
 
   Future setTornStatsChartSave(String value) async {
-    return await _asyncPrefs.setString(_kTornStatsChartSave, value);
+    return await PrefsDatabase.setString(_kTornStatsChartSave, value);
   }
 
   Future<int> getTornStatsChartDateTime() async {
-    return await _asyncPrefs.getInt(_kTornStatsChartDateTime) ?? 0;
+    return await PrefsDatabase.getInt(_kTornStatsChartDateTime, 0);
   }
 
   Future setTornStatsChartDateTime(int value) async {
-    return await _asyncPrefs.setInt(_kTornStatsChartDateTime, value);
+    return await PrefsDatabase.setInt(_kTornStatsChartDateTime, value);
   }
 
   Future<bool> getTornStatsChartEnabled() async {
-    return await _asyncPrefs.getBool(_kTornStatsChartEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kTornStatsChartEnabled, true);
   }
 
   Future setTornStatsChartEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kTornStatsChartEnabled, value);
+    return await PrefsDatabase.setBool(_kTornStatsChartEnabled, value);
   }
 
   Future<String> getTornStatsChartType() async {
-    return await _asyncPrefs.getString(_kTornStatsChartType) ?? "line";
+    return await PrefsDatabase.getString(_kTornStatsChartType, "line");
   }
 
   Future setTornStatsChartType(String value) async {
-    return await _asyncPrefs.setString(_kTornStatsChartType, value);
+    return await PrefsDatabase.setString(_kTornStatsChartType, value);
   }
 
   Future<bool> getTornStatsChartInCollapsedMiscCard() async {
-    return await _asyncPrefs.getBool(_kTornStatsChartInCollapsedMiscCard) ?? true;
+    return await PrefsDatabase.getBool(_kTornStatsChartInCollapsedMiscCard, true);
   }
 
   Future setTornStatsChartInCollapsedMiscCard(bool value) async {
-    return await _asyncPrefs.setBool(_kTornStatsChartInCollapsedMiscCard, value);
+    return await PrefsDatabase.setBool(_kTornStatsChartInCollapsedMiscCard, value);
   }
 
   /// -------------------
   /// TORN ATTACK CENTRAL
   /// -------------------
   Future<bool> getTACEnabled() async {
-    return await _asyncPrefs.getBool(_kTACEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kTACEnabled, false);
   }
 
   Future setTACEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kTACEnabled, value);
+    return await PrefsDatabase.setBool(_kTACEnabled, value);
   }
 
   Future<String> getTACFilters() async {
-    return await _asyncPrefs.getString(_kTACFilters) ?? "";
+    return await PrefsDatabase.getString(_kTACFilters, "");
   }
 
   Future setTACFilters(String value) async {
-    return await _asyncPrefs.setString(_kTACFilters, value);
+    return await PrefsDatabase.setString(_kTACFilters, value);
   }
 
   Future<String> getTACTargets() async {
-    return await _asyncPrefs.getString(_kTACTargets) ?? "";
+    return await PrefsDatabase.getString(_kTACTargets, "");
   }
 
   Future setTACTargets(String value) async {
-    return await _asyncPrefs.setString(_kTACTargets, value);
+    return await PrefsDatabase.setString(_kTACTargets, value);
   }
 
   /// -----------------------------
   /// METHODS FOR LISTS IN SETTINGS
   /// -----------------------------
   Future<bool> getUserScriptsEnabled() async {
-    return await _asyncPrefs.getBool(_kUserScriptsEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kUserScriptsEnabled, true);
   }
 
   Future setUserScriptsEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kUserScriptsEnabled, value);
+    return await PrefsDatabase.setBool(_kUserScriptsEnabled, value);
   }
 
   Future<bool> getUserScriptsNotifyUpdates() async {
-    return await _asyncPrefs.getBool(_kUserScriptsNotifyUpdates) ?? true;
+    return await PrefsDatabase.getBool(_kUserScriptsNotifyUpdates, true);
   }
 
   Future setUserScriptsNotifyUpdates(bool value) async {
-    return await _asyncPrefs.setBool(_kUserScriptsNotifyUpdates, value);
+    return await PrefsDatabase.setBool(_kUserScriptsNotifyUpdates, value);
   }
 
   Future<String?> getUserScriptsList() async {
-    return await _asyncPrefs.getString(_kUserScriptsList);
+    final value = await PrefsDatabase.getString(_kUserScriptsList, "");
+    return value.isEmpty ? null : value;
   }
 
   Future setUserScriptsList(String value) async {
-    return await _asyncPrefs.setString(_kUserScriptsList, value);
+    return await PrefsDatabase.setString(_kUserScriptsList, value);
   }
 
   // --
 
   Future<bool> getUserScriptsSectionNeverVisited() async {
-    return await _asyncPrefs.getBool(_kUserScriptsV2FirstTime) ?? true;
+    return await PrefsDatabase.getBool(_kUserScriptsV2FirstTime, true);
   }
 
   Future setUserScriptsSectionNeverVisited(bool value) async {
-    return await _asyncPrefs.setBool(_kUserScriptsV2FirstTime, value);
+    return await PrefsDatabase.setBool(_kUserScriptsV2FirstTime, value);
   }
 
   // --
 
   Future<bool> getUserScriptsFeatInjectionTimeShown() async {
-    return await _asyncPrefs.getBool(_kUserScriptsFeatInjectionTimeShown) ?? false;
+    return await PrefsDatabase.getBool(_kUserScriptsFeatInjectionTimeShown, false);
   }
 
   Future setUserScriptsFeatInjectionTimeShown(bool value) async {
-    return await _asyncPrefs.setBool(_kUserScriptsFeatInjectionTimeShown, value);
+    return await PrefsDatabase.setBool(_kUserScriptsFeatInjectionTimeShown, value);
   }
 
   Future<List<String>> getUserScriptsForcedVersions() async {
-    return await _asyncPrefs.getStringList(_kUserScriptsForcedVersions) ?? [];
+    return await PrefsDatabase.getStringList(_kUserScriptsForcedVersions, []);
   }
 
   Future setUserScriptsForcedVersions(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kUserScriptsForcedVersions, value);
+    return await PrefsDatabase.setStringList(_kUserScriptsForcedVersions, value);
   }
 
   /// --------------------------------
@@ -2860,11 +3006,11 @@ class Prefs {
   /// --------------------------------
 
   Future<bool> getPlayerInOCv2() async {
-    return await _asyncPrefs.getBool(_kPlayerAlreadyInOCv2) ?? false;
+    return await PrefsDatabase.getBool(_kPlayerAlreadyInOCv2, false);
   }
 
   Future setPlayerInOCv2(bool value) async {
-    return await _asyncPrefs.setBool(_kPlayerAlreadyInOCv2, value);
+    return await PrefsDatabase.setBool(_kPlayerAlreadyInOCv2, value);
   }
 
   /// -----------------------------
@@ -2872,260 +3018,260 @@ class Prefs {
   /// -----------------------------
 
   Future<bool> getOCrimesEnabled() async {
-    return await _asyncPrefs.getBool(_kOCrimesEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kOCrimesEnabled, true);
   }
 
   Future setOCrimesEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kOCrimesEnabled, value);
+    return await PrefsDatabase.setBool(_kOCrimesEnabled, value);
   }
 
   Future<int> getOCrimeDisregarded() async {
-    return await _asyncPrefs.getInt(_kOCrimeDisregarded) ?? 0;
+    return await PrefsDatabase.getInt(_kOCrimeDisregarded, 0);
   }
 
   Future setOCrimeDisregarded(int value) async {
-    return await _asyncPrefs.setInt(_kOCrimeDisregarded, value);
+    return await PrefsDatabase.setInt(_kOCrimeDisregarded, value);
   }
 
   Future<int> getOCrimeLastKnown() async {
-    return await _asyncPrefs.getInt(_kOCrimeLastKnown) ?? 0;
+    return await PrefsDatabase.getInt(_kOCrimeLastKnown, 0);
   }
 
   Future setOCrimeLastKnown(int value) async {
-    return await _asyncPrefs.setInt(_kOCrimeLastKnown, value);
+    return await PrefsDatabase.setInt(_kOCrimeLastKnown, value);
   }
 
   /// -----------------------------
   /// METHODS FOR VAULT SHARE
   /// -----------------------------
   Future<bool> getVaultEnabled() async {
-    return await _asyncPrefs.getBool(_kVaultShareEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kVaultShareEnabled, true);
   }
 
   Future setVaultEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kVaultShareEnabled, value);
+    return await PrefsDatabase.setBool(_kVaultShareEnabled, value);
   }
 
   Future<String> getVaultShareCurrent() async {
-    return await _asyncPrefs.getString(_kVaultShareCurrent) ?? "";
+    return await PrefsDatabase.getString(_kVaultShareCurrent, "");
   }
 
   Future setVaultShareCurrent(String value) async {
-    return await _asyncPrefs.setString(_kVaultShareCurrent, value);
+    return await PrefsDatabase.setString(_kVaultShareCurrent, value);
   }
 
   /// -----------------------------
   /// METHODS FOR JAIL
   /// -----------------------------
   Future<String> getJailModel() async {
-    return await _asyncPrefs.getString(_kJailModel) ?? "";
+    return await PrefsDatabase.getString(_kJailModel, "");
   }
 
   Future setJailModel(String value) async {
-    return await _asyncPrefs.setString(_kJailModel, value);
+    return await PrefsDatabase.setString(_kJailModel, value);
   }
 
   /// -----------------------------
   /// METHODS FOR BOUNTIES
   /// -----------------------------
   Future<String> getBountiesModel() async {
-    return await _asyncPrefs.getString(_kBountiesModel) ?? "";
+    return await PrefsDatabase.getString(_kBountiesModel, "");
   }
 
   Future setBountiesModel(String value) async {
-    return await _asyncPrefs.setString(_kBountiesModel, value);
+    return await PrefsDatabase.setString(_kBountiesModel, value);
   }
 
   /// -----------------------------
   /// METHODS FOR EXTRA ACCESS TO RANKED WAR
   /// -----------------------------
   Future<bool> getRankedWarsInMenu() async {
-    return await _asyncPrefs.getBool(_kRankedWarsInMenu) ?? false;
+    return await PrefsDatabase.getBool(_kRankedWarsInMenu, false);
   }
 
   Future setRankedWarsInMenu(bool value) async {
-    return await _asyncPrefs.setBool(_kRankedWarsInMenu, value);
+    return await PrefsDatabase.setBool(_kRankedWarsInMenu, value);
   }
 
   Future<bool> getRankedWarsInProfile() async {
-    return await _asyncPrefs.getBool(_kRankedWarsInProfile) ?? true;
+    return await PrefsDatabase.getBool(_kRankedWarsInProfile, true);
   }
 
   Future setRankedWarsInProfile(bool value) async {
-    return await _asyncPrefs.setBool(_kRankedWarsInProfile, value);
+    return await PrefsDatabase.setBool(_kRankedWarsInProfile, value);
   }
 
   Future<bool> getRankedWarsInProfileShowTotalHours() async {
-    return await _asyncPrefs.getBool(_kRankedWarsInProfileShowTotalHours) ?? false;
+    return await PrefsDatabase.getBool(_kRankedWarsInProfileShowTotalHours, false);
   }
 
   Future setRankedWarsInProfileShowTotalHours(bool value) async {
-    return await _asyncPrefs.setBool(_kRankedWarsInProfileShowTotalHours, value);
+    return await PrefsDatabase.setBool(_kRankedWarsInProfileShowTotalHours, value);
   }
 
   /// -----------------------
   /// METHODS FOR RETALIATION
   /// -----------------------
   Future<bool> getRetaliationSectionEnabled() async {
-    return await _asyncPrefs.getBool(_kRetaliationSectionEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kRetaliationSectionEnabled, true);
   }
 
   Future setRetaliationSectionEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kRetaliationSectionEnabled, value);
+    return await PrefsDatabase.setBool(_kRetaliationSectionEnabled, value);
   }
 
   Future<bool> getSingleRetaliationOpensBrowser() async {
-    return await _asyncPrefs.getBool(_kSingleRetaliationOpensBrowser) ?? false;
+    return await PrefsDatabase.getBool(_kSingleRetaliationOpensBrowser, false);
   }
 
   Future setSingleRetaliationOpensBrowser(bool value) async {
-    return await _asyncPrefs.setBool(_kSingleRetaliationOpensBrowser, value);
+    return await PrefsDatabase.setBool(_kSingleRetaliationOpensBrowser, value);
   }
 
   /// -----------------------------
   /// METHODS FOR DATA STOCK MARKET
   /// -----------------------------
   Future<String> getDataStockMarket() async {
-    return await _asyncPrefs.getString(_kDataStockMarket) ?? "";
+    return await PrefsDatabase.getString(_kDataStockMarket, "");
   }
 
   Future setDataStockMarket(String value) async {
-    return await _asyncPrefs.setString(_kDataStockMarket, value);
+    return await PrefsDatabase.setString(_kDataStockMarket, value);
   }
 
   Future<bool> getStockExchangeInMenu() async {
-    return await _asyncPrefs.getBool(_kStockExchangeInMenu) ?? false;
+    return await PrefsDatabase.getBool(_kStockExchangeInMenu, false);
   }
 
   Future setStockExchangeInMenu(bool value) async {
-    return await _asyncPrefs.setBool(_kStockExchangeInMenu, value);
+    return await PrefsDatabase.setBool(_kStockExchangeInMenu, value);
   }
 
   /// -----------------------------
   /// METHODS FOR WEB VIEW TABS
   /// -----------------------------
   Future<int> getWebViewLastActiveTab() async {
-    return await _asyncPrefs.getInt(_kWebViewLastActiveTab) ?? 0;
+    return await PrefsDatabase.getInt(_kWebViewLastActiveTab, 0);
   }
 
   Future setWebViewLastActiveTab(int value) async {
-    return await _asyncPrefs.setInt(_kWebViewLastActiveTab, value);
+    return await PrefsDatabase.setInt(_kWebViewLastActiveTab, value);
   }
 
   Future<String> getWebViewSessionCookie() async {
-    return await _asyncPrefs.getString(_kWebViewSessionCookie) ?? '';
+    return await PrefsDatabase.getString(_kWebViewSessionCookie, '');
   }
 
   Future setWebViewSessionCookie(String value) async {
-    return await _asyncPrefs.setString(_kWebViewSessionCookie, value);
+    return await PrefsDatabase.setString(_kWebViewSessionCookie, value);
   }
 
   Future<String> getWebViewMainTab() async {
-    return await _asyncPrefs.getString(_kWebViewMainTab) ?? '{"tabsSave": []}';
+    return await PrefsDatabase.getString(_kWebViewMainTab, '{"tabsSave": []}');
   }
 
   Future setWebViewMainTab(String value) async {
-    return await _asyncPrefs.setString(_kWebViewMainTab, value);
+    return await PrefsDatabase.setString(_kWebViewMainTab, value);
   }
 
   Future<String> getWebViewSecondaryTabs() async {
-    return await _asyncPrefs.getString(_kWebViewSecondaryTabs) ?? '{"tabsSave": []}';
+    return await PrefsDatabase.getString(_kWebViewSecondaryTabs, '{"tabsSave": []}');
   }
 
   Future setWebViewSecondaryTabs(String value) async {
-    return await _asyncPrefs.setString(_kWebViewSecondaryTabs, value);
+    return await PrefsDatabase.setString(_kWebViewSecondaryTabs, value);
   }
 
   Future<bool> getUseTabsFullBrowser() async {
-    return await _asyncPrefs.getBool(_kUseTabsInFullBrowser) ?? true;
+    return await PrefsDatabase.getBool(_kUseTabsInFullBrowser, true);
   }
 
   Future setUseTabsFullBrowser(bool value) async {
-    return await _asyncPrefs.setBool(_kUseTabsInFullBrowser, value);
+    return await PrefsDatabase.setBool(_kUseTabsInFullBrowser, value);
   }
 
   Future<bool> getUseTabsBrowserDialog() async {
-    return await _asyncPrefs.getBool(_kUseTabsInBrowserDialog) ?? true;
+    return await PrefsDatabase.getBool(_kUseTabsInBrowserDialog, true);
   }
 
   Future setUseTabsBrowserDialog(bool value) async {
-    return await _asyncPrefs.setBool(_kUseTabsInBrowserDialog, value);
+    return await PrefsDatabase.setBool(_kUseTabsInBrowserDialog, value);
   }
 
   // -- Remove unused tabs
 
   Future<bool> getRemoveUnusedTabs() async {
-    return await _asyncPrefs.getBool(_kRemoveUnusedTabs) ?? true;
+    return await PrefsDatabase.getBool(_kRemoveUnusedTabs, true);
   }
 
   Future setRemoveUnusedTabs(bool value) async {
-    return await _asyncPrefs.setBool(_kRemoveUnusedTabs, value);
+    return await PrefsDatabase.setBool(_kRemoveUnusedTabs, value);
   }
 
   Future<bool> getRemoveUnusedTabsIncludesLocked() async {
-    return await _asyncPrefs.getBool(_kRemoveUnusedTabsIncludesLocked) ?? false;
+    return await PrefsDatabase.getBool(_kRemoveUnusedTabsIncludesLocked, false);
   }
 
   Future setRemoveUnusedTabsIncludesLocked(bool value) async {
-    return await _asyncPrefs.setBool(_kRemoveUnusedTabsIncludesLocked, value);
+    return await PrefsDatabase.setBool(_kRemoveUnusedTabsIncludesLocked, value);
   }
 
   Future<int> getRemoveUnusedTabsRangeDays() async {
-    return await _asyncPrefs.getInt(_kRemoveUnusedTabsRangeDays) ?? 7;
+    return await PrefsDatabase.getInt(_kRemoveUnusedTabsRangeDays, 7);
   }
 
   Future setRemoveUnusedTabsRangeDays(int value) async {
-    return await _asyncPrefs.setInt(_kRemoveUnusedTabsRangeDays, value);
+    return await PrefsDatabase.setInt(_kRemoveUnusedTabsRangeDays, value);
   }
 
   // ---------------------
 
   Future<bool> getOnlyLoadTabsWhenUsed() async {
-    return await _asyncPrefs.getBool(_kOnlyLoadTabsWhenUsed) ?? true;
+    return await PrefsDatabase.getBool(_kOnlyLoadTabsWhenUsed, true);
   }
 
   Future setOnlyLoadTabsWhenUsed(bool value) async {
-    return await _asyncPrefs.setBool(_kOnlyLoadTabsWhenUsed, value);
+    return await PrefsDatabase.setBool(_kOnlyLoadTabsWhenUsed, value);
   }
 
   Future<bool> getAutomaticChangeToNewTabFromURL() async {
-    return await _asyncPrefs.getBool(_kAutomaticChangeToNewTabFromURL) ?? true;
+    return await PrefsDatabase.getBool(_kAutomaticChangeToNewTabFromURL, true);
   }
 
   Future setAutomaticChangeToNewTabFromURL(bool value) async {
-    return await _asyncPrefs.setBool(_kAutomaticChangeToNewTabFromURL, value);
+    return await PrefsDatabase.setBool(_kAutomaticChangeToNewTabFromURL, value);
   }
 
   Future<bool> getUseTabsHideFeature() async {
-    return await _asyncPrefs.getBool(_kUseTabsHideFeature) ?? true;
+    return await PrefsDatabase.getBool(_kUseTabsHideFeature, true);
   }
 
   Future setUseTabsHideFeature(bool value) async {
-    return await _asyncPrefs.setBool(_kUseTabsHideFeature, value);
+    return await PrefsDatabase.setBool(_kUseTabsHideFeature, value);
   }
 
   Future setTabsHideBarColor(int value) async {
-    return await _asyncPrefs.setInt(_kTabsHideBarColor, value);
+    return await PrefsDatabase.setInt(_kTabsHideBarColor, value);
   }
 
   Future<int> getTabsHideBarColor() async {
-    return await _asyncPrefs.getInt(_kTabsHideBarColor) ?? 0xFF4CAF40;
+    return await PrefsDatabase.getInt(_kTabsHideBarColor, 0xFF4CAF40);
   }
 
   Future<bool> getShowTabLockWarnings() async {
-    return await _asyncPrefs.getBool(_kShowTabLockWarnings) ?? true;
+    return await PrefsDatabase.getBool(_kShowTabLockWarnings, true);
   }
 
   Future setShowTabLockWarnings(bool value) async {
-    return await _asyncPrefs.setBool(_kShowTabLockWarnings, value);
+    return await PrefsDatabase.setBool(_kShowTabLockWarnings, value);
   }
 
   Future<bool> getFullLockNavigationAttemptOpensNewTab() async {
-    return await _asyncPrefs.getBool(_kFullLockNavigationAttemptOpensNewTab) ?? false;
+    return await PrefsDatabase.getBool(_kFullLockNavigationAttemptOpensNewTab, false);
   }
 
   Future setFullLockNavigationAttemptOpensNewTab(bool value) async {
-    return await _asyncPrefs.setBool(_kFullLockNavigationAttemptOpensNewTab, value);
+    return await PrefsDatabase.setBool(_kFullLockNavigationAttemptOpensNewTab, value);
   }
 
   // -- LockedTabsNavigationExceptions
@@ -3135,180 +3281,182 @@ class Prefs {
   ];
 
   Future<String> getLockedTabsNavigationExceptions() async {
-    return await _asyncPrefs.getString(_kFullLockedTabsNavigationExceptions) ??
-        json.encode(_defaultFullLockedTabsNavigationExceptions);
+    return await PrefsDatabase.getString(
+      _kFullLockedTabsNavigationExceptions,
+      json.encode(_defaultFullLockedTabsNavigationExceptions),
+    );
   }
 
   Future setLockedTabsNavigationExceptions(String value) async {
-    return await _asyncPrefs.setString(_kFullLockedTabsNavigationExceptions, value);
+    return await PrefsDatabase.setString(_kFullLockedTabsNavigationExceptions, value);
   }
 
   // --
 
   Future<bool> getUseTabsIcons() async {
-    return await _asyncPrefs.getBool(_kUseTabsIcons) ?? true;
+    return await PrefsDatabase.getBool(_kUseTabsIcons, true);
   }
 
   Future setUseTabsIcons(bool value) async {
-    return await _asyncPrefs.setBool(_kUseTabsIcons, value);
+    return await PrefsDatabase.setBool(_kUseTabsIcons, value);
   }
 
   Future<bool> getHideTabs() async {
-    return await _asyncPrefs.getBool(_kHideTabs) ?? false;
+    return await PrefsDatabase.getBool(_kHideTabs, false);
   }
 
   Future setHideTabs(bool value) async {
-    return await _asyncPrefs.setBool(_kHideTabs, value);
+    return await PrefsDatabase.setBool(_kHideTabs, value);
   }
 
   Future<bool> getReminderAboutHideTabFeature() async {
-    return await _asyncPrefs.getBool(_kReminderAboutHideTabFeature) ?? false;
+    return await PrefsDatabase.getBool(_kReminderAboutHideTabFeature, false);
   }
 
   Future setReminderAboutHideTabFeature(bool value) async {
-    return await _asyncPrefs.setBool(_kReminderAboutHideTabFeature, value);
+    return await PrefsDatabase.setBool(_kReminderAboutHideTabFeature, value);
   }
 
   // -- Quick menu tab
 
   Future<bool> getFullScreenExplanationShown() async {
-    return await _asyncPrefs.getBool(_kFullScreenExplanationShown) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenExplanationShown, false);
   }
 
   Future setFullScreenExplanationShown(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenExplanationShown, value);
+    return await PrefsDatabase.setBool(_kFullScreenExplanationShown, value);
   }
 
   Future<bool> getFullScreenRemovesWidgets() async {
-    return await _asyncPrefs.getBool(_kFullScreenRemovesWidgets) ?? true;
+    return await PrefsDatabase.getBool(_kFullScreenRemovesWidgets, true);
   }
 
   Future setFullScreenRemovesWidgets(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenRemovesWidgets, value);
+    return await PrefsDatabase.setBool(_kFullScreenRemovesWidgets, value);
   }
 
   Future<bool> getFullScreenRemovesChat() async {
-    return await _asyncPrefs.getBool(_kFullScreenRemovesChat) ?? true;
+    return await PrefsDatabase.getBool(_kFullScreenRemovesChat, true);
   }
 
   Future setFullScreenRemovesChat(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenRemovesChat, value);
+    return await PrefsDatabase.setBool(_kFullScreenRemovesChat, value);
   }
 
   Future<bool> getFullScreenExtraCloseButton() async {
-    return await _asyncPrefs.getBool(_kFullScreenExtraCloseButton) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenExtraCloseButton, false);
   }
 
   Future setFullScreenExtraCloseButton(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenExtraCloseButton, value);
+    return await PrefsDatabase.setBool(_kFullScreenExtraCloseButton, value);
   }
 
   Future<bool> getFullScreenExtraReloadButton() async {
-    return await _asyncPrefs.getBool(_kFullScreenExtraReloadButton) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenExtraReloadButton, false);
   }
 
   Future setFullScreenExtraReloadButton(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenExtraReloadButton, value);
+    return await PrefsDatabase.setBool(_kFullScreenExtraReloadButton, value);
   }
 
   Future<bool> getFullScreenOverNotch() async {
-    return await _asyncPrefs.getBool(_kFullScreenOverNotch) ?? true;
+    return await PrefsDatabase.getBool(_kFullScreenOverNotch, true);
   }
 
   Future setFullScreenOverNotch(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenOverNotch, value);
+    return await PrefsDatabase.setBool(_kFullScreenOverNotch, value);
   }
 
   Future<bool> getFullScreenOverBottom() async {
-    return await _asyncPrefs.getBool(_kFullScreenOverBottom) ?? true;
+    return await PrefsDatabase.getBool(_kFullScreenOverBottom, true);
   }
 
   Future setFullScreenOverBottom(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenOverBottom, value);
+    return await PrefsDatabase.setBool(_kFullScreenOverBottom, value);
   }
 
   Future<bool> getFullScreenOverSides() async {
-    return await _asyncPrefs.getBool(_kFullScreenOverSides) ?? true;
+    return await PrefsDatabase.getBool(_kFullScreenOverSides, true);
   }
 
   Future setFullScreenOverSides(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenOverSides, value);
+    return await PrefsDatabase.setBool(_kFullScreenOverSides, value);
   }
 
   //--
 
   Future<bool> getFullScreenByShortTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenByShortTap) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenByShortTap, false);
   }
 
   Future setFullScreenByShortTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenByShortTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenByShortTap, value);
   }
 
   //--
   Future<bool> getFullScreenByLongTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenByLongTap) ?? true;
+    return await PrefsDatabase.getBool(_kFullScreenByLongTap, true);
   }
 
   Future setFullScreenByLongTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenByLongTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenByLongTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByNotificationTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenByNotificationTap) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenByNotificationTap, false);
   }
 
   Future setFullScreenByNotificationTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenByNotificationTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenByNotificationTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByShortChainingTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenByShortChainingTap) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenByShortChainingTap, false);
   }
 
   Future setFullScreenByShortChainingTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenByShortChainingTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenByShortChainingTap, value);
   }
 
   Future<bool> getFullScreenByLongChainingTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenByLongChainingTap) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenByLongChainingTap, false);
   }
 
   Future setFullScreenByLongChainingTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenByLongChainingTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenByLongChainingTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByDeepLinkTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenByDeepLinkTap) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenByDeepLinkTap, false);
   }
 
   Future setFullScreenByDeepLinkTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenByDeepLinkTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenByDeepLinkTap, value);
   }
 
   //--
 
   Future<bool> getFullScreenByQuickItemTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenByQuickItemTap) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenByQuickItemTap, false);
   }
 
   Future setFullScreenByQuickItemTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenByQuickItemTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenByQuickItemTap, value);
   }
 
   //--
   Future<bool> getFullScreenIncludesPDAButtonTap() async {
-    return await _asyncPrefs.getBool(_kFullScreenIncludesPDAButtonTap) ?? false;
+    return await PrefsDatabase.getBool(_kFullScreenIncludesPDAButtonTap, false);
   }
 
   Future setFullScreenIncludesPDAButtonTap(bool value) async {
-    return await _asyncPrefs.setBool(_kFullScreenIncludesPDAButtonTap, value);
+    return await PrefsDatabase.setBool(_kFullScreenIncludesPDAButtonTap, value);
   }
 
   /// --------------------------------
@@ -3316,41 +3464,41 @@ class Prefs {
   /// --------------------------------
 
   Future<String> getLifeNotificationTapAction() async {
-    return await _asyncPrefs.getString(_kLifeNotificationTapAction) ?? 'itemsOwn';
+    return await PrefsDatabase.getString(_kLifeNotificationTapAction, 'itemsOwn');
   }
 
   Future setLifeNotificationTapAction(String value) async {
-    return await _asyncPrefs.setString(_kLifeNotificationTapAction, value);
+    return await PrefsDatabase.setString(_kLifeNotificationTapAction, value);
   }
 
   //
 
   Future<String> getDrugsNotificationTapAction() async {
-    return await _asyncPrefs.getString(_kDrugsNotificationTapAction) ?? 'itemsOwn';
+    return await PrefsDatabase.getString(_kDrugsNotificationTapAction, 'itemsOwn');
   }
 
   Future setDrugsNotificationTapAction(String value) async {
-    return await _asyncPrefs.setString(_kDrugsNotificationTapAction, value);
+    return await PrefsDatabase.setString(_kDrugsNotificationTapAction, value);
   }
 
   //
 
   Future<String> getMedicalNotificationTapAction() async {
-    return await _asyncPrefs.getString(_kMedicalNotificationTapAction) ?? 'itemsOwn';
+    return await PrefsDatabase.getString(_kMedicalNotificationTapAction, 'itemsOwn');
   }
 
   Future setMedicalNotificationTapAction(String value) async {
-    return await _asyncPrefs.setString(_kMedicalNotificationTapAction, value);
+    return await PrefsDatabase.setString(_kMedicalNotificationTapAction, value);
   }
 
   //
 
   Future<String> getBoosterNotificationTapAction() async {
-    return await _asyncPrefs.getString(_kBoosterNotificationTapAction) ?? 'itemsOwn';
+    return await PrefsDatabase.getString(_kBoosterNotificationTapAction, 'itemsOwn');
   }
 
   Future setBoosterNotificationTapAction(String value) async {
-    return await _asyncPrefs.setString(_kBoosterNotificationTapAction, value);
+    return await PrefsDatabase.setString(_kBoosterNotificationTapAction, value);
   }
 
   /// ----------------------------
@@ -3358,30 +3506,30 @@ class Prefs {
   /// ----------------------------
   /// tabs_general -> for tab use information in webview_stackview
   Future<List<String>> getShowCases() async {
-    return await _asyncPrefs.getStringList(_kShowCases) ?? <String>[];
+    return await PrefsDatabase.getStringList(_kShowCases, <String>[]);
   }
 
   Future setShowCases(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kShowCases, value);
+    return await PrefsDatabase.setStringList(_kShowCases, value);
   }
 
   /// ----------------------------
   /// Methods for stats analytics
   /// ----------------------------
   Future<int> getStatsFirstLoginTimestamp() async {
-    return await _asyncPrefs.getInt(_kStatsFirstLoginTimestamp) ?? 0;
+    return await PrefsDatabase.getInt(_kStatsFirstLoginTimestamp, 0);
   }
 
   Future setStatsFirstLoginTimestamp(int value) async {
-    return await _asyncPrefs.setInt(_kStatsFirstLoginTimestamp, value);
+    return await PrefsDatabase.setInt(_kStatsFirstLoginTimestamp, value);
   }
 
   Future<int> getStatsCumulatedAppUseSeconds() async {
-    return await _asyncPrefs.getInt(_kStatsCumulatedAppUseSeconds) ?? 0;
+    return await PrefsDatabase.getInt(_kStatsCumulatedAppUseSeconds, 0);
   }
 
   Future setStatsCumulatedAppUseSeconds(int value) async {
-    return await _asyncPrefs.setInt(_kStatsCumulatedAppUseSeconds, value);
+    return await PrefsDatabase.setInt(_kStatsCumulatedAppUseSeconds, value);
   }
 
   /// Current valid events:
@@ -3393,70 +3541,70 @@ class Prefs {
   ///
   /// List formatting: ["15m_4h", "30m_24h", "1h_3d", "2h_5d", "4h_7d"]
   Future<List<String>> getStatsEventsAchieved() async {
-    return await _asyncPrefs.getStringList(_kStatsEventsAchieved) ?? [];
+    return await PrefsDatabase.getStringList(_kStatsEventsAchieved, []);
   }
 
   Future setStatsCumulatedEventsAchieved(List<String> value) async {
-    return await _asyncPrefs.setStringList(_kStatsEventsAchieved, value);
+    return await PrefsDatabase.setStringList(_kStatsEventsAchieved, value);
   }
 
   /// ----------------------------
   /// Methods for appwidget
   /// ----------------------------
   Future<bool> getAppwidgetDarkMode() async {
-    return await _asyncPrefs.getBool(_kAppwidgetDarkMode) ?? false;
+    return await PrefsDatabase.getBool(_kAppwidgetDarkMode, false);
   }
 
   Future setAppwidgetDarkMode(bool value) async {
-    return await _asyncPrefs.setBool(_kAppwidgetDarkMode, value);
+    return await PrefsDatabase.setBool(_kAppwidgetDarkMode, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetRemoveShortcutsOneRowLayout() async {
-    return await _asyncPrefs.getBool(_kAppwidgetRemoveShortcutsOneRowLayout) ?? false;
+    return await PrefsDatabase.getBool(_kAppwidgetRemoveShortcutsOneRowLayout, false);
   }
 
   Future setAppwidgetRemoveShortcutsOneRowLayout(bool value) async {
-    return await _asyncPrefs.setBool(_kAppwidgetRemoveShortcutsOneRowLayout, value);
+    return await PrefsDatabase.setBool(_kAppwidgetRemoveShortcutsOneRowLayout, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetMoneyEnabled() async {
-    return await _asyncPrefs.getBool(_kAppwidgetMoneyEnabled) ?? true;
+    return await PrefsDatabase.getBool(_kAppwidgetMoneyEnabled, true);
   }
 
   Future setAppwidgetMoneyEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kAppwidgetMoneyEnabled, value);
+    return await PrefsDatabase.setBool(_kAppwidgetMoneyEnabled, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetCooldownTapOpensBrowser() async {
-    return await _asyncPrefs.getBool(_kAppwidgetCooldownTapOpensBrowser) ?? false;
+    return await PrefsDatabase.getBool(_kAppwidgetCooldownTapOpensBrowser, false);
   }
 
   Future setAppwidgetCooldownTapOpensBrowser(bool value) async {
-    return await _asyncPrefs.setBool(_kAppwidgetCooldownTapOpensBrowser, value);
+    return await PrefsDatabase.setBool(_kAppwidgetCooldownTapOpensBrowser, value);
   }
 
   Future<String> getAppwidgetCooldownTapOpensBrowserDestination() async {
-    return await _asyncPrefs.getString(_kAppwidgetCooldownTapOpensBrowserDestination) ?? "own";
+    return await PrefsDatabase.getString(_kAppwidgetCooldownTapOpensBrowserDestination, "own");
   }
 
   Future setAppwidgetCooldownTapOpensBrowserDestination(String value) async {
-    return await _asyncPrefs.setString(_kAppwidgetCooldownTapOpensBrowserDestination, value);
+    return await PrefsDatabase.setString(_kAppwidgetCooldownTapOpensBrowserDestination, value);
   }
 
   // ---
 
   Future<bool> getAppwidgetExplanationShown() async {
-    return await _asyncPrefs.getBool(_kAppwidgetExplanationShown) ?? false;
+    return await PrefsDatabase.getBool(_kAppwidgetExplanationShown, false);
   }
 
   Future setAppwidgetExplanationShown(bool value) async {
-    return await _asyncPrefs.setBool(_kAppwidgetExplanationShown, value);
+    return await PrefsDatabase.setBool(_kAppwidgetExplanationShown, value);
   }
 
   /// ----------------------------
@@ -3464,11 +3612,11 @@ class Prefs {
   /// ----------------------------
 
   Future<int> getExactPermissionDialogShownAndroid() async {
-    return await _asyncPrefs.getInt(_kExactPermissionDialogShownAndroid) ?? 0;
+    return await PrefsDatabase.getInt(_kExactPermissionDialogShownAndroid, 0);
   }
 
   Future setExactPermissionDialogShownAndroid(int value) async {
-    return await _asyncPrefs.setInt(_kExactPermissionDialogShownAndroid, value);
+    return await PrefsDatabase.setInt(_kExactPermissionDialogShownAndroid, value);
   }
 
   /// ----------------------------
@@ -3476,155 +3624,155 @@ class Prefs {
   /// ----------------------------
 
   Future<bool> getDownloadActionShare() async {
-    return await _asyncPrefs.getBool(_downloadActionShare) ?? true;
+    return await PrefsDatabase.getBool(_downloadActionShare, true);
   }
 
   Future setDownloadActionShare(bool value) async {
-    return await _asyncPrefs.setBool(_downloadActionShare, value);
+    return await PrefsDatabase.setBool(_downloadActionShare, value);
   }
 
   /// ----------------------------
   /// Methods for Api Rate
   /// ----------------------------
   Future<bool> getShowApiRateInDrawer() async {
-    return await _asyncPrefs.getBool(_kShowApiRateInDrawer) ?? false;
+    return await PrefsDatabase.getBool(_kShowApiRateInDrawer, false);
   }
 
   Future setShowApiRateInDrawer(bool value) async {
-    return await _asyncPrefs.setBool(_kShowApiRateInDrawer, value);
+    return await PrefsDatabase.setBool(_kShowApiRateInDrawer, value);
   }
 
   Future<bool> getDelayApiCalls() async {
-    return await _asyncPrefs.getBool(_kDelayApiCalls) ?? false;
+    return await PrefsDatabase.getBool(_kDelayApiCalls, false);
   }
 
   Future setDelayApiCalls(bool value) async {
-    return await _asyncPrefs.setBool(_kDelayApiCalls, value);
+    return await PrefsDatabase.setBool(_kDelayApiCalls, value);
   }
 
   // ---
 
   Future<bool> getShowApiMaxCallWarning() async {
-    return await _asyncPrefs.getBool(_kShowApiMaxCallWarning) ?? false;
+    return await PrefsDatabase.getBool(_kShowApiMaxCallWarning, false);
   }
 
   Future setShowApiMaxCallWarning(bool value) async {
-    return await _asyncPrefs.setBool(_kShowApiMaxCallWarning, value);
+    return await PrefsDatabase.setBool(_kShowApiMaxCallWarning, value);
   }
 
   /// ----------------------------
   /// Methods for Memory
   /// ----------------------------
   Future<bool> getShowMemoryInDrawer() async {
-    return await _asyncPrefs.getBool(_kShowMemoryInDrawer) ?? false;
+    return await PrefsDatabase.getBool(_kShowMemoryInDrawer, false);
   }
 
   Future setShowMemoryInDrawer(bool value) async {
-    return await _asyncPrefs.setBool(_kShowMemoryInDrawer, value);
+    return await PrefsDatabase.setBool(_kShowMemoryInDrawer, value);
   }
 
   // ---
 
   Future<bool> getShowMemoryInWebview() async {
-    return await _asyncPrefs.getBool(_kShowMemoryInWebview) ?? false;
+    return await PrefsDatabase.getBool(_kShowMemoryInWebview, false);
   }
 
   Future setShowMemoryInWebview(bool value) async {
-    return await _asyncPrefs.setBool(_kShowMemoryInWebview, value);
+    return await PrefsDatabase.setBool(_kShowMemoryInWebview, value);
   }
 
   /// ----------------------------
   /// Methods for Refresh Rate
   /// ----------------------------
   Future<bool> getHighRefreshRateEnabled() async {
-    return await _asyncPrefs.getBool(_kHighRefreshRateEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kHighRefreshRateEnabled, false);
   }
 
   Future setHighRefreshRateEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kHighRefreshRateEnabled, value);
+    return await PrefsDatabase.setBool(_kHighRefreshRateEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for Refresh Rate
   /// ----------------------------
   Future<String> getSplitScreenWebview() async {
-    return await _asyncPrefs.getString(_kSplitScreenWebview) ?? 'off';
+    return await PrefsDatabase.getString(_kSplitScreenWebview, 'off');
   }
 
   Future setSplitScreenWebview(String value) async {
-    return await _asyncPrefs.setString(_kSplitScreenWebview, value);
+    return await PrefsDatabase.setString(_kSplitScreenWebview, value);
   }
 
   Future<bool> getSplitScreenRevertsToApp() async {
-    return await _asyncPrefs.getBool(_kSplitScreenRevertsToApp) ?? true;
+    return await PrefsDatabase.getBool(_kSplitScreenRevertsToApp, true);
   }
 
   Future setSplitScreenRevertsToApp(bool value) async {
-    return await _asyncPrefs.setBool(_kSplitScreenRevertsToApp, value);
+    return await PrefsDatabase.setBool(_kSplitScreenRevertsToApp, value);
   }
 
   /// ----------------------------
   /// FCM Token
   /// ----------------------------
   Future<String> getFCMToken() async {
-    return await _asyncPrefs.getString(_kFCMToken) ?? "";
+    return await PrefsDatabase.getString(_kFCMToken, "");
   }
 
   Future setFCMToken(String value) async {
-    return await _asyncPrefs.setString(_kFCMToken, value);
+    return await PrefsDatabase.setString(_kFCMToken, value);
   }
 
   /// ----------------------------
   /// Methods for Sendbird notifications
   /// ----------------------------
   Future<bool> getSendbirdNotificationsEnabled() async {
-    return await _asyncPrefs.getBool(_kSendbirdnotificationsEnabled) ?? false;
+    return await PrefsDatabase.getBool(_kSendbirdnotificationsEnabled, false);
   }
 
   Future setSendbirdNotificationsEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kSendbirdnotificationsEnabled, value);
+    return await PrefsDatabase.setBool(_kSendbirdnotificationsEnabled, value);
   }
 
   Future<String> getSendbirdSessionToken() async {
-    return await _asyncPrefs.getString(_kSendbirdSessionToken) ?? "";
+    return await PrefsDatabase.getString(_kSendbirdSessionToken, "");
   }
 
   Future setSendbirdSessionToken(String value) async {
-    return await _asyncPrefs.setString(_kSendbirdSessionToken, value);
+    return await PrefsDatabase.setString(_kSendbirdSessionToken, value);
   }
 
   Future<int> getSendbirdTokenTimestamp() async {
-    return await _asyncPrefs.getInt(_kSendbirdTokenTimestamp) ?? 0;
+    return await PrefsDatabase.getInt(_kSendbirdTokenTimestamp, 0);
   }
 
   Future setSendbirdTokenTimestamp(int timestamp) async {
-    return await _asyncPrefs.setInt(_kSendbirdTokenTimestamp, timestamp);
+    return await PrefsDatabase.setInt(_kSendbirdTokenTimestamp, timestamp);
   }
 
   Future<bool> getSendbirdExcludeFactionMessages() async {
-    return await _asyncPrefs.getBool(_kSendbirdExcludeFactionMessages) ?? false;
+    return await PrefsDatabase.getBool(_kSendbirdExcludeFactionMessages, false);
   }
 
   Future setSendbirdExcludeFactionMessages(bool value) async {
-    return await _asyncPrefs.setBool(_kSendbirdExcludeFactionMessages, value);
+    return await PrefsDatabase.setBool(_kSendbirdExcludeFactionMessages, value);
   }
 
   Future<bool> getSendbirdExcludeCompanyMessages() async {
-    return await _asyncPrefs.getBool(_kSendbirdExcludeCompanyMessages) ?? false;
+    return await PrefsDatabase.getBool(_kSendbirdExcludeCompanyMessages, false);
   }
 
   Future setSendbirdExcludeCompanyMessages(bool value) async {
-    return await _asyncPrefs.setBool(_kSendbirdExcludeCompanyMessages, value);
+    return await PrefsDatabase.setBool(_kSendbirdExcludeCompanyMessages, value);
   }
 
   ///////
 
   Future<bool> getBringBrowserForwardOnStart() async {
-    return await _asyncPrefs.getBool(_kBringBrowserForwardOnStart) ?? false;
+    return await PrefsDatabase.getBool(_kBringBrowserForwardOnStart, false);
   }
 
   Future setBringBrowserForwardOnStart(bool value) async {
-    return await _asyncPrefs.setBool(_kBringBrowserForwardOnStart, value);
+    return await PrefsDatabase.setBool(_kBringBrowserForwardOnStart, value);
   }
 
   /// -----------------------------------
@@ -3633,17 +3781,17 @@ class Prefs {
 
   /// Stores the last execution time for a given task name
   Future setLastExecutionTime(String taskName, int timestamp) async {
-    return await _asyncPrefs.setInt("$_taskPrefix$taskName", timestamp);
+    return await PrefsDatabase.setInt("$_taskPrefix$taskName", timestamp);
   }
 
   /// Retrieves the last execution time for a given task name
   Future<int> getLastExecutionTime(String taskName) async {
-    return await _asyncPrefs.getInt("$_taskPrefix$taskName") ?? 0;
+    return await PrefsDatabase.getInt("$_taskPrefix$taskName", 0);
   }
 
   /// Removes the stored execution time for a task
   Future removeLastExecutionTime(String taskName) async {
-    await _asyncPrefs.remove("$_taskPrefix$taskName");
+    await PrefsDatabase.remove("$_taskPrefix$taskName");
   }
 
   /// -----------------------------------
@@ -3651,27 +3799,27 @@ class Prefs {
   /// -----------------------------------
 
   Future<String> getTornCalendarModel() async {
-    return await _asyncPrefs.getString(_kTornCalendarModel) ?? "";
+    return await PrefsDatabase.getString(_kTornCalendarModel, "");
   }
 
   Future setTornCalendarModel(String value) async {
-    return await _asyncPrefs.setString(_kTornCalendarModel, value);
+    return await PrefsDatabase.setString(_kTornCalendarModel, value);
   }
 
   Future<int> getTornCalendarLastUpdate() async {
-    return await _asyncPrefs.getInt(_kTornCalendarLastUpdate) ?? 0;
+    return await PrefsDatabase.getInt(_kTornCalendarLastUpdate, 0);
   }
 
   Future setTornCalendarLastUpdate(int timestamp) async {
-    return await _asyncPrefs.setInt(_kTornCalendarLastUpdate, timestamp);
+    return await PrefsDatabase.setInt(_kTornCalendarLastUpdate, timestamp);
   }
 
   Future<bool> getTctClockHighlightsEvents() async {
-    return await _asyncPrefs.getBool(_kTctClockHighlightsEvents) ?? true;
+    return await PrefsDatabase.getBool(_kTctClockHighlightsEvents, true);
   }
 
   Future setTctClockHighlightsEvents(bool value) async {
-    return await _asyncPrefs.setBool(_kTctClockHighlightsEvents, value);
+    return await PrefsDatabase.setBool(_kTctClockHighlightsEvents, value);
   }
 
   /// -----------------------------------
@@ -3679,11 +3827,11 @@ class Prefs {
   /// -----------------------------------
 
   Future<bool> getShowWikiInDrawer() async {
-    return await _asyncPrefs.getBool(_kShowWikiInDrawer) ?? true;
+    return await PrefsDatabase.getBool(_kShowWikiInDrawer, true);
   }
 
   Future setShowWikiInDrawer(bool value) async {
-    return await _asyncPrefs.setBool(_kShowWikiInDrawer, value);
+    return await PrefsDatabase.setBool(_kShowWikiInDrawer, value);
   }
 
   /// -----------------------------------
@@ -3703,9 +3851,9 @@ class Prefs {
   }) async {
     final key = _getLaPushTokenKey(activityType);
     if (token == null) {
-      await _asyncPrefs.remove(key);
+      await PrefsDatabase.remove(key);
     } else {
-      await _asyncPrefs.setString(key, token);
+      await PrefsDatabase.setString(key, token);
     }
   }
 
@@ -3713,23 +3861,24 @@ class Prefs {
     required LiveActivityType activityType,
   }) async {
     final key = _getLaPushTokenKey(activityType);
-    return await _asyncPrefs.getString(key);
+    final value = await PrefsDatabase.getString(key, "");
+    return value.isEmpty ? null : value;
   }
 
   Future<bool> getIosLiveActivityTravelEnabled() async {
-    return await _asyncPrefs.getBool(_kIosLiveActivityTravelEnabled) ?? kSdkIos >= 16.2 ? true : false;
+    return await PrefsDatabase.getBool(_kIosLiveActivityTravelEnabled, kSdkIos >= 16.2 ? true : false);
   }
 
   Future setIosLiveActivityTravelEnabled(bool value) async {
-    return await _asyncPrefs.setBool(_kIosLiveActivityTravelEnabled, value);
+    return await PrefsDatabase.setBool(_kIosLiveActivityTravelEnabled, value);
   }
 
   /// ----------------------------
   /// Methods for player notes
   /// ----------------------------
   Future<List<Map<String, dynamic>>> getPlayerNotes() async {
-    final String? notesString = await _asyncPrefs.getString(_kPlayerNotes);
-    if (notesString == null || notesString.isEmpty) {
+    final String notesString = await PrefsDatabase.getString(_kPlayerNotes, "");
+    if (notesString.isEmpty) {
       return [];
     }
 
@@ -3743,36 +3892,36 @@ class Prefs {
 
   Future setPlayerNotes(List<Map<String, dynamic>> notes) async {
     final String notesString = json.encode(notes);
-    return await _asyncPrefs.setString(_kPlayerNotes, notesString);
+    return await PrefsDatabase.setString(_kPlayerNotes, notesString);
   }
 
   // ---
 
   Future<int> getPlayerNotesSort() async {
-    return await _asyncPrefs.getInt(_kPlayerNotesSort) ?? 0;
+    return await PrefsDatabase.getInt(_kPlayerNotesSort, 0);
   }
 
   Future setPlayerNotesSort(int value) async {
-    return await _asyncPrefs.setInt(_kPlayerNotesSort, value);
+    return await PrefsDatabase.setInt(_kPlayerNotesSort, value);
   }
 
   Future<bool> getPlayerNotesSortAscending() async {
-    return await _asyncPrefs.getBool(_kPlayerNotesSortAscending) ?? true;
+    return await PrefsDatabase.getBool(_kPlayerNotesSortAscending, true);
   }
 
   Future setPlayerNotesSortAscending(bool value) async {
-    return await _asyncPrefs.setBool(_kPlayerNotesSortAscending, value);
+    return await PrefsDatabase.setBool(_kPlayerNotesSortAscending, value);
   }
 
   /// ----------------------------
   /// Methods for NOTES migration status
   /// ----------------------------
   // TODO: remove next version when migration to PlayerNotesProvider is removed in Drawer
-  Future<bool> getMigrationCompleted() async {
-    return await _asyncPrefs.getBool(_kPlayerNotesMigrationCompleted) ?? false;
+  Future<bool> getPlayerNotesMigrationCompleted() async {
+    return await PrefsDatabase.getBool(_kPlayerNotesMigrationCompleted, false);
   }
 
-  Future setMigrationCompleted(bool completed) async {
-    return await _asyncPrefs.setBool(_kPlayerNotesMigrationCompleted, completed);
+  Future setPlayerNotesMigrationCompleted(bool completed) async {
+    return await PrefsDatabase.setBool(_kPlayerNotesMigrationCompleted, completed);
   }
 }
