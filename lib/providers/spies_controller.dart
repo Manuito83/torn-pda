@@ -212,7 +212,21 @@ class SpiesController extends GetxController {
           Map<String, dynamic> spyList = mainMap.entries.first.value;
           spyList.forEach((key, value) {
             final YataSpyModel spyModel = yataSpyModelFromJson(json.encode(value));
-            spies.add(spyModel);
+
+            if (key.isNotEmpty) {
+              spyModel.targetId = key;
+            }
+
+            // YATA sometimes returns "Player" or empty names for unknown players, so we filter them out
+            // Only add spy if it has valid identification (ID or meaningful name)
+            final hasValidId = spyModel.targetId != null && spyModel.targetId!.isNotEmpty;
+            final hasValidName =
+                spyModel.targetName != null && spyModel.targetName!.isNotEmpty && spyModel.targetName != 'Player';
+
+            // Add spy if it has either a valid ID or a valid name (or both)
+            if (hasValidId || hasValidName) {
+              spies.add(spyModel);
+            }
           });
         }
       } else {
