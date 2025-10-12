@@ -4909,7 +4909,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         showMisc = true;
         bankActive = true;
         final moneyFormat = NumberFormat("#,##0", "en_US");
-        final timeExpiry = DateTime.now().add(Duration(seconds: bankUntil));
+        final timeExpiry = DateTime.fromMillisecondsSinceEpoch(bankUntil * 1000);
         final timeDifference = timeExpiry.difference(DateTime.now());
         Color? expiryColor = _themeProvider?.getTextColor(Colors.orange[800]);
         String expiryString;
