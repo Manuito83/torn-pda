@@ -4927,39 +4927,42 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           expiryColor = _themeProvider?.mainText;
         }
 
-        final bankAmount = _miscModel?.money?.cityBank?.amount;
-        bankWidget = Semantics(
-          explicitChildNodes: true,
-          child: Row(
-            children: <Widget>[
-              const Icon(MdiIcons.bankOutline),
-              const SizedBox(width: 10),
-              Flexible(
-                child: RichText(
-                  text: TextSpan(
-                    text: "Your bank investment of ",
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: bankAmount != null ? "\$${moneyFormat.format(bankAmount)}" : "(error)",
-                        style: TextStyle(
-                          color: bankAmount != null
-                              ? _themeProvider?.getTextColor(Colors.green)
-                              : _themeProvider?.getTextColor(Colors.red),
+        // Ensure time difference is positive
+        if (!timeDifference.isNegative) {
+          final bankAmount = _miscModel?.money?.cityBank?.amount;
+          bankWidget = Semantics(
+            explicitChildNodes: true,
+            child: Row(
+              children: <Widget>[
+                const Icon(MdiIcons.bankOutline),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: RichText(
+                    text: TextSpan(
+                      text: "Your bank investment of ",
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: bankAmount != null ? "\$${moneyFormat.format(bankAmount)}" : "(error)",
+                          style: TextStyle(
+                            color: bankAmount != null
+                                ? _themeProvider?.getTextColor(Colors.green)
+                                : _themeProvider?.getTextColor(Colors.red),
+                          ),
                         ),
-                      ),
-                      const TextSpan(text: " will expire in "),
-                      TextSpan(
-                        text: expiryString,
-                        style: TextStyle(color: expiryColor),
-                      ),
-                    ],
+                        const TextSpan(text: " will expire in "),
+                        TextSpan(
+                          text: expiryString,
+                          style: TextStyle(color: expiryColor),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            ],
-          ),
-        );
+                )
+              ],
+            ),
+          );
+        }
       }
     }
 
