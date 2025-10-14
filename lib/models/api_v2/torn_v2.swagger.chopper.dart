@@ -877,6 +877,7 @@ final class _$TornV2 extends TornV2 {
     return client.send<TimestampResponse, TimestampResponse>($request);
   }
 
+  // MARK: USER GET
   @override
   Future<Response<dynamic>> _userGet({
     String? selections,

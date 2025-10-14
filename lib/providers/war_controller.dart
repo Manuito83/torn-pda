@@ -15,7 +15,7 @@ import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -260,20 +260,20 @@ class WarController extends GetxController {
         },
       );
 
-      if (updatedTarget is OtherProfileModel) {
+      if (updatedTarget is OtherProfilePDA) {
         member.name = updatedTarget.name;
         member.level = updatedTarget.level;
-        member.position = updatedTarget.faction!.position;
+        member.position = updatedTarget.factionPosition;
         member.overrideEasyLife = true;
-        member.lifeMaximum = updatedTarget.life!.maximum;
-        member.lifeCurrent = updatedTarget.life!.current;
-        member.lastAction!.relative = updatedTarget.lastAction!.relative;
-        member.lastAction!.status = updatedTarget.lastAction!.status;
-        member.status!.description = updatedTarget.status!.description;
-        member.status!.state = updatedTarget.status!.state;
-        member.status!.until = updatedTarget.status!.until;
-        member.status!.color = updatedTarget.status!.color;
-        member.bounty = updatedTarget.basicicons!.icon13 ?? "";
+        member.lifeMaximum = updatedTarget.lifeMaximum;
+        member.lifeCurrent = updatedTarget.lifeCurrent;
+        member.lastAction!.relative = updatedTarget.lastActionRelative;
+        member.lastAction!.status = updatedTarget.lastActionStatus;
+        member.status!.description = updatedTarget.statusDescription;
+        member.status!.state = updatedTarget.statusState;
+        member.status!.until = updatedTarget.statusUntil;
+        member.status!.color = updatedTarget.statusColor;
+        member.bounty = updatedTarget.bountyDescription ?? "";
 
         // Erase previous bounties and calculate new ones
         _calculateMemberBounty(updatedTarget, member);
@@ -287,29 +287,29 @@ class WarController extends GetxController {
         _assignSpiedStats(member);
 
         member.statsEstimated = StatsCalculator.calculateStats(
-          criminalRecordTotal: updatedTarget.personalstats?.crimes?.offenses?.total,
+          criminalRecordTotal: updatedTarget.personalstats?.criminalRecordTotal,
           level: updatedTarget.level,
-          networth: updatedTarget.personalstats!.networth!.total,
+          networth: updatedTarget.personalstats?.networth,
           rank: updatedTarget.rank,
         );
 
         member.statsComparisonSuccess = false;
         if (ownStatsSuccess is OwnPersonalStatsModel) {
           member.statsComparisonSuccess = true;
-          member.memberXanax = updatedTarget.personalstats!.drugs!.xanax;
+          member.memberXanax = updatedTarget.personalstats?.xanax ?? 0;
           member.myXanax = ownStatsSuccess.personalstats!.xantaken;
 
-          member.memberRefill = updatedTarget.personalstats!.other!.refills!.energy;
+          member.memberRefill = updatedTarget.personalstats?.energyRefills ?? 0;
           member.myRefill = ownStatsSuccess.personalstats!.refills;
 
-          member.memberEnhancement = updatedTarget.personalstats!.items!.used!.statEnhancers;
-          member.memberCans = updatedTarget.personalstats!.items!.used!.energy;
+          member.memberEnhancement = updatedTarget.personalstats?.statEnhancers ?? 0;
+          member.memberCans = updatedTarget.personalstats?.energyDrinks ?? 0;
 
           member.myCans = ownStatsSuccess.personalstats!.energydrinkused;
           member.myEnhancement = ownStatsSuccess.personalstats!.statenhancersused;
 
-          member.memberEcstasy = updatedTarget.personalstats!.drugs!.ecstasy;
-          member.memberLsd = updatedTarget.personalstats!.drugs!.lsd;
+          member.memberEcstasy = updatedTarget.personalstats?.ecstasy ?? 0;
+          member.memberLsd = updatedTarget.personalstats?.lsd ?? 0;
         }
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
@@ -621,7 +621,7 @@ class WarController extends GetxController {
         // we lost or we have no records)
         if (value.respectGain > 0) {
           fairFight = value.modifiers!.fairFight;
-          respect = fairFight! * 0.25 * (math.log(member.level!) + 1);
+          respect = fairFight! * 0.25 * (math.log(member.level ?? 1) + 1);
         } else if (respect == -1) {
           respect = 0;
           fairFight = 1.00;
@@ -1148,11 +1148,11 @@ class WarController extends GetxController {
     member.statsExactTotalKnown = -1;
   }
 
-  void _calculateMemberBounty(OtherProfileModel updatedTarget, Member member) {
-    if (updatedTarget.basicicons?.icon13 != null) {
+  void _calculateMemberBounty(OtherProfilePDA updatedTarget, Member member) {
+    if (updatedTarget.bountyDescription != null) {
       // API example text: Bounty - On this person's head for $200,000 : "Optional reason"
       RegExp amountRegex = RegExp(r"\$\d{1,3}(?:,\d{3})*(?:\.\d{2})?");
-      Match? match = amountRegex.firstMatch(updatedTarget.basicicons!.icon13!);
+      Match? match = amountRegex.firstMatch(updatedTarget.bountyDescription!);
       if (match != null) {
         String amountStr = match.group(0)!;
         amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
@@ -1267,17 +1267,17 @@ class WarController extends GetxController {
 
     switch (sortType) {
       case WarSortType.levelDes:
-        return b.level!.compareTo(a.level!);
+        return (b.level ?? 0).compareTo(a.level ?? 0);
       case WarSortType.levelAsc:
-        return a.level!.compareTo(b.level!);
+        return (a.level ?? 0).compareTo(b.level ?? 0);
       case WarSortType.respectDes:
         return b.respectGain!.compareTo(a.respectGain!);
       case WarSortType.respectAsc:
         return a.respectGain!.compareTo(b.respectGain!);
       case WarSortType.nameDes:
-        return b.name!.toLowerCase().compareTo(a.name!.toLowerCase());
+        return (b.name ?? '').toLowerCase().compareTo((a.name ?? '').toLowerCase());
       case WarSortType.nameAsc:
-        return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+        return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
       case WarSortType.lifeDes:
         return b.lifeCurrent!.compareTo(a.lifeCurrent!);
       case WarSortType.lifeAsc:
@@ -1292,7 +1292,7 @@ class WarController extends GetxController {
         } else if (b.hospitalSort! > 0) {
           return 1;
         } else {
-          return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+          return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
         }
       case WarSortType.statsDes:
         return b.statsSort!.compareTo(a.statsSort!);

@@ -764,8 +764,8 @@ class WarCardState extends State<WarCard> {
 
     List<Widget> additional = <Widget>[];
     // XANAX
-    final int otherXanax = _member.memberXanax!;
-    final int myXanax = _member.myXanax!;
+    final int otherXanax = _member.memberXanax ?? 0;
+    final int myXanax = _member.myXanax ?? 0;
     xanaxComparison = otherXanax - myXanax;
     if (xanaxComparison < -10) {
       xanaxColor = Colors.green;
@@ -778,8 +778,8 @@ class WarCardState extends State<WarCard> {
     );
 
     // REFILLS
-    final int otherRefill = _member.memberRefill!;
-    final int myRefill = _member.myRefill!;
+    final int otherRefill = _member.memberRefill ?? 0;
+    final int myRefill = _member.myRefill ?? 0;
     refillComparison = otherRefill - myRefill;
     refillColor = Colors.orange;
     if (refillComparison < -10) {
@@ -793,8 +793,8 @@ class WarCardState extends State<WarCard> {
     );
 
     // ENHANCER
-    final int otherEnhancement = _member.memberEnhancement!;
-    final int myEnhancement = _member.myEnhancement!;
+    final int otherEnhancement = _member.memberEnhancement ?? 0;
+    final int myEnhancement = _member.myEnhancement ?? 0;
     enhancementComparison = otherEnhancement - myEnhancement;
     if (enhancementComparison < 0) {
       enhancementColor = Colors.green;
@@ -807,8 +807,8 @@ class WarCardState extends State<WarCard> {
     );
 
     // CANS
-    final int otherCans = _member.memberCans!;
-    final int myCans = _member.myCans!;
+    final int otherCans = _member.memberCans ?? 0;
+    final int myCans = _member.myCans ?? 0;
     cansComparison = otherCans - myCans;
     if (cansComparison < 0) {
       cansColor = Colors.green;
@@ -827,12 +827,12 @@ class WarCardState extends State<WarCard> {
     /// if (esc + xan) < 150 & LSD > 100 SSL is red
     Widget sslWidget = const SizedBox.shrink();
     sslColor = Colors.green;
-    ecstasy = _member.memberEcstasy;
-    lsd = _member.memberLsd;
-    if (otherXanax + ecstasy! > 150) {
+    ecstasy = _member.memberEcstasy ?? 0;
+    lsd = _member.memberLsd ?? 0;
+    if (otherXanax + ecstasy > 150) {
       sslProb = false;
     } else {
-      if (lsd! > 50 && lsd < 50) {
+      if (lsd > 50 && lsd < 100) {
         sslColor = Colors.orange;
       } else if (lsd > 100) {
         sslColor = Colors.red;
@@ -926,8 +926,8 @@ class WarCardState extends State<WarCard> {
                     totalUpdate: _member.statsExactTotalUpdated,
                     update: _member.statsExactUpdated ?? 0,
                     spySource: _member.spySource,
-                    name: _member.name!,
-                    factionName: _member.factionName!,
+                    name: _member.name ?? '',
+                    factionName: _member.factionName ?? '',
                     themeProvider: _themeProvider,
                   );
 
@@ -942,12 +942,12 @@ class WarCardState extends State<WarCard> {
                     cansColor: cansColor,
                     sslColor: sslColor,
                     sslProb: sslProb,
-                    otherXanTaken: _member.memberXanax!,
-                    otherEctTaken: _member.memberEcstasy!,
-                    otherLsdTaken: _member.memberEcstasy!,
-                    otherName: _member.name!,
-                    otherFactionName: _member.factionName!,
-                    otherLastActionRelative: _member.lastAction!.relative!,
+                    otherXanTaken: _member.memberXanax ?? 0,
+                    otherEctTaken: _member.memberEcstasy ?? 0,
+                    otherLsdTaken: _member.memberLsd ?? 0,
+                    otherName: _member.name ?? '',
+                    otherFactionName: _member.factionName ?? '',
+                    otherLastActionRelative: _member.lastAction?.relative ?? '',
                     themeProvider: _themeProvider,
                   );
 
@@ -1007,12 +1007,12 @@ class WarCardState extends State<WarCard> {
                     cansColor: cansColor,
                     sslColor: sslColor,
                     sslProb: sslProb,
-                    otherXanTaken: _member.memberXanax!,
-                    otherEctTaken: _member.memberEcstasy!,
-                    otherLsdTaken: _member.memberEcstasy!,
-                    otherName: _member.name!,
-                    otherFactionName: _member.factionName!,
-                    otherLastActionRelative: _member.lastAction!.relative!,
+                    otherXanTaken: _member.memberXanax ?? 0,
+                    otherEctTaken: _member.memberEcstasy ?? 0,
+                    otherLsdTaken: _member.memberLsd ?? 0,
+                    otherName: _member.name ?? '',
+                    otherFactionName: _member.factionName ?? '',
+                    otherLastActionRelative: _member.lastAction?.relative ?? '',
                     themeProvider: _themeProvider,
                   );
 

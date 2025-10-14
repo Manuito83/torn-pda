@@ -9,7 +9,7 @@ import 'package:torn_pda/models/chaining/retal_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart' as other;
+import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart' as other;
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -57,21 +57,21 @@ class RetalsController extends GetxController {
         },
       );
 
-      if (updatedTarget is other.OtherProfileModel) {
+      if (updatedTarget is other.OtherProfilePDA) {
         retal.name = updatedTarget.name;
         retal.level = updatedTarget.level;
-        retal.position = updatedTarget.faction!.position;
-        retal.factionName = updatedTarget.faction!.factionName;
-        retal.retalId = updatedTarget.playerId;
+        retal.position = updatedTarget.factionPosition;
+        retal.factionName = updatedTarget.factionName;
+        retal.retalId = updatedTarget.id;
         retal.overrideEasyLife = true;
-        retal.lifeMaximum = updatedTarget.life!.maximum;
-        retal.lifeCurrent = updatedTarget.life!.current;
-        retal.lastAction.relative = updatedTarget.lastAction!.relative;
-        retal.lastAction.status = updatedTarget.lastAction!.status;
-        retal.status.description = updatedTarget.status!.description;
-        retal.status.state = updatedTarget.status!.state;
-        retal.status.until = updatedTarget.status!.until;
-        retal.status.color = updatedTarget.status!.color;
+        retal.lifeMaximum = updatedTarget.lifeMaximum;
+        retal.lifeCurrent = updatedTarget.lifeCurrent;
+        retal.lastAction.relative = updatedTarget.lastActionRelative;
+        retal.lastAction.status = updatedTarget.lastActionStatus;
+        retal.status.description = updatedTarget.statusDescription;
+        retal.status.state = updatedTarget.statusState;
+        retal.status.until = updatedTarget.statusUntil;
+        retal.status.color = updatedTarget.statusColor;
 
         retal.lastUpdated = DateTime.now();
         if (allAttacksSuccess is am.AttackModel) {
@@ -81,9 +81,9 @@ class RetalsController extends GetxController {
         _assignSpiedStats(retal);
 
         retal.statsEstimated = StatsCalculator.calculateStats(
-          criminalRecordTotal: updatedTarget.personalstats?.crimes?.offenses?.total,
+          criminalRecordTotal: updatedTarget.personalstats?.criminalRecordTotal,
           level: updatedTarget.level,
-          networth: updatedTarget.personalstats!.networth!.total,
+          networth: updatedTarget.personalstats?.networth,
           rank: updatedTarget.rank,
         );
 
@@ -91,20 +91,20 @@ class RetalsController extends GetxController {
         if (ownStatsSuccess is OwnPersonalStatsModel) {
           retal.statsComparisonSuccess = true;
 
-          retal.retalXanax = updatedTarget.personalstats!.drugs!.xanax;
+          retal.retalXanax = updatedTarget.personalstats?.xanax ?? 0;
           retal.myXanax = ownStatsSuccess.personalstats!.xantaken;
 
-          retal.retalRefill = updatedTarget.personalstats!.other!.refills!.energy;
+          retal.retalRefill = updatedTarget.personalstats?.energyRefills ?? 0;
           retal.myRefill = ownStatsSuccess.personalstats!.refills;
 
-          retal.retalCans = updatedTarget.personalstats!.items!.used!.energy;
+          retal.retalCans = updatedTarget.personalstats?.energyDrinks ?? 0;
           retal.myCans = ownStatsSuccess.personalstats!.energydrinkused;
 
-          retal.retalEnhancement = updatedTarget.personalstats!.items!.used!.statEnhancers;
+          retal.retalEnhancement = updatedTarget.personalstats?.statEnhancers ?? 0;
           retal.myEnhancement = ownStatsSuccess.personalstats!.statenhancersused;
 
-          retal.retalEcstasy = updatedTarget.personalstats!.drugs!.ecstasy;
-          retal.retalLsd = updatedTarget.personalstats!.drugs!.lsd;
+          retal.retalEcstasy = updatedTarget.personalstats?.ecstasy ?? 0;
+          retal.retalLsd = updatedTarget.personalstats?.lsd ?? 0;
         }
 
         // Even if we assign both exact (if available) and estimated, we only pass estimated to startSort
@@ -160,7 +160,7 @@ class RetalsController extends GetxController {
         // we lost or we have no records)
         if (value.respectGain > 0) {
           fairFight = value.modifiers!.fairFight;
-          respect = fairFight! * 0.25 * (log(retal.level!) + 1);
+          respect = fairFight! * 0.25 * (log(retal.level ?? 1) + 1);
         } else if (respect == -1) {
           respect = 0;
           fairFight = 1.00;

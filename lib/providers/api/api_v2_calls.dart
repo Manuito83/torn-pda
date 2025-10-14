@@ -4,7 +4,7 @@ import 'dart:developer';
 
 import 'package:get/get.dart';
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
 import 'package:torn_pda/providers/api/api_caller.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
@@ -70,7 +70,7 @@ class ApiCallsV2 {
       apiCall: (client, apiKey) {
         return client.userGet(
           id: payload["id"],
-          selections: "profile,personalstats,bazaar",
+          selections: "profile,personalstats,bazaar,faction,job,icons",
           cat: "all",
         );
       },
@@ -78,10 +78,10 @@ class ApiCallsV2 {
 
     if (apiResponse is ApiError) return null;
     try {
-      final otherProfile = OtherProfileModel.fromJson(apiResponse as Map<String, dynamic>);
+      final otherProfile = OtherProfilePDA.fromJson(apiResponse as Map<String, dynamic>);
       return otherProfile;
     } catch (e, trace) {
-      log("Error converting V2 OtherProfileModel: $e, $trace");
+      log("Error converting V2 OtherProfilePDA: $e, $trace");
       return null;
     }
   }
