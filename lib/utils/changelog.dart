@@ -113,6 +113,14 @@ class ChangeLogState extends State<ChangeLog> {
           "Improved tab icons handling",
           "Added The Wolverines revive services",
           "Improved spies dialog with search and better performance",
+          ComplexFeature(
+            "Added option to display all rented out properties in the Misc card",
+            explanation: "Disabled by default"
+                "\n\nIf active, you will see all the properties you rent out to other players in the "
+                "Rented Properties section in the Miscellaneous card. If inactive, you will only "
+                "see the properties you rent (the ones you pay rent for)\n\n"
+                "You can toggle this option via the Profile Page options menu (gear icon in the Profile Page)",
+          ),
           "Fixed bank expiry time calculation",
           "Fixed size limit for user scripts' cloud backup",
           "Fixed notifications getting cleared when opening the app even if disabled",

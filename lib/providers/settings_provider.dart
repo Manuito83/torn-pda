@@ -726,6 +726,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showAllRentedOutProperties = true;
+  bool get showAllRentedOutProperties => _showAllRentedOutProperties;
+  set showAllRentedOutProperties(bool value) {
+    _showAllRentedOutProperties = value;
+    Prefs().setShowAllRentedOutProperties(_showAllRentedOutProperties);
+    notifyListeners();
+  }
+
   var _oCrimeDisregarded = 0;
   int get oCrimeDisregarded => _oCrimeDisregarded;
   set changeOCrimeDisregarded(int value) {
@@ -1449,6 +1457,8 @@ class SettingsProvider extends ChangeNotifier {
     _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
     _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
     _playerInOCv2 = await Prefs().getPlayerInOCv2();
+
+    _showAllRentedOutProperties = await Prefs().getShowAllRentedOutProperties();
 
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
 

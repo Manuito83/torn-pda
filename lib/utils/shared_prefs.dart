@@ -257,6 +257,9 @@ class Prefs {
   final String _kOCrimeDisregarded = "pda_OCrimeDisregarded";
   final String _kOCrimeLastKnown = "pda_OCrimeLastKnown";
 
+  // Rented Properties (Misc Card)
+  final String _kShowAllRentedOutProperties = "pda_showAllRentedOutProperties";
+
   // Loot
   final String _kLootTimerType = "pda_lootTimerType";
   final String _kLootNotificationType = "pda_lootNotificationType";
@@ -3039,6 +3042,17 @@ class Prefs {
 
   Future setOCrimeLastKnown(int value) async {
     return await PrefsDatabase.setInt(_kOCrimeLastKnown, value);
+  }
+
+  /// -----------------------------
+  /// PROPERTY RENTAL (MISC CARD)
+  /// -----------------------------
+  Future<bool> getShowAllRentedOutProperties() async {
+    return await PrefsDatabase.getBool(_kShowAllRentedOutProperties, false);
+  }
+
+  Future setShowAllRentedOutProperties(bool value) async {
+    return await PrefsDatabase.setBool(_kShowAllRentedOutProperties, value);
   }
 
   /// -----------------------------

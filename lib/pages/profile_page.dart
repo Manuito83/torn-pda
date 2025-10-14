@@ -242,6 +242,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
   DateTime? _rentedPropertiesLastChecked;
+  bool? _previousShowAllRentedOutProperties;
 
   // ######## //
   /// OC V2 ///
@@ -879,8 +880,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final expandBasicInfo = await Prefs().getExpandBasicInfo();
             final expandNetworth = await Prefs().getExpandNetworth();
             final sectionList = await Prefs().getProfileSectionOrder();
+            final showAllProperties = _settingsProvider!.showAllRentedOutProperties;
 
             widget.disableTravelSection(disableTravel);
+
+            // Check if showAllRentedOutProperties changed and update properties if needed
+            if (_previousShowAllRentedOutProperties != null &&
+                _previousShowAllRentedOutProperties != showAllProperties &&
+                _miscModel != null) {
+              await _fetchAndUpdateProperties(_miscModel!);
+            }
+            _previousShowAllRentedOutProperties = showAllProperties;
+
             setState(() {
               _warnAboutChains = warnChains;
               _showHeaderWallet = headerWallet;
@@ -7983,12 +7994,30 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final thisRented = <String, Map<String, String>>{};
     final propertyModel = miscApiResponse.properties;
 
-    final List<PropertyV2> rentedProperties = propertyModel.where((p) {
-      if (p.status != null && p.status!.contains("rented") && p.rentedBy != null && p.rentedBy!.id == _user!.playerId) {
-        return true;
-      }
-      return false;
-    }).toList();
+    List<PropertyV2> rentedProperties = [];
+
+    if (!_settingsProvider!.showAllRentedOutProperties) {
+      // This shows only the properties rented by the user
+      // (the user is the one renting, not the owner)
+      rentedProperties = propertyModel.where((p) {
+        if (p.status != null &&
+            p.status!.contains("rented") &&
+            p.rentedBy != null &&
+            p.rentedBy!.id == _user!.playerId) {
+          return true;
+        }
+        return false;
+      }).toList();
+    } else {
+      // This shows all properties rented by the user
+      // (the user is the one renting AND also if he is the owner)
+      rentedProperties = propertyModel.where((p) {
+        if (p.status != null && p.status!.contains("rented") && p.rentedBy != null) {
+          return true;
+        }
+        return false;
+      }).toList();
+    }
 
     if (rentedProperties.isEmpty) {
       if (mounted) {
@@ -8008,11 +8037,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final timeLeft = property.rentalPeriodRemaining!;
             final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
             if (timeLeft > 0) {
-              thisRented[property.id.toString()] = {
-                "time": timeLeft.toString(),
-                "text": "Your ${property.property!.name!.toLowerCase()}'s "
-                    "rent will end in $daysString!",
-              };
+              if (property.rentedBy!.id == _user!.playerId) {
+                thisRented[property.id.toString()] = {
+                  "time": timeLeft.toString(),
+                  "text": "Your ${property.property!.name!.toLowerCase()}'s "
+                      "rent will end in $daysString!",
+                  'rentedOut': 'false',
+                };
+              } else {
+                thisRented[property.id.toString()] = {
+                  "time": timeLeft.toString(),
+                  "text": "Your ${property.property!.name!.toLowerCase()}'s "
+                      "rental agreement with ${property.rentedBy!.name!.toLowerCase()} will end in $daysString!",
+                  'rentedOut': 'true',
+                };
+              }
             }
           }
         } catch (e) {
@@ -8029,13 +8068,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final int? numberDays = int.tryParse(value["time"]!);
       if (numberDays == null) return; // Skip if can't parse days
 
+      Icon houseIcon = const Icon(Icons.house_outlined);
+      if (value["rentedOut"] == "true") {
+        houseIcon = const Icon(Icons.house, color: Colors.blueGrey);
+      }
+
       final Widget prop = Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
             child: Row(
               children: [
-                const Icon(Icons.house_outlined),
+                houseIcon,
                 const SizedBox(width: 10),
                 Flexible(
                   child: Consumer<ThemeProvider>(
