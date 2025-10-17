@@ -78,6 +78,7 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_local/backup_reminder_dialog.dart';
 import 'package:torn_pda/widgets/drawer/authentication_loading_widget.dart';
 import 'package:torn_pda/widgets/drawer/authentication_timeout_widget.dart';
 import 'package:torn_pda/widgets/drawer/connectivity_ui.dart';
@@ -631,7 +632,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         );
       }
 
-      // 4. Add new dialogs here with appropriate priorities
+      // 4. Backup reminder dialog - Priority 5
+      if (mounted) {
+        DialogQueue.enqueue(
+          dialogFunction: () async {
+            await _showBackupReminderIfNeeded();
+            return true;
+          },
+          dialogName: "Backup Reminder",
+          context: context,
+          priority: 5,
+        );
+      }
+
+      // 5. Add new dialogs here with appropriate priorities
       // DialogQueue.enqueue(
       //   dialogFunction: () async {
       //     return await _showMyNewDialog();
@@ -2933,6 +2947,80 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  Future<void> _showBackupReminderIfNeeded() async {
+    try {
+      // Do not show if app has just been updated to avoid losing prefs
+      if (appHasBeenUpdated) return;
+
+      // Only proceed if valid API key and feature enabled
+      if (!UserHelper.isApiKeyValid) return;
+
+      final bool reminderEnabled = await Prefs().getAutoBackupReminderEnabled();
+      if (!reminderEnabled) return;
+
+      final int currentTime = DateTime.now().millisecondsSinceEpoch;
+      final int lastReminderShown = await Prefs().getAutoBackupLastReminderShown();
+      final int lastBackupCreated = await Prefs().getAutoBackupLastLocalCreated();
+      final int appUseSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+
+      // Get backup reminder intervals (constants)
+      const int reminderInterval = 90 * 24 * 60 * 60; // 90 days
+      const int newUserThreshold = 7 * 24 * 60 * 60; // 7 days
+
+      // For new users: show reminder after threshold (7 days of app use)
+      if (lastBackupCreated == 0 && lastReminderShown == 0) {
+        if (appUseSeconds >= newUserThreshold) {
+          log('Backup reminder: Showing for new user after ${appUseSeconds}s of app use');
+          await _showBackupReminderDialog(0);
+          return;
+        }
+      }
+
+      // For existing users: check if it's been long enough since last reminder/backup
+      final int timeSinceLastBackup = currentTime - lastBackupCreated;
+
+      // Use the more recent timestamp (either reminder shown or backup created)
+      final int mostRecentTimestamp = math.max(lastReminderShown, lastBackupCreated);
+      final int timeSinceMostRecent = currentTime - mostRecentTimestamp;
+
+      // Convert to seconds for comparison
+      final int secondsSinceMostRecent = (timeSinceMostRecent / 1000).floor();
+
+      if (secondsSinceMostRecent >= reminderInterval) {
+        // Calculate days since last backup for display
+        final int daysSinceBackup = lastBackupCreated > 0 ? (timeSinceLastBackup / (1000 * 60 * 60 * 24)).floor() : 0;
+
+        await _showBackupReminderDialog(daysSinceBackup);
+      }
+    } catch (e) {
+      log("Error checking backup reminder: $e");
+    }
+  }
+
+  Future<void> _showBackupReminderDialog(int daysSinceLastBackup) async {
+    if (!mounted) return;
+
+    try {
+      final result = await showDialog<bool>(
+        useRootNavigator: false,
+        context: context,
+        barrierDismissible: true,
+        builder: (context) {
+          return BackupReminderDialog(
+            daysSinceLastBackup: daysSinceLastBackup,
+          );
+        },
+      );
+
+      // If result is null (user dismissed), treat as "Not now"
+      if (result == null) {
+        await Prefs().setAutoBackupLastReminderShown(DateTime.now().millisecondsSinceEpoch);
+      }
+    } catch (e) {
+      log("Error showing backup reminder dialog: $e");
+    }
+  }
+
   Future _showPdaUpdateDialog() async {
     final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetailsRC;
     if (pdaUpdateDetailsString.isEmpty) return;
@@ -2962,7 +3050,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       DialogQueue.enqueue(
         dialogFunction: () async {
           try {
-            final shouldUpdate = await showDialog<bool>(
+            final result = await showDialog<Map<String, dynamic>>(
               useRootNavigator: false,
               context: context,
               barrierDismissible: false,
@@ -2979,8 +3067,27 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               await Prefs().setPdaUpdateDialogVersion(updateDetails.latestVersionCode);
             }
 
-            if (shouldUpdate == true) {
-              // Open store
+            if (result != null && result['shouldUpdate'] == true) {
+              // If user wants to create backup, show backup dialog first
+              if (result['createBackup'] == true) {
+                final backupResult = await showDialog<bool>(
+                  useRootNavigator: false,
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (context) {
+                    return const BackupReminderDialog(
+                      daysSinceLastBackup: 0, // Use 0 for pre-update backup
+                    );
+                  },
+                );
+
+                // If backup was cancelled, don't proceed with update
+                if (backupResult != true) {
+                  return false;
+                }
+              }
+
+              // Proceed with opening store
               final storeUrl = Platform.isIOS
                   ? 'https://apps.apple.com/app/torn-pda/id1510138514'
                   : 'https://play.google.com/store/apps/details?id=com.manuito.tornpda';

@@ -402,6 +402,12 @@ class Prefs {
   final String _kStatsCumulatedAppUseSeconds = "pda_statsCumulatedAppUseSeconds";
   final String _kStatsEventsAchieved = "pda_statsEventsAchieved";
 
+  // Backup automation
+  final String _kAutoBackupReminderEnabled = "pda_autoBackupReminderEnabled";
+  final String _kAutoBackupBeforeUpdateEnabled = "pda_autoBackupBeforeUpdateEnabled";
+  final String _kAutoBackupLastReminderShown = "pda_autoBackupLastReminderShown";
+  final String _kAutoBackupLastLocalCreated = "pda_autoBackupLastLocalCreated";
+
   // Alternative keys
   // YATA
   final String _kAlternativeYataKeyEnabled = "pda_alternativeYataKeyEnabled";
@@ -3560,6 +3566,44 @@ class Prefs {
 
   Future setStatsCumulatedEventsAchieved(List<String> value) async {
     return await PrefsDatabase.setStringList(_kStatsEventsAchieved, value);
+  }
+
+  /// ----------------------------
+  /// Methods for backup automation
+  /// ----------------------------
+  Future<bool> getAutoBackupReminderEnabled() async {
+    return await PrefsDatabase.getBool(_kAutoBackupReminderEnabled, false);
+  }
+
+  Future setAutoBackupReminderEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kAutoBackupReminderEnabled, value);
+  }
+
+  Future<bool> getAutoBackupBeforeUpdateEnabled() async {
+    return await PrefsDatabase.getBool(_kAutoBackupBeforeUpdateEnabled, false);
+  }
+
+  Future setAutoBackupBeforeUpdateEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kAutoBackupBeforeUpdateEnabled, value);
+  }
+
+  Future<int> getAutoBackupLastReminderShown() async {
+    return await PrefsDatabase.getInt(_kAutoBackupLastReminderShown, 0);
+  }
+
+  Future setAutoBackupLastReminderShown(int value) async {
+    return await PrefsDatabase.setInt(_kAutoBackupLastReminderShown, value);
+  }
+
+  Future<int> getAutoBackupLastLocalCreated() async {
+    // Default to 5 days ago to ensure existing users get backup reminders within reasonable time
+    // and not right after enabling the feature
+    final fiveDaysAgo = DateTime.now().subtract(const Duration(days: 5)).millisecondsSinceEpoch;
+    return await PrefsDatabase.getInt(_kAutoBackupLastLocalCreated, fiveDaysAgo);
+  }
+
+  Future setAutoBackupLastLocalCreated(int value) async {
+    return await PrefsDatabase.setInt(_kAutoBackupLastLocalCreated, value);
   }
 
   /// ----------------------------

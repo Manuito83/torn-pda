@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.3 - Build 586 - 12/10/2025
+    // v3.9.3 - Build 587 - 17/10/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.3'
@@ -121,6 +121,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "see the properties you rent (the ones you pay rent for)\n\n"
                 "You can toggle this option via the Profile Page options menu (gear icon in the Profile Page)",
           ),
+          "Added local backup reminders",
           "Fixed bank expiry time calculation",
           "Fixed size limit for user scripts' cloud backup",
           "Fixed notifications getting cleared when opening the app even if disabled",

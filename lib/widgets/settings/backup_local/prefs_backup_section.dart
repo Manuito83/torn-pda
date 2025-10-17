@@ -11,11 +11,67 @@ import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
 
 /// Local backup / restore section for app settings
-class PrefsBackupWidget extends StatelessWidget {
+class PrefsBackupWidget extends StatefulWidget {
   const PrefsBackupWidget({super.key});
+
+  @override
+  PrefsBackupWidgetState createState() => PrefsBackupWidgetState();
+
+  // Static method for creating backups from outside the widget
+  static Future<String?> createBackup(String key, {String? customName}) async {
+    final data = await PrefsBackupService.exportPrefs(key);
+    final bytes = Uint8List.fromList(utf8.encode(data));
+
+    String timestamp() {
+      final d = DateTime.now();
+      String two(int n) => n.toString().padLeft(2, '0');
+      return '${d.year}${two(d.month)}${two(d.day)}_${two(d.hour)}${two(d.minute)}${two(d.second)}';
+    }
+
+    final result = await FileSaver.instance.saveAs(
+      name: customName ?? 'prefs_backup_${timestamp()}',
+      bytes: bytes,
+      fileExtension: 'pda',
+      mimeType: MimeType.custom,
+      customMimeType: "application/octet-stream",
+    );
+
+    if (result != null) {
+      // Update backup timestamp
+      await Prefs().setAutoBackupLastLocalCreated(DateTime.now().millisecondsSinceEpoch);
+    }
+
+    return result;
+  }
+}
+
+class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
+  bool _autoBackupReminderEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final reminderEnabled = await Prefs().getAutoBackupReminderEnabled();
+
+    if (mounted) {
+      setState(() {
+        _autoBackupReminderEnabled = reminderEnabled;
+      });
+    }
+  }
+
+  Future<void> _updateBackupTimestamp() async {
+    // Update last backup timestamp whenever a manual backup is created
+    await Prefs().setAutoBackupLastLocalCreated(DateTime.now().millisecondsSinceEpoch);
+  }
 
   Future<void> _showToast(String msg, ToastificationType type) async {
     toastification.show(
@@ -88,12 +144,6 @@ class PrefsBackupWidget extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _ts() {
-    final d = DateTime.now();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${d.year}${two(d.month)}${two(d.day)}_${two(d.hour)}${two(d.minute)}${two(d.second)}';
   }
 
   Future<void> _save(BuildContext ctx) async {
@@ -190,10 +240,23 @@ class PrefsBackupWidget extends StatelessWidget {
     }
   }
 
+  Future<void> _savePrefsToDisk(BuildContext ctx, String key) async {
+    final result = await PrefsBackupWidget.createBackup(key);
+    if (result != null) {
+      _showToast('Backup saved', ToastificationType.success);
+    }
+  }
+
   Future<void> _saveWithShareIntent(BuildContext ctx, String key) async {
     final data = await PrefsBackupService.exportPrefs(key);
+
+    // Create timestamp similar to the static method
+    final d = DateTime.now();
+    String two(int n) => n.toString().padLeft(2, '0');
+    final timestamp = '${d.year}${two(d.month)}${two(d.day)}_${two(d.hour)}${two(d.minute)}${two(d.second)}';
+
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/pda_prefs_backup_${_ts()}.pda');
+    final file = File('${dir.path}/pda_prefs_backup_$timestamp.pda');
     await file.writeAsString(data);
 
     final shareParams = ShareParams(
@@ -203,23 +266,7 @@ class PrefsBackupWidget extends StatelessWidget {
     final res = await SharePlus.instance.share(shareParams);
 
     if (res.status == ShareResultStatus.success) {
-      _showToast('Backup saved', ToastificationType.success);
-    }
-  }
-
-  Future<void> _savePrefsToDisk(BuildContext ctx, String key) async {
-    final data = await PrefsBackupService.exportPrefs(key);
-    final bytes = Uint8List.fromList(utf8.encode(data));
-
-    final result = await FileSaver.instance.saveAs(
-      name: 'prefs_backup_${_ts()}',
-      bytes: bytes,
-      fileExtension: 'pda',
-      mimeType: MimeType.custom,
-      customMimeType: "application/octet-stream",
-    );
-
-    if (result != null) {
+      await _updateBackupTimestamp(); // Update backup timestamp
       _showToast('Backup saved', ToastificationType.success);
     }
   }
@@ -301,6 +348,8 @@ class PrefsBackupWidget extends StatelessWidget {
           style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
         ),
         const SizedBox(height: 15),
+
+        // Manual backup/restore buttons
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -320,6 +369,38 @@ class PrefsBackupWidget extends StatelessWidget {
               icon: const Icon(Icons.restore),
               label: const Text('Restore'),
               onPressed: () => _load(context),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 20),
+
+        // Backup reminder switch
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Backup reminders'),
+                  Text(
+                    'Remind to create backups every 90 days',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: _autoBackupReminderEnabled,
+              onChanged: (value) async {
+                await Prefs().setAutoBackupReminderEnabled(value);
+                setState(() {
+                  _autoBackupReminderEnabled = value;
+                });
+              },
+              activeTrackColor: Colors.lightGreenAccent,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
