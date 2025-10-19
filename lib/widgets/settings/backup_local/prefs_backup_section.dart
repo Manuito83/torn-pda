@@ -137,7 +137,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
               ),
           ],
         ),
-        content: TextField(controller: ctl, autofocus: true, maxLength: 15),
+        content: TextField(controller: ctl, autofocus: true, maxLength: 20),
         actions: [
           TextButton(onPressed: () => Navigator.pop(_, null), child: const Text('Cancel')),
           TextButton(onPressed: () => Navigator.pop(_, ctl.text), child: const Text('OK')),
