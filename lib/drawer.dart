@@ -10,6 +10,7 @@ import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -29,6 +30,7 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:receive_intent/receive_intent.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 // Project imports:
+import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -76,6 +78,7 @@ import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.d
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
+import 'package:torn_pda/widgets/settings/backup_local/backup_reminder_dialog.dart';
 import 'package:torn_pda/widgets/drawer/authentication_loading_widget.dart';
 import 'package:torn_pda/widgets/drawer/authentication_timeout_widget.dart';
 import 'package:torn_pda/widgets/drawer/connectivity_ui.dart';
@@ -203,208 +206,292 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _userScriptsProvider = Provider.of<UserScriptsProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);
 
-    // Start stats counting
-    _statsController.logCheckIn();
+    _initializeStats();
+    _initializeQuickActions();
+    _initializePlayerNotesMigration();
+    _initializeConfig();
+    _initializeLiveActivities();
+    _initializeDeepLinks();
+    _initializeNotifications();
+    _initializeFirebaseMessaging();
+    _initializeBackgroundNotifications();
+    _initializeIntentListeners();
+    _initializeRemoteConfigInit();
+    _initializeChainStatus();
+    _initializeSendbird();
+    _initializeBrowserPreferences();
+    _initializeConnectivity();
+  }
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+  void _initializeStats() {
+    try {
+      _statsController.logCheckIn();
+    } catch (e, stackTrace) {
+      log("Error initializing stats: $e");
+      logErrorToCrashlytics("Error initializing stats", e, stackTrace);
+    }
+  }
+
+  void _initializeQuickActions() {
+    try {
+      const QuickActions quickActions = QuickActions();
+
+      quickActions.initialize((String shortcutType) async {
+        if (shortcutType == 'open_torn') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_gym') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/gym.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_crimes') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/crimes.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        } else if (shortcutType == 'open_travel') {
+          await _preferencesCompleter.future;
+          context.read<WebViewProvider>().openBrowserPreference(
+                context: context,
+                url: "https://www.torn.com/travelagency.php",
+                browserTapType: BrowserTapType.quickItem,
+              );
+        }
+      });
+
+      quickActions.setShortcutItems(<ShortcutItem>[
+        const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
+        const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
+        const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
+        const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
+      ]);
+    } catch (e, stackTrace) {
+      log("Error initializing quick actions: $e");
+      logErrorToCrashlytics("Error initializing quick actions", e, stackTrace);
+    }
+  }
+
+  void _initializePlayerNotesMigration() {
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          final playerNotesController = Get.find<PlayerNotesController>();
+          playerNotesController.initializeMigration();
+        } catch (e) {
+          log('Could not initialize player notes migration: $e');
+        }
+      });
+    } catch (e, stackTrace) {
+      log("Error initializing player notes migration: $e");
+      logErrorToCrashlytics("Error initializing player notes migration", e, stackTrace);
+    }
+  }
+
+  void _initializeConfig() {
+    try {
+      _allowSectionsWithoutKey = [
+        _settingsPosition,
+        _aboutPosition,
+      ];
+
+      _finishedWithPreferencesAndDialogs = _loadPreferencesAndDialogs();
+    } catch (e, stackTrace) {
+      log("Error initializing config: $e");
+      logErrorToCrashlytics("Error initializing config", e, stackTrace);
+    }
+  }
+
+  void _initializeLiveActivities() {
+    try {
+      if (Platform.isIOS) {
+        _initialiseLiveActivitiesBridgeService();
+      }
+    } catch (e, stackTrace) {
+      log("Error initializing live activities: $e");
+      logErrorToCrashlytics("Error initializing live activities", e, stackTrace);
+    }
+  }
+
+  void _initializeDeepLinks() {
+    try {
+      _deepLinksInit();
+    } catch (e, stackTrace) {
+      log("Error initializing deep links: $e");
+      logErrorToCrashlytics("Error initializing deep links", e, stackTrace);
+    }
+  }
+
+  void _initializeNotifications() {
+    try {
+      _onForegroundNotification();
+
+      if (Platform.isAndroid) {
+        configureNotificationChannels();
+      }
+
+      if (Platform.isIOS) {
+        _messaging.setForegroundNotificationPresentationOptions();
+      }
+    } catch (e, stackTrace) {
+      log("Error initializing notifications: $e");
+      logErrorToCrashlytics("Error initializing notifications", e, stackTrace);
+    }
+  }
+
+  void _initializeFirebaseMessaging() {
+    try {
+      _lastMessageReceived = DateTime.now();
+      _lastBody = "";
+
       if (!Platform.isWindows) {
-        // STARTS QUICK ACTIONS
-        const QuickActions quickActions = QuickActions();
+        _messaging.getInitialMessage().then((RemoteMessage? message) {
+          if (message != null && message.data.isNotEmpty) {
+            _onFirebaseBackgroundNotification(message.data);
+          }
+        });
 
-        quickActions.setShortcutItems(<ShortcutItem>[
-          // NOTE: keep the same file name for both platforms
-          const ShortcutItem(type: 'open_torn', localizedTitle: 'Torn Home', icon: "action_torn"),
-          const ShortcutItem(type: 'open_gym', localizedTitle: 'Gym', icon: "action_gym"),
-          const ShortcutItem(type: 'open_crimes', localizedTitle: 'Crimes', icon: "action_crimes"),
-          const ShortcutItem(type: 'open_travel', localizedTitle: 'Travel', icon: "action_travel"),
-        ]);
+        FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
+          if (message.data.isNotEmpty) {
+            _onFirebaseBackgroundNotification(message.data);
+          }
+        });
 
-        quickActions.initialize((String shortcutType) async {
-          if (shortcutType == 'open_torn') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com",
-                  browserTapType: BrowserTapType.quickItem,
-                );
-          } else if (shortcutType == 'open_gym') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com/gym.php",
-                  browserTapType: BrowserTapType.quickItem,
-                );
-          } else if (shortcutType == 'open_crimes') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com/crimes.php",
-                  browserTapType: BrowserTapType.quickItem,
-                );
-          } else if (shortcutType == 'open_travel') {
-            context.read<WebViewProvider>().openBrowserPreference(
-                  context: context,
-                  url: "https://www.torn.com/travelagency.php",
-                  browserTapType: BrowserTapType.quickItem,
-                );
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+          if (message.data.isEmpty) {
+            message.data["title"] = message.notification!.title;
+            message.data["body"] = message.notification!.body;
+          }
+
+          bool skip = false;
+          if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
+            if (message.data["body"] == _lastBody) {
+              skip = true;
+            } else {
+              concurrent++;
+              await Future.delayed(Duration(seconds: 8 * concurrent));
+            }
+          } else {
+            concurrent = 0;
+          }
+
+          if (!skip) {
+            _lastMessageReceived = DateTime.now();
+            _lastBody = message.data["body"] as String?;
+            notId++;
+            if (notId > 990) notId = 900;
+            showNotification(message.data, notId);
+          } else {
+            return;
           }
         });
       }
-    });
-    // ENDS QUICK ACTIONS
+    } catch (e, stackTrace) {
+      log("Error initializing Firebase messaging: $e");
+      logErrorToCrashlytics("Error initializing Firebase messaging", e, stackTrace);
+    }
+  }
 
-    // Initialize player notes migration v3.9.1
-    // TODO: remove
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      try {
-        final playerNotesController = Get.find<PlayerNotesController>();
-        playerNotesController.initializeMigration();
-      } catch (e) {
-        log('Could not initialize player notes migration: $e');
+  void _initializeBackgroundNotifications() {
+    try {
+      _getBackgroundNotificationSavedData();
+      _removeExistingNotifications();
+    } catch (e, stackTrace) {
+      log("Error initializing background notifications: $e");
+      logErrorToCrashlytics("Error initializing background notifications", e, stackTrace);
+    }
+  }
+
+  void _initializeIntentListeners() {
+    try {
+      if (Platform.isAndroid) {
+        _initIntentListenerSubscription();
+        _initIntentReceiverOnLaunch();
       }
-    });
-
-    _allowSectionsWithoutKey = [
-      _settingsPosition,
-      _aboutPosition,
-    ];
-
-    _finishedWithPreferencesAndDialogs = _loadPreferencesAndDialogs();
-
-    // Live Activities
-    if (Platform.isIOS) {
-      _initialiseLiveActivitiesBridgeService();
+    } catch (e, stackTrace) {
+      log("Error initializing intent listeners: $e");
+      logErrorToCrashlytics("Error initializing intent listeners", e, stackTrace);
     }
+  }
 
-    // Deep Linking
-    _deepLinksInit();
-
-    // This starts a stream that listens for tap on local notifications (i.e.:
-    // when the app is open)
-    _onForegroundNotification();
-
-    // Configure all notifications channels so that Firebase alerts have already
-    // and assign channel where to land
-    if (Platform.isAndroid) {
-      configureNotificationChannels();
+  void _initializeRemoteConfigInit() {
+    try {
+      if (!Platform.isWindows) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _initializeRemoteConfig();
+        });
+      }
+    } catch (e, stackTrace) {
+      log("Error initializing remote config: $e");
+      logErrorToCrashlytics("Error initializing remote config", e, stackTrace);
     }
+  }
 
-    // Defaulted to false so that onMessage is the entry point on iOS as it happens on Android (
-    // otherwise we get duplicated notifications). Choose one or the other for iOS.
-    // On Android we have no option since Firebase Android SDK will block displaying any FCM
-    // notification no matter what Notification Channel has been set
-    // See https://firebase.flutter.dev/docs/messaging/notifications/
-    if (Platform.isIOS) {
-      _messaging.setForegroundNotificationPresentationOptions();
+  void _initializeChainStatus() {
+    try {
+      Get.find<ChainStatusController>().initialiseProvider();
+    } catch (e, stackTrace) {
+      log("Error initializing chain status: $e");
+      logErrorToCrashlytics("Error initializing chain status", e, stackTrace);
     }
+  }
 
-    _lastMessageReceived = DateTime.now();
-    _lastBody = "";
+  void _initializeSendbird() {
+    try {
+      _preferencesCompleter.future.whenComplete(() async {
+        final sbController = Get.find<SendbirdController>();
+        await sbController.register();
+      });
+    } catch (e, stackTrace) {
+      log("Error initializing Sendbird: $e");
+      logErrorToCrashlytics("Error initializing Sendbird", e, stackTrace);
+    }
+  }
 
-    if (!Platform.isWindows) {
-      _messaging.getInitialMessage().then((RemoteMessage? message) {
-        if (message != null && message.data.isNotEmpty) {
-          _onFirebaseBackgroundNotification(message.data);
+  void _initializeBrowserPreferences() {
+    try {
+      _preferencesCompleter.future.whenComplete(() async {
+        final fwd = await Prefs().getBringBrowserForwardOnStart();
+        if (fwd) {
+          _webViewProvider.browserShowInForeground = true;
+          Prefs().setBringBrowserForwardOnStart(false);
         }
       });
+    } catch (e, stackTrace) {
+      log("Error initializing browser preferences: $e");
+      logErrorToCrashlytics("Error initializing browser preferences", e, stackTrace);
+    }
+  }
 
-      FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
-        if (message.data.isNotEmpty) {
-          _onFirebaseBackgroundNotification(message.data);
-        }
-      });
-
-      FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-        // This allows for notifications other than predefined ones in functions
-        if (message.data.isEmpty) {
-          message.data["title"] = message.notification!.title;
-          message.data["body"] = message.notification!.body;
-        }
-
-        // Space messages and skip repeated
-        bool skip = false;
-        if (DateTime.now().difference(_lastMessageReceived).inSeconds < 2) {
-          if (message.data["body"] == _lastBody) {
-            // Skips messages with the same body that come repeated in less than 2 seconds, which is
-            // a glitch for some mobile devices with the app in the foreground!
-            skip = true;
-          } else {
-            // Spaces out several notifications so that all of them show if
-            // the app is open (otherwise only 1 of them shows)
-            concurrent++;
-            await Future.delayed(Duration(seconds: 8 * concurrent));
+  void _initializeConnectivity() {
+    try {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        ConnectivityHandler.instance.hasConnection.addListener(() {
+          if (mounted) {
+            setState(() {});
           }
-        } else {
-          concurrent = 0;
-        }
+        });
 
-        if (!skip) {
-          _lastMessageReceived = DateTime.now();
-          _lastBody = message.data["body"] as String?;
-          // Assigns a different id two alerts that come together (otherwise one
-          // deletes the previous one)
-          notId++;
-          if (notId > 990) notId = 900;
-          // This will eventually fire a local notification
-          showNotification(message.data, notId);
-        } else {
-          return;
-        }
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            setState(() {
+              _hasWaitedInitialDelay = true;
+            });
+          }
+        });
       });
+    } catch (e, stackTrace) {
+      log("Error initializing connectivity: $e");
+      logErrorToCrashlytics("Error initializing connectivity", e, stackTrace);
     }
-
-    // Handle notifications
-    _getBackgroundNotificationSavedData();
-    _removeExistingNotifications();
-
-    // Init intent listener (for appWidget)
-    if (Platform.isAndroid) {
-      _initIntentListenerSubscription();
-      _initIntentReceiverOnLaunch();
-    }
-
-    // Initialize Remote Config after first frame
-    if (!Platform.isWindows) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _initializeRemoteConfig();
-      });
-    }
-
-    // Make sure the Chain Status Provider launch API requests if there's a need (chain or status active) for it
-    Get.find<ChainStatusController>().initialiseProvider();
-
-    // Initialise Sendbird notifications
-    _preferencesCompleter.future.whenComplete(() async {
-      // Sendbird notifications
-      final sbController = Get.find<SendbirdController>();
-      // After app install, this will trigger an invalid playerId until the user loads the API
-      await sbController.register();
-    });
-
-    // Should bring browser forward?
-    _preferencesCompleter.future.whenComplete(() async {
-      final fwd = await Prefs().getBringBrowserForwardOnStart();
-      if (fwd) {
-        _webViewProvider.browserShowInForeground = true;
-        Prefs().setBringBrowserForwardOnStart(false);
-      }
-    });
-
-    // Listen to connectivity changes to update UI on start up
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      ConnectivityHandler.instance.hasConnection.addListener(() {
-        if (mounted) {
-          setState(() {});
-        }
-      });
-
-      // Set an initial delay flag after 1 second
-      // so that we don't show the connectivity UI right away
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() {
-            _hasWaitedInitialDelay = true;
-          });
-        }
-      });
-    });
   }
 
   Future<void> _loadPreferencesAndDialogs() async {
@@ -415,14 +502,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     await _loadPreferencesAsync();
 
-    // Show data recovery toast if needed
-    if (showEmergencyDataRecoveryToast) {
-      showEmergencyDataRecoveryToast = false;
-      _showDataRecoveryToast();
-    }
-
     if (mounted) {
-      // Start collectingdialogs for 500ms before processing
+      // Start collecting dialogs for 500ms before processing
       // This ensures proper priority ordering during app startup
       DialogQueue.startCollectingDialogs();
 
@@ -457,7 +538,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Reconfigure notification channels in case new sounds are added (e.g. v2.4.2)
     // Deletes current channels and create new ones
-    if (Platform.isAndroid) {
+    //
+    // NOTE: as this cleans all notifications when the app is launched from a killed state,
+    // regardless of the user preference in Settings (in regards to clearing notifications),
+    // we only do this when the app has been updated
+    if (Platform.isAndroid && appHasBeenUpdated) {
       final vibration = await Prefs().getVibrationPattern();
       await reconfigureNotificationChannels(mod: vibration);
     }
@@ -547,7 +632,20 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         );
       }
 
-      // 4. Add new dialogs here with appropriate priorities
+      // 4. Backup reminder dialog - Priority 5
+      if (mounted) {
+        DialogQueue.enqueue(
+          dialogFunction: () async {
+            await _showBackupReminderIfNeeded();
+            return true;
+          },
+          dialogName: "Backup Reminder",
+          context: context,
+          priority: 5,
+        );
+      }
+
+      // 5. Add new dialogs here with appropriate priorities
       // DialogQueue.enqueue(
       //   dialogFunction: () async {
       //     return await _showMyNewDialog();
@@ -594,11 +692,12 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "dynamic_appIcon_enabled": "false",
         "browser_center_editing_text_field_allowed": true,
         // Revives
-        "revive_hela": "1 million or 1 Xanax",
-        "revive_midnight": "1 million or 1 Xanax",
-        "revive_nuke": "1 million or 1 Xanax",
-        "revive_uhc": "1 million or 1 Xanax",
-        "revive_wtf": "1 million or 1 Xanax",
+        "revive_wolverines": "1 million or 1 Xanax",
+        "revive_hela": "1.8 million or 2 Xanax",
+        "revive_midnight": "1.8 million or 2 Xanax",
+        "revive_nuke": "1.8 million or 2 Xanax",
+        "revive_uhc": "1.8 million or 2 Xanax",
+        "revive_wtf": "1.8 million or 2 Xanax",
         // Torn API
         "apiV2LegacyRequests": "",
         // PDA Update Details
@@ -659,6 +758,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           remoteConfig.getBool("browser_center_editing_text_field_allowed");
 
       // Revives
+      _settingsProvider.reviveWolverinesPrice = remoteConfig.getString("revive_wolverines");
       _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
       _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
       _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
@@ -2352,6 +2452,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  // ## Firebase Auth Restoration Process ##
+  // - Post-import case: Create new anonymous user if needed after local backup import
+  // - Immediate check: Try to get current Firebase user (fastest path)
+  // - App update re-init: For updates, try Firebase.initializeApp again to fix initialization issues
+  // - Start retries UI
+  // - Retries: 4 attempts with exponential increase (2s, 4s, 8s, 16s) + Firebase re-init + auth state refresh
+  // - Final attempt: Listen to authStateChanges for remaining 30s timeout period
+  // - Show timeout UI
   Future<void> _initializeAndHandleFirebaseAuth() async {
     if (Platform.isWindows || _drawerUserChecked) {
       return;
@@ -2361,37 +2469,69 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // (so be leave this as a reminder)
     if (!UserHelper.isApiKeyValid) return;
 
+    // Add extra delay for app updates to ensure Firebase is fully initialized
+    if (appHasBeenUpdated) {
+      await Future.delayed(const Duration(seconds: 1));
+    }
+
     // Case 1: Post-import user creation
     if (justImportedFromLocalBackup) {
       if (FirebaseAuth.instance.currentUser == null) {
         log(
-          "Drawer: Post-import check. Firebase user is null, proceeding with new anonymous sign-in.",
-          name: "Drawer AUTH",
+          "🔒 Drawer: Post-import check. Firebase user is null, proceeding with new anonymous sign-in.",
+          name: "AUTH CHECKS",
         );
 
         try {
-          final User newAnonUser = await (firebaseAuth.signInAnon());
-          _userUID = newAnonUser.uid;
-          FirestoreHelper().setUID(_userUID);
-          await _updateFirebaseDetails();
+          final User? newAnonUser = await (firebaseAuth.signInAnon(
+            isAppUpdate: appHasBeenUpdated,
+            maxRetries: appHasBeenUpdated ? 5 : 3,
+          ));
 
-          // This dialog can be shown here with no postframe callback as it is inside
-          // of the Preferences Completer, so the main FutureBuilder hasn't loaded
-          await showDialog(
-            useRootNavigator: false,
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => const PrefsLocalAfterImportDialog(),
-          );
+          if (newAnonUser != null) {
+            _userUID = newAnonUser.uid;
+            FirestoreHelper().setUID(_userUID);
+            await _updateFirebaseDetails();
 
-          log(
-            "Drawer: Firebase user created successfully after local import. UID: ${newAnonUser.uid}",
-            name: "Drawer AUTH",
-          );
+            // This dialog can be shown here with no postframe callback as it is inside
+            // of the Preferences Completer, so the main FutureBuilder hasn't loaded
+            await showDialog(
+              useRootNavigator: false,
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => const PrefsLocalAfterImportDialog(),
+            );
+
+            log(
+              "🔒 Drawer: Firebase user created successfully after local import. UID: ${newAnonUser.uid}",
+              name: "AUTH CHECKS",
+            );
+          } else {
+            log(
+              "🔒 Drawer: CRITICAL - signInAnon returned null after local backup import.",
+              name: "AUTH CHECKS",
+            );
+
+            await FirebaseCrashlytics.instance.recordError(
+              Exception('Auth Restoration: signInAnon returned null after import'),
+              StackTrace.current,
+              reason: 'Auth Restoration: Post-import sign-in returned null',
+            );
+
+            BotToast.showText(
+              clickClose: true,
+              text: "A critical error occurred while creating your profile after the import.\n\n"
+                  "Please check your internet connection, restart the app, and reload your API key in Settings.",
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.red,
+              duration: const Duration(seconds: 10),
+              contentPadding: const EdgeInsets.all(10),
+            );
+          }
         } catch (e, s) {
           log(
-            "Drawer: CRITICAL - Failed to sign-in anonymously after local backup import. Error: $e",
-            name: "Drawer AUTH",
+            "🔒 Drawer: CRITICAL - Failed to sign-in anonymously after local backup import. Error: $e",
+            name: "AUTH CHECKS",
           );
 
           await FirebaseCrashlytics.instance.recordError(e, s, reason: 'Auth Restoration: Post-import sign-in failed');
@@ -2407,8 +2547,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         }
       } else {
         log(
-          "Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
-          name: "Drawer AUTH",
+          "🔒 Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
+          name: "AUTH CHECKS",
         );
         _userUID = FirebaseAuth.instance.currentUser!.uid;
         FirestoreHelper().setUID(_userUID);
@@ -2423,8 +2563,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     if (user != null) {
       log(
-        "Drawer: Session restored immediately. UID: ${user.uid}",
-        name: "Drawer AUTH",
+        "🔒 Drawer: Session restored immediately. UID: ${user.uid}",
+        name: "AUTH CHECKS",
       );
 
       // Analytics: Auth success immediately
@@ -2435,6 +2575,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           'time_ms': 0,
           'success': 'true',
           'platform': Platform.isIOS ? 'iOS' : 'Android',
+          'app_updated': appHasBeenUpdated.toString(),
         },
       );
 
@@ -2444,49 +2585,129 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       return;
     }
 
-    log(
-      "Drawer: No user found on first attempt. Waiting 2 seconds before second attempt...",
-      name: "Drawer AUTH",
-    );
-
-    // Second attempt after 2 seconds
-    await Future.delayed(const Duration(seconds: 2));
-    user = FirebaseAuth.instance.currentUser;
-
-    if (user != null) {
+    // For app updates, try Firebase.initializeApp again to ensure proper initialization
+    if (appHasBeenUpdated) {
       log(
-        "Drawer: Session restored on second attempt. UID: ${user.uid}",
-        name: "Drawer AUTH",
+        "🔒 Drawer: App updated and no immediate user found, re-initializing Firebase...",
+        name: "AUTH CHECKS",
       );
+      try {
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+        user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          log(
+            "🔒 Drawer: Session restored after Firebase re-initialization. UID: ${user.uid}",
+            name: "AUTH CHECKS",
+          );
 
-      // Analytics: Auth success after 2 seconds
-      FirebaseAnalytics.instance.logEvent(
-        name: 'auth_restoration_success',
-        parameters: {
-          'method': 'second_attempt',
-          'time_ms': 2000,
-          'success': 'true',
-          'platform': Platform.isIOS ? 'iOS' : 'Android',
-        },
-      );
+          FirebaseAnalytics.instance.logEvent(
+            name: 'auth_restoration_success',
+            parameters: {
+              'method': 'firebase_reinit',
+              'time_ms': 0,
+              'success': 'true',
+              'platform': Platform.isIOS ? 'iOS' : 'Android',
+              'app_updated': 'true',
+            },
+          );
 
-      _userUID = user.uid;
-      FirestoreHelper().setUID(_userUID);
-      _drawerUserChecked = true;
-      return;
+          _userUID = user.uid;
+          FirestoreHelper().setUID(_userUID);
+          _drawerUserChecked = true;
+          return;
+        }
+      } catch (e) {
+        log(
+          "🔒 Drawer: Firebase re-initialization failed: $e",
+          name: "AUTH CHECKS",
+        );
+        // Continue with normal flow
+      }
     }
 
     log(
-      "Drawer: No user found after second attempt. Listening to authStateChanges...",
-      name: "Drawer AUTH",
+      "🔒 Drawer: No user found on first attempt. Trying enhanced retry with exponential backoff...",
+      name: "AUTH CHECKS",
     );
 
-    // Activate authentication error UI and start the 60-second process
     if (mounted) {
       setState(() {
         _hasAuthenticationError = true;
       });
     }
+
+    // Retry with exponential increase for Firebase Auth
+    const int maxRetries = 4;
+    final retryStopwatch = Stopwatch()..start();
+
+    for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      final delaySeconds = math.pow(2, attempt).toInt();
+
+      log(
+        "🔒 Drawer: Retry attempt $attempt/$maxRetries after ${delaySeconds}s delay (app_updated: $appHasBeenUpdated)",
+        name: "AUTH CHECKS",
+      );
+
+      await Future.delayed(Duration(seconds: delaySeconds));
+
+      // Try Firebase.initializeApp on each retry attempt
+      try {
+        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+      } catch (e) {
+        log("🔒 Drawer: Firebase re-initialization failed on retry attempt $attempt: $e", name: "AUTH CHECKS");
+      }
+
+      // Force refresh auth state
+      try {
+        await FirebaseAuth.instance.authStateChanges().first.timeout(
+              const Duration(seconds: 5),
+              onTimeout: () => null,
+            );
+      } catch (e) {
+        log("🔒 Drawer: Auth state refresh failed on attempt $attempt: $e", name: "AUTH CHECKS");
+      }
+
+      user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        final elapsedMs = retryStopwatch.elapsedMilliseconds;
+        log(
+          "🔒 Drawer: Session restored after ${elapsedMs}ms on attempt $attempt. UID: ${user.uid}",
+          name: "AUTH CHECKS",
+        );
+
+        FirebaseAnalytics.instance.logEvent(
+          name: 'auth_restoration_success',
+          parameters: {
+            'method': 'retry_exponential_backoff',
+            'time_ms': elapsedMs,
+            'attempt': attempt,
+            'success': 'true',
+            'platform': Platform.isIOS ? 'iOS' : 'Android',
+            'app_updated': appHasBeenUpdated.toString(),
+          },
+        );
+
+        _userUID = user.uid;
+        FirestoreHelper().setUID(_userUID);
+        _drawerUserChecked = true;
+        retryStopwatch.stop();
+
+        // Reset authentication error UI on success durante retry
+        if (mounted) {
+          setState(() {
+            _hasAuthenticationError = false;
+          });
+        }
+
+        return;
+      }
+    }
+
+    log(
+      "🔒 Drawer: No user found after enhanced retry. Continuing with authStateChanges for remaining time...",
+      name: "AUTH CHECKS",
+    );
 
     final stopwatch = Stopwatch()..start();
 
@@ -2494,11 +2715,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       user = await FirebaseAuth.instance
           .authStateChanges()
           .firstWhere((user) => user != null)
-          .timeout(const Duration(seconds: 60));
+          .timeout(const Duration(seconds: 30));
 
       log(
-        "Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
-        name: "Drawer AUTH",
+        "🔒 Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
+        name: "AUTH CHECKS",
       );
 
       // Analytics: Auth success via slow path with timing
@@ -2509,6 +2730,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           'time_ms': stopwatch.elapsedMilliseconds,
           'success': 'true',
           'platform': Platform.isIOS ? 'iOS' : 'Android',
+          'app_updated': appHasBeenUpdated.toString(),
         },
       );
 
@@ -2531,8 +2753,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     } on TimeoutException {
       log(
-        "Drawer: Timeout reached after 60 seconds. Firebase session not restored. Informing user.",
-        name: "Drawer AUTH",
+        "🔒 Drawer: Timeout reached after 60 seconds total (30s retry + 30s authStateChanges). Firebase session not restored. Informing user.",
+        name: "AUTH CHECKS",
       );
 
       // Analytics: Auth timeout failure
@@ -2540,15 +2762,16 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         name: 'auth_restoration_failure',
         parameters: {
           'method': 'timeout',
-          'time_ms': 60000,
+          'time_ms': 60000, // Total time (30s retry + 30s authStateChanges)
           'success': 'false',
-          'reason': 'timeout_60s',
+          'reason': 'timeout_60s_total',
           'platform': Platform.isIOS ? 'iOS' : 'Android',
+          'app_updated': appHasBeenUpdated.toString(),
         },
       );
 
       await FirebaseCrashlytics.instance.recordError(
-        Exception('Auth Restoration: Timeout after 60 seconds'),
+        Exception('Auth Restoration: Timeout after 60 seconds total (30s retry + 30s authStateChanges)'),
         StackTrace.current,
         reason: 'Auth Restoration: Timeout',
         information: ['API: ${UserHelper.apiKey}'],
@@ -2564,8 +2787,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     } catch (e, s) {
       log(
-        "Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
-        name: "Drawer AUTH",
+        "🔒 Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
+        name: "AUTH CHECKS",
       );
 
       await FirebaseCrashlytics.instance.recordError(
@@ -2724,6 +2947,80 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  Future<void> _showBackupReminderIfNeeded() async {
+    try {
+      // Do not show if app has just been updated to avoid losing prefs
+      if (appHasBeenUpdated) return;
+
+      // Only proceed if valid API key and feature enabled
+      if (!UserHelper.isApiKeyValid) return;
+
+      final bool reminderEnabled = await Prefs().getAutoBackupReminderEnabled();
+      if (!reminderEnabled) return;
+
+      final int currentTime = DateTime.now().millisecondsSinceEpoch;
+      final int lastReminderShown = await Prefs().getAutoBackupLastReminderShown();
+      final int lastBackupCreated = await Prefs().getAutoBackupLastLocalCreated();
+      final int appUseSeconds = await Prefs().getStatsCumulatedAppUseSeconds();
+
+      // Get backup reminder intervals (constants)
+      const int reminderInterval = 90 * 24 * 60 * 60; // 90 days
+      const int newUserThreshold = 7 * 24 * 60 * 60; // 7 days
+
+      // For new users: show reminder after threshold (7 days of app use)
+      if (lastBackupCreated == 0 && lastReminderShown == 0) {
+        if (appUseSeconds >= newUserThreshold) {
+          log('Backup reminder: Showing for new user after ${appUseSeconds}s of app use');
+          await _showBackupReminderDialog(0);
+          return;
+        }
+      }
+
+      // For existing users: check if it's been long enough since last reminder/backup
+      final int timeSinceLastBackup = currentTime - lastBackupCreated;
+
+      // Use the more recent timestamp (either reminder shown or backup created)
+      final int mostRecentTimestamp = math.max(lastReminderShown, lastBackupCreated);
+      final int timeSinceMostRecent = currentTime - mostRecentTimestamp;
+
+      // Convert to seconds for comparison
+      final int secondsSinceMostRecent = (timeSinceMostRecent / 1000).floor();
+
+      if (secondsSinceMostRecent >= reminderInterval) {
+        // Calculate days since last backup for display
+        final int daysSinceBackup = lastBackupCreated > 0 ? (timeSinceLastBackup / (1000 * 60 * 60 * 24)).floor() : 0;
+
+        await _showBackupReminderDialog(daysSinceBackup);
+      }
+    } catch (e) {
+      log("Error checking backup reminder: $e");
+    }
+  }
+
+  Future<void> _showBackupReminderDialog(int daysSinceLastBackup) async {
+    if (!mounted) return;
+
+    try {
+      final result = await showDialog<bool>(
+        useRootNavigator: false,
+        context: context,
+        barrierDismissible: true,
+        builder: (context) {
+          return BackupReminderDialog(
+            daysSinceLastBackup: daysSinceLastBackup,
+          );
+        },
+      );
+
+      // If result is null (user dismissed), treat as "Not now"
+      if (result == null) {
+        await Prefs().setAutoBackupLastReminderShown(DateTime.now().millisecondsSinceEpoch);
+      }
+    } catch (e) {
+      log("Error showing backup reminder dialog: $e");
+    }
+  }
+
   Future _showPdaUpdateDialog() async {
     final pdaUpdateDetailsString = _settingsProvider.pdaUpdateDetailsRC;
     if (pdaUpdateDetailsString.isEmpty) return;
@@ -2753,7 +3050,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       DialogQueue.enqueue(
         dialogFunction: () async {
           try {
-            final shouldUpdate = await showDialog<bool>(
+            final result = await showDialog<Map<String, dynamic>>(
               useRootNavigator: false,
               context: context,
               barrierDismissible: false,
@@ -2770,8 +3067,27 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               await Prefs().setPdaUpdateDialogVersion(updateDetails.latestVersionCode);
             }
 
-            if (shouldUpdate == true) {
-              // Open store
+            if (result != null && result['shouldUpdate'] == true) {
+              // If user wants to create backup, show backup dialog first
+              if (result['createBackup'] == true) {
+                final backupResult = await showDialog<bool>(
+                  useRootNavigator: false,
+                  context: context,
+                  barrierDismissible: true,
+                  builder: (context) {
+                    return const BackupReminderDialog(
+                      daysSinceLastBackup: 0, // Use 0 for pre-update backup
+                    );
+                  },
+                );
+
+                // If backup was cancelled, don't proceed with update
+                if (backupResult != true) {
+                  return false;
+                }
+              }
+
+              // Proceed with opening store
               final storeUrl = Platform.isIOS
                   ? 'https://apps.apple.com/app/torn-pda/id1510138514'
                   : 'https://play.google.com/store/apps/details?id=com.manuito.tornpda';
@@ -3049,16 +3365,5 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void changeUID(String uid) {
     _userUID = uid;
-  }
-
-  void _showDataRecoveryToast() {
-    BotToast.showText(
-      text: "⚠️"
-          "\n\nIt took longer than usual to retrieve settings from backup."
-          "\n\nConsider restarting the app to ensure that no data is lost!",
-      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-      contentColor: Colors.orange.shade800,
-      duration: const Duration(seconds: 8),
-    );
   }
 }

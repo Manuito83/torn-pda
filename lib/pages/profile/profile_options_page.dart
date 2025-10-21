@@ -18,24 +18,6 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class ProfileOptionsReturn {
-  bool? warnAboutChainsEnabled;
-  bool? warnAboutExcessEnergyEnabled;
-  bool? shortcutsEnabled;
-  bool? showHeaderWallet;
-  bool? showHeaderIcons;
-  bool? dedicatedTravelCard;
-  bool? disableTravelSection;
-  bool? expandEvents;
-  int? eventsShowNumber;
-  bool? expandMessages;
-  int? messagesShowNumber;
-  bool? expandBasicInfo;
-  bool? expandNetworth;
-  List<String>? sectionSort;
-  late bool oCrimesReactivated;
-}
-
 class ProfileOptionsPage extends StatefulWidget {
   const ProfileOptionsPage({required this.apiValid, required this.user, required this.callBackTimings});
 
@@ -210,7 +192,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -243,7 +225,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                               });
                                             },
                                             activeTrackColor: Colors.lightGreenAccent,
-                                            activeColor: Colors.green,
+                                            activeThumbColor: Colors.green,
                                           ),
                                         ],
                                       ),
@@ -313,7 +295,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -362,7 +344,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           }
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -399,7 +381,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 });
                                               },
                                               activeTrackColor: Colors.lightGreenAccent,
-                                              activeColor: Colors.green,
+                                              activeThumbColor: Colors.green,
                                             ),
                                           ],
                                         ),
@@ -444,7 +426,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -479,7 +461,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 });
                                               },
                                               activeTrackColor: Colors.lightGreenAccent,
-                                              activeColor: Colors.green,
+                                              activeThumbColor: Colors.green,
                                             ),
                                           ],
                                         ),
@@ -569,7 +551,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -580,6 +562,52 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     'Shown in the miscellaneous card and in status when the time approaches. '
                                     'NOTE: if you have faction API access permission, the OC calculation will be exact and include '
                                     "the participants' status. Otherwise, it will be calculated based on received events",
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 15),
+                                const Divider(),
+                                const SizedBox(height: 5),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'PROPERTIES RENTAL',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      const Flexible(
+                                        child: Text("Show also rented out properties"),
+                                      ),
+                                      Switch(
+                                        value: _settingsProvider.showAllRentedOutProperties,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.showAllRentedOutProperties = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeThumbColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    'If active, you will see all the properties you rent out to other players in the '
+                                    'Rented Properties section in the Miscellaneous card. If inactive, you will only '
+                                    'see the properties you rent (the ones you pay rent for)',
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -616,7 +644,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -669,7 +697,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                                 });
                                               },
                                               activeTrackColor: Colors.lightGreenAccent,
-                                              activeColor: Colors.green,
+                                              activeThumbColor: Colors.green,
                                             ),
                                           ],
                                         ),
@@ -729,7 +757,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -766,7 +794,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -803,7 +831,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -823,7 +851,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),

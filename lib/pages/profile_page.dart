@@ -73,6 +73,7 @@ import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
+import 'package:torn_pda/widgets/revive/wolverines_revive_button.dart';
 import 'package:torn_pda/widgets/revive/wtf_revive_button.dart';
 import 'package:torn_pda/widgets/tct_clock.dart';
 import 'package:torn_pda/widgets/travel/travel_return_widget.dart';
@@ -241,6 +242,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
   DateTime? _rentedPropertiesLastChecked;
+  bool? _previousShowAllRentedOutProperties;
 
   // ######## //
   /// OC V2 ///
@@ -878,8 +880,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final expandBasicInfo = await Prefs().getExpandBasicInfo();
             final expandNetworth = await Prefs().getExpandNetworth();
             final sectionList = await Prefs().getProfileSectionOrder();
+            final showAllProperties = _settingsProvider!.showAllRentedOutProperties;
 
             widget.disableTravelSection(disableTravel);
+
+            // Check if showAllRentedOutProperties changed and update properties if needed
+            if (_previousShowAllRentedOutProperties != null &&
+                _previousShowAllRentedOutProperties != showAllProperties &&
+                _miscModel != null) {
+              await _fetchAndUpdateProperties(_miscModel!);
+            }
+            _previousShowAllRentedOutProperties = showAllProperties;
+
             setState(() {
               _warnAboutChains = warnChains;
               _showHeaderWallet = headerWallet;
@@ -1489,6 +1501,16 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               settingsProvider: _settingsProvider,
                             ),
                           ),
+                        if (_user!.status!.state == 'Hospital' && _w.wolverinesReviveActive)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 13, top: 10),
+                            child: WolverinesReviveButton(
+                              themeProvider: _themeProvider,
+                              user: _user,
+                              webViewProvider: _webViewProvider,
+                              settingsProvider: _settingsProvider,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -2022,7 +2044,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       Row(
                         children: <Widget>[
                           const SizedBox(
-                            width: 50,
+                            width: 60,
                             child: Text('Energy'),
                           ),
                           const SizedBox(width: 10),
@@ -2102,7 +2124,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       Row(
                         children: <Widget>[
                           const SizedBox(
-                            width: 50,
+                            width: 60,
                             child: Text('Nerve'),
                           ),
                           const SizedBox(width: 10),
@@ -2149,7 +2171,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   Row(
                     children: <Widget>[
                       const SizedBox(
-                        width: 50,
+                        width: 60,
                         child: Text('Happy'),
                       ),
                       const SizedBox(width: 10),
@@ -2197,7 +2219,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
                           const SizedBox(
-                            width: 50,
+                            width: 60,
                             child: Text('Life'),
                           ),
                           const SizedBox(width: 10),
@@ -3645,158 +3667,74 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final decimalFormat = NumberFormat("#,##0", "en_US");
 
     // Strength modifiers
-    bool strengthModified = false;
-    Color strengthColor = Colors.white;
-    int strengthModifier = 0;
-    double strengthModifiedTotal = 0;
+    final strengthModifiedTotal = _miscModel!.effectiveStrength;
+    final strengthModifier = _miscModel!.strengthModifierPercent;
+    final strengthModified = strengthModifier != 0;
     String strengthString = '';
-    if (_miscModel!.strengthInfo != null && _miscModel!.battleStats?.strength?.value != null) {
-      strengthModifiedTotal = _miscModel!.battleStats?.strength?.value.toDouble() ?? 0.0;
-      for (final strengthMod in _miscModel!.strengthInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(strengthMod);
-        if (matches.isNotEmpty) {
-          strengthModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              strengthModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              strengthModifier += int.parse(change!);
-            }
-          }
-        }
+    Color strengthColor = Colors.white;
+
+    if (strengthModified) {
+      if (strengthModifier < 0) {
+        strengthString = "($strengthModifier%)";
+        strengthColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        strengthString = "(+$strengthModifier%)";
+        strengthColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (strengthModified) {
-        strengthModifiedTotal += strengthModifiedTotal * strengthModifier / 100;
-        if (strengthModifier < 0) {
-          strengthString = "($strengthModifier%)";
-          strengthColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          strengthString = "(+$strengthModifier%)";
-          strengthColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      strengthString = '(error)';
-      strengthColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Defense modifiers
-    bool defenseModified = false;
-    Color defenseColor = Colors.white;
-    int defenseModifier = 0;
-    double defenseModifiedTotal = 0;
+    final defenseModifiedTotal = _miscModel!.effectiveDefense;
+    final defenseModifier = _miscModel!.defenseModifierPercent;
+    final defenseModified = defenseModifier != 0;
     String defenseString = '';
-    if (_miscModel!.defenseInfo != null && _miscModel!.battleStats?.defense?.value != null) {
-      defenseModifiedTotal = _miscModel!.battleStats?.defense?.value.toDouble() ?? 0.0;
-      for (final defenseMod in _miscModel!.defenseInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(defenseMod);
-        if (matches.isNotEmpty) {
-          defenseModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              defenseModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              defenseModifier += int.parse(change!);
-            }
-          }
-        }
+    Color defenseColor = Colors.white;
+
+    if (defenseModified) {
+      if (defenseModifier < 0) {
+        defenseString = "($defenseModifier%)";
+        defenseColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        defenseString = "(+$defenseModifier%)";
+        defenseColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (defenseModified) {
-        defenseModifiedTotal += defenseModifiedTotal * defenseModifier / 100;
-        if (defenseModifier < 0) {
-          defenseString = "($defenseModifier%)";
-          defenseColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          defenseString = "(+$defenseModifier%)";
-          defenseColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      defenseString = '(error)';
-      defenseColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Speed modifiers
-    bool speedModified = false;
-    Color speedColor = Colors.white;
-    int speedModifier = 0;
-    double speedModifiedTotal = 0;
+    final speedModifiedTotal = _miscModel!.effectiveSpeed;
+    final speedModifier = _miscModel!.speedModifierPercent;
+    final speedModified = speedModifier != 0;
     String speedString = '';
-    if (_miscModel!.speedInfo != null && _miscModel!.battleStats?.speed != null) {
-      speedModifiedTotal = _miscModel!.battleStats?.speed?.value.toDouble() ?? 0.0;
-      for (final speedMod in _miscModel!.speedInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(speedMod);
-        if (matches.isNotEmpty) {
-          speedModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              speedModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              speedModifier += int.parse(change!);
-            }
-          }
-        }
+    Color speedColor = Colors.white;
+
+    if (speedModified) {
+      if (speedModifier < 0) {
+        speedString = "($speedModifier%)";
+        speedColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        speedString = "(+$speedModifier%)";
+        speedColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (speedModified) {
-        speedModifiedTotal += speedModifiedTotal * speedModifier / 100;
-        if (speedModifier < 0) {
-          speedString = "($speedModifier%)";
-          speedColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          speedString = "(+$speedModifier%)";
-          speedColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      speedString = '(error)';
-      speedColor = _themeProvider!.getTextColor(Colors.red);
     }
 
     // Dex modifiers
-    bool dexModified = false;
-    Color dexColor = Colors.white;
-    int dexModifier = 0;
-    double dexModifiedTotal = 0;
+    final dexModifiedTotal = _miscModel!.effectiveDexterity;
+    final dexModifier = _miscModel!.dexterityModifierPercent;
+    final dexModified = dexModifier != 0;
     String dexString = '';
-    if (_miscModel!.dexterityInfo != null && _miscModel!.battleStats?.dexterity?.value != null) {
-      dexModifiedTotal = _miscModel!.battleStats?.dexterity?.value.toDouble() ?? 0.0;
-      for (final dexMod in _miscModel!.dexterityInfo!) {
-        final RegExp strRaw = RegExp(r"(\+|\-)([0-9]+)(%)");
-        final matches = strRaw.allMatches(dexMod);
-        if (matches.isNotEmpty) {
-          dexModified = true;
-          for (final match in matches) {
-            final change = match.group(2);
-            if (match.group(1) == '-') {
-              dexModifier -= int.parse(change!);
-            } else if (match.group(1) == '+') {
-              dexModifier += int.parse(change!);
-            }
-          }
-        }
+    Color dexColor = Colors.white;
+
+    if (dexModified) {
+      if (dexModifier < 0) {
+        dexString = "($dexModifier%)";
+        dexColor = _themeProvider!.getTextColor(Colors.red);
+      } else {
+        dexString = "(+$dexModifier%)";
+        dexColor = _themeProvider!.getTextColor(Colors.green);
       }
-      if (dexModified) {
-        dexModifiedTotal += dexModifiedTotal * dexModifier / 100;
-        if (dexModifier < 0) {
-          dexString = "($dexModifier%)";
-          dexColor = _themeProvider!.getTextColor(Colors.red);
-        } else {
-          dexString = "(+$dexModifier%)";
-          dexColor = _themeProvider!.getTextColor(Colors.green);
-        }
-      }
-    } else {
-      dexString = '(error)';
-      dexColor = _themeProvider!.getTextColor(Colors.red);
     }
 
-    final double totalEffective = strengthModifiedTotal + speedModifiedTotal + defenseModifiedTotal + dexModifiedTotal;
+    final double totalEffective = _miscModel!.effectiveTotal;
 
     int? totalEffectiveModifier;
     if (_miscModel!.battleStats?.total != null) {
@@ -4982,7 +4920,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         showMisc = true;
         bankActive = true;
         final moneyFormat = NumberFormat("#,##0", "en_US");
-        final timeExpiry = DateTime.now().add(Duration(seconds: bankUntil));
+        final timeExpiry = DateTime.fromMillisecondsSinceEpoch(bankUntil * 1000);
         final timeDifference = timeExpiry.difference(DateTime.now());
         Color? expiryColor = _themeProvider?.getTextColor(Colors.orange[800]);
         String expiryString;
@@ -4993,46 +4931,49 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         } else if (timeDifference.inHours > 1 && timeDifference.inDays < 1) {
           expiryString = '${timeDifference.inHours} hours';
         } else if (timeDifference.inDays == 1) {
-          expiryString = '1 day and ${(bankUntil / 60 / 60 % 24).floor()} hours';
+          expiryString = '1 day and ${timeDifference.inHours % 24} hours';
           expiryColor = _themeProvider?.mainText;
         } else {
-          expiryString = '${timeDifference.inDays} days and ${(bankUntil / 60 / 60 % 24).floor()} hours';
+          expiryString = '${timeDifference.inDays} days and ${timeDifference.inHours % 24} hours';
           expiryColor = _themeProvider?.mainText;
         }
 
-        final bankAmount = _miscModel?.money?.cityBank?.amount;
-        bankWidget = Semantics(
-          explicitChildNodes: true,
-          child: Row(
-            children: <Widget>[
-              const Icon(MdiIcons.bankOutline),
-              const SizedBox(width: 10),
-              Flexible(
-                child: RichText(
-                  text: TextSpan(
-                    text: "Your bank investment of ",
-                    style: DefaultTextStyle.of(context).style,
-                    children: <TextSpan>[
-                      TextSpan(
-                        text: bankAmount != null ? "\$${moneyFormat.format(bankAmount)}" : "(error)",
-                        style: TextStyle(
-                          color: bankAmount != null
-                              ? _themeProvider?.getTextColor(Colors.green)
-                              : _themeProvider?.getTextColor(Colors.red),
+        // Ensure time difference is positive
+        if (!timeDifference.isNegative) {
+          final bankAmount = _miscModel?.money?.cityBank?.amount;
+          bankWidget = Semantics(
+            explicitChildNodes: true,
+            child: Row(
+              children: <Widget>[
+                const Icon(MdiIcons.bankOutline),
+                const SizedBox(width: 10),
+                Flexible(
+                  child: RichText(
+                    text: TextSpan(
+                      text: "Your bank investment of ",
+                      style: DefaultTextStyle.of(context).style,
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: bankAmount != null ? "\$${moneyFormat.format(bankAmount)}" : "(error)",
+                          style: TextStyle(
+                            color: bankAmount != null
+                                ? _themeProvider?.getTextColor(Colors.green)
+                                : _themeProvider?.getTextColor(Colors.red),
+                          ),
                         ),
-                      ),
-                      const TextSpan(text: " will expire in "),
-                      TextSpan(
-                        text: expiryString,
-                        style: TextStyle(color: expiryColor),
-                      ),
-                    ],
+                        const TextSpan(text: " will expire in "),
+                        TextSpan(
+                          text: expiryString,
+                          style: TextStyle(color: expiryColor),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              )
-            ],
-          ),
-        );
+                )
+              ],
+            ),
+          );
+        }
       }
     }
 
@@ -8053,12 +7994,30 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final thisRented = <String, Map<String, String>>{};
     final propertyModel = miscApiResponse.properties;
 
-    final List<PropertyV2> rentedProperties = propertyModel.where((p) {
-      if (p.status != null && p.status!.contains("rented") && p.rentedBy != null && p.rentedBy!.id == _user!.playerId) {
-        return true;
-      }
-      return false;
-    }).toList();
+    List<PropertyV2> rentedProperties = [];
+
+    if (!_settingsProvider!.showAllRentedOutProperties) {
+      // This shows only the properties rented by the user
+      // (the user is the one renting, not the owner)
+      rentedProperties = propertyModel.where((p) {
+        if (p.status != null &&
+            p.status!.contains("rented") &&
+            p.rentedBy != null &&
+            p.rentedBy!.id == _user!.playerId) {
+          return true;
+        }
+        return false;
+      }).toList();
+    } else {
+      // This shows all properties rented by the user
+      // (the user is the one renting AND also if he is the owner)
+      rentedProperties = propertyModel.where((p) {
+        if (p.status != null && p.status!.contains("rented") && p.rentedBy != null) {
+          return true;
+        }
+        return false;
+      }).toList();
+    }
 
     if (rentedProperties.isEmpty) {
       if (mounted) {
@@ -8078,11 +8037,21 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final timeLeft = property.rentalPeriodRemaining!;
             final daysString = timeLeft > 1 ? "$timeLeft days" : "less than a day";
             if (timeLeft > 0) {
-              thisRented[property.id.toString()] = {
-                "time": timeLeft.toString(),
-                "text": "Your ${property.property!.name!.toLowerCase()}'s "
-                    "rent will end in $daysString!",
-              };
+              if (property.rentedBy!.id == _user!.playerId) {
+                thisRented[property.id.toString()] = {
+                  "time": timeLeft.toString(),
+                  "text": "Your ${property.property!.name!.toLowerCase()}'s "
+                      "rent will end in $daysString!",
+                  'rentedOut': 'false',
+                };
+              } else {
+                thisRented[property.id.toString()] = {
+                  "time": timeLeft.toString(),
+                  "text": "Your ${property.property!.name!.toLowerCase()}'s "
+                      "rental agreement with ${property.rentedBy!.name!.toLowerCase()} will end in $daysString!",
+                  'rentedOut': 'true',
+                };
+              }
             }
           }
         } catch (e) {
@@ -8099,13 +8068,18 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final int? numberDays = int.tryParse(value["time"]!);
       if (numberDays == null) return; // Skip if can't parse days
 
+      Icon houseIcon = const Icon(Icons.house_outlined);
+      if (value["rentedOut"] == "true") {
+        houseIcon = const Icon(Icons.house, color: Colors.blueGrey);
+      }
+
       final Widget prop = Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
             child: Row(
               children: [
-                const Icon(Icons.house_outlined),
+                houseIcon,
                 const SizedBox(width: 10),
                 Flexible(
                   child: Consumer<ThemeProvider>(

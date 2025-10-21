@@ -13,6 +13,7 @@ import 'package:torn_pda/models/chaining/chain_panic_target_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/widgets/chaining/target_card.dart';
 
@@ -60,7 +61,7 @@ class TargetsListState extends State<TargetsList> {
   Widget slidableCard(int index, BuildContext context) {
     final playerNotesController = Get.find<PlayerNotesController>();
     final playerNote = playerNotesController.getNoteForPlayer(widget.targets[index].playerId.toString());
-    final noteColor = playerNote?.color ?? 'z';
+    final noteColor = playerNote?.color ?? PlayerNoteColor.none;
 
     if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
         _targetsProvider.currentColorFilterOut.contains(noteColor)) {

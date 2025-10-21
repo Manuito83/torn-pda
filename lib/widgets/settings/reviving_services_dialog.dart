@@ -47,7 +47,7 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -73,7 +73,7 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -99,7 +99,7 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -125,7 +125,7 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -151,7 +151,33 @@ class RevivingServicesDialogState extends State<RevivingServicesDialog> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  const Flexible(
+                    child: Text(
+                      "The Wolverines Reviving Services",
+                      style: TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                  Switch(
+                    value: _w.wolverinesReviveActive,
+                    onChanged: (value) {
+                      setState(() {
+                        _w.wolverinesReviveActive = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),

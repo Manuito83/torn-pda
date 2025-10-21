@@ -463,7 +463,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -607,7 +607,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -668,7 +668,7 @@ class SettingsPageState extends State<SettingsPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -695,7 +695,7 @@ class SettingsPageState extends State<SettingsPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -749,7 +749,7 @@ class SettingsPageState extends State<SettingsPage> {
                     Prefs().setManualAlarmSound(value);
                   },
                   activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),
@@ -776,7 +776,7 @@ class SettingsPageState extends State<SettingsPage> {
                         Prefs().setManualAlarmVibration(value);
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -833,7 +833,7 @@ class SettingsPageState extends State<SettingsPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -859,7 +859,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -892,7 +892,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -924,7 +924,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1077,7 +1077,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1193,7 +1193,7 @@ class SettingsPageState extends State<SettingsPage> {
                         }
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -1259,7 +1259,7 @@ class SettingsPageState extends State<SettingsPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -1400,7 +1400,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1495,7 +1495,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1625,7 +1625,7 @@ class SettingsPageState extends State<SettingsPage> {
                             _updateRefreshRateAfterChange();
                           },
                           activeTrackColor: Colors.lightGreenAccent,
-                          activeColor: Colors.green,
+                          activeThumbColor: Colors.green,
                         ),
                 ],
               ),
@@ -1685,7 +1685,7 @@ class SettingsPageState extends State<SettingsPage> {
                   _themeProvider.useMaterial3 = enabled;
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -1716,7 +1716,7 @@ class SettingsPageState extends State<SettingsPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -1739,7 +1739,7 @@ class SettingsPageState extends State<SettingsPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -1791,7 +1791,7 @@ class SettingsPageState extends State<SettingsPage> {
                       _themeProvider.accesibilityNoTextColors = enabled;
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1848,7 +1848,8 @@ class SettingsPageState extends State<SettingsPage> {
                     activeTrackColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig
                         ? Colors.lightGreenAccent
                         : Colors.grey[700],
-                    activeColor: _settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.green : Colors.grey[700],
+                    activeThumbColor:
+                        _settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.green : Colors.grey[700],
                     inactiveThumbColor: !_settingsProvider.dynamicAppIconEnabledRemoteConfig ? Colors.grey[800] : null,
                   ),
                 ],
@@ -1941,7 +1942,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2030,7 +2031,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2118,7 +2119,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2154,7 +2155,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2190,7 +2191,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2461,7 +2462,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2504,7 +2505,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2646,7 +2647,7 @@ class SettingsPageState extends State<SettingsPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -3639,7 +3640,12 @@ class SettingsPageState extends State<SettingsPage> {
             final firebaseUser = firebaseErrorUser = await firebaseAuth.getUID();
             // Only sign in if there is currently no user registered (to avoid duplicates)
             if (firebaseUser == null || (firebaseUser is User && firebaseUser.uid.isEmpty)) {
-              final User newFirebaseUser = await (firebaseAuth.signInAnon());
+              final User? newFirebaseUser = await (firebaseAuth.signInAnon());
+
+              if (newFirebaseUser == null) {
+                throw Exception("Firebase anonymous sign-in failed");
+              }
+
               await FirestoreHelper().setUID(newFirebaseUser.uid);
               // Returns UID to Drawer so that it can be passed to settings
               widget.changeUID(newFirebaseUser.uid);

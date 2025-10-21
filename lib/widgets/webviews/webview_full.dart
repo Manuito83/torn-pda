@@ -34,6 +34,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/bounties/bounties_model.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 // Project imports:
 import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
@@ -169,7 +170,8 @@ class WebViewFull extends StatefulWidget {
   WebViewFullState createState() => WebViewFullState();
 }
 
-class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, AutomaticKeepAliveClientMixin {
+class WebViewFullState extends State<WebViewFull>
+    with WidgetsBindingObserver, AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   // DEBUG SCRIPT INJECTION (logs)
   final bool _debugScriptsInjection = false;
 
@@ -261,6 +263,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   BountiesModel? _bountiesModel;
 
   DateTime? _urlTriggerTime;
+  DateTime? _lastReportTabLoadUrlTime; // Track when reportTabLoadUrl was last called
 
   DateTime? _foreignStocksSentTime;
 
@@ -306,6 +309,11 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   int _disposedScrollY = 0;
 
   double _progress = 0;
+
+  // Animation variables for smooth progress bar
+  late AnimationController _progressController;
+  late Animation<double> _progressAnimation;
+  double _animatedProgress = 0;
 
   late SettingsProvider _settingsProvider;
   late UserScriptsProvider _userScriptsProvider;
@@ -506,6 +514,24 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               await _reload();
             },
           );
+
+    // Initialize progress animation controller
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+
+    _progressAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeInOut),
+    );
+
+    _progressAnimation.addListener(() {
+      if (mounted) {
+        setState(() {
+          _animatedProgress = _progressAnimation.value;
+        });
+      }
+    });
   }
 
   @override
@@ -554,6 +580,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
       _ocNnbController.dispose();
 
       _scrollControllerBugsReport.dispose();
+
+      // Dispose progress animation controller
+      _progressController.dispose();
 
       webViewController?.dispose();
 
@@ -1016,9 +1045,9 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         if (_settingsProvider.loadBarBrowser)
           SizedBox(
             height: 2,
-            child: _progress < 1.0
+            child: _animatedProgress < 1.0
                 ? LinearProgressIndicator(
-                    value: _progress,
+                    value: _animatedProgress,
                     backgroundColor: Colors.black,
                     valueColor: AlwaysStoppedAnimation<Color?>(Colors.deepOrange[300]),
                   )
@@ -1479,13 +1508,32 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             _webViewProvider.removeTab(calledFromTab: true);
           },
           onLoadStart: (c, uri) async {
-            log("Start URL: $uri");
+            log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
+
+            // FALLBACK: Always try to force update if reportTabLoadUrl wasn't called recently
+            if (uri != null) {
+              final now = DateTime.now();
+              final lastCallAgo =
+                  _lastReportTabLoadUrlTime != null ? now.difference(_lastReportTabLoadUrlTime!).inSeconds : 999;
+
+              if (lastCallAgo > 0.5) {
+                // If reportTabLoadUrl wasn't called in the last 0.5 seconds
+                _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+                _lastReportTabLoadUrlTime = now;
+              }
+            }
+
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
             _webViewProvider.updateLastTabUse();
 
             _webViewProvider.verticalMenuClose();
             if (!mounted) return;
+
+            // Reset animated progress for new page load
+            setState(() {
+              _animatedProgress = 0;
+            });
 
             if (Platform.isAndroid) {
               _revertTransparentBackground();
@@ -1498,14 +1546,6 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
 
               final html = await webViewController!.getHtml();
               final document = parse(html);
-
-              // Checks URL for [_assessGeneral]
-              logToUser(
-                "URL on Load Start: $_currentUrl",
-                backgroundcolor: Colors.blue,
-                borderColor: Colors.white,
-                duration: 8,
-              );
 
               _assessGeneral(document);
 
@@ -1524,15 +1564,28 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
           onProgressChanged: (c, progress) async {
             if (!mounted) return;
 
+            // Check for URL changes during progress
+            if (progress > 10) {
+              // Wait for some progress to avoid initial load noise
+              final currentUri = await c.getUrl();
+              if (currentUri != null && _currentUrl != currentUri.toString()) {
+                log(
+                  "🔄 onProgressChanged URL change detected: $_currentUrl -> ${currentUri.toString()}",
+                  name: "WEBVIEW FULL",
+                );
+                _currentUrl = currentUri.toString();
+                _reportUrlVisit(currentUri);
+              }
+            }
+
             try {
               _removeTravelAirplaneIfEnabled(c);
 
               hideChatOnLoad();
 
               if (mounted) {
-                setState(() {
-                  _progress = progress / 100;
-                });
+                _progress = progress / 100;
+                _animateProgressTo(_progress);
               }
 
               if (progress > 75) {
@@ -1551,6 +1604,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
             }
           },
           onLoadStop: (c, uri) async {
+            log("🏁 onLoadStop: $uri", name: 'WEBVIEW FULL');
             if (!mounted) return;
 
             if (_settingsProvider.browserCenterEditingTextField &&
@@ -2083,6 +2137,15 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
               ),
               autoCloseDuration: const Duration(seconds: 3),
               animationDuration: const Duration(milliseconds: 0),
+              backgroundColor: _themeProvider.canvas,
+              closeButton: ToastCloseButton(
+                buttonBuilder: (context, onClose) {
+                  return Icon(
+                    Icons.close,
+                    color: _themeProvider.mainText,
+                  );
+                },
+              ),
               showProgressBar: false,
               style: ToastificationStyle.simple,
               borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
@@ -2342,6 +2405,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     if (!_omitTabHistory) {
       // Note: cannot be used in OnLoadStart because it won't trigger for certain pages (e.g. forums)
       _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
+      _lastReportTabLoadUrlTime = DateTime.now();
     } else {
       _omitTabHistory = false;
     }
@@ -3369,8 +3433,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   Widget _crimesMenuIcon() {
     if (_crimesActive) {
       return OpenContainer(
-        transitionDuration: const Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
           return CrimesOptions();
         },
@@ -3652,8 +3716,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
         descTextStyle: const TextStyle(fontSize: 13),
         tooltipPadding: const EdgeInsets.all(20),
         child: OpenContainer(
-          transitionDuration: const Duration(milliseconds: 500),
-          transitionType: ContainerTransitionType.fadeThrough,
+          transitionDuration: const Duration(milliseconds: 300),
+          transitionType: ContainerTransitionType.fade,
           openBuilder: (BuildContext context, VoidCallback _) {
             return TradesOptions(
               playerId: UserHelper.playerId,
@@ -3789,8 +3853,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   Widget _vaultOptionsIcon() {
     if (_vaultIconActive) {
       return OpenContainer(
-        transitionDuration: const Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
           return VaultOptionsPage(
             vaultDetected: _vaultDetected,
@@ -3950,8 +4014,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   Widget _cityMenuIcon() {
     if (_cityIconActive) {
       return OpenContainer(
-        transitionDuration: const Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
           return CityOptions(
             callback: _cityPreferencesLoad,
@@ -4113,8 +4177,8 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   Widget _quickItemsMenuIcon() {
     if (_quickItemsActive || _quickItemsFactionActive) {
       return OpenContainer(
-        transitionDuration: const Duration(milliseconds: 500),
-        transitionType: ContainerTransitionType.fadeThrough,
+        transitionDuration: const Duration(milliseconds: 300),
+        transitionType: ContainerTransitionType.fade,
         openBuilder: (BuildContext context, VoidCallback _) {
           return QuickItemsOptions(
             isFaction: _quickItemsFactionActive,
@@ -5314,6 +5378,14 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
     }
 
     final uri = WebUri(inputUrl);
+
+    // On Android, certain short cuts will revert to the main section (e.g. market search)
+    // If we want to load the same URL again, we need to reload instead of loadUrl
+    if (inputUrl == _currentUrl) {
+      webViewController!.reload();
+      return;
+    }
+
     webViewController!.loadUrl(urlRequest: URLRequest(url: uri));
   }
 
@@ -6095,7 +6167,7 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   void _showNoteToast() {
     Color? cardColor;
     switch (_chainingPayload!.attackNotesColorList[_attackNumber]) {
-      case 'z':
+      case PlayerNoteColor.none:
         cardColor = Colors.grey[700];
       case 'green':
         cardColor = Colors.green[900];
@@ -6288,6 +6360,36 @@ class WebViewFullState extends State<WebViewFull> with WidgetsBindingObserver, A
   Future<void> _assessNotificationPermissions() async {
     if (Platform.isAndroid) {
       await assessExactAlarmsPermissionsAndroid(context, _settingsProvider);
+    }
+  }
+
+  void _animateProgressTo(double newProgress) {
+    if (!mounted) return;
+
+    final currentProgress = _animatedProgress;
+    final targetProgress = newProgress;
+
+    if (targetProgress < currentProgress && currentProgress > 0.1) return;
+
+    _progressAnimation = Tween<double>(
+      begin: currentProgress,
+      end: targetProgress,
+    ).animate(CurvedAnimation(
+      parent: _progressController,
+      curve: Curves.easeOut,
+    ));
+
+    _progressController.reset();
+    _progressController.forward();
+
+    if (targetProgress >= 1.0) {
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (mounted && _progress >= 1.0) {
+          setState(() {
+            _animatedProgress = 1.0;
+          });
+        }
+      });
     }
   }
 }

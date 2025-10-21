@@ -1,13 +1,10 @@
 // Dart imports:
-
-// Flutter imports:
 import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // ignore: depend_on_referenced_packages
@@ -60,6 +57,9 @@ class RotatedDisposedTabDetails {
 }
 
 class TabDetails {
+  // Unique identifier
+  final String id = DateTime.now().millisecondsSinceEpoch.toString() + (DateTime.now().microsecond % 1000).toString();
+
   bool sleepTab = false;
   bool initialised = false;
   Widget? webView;
@@ -228,34 +228,15 @@ class WebViewProvider extends ChangeNotifier {
 
     final SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
     if (settings.fullScreenIncludesPDAButtonTap) {
-      if (shortTap) {
-        if (currentUiMode == UiMode.window) {
-          if (settings.fullScreenByShortTap) {
-            setCurrentUiMode(UiMode.fullScreen, context);
-            if (currentUiMode == UiMode.fullScreen &&
-                Provider.of<SettingsProvider>(context, listen: false).fullScreenRemovesChat) {
-              removeAllChatsFullScreen();
-            }
-          }
-        } else if (currentUiMode == UiMode.fullScreen) {
-          if (!settings.fullScreenByShortTap) {
-            setCurrentUiMode(UiMode.window, context);
-          }
+      final bool prefersFullScreen = shortTap ? settings.fullScreenByShortTap : settings.fullScreenByLongTap;
+
+      if (currentUiMode == UiMode.window && prefersFullScreen) {
+        setCurrentUiMode(UiMode.fullScreen, context);
+        if (settings.fullScreenRemovesChat) {
+          removeAllChatsFullScreen();
         }
-      } else {
-        if (currentUiMode == UiMode.window) {
-          if (settings.fullScreenByLongTap) {
-            setCurrentUiMode(UiMode.fullScreen, context);
-            if (currentUiMode == UiMode.fullScreen &&
-                Provider.of<SettingsProvider>(context, listen: false).fullScreenRemovesChat) {
-              removeAllChatsFullScreen();
-            }
-          }
-        } else if (currentUiMode == UiMode.fullScreen) {
-          if (!settings.fullScreenByLongTap) {
-            setCurrentUiMode(UiMode.window, context);
-          }
-        }
+      } else if (currentUiMode == UiMode.fullScreen && !prefersFullScreen) {
+        setCurrentUiMode(UiMode.window, context);
       }
     }
 
@@ -687,7 +668,7 @@ class WebViewProvider extends ChangeNotifier {
   }
 
   // TODO: old references to [windowId] can theoretically be removed since we are no longer using the windowId to open new tabs
-  //       (as we now use the [_openNewTabFromWindowRequest] method in WebViewFull and avoid creating new windows)
+  // (as we now use the [_openNewTabFromWindowRequest] method in WebViewFull and avoid creating new windows)
   Future addTab({
     GlobalKey? tabKey,
     int? windowId,
@@ -859,11 +840,6 @@ class WebViewProvider extends ChangeNotifier {
 
         if (!includeLockedTabs && tab.isLocked) {
           return false;
-        }
-
-        // DEBUG
-        if (kDebugMode) {
-          _debugLogTabWipeDetails(now, tab, thresholdDuration);
         }
 
         if (tab.lastUsedTimeDT!.isBefore(thresholdTime)) {
@@ -1086,6 +1062,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void reportTabLoadUrl(Key? reporterKey, String newUrl) {
     final tab = getTabFromKey(reporterKey)!;
+
     // Tab initialised prevents the first URL (generic to Torn) to be inserted in the history and also forward history
     // from getting removed (first thing the webView does is to visit the generic URL)
     if (tab.initialised) {
@@ -1613,24 +1590,31 @@ class WebViewProvider extends ChangeNotifier {
 
   UiMode _decideBrowserScreenMode({required BrowserTapType tapType, required BuildContext context}) {
     final SettingsProvider settings = Provider.of<SettingsProvider>(context, listen: false);
-
-    if (tapType == BrowserTapType.chainShort && settings.fullScreenByShortChainingTap) {
-      return UiMode.fullScreen;
-    } else if (tapType == BrowserTapType.chainLong && settings.fullScreenByLongChainingTap) {
-      return UiMode.fullScreen;
-    } else if (tapType == BrowserTapType.short && settings.fullScreenByShortTap) {
-      return UiMode.fullScreen;
-    } else if (tapType == BrowserTapType.long && settings.fullScreenByLongTap) {
-      return UiMode.fullScreen;
-    } else if (tapType == BrowserTapType.notification && settings.fullScreenByNotificationTap) {
-      return UiMode.fullScreen;
-    } else if (tapType == BrowserTapType.deeplink && settings.fullScreenByDeepLinkTap) {
-      return UiMode.fullScreen;
-    } else if (tapType == BrowserTapType.quickItem && settings.fullScreenByQuickItemTap) {
-      return UiMode.fullScreen;
+    bool wantsFullScreen;
+    switch (tapType) {
+      case BrowserTapType.chainShort:
+        wantsFullScreen = settings.fullScreenByShortChainingTap;
+        break;
+      case BrowserTapType.chainLong:
+        wantsFullScreen = settings.fullScreenByLongChainingTap;
+        break;
+      case BrowserTapType.short:
+        wantsFullScreen = settings.fullScreenByShortTap;
+        break;
+      case BrowserTapType.long:
+        wantsFullScreen = settings.fullScreenByLongTap;
+        break;
+      case BrowserTapType.notification:
+        wantsFullScreen = settings.fullScreenByNotificationTap;
+        break;
+      case BrowserTapType.deeplink:
+        wantsFullScreen = settings.fullScreenByDeepLinkTap;
+        break;
+      case BrowserTapType.quickItem:
+        wantsFullScreen = settings.fullScreenByQuickItemTap;
+        break;
     }
-
-    return UiMode.window;
+    return wantsFullScreen ? UiMode.fullScreen : UiMode.window;
   }
 
   void changeTornTheme({required bool dark}) {
@@ -1759,84 +1743,304 @@ class WebViewProvider extends ChangeNotifier {
     }
   }
 
-  /// Uses the already generated shortcuts list
-  Widget getIcon(int i, BuildContext context) {
-    final url = tabList[i].currentUrl!;
-
+  /// Gets the appropriate icon color based on the current theme
+  Color _getIconColor(BuildContext context) {
     final themeProvider = context.read<ThemeProvider>();
-    Color iconColor = themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white;
+    return themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white;
+  }
 
-    Widget boxWidget = ImageIcon(const AssetImage('images/icons/pda_icon.png'), color: iconColor);
+  // Special users configuration - can be made configurable via settings in the future
+  static const Map<String, Color> _specialUsers = {
+    "2225097": Colors.pink, // Manuito
+    "2190604": Colors.pink, // Kwack
+  };
 
-    // Find some icons manually first, as they might trigger errors with shortcuts
-    if (tabList[i].isChainingBrowser) {
-      return const Icon(MdiIcons.linkVariant, color: Colors.red);
-    } else if (url.contains("sid=attack&user2ID=2225097") || url.contains("sid=getInAttack&user2ID=2225097")) {
-      return const Icon(MdiIcons.pistol, color: Colors.pink);
-    } else if (url.contains("sid=attack&user2ID=") || url.contains("sid=getInAttack&user2ID=")) {
-      return Icon(MdiIcons.pistol, color: iconColor);
-    } else if (url.contains("sid=attackLog&ID=")) {
-      return Icon(MdiIcons.notebookOutline, color: iconColor);
-    } else if (url.contains("profiles.php?XID=2225097")) {
-      return const Icon(Icons.person, color: Colors.pink);
-    } else if (url.contains("profiles.php")) {
-      return Icon(Icons.person, color: iconColor);
-    } else if (url.contains("companies.php") || url.contains("joblist.php")) {
-      return ImageIcon(const AssetImage('images/icons/home/job.png'), color: iconColor);
-    } else if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
+  /// Returns icons for special users
+  Widget? _getSpecialUserIcon(String url, Color defaultIconColor) {
+    // Check for attack pages with special users
+    for (final entry in _specialUsers.entries) {
+      final userId = entry.key;
+      final color = entry.value;
+
+      if (url.contains("sid=attack&user2ID=$userId") || url.contains("sid=getInAttack&user2ID=$userId")) {
+        return Icon(MdiIcons.pistol, color: color);
+      }
+    }
+
+    // Check for profile pages with special users
+    for (final entry in _specialUsers.entries) {
+      final userId = entry.key;
+      final color = entry.value;
+
+      if (url.contains("profiles.php?XID=$userId")) {
+        return Icon(Icons.person, color: color);
+      }
+    }
+
+    // Check for specific forum threads
+    if (url.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
       return const ImageIcon(AssetImage('images/icons/home/forums.png'), color: Colors.pink);
-    } else if (url.contains("https://www.torn.com/forums.php")) {
-      return ImageIcon(const AssetImage('images/icons/home/forums.png'), color: iconColor);
-    } else if (url.contains("yata.yt")) {
-      return Image.asset('images/icons/yata_logo.png');
-    } else if (url.contains("jailview.php")) {
-      return Image.asset('images/icons/map/jail.png', color: iconColor);
-    } else if (url.contains("hospitalview.php")) {
-      return Image.asset('images/icons/map/hospital.png', color: iconColor);
-    } else if (url.contains("events.php") || url.contains("page.php?sid=events")) {
-      return Image.asset('images/icons/home/events.png', color: iconColor);
-    } else if (url.contains("properties.php")) {
-      return Image.asset('images/icons/map/property.png', color: iconColor);
-    } else if (url.contains("tornstats.com/")) {
-      return Image.asset('images/icons/tornstats_logo.png');
-    } else if (url.contains("tornexchange.com/")) {
-      return Image.asset('images/icons/tornexchange_logo.png');
-    } else if (url.contains("arsonwarehouse.com/")) {
-      return Image.asset('images/icons/awh_logo2.png');
-    } else if (url.contains("index.php?page=hunting")) {
-      return Icon(MdiIcons.target, size: 20, color: iconColor);
-    } else if (url.contains("bazaar.php")) {
-      return Image.asset('images/icons/inventory/bazaar.png', color: iconColor);
-    } else if (url.contains("sid=ItemMarket")) {
-      return Image.asset('images/icons/map/item_market.png', color: iconColor);
-    } else if (url.contains("torn.com/loader.php?sid=crimes#")) {
-      return Image.asset('images/icons/home/crimes.png', color: iconColor);
-    } else if (url.contains("index.php")) {
-      return ImageIcon(const AssetImage('images/icons/home/home.png'), color: iconColor);
-    } else if (url.contains("sid=travel")) {
-      return Image.asset('images/icons/map/travel_agency.png', color: iconColor);
-    } else if (!url.contains("torn.com")) {
+    }
+
+    return null;
+  }
+
+  /// Check if a user is special or get all special user IDs
+  /// If [userId] is provided, returns true/false if the user is special
+  /// If [userId] is null, returns the list of all special user IDs
+  dynamic getSpecialUserInfo([String? userId]) {
+    if (userId != null) {
+      return _specialUsers.containsKey(userId);
+    }
+    return _specialUsers.keys.toList();
+  }
+
+  /// Helper method to get special user color (for external use)
+  Color? getSpecialUserColor(String userId) {
+    return _specialUsers[userId];
+  }
+
+  /// Get icon for specific tab index - automatically updates when theme changes
+  Widget getTabIcon(int index, BuildContext context) {
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        if (index < 0 || index >= _tabList.length) {
+          return Icon(Icons.error, color: _getIconColor(context));
+        }
+
+        return _generateIcon(index, context);
+      },
+    );
+  }
+
+  /// Generate icon for a specific tab (internal method)
+  Widget _generateIcon(int index, BuildContext context) {
+    if (index >= _tabList.length) {
+      return Icon(Icons.error, color: _getIconColor(context));
+    }
+
+    final tab = _tabList[index];
+    final url = tab.currentUrl!;
+    final iconColor = _getIconColor(context);
+
+    // Check special cases first (chaining browser)
+    if (tab.isChainingBrowser) {
+      return const Icon(MdiIcons.linkVariant, color: Colors.red);
+    }
+
+    // Check for specific user icons (special colored)
+    final specialUserIcon = _getSpecialUserIcon(url, iconColor);
+    if (specialUserIcon != null) {
+      return specialUserIcon;
+    }
+
+    // Check standard URL patterns
+    final standardIcon = _getStandardIcon(url, iconColor);
+    if (standardIcon != null) {
+      return standardIcon;
+    }
+
+    // Check external sites
+    final externalIcon = _getExternalSiteIcon(url);
+    if (externalIcon != null) {
+      return externalIcon;
+    }
+
+    // Check non-Torn sites
+    if (!url.contains("torn.com")) {
       return Icon(Icons.public, size: 22, color: iconColor);
     }
 
-    // Try to find by using shortcuts list
-    // Note: some are not found because the value that comes from OnLoadStop in the WebView differs from
-    // the standard URL in shortcuts. That's why there are some more in the list above.
-    final shortProvider = context.read<ShortcutsProvider>();
-    for (final short in shortProvider.allShortcuts) {
-      if (url.contains(short.url!)) {
-        boxWidget = ImageIcon(
-          AssetImage(short.iconUrl!),
-          color: themeProvider.currentTheme == AppTheme.light ? Colors.black : Colors.white,
-        );
-        // Return if the coincidence is not with the default shortcut
-        if (short.name != "Home") {
-          return boxWidget;
+    // Try shortcuts provider as fallback
+    return _getShortcutIcon(url, context, iconColor);
+  }
+
+  /// Returns icons for standard Torn pages
+  Widget? _getStandardIcon(String url, Color iconColor) {
+    final Map<String, dynamic> iconMappings = {
+      // Attack pages
+      "sid=attack&user2ID=": {'type': 'icon', 'icon': MdiIcons.pistol},
+      "sid=getInAttack&user2ID=": {'type': 'icon', 'icon': MdiIcons.pistol},
+      "sid=attackLog&ID=": {'type': 'icon', 'icon': MdiIcons.notebookOutline},
+
+      "index.php?page=hunting": {'type': 'icon', 'icon': MdiIcons.target, 'size': 20.0},
+
+      "messages.php": {'type': 'asset', 'path': 'images/icons/home/messages.png'},
+      "sid=messages": {'type': 'asset', 'path': 'images/icons/home/messages.png'},
+
+      "events.php": {'type': 'asset', 'path': 'images/icons/home/events.png'},
+      "sid=events": {'type': 'asset', 'path': 'images/icons/home/events.png'},
+
+      "awards.php": {'type': 'asset', 'path': 'images/icons/home/awards.png'},
+      "sid=awards": {'type': 'asset', 'path': 'images/icons/home/awards.png'},
+      "calendar.php": {'type': 'icon', 'icon': MdiIcons.calendar, 'size': 20.0},
+
+      "profiles.php": {'type': 'icon', 'icon': Icons.person},
+
+      "laptop.php": {'type': 'asset', 'path': 'images/icons/home/laptop.png'},
+      "sid=laptop": {'type': 'asset', 'path': 'images/icons/home/laptop.png'},
+
+      "personalstats.php": {'type': 'asset', 'path': 'images/icons/home/stats.png'},
+      "sid=personalstats": {'type': 'asset', 'path': 'images/icons/home/stats.png'},
+
+      "halloffame.php": {'type': 'asset', 'path': 'images/icons/home/hall_fame.png'},
+      "sid=halloffame": {'type': 'asset', 'path': 'images/icons/home/hall_fame.png'},
+
+      "friendlist.php": {'type': 'asset', 'path': 'images/icons/home/friends.png'},
+      "sid=friends": {'type': 'asset', 'path': 'images/icons/home/friends.png'},
+
+      "blacklist.php": {'type': 'asset', 'path': 'images/icons/home/enemies.png'},
+      "sid=enemies": {'type': 'asset', 'path': 'images/icons/home/enemies.png'},
+
+      "city.php": {'type': 'asset', 'path': 'images/icons/home/city.png'},
+      "sid=city": {'type': 'asset', 'path': 'images/icons/home/city.png'},
+
+      "companies.php": {'type': 'asset', 'path': 'images/icons/home/job.png'},
+      "joblist.php": {'type': 'asset', 'path': 'images/icons/home/job.png'},
+      "jobs.php": {'type': 'asset', 'path': 'images/icons/home/job.png'},
+      "sid=jobs": {'type': 'asset', 'path': 'images/icons/home/job.png'},
+
+      "gym.php": {'type': 'asset', 'path': 'images/icons/map/gym.png'},
+      "sid=gym": {'type': 'asset', 'path': 'images/icons/map/gym.png'},
+
+      "properties.php": {'type': 'asset', 'path': 'images/icons/map/property.png'},
+      "sid=properties": {'type': 'asset', 'path': 'images/icons/map/property.png'},
+
+      "education.php": {'type': 'asset', 'path': 'images/icons/map/education.png'},
+      "sid=education": {'type': 'asset', 'path': 'images/icons/map/education.png'},
+
+      "crimes.php": {'type': 'asset', 'path': 'images/icons/home/crimes.png'},
+      "sid=crimes": {'type': 'asset', 'path': 'images/icons/home/crimes.png'},
+
+      "loader.php?sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
+      "sid=missions": {'type': 'asset', 'path': 'images/icons/home/missions.png'},
+
+      "bounties.php": {'type': 'asset', 'path': 'images/icons/home/bounty.png'},
+      "sid=bounties": {'type': 'asset', 'path': 'images/icons/home/bounty.png'},
+
+      "newspaper.php": {'type': 'asset', 'path': 'images/icons/home/newspaper.png'},
+      "sid=newspaper": {'type': 'asset', 'path': 'images/icons/home/newspaper.png'},
+
+      "jailview.php": {'type': 'asset', 'path': 'images/icons/map/jail.png'},
+      "sid=jail": {'type': 'asset', 'path': 'images/icons/map/jail.png'},
+
+      "hospitalview.php": {'type': 'asset', 'path': 'images/icons/map/hospital.png'},
+      "sid=hospital": {'type': 'asset', 'path': 'images/icons/map/hospital.png'},
+
+      "forums.php": {'type': 'asset', 'path': 'images/icons/home/forums.png'},
+      "sid=forums": {'type': 'asset', 'path': 'images/icons/home/forums.png'},
+
+      "factions.php": {'type': 'asset', 'path': 'images/icons/home/faction.png'},
+      "sid=factions": {'type': 'asset', 'path': 'images/icons/home/faction.png'},
+
+      "trade.php": {'type': 'asset', 'path': 'images/icons/inventory/trades.png'},
+      "sid=trade": {'type': 'asset', 'path': 'images/icons/inventory/trades.png'},
+
+      "bazaar.php": {'type': 'asset', 'path': 'images/icons/inventory/bazaar.png'},
+      "sid=bazaar": {'type': 'asset', 'path': 'images/icons/inventory/bazaar.png'},
+
+      "item.php": {'type': 'asset', 'path': 'images/icons/home/items.png'},
+      "sid=items": {'type': 'asset', 'path': 'images/icons/home/items.png'},
+
+      "imarket.php": {'type': 'asset', 'path': 'images/icons/map/item_market.png'},
+      "sid=imarket": {'type': 'asset', 'path': 'images/icons/map/item_market.png'},
+      "sid=ItemMarket": {'type': 'asset', 'path': 'images/icons/map/item_market.png'},
+
+      "amarket.php": {'type': 'asset', 'path': 'images/icons/map/auction_house.png'},
+      "sid=amarket": {'type': 'asset', 'path': 'images/icons/map/auction_house.png'},
+
+      "pmarket.php": {'type': 'asset', 'path': 'images/icons/map/points_market.png'},
+      "sid=pmarket": {'type': 'asset', 'path': 'images/icons/map/points_market.png'},
+
+      "casino.php": {'type': 'asset', 'path': 'images/icons/map/casino.png'},
+      "sid=casino": {'type': 'asset', 'path': 'images/icons/map/casino.png'},
+
+      "points.php": {'type': 'asset', 'path': 'images/icons/map/points_building.png'},
+      "sid=points": {'type': 'asset', 'path': 'images/icons/map/points_building.png'},
+
+      "dump.php": {'type': 'asset', 'path': 'images/icons/map/dump.png'},
+      "sid=dump": {'type': 'asset', 'path': 'images/icons/map/dump.png'},
+
+      "bank.php": {'type': 'asset', 'path': 'images/icons/map/bank.png'},
+      "sid=bank": {'type': 'asset', 'path': 'images/icons/map/bank.png'},
+
+      "page.php?sid=stocks": {'type': 'asset', 'path': 'images/icons/map/stock_exchange.png'},
+      "sid=stocks": {'type': 'asset', 'path': 'images/icons/map/stock_exchange.png'},
+
+      "travelagency.php": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
+      "sid=travel": {'type': 'asset', 'path': 'images/icons/map/travel_agency.png'},
+
+      "loader.php?sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
+      "sid=racing": {'type': 'asset', 'path': 'images/icons/map/race_track.png'},
+    };
+
+    // Check each URL pattern
+    for (final entry in iconMappings.entries) {
+      if (url.contains(entry.key)) {
+        final iconData = entry.value;
+
+        switch (iconData['type']) {
+          case 'icon':
+            return Icon(
+              iconData['icon'],
+              color: iconColor,
+              size: iconData['size'],
+            );
+          case 'asset':
+            return Image.asset(iconData['path'], color: iconColor);
+          case 'imageicon':
+            return ImageIcon(AssetImage(iconData['path']), color: iconColor);
         }
       }
     }
 
-    return boxWidget;
+    // Special case for home page URLs that were not caught by a more specific rule
+    if (url == "https://www.torn.com" || url == "https://www.torn.com/" || url == "https://www.torn.com/index.php") {
+      return ImageIcon(const AssetImage('images/icons/home/home.png'), color: iconColor);
+    }
+
+    return null;
+  }
+
+  /// Returns icons for external sites
+  Widget? _getExternalSiteIcon(String url) {
+    final externalSites = {
+      "yata.yt": 'images/icons/yata_logo.png',
+      "tornstats.com/": 'images/icons/tornstats_logo.png',
+      "tornexchange.com/": 'images/icons/tornexchange_logo.png',
+      "arsonwarehouse.com/": 'images/icons/awh_logo2.png',
+    };
+
+    for (final entry in externalSites.entries) {
+      if (url.contains(entry.key)) {
+        return Image.asset(entry.value);
+      }
+    }
+
+    return null;
+  }
+
+  /// Returns icon from shortcuts provider or default icon
+  Widget _getShortcutIcon(String url, BuildContext context, Color iconColor) {
+    // Note: some URLs are not found in shortcuts because the value from OnLoadStop in the WebView
+    // differs from the standard URL in shortcuts. That's why some are handled manually above.
+    final shortProvider = context.read<ShortcutsProvider>();
+
+    for (final short in shortProvider.allShortcuts) {
+      if (url.contains(short.url!)) {
+        final shortcutIcon = ImageIcon(
+          AssetImage(short.iconUrl!),
+          color: iconColor,
+        );
+        // Return if the coincidence is not with the default shortcut
+        if (short.name != "Home") {
+          return shortcutIcon;
+        }
+      }
+    }
+
+    // Default fallback icon
+    return ImageIcon(const AssetImage('images/icons/pda_icon.png'), color: iconColor);
   }
 
   Future restorePreferences() async {
@@ -1892,30 +2096,6 @@ class WebViewProvider extends ChangeNotifier {
 
   bool splitScreenAndBrowserLeft() {
     return webViewSplitActive && splitScreenPosition == WebViewSplitPosition.left;
-  }
-
-  void _debugLogTabWipeDetails(DateTime now, TabDetails tab, Duration thresholdDuration) {
-    if (tab.lastUsedTimeDT == null) return;
-
-    Duration elapsedTime = now.difference(tab.lastUsedTimeDT!);
-    Duration requiredDuration = thresholdDuration;
-    Duration remainingTime = requiredDuration - elapsedTime;
-
-    String formatDuration(Duration duration) {
-      String twoDigits(int n) => n.toString().padLeft(2, '0');
-      String twoDigitHours = twoDigits(duration.inHours.remainder(24));
-      String twoDigitMinutes = twoDigits(duration.inMinutes.remainder(60));
-      String twoDigitSeconds = twoDigits(duration.inSeconds.remainder(60));
-      return '${duration.inDays}d ${twoDigitHours}h ${twoDigitMinutes}m ${twoDigitSeconds}s';
-    }
-
-    log(
-      'Tab: ${tab.pageTitle}, '
-      'Elapsed: ${formatDuration(elapsedTime)}, '
-      'Required duration: ${formatDuration(requiredDuration)}, '
-      'Time to wipe remaining: ${formatDuration(remainingTime)}',
-      name: 'wipeTabs',
-    );
   }
 
   void togglePeriodicUnusedTabsRemovalRequest({required bool enable}) {

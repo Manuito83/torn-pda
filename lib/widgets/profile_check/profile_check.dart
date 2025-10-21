@@ -13,7 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 // Project imports:
-import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 import 'package:torn_pda/models/profile/own_stats_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
@@ -219,7 +219,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         if (friend.playerId == widget.profileId) _isFriend = true;
       }
 
-      if (otherProfile is OtherProfileModel) {
+      if (otherProfile is OtherProfilePDA) {
         logToUser(
           "Profile Check API received for: ${otherProfile.name}",
           backgroundcolor: Colors.blue,
@@ -228,8 +228,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         );
 
         _playerName = otherProfile.name;
-        _factionName = otherProfile.faction!.factionName;
-        _factionId = otherProfile.faction!.factionId;
+        _factionName = otherProfile.factionName;
+        _factionId = otherProfile.factionId;
 
         // Estimated stats is not awaited, since it can take a few seconds
         // to contact YATA / TS and decide what we show
@@ -237,31 +237,31 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           setState(() {});
         });
 
-        if (otherProfile.playerId == 2225097) {
+        if (otherProfile.id == 2225097 || otherProfile.id == 2190604) {
           _isTornPda = true;
         }
 
-        if (otherProfile.married!.spouseId == UserHelper.playerId) {
+        if (otherProfile.isMySpouse(UserHelper.playerId)) {
           _isPartner = true;
         }
 
-        if (otherProfile.playerId == UserHelper.playerId) {
+        if (otherProfile.id == UserHelper.playerId) {
           _isOwnPlayer = true;
         }
 
-        if (UserHelper.factionId != 0 && otherProfile.faction!.factionId == UserHelper.factionId) {
+        if (otherProfile.isInMyFaction(UserHelper.factionId)) {
           _isOwnFaction = true;
         }
 
         final settingsProvider = context.read<SettingsProvider>();
         for (final fact in settingsProvider.friendlyFactions) {
-          if (otherProfile.faction!.factionId == fact.id) {
+          if (otherProfile.factionId == fact.id) {
             _isFriendlyFaction = true;
             break;
           }
         }
 
-        if (!_isOwnPlayer && otherProfile.job!.companyId != 0 && otherProfile.job!.companyId == UserHelper.companyId) {
+        if (!_isOwnPlayer && otherProfile.hasJob && otherProfile.jobId == UserHelper.companyId) {
           _isWorkColleague = true;
         }
 
@@ -348,7 +348,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         } else if (_isOwnFaction) {
           String factionText = "This is a fellow faction member "
-              "(${otherProfile.faction!.position})!";
+              "(${otherProfile.factionPosition})!";
           Color factionColor = Colors.green;
           if (widget.profileCheckType == ProfileCheckType.attack) {
             factionColor = Colors.black;
@@ -378,7 +378,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
           );
         } else if (_isFriendlyFaction) {
           String factionText = "This is an allied faction member "
-              "(${otherProfile.faction!.factionName})!";
+              "(${otherProfile.factionName})!";
           Color factionColor = Colors.green;
           if (widget.profileCheckType == ProfileCheckType.attack) {
             factionColor = Colors.black;
@@ -476,10 +476,9 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
         if (_networthWidgetEnabled) {
           int bazaar = 0;
-          if (otherProfile.bazaar!.isNotEmpty) {
-            for (final b in otherProfile.bazaar!) {
-              var itemCost = b.marketPrice! * b.quantity!;
-              bazaar += itemCost;
+          if (otherProfile.bazaar != null && otherProfile.bazaar!.isNotEmpty) {
+            for (final item in otherProfile.bazaar!) {
+              bazaar += item.totalValue;
             }
           }
 
@@ -497,7 +496,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   const SizedBox(width: 10),
                   Flexible(
                     child: Text(
-                      formatBigNumbers(otherProfile.personalstats!.networth!.total!),
+                      formatBigNumbers(otherProfile.personalstats?.networth ?? 0),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -572,20 +571,20 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     }
   }
 
-  Future estimatedStatsCalculator(OtherProfileModel otherProfile) async {
+  Future estimatedStatsCalculator(OtherProfilePDA otherProfile) async {
     // Even if we have no spy, we want to show estimated stats
     final npcs = [4, 10, 15, 17, 19, 20];
     String estimatedStats = "";
     bool npc = false;
-    if (npcs.contains(otherProfile.playerId)) {
+    if (npcs.contains(otherProfile.id)) {
       estimatedStats = "NPC!";
       npc = true;
     } else {
       try {
         estimatedStats = StatsCalculator.calculateStats(
-          criminalRecordTotal: otherProfile.personalstats?.crimes?.offenses?.total,
+          criminalRecordTotal: otherProfile.personalstats?.criminalRecordTotal,
           level: otherProfile.level,
-          networth: otherProfile.personalstats!.networth!.total,
+          networth: otherProfile.personalstats?.networth,
           rank: otherProfile.rank,
         );
       } catch (e) {
@@ -604,14 +603,14 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     Color cansColor = Colors.orange;
     Color sslColor = Colors.green;
     bool sslProb = true;
-    int? ecstasy = 0;
-    int? lsd = 0;
+    int ecstasy = 0;
+    int lsd = 0;
 
     List<Widget> additional = <Widget>[];
     final own = await ApiCallsV1.getOwnPersonalStats();
     if (own is OwnPersonalStatsModel) {
       // XANAX
-      final int otherXanax = otherProfile.personalstats!.drugs!.xanax!;
+      final int otherXanax = otherProfile.personalstats?.xanax ?? 0;
       final int myXanax = own.personalstats!.xantaken!;
       xanaxComparison = otherXanax - myXanax;
       if (xanaxComparison < -10) {
@@ -625,7 +624,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
 
       // REFILLS
-      final int otherRefill = otherProfile.personalstats!.other!.refills!.energy!;
+      final int otherRefill = otherProfile.personalstats?.energyRefills ?? 0;
       final int myRefill = own.personalstats!.refills!;
       refillComparison = otherRefill - myRefill;
       refillColor = Colors.orange;
@@ -640,7 +639,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
 
       // ENHANCEMENT
-      final int otherEnhancement = otherProfile.personalstats!.items!.used!.statEnhancers!;
+      final int otherEnhancement = otherProfile.personalstats?.statEnhancers ?? 0;
       final int myEnhancement = own.personalstats!.statenhancersused!;
       enhancementComparison = otherEnhancement - myEnhancement;
       if (enhancementComparison < 0) {
@@ -654,7 +653,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       );
 
       // CANS
-      final int otherCans = otherProfile.personalstats!.items!.used!.energy!;
+      final int otherCans = otherProfile.personalstats?.energyDrinks ?? 0;
       final int myCans = own.personalstats!.energydrinkused!;
       cansComparison = otherCans - myCans;
       if (cansComparison < 0) {
@@ -674,12 +673,12 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
       /// if (esc + xan) < 150 & LSD > 100 SSL is red
       Widget sslWidget = const SizedBox.shrink();
       sslColor = Colors.green;
-      ecstasy = otherProfile.personalstats!.drugs!.ecstasy;
-      lsd = otherProfile.personalstats!.drugs!.lsd;
-      if (otherXanax + ecstasy! > 150) {
+      ecstasy = otherProfile.personalstats?.ecstasy ?? 0;
+      lsd = otherProfile.personalstats?.lsd ?? 0;
+      if (otherXanax + ecstasy > 150) {
         sslProb = false;
       } else {
-        if (lsd! > 50 && lsd < 50) {
+        if (lsd > 50 && lsd < 100) {
           sslColor = Colors.orange;
         } else if (lsd > 100) {
           sslColor = Colors.red;
@@ -712,26 +711,26 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     try {
       // Find the spy based in the current selected spy source
       if (_spyController.spiesSource == SpiesSource.yata) {
-        final spy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
+        final spy = _spyController.getYataSpy(userId: otherProfile.id.toString(), name: otherProfile.name);
         if (spy != null) {
           yataSpy = spy;
           thisSource = SpiesSource.yata;
         } else if (_spyController.allowMixedSpiesSources) {
           // Check alternate source of spies if we allow mixed sources
-          final altSpy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
+          final altSpy = _spyController.getTornStatsSpy(userId: otherProfile.id.toString());
           if (altSpy != null) {
             yataSpy = altSpy.toYataModel();
             thisSource = SpiesSource.tornStats;
           }
         }
       } else if (_spyController.spiesSource == SpiesSource.tornStats) {
-        final spy = _spyController.getTornStatsSpy(userId: otherProfile.playerId.toString());
+        final spy = _spyController.getTornStatsSpy(userId: otherProfile.id.toString());
         if (spy != null) {
           yataSpy = spy.toYataModel();
           thisSource = SpiesSource.tornStats;
         } else if (_spyController.allowMixedSpiesSources) {
           // Check alternate source of spies if we allow mixed sources
-          final altSpy = _spyController.getYataSpy(userId: otherProfile.playerId.toString(), name: otherProfile.name);
+          final altSpy = _spyController.getYataSpy(userId: otherProfile.id.toString(), name: otherProfile.name);
           if (altSpy != null) {
             yataSpy = altSpy;
             thisSource = SpiesSource.yata;
@@ -746,17 +745,17 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
     // ONLINE STATUS
     final Widget onlineStatus = Row(
       children: [
-        if (otherProfile.lastAction!.status == "Offline")
+        if (otherProfile.lastActionStatus == "Offline")
           const Icon(Icons.remove_circle, size: 10, color: Colors.grey)
         else
-          otherProfile.lastAction!.status == "Idle"
+          otherProfile.lastActionStatus == "Idle"
               ? const Icon(Icons.adjust, size: 12, color: Colors.orange)
               : const Icon(Icons.circle, size: 12, color: Colors.green),
-        if (otherProfile.lastAction!.status == "Offline" || otherProfile.lastAction!.status == "Idle")
+        if (otherProfile.lastActionStatus == "Offline" || otherProfile.lastActionStatus == "Idle")
           Padding(
             padding: const EdgeInsets.only(left: 2),
             child: Text(
-              otherProfile.lastAction!.relative!
+              (otherProfile.lastActionRelative ?? '')
                   .replaceAll("minute ago", "m")
                   .replaceAll("minutes ago", "m")
                   .replaceAll("hour ago", "h")
@@ -765,7 +764,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                   .replaceAll("days ago", "d"),
               style: TextStyle(
                 fontSize: 11,
-                color: otherProfile.lastAction!.status == "Idle" ? Colors.orange : Colors.grey,
+                color: otherProfile.lastActionStatus == "Idle" ? Colors.orange : Colors.grey,
               ),
             ),
           ),
@@ -978,8 +977,8 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 totalUpdate: yataSpy?.totalTimestamp,
                                 update: yataSpy?.update ?? 0,
                                 spySource: thisSource,
-                                name: _playerName!,
-                                factionName: _factionName!,
+                                name: _playerName ?? '',
+                                factionName: _factionName ?? '',
                                 themeProvider: widget.themeProvider!,
                               );
 
@@ -994,17 +993,17 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                                 cansColor: cansColor,
                                 sslColor: sslColor,
                                 sslProb: sslProb,
-                                otherXanTaken: otherProfile.personalstats!.drugs!.xanax!,
-                                otherEctTaken: otherProfile.personalstats!.drugs!.ecstasy!,
-                                otherLsdTaken: otherProfile.personalstats!.drugs!.lsd!,
-                                otherName: otherProfile.name!,
-                                otherFactionName: otherProfile.faction!.factionName!,
-                                otherLastActionRelative: otherProfile.lastAction!.relative!,
+                                otherXanTaken: otherProfile.personalstats?.xanax ?? 0,
+                                otherEctTaken: otherProfile.personalstats?.ecstasy ?? 0,
+                                otherLsdTaken: otherProfile.personalstats?.lsd ?? 0,
+                                otherName: otherProfile.name ?? '',
+                                otherFactionName: otherProfile.factionName ?? '',
+                                otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                                 themeProvider: widget.themeProvider!,
                               );
 
-                              final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
-                              final yataStatsPayload = YataStatsPayload(targetId: otherProfile.playerId!);
+                              final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.id ?? 0);
+                              final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
 
                               return StatsDialog(
                                 spiesPayload: spiesPayload,
@@ -1091,17 +1090,17 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                             cansColor: cansColor,
                             sslColor: sslColor,
                             sslProb: sslProb,
-                            otherXanTaken: otherProfile.personalstats!.drugs!.xanax!,
-                            otherEctTaken: otherProfile.personalstats!.drugs!.ecstasy!,
-                            otherLsdTaken: otherProfile.personalstats!.drugs!.lsd!,
-                            otherName: otherProfile.name!,
-                            otherFactionName: otherProfile.faction!.factionName!,
-                            otherLastActionRelative: otherProfile.lastAction!.relative!,
+                            otherXanTaken: otherProfile.personalstats?.xanax ?? 0,
+                            otherEctTaken: otherProfile.personalstats?.ecstasy ?? 0,
+                            otherLsdTaken: otherProfile.personalstats?.lsd ?? 0,
+                            otherName: otherProfile.name ?? '',
+                            otherFactionName: otherProfile.factionName ?? '',
+                            otherLastActionRelative: otherProfile.lastActionRelative ?? '',
                             themeProvider: widget.themeProvider!,
                           );
 
-                          final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.playerId!);
-                          final yataStatsPayload = YataStatsPayload(targetId: otherProfile.playerId!);
+                          final tscStatsPayload = TSCStatsPayload(targetId: otherProfile.id ?? 0);
+                          final yataStatsPayload = YataStatsPayload(targetId: otherProfile.id ?? 0);
 
                           return StatsDialog(
                             spiesPayload: null,

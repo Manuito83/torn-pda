@@ -4,7 +4,6 @@ import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
-import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -17,13 +16,31 @@ class SpiesManagementDialog extends StatefulWidget {
 class SpiesManagementDialogState extends State<SpiesManagementDialog> {
   final SpiesController _spyController = Get.find<SpiesController>();
   final _scrollController = ScrollController();
+  final _searchController = TextEditingController();
+  final _searchQueryNotifier = ValueNotifier<String>('');
 
   bool _fetchActive = false;
 
   @override
   void dispose() {
     _scrollController.dispose();
+    _searchController.dispose();
+    _searchQueryNotifier.dispose();
     super.dispose();
+  }
+
+  // Valid if it has an ID, OR if it has a meaningful name (not null/empty/"Player")
+  bool _isValidYataSpy(dynamic spy) {
+    final hasValidId = spy.targetId != null && spy.targetId!.isNotEmpty;
+    final hasValidName = spy.targetName != null && spy.targetName!.isNotEmpty && spy.targetName != 'Player';
+    return hasValidId || hasValidName;
+  }
+
+  // Valid if it has an ID, OR if it has a meaningful name (not null/empty/"Player")
+  bool _isValidTornStatsSpy(dynamic spy) {
+    final hasValidId = spy.playerId != null && spy.playerId!.isNotEmpty;
+    final hasValidName = spy.playerName != null && spy.playerName!.isNotEmpty && spy.playerName != 'Player';
+    return hasValidId || hasValidName;
   }
 
   @override
@@ -77,6 +94,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
 
     return Container(
       width: double.maxFinite,
+      height: MediaQuery.of(context).size.height * 0.8,
       padding: const EdgeInsets.only(
         top: 25,
         bottom: 16,
@@ -97,7 +115,7 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         children: [
           const Text(
             "SPIES MANAGEMENT",
@@ -228,10 +246,48 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
             ),
           ),
           const SizedBox(height: 10),
-          Flexible(
+          // Search field
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: TextField(
+              controller: _searchController,
+              autofocus: false,
+              decoration: InputDecoration(
+                hintText: 'Search by name or ID...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: ValueListenableBuilder<String>(
+                  valueListenable: _searchQueryNotifier,
+                  builder: (context, query, child) {
+                    return query.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              _searchQueryNotifier.value = '';
+                            },
+                          )
+                        : const SizedBox.shrink();
+                  },
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              ),
+              onChanged: (value) {
+                _searchQueryNotifier.value = value.toLowerCase().trim();
+              },
+            ),
+          ),
+          Expanded(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(10, 5, 10, 10),
-              child: _spiesList(),
+              child: ValueListenableBuilder<String>(
+                valueListenable: _searchQueryNotifier,
+                builder: (context, searchQuery, child) {
+                  return _spiesList(searchQuery);
+                },
+              ),
             ),
           ),
           if (!_fetchActive)
@@ -358,203 +414,44 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
     );
   }
 
-  Widget _spiesList() {
-    final spiesCards = <Card>[];
-
+  Widget _spiesList(String searchQuery) {
     try {
+      // Get sorted list based on source and filter out invalid spies
+      List<dynamic> sortedSpies;
       if (_spyController.spiesSource == SpiesSource.yata) {
-        List<YataSpyModel> sortedListOfSpies = List.from(_spyController.yataSpies)
+        // Filter out invalid spies using helper method
+        sortedSpies = List.from(_spyController.yataSpies.where(_isValidYataSpy))
           ..sort((a, b) => a.targetName!.trim().compareTo(b.targetName!.trim()));
-
-        for (var spy in sortedListOfSpies) {
-          spiesCards.add(
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      spy.targetName!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "STR: ${spy.strength == -1 ? '??' : formatBigNumbers(spy.strength!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(spy.strength != -1 ? _spyController.statsOld(spy.strengthTimestamp) : "",
-                            style: const TextStyle(
-                              fontSize: 11,
-                            )),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "DEF: ${spy.defense == -1 ? '??' : formatBigNumbers(spy.defense!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(spy.defense != -1 ? _spyController.statsOld(spy.defenseTimestamp) : "",
-                            style: const TextStyle(
-                              fontSize: 11,
-                            )),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "SPD: ${spy.speed == -1 ? '??' : formatBigNumbers(spy.speed!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(spy.speed != -1 ? _spyController.statsOld(spy.speedTimestamp) : "",
-                            style: const TextStyle(
-                              fontSize: 11,
-                            )),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "DEX: ${spy.dexterity == -1 ? '??' : formatBigNumbers(spy.dexterity!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(spy.dexterity != -1 ? _spyController.statsOld(spy.dexterityTimestamp) : "",
-                            style: const TextStyle(
-                              fontSize: 11,
-                            )),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "TOTAL: ${spy.total == -1 ? '??' : formatBigNumbers(spy.total!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(spy.total != -1 ? _spyController.statsOld(spy.totalTimestamp) : "",
-                            style: const TextStyle(
-                              fontSize: 11,
-                            )),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
       } else {
-        final sortedListOfSpies = List.from(_spyController.tornStatsSpies.spies)
+        // Filter out invalid spies using helper method
+        sortedSpies = List.from(_spyController.tornStatsSpies.spies.where(_isValidTornStatsSpy))
           ..sort((a, b) => a.playerName!.trim().compareTo(b.playerName!.trim()));
+      }
 
-        for (var spy in sortedListOfSpies) {
-          spiesCards.add(
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      spy.playerName!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "STR: ${spy.strength == -1 ? '??' : formatBigNumbers(spy.strength!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "DEF: ${spy.defense == -1 ? '??' : formatBigNumbers(spy.defense!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "SPD: ${spy.speed == -1 ? '??' : formatBigNumbers(spy.speed!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "DEX: ${spy.dexterity == -1 ? '??' : formatBigNumbers(spy.dexterity!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 5),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "TOTAL: ${spy.total == -1 ? '??' : formatBigNumbers(spy.total!)}",
-                          style: const TextStyle(
-                            fontSize: 11,
-                          ),
-                        ),
-                        Text(spy.total != -1 ? _spyController.statsOld(spy.timestamp) : "",
-                            style: const TextStyle(
-                              fontSize: 11,
-                            )),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
+      // Apply search filter if needed
+      if (searchQuery.isNotEmpty) {
+        if (_spyController.spiesSource == SpiesSource.yata) {
+          sortedSpies = sortedSpies.where((spy) {
+            final name = spy.targetName?.toLowerCase() ?? '';
+            final id = spy.targetId?.toString() ?? '';
+            return name.contains(searchQuery) || id.contains(searchQuery);
+          }).toList();
+        } else {
+          sortedSpies = sortedSpies.where((spy) {
+            final name = spy.playerName?.toLowerCase() ?? '';
+            final id = spy.playerId?.toString() ?? '';
+            return name.contains(searchQuery) || id.contains(searchQuery);
+          }).toList();
         }
       }
+
+      final int spiesCount = sortedSpies.length;
 
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            "Found ${spiesCards.length} spies",
+            "Found $spiesCount spies",
             style: const TextStyle(
               fontSize: 12,
             ),
@@ -570,9 +467,11 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               child: ListView.builder(
                 controller: _scrollController,
                 shrinkWrap: true,
-                itemCount: spiesCards.length,
+                itemCount: spiesCount,
                 itemBuilder: (context, index) {
-                  return spiesCards[index];
+                  final spy = sortedSpies[index];
+                  // Build card on demand for visible items only
+                  return _buildSpyCard(spy);
                 },
               ),
             ),
@@ -593,6 +492,221 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
               ),
             ),
           ],
+        ),
+      );
+    }
+  }
+
+  Widget _buildSpyCard(dynamic spy) {
+    if (_spyController.spiesSource == SpiesSource.yata) {
+      // Build display name: show "Player [ID]" if name is null/empty/Player, otherwise "Name [ID]"
+      String displayName;
+      final bool hasValidName = spy.targetName != null && spy.targetName!.isNotEmpty && spy.targetName != 'Player';
+      final bool hasValidId = spy.targetId != null && spy.targetId!.isNotEmpty;
+
+      if (hasValidName && hasValidId) {
+        // Show name with ID in brackets
+        displayName = '${spy.targetName} [${spy.targetId}]';
+      } else if (hasValidName) {
+        // Show only name (no ID available)
+        displayName = spy.targetName!;
+      } else if (hasValidId) {
+        // Show "Player [ID]" for null/empty/Player names
+        displayName = 'Player [${spy.targetId}]';
+      } else {
+        // Fallback (shouldn't happen due to filtering)
+        displayName = 'Player';
+      }
+
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "STR: ${spy.strength == -1 ? '??' : formatBigNumbers(spy.strength!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(spy.strength != -1 ? _spyController.statsOld(spy.strengthTimestamp) : "",
+                      style: const TextStyle(
+                        fontSize: 11,
+                      )),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "DEF: ${spy.defense == -1 ? '??' : formatBigNumbers(spy.defense!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(spy.defense != -1 ? _spyController.statsOld(spy.defenseTimestamp) : "",
+                      style: const TextStyle(
+                        fontSize: 11,
+                      )),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "SPD: ${spy.speed == -1 ? '??' : formatBigNumbers(spy.speed!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(spy.speed != -1 ? _spyController.statsOld(spy.speedTimestamp) : "",
+                      style: const TextStyle(
+                        fontSize: 11,
+                      )),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "DEX: ${spy.dexterity == -1 ? '??' : formatBigNumbers(spy.dexterity!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(spy.dexterity != -1 ? _spyController.statsOld(spy.dexterityTimestamp) : "",
+                      style: const TextStyle(
+                        fontSize: 11,
+                      )),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "TOTAL: ${spy.total == -1 ? '??' : formatBigNumbers(spy.total!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(spy.total != -1 ? _spyController.statsOld(spy.totalTimestamp) : "",
+                      style: const TextStyle(
+                        fontSize: 11,
+                      )),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      // TornStats spy card
+      // Build display name: show "Player [ID]" if name is null/empty/Player, otherwise "Name [ID]"
+      String displayName;
+      final bool hasValidName = spy.playerName != null && spy.playerName!.isNotEmpty && spy.playerName != 'Player';
+      final bool hasValidId = spy.playerId != null && spy.playerId!.isNotEmpty;
+
+      if (hasValidName && hasValidId) {
+        // Show name with ID in brackets
+        displayName = '${spy.playerName} [${spy.playerId}]';
+      } else if (hasValidName) {
+        // Show only name (no ID available)
+        displayName = spy.playerName!;
+      } else if (hasValidId) {
+        // Show "Player [ID]" for null/empty/Player names
+        displayName = 'Player [${spy.playerId}]';
+      } else {
+        // Fallback (shouldn't happen due to filtering)
+        displayName = 'Player';
+      }
+
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                displayName,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "STR: ${spy.strength == -1 ? '??' : formatBigNumbers(spy.strength!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "DEF: ${spy.defense == -1 ? '??' : formatBigNumbers(spy.defense!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "SPD: ${spy.speed == -1 ? '??' : formatBigNumbers(spy.speed!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "DEX: ${spy.dexterity == -1 ? '??' : formatBigNumbers(spy.dexterity!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "TOTAL: ${spy.total == -1 ? '??' : formatBigNumbers(spy.total!)}",
+                    style: const TextStyle(
+                      fontSize: 11,
+                    ),
+                  ),
+                  Text(spy.total != -1 ? _spyController.statsOld(spy.timestamp) : "",
+                      style: const TextStyle(
+                        fontSize: 11,
+                      )),
+                ],
+              ),
+            ],
+          ),
         ),
       );
     }

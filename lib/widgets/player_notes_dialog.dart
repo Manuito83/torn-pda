@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
+/// Pure content widget for player notes editing. Presentation (width, background,
+/// scrolling, dialog animations) is provided by [showPlayerNotesDialog]
 class PlayerNotesDialog extends StatefulWidget {
   final String playerId;
   final String? playerName;
@@ -40,9 +42,9 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
       final existingNote = _playerNotesController.getNoteForPlayer(widget.playerId);
       if (existingNote != null) {
         _personalNotesController.text = existingNote.note;
-        _myTempChosenColor = existingNote.color;
+        _myTempChosenColor = existingNote.color; // already normalized to sentinel if none
       } else {
-        _myTempChosenColor = 'z'; // Default no color
+        _myTempChosenColor = PlayerNoteColor.none; // Default no color sentinel
       }
       setState(() {});
     });
@@ -58,155 +60,205 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
 
-    return AlertDialog(
-      backgroundColor: _themeProvider.secondBackground,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      contentPadding: const EdgeInsets.all(20),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        // Title
+        Text(
+          widget.playerName != null ? "${widget.playerName} [${widget.playerId}]" : "Player [${widget.playerId}]",
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: _themeProvider.mainText,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 16),
+        // Color selection chips
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            // Title
-            Text(
-              widget.playerName != null ? "${widget.playerName} [${widget.playerId}]" : "Player [${widget.playerId}]",
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: _themeProvider.mainText,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-
-            // Color selection chips
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: RawChip(
-                    selected: _myTempChosenColor == 'red',
-                    label: const SizedBox.shrink(),
-                    onSelected: (bool isSelected) {
-                      setState(() {
-                        _myTempChosenColor = isSelected ? 'red' : 'z';
-                      });
-                    },
-                    selectedColor: Colors.red,
-                    backgroundColor: Colors.red,
-                    shape: const StadiumBorder(
-                      side: BorderSide(),
-                    ),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: EdgeInsets.zero,
+            _buildColorChip('red', Colors.red),
+            const SizedBox(width: 16),
+            _buildColorChip('orange', Colors.orange[600]!),
+            const SizedBox(width: 16),
+            _buildColorChip('green', Colors.green),
+          ],
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8),
+        ),
+        TextFormField(
+          style: TextStyle(
+            fontSize: 14,
+            color: _themeProvider.mainText,
+          ),
+          textCapitalization: TextCapitalization.sentences,
+          controller: _personalNotesController,
+          maxLength: 500,
+          minLines: 3,
+          maxLines: 8,
+          decoration: const InputDecoration(
+            counterText: "",
+            border: OutlineInputBorder(),
+            labelText: 'Insert note',
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        // Action buttons
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: <Widget>[
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 44),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: _themeProvider.buttonText,
                   ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 5),
-                ),
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: RawChip(
-                    selected: _myTempChosenColor == 'orange',
-                    label: const SizedBox.shrink(),
-                    onSelected: (bool isSelected) {
-                      setState(() {
-                        _myTempChosenColor = isSelected ? 'orange' : 'z';
-                      });
-                    },
-                    selectedColor: Colors.orange[600],
-                    backgroundColor: Colors.orange[600],
-                    shape: const StadiumBorder(
-                      side: BorderSide(),
-                    ),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 5),
-                ),
-                SizedBox(
-                  width: 32,
-                  height: 32,
-                  child: RawChip(
-                    selected: _myTempChosenColor == 'green',
-                    label: const SizedBox.shrink(),
-                    onSelected: (bool isSelected) {
-                      setState(() {
-                        _myTempChosenColor = isSelected ? 'green' : 'z';
-                      });
-                    },
-                    selectedColor: Colors.green,
-                    backgroundColor: Colors.green,
-                    shape: const StadiumBorder(
-                      side: BorderSide(),
-                    ),
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    padding: EdgeInsets.zero,
-                  ),
-                ),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-            ),
-
-            TextFormField(
-              style: TextStyle(
-                fontSize: 14,
-                color: _themeProvider.mainText,
-              ),
-              textCapitalization: TextCapitalization.sentences,
-              controller: _personalNotesController,
-              maxLength: 500,
-              minLines: 3,
-              maxLines: 8,
-              decoration: const InputDecoration(
-                counterText: "",
-                border: OutlineInputBorder(),
-                labelText: 'Insert note',
-              ),
-            ),
-            const SizedBox(height: 16.0),
-
-            // Action buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: <Widget>[
-                TextButton(
                   child: const Text("Save"),
                   onPressed: () async {
                     final noteText = _personalNotesController.text.trim();
-                    final noteColor = _myTempChosenColor;
-
+                    final noteColor = PlayerNoteColor.isNone(_myTempChosenColor)
+                        ? null // controller will normalize null -> sentinel
+                        : _myTempChosenColor;
                     await _playerNotesController.setPlayerNote(
-                      widget.playerId,
-                      noteText,
-                      noteColor,
-                      widget.playerName,
+                      playerId: widget.playerId,
+                      note: noteText,
+                      color: noteColor,
+                      playerName: widget.playerName,
                     );
-
                     if (mounted) {
                       Navigator.of(context).pop();
                     }
                   },
                 ),
-                TextButton(
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 44),
+                    backgroundColor: _themeProvider.secondBackground,
+                    foregroundColor: _themeProvider.mainText,
+                    side: BorderSide(color: _alpha(_themeProvider.mainText, 0.3)),
+                  ),
                   child: const Text("Cancel"),
                   onPressed: () {
                     Navigator.of(context).pop();
                   },
                 ),
-              ],
-            )
+              ),
+            ),
           ],
         ),
+      ],
+    );
+  }
+
+  Widget _buildColorChip(String colorValue, Color color) {
+    final bool isSelected = _myTempChosenColor == colorValue;
+    return InkWell(
+      onTap: () {
+        setState(() {
+          _myTempChosenColor = isSelected ? PlayerNoteColor.none : colorValue;
+        });
+      },
+      borderRadius: BorderRadius.circular(24),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: isSelected ? 52 : 48,
+        height: isSelected ? 52 : 48,
+        decoration: BoxDecoration(
+          color: color,
+          shape: BoxShape.circle,
+          border: isSelected
+              ? Border.all(
+                  color: _alpha(_themeProvider.mainText, 0.8),
+                  width: 3,
+                )
+              : Border.all(color: Colors.transparent, width: 3),
+        ),
+        child: isSelected
+            ? Icon(
+                Icons.check,
+                color: _alpha(_themeProvider.mainText, 0.8),
+                size: 24,
+              )
+            : null,
       ),
     );
   }
+
+  Color _alpha(Color c, double o) => c.withAlpha((o * 255).round());
+}
+
+Future<void> showPlayerNotesDialog({
+  required BuildContext context,
+  required String playerId,
+  String? playerName,
+  bool barrierDismissible = false,
+}) {
+  final themeProvider = context.read<ThemeProvider>();
+
+  return showGeneralDialog(
+    context: context,
+    barrierDismissible: barrierDismissible,
+    barrierLabel: 'Player Notes',
+    barrierColor: Colors.black54,
+    transitionDuration: const Duration(milliseconds: 180),
+    pageBuilder: (ctx, anim, secondary) => const SizedBox.shrink(),
+    transitionBuilder: (ctx, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      final mq = MediaQuery.of(ctx);
+      final screenWidth = mq.size.width;
+      final screenHeight = mq.size.height;
+      const outerMargin = 20.0;
+      final maxContentWidth = 600.0;
+      final targetWidth = screenWidth - (outerMargin * 2);
+      final dialogWidth = targetWidth > maxContentWidth ? maxContentWidth : targetWidth;
+      final maxHeight = screenHeight * 0.85;
+
+      return SafeArea(
+        child: Center(
+          child: FadeTransition(
+            opacity: curved,
+            child: ScaleTransition(
+              scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: dialogWidth,
+                  maxHeight: maxHeight,
+                ),
+                child: Material(
+                  color: themeProvider.secondBackground,
+                  elevation: 8,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  clipBehavior: Clip.antiAlias,
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: SingleChildScrollView(
+                      child: PlayerNotesDialog(
+                        playerId: playerId,
+                        playerName: playerName,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }

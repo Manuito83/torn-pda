@@ -13,7 +13,7 @@ import 'package:get/get.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
-import 'package:torn_pda/models/profile/other_profile_model.dart';
+import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 // Project imports:
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
@@ -165,7 +165,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                             );
 
                             dynamic attackAssistMessageArg;
-                            if (t is OtherProfileModel) {
+                            if (t is OtherProfilePDA) {
                               final SpiesController spyController = Get.find<SpiesController>();
 
                               YataSpyModel? spy;
@@ -192,31 +192,32 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                     "updated ${readTimestamp(spy.update!)}";
                               }
                               String estimatedStats = StatsCalculator.calculateStats(
-                                criminalRecordTotal: t.personalstats?.crimes?.offenses?.total,
+                                criminalRecordTotal: t.personalstats?.criminalRecordTotal,
                                 level: t.level,
-                                networth: t.personalstats!.networth!.total,
+                                networth: t.personalstats?.networth,
                                 rank: t.rank,
                               );
 
-                              estimatedStats += "\n- Xanax: ${t.personalstats!.drugs!.xanax}";
-                              estimatedStats += "\n- Refills (E): ${t.personalstats!.other!.refills!.energy}";
-                              estimatedStats += "\n- Drinks (E): ${t.personalstats!.items!.used!.energy}";
+                              estimatedStats += "\n- Xanax: ${t.personalstats?.xanax ?? '?'}";
+                              estimatedStats += "\n- Refills (E): ${t.personalstats?.energyRefills ?? '?'}";
+                              estimatedStats += "\n- Drinks (E): ${t.personalstats?.energyDrinks ?? '?'}";
                               estimatedStats += "\n(tap to get a comparison with you)";
                               attackAssistMessageArg = (
                                 attackId: attackId,
                                 attackName: t.name,
                                 attackLevel: t.level.toString(),
-                                attackLife: "${t.life!.current}/${t.life!.maximum}",
+                                attackLife: "${t.lifeCurrent ?? '?'} / ${t.lifeMaximum ?? '?'}",
                                 attackAge: t.age.toString(),
                                 estimatedStats: estimatedStats,
                                 exactStats: exactStats ?? "",
-                                xanax: t.personalstats!.drugs!.xanax.toString(),
-                                refills: t.personalstats!.other!.refills!.energy.toString(),
-                                drinks: t.personalstats!.items!.used!.energy.toString(),
+                                xanax: (t.personalstats?.xanax ?? '?').toString(),
+                                refills: (t.personalstats?.energyRefills ?? '?').toString(),
+                                drinks: (t.personalstats?.energyDrinks ?? '?').toString(),
                               );
                             } else {
                               attackAssistMessageArg = (attackId: attackId);
                             }
+
                             final int membersNotified = await firebaseFunctions.sendAttackAssistMessage(
                               attackId: attackAssistMessageArg.attackId,
                               attackName: attackAssistMessageArg.attackName,
@@ -597,7 +598,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),

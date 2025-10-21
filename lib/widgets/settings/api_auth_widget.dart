@@ -178,9 +178,23 @@ class _ApiKeySectionWidgetState extends State<ApiKeySectionWidget> {
                                     widget.changeApiError(false);
 
                                     if (!Platform.isWindows) {
-                                      await FirebaseMessaging.instance.deleteToken();
-                                      await FirestoreHelper().deleteUserProfile();
-                                      await FirebaseAuth.instance.signOut();
+                                      try {
+                                        await FirebaseMessaging.instance.deleteToken();
+                                      } catch (e) {
+                                        //
+                                      }
+
+                                      try {
+                                        await FirestoreHelper().deleteUserProfile();
+                                      } catch (e) {
+                                        //
+                                      }
+
+                                      try {
+                                        await FirebaseAuth.instance.signOut();
+                                      } catch (e) {
+                                        //
+                                      }
                                     }
                                     widget.changeUID("");
                                   },

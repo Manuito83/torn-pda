@@ -1677,6 +1677,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       _typesFilteredText = 'ALL';
     }
 
+    if (!mounted) return;
     setState(() {
       _filteredStocksCards.clear();
       countryMap.forEach((countryKey, countryDetails) {
@@ -1965,7 +1966,7 @@ class HiddenForeignStockDialogState extends State<HiddenForeignStockDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
-              "Reset hidden targets",
+              "Reset hidden stocks",
               style: TextStyle(fontSize: 14),
             ),
             const SizedBox(height: 15),

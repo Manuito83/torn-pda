@@ -541,7 +541,15 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                       ? const EdgeInsets.all(10.0)
                       : const EdgeInsets.symmetric(horizontal: 5),
                   child: _webViewProvider.useTabIcons
-                      ? SizedBox(width: 26, height: 20, child: _webViewProvider.getIcon(0, context))
+                      ? SizedBox(
+                          width: 26,
+                          height: 20,
+                          child: Consumer<WebViewProvider>(
+                            builder: (context, provider, child) {
+                              return provider.getTabIcon(0, context);
+                            },
+                          ),
+                        )
                       : Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 // Project imports:
 import 'package:torn_pda/providers/targets_provider.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart';
 
 class ColorFilterDialog extends StatefulWidget {
   @override
@@ -41,16 +42,16 @@ class ColorFilterDialogState extends State<ColorFilterDialog> {
                 children: <Widget>[
                   const Text("No color"),
                   Switch(
-                    value: _targetsProvider.currentColorFilterOut.contains('z'),
+                    value: _targetsProvider.currentColorFilterOut.contains(PlayerNoteColor.none),
                     onChanged: (value) {
                       final temp = _targetsProvider.currentColorFilterOut;
                       if (value) {
-                        temp.add('z');
+                        temp.add(PlayerNoteColor.none);
                         setState(() {
                           _targetsProvider.setFilterColorsOut(temp);
                         });
                       } else {
-                        temp.remove('z');
+                        temp.remove(PlayerNoteColor.none);
                         setState(() {
                           _targetsProvider.setFilterColorsOut(temp);
                         });

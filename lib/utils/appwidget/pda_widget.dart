@@ -333,7 +333,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
 
   // --- DEBUG: RANKED WAR WIDGET ---
   if (kDebugMode) {
-    //factionIdForCheck = 12345;
+    factionIdForCheck = 52726;
   }
   // --- END DEBUG ---
 
@@ -403,7 +403,10 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
 
             final warStartDateTime = DateTime.fromMillisecondsSinceEpoch(warStarts);
             final dateFormat = DateFormat('MMM d, HH:mm');
-            HomeWidget.saveWidgetData<String>('rw_date_string', dateFormat.format(warStartDateTime));
+            // Use same timezone preference as other widget times
+            bool timeZoneIsLocal = (await Prefs().getDefaultTimeZone()) != 'torn';
+            final displayDateTime = timeZoneIsLocal ? warStartDateTime : warStartDateTime.toUtc();
+            HomeWidget.saveWidgetData<String>('rw_date_string', dateFormat.format(displayDateTime));
 
             final bool lessThan24h = warStarts - ts < 86400000;
             HomeWidget.saveWidgetData<bool>('rw_upcoming_soon', lessThan24h);
@@ -454,7 +457,10 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
       // End date
       final warEndDateTime = DateTime.fromMillisecondsSinceEpoch(finishedWar.war!.end! * 1000);
       final dateFormat = DateFormat('MMM d, HH:mm');
-      HomeWidget.saveWidgetData<String>('rw_end_date_string', dateFormat.format(warEndDateTime));
+      // Use same timezone preference as other widget times
+      bool timeZoneIsLocal = (await Prefs().getDefaultTimeZone()) != 'torn';
+      final displayDateTime = timeZoneIsLocal ? warEndDateTime : warEndDateTime.toUtc();
+      HomeWidget.saveWidgetData<String>('rw_end_date_string', dateFormat.format(displayDateTime));
     }
   }
   if (!warFound && !finishedWarFound) {

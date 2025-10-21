@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 // Project imports:
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 
 class PdaUpdateDialog extends StatefulWidget {
   final PdaUpdateDetails updateDetails;
@@ -23,6 +24,8 @@ class PdaUpdateDialog extends StatefulWidget {
 }
 
 class PdaUpdateDialogState extends State<PdaUpdateDialog> {
+  bool _createBackupBeforeUpdate = false;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -203,6 +206,65 @@ class PdaUpdateDialogState extends State<PdaUpdateDialog> {
                       ),
 
                     const SizedBox(height: 20),
+
+                    // Backup option (only show if API key is valid)
+                    if (UserHelper.isApiKeyValid)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: widget.themeProvider?.currentTheme == AppTheme.light
+                              ? Colors.blue.shade50
+                              : Colors.grey.shade800,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: widget.themeProvider?.currentTheme == AppTheme.light
+                                ? Colors.blue.shade200
+                                : Colors.grey.shade600,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Checkbox(
+                              value: _createBackupBeforeUpdate,
+                              onChanged: (value) {
+                                setState(() {
+                                  _createBackupBeforeUpdate = value ?? false;
+                                });
+                              },
+                              activeColor: Platform.isIOS ? Colors.blue.shade600 : Colors.green.shade600,
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Create backup before updating',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: widget.themeProvider?.currentTheme == AppTheme.light
+                                          ? Colors.black87
+                                          : Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Recommended to preserve your settings',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: widget.themeProvider?.currentTheme == AppTheme.light
+                                          ? Colors.grey.shade600
+                                          : Colors.grey.shade400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    if (UserHelper.isApiKeyValid) const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -234,7 +296,11 @@ class PdaUpdateDialogState extends State<PdaUpdateDialog> {
                     flex: 2,
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).pop(true); // User wants to update
+                        // Return a map with both update decision and backup preference
+                        Navigator.of(context).pop({
+                          'shouldUpdate': true,
+                          'createBackup': UserHelper.isApiKeyValid ? _createBackupBeforeUpdate : false,
+                        });
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Platform.isIOS ? Colors.blue.shade600 : Colors.green.shade600,

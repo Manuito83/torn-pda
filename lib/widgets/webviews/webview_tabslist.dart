@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
@@ -67,17 +68,26 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
     for (var i = 0; i < _webViewProvider!.tabList.length; i++) {
       _animationController.forward();
 
-      final bool isManuito = _webViewProvider!.tabList[i].currentUrl!.contains("sid=attack&user2ID=2225097") ||
-          _webViewProvider!.tabList[i].currentUrl!.contains("profiles.php?XID=2225097") ||
-          _webViewProvider!.tabList[i].currentUrl!.contains("https://www.torn.com/forums.php#/"
-              "p=threads&f=67&t=16163503&b=0&a=0");
+      // Get special user color for text styling (if any)
+      Color? specialColor;
+      final currentUrl = _webViewProvider!.tabList[i].currentUrl!;
+
+      // Check if this URL belongs to a special user
+      for (final userId in _webViewProvider!.getSpecialUserInfo()) {
+        if (currentUrl.contains("sid=attack&user2ID=$userId") ||
+            currentUrl.contains("profiles.php?XID=$userId") ||
+            currentUrl.contains("https://www.torn.com/forums.php#/p=threads&f=67&t=16163503&b=0&a=0")) {
+          specialColor = _webViewProvider!.getSpecialUserColor(userId);
+          break;
+        }
+      }
 
       bool tabCustomNameShown =
           _webViewProvider!.tabList[i].customName.isNotEmpty && _webViewProvider!.tabList[i].customNameInTab;
 
       tabs.add(
         Visibility(
-          key: UniqueKey(),
+          key: ValueKey(_webViewProvider!.tabList[i].id),
           visible: i == 0 ? false : true, // Do not repeat tab #0 in the tabs list
           child: FadeTransition(
             opacity: _tabsOpacity,
@@ -142,7 +152,11 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                           ? SizedBox(
                                               width: 26,
                                               height: 20,
-                                              child: _webViewProvider!.getIcon(i, context),
+                                              child: Consumer<WebViewProvider>(
+                                                builder: (context, provider, child) {
+                                                  return provider.getTabIcon(i, context);
+                                                },
+                                              ),
                                             )
                                           // Using page titles
                                           : SizedBox(
@@ -159,7 +173,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                                       textAlign: TextAlign.center,
                                                       style: TextStyle(
                                                         fontSize: 12,
-                                                        color: isManuito ? Colors.pink : _themeProvider.mainText,
+                                                        color: specialColor ?? _themeProvider.mainText,
                                                       ),
                                                     ),
                                                   ),
@@ -240,17 +254,26 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                 closeOnClick: true,
                                 alignment: Alignment.bottomCenter,
                                 margin: const EdgeInsets.only(bottom: 50),
-                                title: const Column(
+                                title: Column(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.lock,
                                       color: Colors.orange,
                                     ),
-                                    SizedBox(height: 10),
-                                    Text("Positional Lock"),
+                                    const SizedBox(height: 10),
+                                    Text("Positional Lock", style: TextStyle(color: _themeProvider.mainText)),
                                   ],
                                 ),
                                 autoCloseDuration: const Duration(milliseconds: 1500),
+                                backgroundColor: _themeProvider.canvas,
+                                closeButton: ToastCloseButton(
+                                  buttonBuilder: (context, onClose) {
+                                    return Icon(
+                                      Icons.close,
+                                      color: _themeProvider.mainText,
+                                    );
+                                  },
+                                ),
                                 animationDuration: const Duration(milliseconds: 0),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
@@ -288,11 +311,23 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                                       color: _webViewProvider!.tabList[i].isLockFull ? Colors.orange : Colors.red,
                                     ),
                                     const SizedBox(height: 10),
-                                    Text(_webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock"),
+                                    Text(
+                                      _webViewProvider!.tabList[i].isLockFull ? "Positional Lock" : "Full Lock",
+                                      style: TextStyle(color: _themeProvider.mainText),
+                                    ),
                                   ],
                                 ),
                                 autoCloseDuration: const Duration(milliseconds: 1500),
                                 animationDuration: const Duration(milliseconds: 0),
+                                backgroundColor: _themeProvider.canvas,
+                                closeButton: ToastCloseButton(
+                                  buttonBuilder: (context, onClose) {
+                                    return Icon(
+                                      Icons.close,
+                                      color: _themeProvider.mainText,
+                                    );
+                                  },
+                                ),
                                 type: ToastificationType.info,
                                 style: ToastificationStyle.simple,
                                 borderSide: BorderSide(width: 1, color: Colors.grey[700]!),
@@ -445,16 +480,26 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                         : Colors.orange,
                   ),
                   const SizedBox(height: 10),
-                  const Text(
+                  Text(
                     "A locked tab cannot be exchanged with an unlocked one!",
                     maxLines: 5,
                     textAlign: TextAlign.center,
+                    style: TextStyle(color: _themeProvider.mainText),
                   ),
                 ],
               ),
             ),
             autoCloseDuration: const Duration(seconds: 3),
             animationDuration: const Duration(milliseconds: 0),
+            backgroundColor: _themeProvider.canvas,
+            closeButton: ToastCloseButton(
+              buttonBuilder: (context, onClose) {
+                return Icon(
+                  Icons.close,
+                  color: _themeProvider.mainText,
+                );
+              },
+            ),
             type: ToastificationType.info,
             style: ToastificationStyle.simple,
             borderSide: BorderSide(width: 1, color: Colors.grey[700]!),

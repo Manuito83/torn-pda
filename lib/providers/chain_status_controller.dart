@@ -19,6 +19,7 @@ import 'package:torn_pda/utils/notification.dart';
 // Project imports:
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/webviews/webview_panic.dart';
+import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 import 'package:vibration/vibration.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
@@ -752,7 +753,7 @@ class ChainStatusController extends GetxController {
       for (final tar in panicTargets) {
         attacksIds.add(tar.id.toString());
         attacksNames.add(tar.name);
-        attackNotesColorList.add('z');
+        attackNotesColorList.add(PlayerNoteColor.none);
         attackNotesList.add('');
       }
 

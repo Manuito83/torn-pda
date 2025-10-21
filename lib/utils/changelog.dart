@@ -102,6 +102,37 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.9.3 - Build 587 - 17/10/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.3'
+        ..date = '20 OCT 2025'
+        ..features = [
+          "Player notes now support color-only entries",
+          "Improved player notes dialog interface",
+          "Improved tab icons handling",
+          "Added The Wolverines revive services",
+          "Improved spies dialog with search and better performance",
+          ComplexFeature(
+            "Added option to display all rented out properties in the Misc card",
+            explanation: "Disabled by default"
+                "\n\nIf active, you will see all the properties you rent out to other players in the "
+                "Rented Properties section in the Miscellaneous card. If inactive, you will only "
+                "see the properties you rent (the ones you pay rent for)\n\n"
+                "You can toggle this option via the Profile Page options menu (gear icon in the Profile Page)",
+          ),
+          "Added local backup reminders",
+          "Fixed bank expiry time calculation",
+          "Fixed size limit for user scripts' cloud backup",
+          "Fixed notifications getting cleared when opening the app even if disabled",
+          "Fixed war widget time zone settings",
+          "Fixed shortcuts to market items not loading the correct URL",
+          "Fixed missing items icons",
+          "Fixed several other reported issues",
+          "Migrated app settings to new local database",
+        ],
+    );
+
     // v3.9.2 - Build 581 - 19/09/2025
     itemList.add(
       ChangeLogItem()

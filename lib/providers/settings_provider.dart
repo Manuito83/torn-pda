@@ -726,6 +726,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showAllRentedOutProperties = true;
+  bool get showAllRentedOutProperties => _showAllRentedOutProperties;
+  set showAllRentedOutProperties(bool value) {
+    _showAllRentedOutProperties = value;
+    Prefs().setShowAllRentedOutProperties(_showAllRentedOutProperties);
+    notifyListeners();
+  }
+
   var _oCrimeDisregarded = 0;
   int get oCrimeDisregarded => _oCrimeDisregarded;
   set changeOCrimeDisregarded(int value) {
@@ -1197,35 +1205,42 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   // REVIVES
-  String _reviveHelaPrice = "1 million or 1 Xanax each";
+  String _reviveWolverinesPrice = "1 million or 1 Xanax each";
+  String get reviveWolverinesPrice => _reviveWolverinesPrice;
+  set reviveWolverinesPrice(String value) {
+    _reviveWolverinesPrice = value;
+    notifyListeners();
+  }
+
+  String _reviveHelaPrice = "1.8 million or 2 Xanax each";
   String get reviveHelaPrice => _reviveHelaPrice;
   set reviveHelaPrice(String value) {
     _reviveHelaPrice = value;
     notifyListeners();
   }
 
-  String _reviveMidnightPrice = "1 million or 1 Xanax each";
+  String _reviveMidnightPrice = "1.8 million or 2 Xanax each";
   String get reviveMidnightPrice => _reviveMidnightPrice;
   set reviveMidnightPrice(String value) {
     _reviveMidnightPrice = value;
     notifyListeners();
   }
 
-  String _reviveNukePrice = "1 million or 1 Xanax each";
+  String _reviveNukePrice = "1.8 million or 2 Xanax each";
   String get reviveNukePrice => _reviveNukePrice;
   set reviveNukePrice(String value) {
     _reviveNukePrice = value;
     notifyListeners();
   }
 
-  String _reviveUhcPrice = "1 million or 1 Xanax each";
+  String _reviveUhcPrice = "1.8 million or 2 Xanax each";
   String get reviveUhcPrice => _reviveUhcPrice;
   set reviveUhcPrice(String value) {
     _reviveUhcPrice = value;
     notifyListeners();
   }
 
-  String _reviveWtfPrice = "1 million or 1 Xanax each";
+  String _reviveWtfPrice = "1.8 million or 2 Xanax each";
   String get reviveWtfPrice => _reviveWtfPrice;
   set reviveWtfPrice(String value) {
     _reviveWtfPrice = value;
@@ -1442,6 +1457,8 @@ class SettingsProvider extends ChangeNotifier {
     _oCrimeDisregarded = await Prefs().getOCrimeDisregarded();
     _oCrimeLastKnown = await Prefs().getOCrimeLastKnown();
     _playerInOCv2 = await Prefs().getPlayerInOCv2();
+
+    _showAllRentedOutProperties = await Prefs().getShowAllRentedOutProperties();
 
     _allowScreenRotation = await Prefs().getAllowScreenRotation();
 

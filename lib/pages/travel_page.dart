@@ -146,8 +146,8 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
               return buildSpeedDial();
             } else {
               return OpenContainer(
-                transitionDuration: const Duration(seconds: 1),
-                transitionType: ContainerTransitionType.fadeThrough,
+                transitionDuration: const Duration(milliseconds: 300),
+                transitionType: ContainerTransitionType.fade,
                 openBuilder: (BuildContext context, VoidCallback _) {
                   return ForeignStockPage(apiKey: _myCurrentKey);
                 },

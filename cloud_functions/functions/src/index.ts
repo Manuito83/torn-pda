@@ -24,7 +24,14 @@ import { evaluateRetals } from "./retals";
 import { checkStocks, fillRestocks, oneTimeClean, deleteOldStocks, cleanupObsoleteRestocks } from "./foreign_stocks";
 import { sendLootRangersNotification } from "./loot_rangers";
 import { sendAssistMessage } from "./faction_assist";
-import { saveUserPrefs, getUserPrefs, deleteUserPrefs, setOwnSharePrefs, getImportShare } from "./prefs_backup";
+import {
+  saveUserPrefs,
+  getUserPrefs,
+  deleteUserPrefs,
+  setOwnSharePrefs,
+  getImportShare,
+  // migrateLegacyUserscripts,
+} from "./prefs_backup";
 import { sendTroubleshootingAutoNotification } from "./troubleshooting_notification";
 import { sendForumsSubscription } from "./forums";
 import { registerPushToStartToken, sendTestTravelPushToManuito } from "./la_functions";
@@ -86,7 +93,8 @@ export const prefsBackup = {
   getUserPrefs: getUserPrefs,
   deleteUserPrefs: deleteUserPrefs,
   setOwnSharePrefs: setOwnSharePrefs,
-  getImportShare: getImportShare
+  getImportShare: getImportShare,
+  //migrateLegacyUserscripts: migrateLegacyUserscripts
 };
 
 export const troubleshooting = {

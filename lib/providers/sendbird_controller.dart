@@ -140,11 +140,11 @@ class SendbirdController extends GetxController {
     if (_initialised) return;
     _initialised = true;
 
-    _excludeFactionMessages = await Prefs().getSendbirdExcludeFactionMessages();
-    _excludeCompanyMessages = await Prefs().getSendbirdExcludeCompanyMessages();
-    _sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
-
     try {
+      _excludeFactionMessages = await Prefs().getSendbirdExcludeFactionMessages();
+      _excludeCompanyMessages = await Prefs().getSendbirdExcludeCompanyMessages();
+      _sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
+
       _sendbirdAppId = Env.sendbirdAppId;
       _sendbirdAppToken = Env.sendbirdAppToken;
 
