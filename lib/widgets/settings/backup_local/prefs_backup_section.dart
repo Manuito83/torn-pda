@@ -183,7 +183,7 @@ class PrefsBackupWidgetState extends State<PrefsBackupWidget> {
         ),
         content: TextField(
           controller: keyCtl,
-          maxLength: 15,
+          maxLength: 20,
           decoration: const InputDecoration(
             labelText: 'Encryption key',
             floatingLabelBehavior: FloatingLabelBehavior.always,
