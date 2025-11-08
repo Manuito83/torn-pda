@@ -102,6 +102,16 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.9.4 - Build 588 - 08/11/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.4'
+        ..date = '25 NOV 2025'
+        ..features = [
+          "Fixed issues with empty loadout names in quick items",
+        ],
+    );
+
     // v3.9.3 - Build 587 - 17/10/2025
     itemList.add(
       ChangeLogItem()

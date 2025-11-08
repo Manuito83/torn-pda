@@ -25,7 +25,7 @@ class LoadoutsNameDialogState extends State<LoadoutsNameDialog> {
   @override
   void initState() {
     super.initState();
-    _nameController.text = widget.loadout.loadoutName!;
+    _nameController.text = widget.loadout.loadoutName ?? "";
   }
 
   @override

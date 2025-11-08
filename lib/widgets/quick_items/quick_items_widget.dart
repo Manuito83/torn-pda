@@ -174,7 +174,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                       ),
             label: item.isLoadout!
                 ? Text(
-                    item.loadoutName!,
+                    item.loadoutName ?? "",
                     style: const TextStyle(fontSize: 11),
                   )
                 : item.isEnergyPoints! || item.isNervePoints!
