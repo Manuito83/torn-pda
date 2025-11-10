@@ -1,0 +1,53 @@
+# Implementation Plan
+
+- [x] 1. (P) Extend Flutter bridge to handle structured Live Update results
+- [x] 1.1 (P) Add typed result/events handling in LiveActivityBridgeController
+  - Convert MethodChannel calls to await structured responses for start, end, and capability queries, parsing status enums and capability snapshots from the Android bridge while remaining backward compatible with iOS’ null responses.
+  - Expose Streams or callbacks that emit dismissal/timeout events from the native layer so the travel controller and widgets can react without polling.
+  - Persist the latest capability snapshot in Dart-side state so settings screens can inform users about OEM capsule availability.
+  - _Requirements: Capability Scoping & Device Eligibility, Interaction & Surface Behavior, Lifecycle Management & Fallback Handling_
+- [x] 1.2 Update LiveActivityTravelController to react to new bridge contracts
+  - Handle unsupported status responses by immediately enabling fallback notifications or widgets and logging telemetry with the returned reason.
+  - Track session identifiers returned by the native layer and pass them into end requests and analytics events for traceability.
+  - Refresh local signals (`isAnyActivityActive`) based on native dismissal/timeout callbacks so Flutter widgets don't display stale countdowns.
+  - _Requirements: Countdown Content & Refresh Accuracy, Interaction & Surface Behavior, Lifecycle Management & Fallback Handling_
+
+- [ ] 2. Implement Android MethodChannel handler and LiveUpdateManager
+- [x] 2.1 Wire com.tornpda.liveactivity handler inside MainActivity
+  - Register a dedicated MethodChannel alongside the existing utilities channel, validating incoming payloads and forwarding them to a Kotlin LiveUpdateManager.
+  - Return structured maps (`status`, `sessionId`, `capabilitySnapshot`, `reason`) for start/end/isAnyActive calls, mirroring the Dart models.
+  - Surface native-to-Dart callbacks (`liveUpdateStatusChanged`, `liveUpdateCapabilityChanged`) via MethodChannel invocations when the manager emits events.
+  - _Requirements: Capability Scoping & Device Eligibility, Countdown Content & Refresh Accuracy, Interaction & Surface Behavior, Lifecycle Management & Fallback Handling_
+- [ ] 2.2 Build LiveUpdateManager with eligibility gating and session registry
+  - Evaluate OS version, notification permissions, battery optimizations, and OEM capsule availability before delegating to adapters, producing consistent `LiveUpdateStartResult` objects.
+  - Maintain a session registry with IDs, timestamps, and active status to respond instantly to `isAnyTravelActivityActive` requests and correlate Flutter telemetry.
+  - Emit dismissal/timeout events when adapters or OS callbacks signal changes, ensuring the Flutter side can trigger fallbacks per requirement.
+  - _Requirements: Capability Scoping & Device Eligibility, Interaction & Surface Behavior, Lifecycle Management & Fallback Handling_
+- [ ] 2.3 (P) Implement EligibilityEvaluator, CapabilityStore, and broadcast listeners
+  - Detect OnePlus capsule support, vendor info, and notification enablement, caching snapshots that Flutter can query even after app restarts.
+  - Listen for permission and OEM setting changes (e.g., notification toggles, battery saver transitions) to refresh eligibility before the next session request.
+  - Provide structured capability snapshots to both `start` responses and a new `getLiveUpdateCapabilities` channel method.
+  - _Requirements: Capability Scoping & Device Eligibility_
+
+- [ ] 3. Introduce LiveUpdateAdapter family and OEM capsule handling
+- [ ] 3.1 Scaffold AndroidLiveUpdateAdapter with NoOp fallback
+  - Create an adapter interface that accepts the travel payload, constructs tap PendingIntents to MainActivity, and interacts with the Android Live Updates SDK when available.
+  - Implement a NoOp adapter that returns `unsupported` with reason codes for devices below the required API level or missing dependencies.
+  - Ensure adapter responses include arrival state transitions and surface identifiers so Flutter can keep countdowns aligned across lock screen, shade, and capsules.
+  - _Requirements: Countdown Content & Refresh Accuracy, Interaction & Surface Behavior_
+- [ ] 3.2 (P) Add OemCapsuleAdapter decorations for OnePlus 13
+  - Inject capsule-specific metadata (icons, animation hints) and verify tap intents remain immutable and correctly routed to travel context.
+  - Publish capability flags indicating capsule readiness so Flutter settings can advise users to enable the OEM surface.
+  - Validate parity of content across capsule and non-capsule surfaces by reusing the same countdown data and verifying formatting constraints.
+  - _Requirements: Interaction & Surface Behavior_
+
+- [ ] 4. Testing and telemetry instrumentation
+- [ ] 4.1 Write Flutter unit tests for bridge and controller changes
+  - Cover parsing of start/end responses, unsupported reasons, and dismissal events so regressions surface quickly.
+  - Validate TravelController fallback logic triggers notifications/widgets when native reports unsupported or timeout statuses.
+  - _Requirements: Capability Scoping & Device Eligibility, Countdown Content & Refresh Accuracy, Lifecycle Management & Fallback Handling_
+- [ ] 4.2 Add Kotlin unit/instrumentation tests for manager and eligibility flow
+  - Mock eligibility permutations to ensure reason codes and capability snapshots match expectations across OS levels and OEM states.
+  - Verify session registry state transitions (start → active → dismissed/end) and MethodChannel callback payloads.
+  - Exercise PendingIntent routing within instrumentation tests to confirm taps open MainActivity with the travel deep link.
+  - _Requirements: Interaction & Surface Behavior, Lifecycle Management & Fallback Handling_
