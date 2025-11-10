@@ -234,10 +234,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late bool _alarmVibration;
 
   bool _miscApiFetchedOnce = false;
-  DateTime _miscTickLastTime = DateTime.now();
   OwnProfileMisc? _miscModel;
   TornEducationModel? _tornEducationModel;
   UserItemMarketResponse? _marketItemsV2;
+
+  // API call rate limiting
+  DateTime _lastFetchApiTime = DateTime.now();
+  DateTime _lastMiscUpdateTime = DateTime.now();
 
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
@@ -344,17 +347,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     routeName = "profile`";
   }
 
-  /// Restarts the API timer (to be executed after 20 seconds)
-  /// If [initCall] is true, a call is placed also at the start
-  /// (unless the browser is open)
+  /// Restarts the API timer with 1-second checks
+  /// [initCall] forces an immediate refresh (e.g., user pull-to-refresh)
   void _resetApiTimer({bool initCall = false}) {
     if (initCall && (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive)) {
-      _apiRefreshPeriodic(forceMisc: true);
+      _apiRefreshPeriodic(forceMisc: false);
     }
 
     _tickerCallApi?.cancel();
-    _tickerCallApi = Timer.periodic(const Duration(seconds: 20), (Timer t) {
-      // Only refresh if the browser is not open!
+    _tickerCallApi = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       if (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive) {
         _apiRefreshPeriodic();
       }
@@ -362,17 +363,22 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _apiRefreshPeriodic({bool forceMisc = false}) {
-    _fetchApi();
-    _refreshEvents();
+    // Fast calls: only if data is older than 20 seconds
+    final secondsSinceLastFetch = DateTime.now().difference(_lastFetchApiTime).inSeconds;
+    if (secondsSinceLastFetch >= 20) {
+      _fetchApi();
+      _refreshEvents();
+      _lastFetchApiTime = DateTime.now();
+    }
 
-    // Fetch misc every minute
-    final int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
-    if (secondsSinceLastMiscFetch > 60 || forceMisc) {
-      _miscTickLastTime = DateTime.now();
+    // Misc calls: only if data is older than 60 seconds (or forced)
+    final secondsSinceLastMisc = DateTime.now().difference(_lastMiscUpdateTime).inSeconds;
+    if (secondsSinceLastMisc >= 60 || forceMisc) {
       _getMiscCardInfo(forcedUpdate: forceMisc);
       _getStatsChart();
       _getRankedWars();
       _getCompanyAddiction();
+      _lastMiscUpdateTime = DateTime.now();
     }
   }
 
@@ -390,7 +396,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (Platform.isWindows) return;
 
     if (state == AppLifecycleState.resumed) {
-      _resetApiTimer(initCall: true);
+      _resetApiTimer(initCall: false);
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
     }

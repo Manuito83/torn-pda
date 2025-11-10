@@ -192,6 +192,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   bool _authenticationTimedOut = false;
   final Completer<void> _authenticationTimeoutCompleter = Completer<void>();
 
+  // Script updates check rate limiting (1 hour between checks)
+  DateTime _lastScriptUpdateCheck = DateTime.now().subtract(const Duration(hours: 2));
+
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
   static const bool _debugShowAllDialogs = kDebugMode && false;
@@ -2837,7 +2840,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _forceFireUserReload = false;
       }
 
-      if (duration.inDays > 1 || kDebugMode) {
+      if (duration.inDays > 1) {
         _settingsProvider.checkIfUserIsOnOCv2();
       }
     });
@@ -3264,6 +3267,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   void checkForScriptUpdates() {
+    // Rate limit: only check once per hour
+    final hoursSinceLastCheck = DateTime.now().difference(_lastScriptUpdateCheck).inHours;
+    if (hoursSinceLastCheck < 1) {
+      return;
+    }
+
+    _lastScriptUpdateCheck = DateTime.now();
+
     final int alreadyAvailableCount = _userScriptsProvider.userScriptList
         .where((s) => s.updateStatus == UserScriptUpdateStatus.updateAvailable)
         .length;

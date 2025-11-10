@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.9.4'
         ..date = '25 NOV 2025'
         ..features = [
+          "Optimized API call rate when bringing app to foreground",
           "Fixed issues with empty loadout names in quick items",
         ],
     );
