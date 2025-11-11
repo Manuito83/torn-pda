@@ -674,8 +674,11 @@ Future<void> _initializeGetXControllers() async {
     Get.put(PeriodicExecutionController(), permanent: true);
     Get.put(ChainStatusController(), permanent: true);
 
-    if (Platform.isIOS && kSdkIos >= 16.2) {
+    final bool enableLiveUpdateBridge = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
+    if (enableLiveUpdateBridge) {
       Get.put(LiveActivityBridgeController(), permanent: true);
+    }
+    if (Platform.isIOS && kSdkIos >= 16.2) {
       Get.put(LiveActivityTravelController(), permanent: true);
     }
   } catch (e, stackTrace) {
