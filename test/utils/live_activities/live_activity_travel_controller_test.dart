@@ -88,4 +88,36 @@ void main() {
     expect(controller.isLiveActivityActiveForTest, isTrue);
     expect(controller.activeSessionIdForTest, 'session-a');
   });
+
+  test('handleStatusEvent clears state on dismissed when session unknown', () {
+    final controller = buildController();
+    controller.applyStartResult(const LiveUpdateStartResult(
+      status: LiveUpdateRequestStatus.started,
+      sessionId: 'session-a',
+    ));
+
+    controller.handleStatusEvent(const LiveUpdateStatusEvent(
+      sessionId: null,
+      status: LiveUpdateLifecycleStatus.dismissed,
+      surface: LiveUpdateSurface.notification,
+    ));
+
+    expect(controller.isLiveActivityActiveForTest, isFalse);
+  });
+
+  test('handleStatusEvent does nothing when event not terminal', () {
+    final controller = buildController();
+    controller.applyStartResult(const LiveUpdateStartResult(
+      status: LiveUpdateRequestStatus.started,
+      sessionId: 'session-a',
+    ));
+
+    controller.handleStatusEvent(const LiveUpdateStatusEvent(
+      sessionId: 'session-a',
+      status: LiveUpdateLifecycleStatus.updated,
+      surface: LiveUpdateSurface.lockscreen,
+    ));
+
+    expect(controller.isLiveActivityActiveForTest, isTrue);
+  });
 }

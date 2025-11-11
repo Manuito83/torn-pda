@@ -128,7 +128,7 @@ public class MainActivity extends FlutterActivity {
                     }
                 });
 
-        LiveUpdatePlugin.register(flutterEngine);
+        LiveUpdatePlugin.register(flutterEngine, this);
     }
 
     // This cancels Firebase notifications upon request from the Flutter app, as the

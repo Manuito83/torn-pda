@@ -117,3 +117,13 @@ interface LiveUpdateEventEmitter {
     fun emitStatus(payload: Map<String, Any?>)
     fun emitCapability(payload: Map<String, Any?>)
 }
+
+object LiveUpdateIntentExtras {
+    const val EXTRA_TARGET_ROUTE = "live_update_target_route"
+    const val EXTRA_ENTRY_POINT = "live_update_entry_point"
+    const val EXTRA_SESSION_ID = "live_update_session_id"
+    const val EXTRA_TRAVEL_IDENTIFIER = "live_update_travel_identifier"
+    const val ROUTE_TRAVEL = "travel"
+    const val ENTRY_POINT_TRAVEL = "live_update_travel"
+    const val ACTION_TRAVEL_LIVE_UPDATE = "com.manuito.tornpda.action.TRAVEL_LIVE_UPDATE"
+}
