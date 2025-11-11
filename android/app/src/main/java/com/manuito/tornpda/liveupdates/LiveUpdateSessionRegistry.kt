@@ -35,7 +35,7 @@ class LiveUpdateSessionRegistry(context: Context) : LiveUpdateSessionStore {
             .apply()
     }
 
-    override fun clear(sessionId: String? = null) {
+    override fun clear(sessionId: String?) {
         if (sessionId != null && cachedState?.sessionId != sessionId) return
         cachedState = null
         prefs.edit().clear().apply()

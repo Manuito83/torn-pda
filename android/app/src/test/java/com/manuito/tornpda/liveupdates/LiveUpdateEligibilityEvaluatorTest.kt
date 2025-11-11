@@ -1,6 +1,6 @@
 package com.manuito.tornpda.liveupdates
 
-import android.test.mock.MockContext
+import android.content.ContextWrapper
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -8,7 +8,7 @@ import org.junit.Test
 
 class LiveUpdateEligibilityEvaluatorTest {
 
-    private val context = MockContext()
+    private val context = object : ContextWrapper(null) {}
 
     @Test
     fun apiTooOldProducesUnsupportedReason() {

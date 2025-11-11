@@ -139,7 +139,7 @@ class DefaultLiveUpdateManager(
         }
     }
 
-    override fun onCapability(snapshot: LiveUpdateCapabilitySnapshot) {
+    fun onCapability(snapshot: LiveUpdateCapabilitySnapshot) {
         notifyCapability(snapshot)
     }
 

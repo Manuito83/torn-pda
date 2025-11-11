@@ -117,7 +117,7 @@ class DefaultLiveUpdateManagerTest {
     private class RecordingAdapter : LiveUpdateAdapter {
         var startCalls = 0
         var endCalls = 0
-        var listener: LiveUpdateAdapterListener? = null
+        var adapterListener: LiveUpdateAdapterListener? = null
         var nextResult: LiveUpdateAdapterResult = LiveUpdateAdapterResult(LiveUpdateRequestStatus.STARTED)
 
         override fun startOrUpdate(sessionId: String, payload: LiveUpdatePayload): LiveUpdateAdapterResult {
@@ -133,11 +133,11 @@ class DefaultLiveUpdateManagerTest {
         override fun isActivityActive(): Boolean = startCalls > endCalls
 
         override fun setListener(listener: LiveUpdateAdapterListener?) {
-            this.listener = listener
+            this.adapterListener = listener
         }
 
         fun emitStatus(status: LiveUpdateLifecycleStatus, sessionId: String) {
-            listener?.onStatus(
+            adapterListener?.onStatus(
                 LiveUpdateStatusEvent(
                     sessionId = sessionId,
                     status = status,

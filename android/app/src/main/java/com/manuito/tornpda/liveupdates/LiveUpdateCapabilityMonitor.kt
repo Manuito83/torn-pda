@@ -1,12 +1,13 @@
 package com.manuito.tornpda.liveupdates
 
+import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
+import android.os.PowerManager
 import android.util.Log
-import android.app.NotificationManager
 
 /**
  * Listens to OS signals that may impact Live Update eligibility (notification permission, battery
@@ -28,7 +29,7 @@ class LiveUpdateCapabilityMonitor(
 
     private val intentFilter: IntentFilter = IntentFilter().apply {
         addAction(Intent.ACTION_BATTERY_CHANGED)
-        addAction(Intent.ACTION_POWER_SAVE_MODE_CHANGED)
+        addAction(PowerManager.ACTION_POWER_SAVE_MODE_CHANGED)
         addAction(Intent.ACTION_USER_PRESENT)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             addAction(NotificationManager.ACTION_APP_BLOCK_STATE_CHANGED)
