@@ -18,8 +18,16 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
   final _scrollController = ScrollController();
   final _searchController = TextEditingController();
   final _searchQueryNotifier = ValueNotifier<String>('');
+  late final Future<void> _initialLoadFuture;
 
   bool _fetchActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Cache initial delay future so the loading state does not restart on rebuilds.
+    _initialLoadFuture = Future.delayed(const Duration(milliseconds: 500));
+  }
 
   @override
   void dispose() {
@@ -53,13 +61,13 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
       elevation: 0.0,
       backgroundColor: Colors.transparent,
       content: FutureBuilder(
-        future: Future.delayed(const Duration(milliseconds: 500)),
+        future: _initialLoadFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             if (_fetchActive) {
               return fetchWaitScreen(context);
             } else {
-              return mainSpiesScreen(context);
+              return _wrapWithKeyboardDismiss(mainSpiesScreen(context));
             }
           } else {
             return loadWaitScreen(context);
@@ -252,6 +260,9 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
             child: TextField(
               controller: _searchController,
               autofocus: false,
+              onTapOutside: (_) {
+                FocusScope.of(context).unfocus();
+              },
               decoration: InputDecoration(
                 hintText: 'Search by name or ID...',
                 prefixIcon: const Icon(Icons.search),
@@ -495,6 +506,19 @@ class SpiesManagementDialogState extends State<SpiesManagementDialog> {
         ),
       );
     }
+  }
+
+  Widget _wrapWithKeyboardDismiss(Widget child) {
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        final focusScope = FocusScope.of(context);
+        if (!focusScope.hasPrimaryFocus && focusScope.focusedChild != null) {
+          focusScope.unfocus();
+        }
+      },
+      child: child,
+    );
   }
 
   Widget _buildSpyCard(dynamic spy) {

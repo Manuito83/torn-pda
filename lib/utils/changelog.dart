@@ -111,6 +111,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Optimized API call rate when bringing app to foreground",
           "Fixed issues with empty loadout names in quick items",
           "Fixed issues with locked tabs and navigation",
+          "Fixed spies dialog search not working in some devices",
         ],
     );
 
