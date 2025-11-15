@@ -1254,8 +1254,14 @@ class WebViewProvider extends ChangeNotifier {
 
   bool tryGoBack() {
     final tab = _tabList[currentTab];
+
+    final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
+    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
+    if (cancelDueLock != null && cancelDueLock) {
+      return false;
+    }
+
     if (tab.historyBack.isNotEmpty) {
-      final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
       addToHistoryForward(tab: tab, url: tab.currentUrl);
       tab.historyBack.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
@@ -1290,9 +1296,14 @@ class WebViewProvider extends ChangeNotifier {
 
   bool tryGoForward() {
     final tab = _tabList[currentTab];
-    if (tab.historyForward.isNotEmpty) {
-      final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
 
+    final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
+    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
+    if (cancelDueLock != null && cancelDueLock) {
+      return false;
+    }
+
+    if (tab.historyForward.isNotEmpty) {
       addToHistoryBack(tab: tab, currentUrl: tab.currentUrl);
 
       tab.historyForward.removeLast();

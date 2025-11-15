@@ -1383,7 +1383,7 @@ class WebViewFullState extends State<WebViewFull>
 
             // If a tab is fully locked, cancel navigation
             // Note: the mini profiles consideration (above) should come first
-            final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
+            final lockedTabCancels = lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
@@ -2059,7 +2059,7 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  bool _lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
+  bool lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
     if (incomingUrl == null) return false;
 
     if (_forceAllowWhenLocked) {
