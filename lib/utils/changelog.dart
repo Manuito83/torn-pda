@@ -113,6 +113,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed issues with locked tabs and navigation",
           "Fixed spies dialog search not working in some devices",
           "Fixed issues with player notes dialog getting covered by keyboard",
+          "Fixed browser history not updating correctly in some cases",
         ],
     );
 

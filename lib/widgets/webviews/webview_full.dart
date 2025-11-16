@@ -1758,6 +1758,14 @@ class WebViewFullState extends State<WebViewFull>
               }
 
               assessErrorCases(document: document);
+
+              if (uri != null) {
+                // Fallback to align tab history with the final URL once the page finishes loading
+                final tab = _webViewProvider.getTabFromKey(widget.key);
+                if (tab?.currentUrl != uri.toString()) {
+                  _reportUrlVisit(uri, bypassThrottle: true);
+                }
+              }
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -2381,7 +2389,11 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  void _reportUrlVisit(Uri? uri) {
+  void _reportUrlVisit(Uri? uri, {bool bypassThrottle = false}) {
+    if (uri == null) {
+      return;
+    }
+
     // This avoids reporting url such as "https://www.torn.com/imarket.php#/0.5912994041327981", which are generated
     // when returning from a bazaar and go straight to the market, not allowing to return to the item search
     if (uri.toString().contains("imarket.php#/")) {
@@ -2396,10 +2408,11 @@ class WebViewFullState extends State<WebViewFull>
     // Once from [onUpdateVisitedHistory] and again from [onResourceLoad].
     // There are also sections such as personal stats that trigger [onUpdateVisitedHistory] several times
     // when loading and when browsing backwards
-    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1.5) {
+    final now = DateTime.now();
+    if (!bypassThrottle && _urlTriggerTime != null && now.difference(_urlTriggerTime!).inMilliseconds < 1500) {
       return;
     }
-    _urlTriggerTime = DateTime.now();
+    _urlTriggerTime = now;
     //log(uri.toString());
 
     if (!_omitTabHistory) {
