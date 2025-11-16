@@ -191,6 +191,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   bool _hasAuthenticationError = false;
   bool _authenticationTimedOut = false;
   final Completer<void> _authenticationTimeoutCompleter = Completer<void>();
+  bool _authFailureLogged = false;
+  Stopwatch? _authFailureStopwatch;
 
   // Script updates check rate limiting (1 hour between checks)
   DateTime _lastScriptUpdateCheck = DateTime.now().subtract(const Duration(hours: 2));
@@ -198,6 +200,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
   static const bool _debugShowAllDialogs = kDebugMode && false;
+  // Force Firebase auth restoration to fail for testing
+  static const bool _debugForceFirebaseAuthMissing = kDebugMode && false;
   // DEBUG ## DEBUG
 
   @override
@@ -1894,7 +1898,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
                         : _hasAuthenticationError
                             ? AuthenticationLoadingWidget(
                                 themeProvider: _themeProvider!,
-                                webViewProvider: _webViewProvider,
+                                onCaptiveFinished: _handleAuthenticationCaptiveFinished,
                               )
                             : ConnectivityUI(
                                 themeProvider: _themeProvider!,
@@ -2455,6 +2459,30 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
+  void _handleAuthenticationCaptiveFinished() {
+    if (!mounted) {
+      return;
+    }
+
+    if (_authenticationTimedOut) {
+      return;
+    }
+
+    setState(() {
+      _authenticationTimedOut = true;
+      _hasAuthenticationError = false;
+    });
+
+    final int elapsedMs = _authFailureStopwatch?.elapsedMilliseconds ?? 0;
+    // Telemetry: loader countdown finished with no Firebase user recovered
+    _reportAuthenticationFailure(
+      method: 'captive_timeout',
+      reason: 'captive_timer_elapsed',
+      elapsedMs: elapsedMs,
+    );
+    _stopAuthFailureStopwatch();
+  }
+
   // ## Firebase Auth Restoration Process ##
   // - Post-import case: Create new anonymous user if needed after local backup import
   // - Immediate check: Try to get current Firebase user (fastest path)
@@ -2472,6 +2500,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // (so be leave this as a reminder)
     if (!UserHelper.isApiKeyValid) return;
 
+    _authFailureLogged = false;
+    _authFailureStopwatch = Stopwatch()..start();
+
     // Add extra delay for app updates to ensure Firebase is fully initialized
     if (appHasBeenUpdated) {
       await Future.delayed(const Duration(seconds: 1));
@@ -2479,7 +2510,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
     // Case 1: Post-import user creation
     if (justImportedFromLocalBackup) {
-      if (FirebaseAuth.instance.currentUser == null) {
+      if (!_debugForceFirebaseAuthMissing && FirebaseAuth.instance.currentUser == null) {
         log(
           "🔒 Drawer: Post-import check. Firebase user is null, proceeding with new anonymous sign-in.",
           name: "AUTH CHECKS",
@@ -2538,6 +2569,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           );
 
           await FirebaseCrashlytics.instance.recordError(e, s, reason: 'Auth Restoration: Post-import sign-in failed');
+
           BotToast.showText(
             clickClose: true,
             text: "A critical error occurred while creating your profile after the import.\n\n"
@@ -2548,7 +2580,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             contentPadding: const EdgeInsets.all(10),
           );
         }
-      } else {
+      } else if (FirebaseAuth.instance.currentUser != null) {
         log(
           "🔒 Drawer: WARNING - justImportedFromLocalBackup is true, but a Firebase user already exists. UID: ${FirebaseAuth.instance.currentUser!.uid}",
           name: "AUTH CHECKS",
@@ -2556,15 +2588,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         _userUID = FirebaseAuth.instance.currentUser!.uid;
         FirestoreHelper().setUID(_userUID);
       }
+
       justImportedFromLocalBackup = false;
-      _drawerUserChecked = true;
-      return;
+      if (!_debugForceFirebaseAuthMissing) {
+        _drawerUserChecked = true;
+        _stopAuthFailureStopwatch();
+        return;
+      }
     }
 
     // Case 2: Standard app launch
     User? user = FirebaseAuth.instance.currentUser;
 
-    if (user != null) {
+    if (user != null && !_debugForceFirebaseAuthMissing) {
       log(
         "🔒 Drawer: Session restored immediately. UID: ${user.uid}",
         name: "AUTH CHECKS",
@@ -2585,6 +2621,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _userUID = user.uid;
       FirestoreHelper().setUID(_userUID);
       _drawerUserChecked = true;
+      _stopAuthFailureStopwatch();
       return;
     }
 
@@ -2597,7 +2634,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       try {
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
         user = FirebaseAuth.instance.currentUser;
-        if (user != null) {
+        if (user != null && !_debugForceFirebaseAuthMissing) {
           log(
             "🔒 Drawer: Session restored after Firebase re-initialization. UID: ${user.uid}",
             name: "AUTH CHECKS",
@@ -2617,6 +2654,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _userUID = user.uid;
           FirestoreHelper().setUID(_userUID);
           _drawerUserChecked = true;
+          _stopAuthFailureStopwatch();
           return;
         }
       } catch (e) {
@@ -2644,6 +2682,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final retryStopwatch = Stopwatch()..start();
 
     for (int attempt = 1; attempt <= maxRetries; attempt++) {
+      if (_authenticationTimedOut) {
+        break;
+      }
+
       final delaySeconds = math.pow(2, attempt).toInt();
 
       log(
@@ -2653,11 +2695,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       await Future.delayed(Duration(seconds: delaySeconds));
 
+      if (_authenticationTimedOut) {
+        break;
+      }
+
       // Try Firebase.initializeApp on each retry attempt
       try {
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       } catch (e) {
         log("🔒 Drawer: Firebase re-initialization failed on retry attempt $attempt: $e", name: "AUTH CHECKS");
+      }
+
+      if (_authenticationTimedOut) {
+        break;
       }
 
       // Force refresh auth state
@@ -2670,9 +2720,13 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         log("🔒 Drawer: Auth state refresh failed on attempt $attempt: $e", name: "AUTH CHECKS");
       }
 
+      if (_authenticationTimedOut) {
+        break;
+      }
+
       user = FirebaseAuth.instance.currentUser;
 
-      if (user != null) {
+      if (user != null && !_debugForceFirebaseAuthMissing) {
         final elapsedMs = retryStopwatch.elapsedMilliseconds;
         log(
           "🔒 Drawer: Session restored after ${elapsedMs}ms on attempt $attempt. UID: ${user.uid}",
@@ -2695,6 +2749,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         FirestoreHelper().setUID(_userUID);
         _drawerUserChecked = true;
         retryStopwatch.stop();
+        _stopAuthFailureStopwatch();
 
         // Reset authentication error UI on success durante retry
         if (mounted) {
@@ -2707,117 +2762,89 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       }
     }
 
+    retryStopwatch.stop();
+
+    if (_authenticationTimedOut) {
+      if (!_authFailureLogged) {
+        // Telemetry: final timeout reached after retries without obtaining a user
+        _reportAuthenticationFailure(
+          method: 'captive_timeout',
+          reason: 'captive_timer_elapsed',
+          elapsedMs: retryStopwatch.elapsedMilliseconds,
+        );
+      }
+      _stopAuthFailureStopwatch();
+      await _authenticationTimeoutCompleter.future;
+      _drawerUserChecked = true;
+      return;
+    }
+
     log(
-      "🔒 Drawer: No user found after enhanced retry. Continuing with authStateChanges for remaining time...",
+      "🔒 Drawer: No user found after enhanced retry. Showing final recovery guidance.",
       name: "AUTH CHECKS",
     );
 
-    final stopwatch = Stopwatch()..start();
+    // Telemetry: retries exhausted without an authenticated user
+    _reportAuthenticationFailure(
+      method: 'retry_exponential_backoff',
+      reason: 'retry_exhausted_no_user',
+      elapsedMs: retryStopwatch.elapsedMilliseconds,
+    );
+    _stopAuthFailureStopwatch();
 
-    try {
-      user = await FirebaseAuth.instance
-          .authStateChanges()
-          .firstWhere((user) => user != null)
-          .timeout(const Duration(seconds: 30));
-
-      log(
-        "🔒 Drawer: Session restored via authStateChanges listener after ${stopwatch.elapsedMilliseconds}ms. UID: ${user!.uid}",
-        name: "AUTH CHECKS",
-      );
-
-      // Analytics: Auth success via slow path with timing
-      FirebaseAnalytics.instance.logEvent(
-        name: 'auth_restoration_success',
-        parameters: {
-          'method': 'auth_state_changes',
-          'time_ms': stopwatch.elapsedMilliseconds,
-          'success': 'true',
-          'platform': Platform.isIOS ? 'iOS' : 'Android',
-          'app_updated': appHasBeenUpdated.toString(),
-        },
-      );
-
-      await FirebaseCrashlytics.instance.recordError(
-        Exception('Auth Restoration: slow path success'),
-        null,
-        reason: 'Auth Restoration: slow path success',
-        information: ['Restoration time: ${stopwatch.elapsedMilliseconds} ms', 'Final UID: ${user.uid}'],
-        fatal: false,
-      );
-
-      _userUID = user.uid;
-      FirestoreHelper().setUID(_userUID);
-
-      // Reset authentication error UI on success
-      if (mounted) {
-        setState(() {
-          _hasAuthenticationError = false;
-        });
-      }
-    } on TimeoutException {
-      log(
-        "🔒 Drawer: Timeout reached after 60 seconds total (30s retry + 30s authStateChanges). Firebase session not restored. Informing user.",
-        name: "AUTH CHECKS",
-      );
-
-      // Analytics: Auth timeout failure
-      FirebaseAnalytics.instance.logEvent(
-        name: 'auth_restoration_failure',
-        parameters: {
-          'method': 'timeout',
-          'time_ms': 60000, // Total time (30s retry + 30s authStateChanges)
-          'success': 'false',
-          'reason': 'timeout_60s_total',
-          'platform': Platform.isIOS ? 'iOS' : 'Android',
-          'app_updated': appHasBeenUpdated.toString(),
-        },
-      );
-
-      await FirebaseCrashlytics.instance.recordError(
-        Exception('Auth Restoration: Timeout after 60 seconds total (30s retry + 30s authStateChanges)'),
-        StackTrace.current,
-        reason: 'Auth Restoration: Timeout',
-        information: ['API: ${UserHelper.apiKey}'],
-        fatal: true,
-      );
-
-      // Activate final timeout UI
-      if (mounted) {
-        setState(() {
-          _authenticationTimedOut = true;
-          _hasAuthenticationError = false;
-        });
-      }
-    } catch (e, s) {
-      log(
-        "🔒 Drawer: An unexpected error occurred while awaiting authStateChanges: $e",
-        name: "AUTH CHECKS",
-      );
-
-      await FirebaseCrashlytics.instance.recordError(
-        e,
-        s,
-        reason: 'Auth Restoration: Unexpected error',
-        fatal: true,
-      );
-
-      // Activate final timeout UI for unexpected errors
-      if (mounted) {
-        setState(() {
-          _authenticationTimedOut = true;
-          _hasAuthenticationError = false;
-        });
-      }
-    } finally {
-      stopwatch.stop();
+    if (mounted) {
+      setState(() {
+        _authenticationTimedOut = true;
+        _hasAuthenticationError = false;
+      });
     }
 
-    // If authentication timed out, wait for user to press "Understood" button
-    if (_authenticationTimedOut) {
-      await _authenticationTimeoutCompleter.future;
-    }
+    await _authenticationTimeoutCompleter.future;
 
     _drawerUserChecked = true;
+  }
+
+  /// Logs the auth restoration failure exactly once, tagging it with the
+  /// relevant context for Crashlytics and analytics
+  void _reportAuthenticationFailure({
+    required String method,
+    required String reason,
+    required int elapsedMs,
+  }) {
+    if (_authFailureLogged) {
+      return;
+    }
+
+    _authFailureLogged = true;
+
+    FirebaseAnalytics.instance.logEvent(
+      name: 'auth_restoration_failure',
+      parameters: {
+        'method': method,
+        'time_ms': elapsedMs,
+        'success': 'false',
+        'reason': reason,
+        'platform': Platform.isIOS ? 'iOS' : 'Android',
+        'app_updated': appHasBeenUpdated.toString(),
+      },
+    );
+
+    FirebaseCrashlytics.instance.recordError(
+      Exception('Auth Restoration: $reason'),
+      StackTrace.current,
+      reason: 'Auth Restoration: $reason',
+      information: [
+        'Method: $method',
+        'Elapsed ms: $elapsedMs',
+        'API: ${UserHelper.apiKey}',
+      ],
+      fatal: true,
+    );
+  }
+
+  void _stopAuthFailureStopwatch() {
+    _authFailureStopwatch?.stop();
+    _authFailureStopwatch = null;
   }
 
   Future<void> _updateLastActiveTime() async {
