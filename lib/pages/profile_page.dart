@@ -3773,6 +3773,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var cracking = getSkillValueSafe("cracking");
     var forgery = getSkillValueSafe("forgery");
     var scamming = getSkillValueSafe("scamming");
+    var arson = getSkillValueSafe("arson");
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -3785,7 +3786,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         disposal.isNotEmpty ||
         cracking.isNotEmpty ||
         forgery.isNotEmpty ||
-        scamming.isNotEmpty) {
+        scamming.isNotEmpty ||
+        arson.isNotEmpty) {
       crimesExist = true;
     }
 
@@ -4604,6 +4606,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                           style: TextStyle(
                                             color:
                                                 scamming == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                if (arson.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Arson: '),
+                                      ),
+                                      SelectionArea(
+                                        child: Text(
+                                          arson,
+                                          style: TextStyle(
+                                            color: arson == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
                                           ),
                                         ),
                                       ),
@@ -6805,6 +6824,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final cracking = getSkillValueSafe("cracking");
       final forgery = getSkillValueSafe("forgery");
       final scamming = getSkillValueSafe("scamming");
+      final arson = getSkillValueSafe("arson");
 
       if (searchForCash.isNotEmpty) {
         crimesString += '\nSearch for Cash: $searchForCash';
@@ -6852,6 +6872,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
       if (scamming.isNotEmpty) {
         crimesString += '\nScamming: $scamming';
+        crimesExist = true;
+      }
+      if (arson.isNotEmpty) {
+        crimesString += '\nArson: $arson';
         crimesExist = true;
       }
 

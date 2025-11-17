@@ -1004,6 +1004,7 @@ class Skills {
           'racing': 'Racing',
           'hustling': 'Hustling',
           'disposal': 'Disposal',
+          'arson': 'Arson',
         };
 
         skillMap.forEach((slug, name) {

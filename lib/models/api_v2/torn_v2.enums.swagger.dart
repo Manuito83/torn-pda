@@ -10317,6 +10317,8 @@ enum PersonalStatsStatName {
   burglaryskill('burglaryskill'),
   @JsonValue('hustlingskill')
   hustlingskill('hustlingskill'),
+  @JsonValue('arsonskill')
+  arsonskill('arsonskill'),
   @JsonValue('disposalskill')
   disposalskill('disposalskill'),
   @JsonValue('crackingskill')

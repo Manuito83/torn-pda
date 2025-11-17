@@ -34478,6 +34478,7 @@ class PersonalStatsCrimesV2$Skills {
     required this.cracking,
     required this.forgery,
     required this.scamming,
+    required this.arson,
   });
 
   factory PersonalStatsCrimesV2$Skills.fromJson(Map<String, dynamic> json) =>
@@ -34510,6 +34511,8 @@ class PersonalStatsCrimesV2$Skills {
   final int forgery;
   @JsonKey(name: 'scamming')
   final int scamming;
+  @JsonKey(name: 'arson')
+  final int arson;
   static const fromJsonFactory = _$PersonalStatsCrimesV2$SkillsFromJson;
 
   @override
@@ -34575,6 +34578,11 @@ class PersonalStatsCrimesV2$Skills {
                 const DeepCollectionEquality().equals(
                   other.scamming,
                   scamming,
+                )) &&
+            (identical(other.arson, arson) ||
+                const DeepCollectionEquality().equals(
+                  other.arson,
+                  arson,
                 )));
   }
 
@@ -34595,6 +34603,7 @@ class PersonalStatsCrimesV2$Skills {
       const DeepCollectionEquality().hash(cracking) ^
       const DeepCollectionEquality().hash(forgery) ^
       const DeepCollectionEquality().hash(scamming) ^
+      const DeepCollectionEquality().hash(arson) ^
       runtimeType.hashCode;
 }
 
@@ -34612,6 +34621,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
     int? cracking,
     int? forgery,
     int? scamming,
+    int? arson,
   }) {
     return PersonalStatsCrimesV2$Skills(
       searchForCash: searchForCash ?? this.searchForCash,
@@ -34626,6 +34636,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
       cracking: cracking ?? this.cracking,
       forgery: forgery ?? this.forgery,
       scamming: scamming ?? this.scamming,
+      arson: arson ?? this.arson,
     );
   }
 
@@ -34642,6 +34653,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
     Wrapped<int>? cracking,
     Wrapped<int>? forgery,
     Wrapped<int>? scamming,
+    Wrapped<int>? arson,
   }) {
     return PersonalStatsCrimesV2$Skills(
       searchForCash: (searchForCash != null ? searchForCash.value : this.searchForCash),
@@ -34656,6 +34668,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
       cracking: (cracking != null ? cracking.value : this.cracking),
       forgery: (forgery != null ? forgery.value : this.forgery),
       scamming: (scamming != null ? scamming.value : this.scamming),
+      arson: (arson != null ? arson.value : this.arson),
     );
   }
 }
