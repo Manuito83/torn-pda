@@ -114,6 +114,8 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed spies dialog search not working in some devices",
           "Fixed issues with player notes dialog getting covered by keyboard",
           "Fixed browser history not updating correctly in some cases",
+          "Fixed dialogs impeding touch interaction in some devices",
+          "Fixed Torn Stats chart export dialog closing unexpectedly",
         ],
     );
 

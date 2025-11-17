@@ -101,145 +101,141 @@ class _StatsChartState extends State<StatsChart> {
             }
 
             toastification.showCustom(
-              autoCloseDuration: const Duration(seconds: 8),
+              autoCloseDuration: null,
               alignment: Alignment.bottomCenter,
               builder: (BuildContext context, ToastificationItem holder) {
-                return GestureDetector(
-                  onTap: () {
-                    toastification.dismiss(holder);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: success ? Colors.green[600] : Colors.red[600],
-                      border: Border.all(
-                        color: success ? Colors.green.shade800 : Colors.red.shade800,
-                        width: 2,
-                      ),
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: success ? Colors.green[600] : Colors.red[600],
+                    border: Border.all(
+                      color: success ? Colors.green.shade800 : Colors.red.shade800,
+                      width: 2,
                     ),
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.all(8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Image.asset('images/icons/tornstats_logo.png', width: 24),
-                        const SizedBox(width: 20),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Stats update report',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset('images/icons/tornstats_logo.png', width: 24),
+                      const SizedBox(width: 20),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Stats update report',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                message,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              message,
+                              style: const TextStyle(
+                                color: Colors.white,
                               ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  if (success)
-                                    TextButton(
-                                      onPressed: () {
-                                        toastification.dismiss(holder);
-                                        const url = 'https://tornstats.com/';
-                                        context.read<WebViewProvider>().openBrowserPreference(
-                                              context: context,
-                                              url: url,
-                                              browserTapType: BrowserTapType.short,
-                                            );
-                                      },
-                                      child: const Text(
-                                        'Open Torn Stats',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12.0),
-                                          side: const BorderSide(color: Colors.white, width: 2.0),
-                                        ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                if (success)
+                                  TextButton(
+                                    onPressed: () {
+                                      toastification.dismiss(holder);
+                                      const url = 'https://tornstats.com/';
+                                      context.read<WebViewProvider>().openBrowserPreference(
+                                            context: context,
+                                            url: url,
+                                            browserTapType: BrowserTapType.short,
+                                          );
+                                    },
+                                    child: const Text(
+                                      'Open Torn Stats',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  if (success)
-                                    GestureDetector(
-                                      onTap: () {
-                                        Clipboard.setData(ClipboardData(text: message));
-                                        toastification.showCustom(
-                                          autoCloseDuration: const Duration(seconds: 2),
-                                          alignment: Alignment.center,
-                                          builder: (BuildContext context, ToastificationItem holder) {
-                                            return GestureDetector(
-                                              onTap: () {
-                                                toastification.dismiss(holder);
-                                              },
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  color: Colors.green[600],
-                                                  border: Border.all(
-                                                    color: Colors.green.shade800,
-                                                    width: 2,
-                                                  ),
-                                                ),
-                                                padding: const EdgeInsets.all(16),
-                                                margin: const EdgeInsets.all(8),
-                                                child: const Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                                  children: [
-                                                    Icon(Icons.copy),
-                                                    SizedBox(width: 20),
-                                                    Flexible(
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Text(
-                                                            'Copied to clipboard!',
-                                                            style: TextStyle(
-                                                              color: Colors.white,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-
-                                        setState(() {
-                                          _statsUpdating = false;
-                                        });
-                                      },
-                                      child: const Icon(Icons.copy, color: Colors.white),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        side: const BorderSide(color: Colors.white, width: 2.0),
+                                      ),
                                     ),
+                                  ),
+                                if (success)
                                   GestureDetector(
                                     onTap: () {
+                                      Clipboard.setData(ClipboardData(text: message));
                                       toastification.dismiss(holder);
+                                      toastification.showCustom(
+                                        autoCloseDuration: const Duration(seconds: 2),
+                                        alignment: Alignment.center,
+                                        builder: (BuildContext context, ToastificationItem holder) {
+                                          return GestureDetector(
+                                            onTap: () {
+                                              toastification.dismiss(holder);
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(8),
+                                                color: Colors.green[600],
+                                                border: Border.all(
+                                                  color: Colors.green.shade800,
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              padding: const EdgeInsets.all(16),
+                                              margin: const EdgeInsets.all(8),
+                                              child: const Row(
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.copy),
+                                                  SizedBox(width: 20),
+                                                  Flexible(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'Copied to clipboard!',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+
+                                      setState(() {
+                                        _statsUpdating = false;
+                                      });
                                     },
-                                    child: const Icon(Icons.cancel, color: Colors.white),
+                                    child: const Icon(Icons.copy, color: Colors.white),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                GestureDetector(
+                                  onTap: () {
+                                    toastification.dismiss(holder);
+                                  },
+                                  child: const Icon(Icons.cancel, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
