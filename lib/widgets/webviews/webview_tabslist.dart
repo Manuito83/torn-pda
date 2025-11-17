@@ -8,6 +8,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/responsive_text.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_item.dart';
 import 'package:torn_pda/widgets/webviews/circular_menu/circular_menu_tabs.dart';
 import 'package:torn_pda/widgets/webviews/tabs_lock_dialog.dart';
@@ -238,7 +239,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                             final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
                             if (!tabLockAlerted) {
                               Prefs().setFirstTabLockAlerted(true);
-                              showDialog<void>(
+                              showWebviewDialog<void>(
                                 context: context,
                                 barrierDismissible: false,
                                 builder: (BuildContext context) {
@@ -289,7 +290,7 @@ class TabsListState extends State<TabsList> with TickerProviderStateMixin {
                             final tabLockAlerted = await Prefs().getFirstTabLockAlerted();
                             if (!tabLockAlerted) {
                               Prefs().setFirstTabLockAlerted(true);
-                              showDialog<void>(
+                              showWebviewDialog<void>(
                                 context: context,
                                 barrierDismissible: false,
                                 builder: (BuildContext context) {

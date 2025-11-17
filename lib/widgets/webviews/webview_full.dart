@@ -72,6 +72,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
 import 'package:torn_pda/utils/webview/webview_utils.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
@@ -878,7 +879,7 @@ class WebViewFullState extends State<WebViewFull>
                 _webViewProvider.toggleHideTabs();
                 if (await Prefs().getReminderAboutHideTabFeature() == false) {
                   Prefs().setReminderAboutHideTabFeature(true);
-                  return showDialog<void>(
+                  return showWebviewDialog<void>(
                     context: context,
                     barrierDismissible: false,
                     builder: (BuildContext context) {
@@ -2597,7 +2598,7 @@ class WebViewFullState extends State<WebViewFull>
               _webViewProvider.toggleHideTabs();
               if (await Prefs().getReminderAboutHideTabFeature() == false) {
                 Prefs().setReminderAboutHideTabFeature(true);
-                return showDialog<void>(
+                return showWebviewDialog<void>(
                   context: context,
                   barrierDismissible: false,
                   builder: (BuildContext context) {
@@ -2666,7 +2667,7 @@ class WebViewFullState extends State<WebViewFull>
             openUrlDialog();
           },
           onLongPress: () {
-            showDialog<void>(
+            showWebviewDialog<void>(
               context: context,
               builder: (BuildContext context) {
                 return WebviewShortcutsDialog(
@@ -4534,7 +4535,7 @@ class WebViewFullState extends State<WebViewFull>
   Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
     final url = await webViewController!.getUrl();
-    return showDialog<void>(
+    return showWebviewDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
@@ -5574,7 +5575,7 @@ class WebViewFullState extends State<WebViewFull>
 
                           if (!error) {
                             final String u = open!.replaceAll("http:", "https:");
-                            return showDialog<void>(
+                            return showWebviewDialog<void>(
                               context: context,
                               barrierDismissible: false,
                               builder: (BuildContext context) {

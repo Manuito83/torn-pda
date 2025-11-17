@@ -695,6 +695,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "yata_stats_enabled": true,
         "prefs_backup_enabled": true,
         "tornexchange_enabled": true,
+        "webview_dialog_recovery_enabled_ios": false,
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
         "browser_center_editing_text_field_allowed": true,
@@ -759,6 +760,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
       _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
+      _webViewProvider.webviewDialogRecoveryEnabledIOS = remoteConfig.getBool("webview_dialog_recovery_enabled_ios");
       _settingsProvider.webviewCacheEnabledRemoteConfig = remoteConfig.getString("use_browser_cache");
       _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
       _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =

@@ -28,6 +28,7 @@ import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
+import 'package:torn_pda/utils/webview_interaction_recovery.dart';
 
 // Package imports:
 
@@ -500,6 +501,8 @@ class WebViewProvider extends ChangeNotifier {
     Prefs().setBrowserDoNotPauseWebviews(_browserDoNotPauseWebview);
     notifyListeners();
   }
+
+  bool webviewDialogRecoveryEnabledIOS = false;
 
   /// [recallLastSession] should be used to open a browser session where we left it last time
   Future<void> initialiseMain({
@@ -1020,6 +1023,27 @@ class WebViewProvider extends ChangeNotifier {
     if (_tabList.isEmpty) return;
     final currentTab = _tabList[this.currentTab];
     currentTab.webViewKey?.currentState?.openUrlDialog();
+  }
+
+  Future<void> notifyDialogClosed() async {
+    if (!Platform.isIOS) return;
+    if (_tabList.isEmpty) return;
+    if (!webviewDialogRecoveryEnabledIOS) return;
+
+    log(
+      name: "Dialog Restoration iOS",
+      "💬 Notifying dialog closed to webview for interaction restoration!",
+    );
+
+    final state = _tabList[currentTab].webViewKey?.currentState;
+    final controller = state?.webViewController;
+    if (controller != null) {
+      try {
+        await controller.evaluateJavascript(
+          source: WebviewInteractionRecoveryScripts.installClickRestoreShim,
+        );
+      } catch (_) {}
+    }
   }
 
   Future clearCacheAndTabs() async {

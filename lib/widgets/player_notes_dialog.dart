@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 /// Pure content widget for player notes editing. Presentation (width, background,
 /// scrolling, dialog animations) is provided by [showPlayerNotesDialog]
@@ -221,10 +222,10 @@ Future<void> showPlayerNotesDialog({
   required String playerId,
   String? playerName,
   bool barrierDismissible = false,
-}) {
+}) async {
   final themeProvider = context.read<ThemeProvider>();
 
-  return showGeneralDialog(
+  await showGeneralDialog(
     context: context,
     barrierDismissible: barrierDismissible,
     barrierLabel: 'Player Notes',
@@ -286,4 +287,10 @@ Future<void> showPlayerNotesDialog({
       );
     },
   );
+
+  try {
+    await context.read<WebViewProvider>().notifyDialogClosed();
+  } catch (_) {
+    // WebViewProvider may be unavailable outside the webview context.
+  }
 }

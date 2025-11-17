@@ -24,6 +24,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_add_button.dart';
 import 'package:torn_pda/widgets/profile_check/profile_check_notes.dart';
 import 'package:torn_pda/widgets/stats/stats_dialog.dart';
@@ -211,6 +212,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
 
       // FRIEND CHECK
       if (!mounted) return; // We could be unmounted when rapidly skipping the first target
+
       final friendsProv = context.read<FriendsProvider>();
       if (!friendsProv.initialized) {
         await friendsProv.initFriends();
@@ -566,8 +568,10 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
         borderColor: Colors.white,
         duration: 8,
       );
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.log("PDA Crash at Profile Check");
-      if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA Crash at Profile Check");
+        FirebaseCrashlytics.instance.recordError("PDA Error: $e", trace);
+      }
     }
   }
 
@@ -960,7 +964,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                           size: 18,
                         ),
                         onTap: () {
-                          showDialog<void>(
+                          showWebviewDialog<void>(
                             context: context,
                             builder: (BuildContext context) {
                               final spiesPayload = SpiesPayload(
@@ -1076,7 +1080,7 @@ class ProfileAttackCheckWidgetState extends State<ProfileAttackCheckWidget> {
                       size: 18,
                     ),
                     onTap: () {
-                      showDialog<void>(
+                      showWebviewDialog<void>(
                         context: context,
                         builder: (BuildContext context) {
                           final estimatedStatsPayload = EstimatedStatsPayload(
