@@ -207,6 +207,7 @@ class Prefs {
   // Profile options
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
   final String _kShowHeaderIcons = "pda_showHeaderIcons";
+  final String _kShowShortcutEditIcon = "pda_showShortcutEditIcon";
   final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
   final String _kDisableTravelSection = "pda_disableTravelSection";
@@ -2187,6 +2188,14 @@ class Prefs {
 
   Future setShowHeaderIcons(bool value) async {
     return await PrefsDatabase.setBool(_kShowHeaderIcons, value);
+  }
+
+  Future<bool> getShowShortcutEditIcon() async {
+    return await PrefsDatabase.getBool(_kShowShortcutEditIcon, true);
+  }
+
+  Future setShowShortcutEditIcon(bool value) async {
+    return await PrefsDatabase.setBool(_kShowShortcutEditIcon, value);
   }
 
   Future<List<String>> getIconsFiltered() async {

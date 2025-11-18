@@ -1149,6 +1149,15 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _showShortcutEditIcon = true;
+  bool get showShortcutEditIcon => _showShortcutEditIcon;
+  set showShortcutEditIcon(bool value) {
+    if (_showShortcutEditIcon == value) return;
+    _showShortcutEditIcon = value;
+    Prefs().setShowShortcutEditIcon(value);
+    notifyListeners();
+  }
+
   var _appwidgetDarkMode = false;
   bool get appwidgetDarkMode => _appwidgetDarkMode;
   set appwidgetDarkMode(bool value) {
@@ -1530,6 +1539,7 @@ class SettingsProvider extends ChangeNotifier {
     _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
+    _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
     _appwidgetRemoveShortcutsOneRowLayout = await Prefs().getAppwidgetRemoveShortcutsOneRowLayout();

@@ -272,6 +272,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _warnAboutChains = false;
   bool _showHeaderWallet = false;
   bool _showHeaderIcons = false;
+  bool _showShortcutEditIcon = true;
   bool _dedicatedTravelCard = false;
 
   late ChainModel _chainModel;
@@ -877,6 +878,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final warnChains = await Prefs().getWarnAboutChains();
             final headerWallet = await Prefs().getShowHeaderWallet();
             final headerIcons = await Prefs().getShowHeaderIcons();
+            final showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
             final dedTravel = await Prefs().getDedicatedTravelCard();
             final disableTravel = await Prefs().getDisableTravelSection();
             final expandEvents = await Prefs().getExpandEvents();
@@ -902,6 +904,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _warnAboutChains = warnChains;
               _showHeaderWallet = headerWallet;
               _showHeaderIcons = headerIcons;
+              _showShortcutEditIcon = showShortcutEditIcon;
               _dedicatedTravelCard = dedTravel;
               _eventsExpController.expanded = expandEvents;
               _messagesShowNumber = messagesNumber;
@@ -961,6 +964,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _shortcutsCarrousel() {
+    void openShortcutsEditor() {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
+    }
+
     // Returns Main individual tile
     Widget shortcutTile(Shortcut thisShortcut) {
       Widget tile;
@@ -1076,13 +1087,53 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
+    Widget editShortcutTile({double? width, double? height}) {
+      final bool iconOnly = _shortcutsProv.shortcutTile == "icon";
+
+      final card = Padding(
+        padding: const EdgeInsets.all(8),
+        child: SizedBox(
+          width: iconOnly ? 32 : 55,
+          child: Center(
+            child: Icon(
+              Icons.switch_access_shortcut_outlined,
+              size: 18,
+              color: _themeProvider!.mainText,
+            ),
+          ),
+        ),
+      );
+
+      final button = InkWell(
+        onTap: openShortcutsEditor,
+        borderRadius: BorderRadius.circular(4.0),
+        child: card,
+      );
+
+      final semantics = Semantics(
+        label: 'Open shortcuts menu',
+        button: true,
+        child: ExcludeSemantics(child: button),
+      );
+
+      if (width != null || height != null) {
+        return SizedBox(width: width, height: height, child: semantics);
+      }
+
+      return semantics;
+    }
+
     // Main menu, returns either slidable list or wrap (grid)
     Widget shortcutMenu() {
       if (_shortcutsProv.shortcutMenu == "carousel") {
         return ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: _shortcutsProv.activeShortcuts.length,
+          itemCount: _shortcutsProv.activeShortcuts.length + (_showShortcutEditIcon ? 1 : 0),
           itemBuilder: (context, index) {
+            final bool isEditOption = _showShortcutEditIcon && index == _shortcutsProv.activeShortcuts.length;
+            if (isEditOption) {
+              return editShortcutTile();
+            }
             final thisShortcut = _shortcutsProv.activeShortcuts[index];
             return Semantics(
               label: "Shortcut to ${thisShortcut.name}",
@@ -1116,8 +1167,72 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           );
         }
+        if (_showShortcutEditIcon) {
+          double h = 60;
+          double w = 70;
+          if (_shortcutsProv.shortcutMenu == "grid") {
+            if (_shortcutsProv.shortcutTile == "icon") {
+              h = 40;
+              w = 40;
+            }
+            if (_shortcutsProv.shortcutTile == "text") {
+              h = 40;
+              w = 70;
+            }
+          }
+          wrapItems.add(editShortcutTile(width: w, height: h));
+        }
         return Wrap(alignment: WrapAlignment.center, children: wrapItems);
       }
+    }
+
+    Widget emptyShortcutsState() {
+      final Color messageColor = _themeProvider!.getTextColor(Colors.orange[900]);
+
+      final description = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'No shortcuts configured, add some!',
+            style: TextStyle(
+              color: messageColor,
+              fontStyle: FontStyle.italic,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            _showShortcutEditIcon ? 'Tap the icon to configure' : 'Use the profile options to configure them',
+            style: TextStyle(
+              color: messageColor,
+              fontStyle: FontStyle.italic,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      );
+
+      if (!_showShortcutEditIcon) {
+        return Center(child: description);
+      }
+
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          description,
+          const SizedBox(width: 6),
+          Semantics(
+            label: 'Open shortcuts menu',
+            button: true,
+            child: ExcludeSemantics(
+              child: IconButton(
+                icon: const Icon(Icons.switch_access_shortcut_outlined),
+                color: messageColor,
+                onPressed: openShortcutsEditor,
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     return SizedBox(
@@ -1127,50 +1242,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           : _shortcutsProv.shortcutTile == 'both'
               ? 60
               : 40,
-      child: _shortcutsProv.activeShortcuts.isEmpty
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'No shortcuts configured, add some!',
-                      style: TextStyle(
-                        color: _themeProvider!.getTextColor(Colors.orange[900]),
-                        fontStyle: FontStyle.italic,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Text(
-                      'Tap the icon to configure',
-                      style: TextStyle(
-                        color: _themeProvider!.getTextColor(Colors.orange[900]),
-                        fontStyle: FontStyle.italic,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  child: Semantics(
-                    label: 'Open shortcuts menu',
-                    child: IconButton(
-                      icon: const Icon(Icons.switch_access_shortcut_outlined),
-                      color: _themeProvider!.getTextColor(Colors.orange[900]),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => ShortcutsPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : shortcutMenu(),
+      child: _shortcutsProv.activeShortcuts.isEmpty ? emptyShortcutsState() : shortcutMenu(),
     );
   }
 
@@ -7030,6 +7102,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _warnAboutChains = await Prefs().getWarnAboutChains();
     _showHeaderWallet = await Prefs().getShowHeaderWallet();
     _showHeaderIcons = await Prefs().getShowHeaderIcons();
+    _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
 
     final expandEvents = await Prefs().getExpandEvents();

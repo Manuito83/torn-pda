@@ -108,7 +108,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.9.4'
         ..date = '25 NOV 2025'
         ..features = [
-          "Added Arson crime to Profile page",
+          "Profile: added Arson crime",
+          "Profile: added edit icon to shortcuts list (can be disabled)",
           "Added direct browser access from Foreign Stocks section",
           "Optimized API call rate when bringing app to foreground",
           "Fixed issues with empty loadout names in quick items",
