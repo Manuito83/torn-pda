@@ -112,6 +112,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Profile: added edit icon to shortcuts list (can be disabled)",
           "Added direct browser access from Foreign Stocks section",
           "Optimized API call rate when bringing app to foreground",
+          "Fixed Calendar not taking user-selected event start time into account",
           "Fixed issues with empty loadout names in quick items",
           "Fixed issues with locked tabs and navigation",
           "Fixed spies dialog search not working in some devices",

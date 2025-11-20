@@ -28333,6 +28333,7 @@ class TornCalendarActivity {
     required this.description,
     required this.start,
     required this.end,
+    this.fixedStartTime,
   });
 
   factory TornCalendarActivity.fromJson(Map<String, dynamic> json) => _$TornCalendarActivityFromJson(json);
@@ -28348,6 +28349,8 @@ class TornCalendarActivity {
   final int start;
   @JsonKey(name: 'end')
   final int end;
+  @JsonKey(name: 'fixed_start_time')
+  final bool? fixedStartTime;
   static const fromJsonFactory = _$TornCalendarActivityFromJson;
 
   @override
@@ -28361,7 +28364,9 @@ class TornCalendarActivity {
                   description,
                 )) &&
             (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)));
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)) &&
+            (identical(other.fixedStartTime, fixedStartTime) ||
+                const DeepCollectionEquality().equals(other.fixedStartTime, fixedStartTime)));
   }
 
   @override
@@ -28373,6 +28378,7 @@ class TornCalendarActivity {
       const DeepCollectionEquality().hash(description) ^
       const DeepCollectionEquality().hash(start) ^
       const DeepCollectionEquality().hash(end) ^
+      const DeepCollectionEquality().hash(fixedStartTime) ^
       runtimeType.hashCode;
 }
 
@@ -28382,12 +28388,14 @@ extension $TornCalendarActivityExtension on TornCalendarActivity {
     String? description,
     int? start,
     int? end,
+    bool? fixedStartTime,
   }) {
     return TornCalendarActivity(
       title: title ?? this.title,
       description: description ?? this.description,
       start: start ?? this.start,
       end: end ?? this.end,
+      fixedStartTime: fixedStartTime ?? this.fixedStartTime,
     );
   }
 
@@ -28396,12 +28404,14 @@ extension $TornCalendarActivityExtension on TornCalendarActivity {
     Wrapped<String>? description,
     Wrapped<int>? start,
     Wrapped<int>? end,
+    Wrapped<bool?>? fixedStartTime,
   }) {
     return TornCalendarActivity(
       title: (title != null ? title.value : this.title),
       description: (description != null ? description.value : this.description),
       start: (start != null ? start.value : this.start),
       end: (end != null ? end.value : this.end),
+      fixedStartTime: (fixedStartTime != null ? fixedStartTime.value : this.fixedStartTime),
     );
   }
 }

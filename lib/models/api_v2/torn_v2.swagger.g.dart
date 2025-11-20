@@ -4346,6 +4346,7 @@ TornCalendarActivity _$TornCalendarActivityFromJson(Map<String, dynamic> json) =
       description: json['description'] as String,
       start: (json['start'] as num).toInt(),
       end: (json['end'] as num).toInt(),
+      fixedStartTime: json['fixed_start_time'] as bool?,
     );
 
 Map<String, dynamic> _$TornCalendarActivityToJson(TornCalendarActivity instance) => <String, dynamic>{
@@ -4353,6 +4354,7 @@ Map<String, dynamic> _$TornCalendarActivityToJson(TornCalendarActivity instance)
       'description': instance.description,
       'start': instance.start,
       'end': instance.end,
+      'fixed_start_time': instance.fixedStartTime,
     };
 
 TornCalendarResponse _$TornCalendarResponseFromJson(Map<String, dynamic> json) => TornCalendarResponse(
