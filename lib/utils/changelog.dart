@@ -120,6 +120,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed browser history not updating correctly in some cases",
           "Fixed dialogs impeding touch interaction in some devices",
           "Fixed Torn Stats chart export dialog closing unexpectedly",
+          "Fixed issues when sharing user scripts with cloud backup",
         ],
     );
 
