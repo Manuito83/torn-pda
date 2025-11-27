@@ -575,7 +575,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _handleChangelogAndOtherDialogs() async {
     try {
-      bool hasChangelog = appHasBeenUpdated || lastSavedAppCompilation.isEmpty;
+      bool hasChangelog = appHasBeenUpdated || appIsFirstRun;
 
       // Enqueue the changelog first with highest priority
       if (hasChangelog) {
@@ -1575,11 +1575,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
           _webViewProvider.browserShowInForeground = false;
         });
 
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (BuildContext context) => const UserScriptsPage(),
-          ),
-        );
+        if (_userScriptsProvider.isInSafeMode) {
+          _userScriptsProvider.showSafeModeWarning();
+        } else {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (BuildContext context) => const UserScriptsPage(),
+            ),
+          );
+        }
       } else if (payload.contains('400-')) {
         launchBrowserWithUrl = true;
         final npcId = payload.split('-')[1];

@@ -366,6 +366,7 @@ class SettingsProvider extends ChangeNotifier {
 
   void removeLockedTabNavigationException(int index) {
     _lockedTabsNavigationExceptions.removeAt(index);
+    Prefs().setLockedTabsNavigationExceptions(json.encode(_lockedTabsNavigationExceptions));
     notifyListeners();
   }
 

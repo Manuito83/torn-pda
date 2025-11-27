@@ -18,6 +18,7 @@ import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.da
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -629,6 +630,12 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                       ],
                                     ),
                                     onPressed: () {
+                                      final userScriptsProvider =
+                                          Provider.of<UserScriptsProvider>(context, listen: false);
+                                      if (userScriptsProvider.isInSafeMode) {
+                                        userScriptsProvider.showSafeModeWarning();
+                                        return;
+                                      }
                                       _customURLController.text = "";
                                       Navigator.of(context).pop();
                                       Navigator.of(context).push(
