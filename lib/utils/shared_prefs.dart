@@ -248,6 +248,7 @@ class Prefs {
   final String _kPlayerNotesSortAscending = "pda_playerNotesSortAscending";
   final String _kNotesWidgetEnabledProfile = "pda_notesWidgetEnabledProfile";
   final String _kNotesWidgetEnabledProfileWhenEmpty = "pda_notesWidgetEnabledProfileWhenEmpty";
+  final String _kJoblessWarningEnabled = "pda_joblessWarningEnabled";
   final String _kPlayerNotesMigrationCompleted = "pda_playerNotesMigrationCompleted";
 
   // OC v2
@@ -1798,6 +1799,14 @@ class Prefs {
 
   Future<bool> getNotesWidgetEnabledProfileWhenEmpty() async {
     return await PrefsDatabase.getBool(_kNotesWidgetEnabledProfileWhenEmpty, true);
+  }
+
+  Future<bool> getJoblessWarningEnabled() async {
+    return await PrefsDatabase.getBool(_kJoblessWarningEnabled, true);
+  }
+
+  Future<void> setJoblessWarningEnabled(bool value) async {
+    await PrefsDatabase.setBool(_kJoblessWarningEnabled, value);
   }
 
   // *************

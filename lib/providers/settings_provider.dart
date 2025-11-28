@@ -681,6 +681,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _joblessWarningEnabled = true;
+  bool get joblessWarningEnabled => _joblessWarningEnabled;
+  set changeJoblessWarningEnabled(bool value) {
+    _joblessWarningEnabled = value;
+    Prefs().setJoblessWarningEnabled(_joblessWarningEnabled);
+    notifyListeners();
+  }
+
   var _extraPlayerNetworth = false;
   bool get extraPlayerNetworth => _extraPlayerNetworth;
   set changeExtraPlayerNetworth(bool value) {
@@ -1562,6 +1570,8 @@ class SettingsProvider extends ChangeNotifier {
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
     _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
+
+    _joblessWarningEnabled = await Prefs().getJoblessWarningEnabled();
 
     notifyListeners();
   }

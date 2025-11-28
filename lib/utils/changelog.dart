@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.4 - Build 589 - 27/11/2025
+    // v3.9.4 - Build 590 - 27/11/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.4'
@@ -111,6 +111,7 @@ class ChangeLogState extends State<ChangeLog> {
           "User scripts can now be exported and imported in a JSON file",
           "Profile: added Arson crime",
           "Profile: added edit icon to shortcuts list (can be disabled)",
+          "Profile: added jobless warning with links to Hire Haven and newspaper (can be disabled)",
           "Added direct browser access from Foreign Stocks section",
           "Optimized API call rate when bringing app to foreground",
           "Added automatic local backup for scripts to help mitigate database issues",

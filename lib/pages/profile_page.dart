@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:flutter/gestures.dart';
 import 'package:android_intent_plus/android_intent.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -4775,6 +4776,67 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       return const SizedBox.shrink();
     }
 
+    // JOBLESS
+    Widget joblessWidget = const SizedBox.shrink();
+    bool joblessActive = false;
+    if (_settingsProvider!.joblessWarningEnabled && (_user!.job?.companyId == 0 || _user!.job?.job == "None")) {
+      showMisc = true;
+      joblessActive = true;
+      joblessWidget = Row(
+        children: [
+          const Icon(Icons.work_off_outlined, color: Colors.red),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: DefaultTextStyle.of(context).style,
+                children: [
+                  const TextSpan(text: "You don't have a job! You can get one in the "),
+                  TextSpan(
+                    text: "newspaper",
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchBrowser(url: 'https://www.torn.com/joblist.php#!p=main', shortTap: true);
+                      },
+                  ),
+                  const TextSpan(text: ", in the "),
+                  TextSpan(
+                    text: "recruitment forum",
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchBrowser(url: 'https://www.torn.com/forums.php#/p=forums&f=46&b=0&a=0', shortTap: true);
+                      },
+                  ),
+                  const TextSpan(text: " or by using "),
+                  TextSpan(
+                    text: "Hire Haven's services",
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchBrowser(
+                            url: 'https://www.torn.com/forums.php#/p=search&q=hire+haven&f=0&y=3', shortTap: true);
+                      },
+                  ),
+                  const TextSpan(text: "."),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     // ADDICTION
     Widget addictionWidget = const SizedBox.shrink();
     if (_user!.icons.icon57 != null ||
@@ -5223,6 +5285,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
+                  if (joblessActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: joblessWidget,
+                    ),
                   if (addictionActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
