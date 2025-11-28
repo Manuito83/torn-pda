@@ -114,6 +114,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added direct browser access from Foreign Stocks section",
           "Optimized API call rate when bringing app to foreground",
           "Added automatic local backup for scripts to help mitigate database issues",
+          "Locked tabs navigation exceptions now accept wildcards (*) and can be edited",
           "Fixed persistence for locked tabs navigation exceptions",
           "Fixed Calendar not taking user-selected event start time into account",
           "Fixed issues with empty loadout names in quick items",

@@ -17,6 +17,7 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
   final TextEditingController _urlController1 = TextEditingController();
   final TextEditingController _urlController2 = TextEditingController();
   String? _errorMessage;
+  int? _editingIndex;
 
   @override
   void dispose() {
@@ -40,7 +41,12 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
               const Text(
                 "By adding URL pairs, you can allow navigation between both in a locked tab. Note: the browser will "
                 "look for matching patterns between URLs (e.g., if you just input 'item' in both, browsing between URLs "
-                "containing 'item' will be allowed). You can be as specific or as general as you prefer.",
+                "containing 'item' will be allowed). You can be as specific or as general as you prefer.\n\n"
+                "IMPORTANT: bear in mind that Torn will sometimes change URLs during navigation (the URL you browse to is not the "
+                "same one you can copy after the page finishes loading). To mitigate this, you can also use '*' as a wildcard. "
+                "For example, 'torn.com/factions.php?step=your*' will match "
+                "'torn.com/factions.php?step=your' (navigation attempt) and "
+                "'torn.com/factions.php?step=your&type=1' (final URL shown).",
                 style: TextStyle(fontSize: 12),
               ),
               const SizedBox(height: 20),
@@ -75,29 +81,52 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
                 Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
               ],
               const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _errorMessage = null;
-                  });
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _errorMessage = null;
+                      });
 
-                  String url1 = _urlController1.text.trim();
-                  String url2 = _urlController2.text.trim();
+                      String url1 = _urlController1.text.trim();
+                      String url2 = _urlController2.text.trim();
 
-                  if (url1.isEmpty || url2.isEmpty) {
-                    setState(() {
-                      _errorMessage = "Both URLs must be provided.";
-                    });
-                    return;
-                  }
+                      if (url1.isEmpty || url2.isEmpty) {
+                        setState(() {
+                          _errorMessage = "Both URLs must be provided.";
+                        });
+                        return;
+                      }
 
-                  setState(() {
-                    widget.settingsProvider.addLockedTabNavigationException(url1, url2);
-                    _urlController1.clear();
-                    _urlController2.clear();
-                  });
-                },
-                child: const Text('Add Exception'),
+                      setState(() {
+                        if (_editingIndex != null) {
+                          widget.settingsProvider.removeLockedTabNavigationException(_editingIndex!);
+                          _editingIndex = null;
+                        }
+                        widget.settingsProvider.addLockedTabNavigationException(url1, url2);
+                        _urlController1.clear();
+                        _urlController2.clear();
+                      });
+                    },
+                    child: Text(_editingIndex == null ? 'Add Exception' : 'Update Exception'),
+                  ),
+                  if (_editingIndex != null) ...[
+                    const SizedBox(width: 10),
+                    TextButton(
+                      onPressed: () {
+                        setState(() {
+                          _editingIndex = null;
+                          _urlController1.clear();
+                          _urlController2.clear();
+                          _errorMessage = null;
+                        });
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                ],
               ),
               const SizedBox(height: 20),
               const Divider(),
@@ -140,9 +169,25 @@ class LockedTabsNavigationExceptionsPageState extends State<LockedTabsNavigation
                           ),
                         ),
                         IconButton(
+                          icon: const Icon(Icons.edit, color: Colors.blue),
+                          onPressed: () {
+                            setState(() {
+                              _editingIndex = index;
+                              _urlController1.text = pair[0];
+                              _urlController2.text = pair[1];
+                              _errorMessage = null;
+                            });
+                          },
+                        ),
+                        IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () {
                             setState(() {
+                              if (_editingIndex == index) {
+                                _editingIndex = null;
+                                _urlController1.clear();
+                                _urlController2.clear();
+                              }
                               widget.settingsProvider.removeLockedTabNavigationException(index);
                             });
                           },

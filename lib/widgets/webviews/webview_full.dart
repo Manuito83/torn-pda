@@ -2090,8 +2090,10 @@ class WebViewFullState extends State<WebViewFull>
 
           // Allow navigation if the current URL matches one of the URLs in the pair
           // and the incoming URL matches the other in the same pair
-          if ((_currentUrl.contains(url1) && incomingUrl.toString().contains(url2)) ||
-              (_currentUrl.contains(url2) && incomingUrl.toString().contains(url1))) {
+          if ((_matchesPatternWithWildcards(_currentUrl, url1) &&
+                  _matchesPatternWithWildcards(incomingUrl.toString(), url2)) ||
+              (_matchesPatternWithWildcards(_currentUrl, url2) &&
+                  _matchesPatternWithWildcards(incomingUrl.toString(), url1))) {
             return false;
           }
         }
@@ -2174,6 +2176,16 @@ class WebViewFullState extends State<WebViewFull>
       }
     }
     return false;
+  }
+
+  bool _matchesPatternWithWildcards(String url, String pattern) {
+    if (pattern.contains('*')) {
+      // Escape special regex characters, then replace the escaped wildcard with .*
+      final regExpPattern = RegExp.escape(pattern).replaceAll(r'\*', '.*');
+      return RegExp(regExpPattern, caseSensitive: false).hasMatch(url);
+    } else {
+      return url.contains(pattern);
+    }
   }
 
   Future<void> loadImageWithBackground(
@@ -4487,6 +4499,8 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   Future _reload() async {
+    if (webViewController == null) return;
+
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
 
