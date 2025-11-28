@@ -384,35 +384,31 @@ class WebViewFullState extends State<WebViewFull>
     // Check rotation! Webview will dispose itself
     // If we find a matching disposed tab, sharing the SAME KEY, it means that it was disposed (most probably due to rotation)
     // so we need to restore its state manually here (we'll also scroll in onLoadStop)
-    if (_settingsProvider.allowScreenRotation) {
-      for (var disposedTab in _webViewProvider.rotatedTabDetails) {
-        if (disposedTab.key == widget.key) {
-          _foundDisposedRotation = true;
-          _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
-          _disposedScrollX = disposedTab.scrollX ?? 0;
-          _disposedScrollY = disposedTab.scrollY ?? 0;
-          log(
-            "Found rotated webview ${widget.key}, url ${disposedTab.currentUrl}, scrollY $_disposedScrollY, scrollX $_disposedScrollX",
-            name: "ROTATED WEBVIEW",
-          );
+    // Note: we are not limiting this check to when rotation is allowed, as iPadOS can rotate even if the app doesn't allow it
+    for (var disposedTab in _webViewProvider.rotatedTabDetails) {
+      if (disposedTab.key == widget.key) {
+        _foundDisposedRotation = true;
+        _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
+        _disposedScrollX = disposedTab.scrollX ?? 0;
+        _disposedScrollY = disposedTab.scrollY ?? 0;
+        log(
+          "Found rotated webview ${widget.key}, url ${disposedTab.currentUrl}, scrollY $_disposedScrollY, scrollX $_disposedScrollX",
+          name: "ROTATED WEBVIEW",
+        );
 
-          // Give it a second to that all disposed/reinitiated webviews load, then clear the list
-          Future.delayed(const Duration(milliseconds: 1000), () {
-            _webViewProvider.rotatedTabDetails.clear();
-          });
-        }
+        // Give it a second to that all disposed/reinitiated webviews load, then clear the list
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          _webViewProvider.rotatedTabDetails.clear();
+        });
       }
+    }
 
-      if (!_foundDisposedRotation) {
-        // This is not a initialised tab after a rotation/disposed, so we use the standard URL
-        _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
-
-        // We keep the list of rotated tabs tidy (not strictly necessary)
-        _webViewProvider.rotatedTabDetails.clear();
-      }
-    } else {
-      // If we are not allowing rotation, we just use the custom URL
+    if (!_foundDisposedRotation) {
+      // This is not a initialised tab after a rotation/disposed, so we use the standard URL
       _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
+
+      // We keep the list of rotated tabs tidy (not strictly necessary)
+      _webViewProvider.rotatedTabDetails.clear();
     }
 
     // We will later changed this for a listenable one in build()
@@ -542,16 +538,14 @@ class WebViewFullState extends State<WebViewFull>
     // Update the scrolls with the latest width available
     // (in case we need to regenerate the webview after rotating the screen)
     // If null, it's probably because the webview is not yet initialized (so we don't log)
-    if (_settingsProvider.allowScreenRotation) {
-      final scrollX = await webViewController?.getScrollX();
-      if (scrollX != null) {
-        _scrollX = scrollX;
-      }
+    final scrollX = await webViewController?.getScrollX();
+    if (scrollX != null) {
+      _scrollX = scrollX;
+    }
 
-      final scrollY = await webViewController?.getScrollY();
-      if (scrollY != null) {
-        _scrollY = scrollY;
-      }
+    final scrollY = await webViewController?.getScrollY();
+    if (scrollY != null) {
+      _scrollY = scrollY;
     }
   }
 
@@ -559,16 +553,14 @@ class WebViewFullState extends State<WebViewFull>
   void dispose() async {
     try {
       // Send details to provider in case we are rotating
-      if (_settingsProvider.allowScreenRotation) {
-        _webViewProvider.rotatedTabDetails.add(
-          RotatedDisposedTabDetails(
-            key: widget.key,
-            currentUrl: _currentUrl,
-            scrollY: _scrollY,
-            scrollX: _scrollX,
-          ),
-        );
-      }
+      _webViewProvider.rotatedTabDetails.add(
+        RotatedDisposedTabDetails(
+          key: widget.key,
+          currentUrl: _currentUrl,
+          scrollY: _scrollY,
+          scrollX: _scrollX,
+        ),
+      );
 
       WidgetsBinding.instance.removeObserver(this);
       _findController.dispose();
