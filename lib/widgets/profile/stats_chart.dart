@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart_update.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -301,17 +302,32 @@ class _StatsChartState extends State<StatsChart> {
     final dexteritySpots = <FlSpot>[];
     final timestamps = <int?>[];
 
-    for (int i = 0; i < widget.statsData!.data!.length; i++) {
-      strengthSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].strength!.toDouble()));
-      speedSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].speed!.toDouble()));
-      defenseSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].defense!.toDouble()));
-      dexteritySpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].dexterity!.toDouble()));
-      timestamps.add(widget.statsData!.data![i].timestamp);
+    // Filter data based on range
+    var data = widget.statsData!.data!;
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final int rangeMonths = settingsProvider.tornStatsChartRange;
+
+    if (rangeMonths > 0) {
+      final now = DateTime.now();
+      final cutoffDate = now.subtract(Duration(days: rangeMonths * 30));
+      data = data.where((element) {
+        if (element.timestamp == null) return false;
+        final date = DateTime.fromMillisecondsSinceEpoch(element.timestamp! * 1000);
+        return date.isAfter(cutoffDate);
+      }).toList();
+    }
+
+    for (int i = 0; i < data.length; i++) {
+      strengthSpots.add(FlSpot(i.toDouble(), data[i].strength!.toDouble()));
+      speedSpots.add(FlSpot(i.toDouble(), data[i].speed!.toDouble()));
+      defenseSpots.add(FlSpot(i.toDouble(), data[i].defense!.toDouble()));
+      dexteritySpots.add(FlSpot(i.toDouble(), data[i].dexterity!.toDouble()));
+      timestamps.add(data[i].timestamp);
       final int thisMax = [
-        widget.statsData!.data![i].strength ?? 0,
-        widget.statsData!.data![i].speed ?? 0,
-        widget.statsData!.data![i].defense ?? 0,
-        widget.statsData!.data![i].dexterity ?? 0,
+        data[i].strength ?? 0,
+        data[i].speed ?? 0,
+        data[i].defense ?? 0,
+        data[i].dexterity ?? 0,
       ].fold(0, max);
       if (thisMax > maxStat) {
         maxStat = thisMax.toDouble();
@@ -319,7 +335,7 @@ class _StatsChartState extends State<StatsChart> {
     }
 
     return LineChartData(
-      maxY: maxStat * 1.05,
+      maxY: maxStat * 1.1,
       lineBarsData: [
         LineChartBarData(
           spots: strengthSpots,
@@ -405,25 +421,25 @@ class _StatsChartState extends State<StatsChart> {
             // Values come unsorted, we sort them here to our liking
             tooltips.add(
               LineTooltipItem(
-                "$strLine\n\nSTR: ${f.format(widget.statsData!.data![thisX].strength)}",
+                "$strLine\n\nSTR: ${f.format(data[thisX].strength)}",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
-                "DEF: ${f.format(widget.statsData!.data![thisX].defense)}",
+                "DEF: ${f.format(data[thisX].defense)}",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
-                "SPD: ${f.format(widget.statsData!.data![thisX].speed)}",
+                "SPD: ${f.format(data[thisX].speed)}",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
-                "DEX: ${f.format(widget.statsData!.data![thisX].dexterity)}\n\n$dexLine",
+                "DEX: ${f.format(data[thisX].dexterity)}\n\n$dexLine",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );

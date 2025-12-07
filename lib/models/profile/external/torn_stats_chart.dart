@@ -21,12 +21,19 @@ class StatsChartTornStats {
   int? shareHof;
   List<Datum>? data;
 
-  factory StatsChartTornStats.fromJson(Map<String, dynamic> json) => StatsChartTornStats(
+  factory StatsChartTornStats.fromJson(Map<String, dynamic> json) {
+    try {
+      return StatsChartTornStats(
         status: json["status"],
         message: json["message"],
-        shareHof: json["share_hof"],
+        shareHof: (json["share_hof"] as num?)?.toInt(),
         data: json["data"] == null ? null : List<Datum>.from(json["data"].map((x) => Datum.fromJson(x))),
       );
+    } catch (e) {
+      print('Error parsing StatsChartTornStats: $e');
+      rethrow;
+    }
+  }
 
   Map<String, dynamic> toJson() => {
         "status": status,
@@ -54,12 +61,12 @@ class Datum {
   int? timestamp;
 
   factory Datum.fromJson(Map<String, dynamic> json) => Datum(
-        strength: json["strength"],
-        defense: json["defense"],
-        speed: json["speed"],
-        dexterity: json["dexterity"],
-        total: json["total"],
-        timestamp: json["timestamp"],
+        strength: (json["strength"] as num?)?.toInt(),
+        defense: (json["defense"] as num?)?.toInt(),
+        speed: (json["speed"] as num?)?.toInt(),
+        dexterity: (json["dexterity"] as num?)?.toInt(),
+        total: (json["total"] as num?)?.toInt(),
+        timestamp: (json["timestamp"] as num?)?.toInt(),
       );
 
   Map<String, dynamic> toJson() => {

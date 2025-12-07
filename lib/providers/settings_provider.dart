@@ -1055,6 +1055,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _tornStatsChartRange = 0;
+  int get tornStatsChartRange => _tornStatsChartRange;
+  set setTornStatsChartRange(int value) {
+    _tornStatsChartRange = value;
+    Prefs().setTornStatsChartRange(tornStatsChartRange);
+    notifyListeners();
+  }
+
   var _tornStatsChartInCollapsedMiscCard = true;
   bool get tornStatsChartInCollapsedMiscCard => _tornStatsChartInCollapsedMiscCard;
   set setTornStatsChartInCollapsedMiscCard(bool value) {
@@ -1533,6 +1541,7 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartDateTime = await Prefs().getTornStatsChartDateTime();
     _tornStatsChartEnabled = await Prefs().getTornStatsChartEnabled();
     _tornStatsChartType = await Prefs().getTornStatsChartType();
+    _tornStatsChartRange = await Prefs().getTornStatsChartRange();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();

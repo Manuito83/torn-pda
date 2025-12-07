@@ -112,6 +112,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Profile: added Arson crime",
           "Profile: added edit icon to shortcuts list (can be disabled)",
           "Profile: added jobless warning with links to Hire Haven and newspaper (can be disabled)",
+          "Profile: fixed TS chart and added option to select time range",
           "Added direct browser access from Foreign Stocks section",
           "Optimized API call rate when bringing app to foreground",
           "Added automatic local backup for scripts to help mitigate database issues",
