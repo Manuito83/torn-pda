@@ -1239,6 +1239,58 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                       ],
                                     ),
                                   ),
+                                if (sendbird.sendBirdNotificationsEnabled)
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 30, right: 8),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.keyboard_arrow_right_outlined),
+                                        Flexible(
+                                          child: CheckboxListTile(
+                                            dense: true,
+                                            checkColor: Colors.white,
+                                            activeColor: Colors.red[900],
+                                            value: sendbird.excludeEliminationMessages,
+                                            title: const Row(
+                                              children: [
+                                                Text(
+                                                  "Exclude Elimination event messages",
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            subtitle: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text(
+                                                  "Elimination event messages won't be shown",
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                                if (sendbird.excludeEliminationMessages)
+                                                  Text(
+                                                      "NOTE: this will affect all installations of Torn PDA & ${Platform.isAndroid ? 'Lite' : 'City'} in other devices "
+                                                      "that you use with this player account",
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        fontStyle: FontStyle.italic,
+                                                        color: _themeProvider!.getTextColor(Colors.orange[900]!),
+                                                      )),
+                                              ],
+                                            ),
+                                            onChanged: (enabled) async {
+                                              sendbird.excludeEliminationMessages = enabled!;
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                               ],
                             );
                           } else {

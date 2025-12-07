@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.4 - Build 591 - 29/11/2025
+    // v3.9.4 - Build 592 - 07/12/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.4'
@@ -117,6 +117,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Optimized API call rate when bringing app to foreground",
           "Added automatic local backup for scripts to help mitigate database issues",
           "Locked tabs navigation exceptions now accept wildcards (*) and can be edited",
+          "Elimination messages can now be excluded from chat notifications",
           "Fixed persistence for locked tabs navigation exceptions",
           "Fixed Calendar not taking user-selected event start time into account",
           "Fixed issues with empty loadout names in quick items",
