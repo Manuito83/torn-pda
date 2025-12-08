@@ -34,14 +34,13 @@ class WebviewShortcutsDialog extends StatefulWidget {
 class WebviewShortcutsDialogState extends State<WebviewShortcutsDialog> {
   late ThemeProvider _themeProvider;
   late ShortcutsProvider _shortcutsProvider;
-  
+
   late WebViewProvider _webViewProvider;
 
   @override
   void initState() {
     super.initState();
 
-    
     _shortcutsProvider = Provider.of<ShortcutsProvider>(context, listen: false);
     _themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     _webViewProvider = Provider.of<WebViewProvider>(context, listen: false);

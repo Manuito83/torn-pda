@@ -11,13 +11,13 @@ String formatBigNumbers(int moneyInput) {
   const thousand = 1000;
 
   // Profit
-  if (moneyInput < -billion || moneyInput > billion) {
+  if (moneyInput <= -billion || moneyInput >= billion) {
     final profitBillion = moneyInput / billion;
     numberFormatted = '${long.format(profitBillion)}B';
-  } else if (moneyInput < -million || moneyInput > million) {
+  } else if (moneyInput <= -million || moneyInput >= million) {
     final profitMillion = moneyInput / million;
     numberFormatted = '${long.format(profitMillion)}M';
-  } else if (moneyInput < -thousand || moneyInput > thousand) {
+  } else if (moneyInput <= -thousand || moneyInput >= thousand) {
     final profitThousand = moneyInput / thousand;
     numberFormatted = '${long.format(profitThousand)}K';
   } else {

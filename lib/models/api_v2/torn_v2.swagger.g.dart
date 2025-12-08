@@ -4346,6 +4346,7 @@ TornCalendarActivity _$TornCalendarActivityFromJson(Map<String, dynamic> json) =
       description: json['description'] as String,
       start: (json['start'] as num).toInt(),
       end: (json['end'] as num).toInt(),
+      fixedStartTime: json['fixed_start_time'] as bool?,
     );
 
 Map<String, dynamic> _$TornCalendarActivityToJson(TornCalendarActivity instance) => <String, dynamic>{
@@ -4353,6 +4354,7 @@ Map<String, dynamic> _$TornCalendarActivityToJson(TornCalendarActivity instance)
       'description': instance.description,
       'start': instance.start,
       'end': instance.end,
+      'fixed_start_time': instance.fixedStartTime,
     };
 
 TornCalendarResponse _$TornCalendarResponseFromJson(Map<String, dynamic> json) => TornCalendarResponse(
@@ -5497,6 +5499,7 @@ PersonalStatsCrimesV2$Skills _$PersonalStatsCrimesV2$SkillsFromJson(Map<String, 
       cracking: (json['cracking'] as num).toInt(),
       forgery: (json['forgery'] as num).toInt(),
       scamming: (json['scamming'] as num).toInt(),
+      arson: (json['arson'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PersonalStatsCrimesV2$SkillsToJson(PersonalStatsCrimesV2$Skills instance) => <String, dynamic>{
@@ -5512,6 +5515,7 @@ Map<String, dynamic> _$PersonalStatsCrimesV2$SkillsToJson(PersonalStatsCrimesV2$
       'cracking': instance.cracking,
       'forgery': instance.forgery,
       'scamming': instance.scamming,
+      'arson': instance.arson,
     };
 
 PersonalStatsCrimesPopular$Crimes _$PersonalStatsCrimesPopular$CrimesFromJson(Map<String, dynamic> json) =>

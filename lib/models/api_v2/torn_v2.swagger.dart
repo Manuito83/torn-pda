@@ -28333,6 +28333,7 @@ class TornCalendarActivity {
     required this.description,
     required this.start,
     required this.end,
+    this.fixedStartTime,
   });
 
   factory TornCalendarActivity.fromJson(Map<String, dynamic> json) => _$TornCalendarActivityFromJson(json);
@@ -28348,6 +28349,8 @@ class TornCalendarActivity {
   final int start;
   @JsonKey(name: 'end')
   final int end;
+  @JsonKey(name: 'fixed_start_time')
+  final bool? fixedStartTime;
   static const fromJsonFactory = _$TornCalendarActivityFromJson;
 
   @override
@@ -28361,7 +28364,9 @@ class TornCalendarActivity {
                   description,
                 )) &&
             (identical(other.start, start) || const DeepCollectionEquality().equals(other.start, start)) &&
-            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)));
+            (identical(other.end, end) || const DeepCollectionEquality().equals(other.end, end)) &&
+            (identical(other.fixedStartTime, fixedStartTime) ||
+                const DeepCollectionEquality().equals(other.fixedStartTime, fixedStartTime)));
   }
 
   @override
@@ -28373,6 +28378,7 @@ class TornCalendarActivity {
       const DeepCollectionEquality().hash(description) ^
       const DeepCollectionEquality().hash(start) ^
       const DeepCollectionEquality().hash(end) ^
+      const DeepCollectionEquality().hash(fixedStartTime) ^
       runtimeType.hashCode;
 }
 
@@ -28382,12 +28388,14 @@ extension $TornCalendarActivityExtension on TornCalendarActivity {
     String? description,
     int? start,
     int? end,
+    bool? fixedStartTime,
   }) {
     return TornCalendarActivity(
       title: title ?? this.title,
       description: description ?? this.description,
       start: start ?? this.start,
       end: end ?? this.end,
+      fixedStartTime: fixedStartTime ?? this.fixedStartTime,
     );
   }
 
@@ -28396,12 +28404,14 @@ extension $TornCalendarActivityExtension on TornCalendarActivity {
     Wrapped<String>? description,
     Wrapped<int>? start,
     Wrapped<int>? end,
+    Wrapped<bool?>? fixedStartTime,
   }) {
     return TornCalendarActivity(
       title: (title != null ? title.value : this.title),
       description: (description != null ? description.value : this.description),
       start: (start != null ? start.value : this.start),
       end: (end != null ? end.value : this.end),
+      fixedStartTime: (fixedStartTime != null ? fixedStartTime.value : this.fixedStartTime),
     );
   }
 }
@@ -34478,6 +34488,7 @@ class PersonalStatsCrimesV2$Skills {
     required this.cracking,
     required this.forgery,
     required this.scamming,
+    required this.arson,
   });
 
   factory PersonalStatsCrimesV2$Skills.fromJson(Map<String, dynamic> json) =>
@@ -34510,6 +34521,8 @@ class PersonalStatsCrimesV2$Skills {
   final int forgery;
   @JsonKey(name: 'scamming')
   final int scamming;
+  @JsonKey(name: 'arson')
+  final int arson;
   static const fromJsonFactory = _$PersonalStatsCrimesV2$SkillsFromJson;
 
   @override
@@ -34575,6 +34588,11 @@ class PersonalStatsCrimesV2$Skills {
                 const DeepCollectionEquality().equals(
                   other.scamming,
                   scamming,
+                )) &&
+            (identical(other.arson, arson) ||
+                const DeepCollectionEquality().equals(
+                  other.arson,
+                  arson,
                 )));
   }
 
@@ -34595,6 +34613,7 @@ class PersonalStatsCrimesV2$Skills {
       const DeepCollectionEquality().hash(cracking) ^
       const DeepCollectionEquality().hash(forgery) ^
       const DeepCollectionEquality().hash(scamming) ^
+      const DeepCollectionEquality().hash(arson) ^
       runtimeType.hashCode;
 }
 
@@ -34612,6 +34631,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
     int? cracking,
     int? forgery,
     int? scamming,
+    int? arson,
   }) {
     return PersonalStatsCrimesV2$Skills(
       searchForCash: searchForCash ?? this.searchForCash,
@@ -34626,6 +34646,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
       cracking: cracking ?? this.cracking,
       forgery: forgery ?? this.forgery,
       scamming: scamming ?? this.scamming,
+      arson: arson ?? this.arson,
     );
   }
 
@@ -34642,6 +34663,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
     Wrapped<int>? cracking,
     Wrapped<int>? forgery,
     Wrapped<int>? scamming,
+    Wrapped<int>? arson,
   }) {
     return PersonalStatsCrimesV2$Skills(
       searchForCash: (searchForCash != null ? searchForCash.value : this.searchForCash),
@@ -34656,6 +34678,7 @@ extension $PersonalStatsCrimesV2$SkillsExtension on PersonalStatsCrimesV2$Skills
       cracking: (cracking != null ? cracking.value : this.cracking),
       forgery: (forgery != null ? forgery.value : this.forgery),
       scamming: (scamming != null ? scamming.value : this.scamming),
+      arson: (arson != null ? arson.value : this.arson),
     );
   }
 }

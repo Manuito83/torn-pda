@@ -22,6 +22,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart' show PlayerNoteColor;
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/dotted_border.dart';
@@ -395,7 +396,7 @@ class WebViewPanicState extends State<WebViewPanic> {
 
   Future<void> _openUrlDialog() async {
     final url = await _webViewController!.currentUrl();
-    return showDialog<void>(
+    return showWebviewDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return WebviewUrlDialog(

@@ -663,26 +663,43 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                     ),
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: <Widget>[
-                                      const Flexible(
-                                        child: Text("Chart type"),
-                                      ),
-                                      const Padding(
-                                        padding: EdgeInsets.only(left: 20),
-                                      ),
-                                      Flexible(
-                                        child: _chartTypeDropdown(),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                                 if (_settingsProvider.tornStatsChartEnabled)
                                   Column(
                                     children: [
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: <Widget>[
+                                            const Flexible(
+                                              child: Text("Chart type"),
+                                            ),
+                                            const Padding(
+                                              padding: EdgeInsets.only(left: 20),
+                                            ),
+                                            Flexible(
+                                              child: _chartTypeDropdown(),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: <Widget>[
+                                            const Flexible(
+                                              child: Text("Chart range"),
+                                            ),
+                                            const Padding(
+                                              padding: EdgeInsets.only(left: 20),
+                                            ),
+                                            Flexible(
+                                              child: _chartRangeDropdown(),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 15),
                                         child: Row(
@@ -863,6 +880,48 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(
+                                      'MISC',
+                                      style: TextStyle(fontSize: 10),
+                                    ),
+                                  ],
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      const Text("Show jobless warning"),
+                                      Switch(
+                                        value: _settingsProvider.joblessWarningEnabled,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _settingsProvider.changeJoblessWarningEnabled = value;
+                                          });
+                                        },
+                                        activeTrackColor: Colors.lightGreenAccent,
+                                        activeThumbColor: Colors.green,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                                  child: Text(
+                                    "If active, a warning will be shown in the Misc card if you don't have a job",
+                                    style: TextStyle(
+                                      color: Colors.grey[600],
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 15),
+                                const Divider(),
+                                const SizedBox(height: 5),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
                                       'CARDS ORDER',
                                       style: TextStyle(fontSize: 10),
                                     ),
@@ -974,6 +1033,84 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
       onChanged: (value) {
         setState(() {
           _settingsProvider.setTornStatsChartType = value!;
+        });
+      },
+    );
+  }
+
+  DropdownButton _chartRangeDropdown() {
+    return DropdownButton<int>(
+      value: _settingsProvider.tornStatsChartRange,
+      items: const [
+        DropdownMenuItem(
+          value: 3,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "3 Months",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 6,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "6 Months",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 12,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "1 Year",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 24,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "2 Years",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: 0,
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "All Time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _settingsProvider.setTornStatsChartRange = value!;
         });
       },
     );

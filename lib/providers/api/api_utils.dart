@@ -40,6 +40,7 @@ enum ApiSelection_v2 {
   userProfileMisc,
   otherUserProfile,
   tornCalendar,
+  userCalendar,
   oc2UserCrime,
 }
 

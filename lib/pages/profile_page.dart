@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'dart:io';
 
 // Flutter imports:
+import 'package:flutter/gestures.dart';
 import 'package:android_intent_plus/android_intent.dart';
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -234,10 +235,13 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   late bool _alarmVibration;
 
   bool _miscApiFetchedOnce = false;
-  DateTime _miscTickLastTime = DateTime.now();
   OwnProfileMisc? _miscModel;
   TornEducationModel? _tornEducationModel;
   UserItemMarketResponse? _marketItemsV2;
+
+  // API call rate limiting
+  DateTime _lastFetchApiTime = DateTime.now();
+  DateTime _lastMiscUpdateTime = DateTime.now();
 
   var _rentedProperties = 0;
   Widget _rentedPropertiesWidget = const SizedBox.shrink();
@@ -269,6 +273,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _warnAboutChains = false;
   bool _showHeaderWallet = false;
   bool _showHeaderIcons = false;
+  bool _showShortcutEditIcon = true;
   bool _dedicatedTravelCard = false;
 
   late ChainModel _chainModel;
@@ -344,17 +349,15 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     routeName = "profile`";
   }
 
-  /// Restarts the API timer (to be executed after 20 seconds)
-  /// If [initCall] is true, a call is placed also at the start
-  /// (unless the browser is open)
+  /// Restarts the API timer with 1-second checks
+  /// [initCall] forces an immediate refresh (e.g., user pull-to-refresh)
   void _resetApiTimer({bool initCall = false}) {
     if (initCall && (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive)) {
-      _apiRefreshPeriodic(forceMisc: true);
+      _apiRefreshPeriodic(forceMisc: false);
     }
 
     _tickerCallApi?.cancel();
-    _tickerCallApi = Timer.periodic(const Duration(seconds: 20), (Timer t) {
-      // Only refresh if the browser is not open!
+    _tickerCallApi = Timer.periodic(const Duration(seconds: 1), (Timer t) {
       if (!_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive) {
         _apiRefreshPeriodic();
       }
@@ -362,17 +365,22 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _apiRefreshPeriodic({bool forceMisc = false}) {
-    _fetchApi();
-    _refreshEvents();
+    // Fast calls: only if data is older than 20 seconds
+    final secondsSinceLastFetch = DateTime.now().difference(_lastFetchApiTime).inSeconds;
+    if (secondsSinceLastFetch >= 20) {
+      _fetchApi();
+      _refreshEvents();
+      _lastFetchApiTime = DateTime.now();
+    }
 
-    // Fetch misc every minute
-    final int secondsSinceLastMiscFetch = DateTime.now().difference(_miscTickLastTime).inSeconds;
-    if (secondsSinceLastMiscFetch > 60 || forceMisc) {
-      _miscTickLastTime = DateTime.now();
+    // Misc calls: only if data is older than 60 seconds (or forced)
+    final secondsSinceLastMisc = DateTime.now().difference(_lastMiscUpdateTime).inSeconds;
+    if (secondsSinceLastMisc >= 60 || forceMisc) {
       _getMiscCardInfo(forcedUpdate: forceMisc);
       _getStatsChart();
       _getRankedWars();
       _getCompanyAddiction();
+      _lastMiscUpdateTime = DateTime.now();
     }
   }
 
@@ -390,7 +398,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     if (Platform.isWindows) return;
 
     if (state == AppLifecycleState.resumed) {
-      _resetApiTimer(initCall: true);
+      _resetApiTimer(initCall: false);
     } else if (state == AppLifecycleState.paused) {
       _tickerCallApi?.cancel();
     }
@@ -871,6 +879,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             final warnChains = await Prefs().getWarnAboutChains();
             final headerWallet = await Prefs().getShowHeaderWallet();
             final headerIcons = await Prefs().getShowHeaderIcons();
+            final showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
             final dedTravel = await Prefs().getDedicatedTravelCard();
             final disableTravel = await Prefs().getDisableTravelSection();
             final expandEvents = await Prefs().getExpandEvents();
@@ -896,6 +905,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
               _warnAboutChains = warnChains;
               _showHeaderWallet = headerWallet;
               _showHeaderIcons = headerIcons;
+              _showShortcutEditIcon = showShortcutEditIcon;
               _dedicatedTravelCard = dedTravel;
               _eventsExpController.expanded = expandEvents;
               _messagesShowNumber = messagesNumber;
@@ -955,6 +965,14 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _shortcutsCarrousel() {
+    void openShortcutsEditor() {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (BuildContext context) => ShortcutsPage(),
+        ),
+      );
+    }
+
     // Returns Main individual tile
     Widget shortcutTile(Shortcut thisShortcut) {
       Widget tile;
@@ -1070,13 +1088,53 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       );
     }
 
+    Widget editShortcutTile({double? width, double? height}) {
+      final bool iconOnly = _shortcutsProv.shortcutTile == "icon";
+
+      final card = Padding(
+        padding: const EdgeInsets.all(8),
+        child: SizedBox(
+          width: iconOnly ? 32 : 55,
+          child: Center(
+            child: Icon(
+              Icons.switch_access_shortcut_outlined,
+              size: 18,
+              color: _themeProvider!.mainText,
+            ),
+          ),
+        ),
+      );
+
+      final button = InkWell(
+        onTap: openShortcutsEditor,
+        borderRadius: BorderRadius.circular(4.0),
+        child: card,
+      );
+
+      final semantics = Semantics(
+        label: 'Open shortcuts menu',
+        button: true,
+        child: ExcludeSemantics(child: button),
+      );
+
+      if (width != null || height != null) {
+        return SizedBox(width: width, height: height, child: semantics);
+      }
+
+      return semantics;
+    }
+
     // Main menu, returns either slidable list or wrap (grid)
     Widget shortcutMenu() {
       if (_shortcutsProv.shortcutMenu == "carousel") {
         return ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: _shortcutsProv.activeShortcuts.length,
+          itemCount: _shortcutsProv.activeShortcuts.length + (_showShortcutEditIcon ? 1 : 0),
           itemBuilder: (context, index) {
+            final bool isEditOption = _showShortcutEditIcon && index == _shortcutsProv.activeShortcuts.length;
+            if (isEditOption) {
+              return editShortcutTile();
+            }
             final thisShortcut = _shortcutsProv.activeShortcuts[index];
             return Semantics(
               label: "Shortcut to ${thisShortcut.name}",
@@ -1110,8 +1168,72 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             ),
           );
         }
+        if (_showShortcutEditIcon) {
+          double h = 60;
+          double w = 70;
+          if (_shortcutsProv.shortcutMenu == "grid") {
+            if (_shortcutsProv.shortcutTile == "icon") {
+              h = 40;
+              w = 40;
+            }
+            if (_shortcutsProv.shortcutTile == "text") {
+              h = 40;
+              w = 70;
+            }
+          }
+          wrapItems.add(editShortcutTile(width: w, height: h));
+        }
         return Wrap(alignment: WrapAlignment.center, children: wrapItems);
       }
+    }
+
+    Widget emptyShortcutsState() {
+      final Color messageColor = _themeProvider!.getTextColor(Colors.orange[900]);
+
+      final description = Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'No shortcuts configured, add some!',
+            style: TextStyle(
+              color: messageColor,
+              fontStyle: FontStyle.italic,
+              fontSize: 13,
+            ),
+          ),
+          Text(
+            _showShortcutEditIcon ? 'Tap the icon to configure' : 'Use the profile options to configure them',
+            style: TextStyle(
+              color: messageColor,
+              fontStyle: FontStyle.italic,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      );
+
+      if (!_showShortcutEditIcon) {
+        return Center(child: description);
+      }
+
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          description,
+          const SizedBox(width: 6),
+          Semantics(
+            label: 'Open shortcuts menu',
+            button: true,
+            child: ExcludeSemantics(
+              child: IconButton(
+                icon: const Icon(Icons.switch_access_shortcut_outlined),
+                color: messageColor,
+                onPressed: openShortcutsEditor,
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     return SizedBox(
@@ -1121,50 +1243,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           : _shortcutsProv.shortcutTile == 'both'
               ? 60
               : 40,
-      child: _shortcutsProv.activeShortcuts.isEmpty
-          ? Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'No shortcuts configured, add some!',
-                      style: TextStyle(
-                        color: _themeProvider!.getTextColor(Colors.orange[900]),
-                        fontStyle: FontStyle.italic,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Text(
-                      'Tap the icon to configure',
-                      style: TextStyle(
-                        color: _themeProvider!.getTextColor(Colors.orange[900]),
-                        fontStyle: FontStyle.italic,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  child: Semantics(
-                    label: 'Open shortcuts menu',
-                    child: IconButton(
-                      icon: const Icon(Icons.switch_access_shortcut_outlined),
-                      color: _themeProvider!.getTextColor(Colors.orange[900]),
-                      onPressed: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (BuildContext context) => ShortcutsPage(),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            )
-          : shortcutMenu(),
+      child: _shortcutsProv.activeShortcuts.isEmpty ? emptyShortcutsState() : shortcutMenu(),
     );
   }
 
@@ -3767,6 +3846,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     var cracking = getSkillValueSafe("cracking");
     var forgery = getSkillValueSafe("forgery");
     var scamming = getSkillValueSafe("scamming");
+    var arson = getSkillValueSafe("arson");
 
     if (searchForCash.isNotEmpty ||
         bootlegging.isNotEmpty ||
@@ -3779,7 +3859,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         disposal.isNotEmpty ||
         cracking.isNotEmpty ||
         forgery.isNotEmpty ||
-        scamming.isNotEmpty) {
+        scamming.isNotEmpty ||
+        arson.isNotEmpty) {
       crimesExist = true;
     }
 
@@ -4603,6 +4684,23 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                       ),
                                     ],
                                   ),
+                                if (arson.isNotEmpty)
+                                  Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 130,
+                                        child: Text('Arson: '),
+                                      ),
+                                      SelectionArea(
+                                        child: Text(
+                                          arson,
+                                          style: TextStyle(
+                                            color: arson == "100" ? _themeProvider!.getTextColor(Colors.green) : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                               ],
                             ),
                           ),
@@ -4676,6 +4774,67 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     if (_miscModel == null) {
       return const SizedBox.shrink();
+    }
+
+    // JOBLESS
+    Widget joblessWidget = const SizedBox.shrink();
+    bool joblessActive = false;
+    if (_settingsProvider!.joblessWarningEnabled && (_user!.job?.companyId == 0 || _user!.job?.job == "None")) {
+      showMisc = true;
+      joblessActive = true;
+      joblessWidget = Row(
+        children: [
+          const Icon(Icons.work_off_outlined, color: Colors.red),
+          const SizedBox(width: 10),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: DefaultTextStyle.of(context).style,
+                children: [
+                  const TextSpan(text: "You don't have a job! You can get one in the "),
+                  TextSpan(
+                    text: "newspaper",
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchBrowser(url: 'https://www.torn.com/joblist.php#!p=main', shortTap: true);
+                      },
+                  ),
+                  const TextSpan(text: ", in the "),
+                  TextSpan(
+                    text: "recruitment forum",
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchBrowser(url: 'https://www.torn.com/forums.php#/p=forums&f=46&b=0&a=0', shortTap: true);
+                      },
+                  ),
+                  const TextSpan(text: " or by using "),
+                  TextSpan(
+                    text: "Hire Haven's services",
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                    recognizer: TapGestureRecognizer()
+                      ..onTap = () {
+                        _launchBrowser(
+                            url: 'https://www.torn.com/forums.php#/p=search&q=hire+haven&f=0&y=3', shortTap: true);
+                      },
+                  ),
+                  const TextSpan(text: "."),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     // ADDICTION
@@ -5126,6 +5285,11 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
+                  if (joblessActive)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
+                      child: joblessWidget,
+                    ),
                   if (addictionActive)
                     Padding(
                       padding: const EdgeInsets.only(left: 8, top: 5, bottom: 5),
@@ -6799,6 +6963,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       final cracking = getSkillValueSafe("cracking");
       final forgery = getSkillValueSafe("forgery");
       final scamming = getSkillValueSafe("scamming");
+      final arson = getSkillValueSafe("arson");
 
       if (searchForCash.isNotEmpty) {
         crimesString += '\nSearch for Cash: $searchForCash';
@@ -6846,6 +7011,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
       if (scamming.isNotEmpty) {
         crimesString += '\nScamming: $scamming';
+        crimesExist = true;
+      }
+      if (arson.isNotEmpty) {
+        crimesString += '\nArson: $arson';
         crimesExist = true;
       }
 
@@ -7000,6 +7169,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     _warnAboutChains = await Prefs().getWarnAboutChains();
     _showHeaderWallet = await Prefs().getShowHeaderWallet();
     _showHeaderIcons = await Prefs().getShowHeaderIcons();
+    _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
     _dedicatedTravelCard = await Prefs().getDedicatedTravelCard();
 
     final expandEvents = await Prefs().getExpandEvents();

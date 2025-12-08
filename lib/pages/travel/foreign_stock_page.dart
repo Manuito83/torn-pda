@@ -30,6 +30,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
+import 'package:torn_pda/widgets/pda_browser_icon.dart';
 import 'package:torn_pda/widgets/sliding_up_panel.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
@@ -346,15 +347,23 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   AppBar buildAppBar() {
+    final bool webViewSplitActive = context.read<WebViewProvider>().webViewSplitActive;
+
     return AppBar(
       iconTheme: const IconThemeData(color: Colors.white),
       elevation: _settingsProvider!.appBarTop ? 2 : 0,
+      leadingWidth: webViewSplitActive ? 56 : 88,
       title: const Text("Foreign Stock", style: TextStyle(color: Colors.white)),
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          _goBack(false, false);
-        },
+      leading: Row(
+        children: [
+          IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () {
+              _goBack(false, false);
+            },
+          ),
+          if (!webViewSplitActive) const PdaBrowserIcon(),
+        ],
       ),
       actions: <Widget>[
         PopupMenuButton<StockSort>(

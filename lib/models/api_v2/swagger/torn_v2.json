@@ -23949,6 +23949,9 @@
                     "end": {
                         "type": "integer",
                         "format": "int32"
+                    },
+                    "fixed_start_time": {
+                        "type": "boolean"
                     }
                 },
                 "type": "object"

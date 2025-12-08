@@ -72,6 +72,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
 import 'package:torn_pda/utils/webview/webview_utils.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
@@ -383,35 +384,31 @@ class WebViewFullState extends State<WebViewFull>
     // Check rotation! Webview will dispose itself
     // If we find a matching disposed tab, sharing the SAME KEY, it means that it was disposed (most probably due to rotation)
     // so we need to restore its state manually here (we'll also scroll in onLoadStop)
-    if (_settingsProvider.allowScreenRotation) {
-      for (var disposedTab in _webViewProvider.rotatedTabDetails) {
-        if (disposedTab.key == widget.key) {
-          _foundDisposedRotation = true;
-          _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
-          _disposedScrollX = disposedTab.scrollX ?? 0;
-          _disposedScrollY = disposedTab.scrollY ?? 0;
-          log(
-            "Found rotated webview ${widget.key}, url ${disposedTab.currentUrl}, scrollY $_disposedScrollY, scrollX $_disposedScrollX",
-            name: "ROTATED WEBVIEW",
-          );
+    // Note: we are not limiting this check to when rotation is allowed, as iPadOS can rotate even if the app doesn't allow it
+    for (var disposedTab in _webViewProvider.rotatedTabDetails) {
+      if (disposedTab.key == widget.key) {
+        _foundDisposedRotation = true;
+        _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
+        _disposedScrollX = disposedTab.scrollX ?? 0;
+        _disposedScrollY = disposedTab.scrollY ?? 0;
+        log(
+          "Found rotated webview ${widget.key}, url ${disposedTab.currentUrl}, scrollY $_disposedScrollY, scrollX $_disposedScrollX",
+          name: "ROTATED WEBVIEW",
+        );
 
-          // Give it a second to that all disposed/reinitiated webviews load, then clear the list
-          Future.delayed(const Duration(milliseconds: 1000), () {
-            _webViewProvider.rotatedTabDetails.clear();
-          });
-        }
+        // Give it a second to that all disposed/reinitiated webviews load, then clear the list
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          _webViewProvider.rotatedTabDetails.clear();
+        });
       }
+    }
 
-      if (!_foundDisposedRotation) {
-        // This is not a initialised tab after a rotation/disposed, so we use the standard URL
-        _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
-
-        // We keep the list of rotated tabs tidy (not strictly necessary)
-        _webViewProvider.rotatedTabDetails.clear();
-      }
-    } else {
-      // If we are not allowing rotation, we just use the custom URL
+    if (!_foundDisposedRotation) {
+      // This is not a initialised tab after a rotation/disposed, so we use the standard URL
       _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
+
+      // We keep the list of rotated tabs tidy (not strictly necessary)
+      _webViewProvider.rotatedTabDetails.clear();
     }
 
     // We will later changed this for a listenable one in build()
@@ -541,16 +538,14 @@ class WebViewFullState extends State<WebViewFull>
     // Update the scrolls with the latest width available
     // (in case we need to regenerate the webview after rotating the screen)
     // If null, it's probably because the webview is not yet initialized (so we don't log)
-    if (_settingsProvider.allowScreenRotation) {
-      final scrollX = await webViewController?.getScrollX();
-      if (scrollX != null) {
-        _scrollX = scrollX;
-      }
+    final scrollX = await webViewController?.getScrollX();
+    if (scrollX != null) {
+      _scrollX = scrollX;
+    }
 
-      final scrollY = await webViewController?.getScrollY();
-      if (scrollY != null) {
-        _scrollY = scrollY;
-      }
+    final scrollY = await webViewController?.getScrollY();
+    if (scrollY != null) {
+      _scrollY = scrollY;
     }
   }
 
@@ -558,16 +553,14 @@ class WebViewFullState extends State<WebViewFull>
   void dispose() async {
     try {
       // Send details to provider in case we are rotating
-      if (_settingsProvider.allowScreenRotation) {
-        _webViewProvider.rotatedTabDetails.add(
-          RotatedDisposedTabDetails(
-            key: widget.key,
-            currentUrl: _currentUrl,
-            scrollY: _scrollY,
-            scrollX: _scrollX,
-          ),
-        );
-      }
+      _webViewProvider.rotatedTabDetails.add(
+        RotatedDisposedTabDetails(
+          key: widget.key,
+          currentUrl: _currentUrl,
+          scrollY: _scrollY,
+          scrollX: _scrollX,
+        ),
+      );
 
       WidgetsBinding.instance.removeObserver(this);
       _findController.dispose();
@@ -878,7 +871,7 @@ class WebViewFullState extends State<WebViewFull>
                 _webViewProvider.toggleHideTabs();
                 if (await Prefs().getReminderAboutHideTabFeature() == false) {
                   Prefs().setReminderAboutHideTabFeature(true);
-                  return showDialog<void>(
+                  return showWebviewDialog<void>(
                     context: context,
                     barrierDismissible: false,
                     builder: (BuildContext context) {
@@ -1383,7 +1376,7 @@ class WebViewFullState extends State<WebViewFull>
 
             // If a tab is fully locked, cancel navigation
             // Note: the mini profiles consideration (above) should come first
-            final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
+            final lockedTabCancels = lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
@@ -1758,6 +1751,14 @@ class WebViewFullState extends State<WebViewFull>
               }
 
               assessErrorCases(document: document);
+
+              if (uri != null) {
+                // Fallback to align tab history with the final URL once the page finishes loading
+                final tab = _webViewProvider.getTabFromKey(widget.key);
+                if (tab?.currentUrl != uri.toString()) {
+                  _reportUrlVisit(uri, bypassThrottle: true);
+                }
+              }
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -2059,7 +2060,7 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  bool _lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
+  bool lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
     if (incomingUrl == null) return false;
 
     if (_forceAllowWhenLocked) {
@@ -2081,8 +2082,10 @@ class WebViewFullState extends State<WebViewFull>
 
           // Allow navigation if the current URL matches one of the URLs in the pair
           // and the incoming URL matches the other in the same pair
-          if ((_currentUrl.contains(url1) && incomingUrl.toString().contains(url2)) ||
-              (_currentUrl.contains(url2) && incomingUrl.toString().contains(url1))) {
+          if ((_matchesPatternWithWildcards(_currentUrl, url1) &&
+                  _matchesPatternWithWildcards(incomingUrl.toString(), url2)) ||
+              (_matchesPatternWithWildcards(_currentUrl, url2) &&
+                  _matchesPatternWithWildcards(incomingUrl.toString(), url1))) {
             return false;
           }
         }
@@ -2165,6 +2168,16 @@ class WebViewFullState extends State<WebViewFull>
       }
     }
     return false;
+  }
+
+  bool _matchesPatternWithWildcards(String url, String pattern) {
+    if (pattern.contains('*')) {
+      // Escape special regex characters, then replace the escaped wildcard with .*
+      final regExpPattern = RegExp.escape(pattern).replaceAll(r'\*', '.*');
+      return RegExp(regExpPattern, caseSensitive: false).hasMatch(url);
+    } else {
+      return url.contains(pattern);
+    }
   }
 
   Future<void> loadImageWithBackground(
@@ -2381,7 +2394,11 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  void _reportUrlVisit(Uri? uri) {
+  void _reportUrlVisit(Uri? uri, {bool bypassThrottle = false}) {
+    if (uri == null) {
+      return;
+    }
+
     // This avoids reporting url such as "https://www.torn.com/imarket.php#/0.5912994041327981", which are generated
     // when returning from a bazaar and go straight to the market, not allowing to return to the item search
     if (uri.toString().contains("imarket.php#/")) {
@@ -2396,10 +2413,11 @@ class WebViewFullState extends State<WebViewFull>
     // Once from [onUpdateVisitedHistory] and again from [onResourceLoad].
     // There are also sections such as personal stats that trigger [onUpdateVisitedHistory] several times
     // when loading and when browsing backwards
-    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1.5) {
+    final now = DateTime.now();
+    if (!bypassThrottle && _urlTriggerTime != null && now.difference(_urlTriggerTime!).inMilliseconds < 1500) {
       return;
     }
-    _urlTriggerTime = DateTime.now();
+    _urlTriggerTime = now;
     //log(uri.toString());
 
     if (!_omitTabHistory) {
@@ -2584,7 +2602,7 @@ class WebViewFullState extends State<WebViewFull>
               _webViewProvider.toggleHideTabs();
               if (await Prefs().getReminderAboutHideTabFeature() == false) {
                 Prefs().setReminderAboutHideTabFeature(true);
-                return showDialog<void>(
+                return showWebviewDialog<void>(
                   context: context,
                   barrierDismissible: false,
                   builder: (BuildContext context) {
@@ -2653,7 +2671,7 @@ class WebViewFullState extends State<WebViewFull>
             openUrlDialog();
           },
           onLongPress: () {
-            showDialog<void>(
+            showWebviewDialog<void>(
               context: context,
               builder: (BuildContext context) {
                 return WebviewShortcutsDialog(
@@ -4473,6 +4491,8 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   Future _reload() async {
+    if (webViewController == null) return;
+
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
 
@@ -4521,7 +4541,7 @@ class WebViewFullState extends State<WebViewFull>
   Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
     final url = await webViewController!.getUrl();
-    return showDialog<void>(
+    return showWebviewDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
@@ -5561,7 +5581,7 @@ class WebViewFullState extends State<WebViewFull>
 
                           if (!error) {
                             final String u = open!.replaceAll("http:", "https:");
-                            return showDialog<void>(
+                            return showWebviewDialog<void>(
                               context: context,
                               barrierDismissible: false,
                               builder: (BuildContext context) {

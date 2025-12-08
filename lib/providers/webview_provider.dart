@@ -28,6 +28,7 @@ import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/tabs_wipe_dialog.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
+import 'package:torn_pda/utils/webview_interaction_recovery.dart';
 
 // Package imports:
 
@@ -500,6 +501,8 @@ class WebViewProvider extends ChangeNotifier {
     Prefs().setBrowserDoNotPauseWebviews(_browserDoNotPauseWebview);
     notifyListeners();
   }
+
+  bool webviewDialogRecoveryEnabledIOS = false;
 
   /// [recallLastSession] should be used to open a browser session where we left it last time
   Future<void> initialiseMain({
@@ -1022,6 +1025,27 @@ class WebViewProvider extends ChangeNotifier {
     currentTab.webViewKey?.currentState?.openUrlDialog();
   }
 
+  Future<void> notifyDialogClosed() async {
+    if (!Platform.isIOS) return;
+    if (_tabList.isEmpty) return;
+    if (!webviewDialogRecoveryEnabledIOS) return;
+
+    log(
+      name: "Dialog Restoration iOS",
+      "💬 Notifying dialog closed to webview for interaction restoration!",
+    );
+
+    final state = _tabList[currentTab].webViewKey?.currentState;
+    final controller = state?.webViewController;
+    if (controller != null) {
+      try {
+        await controller.evaluateJavascript(
+          source: WebviewInteractionRecoveryScripts.installClickRestoreShim,
+        );
+      } catch (_) {}
+    }
+  }
+
   Future clearCacheAndTabs() async {
     if (_tabList.isEmpty) return;
 
@@ -1254,8 +1278,14 @@ class WebViewProvider extends ChangeNotifier {
 
   bool tryGoBack() {
     final tab = _tabList[currentTab];
+
+    final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
+    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
+    if (cancelDueLock != null && cancelDueLock) {
+      return false;
+    }
+
     if (tab.historyBack.isNotEmpty) {
-      final previous = tab.historyBack.elementAt(tab.historyBack.length - 1);
       addToHistoryForward(tab: tab, url: tab.currentUrl);
       tab.historyBack.removeLast();
       // Call child method directly, otherwise the 'back' button will only work with the first webView
@@ -1290,9 +1320,14 @@ class WebViewProvider extends ChangeNotifier {
 
   bool tryGoForward() {
     final tab = _tabList[currentTab];
-    if (tab.historyForward.isNotEmpty) {
-      final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
 
+    final previous = tab.historyForward.elementAt(tab.historyForward.length - 1);
+    final cancelDueLock = tab.webViewKey?.currentState?.lockedTabShouldCancelsNavigation(WebUri(previous ?? ""));
+    if (cancelDueLock != null && cancelDueLock) {
+      return false;
+    }
+
+    if (tab.historyForward.isNotEmpty) {
       addToHistoryBack(tab: tab, currentUrl: tab.currentUrl);
 
       tab.historyForward.removeLast();

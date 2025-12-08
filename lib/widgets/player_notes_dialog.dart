@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 
 /// Pure content widget for player notes editing. Presentation (width, background,
 /// scrolling, dialog animations) is provided by [showPlayerNotesDialog]
@@ -36,9 +37,11 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
   void initState() {
     super.initState();
 
+    _playerNotesController = Get.find<PlayerNotesController>();
+    _myTempChosenColor = PlayerNoteColor.none;
+
     // Initialize with existing note if it exists
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _playerNotesController = Get.find<PlayerNotesController>();
       final existingNote = _playerNotesController.getNoteForPlayer(widget.playerId);
       if (existingNote != null) {
         _personalNotesController.text = existingNote.note;
@@ -46,7 +49,9 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
       } else {
         _myTempChosenColor = PlayerNoteColor.none; // Default no color sentinel
       }
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     });
   }
 
@@ -99,6 +104,13 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
           maxLength: 500,
           minLines: 3,
           maxLines: 8,
+          textInputAction: TextInputAction.send,
+          onFieldSubmitted: (_) {
+            _handleSave();
+          },
+          onTapOutside: (_) {
+            FocusScope.of(context).unfocus();
+          },
           decoration: const InputDecoration(
             counterText: "",
             border: OutlineInputBorder(),
@@ -120,20 +132,8 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
                     foregroundColor: _themeProvider.buttonText,
                   ),
                   child: const Text("Save"),
-                  onPressed: () async {
-                    final noteText = _personalNotesController.text.trim();
-                    final noteColor = PlayerNoteColor.isNone(_myTempChosenColor)
-                        ? null // controller will normalize null -> sentinel
-                        : _myTempChosenColor;
-                    await _playerNotesController.setPlayerNote(
-                      playerId: widget.playerId,
-                      note: noteText,
-                      color: noteColor,
-                      playerName: widget.playerName,
-                    );
-                    if (mounted) {
-                      Navigator.of(context).pop();
-                    }
+                  onPressed: () {
+                    _handleSave();
                   },
                 ),
               ),
@@ -150,6 +150,7 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
                   ),
                   child: const Text("Cancel"),
                   onPressed: () {
+                    FocusScope.of(context).unfocus();
                     Navigator.of(context).pop();
                   },
                 ),
@@ -165,6 +166,7 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
     final bool isSelected = _myTempChosenColor == colorValue;
     return InkWell(
       onTap: () {
+        FocusScope.of(context).unfocus();
         setState(() {
           _myTempChosenColor = isSelected ? PlayerNoteColor.none : colorValue;
         });
@@ -196,6 +198,23 @@ class PlayerNotesDialogState extends State<PlayerNotesDialog> {
   }
 
   Color _alpha(Color c, double o) => c.withAlpha((o * 255).round());
+
+  Future<void> _handleSave() async {
+    FocusScope.of(context).unfocus();
+    final noteText = _personalNotesController.text.trim();
+    final noteColor = PlayerNoteColor.isNone(_myTempChosenColor)
+        ? null // controller will normalize null -> sentinel
+        : _myTempChosenColor;
+    await _playerNotesController.setPlayerNote(
+      playerId: widget.playerId,
+      note: noteText,
+      color: noteColor,
+      playerName: widget.playerName,
+    );
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
 }
 
 Future<void> showPlayerNotesDialog({
@@ -203,10 +222,10 @@ Future<void> showPlayerNotesDialog({
   required String playerId,
   String? playerName,
   bool barrierDismissible = false,
-}) {
+}) async {
   final themeProvider = context.read<ThemeProvider>();
 
-  return showGeneralDialog(
+  await showGeneralDialog(
     context: context,
     barrierDismissible: barrierDismissible,
     barrierLabel: 'Player Notes',
@@ -222,6 +241,7 @@ Future<void> showPlayerNotesDialog({
       final mq = MediaQuery.of(ctx);
       final screenWidth = mq.size.width;
       final screenHeight = mq.size.height;
+      final keyboardInset = mq.viewInsets.bottom;
       const outerMargin = 20.0;
       final maxContentWidth = 600.0;
       final targetWidth = screenWidth - (outerMargin * 2);
@@ -229,27 +249,33 @@ Future<void> showPlayerNotesDialog({
       final maxHeight = screenHeight * 0.85;
 
       return SafeArea(
-        child: Center(
-          child: FadeTransition(
-            opacity: curved,
-            child: ScaleTransition(
-              scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: dialogWidth,
-                  maxHeight: maxHeight,
-                ),
-                child: Material(
-                  color: themeProvider.secondBackground,
-                  elevation: 8,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  clipBehavior: Clip.antiAlias,
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: SingleChildScrollView(
-                      child: PlayerNotesDialog(
-                        playerId: playerId,
-                        playerName: playerName,
+        child: AnimatedPadding(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutCubic,
+          padding: EdgeInsets.only(bottom: keyboardInset),
+          child: Center(
+            child: FadeTransition(
+              opacity: curved,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.96, end: 1.0).animate(curved),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: dialogWidth,
+                    maxHeight: maxHeight,
+                  ),
+                  child: Material(
+                    color: themeProvider.secondBackground,
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    clipBehavior: Clip.antiAlias,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: SingleChildScrollView(
+                        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                        child: PlayerNotesDialog(
+                          playerId: playerId,
+                          playerName: playerName,
+                        ),
                       ),
                     ),
                   ),
@@ -261,4 +287,10 @@ Future<void> showPlayerNotesDialog({
       );
     },
   );
+
+  try {
+    await context.read<WebViewProvider>().notifyDialogClosed();
+  } catch (_) {
+    // WebViewProvider may be unavailable outside the webview context.
+  }
 }

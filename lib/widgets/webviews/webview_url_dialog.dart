@@ -18,6 +18,7 @@ import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.da
 import 'package:torn_pda/models/profile/shortcuts_model.dart';
 import 'package:torn_pda/pages/settings/userscripts_page.dart';
 import 'package:torn_pda/providers/api/api_v2_calls.dart';
+import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/shortcuts_provider.dart';
 import 'package:torn_pda/providers/spies_controller.dart';
@@ -28,6 +29,7 @@ import 'package:torn_pda/utils/number_formatter.dart';
 import 'package:torn_pda/utils/stats_calculator.dart';
 import 'package:torn_pda/utils/timestamp_ago.dart';
 import 'package:torn_pda/utils/user_helper.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_open_button.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -628,6 +630,12 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
                                       ],
                                     ),
                                     onPressed: () {
+                                      final userScriptsProvider =
+                                          Provider.of<UserScriptsProvider>(context, listen: false);
+                                      if (userScriptsProvider.isInSafeMode) {
+                                        userScriptsProvider.showSafeModeWarning();
+                                        return;
+                                      }
                                       _customURLController.text = "";
                                       Navigator.of(context).pop();
                                       Navigator.of(context).push(
@@ -709,7 +717,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
   }
 
   Future<void> _openCustomShortcutDialog(String? title, String? url) {
-    return showDialog<void>(
+    return showWebviewDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
@@ -723,7 +731,7 @@ class WebviewUrlDialogState extends State<WebviewUrlDialog> {
   }
 
   Future<void> _openShortcutsDialog() {
-    return showDialog<void>(
+    return showWebviewDialog<void>(
       context: context,
       barrierDismissible: false, // user must tap button!
       builder: (BuildContext context) {
