@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 // Package imports:
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
+import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/own_profile_model.dart';
 import 'package:torn_pda/pages/profile/icons_filter_page.dart';
 import 'package:torn_pda/pages/profile/profile_notifications_android.dart';
@@ -19,11 +20,17 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class ProfileOptionsPage extends StatefulWidget {
-  const ProfileOptionsPage({required this.apiValid, required this.user, required this.callBackTimings});
+  const ProfileOptionsPage({
+    required this.apiValid,
+    required this.user,
+    required this.callBackTimings,
+    this.statsData,
+  });
 
   final bool apiValid;
   final OwnProfileExtended? user;
   final Function callBackTimings;
+  final StatsChartTornStats? statsData;
 
   @override
   ProfileOptionsPageState createState() => ProfileOptionsPageState();
@@ -688,6 +695,25 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                         child: Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: <Widget>[
+                                            const Text("Show both charts"),
+                                            Switch(
+                                              value: _settingsProvider.tornStatsChartShowBoth,
+                                              onChanged: (value) {
+                                                setState(() {
+                                                  _settingsProvider.setTornStatsChartShowBoth = value;
+                                                });
+                                              },
+                                              activeTrackColor: Colors.lightGreenAccent,
+                                              activeThumbColor: Colors.green,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: <Widget>[
                                             const Flexible(
                                               child: Text("Chart range"),
                                             ),
@@ -700,6 +726,20 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                           ],
                                         ),
                                       ),
+                                      if (widget.statsData != null &&
+                                          widget.statsData!.data != null &&
+                                          widget.statsData!.data!.isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                                          child: Text(
+                                            "The available range options depend on the data provided by Torn Stats.",
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 12,
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        ),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 15),
                                         child: Row(
@@ -1039,80 +1079,96 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
   }
 
   DropdownButton _chartRangeDropdown() {
+    List<DropdownMenuItem<int>> items = [];
+    bool disabled = false;
+
+    DropdownMenuItem<int> buildItem(int value, String text) {
+      return DropdownMenuItem(
+        value: value,
+        child: SizedBox(
+          width: 80,
+          child: Text(
+            text,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (widget.statsData != null && widget.statsData!.data != null && widget.statsData!.data!.isNotEmpty) {
+      var data = widget.statsData!.data!;
+      int minTs = data.first.timestamp!;
+      int maxTs = data.last.timestamp!;
+      for (var d in data) {
+        if (d.timestamp! < minTs) minTs = d.timestamp!;
+        if (d.timestamp! > maxTs) maxTs = d.timestamp!;
+      }
+
+      final durationSeconds = maxTs - minTs;
+      final durationDays = durationSeconds / (60 * 60 * 24);
+      final durationMonths = durationDays / 30;
+
+      if (durationMonths <= 3) {
+        items.add(buildItem(3, "3 Months"));
+        disabled = true;
+      } else {
+        items.add(buildItem(3, "3 Months"));
+        if (durationMonths > 5) {
+          items.add(buildItem(6, "6 Months"));
+        }
+        if (durationMonths > 11) {
+          items.add(buildItem(12, "1 Year"));
+        }
+        if (durationMonths > 23) {
+          items.add(buildItem(24, "2 Years"));
+        }
+        if (durationMonths > 25) {
+          items.add(buildItem(0, "All Time"));
+        }
+      }
+
+      items.sort((a, b) {
+        if (a.value == 0) return 1;
+        if (b.value == 0) return -1;
+        return a.value!.compareTo(b.value!);
+      });
+    } else {
+      items.add(buildItem(3, "3 Months"));
+      items.add(buildItem(6, "6 Months"));
+      items.add(buildItem(12, "1 Year"));
+      items.add(buildItem(24, "2 Years"));
+      items.add(buildItem(0, "All Time"));
+      items.sort((a, b) {
+        if (a.value == 0) return 1;
+        if (b.value == 0) return -1;
+        return a.value!.compareTo(b.value!);
+      });
+    }
+
+    int currentValue = _settingsProvider.tornStatsChartRange;
+
+    // If the saved value is not available in the current items (e.g. because we have less data
+    // than the saved range), we select the best available option for display purposes
+    // ... in this case, we do NOT update Prefs, so if more data becomes available later,
+    // the user's original preference will be respected
+    if (!items.any((item) => item.value == currentValue)) {
+      // Select the maximum available range (last item in the sorted list)
+      currentValue = items.last.value!;
+    }
+
     return DropdownButton<int>(
-      value: _settingsProvider.tornStatsChartRange,
-      items: const [
-        DropdownMenuItem(
-          value: 3,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "3 Months",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 6,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "6 Months",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 12,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "1 Year",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 24,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "2 Years",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 0,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "All Time",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ],
-      onChanged: (value) {
-        setState(() {
-          _settingsProvider.setTornStatsChartRange = value!;
-        });
-      },
+      value: currentValue,
+      items: items,
+      onChanged: disabled
+          ? null
+          : (value) {
+              setState(() {
+                _settingsProvider.setTornStatsChartRange = value!;
+              });
+            },
     );
   }
 

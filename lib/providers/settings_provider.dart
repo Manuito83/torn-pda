@@ -1067,7 +1067,15 @@ class SettingsProvider extends ChangeNotifier {
   bool get tornStatsChartInCollapsedMiscCard => _tornStatsChartInCollapsedMiscCard;
   set setTornStatsChartInCollapsedMiscCard(bool value) {
     _tornStatsChartInCollapsedMiscCard = value;
-    Prefs().setTornStatsChartEnabled(tornStatsChartInCollapsedMiscCard);
+    Prefs().setTornStatsChartInCollapsedMiscCard(tornStatsChartInCollapsedMiscCard);
+    notifyListeners();
+  }
+
+  var _tornStatsChartShowBoth = false;
+  bool get tornStatsChartShowBoth => _tornStatsChartShowBoth;
+  set setTornStatsChartShowBoth(bool value) {
+    _tornStatsChartShowBoth = value;
+    Prefs().setTornStatsChartShowBoth(tornStatsChartShowBoth);
     notifyListeners();
   }
 
@@ -1543,6 +1551,7 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartType = await Prefs().getTornStatsChartType();
     _tornStatsChartRange = await Prefs().getTornStatsChartRange();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
+    _tornStatsChartShowBoth = await Prefs().getTornStatsChartShowBoth();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();

@@ -102,11 +102,12 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.4 - Build 592 - 07/12/2025
+    // v3.9.5 - Build 593 - 08/12/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.9.4'
+        ..version = 'Torn PDA v3.9.5'
         ..date = '10 DEC 2025'
+        ..infoString = 'Hotfix: resolved issues with TS chart data range; also added option to show both charts'
         ..features = [
           "User scripts can now be exported and imported in a JSON file",
           "Profile: added Arson crime",

@@ -40,21 +40,87 @@ class _StatsChartState extends State<StatsChart> {
 
   @override
   Widget build(BuildContext context) {
-    final dynamic chartData;
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    bool showBoth = settingsProvider.tornStatsChartShowBoth;
+
+    bool isOldData = false;
+    if (widget.statsData?.data != null && widget.statsData!.data!.isNotEmpty) {
+      int maxTimestamp = 0;
+      for (var element in widget.statsData!.data!) {
+        if (element.timestamp != null && element.timestamp! > maxTimestamp) {
+          maxTimestamp = element.timestamp!;
+        }
+      }
+      if (maxTimestamp > 0) {
+        final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
+        final now = DateTime.now();
+        final difference = now.difference(latestDate);
+        if (difference.inDays > 30) {
+          isOldData = true;
+        }
+      }
+    }
+
+    Widget? warningWidget;
+    if (isOldData) {
+      warningWidget = Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.warning, size: 12, color: Colors.orange[800]),
+            const SizedBox(width: 5),
+            Text(
+              "TS sent data older than 1 month",
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.orange[800],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (showBoth) {
+      Widget firstChart;
+      Widget secondChart;
+
+      if (widget.chartType == TornStatsChartType.Line) {
+        firstChart = LineChart(_buildLineChartData());
+        secondChart = PieChart(_buildPieChartData());
+      } else {
+        firstChart = PieChart(_buildPieChartData());
+        secondChart = LineChart(_buildLineChartData());
+      }
+
+      return Column(
+        children: [
+          if (warningWidget != null) warningWidget,
+          _legend(),
+          const SizedBox(height: 5),
+          Flexible(child: firstChart),
+          const SizedBox(height: 20),
+          Flexible(child: secondChart),
+        ],
+      );
+    }
+
+    Widget chart;
     if (widget.chartType == TornStatsChartType.Line) {
-      chartData = _buildLineChartData();
+      chart = LineChart(_buildLineChartData());
     } else {
-      chartData = _buildPieChartData();
+      chart = PieChart(_buildPieChartData());
     }
 
     return Column(
       children: [
+        if (warningWidget != null) warningWidget,
         _legend(),
         const SizedBox(height: 5),
         Flexible(
-          child: widget.chartType == TornStatsChartType.Line
-              ? LineChart(chartData as LineChartData)
-              : PieChart(chartData as PieChartData),
+          child: chart,
         ),
       ],
     );
@@ -307,14 +373,24 @@ class _StatsChartState extends State<StatsChart> {
     final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
     final int rangeMonths = settingsProvider.tornStatsChartRange;
 
-    if (rangeMonths > 0) {
-      final now = DateTime.now();
-      final cutoffDate = now.subtract(Duration(days: rangeMonths * 30));
-      data = data.where((element) {
-        if (element.timestamp == null) return false;
-        final date = DateTime.fromMillisecondsSinceEpoch(element.timestamp! * 1000);
-        return date.isAfter(cutoffDate);
-      }).toList();
+    if (rangeMonths > 0 && data.isNotEmpty) {
+      // Show the last X months of AVAILABLE data
+      int maxTimestamp = 0;
+      for (var element in data) {
+        if (element.timestamp != null && element.timestamp! > maxTimestamp) {
+          maxTimestamp = element.timestamp!;
+        }
+      }
+
+      if (maxTimestamp > 0) {
+        final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
+        final cutoffDate = latestDate.subtract(Duration(days: rangeMonths * 30));
+        data = data.where((element) {
+          if (element.timestamp == null) return false;
+          final date = DateTime.fromMillisecondsSinceEpoch(element.timestamp! * 1000);
+          return date.isAfter(cutoffDate);
+        }).toList();
+      }
     }
 
     for (int i = 0; i < data.length; i++) {
