@@ -1131,6 +1131,9 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
         if (durationMonths > 23) {
           items.add(buildItem(24, "2 Years"));
         }
+        if (durationMonths > 35) {
+          items.add(buildItem(36, "3 Years"));
+        }
         if (durationMonths > 25) {
           items.add(buildItem(0, "All Time"));
         }
@@ -1146,6 +1149,7 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
       items.add(buildItem(6, "6 Months"));
       items.add(buildItem(12, "1 Year"));
       items.add(buildItem(24, "2 Years"));
+      items.add(buildItem(36, "3 Years"));
       items.add(buildItem(0, "All Time"));
       items.sort((a, b) {
         if (a.value == 0) return 1;

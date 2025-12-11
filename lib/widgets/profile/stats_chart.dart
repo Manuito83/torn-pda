@@ -530,7 +530,9 @@ class _StatsChartState extends State<StatsChart> {
           sideTitles: SideTitles(
             showTitles: true,
             getTitlesWidget: (position, meta) {
-              if (position == 0) return const SizedBox.shrink();
+              if (position == 0 || position.toInt() >= timestamps.length) {
+                return const SizedBox.shrink();
+              }
 
               final int ts = timestamps[position.toInt()]! * 1000;
               final DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts);
@@ -540,13 +542,26 @@ class _StatsChartState extends State<StatsChart> {
               const degrees = -50;
               const radians = degrees * pi / 180;
 
+              // Color logic based on year
+              final int currentYear = DateTime.now().year;
+              Color yearColor;
+              if (dt.year == currentYear) {
+                yearColor = Colors.black;
+              } else if (dt.year == currentYear - 1) {
+                yearColor = Colors.blue;
+              } else if (dt.year == currentYear - 2) {
+                yearColor = Colors.yellow[800]!;
+              } else {
+                yearColor = Colors.red;
+              }
+
               return Transform.rotate(
                 angle: radians,
                 child: SizedBox(
                   width: 60,
                   child: Text(
                     date,
-                    style: const TextStyle(fontSize: 9),
+                    style: TextStyle(fontSize: 9, color: yearColor),
                   ),
                 ),
               );

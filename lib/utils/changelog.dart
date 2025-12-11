@@ -109,6 +109,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '15 DEC 2025'
         ..features = [
           "Profile widget can now be hidden when attacking (shown by default)",
+          "Added more time range filtering options for Torn Stats chart",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed option to option to hide foreign items info",
           "Fixed quick travel return button",
