@@ -40,7 +40,6 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/oc/yata_members_model.dart';
-import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
@@ -89,6 +88,7 @@ import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
+import 'package:torn_pda/widgets/webviews/handlers/travel_handler.dart';
 import 'package:torn_pda/widgets/webviews/memory_widget_browser.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
@@ -177,6 +177,7 @@ class WebViewFullState extends State<WebViewFull>
   final bool _debugScriptsInjection = false;
 
   InAppWebViewController? webViewController;
+  TravelHandler? _travelHandler;
   var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
@@ -265,8 +266,6 @@ class WebViewFullState extends State<WebViewFull>
 
   DateTime? _urlTriggerTime;
   DateTime? _lastReportTabLoadUrlTime; // Track when reportTabLoadUrl was last called
-
-  DateTime? _foreignStocksSentTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -1254,6 +1253,16 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
+            _travelHandler = TravelHandler(
+              webViewController: webViewController,
+              onTravelStatusChanged: (isAbroad) {
+                if (mounted) {
+                  setState(() {
+                    _travelAbroad = isAbroad;
+                  });
+                }
+              },
+            );
 
             // Clear cache (except for cookies) for each new session
             if (!_settingsProvider.webviewCacheEnabled && !Platform.isWindows) {
@@ -1708,7 +1717,7 @@ class WebViewFullState extends State<WebViewFull>
                 _reportPageTitle();
               }
 
-              _assessTravel(document);
+              _travelHandler?.assessTravel(document);
               _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
@@ -3220,206 +3229,45 @@ class WebViewFullState extends State<WebViewFull>
     return title;
   }
 
-  // TRAVEL
-  Future _assessTravel(dom.Document document) async {
-    final abroad = document.querySelectorAll(".travel-home");
-    if (abroad.isNotEmpty) {
-      _insertTravelFillMaxButtons();
-      _sendStockInformation(document);
-      if (mounted) {
-        setState(() {
-          _travelAbroad = true;
-        });
-      }
-    } else {
-      if (mounted) {
-        setState(() {
-          _travelAbroad = false;
-        });
-      }
-    }
-  }
-
-  Future _insertTravelFillMaxButtons() async {
-    final shouldHideInfo = await Prefs().getRemoveForeignItemsDetails();
-    await webViewController!.evaluateJavascript(source: buyMaxAbroadJS(hideItemInfoPanel: shouldHideInfo));
-  }
-
-  Future _sendStockInformation(dom.Document document) async {
-    final elements = document.querySelectorAll('.users-list > li');
-
-    if (elements.isNotEmpty) {
-      try {
-        // Parse stocks
-        final items = <ForeignStockOutItem>[];
-        for (final el in elements) {
-          int id = int.tryParse(el.querySelector(".details")!.attributes["itemid"]!) ?? 0;
-          int quantity =
-              int.tryParse(el.querySelector(".stck-amount")!.innerHtml.replaceAll(RegExp("[^0-9]"), "")) ?? 0;
-          int cost = int.tryParse(el.querySelector(".c-price")!.innerHtml.replaceAll(RegExp("[^0-9]"), "")) ?? 0;
-
-          if (id != 0 && cost != 0) {
-            items.add(ForeignStockOutItem(id: id, quantity: quantity, cost: cost));
-          }
-        }
-
-        final stockModel = ForeignStockOutModel(
-          client: "Torn PDA",
-          version: appVersion,
-          authorName: "Manuito",
-          authorId: 2225097,
-          country: document.querySelector(".content-title > h4")!.text.trim().substring(0, 3).toLowerCase(),
-          items: items,
-        );
-
-        Future<void> sendToYATA() async {
-          String error = "";
-          try {
-            final response = await http
-                .post(
-                  Uri.parse('https://yata.yt/api/v1/travel/import/'),
-                  headers: <String, String>{
-                    'Content-Type': 'application/json; charset=UTF-8',
-                  },
-                  body: foreignStockOutModelToJson(stockModel),
-                )
-                .timeout(const Duration(seconds: 8));
-
-            log("YATA replied with status code ${response.statusCode}. Response: ${response.body}");
-            if (response.statusCode != 200) {
-              error = "Replied with status code ${response.statusCode}. Response: ${response.body}";
-            }
-          } catch (e) {
-            log('Error sending request to YATA: $e');
-            error = "Catched exception: $e";
-          }
-
-          if (error.isNotEmpty) {
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
-            logToUser("Error sending Foreign Stocks to YATA");
-          }
-        }
-
-        Future<void> sendToPrometheus() async {
-          String error = "";
-          try {
-            final response = await http
-                .post(
-                  Uri.parse('https://api.prombot.co.uk/api/travel'),
-                  headers: <String, String>{
-                    'Content-Type': 'application/json; charset=UTF-8',
-                  },
-                  body: foreignStockOutModelToJson(stockModel),
-                )
-                .timeout(const Duration(seconds: 8));
-
-            log("Prometeus replied with status code ${response.statusCode}. Response: ${response.body}");
-            if (response.statusCode != 200) {
-              error = "Replied with status code ${response.statusCode}. Response: ${response.body}";
-            }
-          } catch (e) {
-            log('Error sending request to Prometheus: $e');
-            error = "Catched exception: $e";
-          }
-
-          if (error.isNotEmpty) {
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
-            logToUser("Error sending Foreign Stocks to Prometheus");
-          }
-        }
-
-        if (stockModel.items.isEmpty) {
-          log("Foreign stocks are empty!!");
-          return;
-        }
-
-        // Avoid repetitive submissions
-        if (_foreignStocksSentTime != null && (DateTime.now().difference(_foreignStocksSentTime!).inSeconds) < 3) {
-          return;
-        }
-        _foreignStocksSentTime = DateTime.now();
-
-        await Future.wait([
-          sendToYATA(),
-          sendToPrometheus(),
-        ]);
-      } catch (e) {
-        // Error parsing
-      }
-    }
-  }
-
   Widget _travelHomeIcon() {
-    // We use two buttons with a trigger, so that we need to press twice
-    if (_travelAbroad) {
-      if (!_travelHomeIconTriggered) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              splashColor: Colors.blueGrey,
-              child: Icon(
-                Icons.home,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
-              ),
-              onTap: () async {
-                setState(() {
-                  _travelHomeIconTriggered = true;
-                });
-                BotToast.showText(
-                  text: 'Tap again to travel back!',
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.orange[800]!,
-                  duration: const Duration(seconds: 3),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-                Future.delayed(const Duration(seconds: 3)).then((value) {
-                  if (mounted) {
-                    setState(() {
-                      _travelHomeIconTriggered = false;
-                    });
-                  }
-                });
-              },
-            ),
+    if (!_travelAbroad) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          splashColor: Colors.blueGrey,
+          child: Icon(
+            Icons.home,
+            color: _travelHomeIconTriggered
+                ? Colors.orange
+                : (_webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white),
           ),
-        );
-      } else {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              splashColor: Colors.blueGrey,
-              child: const Icon(
-                Icons.home,
-                color: Colors.orange,
-              ),
-              onTap: () async {
-                await webViewController!.evaluateJavascript(source: travelReturnHomeJS());
-                Future.delayed(const Duration(seconds: 3)).then((value) {
-                  if (mounted) {
-                    setState(() {
-                      _travelHomeIconTriggered = false;
-                    });
-                  }
-                });
-              },
-            ),
-          ),
-        );
-      }
-    } else {
-      return const SizedBox.shrink();
-    }
+          onTap: () async {
+            if (!_travelHomeIconTriggered) {
+              setState(() => _travelHomeIconTriggered = true);
+              BotToast.showText(
+                text: 'Tap again to travel back!',
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                contentColor: Colors.orange[800]!,
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+              );
+              Future.delayed(const Duration(seconds: 3)).then((_) {
+                if (mounted) setState(() => _travelHomeIconTriggered = false);
+              });
+            } else {
+              await webViewController!.evaluateJavascript(source: travelReturnHomeJS());
+              Future.delayed(const Duration(seconds: 3)).then((_) {
+                if (mounted) setState(() => _travelHomeIconTriggered = false);
+              });
+            }
+          },
+        ),
+      ),
+    );
   }
 
   // CRIMES
