@@ -4780,7 +4780,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // JOBLESS
     Widget joblessWidget = const SizedBox.shrink();
     bool joblessActive = false;
-    if (_settingsProvider!.joblessWarningEnabled && (_user!.job?.companyId == 0 || _user!.job?.job == "None")) {
+    if (_settingsProvider!.joblessWarningEnabled && (_user!.job?.companyId == 0 && _user!.job?.job == "None")) {
       showMisc = true;
       joblessActive = true;
       joblessWidget = Row(
