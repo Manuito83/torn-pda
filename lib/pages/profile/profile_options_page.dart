@@ -729,16 +729,22 @@ class ProfileOptionsPageState extends State<ProfileOptionsPage> {
                                       if (widget.statsData != null &&
                                           widget.statsData!.data != null &&
                                           widget.statsData!.data!.isNotEmpty)
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                                          child: Text(
-                                            "The available range options depend on the data provided by Torn Stats.",
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 12,
-                                              fontStyle: FontStyle.italic,
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 15),
+                                                child: Text(
+                                                  "The available range options depend on the data provided by Torn Stats",
+                                                  style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 12,
+                                                    fontStyle: FontStyle.italic,
+                                                  ),
+                                                ),
+                                              ),
                                             ),
-                                          ),
+                                          ],
                                         ),
                                       Padding(
                                         padding: const EdgeInsets.symmetric(horizontal: 15),

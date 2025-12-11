@@ -102,6 +102,16 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.9.6 - Build 595 - 11/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.6'
+        ..date = '15 DEC 2025'
+        ..features = [
+          "Profile widget can now be hidden when attacking (shown by default)",
+        ],
+    );
+
     // v3.9.5 - Build 594 - 09/12/2025
     itemList.add(
       ChangeLogItem()

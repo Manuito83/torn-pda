@@ -2491,6 +2491,43 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Show also in attacks",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show also in attacks")),
+                  Switch(
+                    value: _settingsProvider.profileCheckAttackEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.profileCheckAttackEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'Shows the extra profile information widget (stats, notes, etc.) in the attack screen '
+                '(you might want to disable this if it\'s causing performance issues)',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
       if (_settingsProvider.extraPlayerInformation)
         SearchableRow(
           label: "Friendly factions",
