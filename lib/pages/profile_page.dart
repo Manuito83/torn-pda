@@ -872,6 +872,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   callBackTimings: _callBackFromNotificationOptions,
                   user: _user,
                   apiValid: _apiGoodData,
+                  statsData: _statsChartModel,
                 ),
               ),
             );
@@ -3988,7 +3989,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               children: [
                                 const SizedBox(height: 20),
                                 SizedBox(
-                                  height: 200,
+                                  height: _settingsProvider!.tornStatsChartShowBoth ? 400 : 200,
                                   child: ExcludeSemantics(
                                     child: StatsChart(
                                       statsData: _statsChartModel,
@@ -4312,7 +4313,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 children: [
                                   const SizedBox(height: 40),
                                   SizedBox(
-                                    height: 200,
+                                    height: _settingsProvider!.tornStatsChartShowBoth ? 400 : 200,
                                     child: ExcludeSemantics(
                                       child: StatsChart(
                                         statsData: _statsChartModel,
@@ -4779,7 +4780,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     // JOBLESS
     Widget joblessWidget = const SizedBox.shrink();
     bool joblessActive = false;
-    if (_settingsProvider!.joblessWarningEnabled && (_user!.job?.companyId == 0 || _user!.job?.job == "None")) {
+    if (_settingsProvider!.joblessWarningEnabled && (_user!.job?.companyId == 0 && _user!.job?.job == "None")) {
       showMisc = true;
       joblessActive = true;
       joblessWidget = Row(

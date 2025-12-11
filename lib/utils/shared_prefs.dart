@@ -428,6 +428,7 @@ class Prefs {
   final String _kTornStatsChartType = "pda_tornStatsChartType";
   final String _kTornStatsChartRange = "pda_tornStatsChartRange";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
+  final String _kTornStatsChartShowBoth = "pda_tornStatsChartShowBoth";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -2953,6 +2954,14 @@ class Prefs {
 
   Future setTornStatsChartInCollapsedMiscCard(bool value) async {
     return await PrefsDatabase.setBool(_kTornStatsChartInCollapsedMiscCard, value);
+  }
+
+  Future<bool> getTornStatsChartShowBoth() async {
+    return await PrefsDatabase.getBool(_kTornStatsChartShowBoth, false);
+  }
+
+  Future setTornStatsChartShowBoth(bool value) async {
+    return await PrefsDatabase.setBool(_kTornStatsChartShowBoth, value);
   }
 
   /// -------------------

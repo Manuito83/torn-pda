@@ -102,17 +102,18 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.4 - Build 592 - 07/12/2025
+    // v3.9.5 - Build 594 - 09/12/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.9.4'
+        ..version = 'Torn PDA v3.9.5'
         ..date = '10 DEC 2025'
+        ..infoString = 'Hotfix: resolved issues with TS chart and jobless warning'
         ..features = [
           "User scripts can now be exported and imported in a JSON file",
           "Profile: added Arson crime",
           "Profile: added edit icon to shortcuts list (can be disabled)",
           "Profile: added jobless warning with links to Hire Haven and newspaper (can be disabled)",
-          "Profile: fixed TS chart and added option to select time range",
+          "Profile: added option to show both TS stats charts and to select time range",
           "Added direct browser access from Foreign Stocks section",
           "Optimized API call rate when bringing app to foreground",
           "Added automatic local backup for scripts to help mitigate database issues",
