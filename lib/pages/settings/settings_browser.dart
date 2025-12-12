@@ -240,7 +240,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -276,7 +276,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -374,7 +374,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -408,7 +408,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     });
                   },
                   activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),
@@ -427,6 +427,10 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 IconButton(
                   icon: const Icon(MdiIcons.script),
                   onPressed: () {
+                    if (_userScriptsProvider.isInSafeMode) {
+                      _userScriptsProvider.showSafeModeWarning();
+                      return;
+                    }
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (BuildContext context) => const UserScriptsPage(),
@@ -485,7 +489,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   }
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -510,7 +514,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         _webViewProvider.automaticChangeToNewTabFromURL = value;
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -549,7 +553,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: enabled);
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -588,7 +592,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                                 _webViewProvider.togglePeriodicUnusedTabsRemovalRequest(enable: true);
                               },
                               activeTrackColor: Colors.lightGreenAccent,
-                              activeColor: Colors.green,
+                              activeThumbColor: Colors.green,
                             ),
                           ],
                         ),
@@ -650,7 +654,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         _webViewProvider.onlyLoadTabsWhenUsed = value;
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -690,7 +694,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         }
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -759,7 +763,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -789,7 +793,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -865,7 +869,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       }
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -931,7 +935,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         _webViewProvider.fabOnlyFullScreen = value;
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -1179,7 +1183,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1211,7 +1215,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1243,7 +1247,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1275,7 +1279,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1319,7 +1323,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1351,7 +1355,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1383,7 +1387,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1427,7 +1431,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1459,7 +1463,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1491,7 +1495,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1523,7 +1527,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1555,7 +1559,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1587,7 +1591,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1627,7 +1631,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1667,7 +1671,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1764,7 +1768,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -1787,7 +1791,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -1886,7 +1890,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1922,7 +1926,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -1958,12 +1962,14 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
               Text(
-                "This will hide foreign items information (details such as description, value, circulation and its picture) when abroad, so that buying is quicker.",
+                "This will hide foreign items information (details such as description, value, "
+                "circulation and its picture) when abroad, even if the item is inadvertently tapped, "
+                "so that buying is quicker",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -2004,7 +2010,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2036,7 +2042,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2112,7 +2118,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2194,7 +2200,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2265,7 +2271,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2334,7 +2340,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                   });
                 },
                 activeTrackColor: Colors.lightGreenAccent,
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
               ),
             ],
           ),
@@ -2398,7 +2404,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2429,7 +2435,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2471,12 +2477,49 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
               Text(
                 'Add additional player information when visiting a profile or attacking someone (e.g. same faction, friendly faction, friends) and estimated stats',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Show also in attacks",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show also in attacks")),
+                  Switch(
+                    value: _settingsProvider.profileCheckAttackEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.profileCheckAttackEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'Shows the extra profile information widget (stats, notes, etc.) in the attack screen '
+                '(you might want to disable this if it\'s causing performance issues)',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -2545,7 +2588,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -2587,7 +2630,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                               });
                             },
                             activeTrackColor: Colors.lightGreenAccent,
-                            activeColor: Colors.green,
+                            activeThumbColor: Colors.green,
                           ),
                         ],
                       ),
@@ -2627,7 +2670,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -2663,7 +2706,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2708,7 +2751,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -2753,7 +2796,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2813,7 +2856,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         : _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
                             ? Colors.lightGreenAccent
                             : Colors.grey[700],
-                    activeColor: Platform.isWindows
+                    activeThumbColor: Platform.isWindows
                         ? Colors.grey[700]
                         : _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
                             ? Colors.green
@@ -2910,7 +2953,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2945,7 +2988,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -2988,7 +3031,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                     });
                   },
                   activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),
@@ -3015,7 +3058,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),
@@ -3051,7 +3094,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                       });
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -3090,7 +3133,7 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                             });
                           },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                     inactiveThumbColor:
                         !_settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed ? Colors.grey[800] : null,
                   ),

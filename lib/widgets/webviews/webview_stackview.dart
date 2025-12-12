@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/animated_indexedstack.dart';
 import 'package:torn_pda/widgets/status_color_counter.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
@@ -790,7 +791,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                     },
                               doubleTapped: () {
                                 _webViewProvider.verticalMenuClose();
-                                showDialog<void>(
+                                showWebviewDialog<void>(
                                   context: context,
                                   builder: (BuildContext context) {
                                     return const WebviewShortcutsDialog(fromShortcut: true);
@@ -881,7 +882,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                   icon: MdiIcons.heartOutline,
                                   onTap: () {
                                     _webViewProvider.verticalMenuClose();
-                                    showDialog<void>(
+                                    showWebviewDialog<void>(
                                       context: context,
                                       builder: (BuildContext context) {
                                         return const WebviewShortcutsDialog(fromShortcut: true);
@@ -893,7 +894,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                   icon: MdiIcons.heartPlusOutline,
                                   onTap: () {
                                     _webViewProvider.verticalMenuClose();
-                                    showDialog<void>(
+                                    showWebviewDialog<void>(
                                       context: context,
                                       barrierDismissible: false,
                                       builder: (BuildContext context) {
@@ -931,7 +932,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
 
                                       if (!await Prefs().getFullScreenExplanationShown()) {
                                         Prefs().setFullScreenExplanationShown(true);
-                                        return showDialog<void>(
+                                        return showWebviewDialog<void>(
                                           context: _,
                                           barrierDismissible: false,
                                           builder: (BuildContext context) {
@@ -972,7 +973,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
                                     color: Colors.red[800],
                                     onTap: () {
                                       _webViewProvider.verticalMenuClose();
-                                      showDialog<void>(
+                                      showWebviewDialog<void>(
                                         context: _,
                                         barrierDismissible: false,
                                         builder: (BuildContext context) {
@@ -1112,7 +1113,7 @@ class WebViewStackViewState extends State<WebViewStackView> with WidgetsBindingO
 
                                 if (_webViewProvider.tabList.length > 4 && !await Prefs().getExcessTabsAlerted()) {
                                   Prefs().setExcessTabsAlerted(true);
-                                  return showDialog<void>(
+                                  return showWebviewDialog<void>(
                                     context: _,
                                     barrierDismissible: false,
                                     builder: (BuildContext context) {

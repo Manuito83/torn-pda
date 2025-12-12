@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart_update.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -39,21 +40,87 @@ class _StatsChartState extends State<StatsChart> {
 
   @override
   Widget build(BuildContext context) {
-    final dynamic chartData;
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    bool showBoth = settingsProvider.tornStatsChartShowBoth;
+
+    bool isOldData = false;
+    if (widget.statsData?.data != null && widget.statsData!.data!.isNotEmpty) {
+      int maxTimestamp = 0;
+      for (var element in widget.statsData!.data!) {
+        if (element.timestamp != null && element.timestamp! > maxTimestamp) {
+          maxTimestamp = element.timestamp!;
+        }
+      }
+      if (maxTimestamp > 0) {
+        final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
+        final now = DateTime.now();
+        final difference = now.difference(latestDate);
+        if (difference.inDays > 30) {
+          isOldData = true;
+        }
+      }
+    }
+
+    Widget? warningWidget;
+    if (isOldData) {
+      warningWidget = Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.warning, size: 12, color: Colors.orange[800]),
+            const SizedBox(width: 5),
+            Text(
+              "TS sent data older than 1 month",
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.orange[800],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (showBoth) {
+      Widget firstChart;
+      Widget secondChart;
+
+      if (widget.chartType == TornStatsChartType.Line) {
+        firstChart = LineChart(_buildLineChartData());
+        secondChart = PieChart(_buildPieChartData());
+      } else {
+        firstChart = PieChart(_buildPieChartData());
+        secondChart = LineChart(_buildLineChartData());
+      }
+
+      return Column(
+        children: [
+          if (warningWidget != null) warningWidget,
+          _legend(),
+          const SizedBox(height: 5),
+          Flexible(child: firstChart),
+          const SizedBox(height: 20),
+          Flexible(child: secondChart),
+        ],
+      );
+    }
+
+    Widget chart;
     if (widget.chartType == TornStatsChartType.Line) {
-      chartData = _buildLineChartData();
+      chart = LineChart(_buildLineChartData());
     } else {
-      chartData = _buildPieChartData();
+      chart = PieChart(_buildPieChartData());
     }
 
     return Column(
       children: [
+        if (warningWidget != null) warningWidget,
         _legend(),
         const SizedBox(height: 5),
         Flexible(
-          child: widget.chartType == TornStatsChartType.Line
-              ? LineChart(chartData as LineChartData)
-              : PieChart(chartData as PieChartData),
+          child: chart,
         ),
       ],
     );
@@ -101,145 +168,141 @@ class _StatsChartState extends State<StatsChart> {
             }
 
             toastification.showCustom(
-              autoCloseDuration: const Duration(seconds: 8),
+              autoCloseDuration: null,
               alignment: Alignment.bottomCenter,
               builder: (BuildContext context, ToastificationItem holder) {
-                return GestureDetector(
-                  onTap: () {
-                    toastification.dismiss(holder);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: success ? Colors.green[600] : Colors.red[600],
-                      border: Border.all(
-                        color: success ? Colors.green.shade800 : Colors.red.shade800,
-                        width: 2,
-                      ),
+                return Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: success ? Colors.green[600] : Colors.red[600],
+                    border: Border.all(
+                      color: success ? Colors.green.shade800 : Colors.red.shade800,
+                      width: 2,
                     ),
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.all(8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Image.asset('images/icons/tornstats_logo.png', width: 24),
-                        const SizedBox(width: 20),
-                        Flexible(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Stats update report',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  margin: const EdgeInsets.all(8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset('images/icons/tornstats_logo.png', width: 24),
+                      const SizedBox(width: 20),
+                      Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Stats update report',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
                               ),
-                              const SizedBox(height: 8),
-                              Text(
-                                message,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              message,
+                              style: const TextStyle(
+                                color: Colors.white,
                               ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  if (success)
-                                    TextButton(
-                                      onPressed: () {
-                                        toastification.dismiss(holder);
-                                        const url = 'https://tornstats.com/';
-                                        context.read<WebViewProvider>().openBrowserPreference(
-                                              context: context,
-                                              url: url,
-                                              browserTapType: BrowserTapType.short,
-                                            );
-                                      },
-                                      child: const Text(
-                                        'Open Torn Stats',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(12.0),
-                                          side: const BorderSide(color: Colors.white, width: 2.0),
-                                        ),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                if (success)
+                                  TextButton(
+                                    onPressed: () {
+                                      toastification.dismiss(holder);
+                                      const url = 'https://tornstats.com/';
+                                      context.read<WebViewProvider>().openBrowserPreference(
+                                            context: context,
+                                            url: url,
+                                            browserTapType: BrowserTapType.short,
+                                          );
+                                    },
+                                    child: const Text(
+                                      'Open Torn Stats',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  if (success)
-                                    GestureDetector(
-                                      onTap: () {
-                                        Clipboard.setData(ClipboardData(text: message));
-                                        toastification.showCustom(
-                                          autoCloseDuration: const Duration(seconds: 2),
-                                          alignment: Alignment.center,
-                                          builder: (BuildContext context, ToastificationItem holder) {
-                                            return GestureDetector(
-                                              onTap: () {
-                                                toastification.dismiss(holder);
-                                              },
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(8),
-                                                  color: Colors.green[600],
-                                                  border: Border.all(
-                                                    color: Colors.green.shade800,
-                                                    width: 2,
-                                                  ),
-                                                ),
-                                                padding: const EdgeInsets.all(16),
-                                                margin: const EdgeInsets.all(8),
-                                                child: const Row(
-                                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                                  children: [
-                                                    Icon(Icons.copy),
-                                                    SizedBox(width: 20),
-                                                    Flexible(
-                                                      child: Column(
-                                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                                        children: [
-                                                          Text(
-                                                            'Copied to clipboard!',
-                                                            style: TextStyle(
-                                                              color: Colors.white,
-                                                              fontWeight: FontWeight.bold,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                        );
-
-                                        setState(() {
-                                          _statsUpdating = false;
-                                        });
-                                      },
-                                      child: const Icon(Icons.copy, color: Colors.white),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.0),
+                                        side: const BorderSide(color: Colors.white, width: 2.0),
+                                      ),
                                     ),
+                                  ),
+                                if (success)
                                   GestureDetector(
                                     onTap: () {
+                                      Clipboard.setData(ClipboardData(text: message));
                                       toastification.dismiss(holder);
+                                      toastification.showCustom(
+                                        autoCloseDuration: const Duration(seconds: 2),
+                                        alignment: Alignment.center,
+                                        builder: (BuildContext context, ToastificationItem holder) {
+                                          return GestureDetector(
+                                            onTap: () {
+                                              toastification.dismiss(holder);
+                                            },
+                                            child: Container(
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(8),
+                                                color: Colors.green[600],
+                                                border: Border.all(
+                                                  color: Colors.green.shade800,
+                                                  width: 2,
+                                                ),
+                                              ),
+                                              padding: const EdgeInsets.all(16),
+                                              margin: const EdgeInsets.all(8),
+                                              child: const Row(
+                                                crossAxisAlignment: CrossAxisAlignment.center,
+                                                children: [
+                                                  Icon(Icons.copy),
+                                                  SizedBox(width: 20),
+                                                  Flexible(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          'Copied to clipboard!',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+
+                                      setState(() {
+                                        _statsUpdating = false;
+                                      });
                                     },
-                                    child: const Icon(Icons.cancel, color: Colors.white),
+                                    child: const Icon(Icons.copy, color: Colors.white),
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                GestureDetector(
+                                  onTap: () {
+                                    toastification.dismiss(holder);
+                                  },
+                                  child: const Icon(Icons.cancel, color: Colors.white),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -305,17 +368,42 @@ class _StatsChartState extends State<StatsChart> {
     final dexteritySpots = <FlSpot>[];
     final timestamps = <int?>[];
 
-    for (int i = 0; i < widget.statsData!.data!.length; i++) {
-      strengthSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].strength!.toDouble()));
-      speedSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].speed!.toDouble()));
-      defenseSpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].defense!.toDouble()));
-      dexteritySpots.add(FlSpot(i.toDouble(), widget.statsData!.data![i].dexterity!.toDouble()));
-      timestamps.add(widget.statsData!.data![i].timestamp);
+    // Filter data based on range
+    var data = widget.statsData!.data!;
+    final settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
+    final int rangeMonths = settingsProvider.tornStatsChartRange;
+
+    if (rangeMonths > 0 && data.isNotEmpty) {
+      // Show the last X months of AVAILABLE data
+      int maxTimestamp = 0;
+      for (var element in data) {
+        if (element.timestamp != null && element.timestamp! > maxTimestamp) {
+          maxTimestamp = element.timestamp!;
+        }
+      }
+
+      if (maxTimestamp > 0) {
+        final latestDate = DateTime.fromMillisecondsSinceEpoch(maxTimestamp * 1000);
+        final cutoffDate = latestDate.subtract(Duration(days: rangeMonths * 30));
+        data = data.where((element) {
+          if (element.timestamp == null) return false;
+          final date = DateTime.fromMillisecondsSinceEpoch(element.timestamp! * 1000);
+          return date.isAfter(cutoffDate);
+        }).toList();
+      }
+    }
+
+    for (int i = 0; i < data.length; i++) {
+      strengthSpots.add(FlSpot(i.toDouble(), data[i].strength!.toDouble()));
+      speedSpots.add(FlSpot(i.toDouble(), data[i].speed!.toDouble()));
+      defenseSpots.add(FlSpot(i.toDouble(), data[i].defense!.toDouble()));
+      dexteritySpots.add(FlSpot(i.toDouble(), data[i].dexterity!.toDouble()));
+      timestamps.add(data[i].timestamp);
       final int thisMax = [
-        widget.statsData!.data![i].strength ?? 0,
-        widget.statsData!.data![i].speed ?? 0,
-        widget.statsData!.data![i].defense ?? 0,
-        widget.statsData!.data![i].dexterity ?? 0,
+        data[i].strength ?? 0,
+        data[i].speed ?? 0,
+        data[i].defense ?? 0,
+        data[i].dexterity ?? 0,
       ].fold(0, max);
       if (thisMax > maxStat) {
         maxStat = thisMax.toDouble();
@@ -323,7 +411,7 @@ class _StatsChartState extends State<StatsChart> {
     }
 
     return LineChartData(
-      maxY: maxStat * 1.05,
+      maxY: maxStat * 1.1,
       lineBarsData: [
         LineChartBarData(
           spots: strengthSpots,
@@ -409,25 +497,25 @@ class _StatsChartState extends State<StatsChart> {
             // Values come unsorted, we sort them here to our liking
             tooltips.add(
               LineTooltipItem(
-                "$strLine\n\nSTR: ${f.format(widget.statsData!.data![thisX].strength)}",
+                "$strLine\n\nSTR: ${f.format(data[thisX].strength)}",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
-                "DEF: ${f.format(widget.statsData!.data![thisX].defense)}",
+                "DEF: ${f.format(data[thisX].defense)}",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
-                "SPD: ${f.format(widget.statsData!.data![thisX].speed)}",
+                "SPD: ${f.format(data[thisX].speed)}",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
             tooltips.add(
               LineTooltipItem(
-                "DEX: ${f.format(widget.statsData!.data![thisX].dexterity)}\n\n$dexLine",
+                "DEX: ${f.format(data[thisX].dexterity)}\n\n$dexLine",
                 const TextStyle(fontSize: 10, color: Colors.white),
               ),
             );
@@ -442,7 +530,9 @@ class _StatsChartState extends State<StatsChart> {
           sideTitles: SideTitles(
             showTitles: true,
             getTitlesWidget: (position, meta) {
-              if (position == 0) return const SizedBox.shrink();
+              if (position == 0 || position.toInt() >= timestamps.length) {
+                return const SizedBox.shrink();
+              }
 
               final int ts = timestamps[position.toInt()]! * 1000;
               final DateTime dt = DateTime.fromMillisecondsSinceEpoch(ts);
@@ -452,13 +542,26 @@ class _StatsChartState extends State<StatsChart> {
               const degrees = -50;
               const radians = degrees * pi / 180;
 
+              // Color logic based on year
+              final int currentYear = DateTime.now().year;
+              Color yearColor;
+              if (dt.year == currentYear) {
+                yearColor = Colors.black;
+              } else if (dt.year == currentYear - 1) {
+                yearColor = Colors.blue;
+              } else if (dt.year == currentYear - 2) {
+                yearColor = Colors.yellow[800]!;
+              } else {
+                yearColor = Colors.red;
+              }
+
               return Transform.rotate(
                 angle: radians,
                 child: SizedBox(
                   width: 60,
                   child: Text(
                     date,
-                    style: const TextStyle(fontSize: 9),
+                    style: TextStyle(fontSize: 9, color: yearColor),
                   ),
                 ),
               );

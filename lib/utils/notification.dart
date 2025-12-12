@@ -978,6 +978,7 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
   String ownName = "";
   bool excludeFaction = false;
   bool excludeCompany = false;
+  bool excludeElimination = false;
   if (fromBackground) {
     // Don't show own messages
     final savedUser = await Prefs().getOwnDetails();
@@ -993,10 +994,13 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
     excludeFaction = await Prefs().getSendbirdExcludeFactionMessages();
     // Filter company
     excludeCompany = await Prefs().getSendbirdExcludeCompanyMessages();
+    // Filter elimination
+    excludeElimination = await Prefs().getSendbirdExcludeEliminationMessages();
   } else {
     ownName = Get.find<UserController>().playerName;
     excludeFaction = Get.find<SendbirdController>().excludeFactionMessages;
     excludeCompany = Get.find<SendbirdController>().excludeCompanyMessages;
+    excludeElimination = Get.find<SendbirdController>().excludeEliminationMessages;
   }
 
   if (sender.toLowerCase() == ownName.toLowerCase()) return;
@@ -1011,6 +1015,7 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
     "private-": "",
     "faction-": "(faction)",
     "company-": "(company)",
+    "elimination-": "(elimination)",
     "public_global": "(global)",
     "public_trade": "(trade)",
     "public_competition": "(competition)",
@@ -1030,9 +1035,15 @@ Future<void> showSendbirdNotification(String sender, String message, String chan
         return;
       }
 
-      // Exclude faction messages
+      // Exclude company messages
       if (suffix == "(company)" && excludeCompany) {
         log("Filtered OUT company message: $message");
+        return;
+      }
+
+      // Exclude elimination messages
+      if (suffix == "(elimination)" && excludeElimination) {
+        log("Filtered OUT elimination message: $message");
         return;
       }
 

@@ -41,17 +41,31 @@ String easyCrimesJS({
   ''';
 }
 
-String buyMaxAbroadJS({required bool hideItemInfoPanel}) {
+String hideItemInfoJS() {
+  return '''
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = `
+      body.pda-hide-item-info div.show-item-info {
+        display: none !important;
+      }
+      /* New UI */
+      [id\$="-itemInfoWrapper"] {
+        display: none !important;
+      }
+    `;
+    document.head.appendChild(style);
+    document.body.classList.add('pda-hide-item-info');
+  ''';
+}
+
+String buyMaxAbroadJS() {
   return '''
 // @ts-check
 
 addFillMaxButtons();
 
 function addFillMaxButtons() {
-  if ($hideItemInfoPanel) {
-    document.body.classList.add('pda-hide-item-info');
-  }
-
   /** @type {NodeListOf<HTMLLIElement>} */
   const tableRows = document.querySelectorAll("ul.users-list > li");
   if (!tableRows.length)
@@ -64,10 +78,6 @@ function addFillMaxButtons() {
   }
 
   addStyle(`
-	body.pda-hide-item-info div.show-item-info {
-		display: none !important;
-	}
-
 	span.item-info-wrap > .deal {
 		position: relative;
 	}
@@ -267,24 +277,17 @@ String travelReturnHomeJS() {
   return '''
     function goHome() {
       const doc = document;
-      let travelHome1 = doc.querySelector('[class*="travel-home t-clear"]');
+      let travelHome = doc.querySelector('.travel-home-header-button');
       
-      if(!travelHome1){
-          return;
+      if (travelHome) {
+          travelHome.click();
+          setTimeout(function() {
+              let confirmBtn = doc.querySelector('#travel-home-panel button.torn-btn');
+              if (confirmBtn) {
+                  confirmBtn.click();
+              }
+          }, 1000);
       }
-      
-      function sleep(ms) {
-			  return new Promise(resolve => setTimeout(resolve, ms));
-			}
-      
-      async function initReturn() {
-          travelHome1.click();
-          await sleep(1000);
-          var travelHome2 = doc.querySelector('[class="btn c-pointer"]');
-          travelHome2.click();
-      }
-      
-      initReturn();
     }
 
     goHome();

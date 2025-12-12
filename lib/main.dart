@@ -72,13 +72,12 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.9.3';
-const String androidCompilation = '587';
-const String iosCompilation = '587';
+const String appVersion = '3.9.6';
+const String androidCompilation = '595';
+const String iosCompilation = '595';
 
-// This also saves as a mean to check if it's the first time the app is launched
-String lastSavedAppCompilation = "";
 bool appHasBeenUpdated = false;
+bool appIsFirstRun = false;
 
 // TODO (App release)
 // Note: if using Windows and calling HTTP functions, we need to change the URL in [firebase_functions.dart]
@@ -373,11 +372,6 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
                       // Index 1: Browser mode - drawer hidden but maintains state
                       Stack(
                         children: [
-                          Offstage(
-                            // Drawer in memory but not rendered
-                            offstage: true,
-                            child: homeDrawerWidget,
-                          ),
                           _mainBrowser,
                           const AppBorder(),
                         ],
@@ -545,18 +539,17 @@ class MyAppState extends State<MyApp> with WidgetsBindingObserver {
 /// Initialize app compilation and detect updates
 Future<void> _initializeAppCompilation() async {
   final String currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
-  lastSavedAppCompilation = await Prefs().getAppCompilation();
+  String lastSavedAppCompilation = await Prefs().getAppCompilation();
 
   if (lastSavedAppCompilation.isNotEmpty && lastSavedAppCompilation != currentCompilation) {
     // App has been updated
     appHasBeenUpdated = true;
     log("📜 App updated: $lastSavedAppCompilation → $currentCompilation");
     await Prefs().setAppCompilation(currentCompilation);
-    lastSavedAppCompilation = currentCompilation;
   } else if (lastSavedAppCompilation.isEmpty) {
     // First app run
+    appIsFirstRun = true;
     await Prefs().setAppCompilation(currentCompilation);
-    lastSavedAppCompilation = currentCompilation;
     log("📜 First app run, saved compilation: $currentCompilation");
   }
 }

@@ -46,29 +46,33 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(children: [
-      const Text("Available parameters"),
-      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.shortcuts))
-        Column(
-          children: [
-            _shorcutsMain(),
-          ],
-        ),
-      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.userscripts))
-        Column(
-          children: [
-            const Divider(),
-            _userscriptsMain(),
-          ],
-        ),
-      if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.targets))
-        Column(
-          children: [
-            const Divider(),
-            _targetsMain(),
-          ],
-        ),
-    ]);
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          const Text("Available parameters"),
+          if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.shortcuts))
+            Column(
+              children: [
+                _shorcutsMain(),
+              ],
+            ),
+          if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.userscripts))
+            Column(
+              children: [
+                const Divider(),
+                _userscriptsMain(),
+              ],
+            ),
+          if (BackupPrefsGroups.assessIncoming(widget.serverPrefs, BackupPrefs.targets))
+            Column(
+              children: [
+                const Divider(),
+                _targetsMain(),
+              ],
+            ),
+        ],
+      ),
+    );
   }
 
   Widget _shorcutsMain() {

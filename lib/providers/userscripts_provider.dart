@@ -13,12 +13,14 @@ import 'package:flutter/material.dart';
 // Package imports:
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:torn_pda/main.dart';
 
 // Project imports:
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/utils/js_handlers.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 // import 'package:torn_pda/utils/userscript_examples.dart';
 
 class UserScriptsProvider extends ChangeNotifier {
@@ -27,6 +29,10 @@ class UserScriptsProvider extends ChangeNotifier {
 
   final List<UserScriptModel> _userScriptList = <UserScriptModel>[];
   List<UserScriptModel> get userScriptList => _userScriptList;
+
+  // Safety lock to prevent overwriting data with empty lists if load fails
+  bool _isSafeToSave = false;
+  bool get isInSafeMode => !_isSafeToSave;
 
   List<UserScriptModel> exampleScripts = <UserScriptModel>[];
 
@@ -270,6 +276,9 @@ class UserScriptsProvider extends ChangeNotifier {
     required String scriptsList,
     bool defaultToDisabled = false,
   }) async {
+    // If we are restoring from a backup, we assume the data is valid and we can exit Safe Mode
+    _isSafeToSave = true;
+
     if (overwrite) {
       _userScriptList.clear();
       final List<dynamic> decoded = json.decode(scriptsList);
@@ -341,16 +350,80 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> showSafeModeWarning() async {
+    if (navigatorKey.currentContext != null) {
+      await showWebviewDialog(
+        context: navigatorKey.currentContext!,
+        builder: (context) => AlertDialog(
+          title: const Text("⚠️ Error restoring scripts"),
+          content: const Text(
+            "There was a problem loading your scripts. To protect your data, changes will not be saved.\n\n"
+            "If this problem persists, you can reset your scripts to fix it (warning: this will delete all your scripts) or try importing a backup from Settings.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(foregroundColor: Colors.green),
+              child: const Text("Understood"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _forceResetScripts();
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text("Reset Scripts"),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // Fallback if context is not available (unlikely)
+      BotToast.showNotification(
+        title: (_) => const Text(
+          "⚠️ Error restoring scripts",
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        subtitle: (_) => const Text(
+          "There was a problem loading your scripts. To protect your data, changes will not be saved.\nPlease restart the app.",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Colors.orange[900],
+        duration: const Duration(seconds: 8),
+        leading: (_) => const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 32),
+      );
+    }
+  }
+
+  Future<void> _forceResetScripts() async {
+    _userScriptList.clear();
+    _isSafeToSave = true;
+    await addDefaultScripts();
+    BotToast.showText(text: "Scripts have been reset to defaults");
+  }
+
   /// Save userscripts list with proper encoding
   Future<void> _saveUserScriptsToStorage() async {
     if (!_initializationCompleter.isCompleted) {
-      log("📜❌ Rejected userscripts save");
+      log("📜❌ Rejected userscripts save", name: "UserScriptsProvider");
+      return;
+    }
+
+    // SAFETY LOCK: Prevent saving if we haven't successfully loaded scripts at least once
+    if (!_isSafeToSave) {
+      log("🛑 SAFE LOCK: app was not initialized correctly.", name: "UserScriptsProvider");
+      showSafeModeWarning();
       return;
     }
 
     try {
       _checkForCustomApiKeyCandidates();
       final saveString = json.encode(_userScriptList);
+
+      // 1. Save to backup JSON (not awaited...)
+      _writeBackupFile(saveString);
+
+      // 2. Save to Prefs
       // Encode to Base64 with prefix to prevent character encoding issues
       final encodedString = "PDA_B64:${base64Encode(utf8.encode(saveString))}";
       await Prefs().setUserScriptsList(encodedString);
@@ -370,15 +443,15 @@ class UserScriptsProvider extends ChangeNotifier {
 
     if (savedScripts.startsWith("PDA_B64:")) {
       try {
-        // New format: Base64 encoded
+        // New format found: Base64 encoded
         final base64Data = savedScripts.substring(8); // Remove "PDA_B64:" prefix
         final decodedBytes = base64Decode(base64Data);
         final decodedString = utf8.decode(decodedBytes);
-        log("📜 UserScripts loaded from new Base64 format");
+        log("📜 UserScripts loaded from new Base64 format", name: "UserScriptsProvider");
         return decodedString;
       } catch (e, trace) {
         if (!Platform.isWindows) {
-          FirebaseCrashlytics.instance.log("PDA error decoding Base64 userscripts. Error: $e");
+          FirebaseCrashlytics.instance.log("UserScriptsProvider: error decoding Base64 userscripts. Error: $e");
         }
         if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(e, trace);
         logToUser("PDA error decoding Base64 userscripts. Error: $e");
@@ -386,7 +459,7 @@ class UserScriptsProvider extends ChangeNotifier {
       }
     } else {
       // Old format: direct JSON string
-      log("📜 UserScripts loaded from legacy format");
+      log("📜 UserScripts loaded from legacy format", name: "UserScriptsProvider");
       return savedScripts;
     }
   }
@@ -394,6 +467,44 @@ class UserScriptsProvider extends ChangeNotifier {
   /// Get userscripts as JSON string for external use (backups, etc.)
   Future<String?> getUserScriptsAsJsonString() async {
     return await _loadUserScriptsFromStorage();
+  }
+
+  Future<File> _getBackupFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final backupDir = Directory('${directory.path}/backup');
+    if (!await backupDir.exists()) {
+      await backupDir.create(recursive: true);
+    }
+    return File('${backupDir.path}/userscripts_backup.json');
+  }
+
+  Future<void> _writeBackupFile(String jsonString) async {
+    try {
+      final file = await _getBackupFile();
+      await file.writeAsString(jsonString);
+    } catch (e, trace) {
+      log("📜❌ Error writing backup file: $e", name: "UserScriptsProvider");
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("UserScriptsProvider: PDA error writing backup file. Error: $e");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+    }
+  }
+
+  Future<String?> _readBackupFile() async {
+    try {
+      final file = await _getBackupFile();
+      if (await file.exists()) {
+        return await file.readAsString();
+      }
+    } catch (e, trace) {
+      log("📜❌ Error reading backup file: $e", name: "UserScriptsProvider");
+      if (!Platform.isWindows) {
+        FirebaseCrashlytics.instance.log("PDA error reading backup file. Error: $e");
+        FirebaseCrashlytics.instance.recordError(e, trace);
+      }
+    }
+    return null;
   }
 
   void _sort() {
@@ -404,7 +515,10 @@ class UserScriptsProvider extends ChangeNotifier {
     try {
       final String scriptName = script.name.toLowerCase();
       if (targetList.any((existingScript) => existingScript.name.toLowerCase() == scriptName)) {
-        log("📜 UserScripts: Script '${script.name}' already exists in list, skipping (context: $context)");
+        log(
+          "📜 Script '${script.name}' already exists in list, skipping (context: $context)",
+          name: "UserScriptsProvider",
+        );
         return false;
       }
 
@@ -412,10 +526,10 @@ class UserScriptsProvider extends ChangeNotifier {
       return true;
     } catch (e, trace) {
       final errorMessage = "Error adding userscript '${script.name}' in context: $context. Error: $e";
-      log("📜 UserScripts ERROR: $errorMessage");
+      log("📜 ERROR: $errorMessage", name: "UserScriptsProvider");
 
       if (!Platform.isWindows) {
-        FirebaseCrashlytics.instance.log("PDA error at _addScript. $errorMessage");
+        FirebaseCrashlytics.instance.log("UserScriptsProvider: error at _addScript. $errorMessage");
         FirebaseCrashlytics.instance.recordError(e, trace, reason: "UserScript add failure in $context");
       }
 
@@ -432,12 +546,13 @@ class UserScriptsProvider extends ChangeNotifier {
 
   Future<void> loadPreferencesAndScripts() async {
     _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
+    _isSafeToSave = false; // Reset safety lock
 
     // 1. Always try to load existing scripts first (regardless of app version)
     // 2. Only check if it's "first time" if no scripts exist
 
     try {
-      // If scripts exist, load them regardless of what lastSavedAppCompilation says
+      // If scripts exist, load them regardless of app update status
       String? savedScripts;
       const int maxRetries = 5;
 
@@ -445,7 +560,7 @@ class UserScriptsProvider extends ChangeNotifier {
         savedScripts = await _loadUserScriptsFromStorage();
         if (savedScripts != null) {
           if (attempt > 1) {
-            log("📜 UserScripts: Load succeeded on attempt $attempt");
+            log("📜 Load succeeded on attempt $attempt", name: "UserScriptsProvider");
           }
           break;
         }
@@ -453,7 +568,7 @@ class UserScriptsProvider extends ChangeNotifier {
         if (attempt < maxRetries) {
           await Future.delayed(const Duration(milliseconds: 500));
         } else {
-          log("📜 UserScripts: Load failed after $maxRetries attempts");
+          log("📜 Load failed after $maxRetries attempts", name: "UserScriptsProvider");
         }
       }
 
@@ -473,43 +588,103 @@ class UserScriptsProvider extends ChangeNotifier {
         _userScriptList.addAll(tempList);
         _sort();
         _checkForCustomApiKeyCandidates();
+        _isSafeToSave = true;
         notifyListeners();
 
-        log("📜 UserScripts: Successfully loaded ${_userScriptList.length} existing scripts");
+        // IMPORTANT: we create a backup immediately after successful load
+        // (If Prefs fails in the next run, we already have a backup)
+        _writeBackupFile(json.encode(_userScriptList));
+
+        log("📜 Successfully loaded ${_userScriptList.length} existing scripts", name: "UserScriptsProvider");
+        return;
+      }
+
+      // ATTEMPT RECOVERY FROM SHADOW BACKUP
+      // We check backup BEFORE checking for "first run", because if SharedPreferences are lost
+      // but Backup exists, we want to restore, regardless of app update status.
+      log("📜 SharedPreferences empty. Attempting Shadow Backup recovery...", name: "UserScriptsProvider");
+      final backupJson = await _readBackupFile();
+      if (backupJson != null) {
+        final List<UserScriptModel> tempList = <UserScriptModel>[];
+        final decoded = json.decode(backupJson);
+        if (decoded is List) {
+          for (final dec in decoded) {
+            final decodedModel = UserScriptModel.fromJson(dec);
+            _addScript(tempList, decodedModel, "loadPreferencesAndScripts-backup");
+          }
+        }
+
+        _userScriptList.clear();
+        _userScriptList.addAll(tempList);
+        _sort();
+        _checkForCustomApiKeyCandidates();
+        _isSafeToSave = true;
+        notifyListeners();
+
+        // Repair Prefs immediately
+        final saveString = json.encode(_userScriptList);
+        final encodedString = "PDA_B64:${base64Encode(utf8.encode(saveString))}";
+        await Prefs().setUserScriptsList(encodedString);
+
+        log("📜 RECOVERED from Shadow Backup! (${_userScriptList.length} scripts)", name: "UserScriptsProvider");
+        BotToast.showText(text: "Scripts were recovered from backup after unsuccessful DB load!");
         return;
       }
 
       // Check if it's the first run based on app update status
       // Scripts == null and app never updated -> should be first run
-      if (!appHasBeenUpdated) {
-        log("📜 UserScripts: First app run detected, loading default scripts");
+      if (appIsFirstRun) {
+        log("📜 First app run detected (and no backup found), loading default scripts", name: "UserScriptsProvider");
         // NOTE: this will probably get a rejected save (and a log message) as the completer is not completed,
         // but it's fine (and it will keep happening) for several app starts while scripts are untouched)
         // since we have no custom scripts yet and any user action (a save, deletion, etc.)
         // will save them eventually
+
+        // We mark it as safe to save because we are initializing a fresh state
+        // so we are not overwriting any previous user data
+        _isSafeToSave = true;
+
         await addDefaultScripts();
         notifyListeners();
         return;
       }
-
-      // If we reach here, scripts are null but the app has been updated
-      // It does not make sense. If anything, scripts could be empty but not null.
       // This should not happen take place and we should not load defaults
       // just in case the user can recover them by resetting the app
       throw Exception("PDA error in loadPreferencesAndScripts. Scripts are null after app update.");
     } catch (e, trace) {
       if (!Platform.isWindows) {
-        FirebaseCrashlytics.instance.log("PDA error in loadPreferencesAndScripts. Error: $e");
+        FirebaseCrashlytics.instance.log("UserScriptsProvider: error in loadPreferencesAndScripts. Error: $e");
         FirebaseCrashlytics.instance.recordError(e, trace);
       }
-      BotToast.showText(
-        text: "⚠️"
-            "\n\nThere was a problem retrieving userscripts: $e"
-            "\n\nConsider restarting the app to ensure that no data is lost!",
-        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-        contentColor: Colors.orange.shade800,
-        duration: const Duration(seconds: 8),
-      );
+
+      if (navigatorKey.currentContext != null) {
+        showDialog(
+          context: navigatorKey.currentContext!,
+          builder: (context) => AlertDialog(
+            title: const Text("Issue Loading Scripts"),
+            content: const Text(
+              "We encountered a problem loading your user scripts. To protect your data, please restart the app so that we can try again.\n\n"
+              "If this happens repeatedly, please go to 'Settings > Advanced Browser Settings > Manage Scripts' to reset them, "
+              "or alternatively import a local or cloud backup if you have one.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text("OK"),
+              ),
+            ],
+          ),
+        );
+      } else {
+        BotToast.showText(
+          text: "⚠️"
+              "\n\nThere was a problem retrieving userscripts: $e"
+              "\n\nConsider restarting the app to ensure that no data is lost!",
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+          contentColor: Colors.orange.shade800,
+          duration: const Duration(seconds: 8),
+        );
+      }
     } finally {
       // We complete the init after 2 seconds:
       // - Any tries to save the scripts before initialisation completes are ignored immediately
@@ -579,7 +754,7 @@ class UserScriptsProvider extends ChangeNotifier {
           // Notify listeners of the change after every row
           notifyListeners();
         }).catchError((e) {
-          log(e);
+          log("$e", name: "UserScriptsProvider");
           if (s.updateStatus != UserScriptUpdateStatus.error) {
             s.updateStatus = UserScriptUpdateStatus.error;
             hasChanges = true;
@@ -675,5 +850,49 @@ class UserScriptsProvider extends ChangeNotifier {
     } else {
       return (success: false, message: response.message);
     }
+  }
+
+  /// Generates a unique script name by appending (1), (2), etc. if needed
+  String _getUniqueScriptName(String baseName) {
+    String newName = baseName;
+    int counter = 1;
+    while (_userScriptList.any((s) => s.name.toLowerCase() == newName.toLowerCase())) {
+      newName = "$baseName ($counter)";
+      counter++;
+    }
+    return newName;
+  }
+
+  /// Import scripts from a list of models
+  Future<void> importScriptsFromList({
+    required List<UserScriptModel> scriptsToImport,
+    required bool overwrite,
+  }) async {
+    if (overwrite) {
+      _userScriptList.clear();
+      for (final script in scriptsToImport) {
+        _addScript(_userScriptList, script, "importScriptsFromList-overwrite");
+      }
+    } else {
+      for (final script in scriptsToImport) {
+        // Check for name conflict
+        if (_userScriptList.any((s) => s.name.toLowerCase() == script.name.toLowerCase())) {
+          // Rename
+          final newName = _getUniqueScriptName(script.name);
+          script.name = newName;
+        }
+        _addScript(_userScriptList, script, "importScriptsFromList-append");
+      }
+    }
+
+    _sort();
+    _isSafeToSave = true; // We assume user action validates the state
+    await _saveUserScriptsToStorage();
+    notifyListeners();
+  }
+
+  /// Export specific scripts to JSON string
+  String exportScriptsToJson(List<UserScriptModel> scriptsToExport) {
+    return json.encode(scriptsToExport);
   }
 }

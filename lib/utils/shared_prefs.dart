@@ -96,6 +96,7 @@ class Prefs {
   final String _kDynamicAppIconsManual = "pda_dynamicAppIconsManual";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
+  final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
@@ -207,6 +208,7 @@ class Prefs {
   // Profile options
   final String _kShowHeaderWallet = "pda_showHeaderWallet";
   final String _kShowHeaderIcons = "pda_showHeaderIcons";
+  final String _kShowShortcutEditIcon = "pda_showShortcutEditIcon";
   final String _kIconsFiltered = "pda_iconsFiltered";
   final String _kDedicatedTravelCard = "pda_dedicatedTravelCard";
   final String _kDisableTravelSection = "pda_disableTravelSection";
@@ -247,6 +249,7 @@ class Prefs {
   final String _kPlayerNotesSortAscending = "pda_playerNotesSortAscending";
   final String _kNotesWidgetEnabledProfile = "pda_notesWidgetEnabledProfile";
   final String _kNotesWidgetEnabledProfileWhenEmpty = "pda_notesWidgetEnabledProfileWhenEmpty";
+  final String _kJoblessWarningEnabled = "pda_joblessWarningEnabled";
   final String _kPlayerNotesMigrationCompleted = "pda_playerNotesMigrationCompleted";
 
   // OC v2
@@ -424,7 +427,9 @@ class Prefs {
   final String _kTornStatsChartDateTime = "pda_tornStatsChartDateTime";
   final String _kTornStatsChartEnabled = "pda_tornStatsChartEnabled";
   final String _kTornStatsChartType = "pda_tornStatsChartType";
+  final String _kTornStatsChartRange = "pda_tornStatsChartRange";
   final String _kTornStatsChartInCollapsedMiscCard = "pda_tornStatsChartInCollapsedMiscCard";
+  final String _kTornStatsChartShowBoth = "pda_tornStatsChartShowBoth";
 
   // Torn Attack Central
   // NOTE: [_kTACEnabled] adds an extra tab in Chaining
@@ -472,6 +477,7 @@ class Prefs {
   final String _kSendbirdTokenTimestamp = "pda_sendbirdTimestamp";
   final String _kSendbirdExcludeFactionMessages = "pda_sendbirdExcludeFactionMessages";
   final String _kSendbirdExcludeCompanyMessages = "pda_sendbirdExcludeCompanyMessages";
+  final String _kSendbirdExcludeEliminationMessages = "pda_sendbirdExcludeEliminationMessages";
 
   final String _kBringBrowserForwardOnStart = "pda_bringBrowserForwardOnStart";
 
@@ -1799,6 +1805,14 @@ class Prefs {
     return await PrefsDatabase.getBool(_kNotesWidgetEnabledProfileWhenEmpty, true);
   }
 
+  Future<bool> getJoblessWarningEnabled() async {
+    return await PrefsDatabase.getBool(_kJoblessWarningEnabled, true);
+  }
+
+  Future<void> setJoblessWarningEnabled(bool value) async {
+    await PrefsDatabase.setBool(_kJoblessWarningEnabled, value);
+  }
+
   // *************
   Future<bool> getExtraPlayerNetworth() async {
     return await PrefsDatabase.getBool(_kExtraPlayerNetworth, false);
@@ -2189,6 +2203,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kShowHeaderIcons, value);
   }
 
+  Future<bool> getShowShortcutEditIcon() async {
+    return await PrefsDatabase.getBool(_kShowShortcutEditIcon, true);
+  }
+
+  Future setShowShortcutEditIcon(bool value) async {
+    return await PrefsDatabase.setBool(_kShowShortcutEditIcon, value);
+  }
+
   Future<List<String>> getIconsFiltered() async {
     return await PrefsDatabase.getStringList(_kIconsFiltered, <String>[]);
   }
@@ -2524,6 +2546,14 @@ class Prefs {
 
   Future setShortcutsEnabledProfile(bool value) async {
     return await PrefsDatabase.setBool(_kEnableShortcuts, value);
+  }
+
+  Future<bool> getProfileCheckAttackEnabled() async {
+    return await PrefsDatabase.getBool(_kProfileCheckAttackEnabled, true);
+  }
+
+  Future setProfileCheckAttackEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kProfileCheckAttackEnabled, value);
   }
 
   Future<String> getShortcutTile() async {
@@ -2919,12 +2949,28 @@ class Prefs {
     return await PrefsDatabase.setString(_kTornStatsChartType, value);
   }
 
+  Future<int> getTornStatsChartRange() async {
+    return await PrefsDatabase.getInt(_kTornStatsChartRange, 0);
+  }
+
+  Future setTornStatsChartRange(int value) async {
+    return await PrefsDatabase.setInt(_kTornStatsChartRange, value);
+  }
+
   Future<bool> getTornStatsChartInCollapsedMiscCard() async {
     return await PrefsDatabase.getBool(_kTornStatsChartInCollapsedMiscCard, true);
   }
 
   Future setTornStatsChartInCollapsedMiscCard(bool value) async {
     return await PrefsDatabase.setBool(_kTornStatsChartInCollapsedMiscCard, value);
+  }
+
+  Future<bool> getTornStatsChartShowBoth() async {
+    return await PrefsDatabase.getBool(_kTornStatsChartShowBoth, false);
+  }
+
+  Future setTornStatsChartShowBoth(bool value) async {
+    return await PrefsDatabase.setBool(_kTornStatsChartShowBoth, value);
   }
 
   /// -------------------
@@ -3821,6 +3867,14 @@ class Prefs {
 
   Future setSendbirdExcludeCompanyMessages(bool value) async {
     return await PrefsDatabase.setBool(_kSendbirdExcludeCompanyMessages, value);
+  }
+
+  Future<bool> getSendbirdExcludeEliminationMessages() async {
+    return await PrefsDatabase.getBool(_kSendbirdExcludeEliminationMessages, false);
+  }
+
+  Future setSendbirdExcludeEliminationMessages(bool value) async {
+    return await PrefsDatabase.setBool(_kSendbirdExcludeEliminationMessages, value);
   }
 
   ///////

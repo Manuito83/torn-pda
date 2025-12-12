@@ -102,6 +102,51 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.9.6 - Build 595 - 11/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.6'
+        ..date = '15 DEC 2025'
+        ..features = [
+          "Profile widget can now be hidden when attacking (shown by default)",
+          "Added more time range filtering options for Torn Stats chart",
+          "Fixed Foreign Stocks data submission to YATA and Prometheus",
+          "Fixed option to option to hide foreign items info",
+          "Fixed quick travel return button",
+        ],
+    );
+
+    // v3.9.5 - Build 594 - 09/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.5'
+        ..date = '10 DEC 2025'
+        ..infoString = 'Hotfix: resolved issues with TS chart and jobless warning'
+        ..features = [
+          "User scripts can now be exported and imported in a JSON file",
+          "Profile: added Arson crime",
+          "Profile: added edit icon to shortcuts list (can be disabled)",
+          "Profile: added jobless warning with links to Hire Haven and newspaper (can be disabled)",
+          "Profile: added option to show both TS stats charts and to select time range",
+          "Added direct browser access from Foreign Stocks section",
+          "Optimized API call rate when bringing app to foreground",
+          "Added automatic local backup for scripts to help mitigate database issues",
+          "Locked tabs navigation exceptions now accept wildcards (*) and can be edited",
+          "Elimination messages can now be excluded from chat notifications",
+          "Fixed persistence for locked tabs navigation exceptions",
+          "Fixed Calendar not taking user-selected event start time into account",
+          "Fixed issues with empty loadout names in quick items",
+          "Fixed issues with locked tabs and navigation",
+          "Fixed spies dialog search not working in some devices",
+          "Fixed issues with player notes dialog getting covered by keyboard",
+          "Fixed browser history not updating correctly in some cases",
+          "Fixed dialogs impeding touch interaction in some devices",
+          "Fixed Torn Stats chart export dialog closing unexpectedly",
+          "Fixed issues when sharing user scripts with cloud backup",
+          "Fixed browser losing state when rotating in some devices",
+        ],
+    );
+
     // v3.9.3 - Build 587 - 17/10/2025
     itemList.add(
       ChangeLogItem()

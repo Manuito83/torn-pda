@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:get/get.dart';
@@ -86,6 +87,16 @@ class SendbirdController extends GetxController {
     update();
   }
 
+  bool _excludeEliminationMessages = false;
+  bool get excludeEliminationMessages => _excludeEliminationMessages;
+  set excludeEliminationMessages(bool exclude) {
+    _excludeEliminationMessages = exclude;
+    Prefs().setSendbirdExcludeEliminationMessages(exclude);
+    update();
+
+    _updateEliminationPushPreference(exclude);
+  }
+
   bool _sendBirdPushAndroidRemoteConfigEnabled = true;
   bool get sendBirdPushAndroidRemoteConfigEnabled => _sendBirdPushAndroidRemoteConfigEnabled;
   set sendBirdPushAndroidRemoteConfigEnabled(bool enabled) {
@@ -118,6 +129,7 @@ class SendbirdController extends GetxController {
 
         _checkAndUpdateServerFactionPushPreferences();
         _checkAndUpdateServerCompanyPushPreferences();
+        _checkAndUpdateServerEliminationPushPreferences();
       } else {
         toastification.show(
           closeOnClick: true,
@@ -143,6 +155,7 @@ class SendbirdController extends GetxController {
     try {
       _excludeFactionMessages = await Prefs().getSendbirdExcludeFactionMessages();
       _excludeCompanyMessages = await Prefs().getSendbirdExcludeCompanyMessages();
+      _excludeEliminationMessages = await Prefs().getSendbirdExcludeEliminationMessages();
       _sendBirdNotificationsEnabled = await Prefs().getSendbirdNotificationsEnabled();
 
       _sendbirdAppId = Env.sendbirdAppId;
@@ -210,6 +223,7 @@ class SendbirdController extends GetxController {
             // Also, we need to recheck (and resync) when the user changes faction or company
             await _checkAndUpdateServerFactionPushPreferences();
             await _checkAndUpdateServerCompanyPushPreferences();
+            await _checkAndUpdateServerEliminationPushPreferences();
           } else {
             await sendbirdUnregisterFCMTokenAndChannel();
           }
@@ -220,6 +234,10 @@ class SendbirdController extends GetxController {
             'channel_handler',
             SendbirdChannelHandler(),
           );
+
+          // DEBUG #####
+          //if (kDebugMode) debugPrintChannels();
+          // ###########
 
           return true;
         } else {
@@ -365,6 +383,29 @@ class SendbirdController extends GetxController {
     final tokenDate = DateTime.fromMillisecondsSinceEpoch(tokenTimestamp);
     final currentDate = DateTime.now();
     return currentDate.difference(tokenDate);
+  }
+
+  Future<void> debugPrintChannels() async {
+    try {
+      final query = GroupChannelListQuery()
+        ..limit = 100
+        ..includeEmpty = true
+        ..myMemberStateFilter = MyMemberStateFilter.joined;
+
+      List<GroupChannel> channels = [];
+      while (query.hasNext) {
+        final list = await query.next();
+        channels.addAll(list);
+      }
+
+      log("--- SENDBIRD DEBUG CHANNELS (${channels.length}) ---");
+      for (var c in channels) {
+        log("Channel: ${c.channelUrl} (Name: ${c.name})");
+      }
+      log("---------------------------------------------------");
+    } catch (e) {
+      logToUser("Error debugging channels: $e");
+    }
   }
 
   Future<void> sendMessage({required String channelUrl, required String message}) async {
@@ -525,6 +566,34 @@ class SendbirdController extends GetxController {
     }
   }
 
+  Future<String?> _getEliminationChannelUrl() async {
+    try {
+      final query = GroupChannelListQuery()
+        ..limit = 100
+        ..includeEmpty = true
+        ..myMemberStateFilter = MyMemberStateFilter.joined;
+
+      while (query.hasNext) {
+        final list = await query.next();
+        for (var channel in list) {
+          if (channel.channelUrl.startsWith("elimination-")) {
+            return channel.channelUrl;
+          }
+        }
+      }
+    } catch (e) {
+      logToUser("Error getting elimination channel: $e");
+    }
+    return null;
+  }
+
+  Future<void> _updateEliminationPushPreference(bool exclude) async {
+    String? channelUrl = await _getEliminationChannelUrl();
+    if (channelUrl != null) {
+      _setChannelPushPreference(exclude: exclude, channelUrl: channelUrl);
+    }
+  }
+
   Future<void> _checkAndUpdateServerFactionPushPreferences() async {
     if (_uc.factionId != 0) {
       // We first get the current preference, which might have been set by another installation
@@ -575,9 +644,36 @@ class SendbirdController extends GetxController {
     }
   }
 
+  Future<void> _checkAndUpdateServerEliminationPushPreferences() async {
+    String? channelUrl = await _getEliminationChannelUrl();
+    if (channelUrl != null) {
+      // We first get the current preference, which might have been set by another installation
+      String eliminationExcludedAPI = await _getChannelPushPreference(
+        channelUrl: channelUrl,
+        exclude: _excludeEliminationMessages,
+      );
+
+      if (eliminationExcludedAPI.isNotEmpty) {
+        final incomingEliminationExcluded = eliminationExcludedAPI.isNotEmpty
+            ? eliminationExcludedAPI == "off"
+                ? true
+                : false
+            : false;
+
+        // If it does not match the current preference, we update it
+        if (incomingEliminationExcluded != _excludeEliminationMessages) {
+          _excludeEliminationMessages = incomingEliminationExcluded;
+          update();
+          Prefs().setSendbirdExcludeEliminationMessages(incomingEliminationExcluded);
+        }
+      }
+    }
+  }
+
   Future<void> updateFactionAndCompanyPreferences() async {
     await _checkAndUpdateServerFactionPushPreferences();
     await _checkAndUpdateServerCompanyPushPreferences();
+    await _checkAndUpdateServerEliminationPushPreferences();
   }
 
   /// If we have changed faction, we need to update the push preferences for the faction channel

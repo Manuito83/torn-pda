@@ -40,7 +40,6 @@ import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/jail/jail_model.dart';
 import 'package:torn_pda/models/oc/ts_members_model.dart';
 import 'package:torn_pda/models/oc/yata_members_model.dart';
-import 'package:torn_pda/models/travel/foreign_stock_out.dart';
 import 'package:torn_pda/models/userscript_model.dart';
 import 'package:torn_pda/pages/city/city_options.dart';
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
@@ -72,6 +71,7 @@ import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/utils/webview/webview_handlers.dart';
 import 'package:torn_pda/utils/webview/webview_utils.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 import 'package:torn_pda/widgets/bounties/bounties_widget.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/city/city_widget.dart';
@@ -88,6 +88,7 @@ import 'package:torn_pda/widgets/vault/vault_widget.dart';
 import 'package:torn_pda/widgets/webviews/chaining_payload.dart';
 import 'package:torn_pda/widgets/webviews/custom_appbar.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_main.dart';
+import 'package:torn_pda/widgets/webviews/handlers/travel_handler.dart';
 import 'package:torn_pda/widgets/webviews/memory_widget_browser.dart';
 import 'package:torn_pda/widgets/webviews/tabs_hide_reminder.dart';
 import 'package:torn_pda/widgets/webviews/webview_shortcuts_dialog.dart';
@@ -176,6 +177,7 @@ class WebViewFullState extends State<WebViewFull>
   final bool _debugScriptsInjection = false;
 
   InAppWebViewController? webViewController;
+  TravelHandler? _travelHandler;
   var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
@@ -264,8 +266,6 @@ class WebViewFullState extends State<WebViewFull>
 
   DateTime? _urlTriggerTime;
   DateTime? _lastReportTabLoadUrlTime; // Track when reportTabLoadUrl was last called
-
-  DateTime? _foreignStocksSentTime;
 
   // Allow onProgressChanged to call several sections, for better responsiveness,
   // while making sure that we don't call the API each time
@@ -383,35 +383,31 @@ class WebViewFullState extends State<WebViewFull>
     // Check rotation! Webview will dispose itself
     // If we find a matching disposed tab, sharing the SAME KEY, it means that it was disposed (most probably due to rotation)
     // so we need to restore its state manually here (we'll also scroll in onLoadStop)
-    if (_settingsProvider.allowScreenRotation) {
-      for (var disposedTab in _webViewProvider.rotatedTabDetails) {
-        if (disposedTab.key == widget.key) {
-          _foundDisposedRotation = true;
-          _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
-          _disposedScrollX = disposedTab.scrollX ?? 0;
-          _disposedScrollY = disposedTab.scrollY ?? 0;
-          log(
-            "Found rotated webview ${widget.key}, url ${disposedTab.currentUrl}, scrollY $_disposedScrollY, scrollX $_disposedScrollX",
-            name: "ROTATED WEBVIEW",
-          );
+    // Note: we are not limiting this check to when rotation is allowed, as iPadOS can rotate even if the app doesn't allow it
+    for (var disposedTab in _webViewProvider.rotatedTabDetails) {
+      if (disposedTab.key == widget.key) {
+        _foundDisposedRotation = true;
+        _initialUrl = URLRequest(url: WebUri(disposedTab.currentUrl ?? widget.customUrl!));
+        _disposedScrollX = disposedTab.scrollX ?? 0;
+        _disposedScrollY = disposedTab.scrollY ?? 0;
+        log(
+          "Found rotated webview ${widget.key}, url ${disposedTab.currentUrl}, scrollY $_disposedScrollY, scrollX $_disposedScrollX",
+          name: "ROTATED WEBVIEW",
+        );
 
-          // Give it a second to that all disposed/reinitiated webviews load, then clear the list
-          Future.delayed(const Duration(milliseconds: 1000), () {
-            _webViewProvider.rotatedTabDetails.clear();
-          });
-        }
+        // Give it a second to that all disposed/reinitiated webviews load, then clear the list
+        Future.delayed(const Duration(milliseconds: 1000), () {
+          _webViewProvider.rotatedTabDetails.clear();
+        });
       }
+    }
 
-      if (!_foundDisposedRotation) {
-        // This is not a initialised tab after a rotation/disposed, so we use the standard URL
-        _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
-
-        // We keep the list of rotated tabs tidy (not strictly necessary)
-        _webViewProvider.rotatedTabDetails.clear();
-      }
-    } else {
-      // If we are not allowing rotation, we just use the custom URL
+    if (!_foundDisposedRotation) {
+      // This is not a initialised tab after a rotation/disposed, so we use the standard URL
       _initialUrl = URLRequest(url: WebUri(widget.customUrl!));
+
+      // We keep the list of rotated tabs tidy (not strictly necessary)
+      _webViewProvider.rotatedTabDetails.clear();
     }
 
     // We will later changed this for a listenable one in build()
@@ -541,16 +537,14 @@ class WebViewFullState extends State<WebViewFull>
     // Update the scrolls with the latest width available
     // (in case we need to regenerate the webview after rotating the screen)
     // If null, it's probably because the webview is not yet initialized (so we don't log)
-    if (_settingsProvider.allowScreenRotation) {
-      final scrollX = await webViewController?.getScrollX();
-      if (scrollX != null) {
-        _scrollX = scrollX;
-      }
+    final scrollX = await webViewController?.getScrollX();
+    if (scrollX != null) {
+      _scrollX = scrollX;
+    }
 
-      final scrollY = await webViewController?.getScrollY();
-      if (scrollY != null) {
-        _scrollY = scrollY;
-      }
+    final scrollY = await webViewController?.getScrollY();
+    if (scrollY != null) {
+      _scrollY = scrollY;
     }
   }
 
@@ -558,16 +552,14 @@ class WebViewFullState extends State<WebViewFull>
   void dispose() async {
     try {
       // Send details to provider in case we are rotating
-      if (_settingsProvider.allowScreenRotation) {
-        _webViewProvider.rotatedTabDetails.add(
-          RotatedDisposedTabDetails(
-            key: widget.key,
-            currentUrl: _currentUrl,
-            scrollY: _scrollY,
-            scrollX: _scrollX,
-          ),
-        );
-      }
+      _webViewProvider.rotatedTabDetails.add(
+        RotatedDisposedTabDetails(
+          key: widget.key,
+          currentUrl: _currentUrl,
+          scrollY: _scrollY,
+          scrollX: _scrollX,
+        ),
+      );
 
       WidgetsBinding.instance.removeObserver(this);
       _findController.dispose();
@@ -878,7 +870,7 @@ class WebViewFullState extends State<WebViewFull>
                 _webViewProvider.toggleHideTabs();
                 if (await Prefs().getReminderAboutHideTabFeature() == false) {
                   Prefs().setReminderAboutHideTabFeature(true);
-                  return showDialog<void>(
+                  return showWebviewDialog<void>(
                     context: context,
                     barrierDismissible: false,
                     builder: (BuildContext context) {
@@ -1261,6 +1253,16 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
+            _travelHandler = TravelHandler(
+              webViewController: webViewController,
+              onTravelStatusChanged: (isAbroad) {
+                if (mounted) {
+                  setState(() {
+                    _travelAbroad = isAbroad;
+                  });
+                }
+              },
+            );
 
             // Clear cache (except for cookies) for each new session
             if (!_settingsProvider.webviewCacheEnabled && !Platform.isWindows) {
@@ -1383,7 +1385,7 @@ class WebViewFullState extends State<WebViewFull>
 
             // If a tab is fully locked, cancel navigation
             // Note: the mini profiles consideration (above) should come first
-            final lockedTabCancels = _lockedTabShouldCancelsNavigation(action.request.url);
+            final lockedTabCancels = lockedTabShouldCancelsNavigation(action.request.url);
             if (lockedTabCancels) return NavigationActionPolicy.CANCEL;
 
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
@@ -1715,7 +1717,7 @@ class WebViewFullState extends State<WebViewFull>
                 _reportPageTitle();
               }
 
-              _assessTravel(document);
+              _travelHandler?.assessTravel(document);
               _assessGeneral(document);
 
               // This is used in case the user presses reload. We need to wait for the page
@@ -1758,6 +1760,14 @@ class WebViewFullState extends State<WebViewFull>
               }
 
               assessErrorCases(document: document);
+
+              if (uri != null) {
+                // Fallback to align tab history with the final URL once the page finishes loading
+                final tab = _webViewProvider.getTabFromKey(widget.key);
+                if (tab?.currentUrl != uri.toString()) {
+                  _reportUrlVisit(uri, bypassThrottle: true);
+                }
+              }
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
@@ -2059,7 +2069,7 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  bool _lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
+  bool lockedTabShouldCancelsNavigation(WebUri? incomingUrl) {
     if (incomingUrl == null) return false;
 
     if (_forceAllowWhenLocked) {
@@ -2081,8 +2091,10 @@ class WebViewFullState extends State<WebViewFull>
 
           // Allow navigation if the current URL matches one of the URLs in the pair
           // and the incoming URL matches the other in the same pair
-          if ((_currentUrl.contains(url1) && incomingUrl.toString().contains(url2)) ||
-              (_currentUrl.contains(url2) && incomingUrl.toString().contains(url1))) {
+          if ((_matchesPatternWithWildcards(_currentUrl, url1) &&
+                  _matchesPatternWithWildcards(incomingUrl.toString(), url2)) ||
+              (_matchesPatternWithWildcards(_currentUrl, url2) &&
+                  _matchesPatternWithWildcards(incomingUrl.toString(), url1))) {
             return false;
           }
         }
@@ -2165,6 +2177,16 @@ class WebViewFullState extends State<WebViewFull>
       }
     }
     return false;
+  }
+
+  bool _matchesPatternWithWildcards(String url, String pattern) {
+    if (pattern.contains('*')) {
+      // Escape special regex characters, then replace the escaped wildcard with .*
+      final regExpPattern = RegExp.escape(pattern).replaceAll(r'\*', '.*');
+      return RegExp(regExpPattern, caseSensitive: false).hasMatch(url);
+    } else {
+      return url.contains(pattern);
+    }
   }
 
   Future<void> loadImageWithBackground(
@@ -2381,7 +2403,11 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  void _reportUrlVisit(Uri? uri) {
+  void _reportUrlVisit(Uri? uri, {bool bypassThrottle = false}) {
+    if (uri == null) {
+      return;
+    }
+
     // This avoids reporting url such as "https://www.torn.com/imarket.php#/0.5912994041327981", which are generated
     // when returning from a bazaar and go straight to the market, not allowing to return to the item search
     if (uri.toString().contains("imarket.php#/")) {
@@ -2396,10 +2422,11 @@ class WebViewFullState extends State<WebViewFull>
     // Once from [onUpdateVisitedHistory] and again from [onResourceLoad].
     // There are also sections such as personal stats that trigger [onUpdateVisitedHistory] several times
     // when loading and when browsing backwards
-    if (_urlTriggerTime != null && (DateTime.now().difference(_urlTriggerTime!).inSeconds) < 1.5) {
+    final now = DateTime.now();
+    if (!bypassThrottle && _urlTriggerTime != null && now.difference(_urlTriggerTime!).inMilliseconds < 1500) {
       return;
     }
-    _urlTriggerTime = DateTime.now();
+    _urlTriggerTime = now;
     //log(uri.toString());
 
     if (!_omitTabHistory) {
@@ -2584,7 +2611,7 @@ class WebViewFullState extends State<WebViewFull>
               _webViewProvider.toggleHideTabs();
               if (await Prefs().getReminderAboutHideTabFeature() == false) {
                 Prefs().setReminderAboutHideTabFeature(true);
-                return showDialog<void>(
+                return showWebviewDialog<void>(
                   context: context,
                   barrierDismissible: false,
                   builder: (BuildContext context) {
@@ -2653,7 +2680,7 @@ class WebViewFullState extends State<WebViewFull>
             openUrlDialog();
           },
           onLongPress: () {
-            showDialog<void>(
+            showWebviewDialog<void>(
               context: context,
               builder: (BuildContext context) {
                 return WebviewShortcutsDialog(
@@ -3202,206 +3229,45 @@ class WebViewFullState extends State<WebViewFull>
     return title;
   }
 
-  // TRAVEL
-  Future _assessTravel(dom.Document document) async {
-    final abroad = document.querySelectorAll(".travel-home");
-    if (abroad.isNotEmpty) {
-      _insertTravelFillMaxButtons();
-      _sendStockInformation(document);
-      if (mounted) {
-        setState(() {
-          _travelAbroad = true;
-        });
-      }
-    } else {
-      if (mounted) {
-        setState(() {
-          _travelAbroad = false;
-        });
-      }
-    }
-  }
-
-  Future _insertTravelFillMaxButtons() async {
-    final shouldHideInfo = await Prefs().getRemoveForeignItemsDetails();
-    await webViewController!.evaluateJavascript(source: buyMaxAbroadJS(hideItemInfoPanel: shouldHideInfo));
-  }
-
-  Future _sendStockInformation(dom.Document document) async {
-    final elements = document.querySelectorAll('.users-list > li');
-
-    if (elements.isNotEmpty) {
-      try {
-        // Parse stocks
-        final items = <ForeignStockOutItem>[];
-        for (final el in elements) {
-          int id = int.tryParse(el.querySelector(".details")!.attributes["itemid"]!) ?? 0;
-          int quantity =
-              int.tryParse(el.querySelector(".stck-amount")!.innerHtml.replaceAll(RegExp("[^0-9]"), "")) ?? 0;
-          int cost = int.tryParse(el.querySelector(".c-price")!.innerHtml.replaceAll(RegExp("[^0-9]"), "")) ?? 0;
-
-          if (id != 0 && cost != 0) {
-            items.add(ForeignStockOutItem(id: id, quantity: quantity, cost: cost));
-          }
-        }
-
-        final stockModel = ForeignStockOutModel(
-          client: "Torn PDA",
-          version: appVersion,
-          authorName: "Manuito",
-          authorId: 2225097,
-          country: document.querySelector(".content-title > h4")!.text.trim().substring(0, 3).toLowerCase(),
-          items: items,
-        );
-
-        Future<void> sendToYATA() async {
-          String error = "";
-          try {
-            final response = await http
-                .post(
-                  Uri.parse('https://yata.yt/api/v1/travel/import/'),
-                  headers: <String, String>{
-                    'Content-Type': 'application/json; charset=UTF-8',
-                  },
-                  body: foreignStockOutModelToJson(stockModel),
-                )
-                .timeout(const Duration(seconds: 8));
-
-            log("YATA replied with status code ${response.statusCode}. Response: ${response.body}");
-            if (response.statusCode != 200) {
-              error = "Replied with status code ${response.statusCode}. Response: ${response.body}";
-            }
-          } catch (e) {
-            log('Error sending request to YATA: $e');
-            error = "Catched exception: $e";
-          }
-
-          if (error.isNotEmpty) {
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to YATA");
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
-            logToUser("Error sending Foreign Stocks to YATA");
-          }
-        }
-
-        Future<void> sendToPrometheus() async {
-          String error = "";
-          try {
-            final response = await http
-                .post(
-                  Uri.parse('https://api.prombot.co.uk/api/travel'),
-                  headers: <String, String>{
-                    'Content-Type': 'application/json; charset=UTF-8',
-                  },
-                  body: foreignStockOutModelToJson(stockModel),
-                )
-                .timeout(const Duration(seconds: 8));
-
-            log("Prometeus replied with status code ${response.statusCode}. Response: ${response.body}");
-            if (response.statusCode != 200) {
-              error = "Replied with status code ${response.statusCode}. Response: ${response.body}";
-            }
-          } catch (e) {
-            log('Error sending request to Prometheus: $e');
-            error = "Catched exception: $e";
-          }
-
-          if (error.isNotEmpty) {
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.log("Error sending Foreign Stocks to Prometheus");
-            if (!Platform.isWindows) FirebaseCrashlytics.instance.recordError(error, null);
-            logToUser("Error sending Foreign Stocks to Prometheus");
-          }
-        }
-
-        if (stockModel.items.isEmpty) {
-          log("Foreign stocks are empty!!");
-          return;
-        }
-
-        // Avoid repetitive submissions
-        if (_foreignStocksSentTime != null && (DateTime.now().difference(_foreignStocksSentTime!).inSeconds) < 3) {
-          return;
-        }
-        _foreignStocksSentTime = DateTime.now();
-
-        await Future.wait([
-          sendToYATA(),
-          sendToPrometheus(),
-        ]);
-      } catch (e) {
-        // Error parsing
-      }
-    }
-  }
-
   Widget _travelHomeIcon() {
-    // We use two buttons with a trigger, so that we need to press twice
-    if (_travelAbroad) {
-      if (!_travelHomeIconTriggered) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              splashColor: Colors.blueGrey,
-              child: Icon(
-                Icons.home,
-                color: _webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white,
-              ),
-              onTap: () async {
-                setState(() {
-                  _travelHomeIconTriggered = true;
-                });
-                BotToast.showText(
-                  text: 'Tap again to travel back!',
-                  textStyle: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.white,
-                  ),
-                  contentColor: Colors.orange[800]!,
-                  duration: const Duration(seconds: 3),
-                  contentPadding: const EdgeInsets.all(10),
-                );
-                Future.delayed(const Duration(seconds: 3)).then((value) {
-                  if (mounted) {
-                    setState(() {
-                      _travelHomeIconTriggered = false;
-                    });
-                  }
-                });
-              },
-            ),
+    if (!_travelAbroad) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          splashColor: Colors.blueGrey,
+          child: Icon(
+            Icons.home,
+            color: _travelHomeIconTriggered
+                ? Colors.orange
+                : (_webViewProvider.bottomBarStyleEnabled ? _themeProvider.mainText : Colors.white),
           ),
-        );
-      } else {
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              customBorder: const CircleBorder(),
-              splashColor: Colors.blueGrey,
-              child: const Icon(
-                Icons.home,
-                color: Colors.orange,
-              ),
-              onTap: () async {
-                await webViewController!.evaluateJavascript(source: travelReturnHomeJS());
-                Future.delayed(const Duration(seconds: 3)).then((value) {
-                  if (mounted) {
-                    setState(() {
-                      _travelHomeIconTriggered = false;
-                    });
-                  }
-                });
-              },
-            ),
-          ),
-        );
-      }
-    } else {
-      return const SizedBox.shrink();
-    }
+          onTap: () async {
+            if (!_travelHomeIconTriggered) {
+              setState(() => _travelHomeIconTriggered = true);
+              BotToast.showText(
+                text: 'Tap again to travel back!',
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                contentColor: Colors.orange[800]!,
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+              );
+              Future.delayed(const Duration(seconds: 3)).then((_) {
+                if (mounted) setState(() => _travelHomeIconTriggered = false);
+              });
+            } else {
+              await webViewController!.evaluateJavascript(source: travelReturnHomeJS());
+              Future.delayed(const Duration(seconds: 3)).then((_) {
+                if (mounted) setState(() => _travelHomeIconTriggered = false);
+              });
+            }
+          },
+        ),
+      ),
+    );
   }
 
   // CRIMES
@@ -4352,13 +4218,17 @@ class WebViewFullState extends State<WebViewFull>
           final matches = regId.allMatches(_currentUrl);
           userId = int.parse(matches.elementAt(0).group(1)!);
           setState(() {
-            _profileAttackWidget = ProfileAttackCheckWidget(
-              key: UniqueKey(),
-              profileId: userId,
-              apiKey: UserHelper.apiKey,
-              profileCheckType: ProfileCheckType.attack,
-              themeProvider: _themeProvider,
-            );
+            if (_settingsProvider.profileCheckAttackEnabled) {
+              _profileAttackWidget = ProfileAttackCheckWidget(
+                key: UniqueKey(),
+                profileId: userId,
+                apiKey: UserHelper.apiKey,
+                profileCheckType: ProfileCheckType.attack,
+                themeProvider: _themeProvider,
+              );
+            } else {
+              _profileAttackWidget = const SizedBox.shrink();
+            }
           });
         } catch (e) {
           userId = 0;
@@ -4473,6 +4343,8 @@ class WebViewFullState extends State<WebViewFull>
   }
 
   Future _reload() async {
+    if (webViewController == null) return;
+
     // Reset city so that it can be reloaded and icons don't disappear
     if (_cityTriggered) _cityTriggered = false;
 
@@ -4521,7 +4393,7 @@ class WebViewFullState extends State<WebViewFull>
   Future<void> openUrlDialog() async {
     _webViewProvider.verticalMenuClose();
     final url = await webViewController!.getUrl();
-    return showDialog<void>(
+    return showWebviewDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
@@ -5561,7 +5433,7 @@ class WebViewFullState extends State<WebViewFull>
 
                           if (!error) {
                             final String u = open!.replaceAll("http:", "https:");
-                            return showDialog<void>(
+                            return showWebviewDialog<void>(
                               context: context,
                               barrierDismissible: false,
                               builder: (BuildContext context) {

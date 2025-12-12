@@ -19,6 +19,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/html_parser.dart';
+import 'package:torn_pda/utils/webview_dialog_helper.dart';
 
 class ProfileCheckAddButton extends StatefulWidget {
   final int profileId;
@@ -108,7 +109,7 @@ class ProfileCheckAddButtonState extends State<ProfileCheckAddButton> {
               },
             ),
             onTap: () async {
-              return showDialog<void>(
+              return showWebviewDialog<void>(
                 context: context,
                 builder: (context) {
                   return ProfileCheckAddDialog(

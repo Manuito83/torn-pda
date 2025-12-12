@@ -391,7 +391,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           children: [
                                             Flexible(
                                               child: Text(
-                                                item.isLoadout! ? item.loadoutName! : item.name!,
+                                                item.isLoadout! ? item.loadoutName ?? "" : item.name ?? "",
                                                 style: const TextStyle(fontSize: 13),
                                               ),
                                             ),

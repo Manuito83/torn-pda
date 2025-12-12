@@ -576,6 +576,43 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+      if (_settingsProvider.shortcutsEnabledProfile)
+        SearchableRow(
+          label: "Show shortcuts edit icon",
+          searchText: _searchText,
+          child: Padding(
+            padding: const EdgeInsets.only(left: 30, right: 20, top: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Flexible(child: Text("Show shortcuts edit icon")),
+                    Switch(
+                      value: _settingsProvider.showShortcutEditIcon,
+                      onChanged: (value) {
+                        setState(() {
+                          _settingsProvider.showShortcutEditIcon = value;
+                        });
+                      },
+                      activeTrackColor: Colors.lightGreenAccent,
+                      activeThumbColor: Colors.green,
+                    ),
+                  ],
+                ),
+                Text(
+                  'Adds a dedicated icon at the end of the Profile shortcuts list to open the editor quickly.',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
     ];
 
     return buildSectionWithRows(

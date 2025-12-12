@@ -366,6 +366,7 @@ class SettingsProvider extends ChangeNotifier {
 
   void removeLockedTabNavigationException(int index) {
     _lockedTabsNavigationExceptions.removeAt(index);
+    Prefs().setLockedTabsNavigationExceptions(json.encode(_lockedTabsNavigationExceptions));
     notifyListeners();
   }
 
@@ -677,6 +678,14 @@ class SettingsProvider extends ChangeNotifier {
   set changeNotesWidgetEnabledProfileWhenEmpty(bool value) {
     _notesWidgetEnabledProfileWhenEmpty = value;
     Prefs().setNotesWidgetEnabledProfileWhenEmpty(_notesWidgetEnabledProfileWhenEmpty);
+    notifyListeners();
+  }
+
+  var _joblessWarningEnabled = true;
+  bool get joblessWarningEnabled => _joblessWarningEnabled;
+  set changeJoblessWarningEnabled(bool value) {
+    _joblessWarningEnabled = value;
+    Prefs().setJoblessWarningEnabled(_joblessWarningEnabled);
     notifyListeners();
   }
 
@@ -1046,11 +1055,27 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _tornStatsChartRange = 0;
+  int get tornStatsChartRange => _tornStatsChartRange;
+  set setTornStatsChartRange(int value) {
+    _tornStatsChartRange = value;
+    Prefs().setTornStatsChartRange(tornStatsChartRange);
+    notifyListeners();
+  }
+
   var _tornStatsChartInCollapsedMiscCard = true;
   bool get tornStatsChartInCollapsedMiscCard => _tornStatsChartInCollapsedMiscCard;
   set setTornStatsChartInCollapsedMiscCard(bool value) {
     _tornStatsChartInCollapsedMiscCard = value;
-    Prefs().setTornStatsChartEnabled(tornStatsChartInCollapsedMiscCard);
+    Prefs().setTornStatsChartInCollapsedMiscCard(tornStatsChartInCollapsedMiscCard);
+    notifyListeners();
+  }
+
+  var _tornStatsChartShowBoth = false;
+  bool get tornStatsChartShowBoth => _tornStatsChartShowBoth;
+  set setTornStatsChartShowBoth(bool value) {
+    _tornStatsChartShowBoth = value;
+    Prefs().setTornStatsChartShowBoth(tornStatsChartShowBoth);
     notifyListeners();
   }
 
@@ -1146,6 +1171,23 @@ class SettingsProvider extends ChangeNotifier {
   set shortcutsEnabledProfile(bool value) {
     _shortcutsEnabledProfile = value;
     Prefs().setShortcutsEnabledProfile(value);
+    notifyListeners();
+  }
+
+  var _profileCheckAttackEnabled = true;
+  bool get profileCheckAttackEnabled => _profileCheckAttackEnabled;
+  set profileCheckAttackEnabled(bool value) {
+    _profileCheckAttackEnabled = value;
+    Prefs().setProfileCheckAttackEnabled(value);
+    notifyListeners();
+  }
+
+  var _showShortcutEditIcon = true;
+  bool get showShortcutEditIcon => _showShortcutEditIcon;
+  set showShortcutEditIcon(bool value) {
+    if (_showShortcutEditIcon == value) return;
+    _showShortcutEditIcon = value;
+    Prefs().setShowShortcutEditIcon(value);
     notifyListeners();
   }
 
@@ -1515,7 +1557,9 @@ class SettingsProvider extends ChangeNotifier {
     _tornStatsChartDateTime = await Prefs().getTornStatsChartDateTime();
     _tornStatsChartEnabled = await Prefs().getTornStatsChartEnabled();
     _tornStatsChartType = await Prefs().getTornStatsChartType();
+    _tornStatsChartRange = await Prefs().getTornStatsChartRange();
     _tornStatsChartInCollapsedMiscCard = await Prefs().getTornStatsChartInCollapsedMiscCard();
+    _tornStatsChartShowBoth = await Prefs().getTornStatsChartShowBoth();
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
@@ -1530,6 +1574,8 @@ class SettingsProvider extends ChangeNotifier {
     _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
+    _profileCheckAttackEnabled = await Prefs().getProfileCheckAttackEnabled();
+    _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();
     _appwidgetRemoveShortcutsOneRowLayout = await Prefs().getAppwidgetRemoveShortcutsOneRowLayout();
@@ -1551,6 +1597,8 @@ class SettingsProvider extends ChangeNotifier {
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
     _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
+
+    _joblessWarningEnabled = await Prefs().getJoblessWarningEnabled();
 
     notifyListeners();
   }

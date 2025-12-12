@@ -507,12 +507,66 @@ export const getImportShare = onCall({
             targets: ['pda_targetsList'],
         };
 
+        const ownSharePrefs: string[] = Array.isArray(importConfiguration.ownSharePrefs)
+            ? importConfiguration.ownSharePrefs
+            : [];
+
         for (const [preferenceCategory, categoryKeys] of Object.entries(preferencesMapping)) {
-            if (mainImportBackupDoc.data().ownSharePrefs.includes(preferenceCategory)) {
-                for (const preference of userPrefsSnapshot.docs) {
-                    if (categoryKeys.includes(preference.id)) {
-                        dbPrefs[preference.id] = preference.data().prefKey;
+            if (!ownSharePrefs.includes(preferenceCategory)) {
+                continue;
+            }
+
+            if (preferenceCategory === 'userscripts') {
+                // Share import mirrors getUserPrefs: prefer new subcollection storage, fallback to legacy field
+                const userscriptsKey = categoryKeys[0];
+                let userscriptsPayload: string | null = null;
+
+                try {
+                    const userscriptsRef = mainImportBackupDoc.ref.collection('userscripts');
+                    const userscriptsSnapshot = await userscriptsRef.get();
+
+                    if (!userscriptsSnapshot.empty) {
+                        // New structure exists – rebuild the serialized array used by the client
+                        const reconstructedScripts: any[] = [];
+                        for (const scriptDoc of userscriptsSnapshot.docs) {
+                            const scriptJson = scriptDoc.data().scriptJson;
+                            if (!scriptJson) {
+                                continue;
+                            }
+                            try {
+                                reconstructedScripts.push(JSON.parse(scriptJson));
+                            } catch (parseError) {
+                                logger.warn(`Failed to parse shared userscript for user ${inputJson.shareId}: ${parseError}`);
+                            }
+                        }
+
+                        if (reconstructedScripts.length > 0) {
+                            // Keep output identical to legacy format: JSON string keyed by pda_userScriptsList
+                            userscriptsPayload = JSON.stringify(reconstructedScripts);
+                        }
                     }
+                } catch (userscriptsError) {
+                    logger.warn(`Error retrieving shared userscripts for user ${inputJson.shareId}: ${userscriptsError}`);
+                }
+
+                if (!userscriptsPayload) {
+                    // No new structure available (or failed to parse): try legacy document stored under prefs
+                    const legacyUserscriptsDoc = await userPrefsRef.doc(userscriptsKey).get();
+                    if (legacyUserscriptsDoc.exists) {
+                        userscriptsPayload = legacyUserscriptsDoc.data().prefKey;
+                    }
+                }
+
+                if (userscriptsPayload) {
+                    dbPrefs[userscriptsKey] = userscriptsPayload;
+                }
+
+                continue;
+            }
+
+            for (const preference of userPrefsSnapshot.docs) {
+                if (categoryKeys.includes(preference.id)) {
+                    dbPrefs[preference.id] = preference.data().prefKey;
                 }
             }
         }

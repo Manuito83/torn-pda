@@ -1,14 +1,18 @@
 // Flutter imports:
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 import 'package:easy_rich_text/easy_rich_text.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 // Project imports:
@@ -249,7 +253,8 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           value: script.enabled,
                           activeTrackColor: Colors.green[100],
                           activeColor: Colors.green,
-                          inactiveThumbColor: Colors.red[100],
+                          inactiveThumbColor: Colors.grey,
+                          inactiveTrackColor: Colors.grey[300],
                           onChanged: (value) {
                             _userScriptsProvider.changeUserScriptEnabled(script, value);
                           },
@@ -479,6 +484,40 @@ class UserScriptsPageState extends State<UserScriptsPage> {
         ],
       ),
       actions: [
+        PopupMenuButton<String>(
+          icon: const Icon(MdiIcons.contentSaveEditOutline),
+          onSelected: (value) {
+            if (value == 'export') {
+              _showExportDialog();
+            } else if (value == 'import') {
+              _showImportDialog();
+            }
+          },
+          itemBuilder: (BuildContext context) {
+            return [
+              const PopupMenuItem<String>(
+                value: 'export',
+                child: Row(
+                  children: [
+                    Icon(Icons.upload_file, color: Colors.grey),
+                    SizedBox(width: 10),
+                    Text('Export to JSON'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'import',
+                child: Row(
+                  children: [
+                    Icon(Icons.download, color: Colors.grey),
+                    SizedBox(width: 10),
+                    Text('Import from JSON'),
+                  ],
+                ),
+              ),
+            ];
+          },
+        ),
         IconButton(
           icon: const Icon(
             MdiIcons.backupRestore,
@@ -514,6 +553,372 @@ class UserScriptsPageState extends State<UserScriptsPage> {
         return const UserScriptsAddDialog(editingExistingScript: false);
       },
     );
+  }
+
+  void _showExportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Export Scripts"),
+        content: const Text(
+          "You can export your scripts to a JSON file to share them or save them manually.\n\n"
+          "Note: bear in mind that you can also export through the Share, "
+          "Cloud backup and Local backup features in Settings.",
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _showExportSelectionDialog();
+            },
+            child: const Text("Continue"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showExportSelectionDialog() {
+    final allScripts = _userScriptsProvider.userScriptList;
+    final selectedScripts = Set<UserScriptModel>.from(allScripts);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Select Scripts to Export"),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedScripts.clear();
+                              selectedScripts.addAll(allScripts);
+                            });
+                          },
+                          child: const Text("Select All"),
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedScripts.clear();
+                            });
+                          },
+                          child: const Text("Deselect All"),
+                        ),
+                      ],
+                    ),
+                    const Divider(),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: allScripts.length,
+                        itemBuilder: (context, index) {
+                          final script = allScripts[index];
+                          return SwitchListTile(
+                            title: Text(script.name, style: const TextStyle(fontSize: 14)),
+                            value: selectedScripts.contains(script),
+                            activeColor: Colors.green,
+                            inactiveThumbColor: Colors.grey,
+                            inactiveTrackColor: Colors.grey[300],
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value == true) {
+                                  selectedScripts.add(script);
+                                } else {
+                                  selectedScripts.remove(script);
+                                }
+                              });
+                            },
+                            dense: true,
+                            controlAffinity: ListTileControlAffinity.leading,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  onPressed: selectedScripts.isEmpty
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          _performExport(selectedScripts.toList());
+                        },
+                  child: const Text("Share File"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _performExport(List<UserScriptModel> scripts) async {
+    try {
+      final jsonString = _userScriptsProvider.exportScriptsToJson(scripts);
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/userscripts_export.json');
+      await file.writeAsString(jsonString);
+
+      await SharePlus.instance.share(ShareParams(
+        files: [XFile(file.path)],
+        sharePositionOrigin: Rect.fromLTWH(
+          0,
+          0,
+          MediaQuery.of(context).size.width,
+          MediaQuery.of(context).size.height / 2,
+        ),
+      ));
+    } catch (e) {
+      BotToast.showText(text: "Error exporting scripts: $e");
+    }
+  }
+
+  void _showImportDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Import Scripts"),
+        content: const Text(
+          "You can import scripts from a JSON file (a specific format valid for Torn PDA is required, "
+          "so it's easier if it comes from previous Torn PDA export).\n\n"
+          "Note: bear in mind that you can also restore from the Share, "
+          "Cloud backup and Local backup features in Settings.",
+        ),
+        actions: [
+          OutlinedButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _pickImportFile();
+            },
+            child: const Text("Select File"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickImportFile() async {
+    try {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+
+      if (result != null) {
+        final file = File(result.files.single.path!);
+        final content = await file.readAsString();
+        _parseAndShowImportSelection(content);
+      }
+    } catch (e) {
+      BotToast.showText(text: "Error picking file: $e");
+    }
+  }
+
+  void _parseAndShowImportSelection(String jsonContent) {
+    List<UserScriptModel> importedScripts = [];
+    try {
+      final decoded = json.decode(jsonContent);
+      if (decoded is List) {
+        for (final item in decoded) {
+          importedScripts.add(UserScriptModel.fromJson(item));
+        }
+      } else {
+        throw const FormatException("JSON is not a list");
+      }
+    } catch (e) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("Invalid Format"),
+          content: Text("The file could not be parsed as a valid script list.\nError: $e"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    if (importedScripts.isEmpty) {
+      BotToast.showText(text: "No scripts found in file.");
+      return;
+    }
+
+    // Selection state
+    final selectedScripts = Set<UserScriptModel>.from(importedScripts);
+    bool overwriteMode = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Import Options"),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        const Text("Mode: "),
+                        const Spacer(),
+                        Text(overwriteMode ? "Overwrite" : "Append",
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, color: overwriteMode ? Colors.red : Colors.green)),
+                        Switch(
+                          value: overwriteMode,
+                          activeThumbColor: Colors.red,
+                          onChanged: (val) {
+                            setState(() {
+                              overwriteMode = val;
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    if (overwriteMode)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 10),
+                        child: Text(
+                          "Warning: this will delete ALL your current scripts!",
+                          style: TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    const Divider(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedScripts.clear();
+                              selectedScripts.addAll(importedScripts);
+                            });
+                          },
+                          child: const Text("Select All"),
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton(
+                          onPressed: () {
+                            setState(() {
+                              selectedScripts.clear();
+                            });
+                          },
+                          child: const Text("Deselect All"),
+                        ),
+                      ],
+                    ),
+                    Flexible(
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: importedScripts.length,
+                        itemBuilder: (context, index) {
+                          final script = importedScripts[index];
+                          // Check for conflict (only relevant in Append mode)
+                          bool nameConflict = false;
+                          if (!overwriteMode) {
+                            nameConflict = _userScriptsProvider.userScriptList
+                                .any((s) => s.name.toLowerCase() == script.name.toLowerCase());
+                          }
+
+                          return SwitchListTile(
+                            title: Text(script.name, style: const TextStyle(fontSize: 14)),
+                            subtitle: nameConflict
+                                ? const Text(
+                                    "Name conflict: Will be renamed",
+                                    style: TextStyle(color: Colors.orange, fontSize: 12),
+                                  )
+                                : null,
+                            value: selectedScripts.contains(script),
+                            activeColor: Colors.green,
+                            inactiveThumbColor: Colors.grey,
+                            inactiveTrackColor: Colors.grey[300],
+                            onChanged: (bool? value) {
+                              setState(() {
+                                if (value == true) {
+                                  selectedScripts.add(script);
+                                } else {
+                                  selectedScripts.remove(script);
+                                }
+                              });
+                            },
+                            dense: true,
+                            controlAffinity: ListTileControlAffinity.leading,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  style: overwriteMode
+                      ? ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white)
+                      : null,
+                  onPressed: selectedScripts.isEmpty
+                      ? null
+                      : () {
+                          Navigator.of(context).pop();
+                          _performImport(selectedScripts.toList(), overwriteMode);
+                        },
+                  child: Text(
+                    overwriteMode ? "Overwrite" : "Import",
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _performImport(List<UserScriptModel> scripts, bool overwrite) async {
+    try {
+      await _userScriptsProvider.importScriptsFromList(
+        scriptsToImport: scripts,
+        overwrite: overwrite,
+      );
+      BotToast.showText(text: "Scripts imported successfully!");
+    } catch (e) {
+      BotToast.showText(text: "Error importing scripts: $e");
+    }
   }
 
   Future<void> _openWipeDialog() {

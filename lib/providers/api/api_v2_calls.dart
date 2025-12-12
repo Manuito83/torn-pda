@@ -103,6 +103,23 @@ class ApiCallsV2 {
     return null;
   }
 
+  static Future<UserCalendarResponse?> getUserCalendar_v2() async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<UserCalendarResponse>(
+      apiSelection_v2: ApiSelection_v2.userCalendar,
+      apiCall: (client, apiKey) {
+        return client.userCalendarGet();
+      },
+    );
+
+    if (apiResponse is UserCalendarResponse) {
+      return apiResponse;
+    }
+
+    log("Error converting V2 UserCalendarResponse");
+    return null;
+  }
+
   static Future<dynamic> getUserOC2Crime_v2() async {
     final apiCaller = Get.find<ApiCallerController>();
     final apiResponse = await apiCaller.enqueueApiCall<dynamic>(

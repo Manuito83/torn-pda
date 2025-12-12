@@ -358,7 +358,7 @@ class BackupShareDialogState extends State<BackupShareDialog> with TickerProvide
                 style: const TextStyle(fontSize: 14),
                 controller: _importPasswordController,
                 obscureText: !_importPasswordVisible,
-                maxLength: 10,
+                maxLength: 20,
                 decoration: InputDecoration(
                   isDense: true,
                   errorMaxLines: 2,
