@@ -41,247 +41,203 @@ String easyCrimesJS({
   ''';
 }
 
-String hideItemInfoJS() {
+String buyMaxAbroadJS({required bool hideItemInfoPanel}) {
   return '''
-    var style = document.createElement('style');
-    style.type = 'text/css';
-    style.innerHTML = `
-      body.pda-hide-item-info div.show-item-info {
-        display: none !important;
-      }
-      /* New UI */
-      [id\$="-itemInfoWrapper"] {
-        display: none !important;
-      }
-    `;
-    document.head.appendChild(style);
+// @ts-check
+
+addFillMaxButtons();
+
+function addFillMaxButtons() {
+  if ($hideItemInfoPanel) {
     document.body.classList.add('pda-hide-item-info');
-  ''';
-}
-
-String buyMaxAbroadJS() {
-  return '''
-
-  function addFillMaxButtons() {
-
-    // 1. CSS INJECTION
-    if (!document.getElementById('pda-buy-max-style')) {
-        const style = document.createElement('style');
-        style.id = 'pda-buy-max-style';
-        style.innerHTML = `
-            /* Global Reset: Eliminate gaps and auto-margins that waste space */
-            [class*="row___"], [class*="stockHeader___"] {
-                gap: 0 !important;
-            }
-            [class*="row___"] > div, [class*="stockHeader___"] > div {
-                padding-left: 2px !important;
-                padding-right: 2px !important;
-                margin: 0 !important; 
-            }
-
-            /* Column Optimization:
-            * - Hide "Type" (3rd child) to save ~40px
-            * - Set "Cost" and "Stock" to auto-width to fit content tightly
-            * - Allow "Name" to flex and truncate if necessary
-            */
-            [class*="stockHeader___"] > div:nth-child(3),
-            [class*="row___"] > div:nth-child(3) {
-                display: none !important;
-            }
-
-            [class*="stockHeader___"] > div:nth-child(4),
-            [class*="row___"] > div:nth-child(4),
-            [class*="stockHeader___"] > div:nth-child(5),
-            [class*="row___"] > div:nth-child(5) {
-                flex: 0 0 auto !important;
-                width: auto !important;
-                min-width: 0 !important;
-                max-width: none !important;
-            }
-
-            [class*="itemName___"] {
-                flex: 1 1 auto !important;
-                min-width: 40px !important;
-                overflow: hidden !important;
-            }
-            
-            /* Ensure long item names don't break the row height */
-            [class*="itemName___"] button {
-                white-space: nowrap !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                max-width: 100% !important;
-                display: block !important;
-            }
-
-            [class*="buyCell___"] {
-                flex: 0 0 auto !important;
-                width: auto !important;
-                max-width: none !important;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    // 2. BUTTON INJECTION
-    const buttons = document.querySelectorAll('button.torn-btn[type="submit"]');
-    
-    buttons.forEach(btn => {
-        // Prevent duplicate injection
-        if (btn.dataset.pdaMaxAdded) return;
-        btn.dataset.pdaMaxAdded = 'true';
-        
-        // Create the MAX button element
-        const maxBtn = document.createElement('button');
-        maxBtn.innerText = 'MAX';
-        maxBtn.className = 'torn-btn pda-max-btn';
-        // Inline styles to match Torn's aesthetic while keeping it compact
-        maxBtn.style.padding = '0 8px';
-        maxBtn.style.fontSize = '11px';
-        maxBtn.style.height = '30px'; 
-        maxBtn.style.lineHeight = '12px';
-        maxBtn.type = 'button'; 
-        
-        // We wrap the two buttons in a flex container to align them horizontally
-        if (btn.parentNode) {
-            const wrapper = document.createElement('div');
-            wrapper.style.display = 'inline-flex';
-            wrapper.style.flexDirection = 'row';
-            wrapper.style.alignItems = 'center';
-            wrapper.style.marginTop = '3px'; 
-            
-            btn.parentNode.insertBefore(wrapper, btn);
-            
-            wrapper.appendChild(btn);
-            wrapper.appendChild(maxBtn);
-            
-            // Reset original button margins to fit the new wrapper
-            btn.style.flex = '0 0 auto'; 
-            btn.style.width = 'auto'; 
-            btn.style.margin = '0'; 
-            btn.style.marginBottom = '0';
-            btn.style.marginRight = '5px'; 
-            
-            maxBtn.style.flex = '0 0 auto'; 
-            maxBtn.style.margin = '0';
-        }
-        
-        // 3. CALCULATION LOGIC
-        maxBtn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // 3A. Cost Detection
-            // We attempt to find the cost in the expanded mobile panel first,
-            // falling back to the table row cells for desktop views
-            let cost = 0;
-            
-            const buyPanel = btn.closest('div[class*="buyPanel___"]');
-            if (buyPanel) {
-                const question = buyPanel.querySelector('p[class*="question___"]');
-                if (question) {
-                    // Regex to extract price from "Buy X for \$1,234"
-                    const match = question.textContent.match(/for\\s*\\\$([\\d,]+)/);
-                    if (match) {
-                        cost = parseInt(match[1].replace(/,/g, ''));
-                    }
-                }
-            }
-            
-            if (cost === 0) {
-                const li = btn.closest('li');
-                if (li) {
-                    const cells = li.querySelectorAll('div[class*="cell___"]');
-                    for (const cell of cells) {
-                        const txt = cell.textContent.toLowerCase();
-                        if (txt.includes('cost') && txt.includes('\$')) {
-                            const match = cell.textContent.match(/\\\$([\\d,]+)/);
-                            if (match) {
-                                cost = parseInt(match[1].replace(/,/g, ''));
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // 3B. Stock Detection
-            // "x" followed by the quantity (e.g. "x50").
-            let stock = 0;
-            const li = btn.closest('li');
-            if (li) {
-                const inlineStock = li.querySelector('[class*="inlineStock___"]');
-                if (inlineStock) {
-                    const match = inlineStock.textContent.match(/x([\\d,]+)/);
-                    if (match) {
-                        stock = parseInt(match[1].replace(/,/g, ''));
-                    }
-                }
-                
-                if (stock === 0) {
-                    const cells = li.querySelectorAll('div[class*="cell___"]');
-                    for (const cell of cells) {
-                        const txt = cell.textContent.toLowerCase();
-                        if (txt.includes('stock')) {
-                            const match = cell.textContent.match(/stock\\s*([\\d,]+)/i) || cell.textContent.match(/([\\d,]+)/);
-                            if (match) {
-                                stock = parseInt(match[1].replace(/,/g, ''));
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // 3C. User Money Detection
-            // Extracted from the sidebar or header data attributes
-            let money = 0;
-            const moneyEl = document.querySelector('#user-money') || document.querySelector('[data-currency-money]');
-            if (moneyEl) {
-              const txt = moneyEl.getAttribute('data-money') || moneyEl.textContent;
-              money = parseInt(txt.replace(/[^0-9]/g, ''));
-            }
-            
-            // 3D. Capacity Detection
-            // Parsed from the items bar (e.g., "5/29")
-            let capacityLeft = 1000;
-            const itemsBar = document.querySelector('[class*="items-"]');
-            if (itemsBar) {
-                const capMatch = itemsBar.textContent.match(/(\\d+)\\s*\\/\\s*(\\d+)/);
-                if (capMatch) {
-                    capacityLeft = parseInt(capMatch[2]) - parseInt(capMatch[1]);
-                }
-            }
-            
-            // 3E. Final Calculation
-            let max = stock;
-            if (cost > 0 && money > 0) {
-                max = Math.min(max, Math.floor(money / cost));
-            }
-            if (capacityLeft >= 0) {
-              max = Math.min(max, capacityLeft);
-            }
-            
-            // 3F. Input Injection
-            // We must dispatch 'input' and 'change' events for React to register the value
-            const form = btn.form;
-            if (form) {
-                const input = form.querySelector('input.input-money');
-                if (input) {
-                    input.value = max;
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
-                    input.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-            }
-        };
-    });
   }
 
-  // Initialize and observe for dynamic content changes
-  addFillMaxButtons();
-  const observer = new MutationObserver((mutations) => {
-    addFillMaxButtons();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
+  /** @type {NodeListOf<HTMLLIElement>} */
+  const tableRows = document.querySelectorAll("ul.users-list > li");
+  if (!tableRows.length)
+    return console.error("Could not find table rows for addFillMaxButtons()");
+
+  for (const row of tableRows) {
+    /** @type {(e: MouseEvent) => void} */
+    const cb = generateCallback(row);
+    addButton(row, cb);
+  }
+
+  addStyle(`
+	body.pda-hide-item-info div.show-item-info {
+		display: none !important;
+	}
+
+	span.item-info-wrap > .deal {
+		position: relative;
+	}
+
+	span.item-info-wrap > .deal > .buy {
+		margin-top: -14px !important;
+		line-height: 20px !important;
+	}
+
+	span.item-info-wrap > .deal > .pda-fill-max-btn {
+		position: absolute;
+		width: 36px;
+		text-align: center;
+		border-left: 2px solid #ccc;
+		height: 14px;
+		line-height: 13px;
+		bottom: -15px;
+		right: -1px;
+		font-size: 10px;
+	}
+	`)
+
+  /**
+   * @param {HTMLInputElement} element
+   * @param {string} newValue
+   * @returns {void}
+   */
+  function dispatchEvent(element, newValue) {
+    const oldValue = element.value;
+    element.value = newValue;
+    const ev = new Event("blur", { bubbles: true });
+    // @ts-expect-error
+    ev.simulated = true;
+    // @ts-expect-error
+    const tracker = element._valueTracker;
+    if (tracker) tracker.setValue(oldValue);
+    element.dispatchEvent(ev);
+  }
+
+  /**
+   * @param {number} available Available items count
+   * @param {number} capacity Available item capacity
+   * @param {number} price Price per item
+   * @param {number} userMoney Money on hand
+   * @returns {number}
+   */
+  function calcMax(available, capacity, price, userMoney) {
+    return Math.min(available, capacity, Math.floor(userMoney / price));
+  }
+
+  /**
+   * @param {HTMLLIElement} row
+   * @param {number} capacity
+   * @param {number} userMoney
+   * @returns {number}
+   */
+  function calcMaxFromRow(row, capacity, userMoney) {
+    /** @type {HTMLSpanElement | null} */
+    const \$available = row.querySelector("span.stock > span.stck-amount");
+    /** @type {HTMLSpanElement | null} */
+    const \$cost = row.querySelector("span.cost > span.c-price");
+
+    if (!\$available || !\$cost) return 0;
+    const availableInt = Number.parseInt(
+      \$available.innerText.replaceAll(/,/g, "")
+    );
+    const costInt = Number.parseInt(\$cost.innerText.replaceAll(/[\$,]/g, ""));
+    return calcMax(availableInt, capacity, costInt, userMoney);
+  }
+
+  /**
+   * @param {HTMLLIElement} row
+   * @param {(e: MouseEvent) => void} callback
+   * @returns {void}
+   */
+  function addButton(row, callback) {
+    const existingMiniButton = row.querySelector(
+      "span.buy > a.pda-fill-max-btn"
+    );
+    const existingMainButton = row.querySelector(
+      "span.travel-info-btn button.pda-fill-max-btn"
+    );
+
+    if (!existingMiniButton) {
+      /** @type {HTMLSpanElement | null} */
+      const \$container = row.querySelector("span.item-info-wrap > span.deal");
+      if (!\$container)
+        return console.error(
+          "Could not find button container for addFillMaxButtons()"
+        );
+      const \$miniButton = document.createElement("a");
+      \$miniButton.innerText = "FILL";
+      \$miniButton.classList.add("pda-fill-max-btn", "buy", "t-blue");
+	  \$miniButton.addEventListener("click", callback);
+      \$container.appendChild(\$miniButton);
+    }
+
+    if (!existingMainButton) {
+      /** @type {HTMLSpanElement | null} */
+      const \$container = row.querySelector(
+        "div.confirm-buy span.travel-buttons > span.travel-info-btn"
+      );
+      if (!\$container)
+        return console.error(
+          "Could not find button container for addFillMaxButtons()"
+        );
+      const \$mainButton = document.createElement("button");
+      \$mainButton.innerText = "MAX";
+      \$mainButton.classList.add("torn-btn", "pda-fill-max-btn");
+	  \$mainButton.addEventListener("click", callback);
+      \$container.appendChild(\$mainButton);
+    }
+  }
+
+  /**
+   * @returns {{ capacity: number, userMoney: number }}
+   */
+  function getCapacityAndUserMoney() {
+    /** @type {HTMLSpanElement | null} */
+    const \$capacityParent = document.querySelector(
+      "div.info-msg-cont.user-info div.msg"
+    );
+    if (!\$capacityParent) {
+      console.error("Could not find capacity parent for addFillMaxButtons()");
+      console.error(\$capacityParent);
+      throw new Error("Capacity information not found");
+    }
+
+    const matches =
+      /and\\shave\\s\\\$([\\d,]+)\\.\\sYou\\shave\\spurchased\\s(\\d+)\\s\\/\\s(\\d+)\\sitems\\sso\\sfar\\./.exec(
+        \$capacityParent.innerText
+      );
+    if (!matches) {
+      console.error(
+        "Could not parse capacity information for addFillMaxButtons()"
+      );
+      console.error(\$capacityParent.innerText, \$capacityParent);
+      throw new Error("Capacity information not found");
+    }
+    const [, userMoneyStr, capUsed, capTotal] = matches;
+    // const capacity = Number.parseInt(capTotal) - Number.parseInt(capUsed);
+    const capacity = 999; // Let torn handle capacity due to toy shop 7* special `Over Capacity` - it will automatically reduce
+	const userMoney = Number.parseInt(userMoneyStr.replaceAll(/,/g, ""));
+	return { capacity, userMoney }
+  }
+
+  /**
+   *
+   * @param {HTMLLIElement} row
+   * @returns {(e: MouseEvent) => void}
+   */
+  function generateCallback(row) {
+    return (e) => {
+      e.preventDefault();
+	  const { capacity, userMoney } = getCapacityAndUserMoney();
+      const max = calcMaxFromRow(row, capacity, userMoney);
+      /** @type {HTMLInputElement | null} */
+      const input = row.querySelector("input[name='amount']");
+      if (input) dispatchEvent(input, max.toString());
+    };
+  }
+
+  function addStyle(cssText) {
+    const stylesheet = document.createElement("style");
+    stylesheet.type = "text/css";
+    stylesheet.appendChild(document.createTextNode(cssText));
+    document.head.appendChild(stylesheet);
+  }
+}
+
   ''';
 }
 
@@ -311,17 +267,24 @@ String travelReturnHomeJS() {
   return '''
     function goHome() {
       const doc = document;
-      let travelHome = doc.querySelector('.travel-home-header-button');
+      let travelHome1 = doc.querySelector('[class*="travel-home t-clear"]');
       
-      if (travelHome) {
-          travelHome.click();
-          setTimeout(function() {
-              let confirmBtn = doc.querySelector('#travel-home-panel button.torn-btn');
-              if (confirmBtn) {
-                  confirmBtn.click();
-              }
-          }, 1000);
+      if(!travelHome1){
+          return;
       }
+      
+      function sleep(ms) {
+			  return new Promise(resolve => setTimeout(resolve, ms));
+			}
+      
+      async function initReturn() {
+          travelHome1.click();
+          await sleep(1000);
+          var travelHome2 = doc.querySelector('[class="btn c-pointer"]');
+          travelHome2.click();
+      }
+      
+      initReturn();
     }
 
     goHome();

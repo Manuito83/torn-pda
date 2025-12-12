@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.6 - Build 595 - 11/12/2025
+    // v3.9.6 - Build 596 - 12/12/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.6'
@@ -113,6 +113,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed option to option to hide foreign items info",
           "Fixed quick travel return button",
+          "Fixed max buy buttons abroad",
         ],
     );
 
