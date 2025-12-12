@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
@@ -110,18 +111,19 @@ class AlertsSettingsState extends State<AlertsSettings> {
                   controller: _scrollController,
                   child: Column(
                     children: [
-                      if (Platform.isIOS && kSdkIos >= 16.2) _liveActivities(),
+                      if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26))
+                        _liveActivities(),
                       // Create alerts title if we are also showing live activities at the top
-                      if (Platform.isIOS && kSdkIos >= 16.2)
+                      if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26))
                         const Padding(
-                          padding: EdgeInsets.all(20),
+                          padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
                           child: Text(
                             "ALERTS",
                             style: TextStyle(fontSize: 9),
                           ),
                         ),
                       const Padding(
-                        padding: EdgeInsets.fromLTRB(20, 0, 20, 10),
+                        padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
                         child: Text(
                           "Alerts are automatic notifications that you only "
                           "need to activate once. However, you will normally be notified "
@@ -1457,15 +1459,22 @@ class AlertsSettingsState extends State<AlertsSettings> {
   }
 
   Widget _liveActivities() {
+    if (!Platform.isIOS && !Platform.isAndroid) return const SizedBox.shrink();
+    if (Platform.isIOS && kSdkIos < 16.2) return const SizedBox.shrink();
+    if (Platform.isAndroid && kSdkAndroid < 26) return const SizedBox.shrink();
+
     String laHeader =
         "Live activities will only start if you have Torn PDA open in the foreground when they take place. "
         "You'll see them in the lock screen and the dynamic island (if supported)";
 
-    if (kSdkIos >= 17.2) {
+    if (Platform.isIOS && kSdkIos >= 17.2) {
       laHeader =
           "Live activities will start immediately if you have Torn PDA open in the foreground, or after a few minutes "
           "when it's in the background or completely closed.\n\n"
           "They'll show in the lock screen and dynamic island.";
+    } else if (Platform.isAndroid) {
+      laHeader = "Live Updates will show a persistent notification with a countdown timer for your travel.\n\n"
+          "If you have battery optimization enabled, the update might stop when the app is in the background.";
     }
 
     return Column(
@@ -1502,6 +1511,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
               });
 
               if (enabled) {
+                if (Platform.isAndroid) {
+                  _checkAndroidBatteryOptimization();
+                }
+
                 await Get.find<LiveActivityTravelController>().activate();
                 Get.find<LiveActivityBridgeController>().initializeHandler();
               } else {
@@ -1513,6 +1526,39 @@ class AlertsSettingsState extends State<AlertsSettings> {
         const Divider(),
       ],
     );
+  }
+
+  Future<void> _checkAndroidBatteryOptimization() async {
+    final channel = MethodChannel('tornpda.channel');
+    try {
+      final bool isRestricted = await channel.invokeMethod('checkBatteryOptimization');
+      if (isRestricted && mounted) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Battery Optimization Detected"),
+            content: const Text(
+              "To ensure Live Updates work correctly in the background, please disable battery optimization for Torn PDA.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  channel.invokeMethod('openBatterySettings');
+                },
+                child: const Text("Open Settings"),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (e) {
+      // Ignore errors
+    }
   }
 
   Widget _drugsTapSelector() {

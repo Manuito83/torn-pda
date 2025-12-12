@@ -1065,9 +1065,9 @@ class SettingsPageState extends State<SettingsPage> {
   }
 
   Future<void> _sendMockLiveUpdate() async {
-    final bool liveUpdatesSupported = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
+    final bool liveUpdatesSupported = (Platform.isAndroid && kSdkAndroid >= 26) || (Platform.isIOS && kSdkIos >= 16.2);
     if (!liveUpdatesSupported) {
-      BotToast.showText(text: "Live Updates are only available on Android 14+ or iOS 16.2+.");
+      BotToast.showText(text: "Live Updates are only available on Android 8+ or iOS 16.2+.");
       return;
     }
 
@@ -1081,8 +1081,9 @@ class SettingsPageState extends State<SettingsPage> {
 
     final scenario = _selectedMockTravelScenario;
     final bool hasArrived = _mockLiveUpdateHasArrived;
-    final String foreignLocation =
-        _mockLiveUpdateLocationController.text.trim().isEmpty ? "Mexico" : _mockLiveUpdateLocationController.text.trim();
+    final String foreignLocation = _mockLiveUpdateLocationController.text.trim().isEmpty
+        ? "Mexico"
+        : _mockLiveUpdateLocationController.text.trim();
 
     final int nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
     final int arrivalTimestamp = hasArrived ? nowSeconds : nowSeconds + scenario.secondsRemaining;

@@ -1,5 +1,3 @@
-import 'package:flutter/foundation.dart';
-
 /// Status returned by native start/update requests.
 enum LiveUpdateRequestStatus {
   started,
@@ -61,9 +59,8 @@ class LiveUpdateCapabilitySnapshot {
       notificationsEnabled: json['notificationsEnabled'] == true,
       batteryOptimized: json['batteryOptimized'] == true,
       vendor: (json['vendor'] ?? '') as String,
-      timestamp: json['timestamp'] is num
-          ? DateTime.fromMillisecondsSinceEpoch((json['timestamp'] as num).toInt())
-          : null,
+      timestamp:
+          json['timestamp'] is num ? DateTime.fromMillisecondsSinceEpoch((json['timestamp'] as num).toInt()) : null,
     );
   }
 

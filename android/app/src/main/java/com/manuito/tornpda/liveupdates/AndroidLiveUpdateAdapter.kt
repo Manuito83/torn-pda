@@ -97,6 +97,7 @@ class AndroidLiveUpdateAdapter(
 
     private fun clearState(sessionId: String) {
         if (sessionId == activeSessionId) {
+            cancelArrivedAlarm(sessionId)
             cachedPayload = null
             activeSessionId = null
         }
@@ -113,8 +114,19 @@ class AndroidLiveUpdateAdapter(
         val etaText = formatEta(payload)
         val secondary = context.getString(R.string.live_update_notification_secondary, origin, destination)
 
+        val extrasBundle = android.os.Bundle()
+        payload.extras.forEach { (key, value) ->
+            when (value) {
+                is String -> extrasBundle.putString(key, value)
+                is Boolean -> extrasBundle.putBoolean(key, value)
+                is Int -> extrasBundle.putInt(key, value)
+                is Long -> extrasBundle.putLong(key, value)
+                is Double -> extrasBundle.putDouble(key, value)
+            }
+        }
+
         val builder = NotificationCompat.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.notification_travel)
             .setContentTitle("$title $destination")
             .setContentText(etaText)
             .setStyle(NotificationCompat.BigTextStyle().bigText("$etaText • $secondary"))
@@ -125,6 +137,7 @@ class AndroidLiveUpdateAdapter(
             .setAutoCancel(payload.hasArrived)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setCategory(NotificationCompat.CATEGORY_STATUS)
+            .setExtras(extrasBundle)
 
         val progress = computeProgress(payload)
         if (progress != null) {
@@ -138,9 +151,37 @@ class AndroidLiveUpdateAdapter(
             builder.setUsesChronometer(true)
             builder.setChronometerCountDown(true)
             builder.setWhen(arrivalMillis)
+            
+            // Schedule "Arrived" update
+            scheduleArrivedAlarm(payload, arrivalMillis)
         }
 
         return builder.build()
+    }
+
+    private fun scheduleArrivedAlarm(payload: LiveUpdatePayload, arrivalMillis: Long) {
+        val sessionId = activeSessionId ?: return
+        val destination = payload.currentDestinationDisplayName ?: context.getString(R.string.live_update_destination_unknown)
+        
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? android.app.AlarmManager
+        val intent = LiveUpdateNotificationReceiver.createArrivedIntent(context, sessionId, destination)
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            if (alarmManager?.canScheduleExactAlarms() == true) {
+                alarmManager.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, arrivalMillis, intent)
+            } else {
+                alarmManager?.setAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, arrivalMillis, intent)
+            }
+        } else {
+            alarmManager?.setExactAndAllowWhileIdle(android.app.AlarmManager.RTC_WAKEUP, arrivalMillis, intent)
+        }
+    }
+
+    private fun cancelArrivedAlarm(sessionId: String) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? android.app.AlarmManager
+        // We need a dummy destination to recreate the same PendingIntent structure for matching
+        val intent = LiveUpdateNotificationReceiver.createArrivedIntent(context, sessionId, "dummy")
+        alarmManager?.cancel(intent)
     }
 
     private fun formatEta(payload: LiveUpdatePayload): String {

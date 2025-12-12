@@ -44,12 +44,13 @@ class LiveActivityTravelController extends GetxController {
       return;
     }
 
-    if (!Platform.isIOS) {
-      log("TravelLiveActivityHandler: Not on iOS, activation skipped.");
-      return;
-    }
+    // Android support enabled.
+    // if (!Platform.isIOS) {
+    //   log("TravelLiveActivityHandler: Not on iOS, activation skipped.");
+    //   return;
+    // }
 
-    if (kSdkIos < 16.2) {
+    if (Platform.isIOS && kSdkIos < 16.2) {
       log("TravelLiveActivityHandler: iOS SDK < 16.2, LA not supported. Activation skipped.");
       return;
     }

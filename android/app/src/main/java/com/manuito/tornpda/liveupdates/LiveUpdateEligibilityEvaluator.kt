@@ -22,14 +22,12 @@ interface LiveUpdateEligibilityProvider {
 class LiveUpdateEligibilityEvaluator(
     private val context: Context,
     private val capabilityCache: LiveUpdateCapabilityCache,
-    private val oemCapabilityDetector: OemCapabilityDetector,
     private val timeProvider: () -> Long = { System.currentTimeMillis() },
     private val requiredApiLevel: Int = DEFAULT_REQUIRED_API_LEVEL,
     private val apiLevelProvider: () -> Int = { Build.VERSION.SDK_INT },
     private val notificationsAllowedProvider: (() -> Boolean)? = null,
     private val batteryOptimizedProvider: (() -> Boolean)? = null,
     private val vendorProvider: () -> String = { Build.MANUFACTURER ?: "unknown" },
-    private val capsuleAvailabilityProvider: (() -> Boolean)? = null,
 ) : LiveUpdateEligibilityProvider {
 
     override fun evaluate(): LiveUpdateEligibilityResult {
@@ -50,10 +48,9 @@ class LiveUpdateEligibilityEvaluator(
         val notificationsEnabled = notificationsAllowedProvider?.invoke() ?: notificationsAllowed()
         val batteryOptimized = batteryOptimizedProvider?.invoke() ?: isBatteryOptimized()
         val vendor = vendorProvider().ifEmpty { "unknown" }.lowercase()
-        val oemCapsule = capsuleAvailabilityProvider?.invoke() ?: oemCapabilityDetector.isOnePlusCapsuleAvailable()
         return LiveUpdateCapabilitySnapshot(
             supportedApi = supportedApi,
-            oemCapsule = oemCapsule,
+            oemCapsule = false,
             notificationsEnabled = notificationsEnabled,
             batteryOptimized = batteryOptimized,
             vendor = vendor,
@@ -91,7 +88,7 @@ class LiveUpdateEligibilityEvaluator(
     }
 
     companion object {
-        // Android 15 / API 35 is the earliest version expected to support Live Updates.
-        private const val DEFAULT_REQUIRED_API_LEVEL = 35
+        // Android 8.0 / API 26 is the earliest version expected to support Live Updates.
+        private const val DEFAULT_REQUIRED_API_LEVEL = 26
     }
 }

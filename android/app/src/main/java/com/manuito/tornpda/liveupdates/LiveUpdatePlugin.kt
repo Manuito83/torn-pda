@@ -7,7 +7,7 @@ import io.flutter.plugin.common.MethodChannel
 
 object LiveUpdatePlugin {
 
-    private const val MIN_NATIVE_ADAPTER_API = 35
+    private const val MIN_NATIVE_ADAPTER_API = 26
 
     @JvmStatic
     fun register(flutterEngine: FlutterEngine, context: Context) {
@@ -18,10 +18,9 @@ object LiveUpdatePlugin {
 
         val appContext = context.applicationContext
         val capabilityStore = LiveUpdateCapabilityStore(appContext)
-        val oemDetector = OemCapabilityDetector(appContext)
-        val eligibilityEvaluator = LiveUpdateEligibilityEvaluator(appContext, capabilityStore, oemDetector)
+        val eligibilityEvaluator = LiveUpdateEligibilityEvaluator(appContext, capabilityStore)
         val sessionRegistry = LiveUpdateSessionRegistry(appContext)
-        val adapter = createAdapter(appContext, oemDetector)
+        val adapter = createAdapter(appContext)
         val manager = DefaultLiveUpdateManager(
             adapter = adapter,
             eligibilityProvider = eligibilityEvaluator,
@@ -39,19 +38,12 @@ object LiveUpdatePlugin {
         manager.attachCapabilityMonitor(capabilityMonitor)
     }
 
-    private fun createAdapter(context: Context, oemDetector: OemCapabilityDetector): LiveUpdateAdapter {
+    private fun createAdapter(context: Context): LiveUpdateAdapter {
         val tapIntentFactory = LiveUpdateTapIntentFactory(context)
-        val baseAdapter: LiveUpdateAdapter = if (Build.VERSION.SDK_INT >= MIN_NATIVE_ADAPTER_API) {
+        return if (Build.VERSION.SDK_INT >= MIN_NATIVE_ADAPTER_API) {
             AndroidLiveUpdateAdapter(context, tapIntentFactory)
         } else {
             NoOpLiveUpdateAdapter()
         }
-
-        val withCapsule = if (oemDetector.isOnePlusCapsuleAvailable()) {
-            OemCapsuleAdapter(baseAdapter)
-        } else {
-            baseAdapter
-        }
-        return withCapsule
     }
 }
