@@ -117,6 +117,11 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/ranked_war_widget_info" />
         </receiver>
+
+        <receiver
+            android:name=".liveupdates.LiveUpdateNotificationReceiver"
+            android:exported="false" />
+
         <!-- Widget Background Work -->
         <receiver android:name="es.antonborri.home_widget.HomeWidgetBackgroundReceiver"
             android:exported="true">

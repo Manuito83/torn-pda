@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.os.Build;
 import java.util.List;
 import io.flutter.plugin.common.MethodChannel;
+import com.manuito.tornpda.liveupdates.LiveUpdatePlugin;
 import android.os.Bundle;
 import android.window.SplashScreenView;
 import androidx.core.view.WindowCompat;
@@ -126,6 +127,8 @@ public class MainActivity extends FlutterActivity {
                             result.notImplemented();
                     }
                 });
+
+        LiveUpdatePlugin.register(flutterEngine, this);
     }
 
     // This cancels Firebase notifications upon request from the Flutter app, as the
