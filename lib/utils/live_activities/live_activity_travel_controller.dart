@@ -44,12 +44,6 @@ class LiveActivityTravelController extends GetxController {
       return;
     }
 
-    // Android support enabled.
-    // if (!Platform.isIOS) {
-    //   log("TravelLiveActivityHandler: Not on iOS, activation skipped.");
-    //   return;
-    // }
-
     if (Platform.isIOS && kSdkIos < 16.2) {
       log("TravelLiveActivityHandler: iOS SDK < 16.2, LA not supported. Activation skipped.");
       return;
@@ -205,7 +199,7 @@ class LiveActivityTravelController extends GetxController {
         }
       }
       // CASE 1: Player has arrived (and if it's the first valid run, it's not stale), and arrival not yet notified by LA
-      else if (hasPlayerArrived && !_hasArrivedNotified) {
+      else if (hasPlayerArrived && !_hasArrivedNotified && travelId != _lastProcessedTravelIdentifier) {
         log("TravelLiveActivityHandler: CASE 1 - Arrival detected for ${apiData['destination']}. Preparing 'Arrived' LA.");
         laArgs = _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true);
         shouldStartOrUpdateLA = true;
@@ -279,7 +273,6 @@ class LiveActivityTravelController extends GetxController {
     _isLALogicallyActive = false;
     _activeSessionId = null;
     _currentLAArrivalTimestamp = 0;
-    _lastProcessedTravelIdentifier = "internal_reset_${DateTime.now().millisecondsSinceEpoch}";
     _hasArrivedNotified = false;
   }
 
@@ -374,6 +367,9 @@ class LiveActivityTravelController extends GetxController {
   }
 
   void _syncTimestamp(int arrivalTimestamp) {
+    // This is currently only used for iOS Live Activities sync
+    if (!Platform.isIOS) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       FirebaseRtdbHelper().liveActivityTravelTimestampSync(
@@ -384,6 +380,9 @@ class LiveActivityTravelController extends GetxController {
   }
 
   void _clearTimestamp() {
+    // This is currently only used for iOS Live Activities sync
+    if (!Platform.isIOS) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       FirebaseRtdbHelper().liveActivityClearTimeStamp(uid: user.uid);

@@ -1112,6 +1112,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
           for (final not in activeNotifications) {
             if (not.id == null) continue;
+            if (not.channelId == 'travel_live_updates') continue;
             // Platform channel to cancel direct Firebase notifications (we can call
             // "cancelAll()" there without affecting scheduled notifications, which is
             // a problem with the local plugin)
@@ -3382,12 +3383,19 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _initialiseLiveActivitiesBridgeService() async {
     _preferencesCompleter.future.whenComplete(() async {
-      if (!Platform.isIOS) return;
+      final bool isAndroid = Platform.isAndroid;
+      final bool isIos = Platform.isIOS;
+
+      if (!isAndroid && !isIos) return;
       if (!_settingsProvider.iosLiveActivityTravelEnabled) return;
 
-      if (kSdkIos < 16.2) {
+      if (isIos && kSdkIos < 16.2) {
         // Regardless of user settings, disable Live Activities on iOS versions below 16.2
         _settingsProvider.iosLiveActivityTravelEnabled = false;
+        return;
+      }
+
+      if (isAndroid && kSdkAndroid < 26) {
         return;
       }
 

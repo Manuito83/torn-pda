@@ -25,6 +25,8 @@ object LiveUpdateNotificationChannel {
             enableVibration(false)
             setShowBadge(false)
             lockscreenVisibility = Notification.VISIBILITY_PUBLIC
+            // Configure channel to be silent
+            setSound(null, null)
         }
         manager.createNotificationChannel(channel)
     }

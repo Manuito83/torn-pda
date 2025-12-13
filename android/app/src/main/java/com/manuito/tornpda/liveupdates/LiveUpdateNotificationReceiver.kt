@@ -26,9 +26,9 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
     }
 
     private fun showArrivedNotification(context: Context, sessionId: String, destination: String) {
-        val channelId = "torn_pda_live_updates" // Must match LiveUpdateNotificationChannel.CHANNEL_ID
+        val channelId = LiveUpdateNotificationChannel.CHANNEL_ID
         
-        // Recreate the tap intent (opens the app)
+        // Recreate the tap intent to open the app
         val tapIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.let {
             it.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_IMMUTABLE)
@@ -41,6 +41,9 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             .setContentIntent(tapIntent)
             .setAutoCancel(true)
             .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH)
+            .setUsesChronometer(false)
+            .setShowWhen(true)
+            .setWhen(System.currentTimeMillis())
             .build()
 
         androidx.core.app.NotificationManagerCompat.from(context).notify(sessionId.hashCode(), notification)
@@ -79,8 +82,7 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
                 putExtra(EXTRA_DESTINATION, destination)
             }
             val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            // Use a different requestCode base or offset to avoid collision with dismiss intent, 
-            // though action differs so it should be fine. Using hashcode + 1 just in case.
+            // Use a distinct request code to avoid collision with other intents
             val requestCode = sessionId.hashCode() + 1
             return PendingIntent.getBroadcast(context, requestCode, intent, flags)
         }

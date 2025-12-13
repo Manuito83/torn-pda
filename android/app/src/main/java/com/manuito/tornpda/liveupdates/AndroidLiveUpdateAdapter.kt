@@ -3,16 +3,20 @@ package com.manuito.tornpda.liveupdates
 import android.annotation.SuppressLint
 import android.app.Notification
 import android.content.Context
+import android.os.Build
 import android.text.format.DateUtils
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.app.Person
+import androidx.core.graphics.drawable.IconCompat
 import com.manuito.tornpda.R
+import kotlinx.coroutines.*
 import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Renders travel countdowns on Android surfaces (lock screen, notification shade, OEM capsules)
- * using high-priority notifications and dismissal callbacks.
+ * Manages the lifecycle and rendering of the travel live update notification
+ * Handles periodic updates for progress bar animation and system alarm scheduling
  */
 class AndroidLiveUpdateAdapter(
     private val context: Context,
@@ -23,6 +27,9 @@ class AndroidLiveUpdateAdapter(
     private var listener: LiveUpdateAdapterListener? = null
     private var activeSessionId: String? = null
     private var cachedPayload: LiveUpdatePayload? = null
+    
+    private val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+    private var updateJob: Job? = null
 
     init {
         LiveUpdateNotificationReceiver.registerListener(this)
@@ -39,6 +46,9 @@ class AndroidLiveUpdateAdapter(
         val dismissIntent = LiveUpdateNotificationReceiver.createDismissIntent(context, sessionId)
         val notification = buildNotification(payload, tapIntent, dismissIntent)
         notifySurface(sessionId.hashCode(), notification)
+        
+        // Initiate the update loop to refresh the progress bar
+        startUpdateLoop(sessionId, tapIntent, dismissIntent)
 
         val eventStatus = when {
             payload.hasArrived -> LiveUpdateLifecycleStatus.ARRIVED
@@ -97,9 +107,38 @@ class AndroidLiveUpdateAdapter(
 
     private fun clearState(sessionId: String) {
         if (sessionId == activeSessionId) {
+            updateJob?.cancel()
             cancelArrivedAlarm(sessionId)
             cachedPayload = null
             activeSessionId = null
+        }
+    }
+    
+    /**
+     * Starts a coroutine loop to update the notification every minute
+     * This ensures the progress bar reflects the current travel status
+     */
+    private fun startUpdateLoop(
+        sessionId: String, 
+        tapIntent: android.app.PendingIntent, 
+        dismissIntent: android.app.PendingIntent
+    ) {
+        updateJob?.cancel()
+        val payload = cachedPayload ?: return
+        
+        if (payload.hasArrived) return
+
+        updateJob = scope.launch {
+            while (isActive) {
+                delay(60_000) 
+                
+                if (activeSessionId != sessionId) break
+                val current = cachedPayload ?: break
+                if (current.hasArrived) break
+                
+                val notification = buildNotification(current, tapIntent, dismissIntent)
+                notifySurface(sessionId.hashCode(), notification)
+            }
         }
     }
 
@@ -129,15 +168,17 @@ class AndroidLiveUpdateAdapter(
             .setSmallIcon(R.drawable.notification_travel)
             .setContentTitle("$title $destination")
             .setContentText(etaText)
-            .setStyle(NotificationCompat.BigTextStyle().bigText("$etaText • $secondary"))
             .setContentIntent(tapIntent)
             .setDeleteIntent(dismissIntent)
             .setOnlyAlertOnce(true)
             .setOngoing(!payload.hasArrived)
             .setAutoCancel(payload.hasArrived)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setCategory(NotificationCompat.CATEGORY_STATUS)
             .setExtras(extrasBundle)
+
+        // Standard BigTextStyle is used for reliability across different Android versions
+        builder.setStyle(NotificationCompat.BigTextStyle().bigText("$etaText • $secondary"))
+        builder.setCategory(NotificationCompat.CATEGORY_STATUS)
 
         val progress = computeProgress(payload)
         if (progress != null) {
@@ -148,11 +189,22 @@ class AndroidLiveUpdateAdapter(
 
         val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
         if (!payload.hasArrived && arrivalMillis > 0) {
+            builder.setShowWhen(true)
             builder.setUsesChronometer(true)
             builder.setChronometerCountDown(true)
             builder.setWhen(arrivalMillis)
             
-            // Schedule "Arrived" update
+            // Set subtext to assist system in identifying context
+            builder.setSubText(context.getString(R.string.live_update_channel_name))
+            
+            // Attempt to enable promoted ongoing notification for Android 16+
+            try {
+                val method = builder.javaClass.getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
+                method.invoke(builder, true)
+            } catch (e: Exception) {
+                // Feature not supported on this device or SDK version
+            }
+            
             scheduleArrivedAlarm(payload, arrivalMillis)
         }
 
@@ -186,20 +238,25 @@ class AndroidLiveUpdateAdapter(
 
     private fun formatEta(payload: LiveUpdatePayload): String {
         val arrival = payload.arrivalTimeTimestamp ?: return context.getString(R.string.live_update_unknown_eta)
-        val reference = payload.currentServerTimestamp ?: (System.currentTimeMillis() / 1000)
-        val remainingSeconds = arrival - reference
-        return if (remainingSeconds <= 0 || payload.hasArrived) {
-            context.getString(R.string.live_update_arrived_label)
-        } else {
-            val formatted = DateUtils.formatElapsedTime(remainingSeconds)
-            context.getString(R.string.live_update_eta_pattern, formatted)
+        
+        // If arrived, show Arrived label
+        if (payload.hasArrived) {
+            return context.getString(R.string.live_update_arrived_label)
         }
+        
+        // Format as local clock time (e.g. 09:53 or 21:53)
+        val date = java.util.Date(arrival * 1000)
+        val format = android.text.format.DateFormat.getTimeFormat(context)
+        val formatted = format.format(date)
+        return context.getString(R.string.live_update_eta_pattern, formatted)
     }
 
     private fun computeProgress(payload: LiveUpdatePayload): ProgressInfo? {
         val arrival = payload.arrivalTimeTimestamp ?: return null
         val departure = payload.departureTimeTimestamp ?: return null
-        val reference = payload.currentServerTimestamp ?: (System.currentTimeMillis() / 1000)
+        
+        // Calculate progress based on current system time
+        val reference = System.currentTimeMillis() / 1000
         val totalSeconds = max(1L, arrival - departure)
         val elapsedSeconds = min(totalSeconds, max(0L, reference - departure))
         return ProgressInfo(totalSeconds, elapsedSeconds)

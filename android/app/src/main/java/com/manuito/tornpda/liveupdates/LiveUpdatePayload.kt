@@ -3,8 +3,8 @@ package com.manuito.tornpda.liveupdates
 import java.util.HashMap
 
 /**
- * Parsed representation of the Live Activity payload sent from Flutter.
- * Keeps the most common fields typed while preserving the raw map for adapters that need it.
+ * Parsed representation of the Live Activity payload sent from Flutter
+ * Keeps the most common fields typed while preserving the raw map for adapters that need it
  */
 data class LiveUpdatePayload(
     val currentDestinationDisplayName: String?,
