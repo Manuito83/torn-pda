@@ -537,14 +537,18 @@ class WebViewFullState extends State<WebViewFull>
     // Update the scrolls with the latest width available
     // (in case we need to regenerate the webview after rotating the screen)
     // If null, it's probably because the webview is not yet initialized (so we don't log)
-    final scrollX = await webViewController?.getScrollX();
-    if (scrollX != null) {
-      _scrollX = scrollX;
-    }
+    try {
+      final scrollX = await webViewController?.getScrollX();
+      if (scrollX != null) {
+        _scrollX = scrollX;
+      }
 
-    final scrollY = await webViewController?.getScrollY();
-    if (scrollY != null) {
-      _scrollY = scrollY;
+      final scrollY = await webViewController?.getScrollY();
+      if (scrollY != null) {
+        _scrollY = scrollY;
+      }
+    } catch (e) {
+      // Webview might be disposed
     }
   }
 

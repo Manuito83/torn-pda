@@ -53,7 +53,7 @@ class TravelHandler {
     if (shouldHideInfo) {
       await webViewController?.evaluateJavascript(source: hideItemInfoJS());
     }
-    // await webViewController?.evaluateJavascript(source: buyMaxAbroadJS());
+    await webViewController?.evaluateJavascript(source: buyMaxAbroadJS());
   }
 
   Future<void> _sendStockInformation(dom.Document document) async {
