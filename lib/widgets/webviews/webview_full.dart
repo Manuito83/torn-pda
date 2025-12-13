@@ -195,6 +195,7 @@ class WebViewFullState extends State<WebViewFull>
   URLRequest? _initialUrl;
   String? _pageTitle = "";
   String _currentUrl = '';
+  String _lastReportedUrl = '';
 
   bool _backButtonPopsContext = true;
 
@@ -1524,8 +1525,7 @@ class WebViewFullState extends State<WebViewFull>
 
               if (lastCallAgo > 0.5) {
                 // If reportTabLoadUrl wasn't called in the last 0.5 seconds
-                _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
-                _lastReportTabLoadUrlTime = now;
+                _reportUrlVisit(uri, bypassThrottle: true);
               }
             }
 
@@ -1574,9 +1574,9 @@ class WebViewFullState extends State<WebViewFull>
             if (progress > 10) {
               // Wait for some progress to avoid initial load noise
               final currentUri = await c.getUrl();
-              if (currentUri != null && _currentUrl != currentUri.toString()) {
+              if (currentUri != null && _lastReportedUrl != currentUri.toString()) {
                 log(
-                  "🔄 onProgressChanged URL change detected: $_currentUrl -> ${currentUri.toString()}",
+                  "🔄 onProgressChanged URL change detected: $_lastReportedUrl -> ${currentUri.toString()}",
                   name: "WEBVIEW FULL",
                 );
                 _currentUrl = currentUri.toString();
@@ -2422,6 +2422,10 @@ class WebViewFullState extends State<WebViewFull>
       }
     }
 
+    if (_webViewProvider.areUrlsEquivalent(_lastReportedUrl, uri.toString())) {
+      return;
+    }
+
     // For certain URLs (e.g. forums or personal stats in iOS) we might be reporting this twice.
     // Once from [onUpdateVisitedHistory] and again from [onResourceLoad].
     // There are also sections such as personal stats that trigger [onUpdateVisitedHistory] several times
@@ -2431,6 +2435,7 @@ class WebViewFullState extends State<WebViewFull>
       return;
     }
     _urlTriggerTime = now;
+    _lastReportedUrl = uri.toString();
     //log(uri.toString());
 
     if (!_omitTabHistory) {
@@ -5257,7 +5262,7 @@ class WebViewFullState extends State<WebViewFull>
 
     // On Android, certain short cuts will revert to the main section (e.g. market search)
     // If we want to load the same URL again, we need to reload instead of loadUrl
-    if (inputUrl == _currentUrl) {
+    if (inputUrl == _lastReportedUrl) {
       webViewController!.reload();
       return;
     }
