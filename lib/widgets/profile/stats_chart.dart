@@ -9,6 +9,7 @@ import 'package:toastification/toastification.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart_update.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -546,7 +547,7 @@ class _StatsChartState extends State<StatsChart> {
               final int currentYear = DateTime.now().year;
               Color yearColor;
               if (dt.year == currentYear) {
-                yearColor = Colors.black;
+                yearColor = context.read<ThemeProvider>().mainText;
               } else if (dt.year == currentYear - 1) {
                 yearColor = Colors.blue;
               } else if (dt.year == currentYear - 2) {
