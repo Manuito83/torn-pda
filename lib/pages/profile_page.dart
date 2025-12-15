@@ -310,6 +310,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   var _sharedJobPoints = "";
 
   StatsChartTornStats? _statsChartModel;
+  String? _statsChartError;
   Future? _statsChartDataFetched;
 
   RankedWar? _factionRankedWar;
@@ -4004,6 +4005,30 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                 const SizedBox(height: 40),
                               ],
                             );
+                          } else if (_statsChartError != null) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 15.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  const Icon(
+                                    Icons.bar_chart,
+                                    color: Colors.red,
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      _statsChartError!,
+                                      style: TextStyle(
+                                        color: _themeProvider!.getTextColor(Colors.red),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
                           }
                         }
                         return const SizedBox(height: 8);
@@ -4327,6 +4352,28 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                                   ),
                                   const SizedBox(height: 40),
                                 ],
+                              );
+                            } else if (_statsChartError != null) {
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.bar_chart,
+                                      color: Colors.red,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      _statsChartError!,
+                                      style: TextStyle(
+                                        color: _themeProvider!.getTextColor(Colors.red),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               );
                             }
                           }
@@ -5693,26 +5740,68 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         if (savedChart.isNotEmpty) {
           setState(() {
             _statsChartModel = statsChartTornStatsFromJson(savedChart);
+            _statsChartError = null;
           });
           return;
         }
       }
 
       final String tornStatsURL = 'https://www.tornstats.com/api/v1/${_u.alternativeTornStatsKey}/battlestats/graph';
-      final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 2));
+      final resp = await http.get(Uri.parse(tornStatsURL)).timeout(const Duration(seconds: 5));
       if (resp.statusCode == 200) {
         final StatsChartTornStats statsJson = statsChartTornStatsFromJson(resp.body);
         if (!statsJson.message!.contains("ERROR")) {
           setState(() {
             _statsChartModel = statsJson;
+            _statsChartError = null;
           });
 
           Prefs().setTornStatsChartSave(resp.body);
           _settingsProvider!.setTornStatsChartDateTime = DateTime.now().millisecondsSinceEpoch;
+        } else {
+          setState(() {
+            String errorStr = statsJson.message ?? "Unknown";
+            if (errorStr.length > 20) {
+              errorStr = '${errorStr.substring(0, 20)}...';
+            }
+            _statsChartError = "Torn Stats chart error: $errorStr";
+          });
         }
+      } else {
+        String errorMsg;
+        switch (resp.statusCode) {
+          case 401:
+          case 403:
+            errorMsg = "unauthorized";
+            break;
+          case 404:
+            errorMsg = "server not found";
+            break;
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            errorMsg = "server error";
+            break;
+          default:
+            errorMsg = "HTTP ${resp.statusCode}";
+        }
+        setState(() {
+          _statsChartError = "Torn Stats chart error: $errorMsg";
+        });
       }
     } catch (e) {
-      // Returns null
+      setState(() {
+        if (e is TimeoutException) {
+          _statsChartError = "Torn Stats chart error: connection timed out";
+        } else {
+          String errorStr = e.toString();
+          if (errorStr.length > 20) {
+            errorStr = '${errorStr.substring(0, 20)}...';
+          }
+          _statsChartError = "Torn Stats chart error: $errorStr";
+        }
+      });
     }
   }
 

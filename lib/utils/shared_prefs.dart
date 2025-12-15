@@ -96,6 +96,7 @@ class Prefs {
   final String _kDynamicAppIconsManual = "pda_dynamicAppIconsManual";
   final String _kVibrationPattern = "pda_vibrationPattern";
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
+  final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
@@ -2545,6 +2546,14 @@ class Prefs {
 
   Future setShortcutsEnabledProfile(bool value) async {
     return await PrefsDatabase.setBool(_kEnableShortcuts, value);
+  }
+
+  Future<bool> getProfileCheckAttackEnabled() async {
+    return await PrefsDatabase.getBool(_kProfileCheckAttackEnabled, true);
+  }
+
+  Future setProfileCheckAttackEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kProfileCheckAttackEnabled, value);
   }
 
   Future<String> getShortcutTile() async {

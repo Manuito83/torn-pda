@@ -102,6 +102,23 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.9.6 - Build 598 - 13/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.9.6'
+        ..date = '16 DEC 2025'
+        ..features = [
+          "Profile widget can now be hidden when attacking (shown by default)",
+          "Added more time range filtering options for Torn Stats chart",
+          "Added colored time range and error messages for TS stats chart",
+          "Fixed Foreign Stocks data submission to YATA and Prometheus",
+          "Fixed option to option to hide foreign items info",
+          "Fixed quick travel return button",
+          "Fixed max buy buttons abroad",
+          "Fixed browser history navigation issues",
+        ],
+    );
+
     // v3.9.5 - Build 594 - 09/12/2025
     itemList.add(
       ChangeLogItem()

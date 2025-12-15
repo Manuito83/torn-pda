@@ -1967,7 +1967,9 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
                 ],
               ),
               Text(
-                "This will hide foreign items information (details such as description, value, circulation and its picture) when abroad, so that buying is quicker.",
+                "This will hide foreign items information (details such as description, value, "
+                "circulation and its picture) when abroad, even if the item is inadvertently tapped, "
+                "so that buying is quicker",
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,
@@ -2481,6 +2483,43 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
               ),
               Text(
                 'Add additional player information when visiting a profile or attacking someone (e.g. same faction, friendly faction, friends) and estimated stats',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Show also in attacks",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Show also in attacks")),
+                  Switch(
+                    value: _settingsProvider.profileCheckAttackEnabled,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.profileCheckAttackEnabled = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                'Shows the extra profile information widget (stats, notes, etc.) in the attack screen '
+                '(you might want to disable this if it\'s causing performance issues)',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontSize: 12,

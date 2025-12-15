@@ -72,9 +72,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.9.5';
-const String androidCompilation = '594';
-const String iosCompilation = '594';
+const String appVersion = '3.9.6';
+const String androidCompilation = '598';
+const String iosCompilation = '598';
 
 bool appHasBeenUpdated = false;
 bool appIsFirstRun = false;

@@ -1174,6 +1174,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _profileCheckAttackEnabled = true;
+  bool get profileCheckAttackEnabled => _profileCheckAttackEnabled;
+  set profileCheckAttackEnabled(bool value) {
+    _profileCheckAttackEnabled = value;
+    Prefs().setProfileCheckAttackEnabled(value);
+    notifyListeners();
+  }
+
   var _showShortcutEditIcon = true;
   bool get showShortcutEditIcon => _showShortcutEditIcon;
   set showShortcutEditIcon(bool value) {
@@ -1566,6 +1574,7 @@ class SettingsProvider extends ChangeNotifier {
     _debugMessages = logAndShowToUser = await Prefs().getDebugMessages();
 
     _shortcutsEnabledProfile = await Prefs().getShortcutsEnabledProfile();
+    _profileCheckAttackEnabled = await Prefs().getProfileCheckAttackEnabled();
     _showShortcutEditIcon = await Prefs().getShowShortcutEditIcon();
 
     _appwidgetDarkMode = await Prefs().getAppwidgetDarkMode();

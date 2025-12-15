@@ -932,13 +932,17 @@ class WebViewPanicState extends State<WebViewPanic> {
           final matches = regId.allMatches(page);
           userId = int.parse(matches.elementAt(0).group(1)!);
           setState(() {
-            _profileAttackWidget = ProfileAttackCheckWidget(
-              key: UniqueKey(),
-              profileId: userId,
-              apiKey: UserHelper.apiKey,
-              profileCheckType: ProfileCheckType.attack,
-              themeProvider: _themeProvider,
-            );
+            if (_settingsProvider.profileCheckAttackEnabled) {
+              _profileAttackWidget = ProfileAttackCheckWidget(
+                key: UniqueKey(),
+                profileId: userId,
+                apiKey: UserHelper.apiKey,
+                profileCheckType: ProfileCheckType.attack,
+                themeProvider: _themeProvider,
+              );
+            } else {
+              _profileAttackWidget = const SizedBox.shrink();
+            }
           });
         } catch (e) {
           userId = 0;
