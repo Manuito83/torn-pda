@@ -57,13 +57,32 @@ class TravelHandler {
   }
 
   Future<void> _sendStockInformation(dom.Document document) async {
-    // Find wrapper
+    // Find item elements
     var elements = <dom.Element>[];
-    final allDivs = document.querySelectorAll('div');
-    for (var div in allDivs) {
-      if (div.className.contains('stockTableWrapper')) {
-        elements.addAll(div.querySelectorAll('li'));
-        break;
+
+    // Find wrappers
+    var wrappers = document.querySelectorAll('div[class*="stockTableWrapper"]');
+    for (var wrapper in wrappers) {
+      // Find rows (divs with class row___)
+      elements.addAll(wrapper.querySelectorAll('div[class*="row___"]'));
+    }
+
+    // Retry if empty as it might take additional time to load after [assessTravel] is called
+    if (elements.isEmpty) {
+      int attempts = 0;
+      while (attempts < 10) {
+        await Future.delayed(const Duration(milliseconds: 250));
+        final html = await webViewController?.getHtml();
+        if (html != null) {
+          document = parse(html);
+          elements.clear();
+          wrappers = document.querySelectorAll('div[class*="stockTableWrapper"]');
+          for (var wrapper in wrappers) {
+            elements.addAll(wrapper.querySelectorAll('div[class*="row___"]'));
+          }
+          if (elements.isNotEmpty) break;
+        }
+        attempts++;
       }
     }
 
@@ -73,7 +92,7 @@ class TravelHandler {
         final items = <ForeignStockOutItem>[];
         for (final el in elements) {
           int id = 0;
-          int quantity = 0;
+          int quantity = -1;
           int cost = 0;
 
           // ID
@@ -86,28 +105,24 @@ class TravelHandler {
             }
           }
 
-          // Cost & Stock from cells
-          final divs = el.querySelectorAll("div");
-          for (final div in divs) {
-            final text = div.text.trim().toLowerCase();
-            if (text.startsWith("cost")) {
+          // Cost & Stock
+          final spans = el.querySelectorAll("span");
+          for (final span in spans) {
+            final text = span.text.trim();
+            // Cost
+            if (text.contains('\$') && span.attributes['aria-hidden'] != 'true') {
               cost = int.tryParse(text.replaceAll(RegExp(r"[^0-9]"), "")) ?? 0;
             }
-            if (text.startsWith("stock")) {
-              quantity = int.tryParse(text.replaceAll(RegExp(r"[^0-9]"), "")) ?? 0;
-            }
-          }
-
-          // Fallback for stock (inline)
-          if (quantity == 0) {
-            final spans = el.querySelectorAll("span");
-            for (final span in spans) {
-              if (span.className.contains('inlineStock')) {
-                quantity = int.tryParse(span.text.replaceAll(RegExp(r"[^0-9]"), "")) ?? 0;
-                break;
+            // Stock
+            if (text.toLowerCase().contains('stock')) {
+              final parent = span.parent;
+              if (parent != null) {
+                quantity = int.tryParse(parent.text.replaceAll(RegExp(r"[^0-9]"), "")) ?? 0;
               }
             }
           }
+
+          if (quantity == -1) quantity = 0;
 
           if (id != 0 && cost != 0) {
             items.add(ForeignStockOutItem(id: id, quantity: quantity, cost: cost));
