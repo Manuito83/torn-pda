@@ -1636,6 +1636,10 @@ class UserScriptsPageState extends State<UserScriptsPage> {
               child: const Text("Yes, I promise!"),
               onPressed: () {
                 _userScriptsProvider.changeScriptsFirstTime = false;
+                // Fire and forget: load defaults now that the user accepted
+                if (_userScriptsProvider.userScriptList.isEmpty) {
+                  _userScriptsProvider.addDefaultScripts();
+                }
                 Navigator.of(context).pop('exit');
               },
             ),

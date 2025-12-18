@@ -648,6 +648,15 @@ class UserScriptsProvider extends ChangeNotifier {
         notifyListeners();
         return;
       }
+
+      // If the user never visited the section, it's valid that scripts are null.
+      if (_scriptsSectionNeverVisited) {
+        log("📜 User never visited scripts section, initializing empty list", name: "UserScriptsProvider");
+        _isSafeToSave = true;
+        notifyListeners();
+        return;
+      }
+
       // This should not happen take place and we should not load defaults
       // just in case the user can recover them by resetting the app
       throw Exception("PDA error in loadPreferencesAndScripts. Scripts are null after app update.");
