@@ -62,7 +62,7 @@ dependencies:
   flutter_font_icons: 2.2.7
   flutter_inappwebview: 6.1.5
   flutter_local_notifications: 19.4.0
-  flutter_secure_storage: 9.2.4
+  flutter_secure_storage: ^10.0.0
   flutter_slidable: 4.0.0
   flutter_speed_dial: 7.0.0
   flutter_svg: 2.2.0

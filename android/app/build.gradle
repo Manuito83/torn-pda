@@ -42,19 +42,19 @@ android {
         versionName flutterVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        ndk {
+        //ndk {
             // Filter for architectures supported by Flutter.
             // https://github.com/flutter/flutter/issues/83596#issuecomment-1122132782
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
-        }
+            //abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+        //}
     }
 
     compileOptions {
         // Flag to enable support for the new language APIs
         coreLibraryDesugaringEnabled true
-        // Sets Java compatibility to Java 8
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        // Sets Java compatibility to Java 11
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     signingConfigs {
