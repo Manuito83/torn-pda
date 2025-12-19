@@ -102,12 +102,13 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.7 - Build 599 - 18/12/2025
+    // v3.9.7 - Build 600 - 19/12/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.7'
         ..date = '22 DEC 2025'
         ..features = [
+          "Improved TS chart cache data handling",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed max buy buttons abroad",
           "Fixed axis margin for foreign stocks charts",

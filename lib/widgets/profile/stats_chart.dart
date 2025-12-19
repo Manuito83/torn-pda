@@ -23,6 +23,7 @@ class StatsChart extends StatefulWidget {
   final StatsChartTornStats? statsData;
   final UserController userController;
   final Function callbackStatsUpdate;
+  final bool isCachedData;
 
   StatsChart({
     super.key,
@@ -30,6 +31,7 @@ class StatsChart extends StatefulWidget {
     required this.statsData,
     required this.userController,
     required this.callbackStatsUpdate,
+    this.isCachedData = false,
   });
 
   @override
@@ -45,6 +47,7 @@ class _StatsChartState extends State<StatsChart> {
     bool showBoth = settingsProvider.tornStatsChartShowBoth;
 
     bool isOldData = false;
+    bool isStaleData = false;
     if (widget.statsData?.data != null && widget.statsData!.data!.isNotEmpty) {
       int maxTimestamp = 0;
       for (var element in widget.statsData!.data!) {
@@ -58,6 +61,8 @@ class _StatsChartState extends State<StatsChart> {
         final difference = now.difference(latestDate);
         if (difference.inDays > 30) {
           isOldData = true;
+        } else if (difference.inDays > 5 && widget.isCachedData) {
+          isStaleData = true;
         }
       }
     }
@@ -73,6 +78,25 @@ class _StatsChartState extends State<StatsChart> {
             const SizedBox(width: 5),
             Text(
               "TS sent data older than 1 month",
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.orange[800],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (isStaleData) {
+      warningWidget = Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.warning, size: 12, color: Colors.orange[800]),
+            const SizedBox(width: 5),
+            Text(
+              "Displaying old cached data (> 5 days)",
               style: TextStyle(
                 fontSize: 10,
                 color: Colors.orange[800],
