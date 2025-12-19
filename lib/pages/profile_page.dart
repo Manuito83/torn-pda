@@ -5733,7 +5733,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Future _getStatsChart() async {
-    Future<void> loadFromCacheOrError(String errorMsg) async {
+    Future<void> loadFromCacheOrError(String errorMsg, {bool forceShow = false}) async {
       final savedChart = await Prefs().getTornStatsChartSave();
       if (savedChart.isNotEmpty) {
         setState(() {
@@ -5744,7 +5744,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       } else {
         setState(() {
           String errorStr = errorMsg;
-          if (errorStr.length > 20) {
+          if (!forceShow && errorStr.length > 20) {
             errorStr = '${errorStr.substring(0, 20)}...';
           }
           _statsChartError = "Torn Stats chart error: $errorStr";
@@ -5787,24 +5787,31 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       } else {
         String errorMsg;
-        switch (resp.statusCode) {
-          case 401:
-          case 403:
-            errorMsg = "unauthorized";
-            break;
-          case 404:
-            errorMsg = "server not found";
-            break;
-          case 500:
-          case 502:
-          case 503:
-          case 504:
-            errorMsg = "server error";
-            break;
-          default:
-            errorMsg = "HTTP ${resp.statusCode}";
+        bool forceShow = false;
+        if (resp.statusCode == 404 && resp.body.contains("User not found")) {
+          errorMsg = "User not found. Please check your Torn Stats API Key in Settings > Alternative Keys, "
+              "or disable the Torn Stats chart entirely by using the gear icon at the top of this section";
+          forceShow = true;
+        } else {
+          switch (resp.statusCode) {
+            case 401:
+            case 403:
+              errorMsg = "unauthorized";
+              break;
+            case 404:
+              errorMsg = "server not found";
+              break;
+            case 500:
+            case 502:
+            case 503:
+            case 504:
+              errorMsg = "server error";
+              break;
+            default:
+              errorMsg = "HTTP ${resp.statusCode}";
+          }
         }
-        await loadFromCacheOrError(errorMsg);
+        await loadFromCacheOrError(errorMsg, forceShow: forceShow);
       }
     } catch (e) {
       if (e is TimeoutException) {

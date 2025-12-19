@@ -98,9 +98,11 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     _tornStatsKey(),
                     const SizedBox(height: 15),
                     const SizedBox(height: 40),
+                    /*
                     _tscKey(),
                     const SizedBox(height: 15),
                     const SizedBox(height: 40),
+                    */
                   ],
                 ),
               ),
