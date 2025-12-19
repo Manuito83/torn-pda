@@ -1854,7 +1854,7 @@ class Prefs {
   }
 
   Future<List<String>> getStockTypeFilter() async {
-    return await PrefsDatabase.getStringList(_kStockTypeFilter, List<String>.filled(4, '1'));
+    return await PrefsDatabase.getStringList(_kStockTypeFilter, List<String>.filled(5, '1'));
   }
 
   Future setStockTypeFilter(List<String> value) async {
