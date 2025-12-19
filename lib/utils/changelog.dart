@@ -109,7 +109,9 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '22 DEC 2025'
         ..features = [
           "Foreign Stocks: added option to set a market selling fee for profit calculation",
+          "Foreign Stocks: added filter for OC items",
           "Improved Torn Stats chart cache data handling",
+          "Updated images for new items",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed max buy buttons abroad",
           "Fixed axis margin for foreign stocks charts",

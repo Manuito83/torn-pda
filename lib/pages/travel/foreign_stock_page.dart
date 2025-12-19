@@ -96,7 +96,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   OwnProfileExtended? _profile;
   int _capacity = 1;
 
-  final _filteredTypes = List<bool>.filled(4, true);
+  final _filteredTypes = List<bool>.filled(5, true);
   final _filteredFlags = List<bool>.filled(12, true);
 
   bool _alphabeticalFilter = false;
@@ -150,6 +150,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     'Plushies',
     'Drugs',
     'Others',
+    'OC Items',
   ];
 
   StockSort? _currentSort;
@@ -668,6 +669,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           'images/icons/ic_pill_black_48dp.png',
           width: 25,
           height: 25,
+          color: _themeProvider!.mainText,
+        ),
+        Icon(
+          MdiIcons.fingerprint,
           color: _themeProvider!.mainText,
         ),
         Icon(
@@ -1593,6 +1598,11 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           if (_filteredTypes[2]) {
             return true;
           }
+        case ItemType.MATERIAL:
+        case ItemType.TOOL:
+          if (_filteredTypes[4]) {
+            return true;
+          }
         default:
           if (_filteredTypes[3]) {
             return true;
@@ -1688,7 +1698,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
     if (totalTypesShown == 0) {
       _typesFilteredText = 'NONE';
-    } else if (totalTypesShown == 4) {
+    } else if (totalTypesShown == 5) {
       _typesFilteredText = 'ALL';
     }
 
