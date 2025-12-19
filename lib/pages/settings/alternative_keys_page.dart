@@ -257,6 +257,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
     );
   }
 
+  // ignore: unused_element
   Widget _tscKey() {
     return GetBuilder<UserController>(
       builder: (w) {

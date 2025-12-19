@@ -960,6 +960,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _foreignStockSellingFee = 0;
+  int get foreignStockSellingFee => _foreignStockSellingFee;
+  set changeForeignStockSellingFee(int value) {
+    _foreignStockSellingFee = value;
+    Prefs().setForeignStockSellingFee(_foreignStockSellingFee);
+    notifyListeners();
+  }
+
   var _iconsFiltered = [];
   List<String> get iconsFiltered => _iconsFiltered as List<String>;
   set changeIconsFiltered(List<String> icons) {
@@ -1532,6 +1540,7 @@ class SettingsProvider extends ChangeNotifier {
     _rankedWarsInProfileShowTotalHours = await Prefs().getRankedWarsInProfileShowTotalHours();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
+    _foreignStockSellingFee = await Prefs().getForeignStockSellingFee();
 
     _iconsFiltered = await Prefs().getIconsFiltered();
 

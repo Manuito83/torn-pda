@@ -98,6 +98,9 @@ class Prefs {
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
+
+  // Foreign Stocks
+  final String _kForeignStockSellingFee = "pda_foreignStockSellingFee";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
@@ -3211,6 +3214,14 @@ class Prefs {
 
   Future setStockExchangeInMenu(bool value) async {
     return await PrefsDatabase.setBool(_kStockExchangeInMenu, value);
+  }
+
+  Future<int> getForeignStockSellingFee() async {
+    return await PrefsDatabase.getInt(_kForeignStockSellingFee, 0);
+  }
+
+  Future setForeignStockSellingFee(int value) async {
+    return await PrefsDatabase.setInt(_kForeignStockSellingFee, value);
   }
 
   /// -----------------------------

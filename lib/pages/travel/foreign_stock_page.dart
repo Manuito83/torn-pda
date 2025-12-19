@@ -994,7 +994,13 @@ class ForeignStockPageState extends State<ForeignStockPage> {
 
           if (itemMatch != null) {
             // Calculate value as market_value - cost
-            stock.value = (itemMatch.marketValue ?? 1) - (stock.cost ?? 1);
+            // stock.value = (itemMatch.marketValue ?? 1) - (stock.cost ?? 1);
+            // Apply selling fee
+            double sellPrice = (itemMatch.marketValue ?? 1).toDouble();
+            double feePercent = _settingsProvider!.foreignStockSellingFee.toDouble();
+            double fee = sellPrice * (feePercent / 100.0);
+            double cost = (stock.cost ?? 1).toDouble();
+            stock.value = (sellPrice - fee - cost).round();
 
             // Assign item type based on Torn API data
             stock.itemType = itemMatch.type ?? ItemType.OTHER;
@@ -1817,12 +1823,44 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
+  void _recalculateProfit() {
+    if (_stocksModel.countries == null) return;
+
+    _stocksModel.countries!.forEach((countryKey, countryDetails) {
+      if (countryDetails.stocks == null) return;
+      for (final stock in countryDetails.stocks!) {
+        final itemMatch = _allTornItems?.items?[stock.id!.toString()];
+        if (itemMatch != null) {
+          double sellPrice = (itemMatch.marketValue ?? 1).toDouble();
+          double feePercent = _settingsProvider!.foreignStockSellingFee.toDouble();
+          double fee = sellPrice * (feePercent / 100.0);
+          double cost = (stock.cost ?? 1).toDouble();
+          stock.value = (sellPrice - fee - cost).round();
+
+          stock.profit = (stock.value /
+                  (TravelTimes.travelTimeMinutesOneWay(
+                        ticket: _settingsProvider!.travelTicket,
+                        countryCode: stock.country,
+                      ) *
+                      2 /
+                      60))
+              .round();
+        }
+      }
+    });
+
+    if (_currentSort?.type == StockSortType.profit) {
+      _filteredStocksCards.sort((a, b) => b.profit.compareTo(a.profit));
+    }
+  }
+
   void _onStocksOptionsChanged(
     int newCapacity,
     bool inventoryEnabled,
     bool showArrivalTime,
     bool showBarsCooldownAnalysis,
   ) {
+    _recalculateProfit();
     setState(() {
       _capacity = newCapacity;
       _inventoryEnabled = inventoryEnabled;

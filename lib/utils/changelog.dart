@@ -108,7 +108,8 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.9.7'
         ..date = '22 DEC 2025'
         ..features = [
-          "Improved TS chart cache data handling",
+          "Foreign Stocks: added option to set a market selling fee for profit calculation",
+          "Improved Torn Stats chart cache data handling",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed max buy buttons abroad",
           "Fixed axis margin for foreign stocks charts",
