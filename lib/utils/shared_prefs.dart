@@ -161,6 +161,7 @@ class Prefs {
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
+  final String _kPreventBasketKeyboard = "pda_preventBasketKeyboard";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
@@ -1731,6 +1732,14 @@ class Prefs {
 
   Future setRemoveForeignItemsDetails(bool value) async {
     return await PrefsDatabase.setBool(_kRemoveForeignItemsDetails, value);
+  }
+
+  Future<bool> getPreventBasketKeyboard() async {
+    return await PrefsDatabase.getBool(_kPreventBasketKeyboard, true);
+  }
+
+  Future setPreventBasketKeyboard(bool value) async {
+    return await PrefsDatabase.setBool(_kPreventBasketKeyboard, value);
   }
 
   Future<bool> getRemoveTravelQuickReturnButton() async {

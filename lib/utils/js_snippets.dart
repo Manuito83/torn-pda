@@ -59,8 +59,10 @@ String hideItemInfoJS() {
   ''';
 }
 
-String buyMaxAbroadJS() {
+String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
   return '''
+
+  var preventBasketKeyboard = $preventBasketKeyboard;
 
   function addFillMaxButtons() {
     
@@ -397,6 +399,25 @@ String buyMaxAbroadJS() {
             }
         };
     });
+
+    // 5. PREVENT KEYBOARD ON BASKET CLICK (Vertical Mode)
+    if (preventBasketKeyboard) {
+      const basketButtons = document.querySelectorAll('button[class*="buyIconButton___"]');
+      basketButtons.forEach(btn => {
+          if (btn.dataset.pdaBlurAdded) return;
+          btn.dataset.pdaBlurAdded = 'true';
+          
+          btn.addEventListener('click', (e) => {
+              [50, 150, 300, 500].forEach(delay => {
+                  setTimeout(() => {
+                      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                          document.activeElement.blur();
+                      }
+                  }, delay);
+              });
+          });
+      });
+    }
   }
 
   addFillMaxButtons();

@@ -120,6 +120,7 @@ class ChangeLogState extends State<ChangeLog> {
                 "triggering the system share sheet.\n\n"
                 "Please visit the ./docs section in Github for more information.",
           ),
+          "Added option to prevent keyboard from opening when tapping basket icon abroad (enabled by default)",
           "Updated images for new items",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed max buy buttons abroad",

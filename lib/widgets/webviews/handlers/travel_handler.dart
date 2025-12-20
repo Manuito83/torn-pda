@@ -50,10 +50,11 @@ class TravelHandler {
 
   Future<void> _handleTravelUI() async {
     final shouldHideInfo = await Prefs().getRemoveForeignItemsDetails();
+    final preventBasketKeyboard = await Prefs().getPreventBasketKeyboard();
     if (shouldHideInfo) {
       await webViewController?.evaluateJavascript(source: hideItemInfoJS());
     }
-    await webViewController?.evaluateJavascript(source: buyMaxAbroadJS());
+    await webViewController?.evaluateJavascript(source: buyMaxAbroadJS(preventBasketKeyboard: preventBasketKeyboard));
   }
 
   Future<void> _sendStockInformation(dom.Document document) async {
