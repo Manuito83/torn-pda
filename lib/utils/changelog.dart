@@ -111,6 +111,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Overhauled war target sorting: added smart score weighting, filters and improved hospital time handling",
           "Foreign Stocks: added option to set a market selling fee for profit calculation",
           "Foreign Stocks: added filter for OC items",
+          "Friends: added option to import an entire faction",
           "Improved Torn Stats chart cache data handling",
           "Updated images for new items",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
