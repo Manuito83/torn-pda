@@ -12,6 +12,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/tornstats/tornstats_spies_model.dart';
+import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/models/chaining/war_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_spy_model.dart';
 import 'package:torn_pda/models/faction/faction_model.dart';
@@ -42,6 +43,12 @@ class WarController extends GetxController {
   List<FactionModel> factions = <FactionModel>[];
   List<WarCardDetails> orderedCardsDetails = <WarCardDetails>[];
   WarSortType? currentSort;
+  WarSettings warSettings = WarSettings();
+
+  // Stores the Min/Max Log10 values for the current list of targets
+  // Keys: 'Stats', 'Estimated', 'Str', 'Def', 'Spd', 'Dex'
+  // Values: {'min': 4.5, 'max': 9.2}
+  Map<String, Map<String, double>> attributeRanges = {};
 
   // Filters
   List<String> activeFilters = [];
@@ -344,6 +351,10 @@ class WarController extends GetxController {
 
     // End animation and update
     member.isUpdating = false;
+
+    // Clear cached ranges to force recalculation with new data
+    attributeRanges.clear();
+
     update();
 
     // Avoid hundred of updates when performing a full faction update
@@ -838,6 +849,8 @@ class WarController extends GetxController {
     _statsShareShowEstimatesIfNoSpyAvailable = await Prefs().getStatsShareShowEstimatesIfNoSpyAvailable();
     _statsShareIncludeTargetsWithNoStatsAvailable = await Prefs().getStatsShareIncludeTargetsWithNoStatsAvailable();
 
+    warSettings = await Prefs().getWarSettings();
+
     // Get sorting
     final String targetSort = await Prefs().getWarMembersSort();
     switch (targetSort) {
@@ -885,6 +898,8 @@ class WarController extends GetxController {
         currentSort = WarSortType.travelDistanceDesc;
       case 'travelDistanceAsc':
         currentSort = WarSortType.travelDistanceAsc;
+      case 'smartScore':
+        currentSort = WarSortType.smartScore;
     }
 
     _lastIntegrityCheck = DateTime.fromMillisecondsSinceEpoch(await Prefs().getWarIntegrityCheckTime());
@@ -915,6 +930,7 @@ class WarController extends GetxController {
     Prefs().setCountryFilterInWars(countryFilter);
     Prefs().setTravelingFilterInWars(abroadFilter);
     Prefs().setShowChainWidgetInWars(showChainWidget);
+    Prefs().setWarSettings(warSettings);
 
     // Save sorting
     late String sortToSave;
@@ -961,6 +977,8 @@ class WarController extends GetxController {
         sortToSave = 'travelDistanceDes';
       case WarSortType.travelDistanceAsc:
         sortToSave = 'travelDistanceAsc';
+      case WarSortType.smartScore:
+        sortToSave = 'smartScore';
     }
     Prefs().setWarMembersSort(sortToSave);
   }
@@ -1028,6 +1046,10 @@ class WarController extends GetxController {
       Prefs().setWarIntegrityCheckTime(DateTime.now().millisecondsSinceEpoch);
       savePreferences();
       assessPendingNotifications();
+
+      // Clear cached ranges to force recalculation with new data
+      attributeRanges.clear();
+
       update();
     } finally {
       _integrityChecking = false;
@@ -1254,6 +1276,290 @@ class WarController extends GetxController {
     }
   }
 
+  void calculateAttributeRanges() {
+    List<double> stats = [];
+    List<double> est = [];
+    List<double> str = [];
+    List<double> def = [];
+    List<double> spd = [];
+    List<double> dex = [];
+    List<double> hospital = [];
+
+    // Collect all valid stats
+    for (var faction in factions) {
+      if (faction.members != null) {
+        for (var m in faction.members!.values) {
+          if (m == null) continue;
+
+          // Estimated
+          double e = getMemberEstimatedStats(m);
+          if (e > 0) est.add(e);
+
+          // Total Stats
+          double s = getMemberTotalStats(m);
+          if (s > 0) stats.add(s);
+
+          // Individual
+          if (m.statsStr != null && m.statsStr! > 0) str.add(m.statsStr!.toDouble());
+          if (m.statsDef != null && m.statsDef! > 0) def.add(m.statsDef!.toDouble());
+          if (m.statsSpd != null && m.statsSpd! > 0) spd.add(m.statsSpd!.toDouble());
+          if (m.statsDex != null && m.statsDex! > 0) dex.add(m.statsDex!.toDouble());
+
+          // Hospital Time
+          if (m.status?.state == 'Hospital') {
+            int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+            int remaining = (m.status?.until ?? 0) - now;
+            if (remaining < 0) remaining = 0;
+            hospital.add(remaining.toDouble());
+          } else {
+            hospital.add(0.0);
+          }
+        }
+      }
+    }
+
+    // Calculate Log Range with spread for a given list of stats
+    // Normalize scores between 0.0 and 1.0.
+    Map<String, double> calcRange(List<double> values) {
+      if (values.isEmpty) return {'min': 0, 'max': 10, 'spread': 10, 'count': 0}; // Default fallback
+
+      // We use Log10 to handle the massive difference in stats
+      // We add +1 to avoid log(0) errors
+      var logs = values.map((v) => math.log(v + 1) / math.ln10).toList();
+
+      // Find the lowest and highest log values in the data
+      double minLog = logs.reduce(math.min);
+      double maxLog = logs.reduce(math.max);
+
+      // Spread rule (min 2.0 difference)
+      // If the difference between the strongest and weakest is too small (e.g. everyone has similar stats)
+      // the normalization would be too sensitive (small differences would look huge).
+      // We apply a minimum spread of 2.0 (which corresponds to a 100x difference in raw values)
+      double spread = maxLog - minLog;
+      if (spread < 2.0) {
+        maxLog = minLog + 2.0;
+        spread = 2.0;
+      }
+
+      return {'min': minLog, 'max': maxLog, 'spread': spread, 'count': values.length.toDouble()};
+    }
+
+    attributeRanges['Stats'] = calcRange(stats);
+    attributeRanges['Estimated'] = calcRange(est);
+    attributeRanges['Str'] = calcRange(str);
+    attributeRanges['Def'] = calcRange(def);
+    attributeRanges['Spd'] = calcRange(spd);
+    attributeRanges['Dex'] = calcRange(dex);
+
+    // Hospital - Fixed range 0-100h to match filter and avoid outlier skewing
+    if (hospital.isNotEmpty) {
+      double maxHosp = 360000; // 100 hours
+      double maxLogHosp = math.log(maxHosp + 1) / math.ln10;
+      attributeRanges['Hospital'] = {
+        'min': 0.0,
+        'max': maxLogHosp,
+        'spread': maxLogHosp,
+        'count': hospital.length.toDouble(),
+      };
+    } else {
+      attributeRanges['Hospital'] = {'min': 0, 'max': 10, 'spread': 10, 'count': 0};
+    }
+  }
+
+  double calculateSmartScore(Member member) {
+    return getSmartScoreDetails(member)['total']!;
+  }
+
+  double getMemberTotalStats(Member member) {
+    if (member.statsExactTotal != null && member.statsExactTotal != -1) {
+      return member.statsExactTotal!.toDouble();
+    }
+    return 0.0;
+  }
+
+  static const List<String> estimateCategories = [
+    "< 2k",
+    "2k - 25k",
+    "20k - 250k",
+    "200k - 2.5M",
+    "2M - 25M",
+    "20M - 250M",
+    "> 200M"
+  ];
+
+  double getMemberEstimatedStats(Member member) {
+    return _parseEstimate(member.statsEstimated);
+  }
+
+  int getMemberEstimatedStatsIndex(Member member) {
+    if (member.statsEstimated == null) return -1;
+    return estimateCategories.indexOf(member.statsEstimated!);
+  }
+
+  double _parseEstimate(String? estimate) {
+    if (estimate == null || estimate.isEmpty) return 0.0;
+    switch (estimate) {
+      case "< 2k":
+        return 2000;
+      case "2k - 25k":
+        return 25000;
+      case "20k - 250k":
+        return 250000;
+      case "200k - 2.5M":
+        return 2500000;
+      case "2M - 25M":
+        return 25000000;
+      case "20M - 250M":
+        return 200000000;
+      case "> 200M":
+        return 250000000;
+      default:
+        return 0.0;
+    }
+  }
+
+  Map<String, double> getSmartScoreDetails(Member member) {
+    if (attributeRanges.isEmpty) calculateAttributeRanges();
+    double score = 0.0;
+
+    double calcContribution(double? normalizedVal, double weight) {
+      if (normalizedVal == null) return 0.0; // Unknown is 0 points
+      if (weight < 0) {
+        return (1.0 - normalizedVal) * weight.abs();
+      } else {
+        return normalizedVal * weight;
+      }
+    }
+
+    // Log-MinMax scaling
+    double? calcLogScore(double val, String key) {
+      if (val <= 0) return null;
+      var range = attributeRanges[key];
+
+      // Should not happen if init correctly
+      if (range == null) return 0.0;
+
+      double valLog = math.log(val + 1) / math.ln10;
+      double minLog = range['min']!;
+      double spread = range['spread']!;
+
+      // Clamp to range (just in case)
+      if (valLog < minLog) valLog = minLog;
+      if (valLog > range['max']!) valLog = range['max']!;
+
+      return (valLog - minLog) / spread;
+    }
+
+    // Hospital Time
+    double? hospitalScore;
+    int seconds = 0;
+    bool inHospital = false;
+    if (member.status?.state == 'Hospital') {
+      inHospital = true;
+      int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      seconds = (member.status?.until ?? 0) - now;
+      if (seconds < 0) seconds = 0;
+    }
+
+    // Only calculate score if actually in hospital.
+    // If not in hospital, score is null (0 contribution), so they don't get points for "0 seconds".
+    double hospitalContribution = 0.0;
+    if (inHospital) {
+      hospitalScore = calcLogScore(seconds.toDouble(), 'Hospital');
+      // If calcLogScore returns null (e.g. val <= 0), we treat it as 0.0 normalized (min value)
+      hospitalScore ??= 0.0;
+      hospitalContribution = calcContribution(hospitalScore, warSettings.weightHospitalTime);
+      score += hospitalContribution;
+    } else {
+      // Not in hospital -> No score contribution (Neutral)
+      hospitalScore = null;
+    }
+
+    // Life
+    double? lifeScore;
+    if (member.lifeCurrent != null && member.lifeMaximum != null && member.lifeMaximum! > 0) {
+      lifeScore = member.lifeCurrent! / member.lifeMaximum!;
+    } else {
+      lifeScore = null;
+    }
+    double lifeContribution = calcContribution(lifeScore, warSettings.weightLife);
+    score += lifeContribution;
+
+    // Estimated Stats
+    double? estimatedStatsScore;
+    if (member.statsEstimated != null && member.statsEstimated!.isNotEmpty) {
+      double val = getMemberEstimatedStats(member);
+      if (val > 0) {
+        estimatedStatsScore = calcLogScore(val, 'Estimated');
+      }
+    }
+    double estimatedStatsContribution = calcContribution(estimatedStatsScore, warSettings.weightEstimatedStats);
+    score += estimatedStatsContribution;
+
+    // Spied stats
+    double statsContribution = 0.0;
+    double strContribution = 0.0;
+    double defContribution = 0.0;
+    double spdContribution = 0.0;
+    double dexContribution = 0.0;
+
+    double? statsScore;
+    double totalStatsVal = getMemberTotalStats(member);
+    if (totalStatsVal > 0) {
+      statsScore = calcLogScore(totalStatsVal, 'Stats');
+    }
+    statsContribution = calcContribution(statsScore, warSettings.weightStats);
+    score += statsContribution;
+
+    strContribution =
+        calcContribution(calcLogScore(member.statsStr?.toDouble() ?? 0, 'Str'), warSettings.weightStrength);
+    defContribution =
+        calcContribution(calcLogScore(member.statsDef?.toDouble() ?? 0, 'Def'), warSettings.weightDefense);
+    spdContribution = calcContribution(calcLogScore(member.statsSpd?.toDouble() ?? 0, 'Spd'), warSettings.weightSpeed);
+    dexContribution =
+        calcContribution(calcLogScore(member.statsDex?.toDouble() ?? 0, 'Dex'), warSettings.weightDexterity);
+
+    score += strContribution + defContribution + spdContribution + dexContribution;
+
+    // Fair Fight
+    // Normalize 0.0 (1.0 FF) to 1.0 (3.0 FF)
+    double? ffScore;
+    if (member.fairFight != null && member.fairFight! >= 1.0) {
+      double ff = member.fairFight!;
+      if (ff < 1.0) ff = 1.0;
+      if (ff > 3.0) ff = 3.0;
+      // Map 1.0->0.0, 3.0->1.0
+      ffScore = (ff - 1.0) / 2.0;
+    }
+    double ffContribution = calcContribution(ffScore, warSettings.weightFairFight);
+    score += ffContribution;
+
+    // Level
+    // Normalize: 0.0 (Lvl 1) to 1.0 (Lvl 100)
+    double? levelScore;
+    if (member.level != null) {
+      double lvl = member.level!.toDouble();
+      if (lvl > 100) lvl = 100;
+      levelScore = lvl / 100.0;
+    }
+    double levelContribution = calcContribution(levelScore, warSettings.weightLevel);
+    score += levelContribution;
+
+    return {
+      'total': score,
+      'Hospital': hospitalContribution,
+      'Life': lifeContribution,
+      'Stats': statsContribution,
+      'Estimated Stats': estimatedStatsContribution,
+      'Str': strContribution,
+      'Def': defContribution,
+      'Spd': spdContribution,
+      'Dex': dexContribution,
+      'Fair Fight': ffContribution,
+      'Level': levelContribution,
+    };
+  }
+
   // Sorting function for MemberModel lists to be used in shareStats
   int compareMembers(Member a, Member b, WarSortType sortType) {
     // Get the notes controller once for all note/color related operations
@@ -1283,8 +1589,35 @@ class WarController extends GetxController {
       case WarSortType.lifeAsc:
         return a.lifeCurrent!.compareTo(b.lifeCurrent!);
       case WarSortType.hospitalDes:
+        // Apply "Okay at top" logic if enabled
+        if (warSettings.okayTargetsAtTop) {
+          bool aIsOkay = (a.status?.state ?? 'Okay') == 'Okay';
+          bool bIsOkay = (b.status?.state ?? 'Okay') == 'Okay';
+          if (aIsOkay && !bIsOkay) return -1;
+          if (!aIsOkay && bIsOkay) return 1;
+
+          if (aIsOkay && bIsOkay) {
+            return compareMembers(a, b, warSettings.secondarySortForOkay);
+          }
+        }
         return b.hospitalSort!.compareTo(a.hospitalSort!);
       case WarSortType.hospitalAsc:
+        bool aIsOkay = (a.status?.state ?? 'Okay') == 'Okay';
+        bool bIsOkay = (b.status?.state ?? 'Okay') == 'Okay';
+
+        if (warSettings.okayTargetsAtTop) {
+          if (aIsOkay && !bIsOkay) return -1;
+          if (!aIsOkay && bIsOkay) return 1;
+        } else {
+          if (aIsOkay && !bIsOkay) return 1;
+          if (!aIsOkay && bIsOkay) return -1;
+        }
+
+        if (aIsOkay && bIsOkay) {
+          return compareMembers(a, b, warSettings.secondarySortForOkay);
+        }
+
+        // If both are hospitalized, sort by time
         if (a.hospitalSort! > 0 && b.hospitalSort! > 0) {
           return a.hospitalSort!.compareTo(b.hospitalSort!);
         } else if (a.hospitalSort! > 0) {
@@ -1295,9 +1628,21 @@ class WarController extends GetxController {
           return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
         }
       case WarSortType.statsDes:
-        return b.statsSort!.compareTo(a.statsSort!);
+        return getMemberTotalStats(b).compareTo(getMemberTotalStats(a));
       case WarSortType.statsAsc:
-        return a.statsSort!.compareTo(b.statsSort!);
+        return getMemberTotalStats(a).compareTo(getMemberTotalStats(b));
+      case WarSortType.smartScore:
+        // Ensure ranges are calculated before sorting
+        if (attributeRanges.isEmpty) {
+          calculateAttributeRanges();
+        }
+        // We do NOT apply "Okay at top" logic here anymore, as requested.
+        // Smart Score should be pure score sorting.
+        int scoreComparison = calculateSmartScore(b).compareTo(calculateSmartScore(a)); // Descending score
+        if (scoreComparison == 0) {
+          return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
+        }
+        return scoreComparison;
       case WarSortType.onlineDes:
         return b.lastAction!.timestamp!.compareTo(a.lastAction!.timestamp!);
       case WarSortType.onlineAsc:

@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.9.7'
         ..date = '22 DEC 2025'
         ..features = [
+          "Overhauled war target sorting: added smart score weighting, filters and improved hospital time handling",
           "Foreign Stocks: added option to set a market selling fee for profit calculation",
           "Foreign Stocks: added filter for OC items",
           "Improved Torn Stats chart cache data handling",

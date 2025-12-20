@@ -46,6 +46,8 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/models/chaining/war_settings.dart';
+import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/widgets/alerts/discreet_info.dart';
 import 'package:torn_pda/widgets/settings/api_auth_widget.dart';
@@ -2727,6 +2729,78 @@ class SettingsPageState extends State<SettingsPage> {
                   fontStyle: FontStyle.italic,
                 ),
               )
+            ],
+          ),
+        ),
+      ),
+      SearchableRow(
+        label: "Reset Chaining Settings",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Reset Chaining Settings")),
+                  ElevatedButton(
+                    child: const Text("RESET", style: TextStyle(color: Colors.white)),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Reset Chaining Settings"),
+                            content: const Text("This will reset all your War/Chaining sorting preferences, "
+                                "smart score weights, and filters to their default values."),
+                            actions: [
+                              TextButton(
+                                child: const Text("Cancel"),
+                                onPressed: () => Navigator.of(context).pop(),
+                              ),
+                              TextButton(
+                                child: const Text("Reset", style: TextStyle(color: Colors.red)),
+                                onPressed: () async {
+                                  Navigator.of(context).pop();
+                                  var defaultSettings = WarSettings();
+                                  await Prefs().setWarSettings(defaultSettings);
+
+                                  try {
+                                    if (Get.isRegistered<WarController>()) {
+                                      var warController = Get.find<WarController>();
+                                      warController.warSettings = defaultSettings;
+                                      warController.update();
+                                    }
+                                  } catch (e) {
+                                    //
+                                  }
+
+                                  BotToast.showText(
+                                    text: "Chaining settings reset to defaults",
+                                    textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                                    contentColor: Colors.green,
+                                    duration: const Duration(seconds: 3),
+                                  );
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Text(
+                "If you experience issues with sorting or filters in the War page, use this button to restore default values.",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
             ],
           ),
         ),

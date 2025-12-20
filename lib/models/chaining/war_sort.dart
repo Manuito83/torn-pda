@@ -20,6 +20,7 @@ enum WarSortType {
   bounty,
   travelDistanceAsc,
   travelDistanceDesc,
+  smartScore,
 }
 
 class WarSort {
@@ -70,6 +71,8 @@ class WarSort {
         description = 'Sort by travel distance (des)';
       case WarSortType.travelDistanceAsc:
         description = 'Sort by travel distance (asc)';
+      case WarSortType.smartScore:
+        description = 'Sort by Smart Score';
       default:
         description = 'Sort by respect (des)';
         break;

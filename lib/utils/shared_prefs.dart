@@ -7,6 +7,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
@@ -53,6 +54,7 @@ class Prefs {
   final String _kTravelingFilterInWars = "pda_travelingFilterStatusInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
+  final String _kWarSettings = "pda_warSettings";
   final String _kRankedWarSortPerTab = "pda_rankedWarSortPerTab";
   final String _kYataSpies = "pda_yataSpies";
   final String _kYataSpiesTime = "pda_yataSpiesTime";
@@ -878,6 +880,22 @@ class Prefs {
 
   Future setWarMembersSort(String value) async {
     return await PrefsDatabase.setString(_kWarMembersSort, value);
+  }
+
+  Future<WarSettings> getWarSettings() async {
+    String jsonString = await PrefsDatabase.getString(_kWarSettings, '');
+    if (jsonString.isEmpty) {
+      return WarSettings();
+    }
+    try {
+      return WarSettings.fromJson(jsonDecode(jsonString));
+    } catch (e) {
+      return WarSettings();
+    }
+  }
+
+  Future setWarSettings(WarSettings value) async {
+    return await PrefsDatabase.setString(_kWarSettings, jsonEncode(value.toJson()));
   }
 
   Future<String> getRankerWarSortPerTab() async {
