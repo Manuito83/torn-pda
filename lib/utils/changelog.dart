@@ -113,6 +113,13 @@ class ChangeLogState extends State<ChangeLog> {
           "Foreign Stocks: added filter for OC items",
           "Friends: added option to import an entire faction",
           "Improved Torn Stats chart cache data handling",
+          ComplexFeature(
+            "Added browser handler to share files from user scripts (see details)",
+            explanation: "The new handler allows web content / user scripts to share files "
+                "(like CSVs or images) generated within the browser to the native side of the app, "
+                "triggering the system share sheet.\n\n"
+                "Please visit the ./docs section in Github for more information.",
+          ),
           "Updated images for new items",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed max buy buttons abroad",

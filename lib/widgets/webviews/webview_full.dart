@@ -1336,6 +1336,8 @@ class WebViewFullState extends State<WebViewFull>
               webview: webViewController!,
               exitFullScreenCallback: _exitFullScreenFromJS,
             );
+
+            WebviewHandlers.addShareFileHandler(webview: webViewController!, context: context);
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
