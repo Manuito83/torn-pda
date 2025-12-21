@@ -96,6 +96,12 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   OwnProfileExtended? _profile;
   int _capacity = 1;
 
+  // Filter types indices:
+  // 0: Flowers
+  // 1: Plushies
+  // 2: Drugs
+  // 3: Others
+  // 4: OC Items (Added Dec 2025, v3.10.0)
   final _filteredTypes = List<bool>.filled(5, true);
   final _filteredFlags = List<bool>.filled(12, true);
 
@@ -680,15 +686,22 @@ class ForeignStockPageState extends State<ForeignStockPage> {
           color: _themeProvider!.mainText,
         ),
       ].asMap().entries.map((widget) {
+        // Map visual index to data index
+        // Visual: 0(F), 1(P), 2(D), 3(OC), 4(Others)
+        // Data:   0(F), 1(P), 2(D), 4(OC), 3(Others)
+        int dataIndex = widget.key;
+        if (widget.key == 3) dataIndex = 4;
+        if (widget.key == 4) dataIndex = 3;
+
         return ToggleButtons(
           constraints: const BoxConstraints(minWidth: 30.0),
           highlightColor: Colors.orange,
           selectedBorderColor: Colors.green,
-          isSelected: [_filteredTypes[widget.key]],
+          isSelected: [_filteredTypes[dataIndex]],
           onPressed: (_) {
             setState(() {
               // Any item type state change is handled here
-              _filteredTypes[widget.key] = !_filteredTypes[widget.key];
+              _filteredTypes[dataIndex] = !_filteredTypes[dataIndex];
             });
 
             // Saving to shared preferences
@@ -1689,7 +1702,9 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     _typesFilteredText = '';
     bool firstType = true;
     int totalTypesShown = 0;
-    for (var i = 0; i < _filteredTypes.length; i++) {
+    // Visual order: Flowers(0), Plushies(1), Drugs(2), OC Items(4), Others(3)
+    final visualOrder = [0, 1, 2, 4, 3];
+    for (var i in visualOrder) {
       if (_filteredTypes[i]) {
         _typesFilteredText += firstType ? _typeCodes[i] : ', ${_typeCodes[i]}';
         firstType = false;
@@ -1764,9 +1779,21 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     }
     _alphabeticalFilter = await Prefs().getCountriesAlphabeticalFilter();
 
-    final typesStrings = await Prefs().getStockTypeFilter();
+    var typesStrings = await Prefs().getStockTypeFilter();
+
     for (var i = 0; i < typesStrings.length; i++) {
-      typesStrings[i] == '0' ? _filteredTypes[i] = false : _filteredTypes[i] = true;
+      if (i < _filteredTypes.length) {
+        typesStrings[i] == '0' ? _filteredTypes[i] = false : _filteredTypes[i] = true;
+      }
+    }
+
+    // TODO: Remove in future versions
+    // Valid in v3.10.0 so that existing users get the new OC filter enabled by default
+    // and don't miss items because they don't realize a new filter was added
+    //
+    // Ensure the new OC filter is enabled by default for existing users
+    if (typesStrings.length < 5) {
+      _filteredTypes[4] = true;
     }
 
     final sortString = await Prefs().getStockSort();
