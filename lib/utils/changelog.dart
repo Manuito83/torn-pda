@@ -102,11 +102,11 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.7 - Build 600 - 20/12/2025
+    // v3.10.0 - Build 601 - 21/12/2025
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.9.7'
-        ..date = '22 DEC 2025'
+        ..version = 'Torn PDA v3.10.0'
+        ..date = '26 DEC 2025'
         ..features = [
           "Overhauled war target sorting: added smart score weighting, filters and improved hospital time handling",
           "Foreign Stocks: added option to set a market selling fee for profit calculation",
