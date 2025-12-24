@@ -570,6 +570,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _preventBasketKeyboard = true;
+  bool get preventBasketKeyboard => _preventBasketKeyboard;
+  set preventBasketKeyboard(bool value) {
+    _preventBasketKeyboard = value;
+    Prefs().setPreventBasketKeyboard(_preventBasketKeyboard);
+    notifyListeners();
+  }
+
   var _removeTravelQuickReturnButton = false;
   bool get removeTravelQuickReturnButton => _removeTravelQuickReturnButton;
   set removeTravelQuickReturnButton(bool value) {
@@ -957,6 +965,14 @@ class SettingsProvider extends ChangeNotifier {
   set changeStockExchangeInMenu(bool choice) {
     _stockExchangeInMenu = choice;
     Prefs().setStockExchangeInMenu(_stockExchangeInMenu);
+    notifyListeners();
+  }
+
+  var _foreignStockSellingFee = 0;
+  int get foreignStockSellingFee => _foreignStockSellingFee;
+  set changeForeignStockSellingFee(int value) {
+    _foreignStockSellingFee = value;
+    Prefs().setForeignStockSellingFee(_foreignStockSellingFee);
     notifyListeners();
   }
 
@@ -1434,6 +1450,7 @@ class SettingsProvider extends ChangeNotifier {
 
     _removeAirplane = await Prefs().getRemoveAirplane();
     _removeForeignItemsDetails = await Prefs().getRemoveForeignItemsDetails();
+    _preventBasketKeyboard = await Prefs().getPreventBasketKeyboard();
     _removeTravelQuickReturnButton = await Prefs().getRemoveTravelQuickReturnButton();
 
     _extraPlayerInformation = await Prefs().getExtraPlayerInformation();
@@ -1532,6 +1549,7 @@ class SettingsProvider extends ChangeNotifier {
     _rankedWarsInProfileShowTotalHours = await Prefs().getRankedWarsInProfileShowTotalHours();
 
     _stockExchangeInMenu = await Prefs().getStockExchangeInMenu();
+    _foreignStockSellingFee = await Prefs().getForeignStockSellingFee();
 
     _iconsFiltered = await Prefs().getIconsFiltered();
 

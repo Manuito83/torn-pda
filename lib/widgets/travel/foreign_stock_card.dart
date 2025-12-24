@@ -519,7 +519,11 @@ class ForeignStockCardState extends State<ForeignStockCard> {
                     width: 600,
                     child: LineChart(_mainChartData()),
                   ),
-                  SizedBox(height: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 60 : 40),
+                  SizedBox(
+                      height: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ||
+                              _settingsProvider.currentTimeZone == TimeZoneSetting.tornTime
+                          ? 60
+                          : 40),
                   Text(
                     // Only include more than 0 per hour and
                     (_depletionTrendPerSecond * 3600).floor() > 0 && _depletionTrendPerSecond < 86400
@@ -1671,7 +1675,10 @@ class ForeignStockCardState extends State<ForeignStockCard> {
               return Transform.rotate(
                 angle: radians,
                 child: SizedBox(
-                  width: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ? 120 : 80,
+                  width: _settingsProvider.currentTimeFormat == TimeFormatSetting.h12 ||
+                          _settingsProvider.currentTimeZone == TimeZoneSetting.tornTime
+                      ? 120
+                      : 80,
                   child: Text(
                     _timeFormatter(date)!,
                     style: myStyle,
@@ -1685,7 +1692,7 @@ class ForeignStockCardState extends State<ForeignStockCard> {
           sideTitles: SideTitles(
             showTitles: true,
             interval: interval,
-            reservedSize: 20,
+            reservedSize: 35,
             getTitlesWidget: (yValue, titleMeta) {
               if (maxY! > 1000) {
                 return Text(

@@ -7,6 +7,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
@@ -53,6 +54,7 @@ class Prefs {
   final String _kTravelingFilterInWars = "pda_travelingFilterStatusInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
+  final String _kWarSettings = "pda_warSettings";
   final String _kRankedWarSortPerTab = "pda_rankedWarSortPerTab";
   final String _kYataSpies = "pda_yataSpies";
   final String _kYataSpiesTime = "pda_yataSpiesTime";
@@ -98,6 +100,9 @@ class Prefs {
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
+
+  // Foreign Stocks
+  final String _kForeignStockSellingFee = "pda_foreignStockSellingFee";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
@@ -156,6 +161,7 @@ class Prefs {
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
+  final String _kPreventBasketKeyboard = "pda_preventBasketKeyboard";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
@@ -875,6 +881,22 @@ class Prefs {
 
   Future setWarMembersSort(String value) async {
     return await PrefsDatabase.setString(_kWarMembersSort, value);
+  }
+
+  Future<WarSettings> getWarSettings() async {
+    String jsonString = await PrefsDatabase.getString(_kWarSettings, '');
+    if (jsonString.isEmpty) {
+      return WarSettings();
+    }
+    try {
+      return WarSettings.fromJson(jsonDecode(jsonString));
+    } catch (e) {
+      return WarSettings();
+    }
+  }
+
+  Future setWarSettings(WarSettings value) async {
+    return await PrefsDatabase.setString(_kWarSettings, jsonEncode(value.toJson()));
   }
 
   Future<String> getRankerWarSortPerTab() async {
@@ -1712,6 +1734,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kRemoveForeignItemsDetails, value);
   }
 
+  Future<bool> getPreventBasketKeyboard() async {
+    return await PrefsDatabase.getBool(_kPreventBasketKeyboard, true);
+  }
+
+  Future setPreventBasketKeyboard(bool value) async {
+    return await PrefsDatabase.setBool(_kPreventBasketKeyboard, value);
+  }
+
   Future<bool> getRemoveTravelQuickReturnButton() async {
     return await PrefsDatabase.getBool(_kRemoveTravelQuickReturnButton, false);
   }
@@ -1851,7 +1881,7 @@ class Prefs {
   }
 
   Future<List<String>> getStockTypeFilter() async {
-    return await PrefsDatabase.getStringList(_kStockTypeFilter, List<String>.filled(4, '1'));
+    return await PrefsDatabase.getStringList(_kStockTypeFilter, List<String>.filled(5, '1'));
   }
 
   Future setStockTypeFilter(List<String> value) async {
@@ -3211,6 +3241,14 @@ class Prefs {
 
   Future setStockExchangeInMenu(bool value) async {
     return await PrefsDatabase.setBool(_kStockExchangeInMenu, value);
+  }
+
+  Future<int> getForeignStockSellingFee() async {
+    return await PrefsDatabase.getInt(_kForeignStockSellingFee, 0);
+  }
+
+  Future setForeignStockSellingFee(int value) async {
+    return await PrefsDatabase.setInt(_kForeignStockSellingFee, value);
   }
 
   /// -----------------------------

@@ -102,6 +102,32 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.10.0 - Build 601 - 21/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.10.0'
+        ..date = '26 DEC 2025'
+        ..features = [
+          "Overhauled war target sorting: added smart score weighting, filters and improved hospital time handling",
+          "Foreign Stocks: added option to set a market selling fee for profit calculation",
+          "Foreign Stocks: added filter for OC items",
+          "Friends: added option to import an entire faction",
+          "Improved Torn Stats chart cache data handling",
+          ComplexFeature(
+            "Added browser handler to share files from user scripts (see details)",
+            explanation: "The new handler allows web content / user scripts to share files "
+                "(like CSVs or images) generated within the browser to the native side of the app, "
+                "triggering the system share sheet.\n\n"
+                "Please visit the ./docs section in Github for more information.",
+          ),
+          "Added option to prevent keyboard from opening when tapping basket icon abroad (enabled by default)",
+          "Updated images for new items",
+          "Fixed Foreign Stocks data submission to YATA and Prometheus",
+          "Fixed max buy buttons abroad",
+          "Fixed axis margin for foreign stocks charts",
+        ],
+    );
+
     // v3.9.6 - Build 598 - 13/12/2025
     itemList.add(
       ChangeLogItem()

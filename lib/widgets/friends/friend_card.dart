@@ -171,10 +171,27 @@ class FriendCardState extends State<FriendCard> {
                         Text(
                           'Lvl ${_friend!.level}',
                         ),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 15),
-                          child: _factionIcon(),
-                        ),
+                        if (_friend!.hasFaction!)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 15),
+                            child: Row(
+                              children: [
+                                _factionIcon(),
+                                const SizedBox(width: 6),
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 100),
+                                  child: Text(
+                                    _friend!.faction!.factionName ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         Padding(
                           padding: const EdgeInsets.only(left: 10),
                           child: _companyIcon(),

@@ -30,8 +30,6 @@ class FriendsPageState extends State<FriendsPage> {
   final _searchController = TextEditingController();
   final _addIdController = TextEditingController();
 
-  final _addFormKey = GlobalKey<FormState>();
-
   // For appBar search
   Icon _searchIcon = const Icon(Icons.search);
   Widget _appBarText = const Text("Friends");
@@ -283,6 +281,42 @@ class FriendsPageState extends State<FriendsPage> {
           },
         ),
         IconButton(
+          icon: const Icon(Icons.delete_outline),
+          onPressed: () async {
+            final bool? confirm = await showDialog<bool>(
+              context: context,
+              builder: (dialogContext) => AlertDialog(
+                title: const Text('Wipe friends list'),
+                content: const Text('This will remove all friends. Are you sure?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(true),
+                    child: const Text('Wipe'),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm == true) {
+              _friendsProvider.wipeAllFriends();
+              BotToast.showText(
+                text: 'Friends list wiped',
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.orange.shade700,
+                duration: const Duration(seconds: 3),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            }
+          },
+        ),
+        IconButton(
           icon: const Icon(Icons.save),
           onPressed: () {
             Navigator.push(
@@ -301,155 +335,417 @@ class FriendsPageState extends State<FriendsPage> {
   Future dispose() async {
     _addIdController.dispose();
     _searchController.dispose();
+    _focusSearch.dispose();
     super.dispose();
   }
 
   Future<void> _showAddDialog(BuildContext _) {
     final friendsProvider = Provider.of<FriendsProvider>(context, listen: false);
+
+    final addFriendFormKey = GlobalKey<FormState>();
+    final addFactionFormKey = GlobalKey<FormState>();
+    final factionIdController = TextEditingController();
+
+    bool addFromUserId = false;
+    bool addingFriendActive = false;
+    bool addingFactionActive = false;
+
+    String importingName = '';
+    int importingCount = 0;
+    int importingTotal = 0;
+
     return showDialog<void>(
       context: _,
       barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0.0,
-          backgroundColor: Colors.transparent,
-          content: SingleChildScrollView(
-            child: Stack(
-              children: <Widget>[
-                SingleChildScrollView(
-                  child: Container(
-                    padding: const EdgeInsets.only(
-                      top: 45,
-                      bottom: 16,
+      builder: (BuildContext dialogContext) {
+        return StatefulBuilder(
+          builder: (sbContext, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              elevation: 0.0,
+              backgroundColor: Colors.transparent,
+              content: SingleChildScrollView(
+                child: Stack(
+                  children: <Widget>[
+                    SingleChildScrollView(
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(dialogContext).size.height * 0.75,
+                        ),
+                        padding: const EdgeInsets.only(
+                          top: 45,
+                          bottom: 16,
+                          left: 16,
+                          right: 16,
+                        ),
+                        margin: const EdgeInsets.only(top: 30),
+                        decoration: BoxDecoration(
+                          color: _themeProvider.secondBackground,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10.0,
+                              offset: Offset(0.0, 10.0),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Text(
+                              addingFactionActive ? 'Importing friends' : 'Add to Friends',
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                            const SizedBox(height: 10),
+                            // SECTION 1: Individual friend
+                            if (!addingFactionActive) ...[
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Individual',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Form(
+                                key: addFriendFormKey,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    TextFormField(
+                                      enabled: !addingFriendActive,
+                                      style: const TextStyle(fontSize: 14),
+                                      controller: _addIdController,
+                                      maxLength: 10,
+                                      minLines: 1,
+                                      maxLines: 2,
+                                      keyboardType: TextInputType.number,
+                                      decoration: const InputDecoration(
+                                        counterText: '',
+                                        border: OutlineInputBorder(),
+                                        labelText: 'Insert friend ID',
+                                      ),
+                                      validator: (value) {
+                                        if (value!.isEmpty) {
+                                          return 'Cannot be empty!';
+                                        }
+                                        final n = num.tryParse(value);
+                                        if (n == null) {
+                                          return '$value is not a valid ID!';
+                                        }
+                                        _addIdController.text = value.trim();
+                                        return null;
+                                      },
+                                    ),
+                                    const SizedBox(height: 10),
+                                    if (addingFriendActive)
+                                      const Padding(
+                                        padding: EdgeInsets.only(bottom: 6),
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        TextButton(
+                                          child: const Text('Add'),
+                                          onPressed: addingFriendActive
+                                              ? null
+                                              : () async {
+                                                  if (addFriendFormKey.currentState!.validate()) {
+                                                    setDialogState(() {
+                                                      addingFriendActive = true;
+                                                    });
+
+                                                    final String inputId = _addIdController.text;
+                                                    _addIdController.text = '';
+                                                    final AddFriendResult tryAddFriend =
+                                                        await friendsProvider.addFriend(inputId);
+
+                                                    if (tryAddFriend.success) {
+                                                      BotToast.showText(
+                                                        text:
+                                                            'Added ${tryAddFriend.friendName} [${tryAddFriend.friendId}]',
+                                                        textStyle: const TextStyle(
+                                                          fontSize: 14,
+                                                          color: Colors.white,
+                                                        ),
+                                                        contentColor: Colors.green,
+                                                        duration: const Duration(seconds: 3),
+                                                        contentPadding: const EdgeInsets.all(10),
+                                                      );
+                                                    } else {
+                                                      BotToast.showText(
+                                                        text:
+                                                            'Error adding $inputId. ${tryAddFriend.errorReason ?? ''}',
+                                                        textStyle: const TextStyle(
+                                                          fontSize: 14,
+                                                          color: Colors.white,
+                                                        ),
+                                                        contentColor: Colors.red,
+                                                        duration: const Duration(seconds: 3),
+                                                        contentPadding: const EdgeInsets.all(10),
+                                                      );
+                                                    }
+
+                                                    if (sbContext.mounted) {
+                                                      setDialogState(() {
+                                                        addingFriendActive = false;
+                                                      });
+                                                    }
+                                                  }
+                                                },
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 14),
+                              Divider(color: Colors.grey[500]),
+                              const SizedBox(height: 14),
+                            ],
+
+                            // SECTION 2: Import faction members
+                            if (!addingFactionActive) ...[
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'From faction',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                'Press the icon to the right to switch between faction ID or player ID input',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontStyle: FontStyle.italic,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                            ],
+                            Form(
+                              key: addFactionFormKey,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (!addingFactionActive)
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: TextFormField(
+                                            style: const TextStyle(fontSize: 14),
+                                            controller: factionIdController,
+                                            maxLength: 10,
+                                            minLines: 1,
+                                            maxLines: 2,
+                                            keyboardType: TextInputType.number,
+                                            decoration: InputDecoration(
+                                              counterText: '',
+                                              border: const OutlineInputBorder(),
+                                              labelText: !addFromUserId ? 'Insert faction ID' : 'Insert user ID',
+                                            ),
+                                            validator: (value) {
+                                              if (value!.isEmpty) {
+                                                return 'Cannot be empty!';
+                                              }
+                                              final n = num.tryParse(value);
+                                              if (n == null) {
+                                                return '$value is not a valid ID!';
+                                              }
+                                              factionIdController.text = value.trim();
+                                              return null;
+                                            },
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: addFromUserId
+                                              ? Image.asset(
+                                                  'images/icons/faction.png',
+                                                  color: _themeProvider.mainText,
+                                                  width: 16,
+                                                )
+                                              : const Icon(Icons.person),
+                                          onPressed: () {
+                                            setDialogState(() {
+                                              addFromUserId = !addFromUserId;
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  const SizedBox(height: 10),
+                                  if (addingFactionActive)
+                                    Padding(
+                                      padding: const EdgeInsets.only(bottom: 10),
+                                      child: Column(
+                                        children: [
+                                          LinearProgressIndicator(
+                                            value: importingTotal > 0 ? importingCount / importingTotal : null,
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Text(
+                                            importingName.startsWith('API Limit')
+                                                ? importingName
+                                                : 'Imported: $importingName',
+                                            style: const TextStyle(fontSize: 12),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            '$importingCount / $importingTotal',
+                                            style: const TextStyle(fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: <Widget>[
+                                      TextButton(
+                                        child: Text(addingFactionActive ? 'Cancel' : 'Import'),
+                                        onPressed: () async {
+                                          if (addingFactionActive) {
+                                            friendsProvider.cancelImport();
+                                            return;
+                                          }
+
+                                          if (addFactionFormKey.currentState!.validate()) {
+                                            setDialogState(() {
+                                              addingFactionActive = true;
+                                              importingName = 'Fetching...';
+                                              importingCount = 0;
+                                              importingTotal = 0;
+                                            });
+
+                                            final FocusScopeNode currentFocus = FocusScope.of(context);
+                                            if (!currentFocus.hasPrimaryFocus) {
+                                              currentFocus.unfocus();
+                                            }
+
+                                            final String inputId = factionIdController.text;
+                                            factionIdController.text = '';
+
+                                            final result = await friendsProvider.addFriendsFromFaction(
+                                              inputId: inputId,
+                                              fromUserId: addFromUserId,
+                                              onProgress: (name, count, total) {
+                                                if (sbContext.mounted) {
+                                                  setDialogState(() {
+                                                    importingName = name;
+                                                    importingCount = count;
+                                                    importingTotal = total;
+                                                  });
+                                                }
+                                              },
+                                            );
+
+                                            Color messageColor = Colors.green;
+                                            String message = '';
+
+                                            if (!result.success) {
+                                              // If cancelled, we might still have some success
+                                              if (result.added > 0 || result.alreadyExisting > 0) {
+                                                messageColor = Colors.orange[700]!;
+                                                message = 'Import cancelled/finished with partial results.\n'
+                                                    'Added: ${result.added}\n'
+                                                    'Existing: ${result.alreadyExisting}';
+                                              } else {
+                                                messageColor = Colors.red;
+                                                message = 'Error importing members. ${result.errorReason ?? ''}';
+                                              }
+                                            } else {
+                                              if (result.errors > 0) {
+                                                messageColor = Colors.orange[700]!;
+                                              }
+
+                                              final namePart =
+                                                  (result.factionName ?? '').isNotEmpty ? '${result.factionName} ' : '';
+                                              final idPart =
+                                                  (result.factionId ?? '').isNotEmpty ? '[${result.factionId}]' : '';
+                                              message = 'Imported ${result.added} members into Friends\n'
+                                                  'Already existed: ${result.alreadyExisting}\n'
+                                                  'Errors: ${result.errors}\n\n'
+                                                  '$namePart$idPart';
+                                            }
+
+                                            BotToast.showText(
+                                              clickClose: true,
+                                              text: message,
+                                              textStyle: const TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.white,
+                                              ),
+                                              contentColor: messageColor,
+                                              duration: const Duration(seconds: 5),
+                                              contentPadding: const EdgeInsets.all(10),
+                                            );
+
+                                            if (sbContext.mounted) {
+                                              setDialogState(() {
+                                                addingFactionActive = false;
+                                              });
+                                            }
+                                          }
+                                        },
+                                      ),
+                                      TextButton(
+                                        child: const Text('Close'),
+                                        onPressed: () {
+                                          if (addingFactionActive) {
+                                            friendsProvider.cancelImport();
+                                          }
+                                          Navigator.of(dialogContext).pop();
+                                          _addIdController.text = '';
+                                          factionIdController.text = '';
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
                       left: 16,
                       right: 16,
-                    ),
-                    margin: const EdgeInsets.only(top: 30),
-                    decoration: BoxDecoration(
-                      color: _themeProvider.secondBackground,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10.0,
-                          offset: Offset(0.0, 10.0),
-                        ),
-                      ],
-                    ),
-                    child: Form(
-                      key: _addFormKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min, // To make the card compact
-                        children: <Widget>[
-                          TextFormField(
-                            style: const TextStyle(fontSize: 14),
-                            controller: _addIdController,
-                            maxLength: 10,
-                            minLines: 1,
-                            maxLines: 2,
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              counterText: "",
-                              border: OutlineInputBorder(),
-                              labelText: 'Insert friend ID',
-                            ),
-                            validator: (value) {
-                              if (value!.isEmpty) {
-                                return "Cannot be empty!";
-                              }
-                              final n = num.tryParse(value);
-                              if (n == null) {
-                                return '$value is not a valid ID!';
-                              }
-                              _addIdController.text = value.trim();
-                              return null;
-                            },
+                      child: CircleAvatar(
+                        radius: 26,
+                        backgroundColor: _themeProvider.secondBackground,
+                        child: CircleAvatar(
+                          backgroundColor: _themeProvider.mainText,
+                          radius: 22,
+                          child: const SizedBox(
+                            height: 28,
+                            width: 28,
+                            child: Icon(Icons.people),
                           ),
-                          const SizedBox(height: 16.0),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: <Widget>[
-                              TextButton(
-                                child: const Text("Add"),
-                                onPressed: () async {
-                                  if (_addFormKey.currentState!.validate()) {
-                                    // Get rid of dialog first, so that it can't
-                                    // be pressed twice
-                                    Navigator.of(context).pop();
-                                    // Copy controller's text ot local variable
-                                    // early and delete the global, so that text
-                                    // does not appear again in case of failure
-                                    final inputId = _addIdController.text;
-                                    _addIdController.text = '';
-                                    final AddFriendResult tryAddFriend = await friendsProvider.addFriend(inputId);
-                                    if (tryAddFriend.success) {
-                                      BotToast.showText(
-                                        text: 'Added ${tryAddFriend.friendName} '
-                                            '[${tryAddFriend.friendId}]',
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                        contentColor: Colors.green,
-                                        duration: const Duration(seconds: 3),
-                                        contentPadding: const EdgeInsets.all(10),
-                                      );
-                                    } else if (!tryAddFriend.success) {
-                                      BotToast.showText(
-                                        text: 'Error adding $inputId.'
-                                            ' ${tryAddFriend.errorReason}',
-                                        textStyle: const TextStyle(
-                                          fontSize: 14,
-                                          color: Colors.white,
-                                        ),
-                                        contentColor: Colors.red,
-                                        duration: const Duration(seconds: 3),
-                                        contentPadding: const EdgeInsets.all(10),
-                                      );
-                                    }
-                                  }
-                                },
-                              ),
-                              TextButton(
-                                child: const Text("Cancel"),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                  _addIdController.text = '';
-                                },
-                              ),
-                            ],
-                          )
-                        ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  child: CircleAvatar(
-                    radius: 26,
-                    backgroundColor: _themeProvider.secondBackground,
-                    child: CircleAvatar(
-                      backgroundColor: _themeProvider.mainText,
-                      radius: 22,
-                      child: const SizedBox(
-                        height: 28,
-                        width: 28,
-                        child: Icon(Icons.people),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
-    );
+    ).then((_) {
+      factionIdController.dispose();
+    });
   }
 
   void onSearchInputTextChange() {

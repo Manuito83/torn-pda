@@ -1980,6 +1980,43 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Prevent keyboard on basket click",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Prevent keyboard on basket click")),
+                  Switch(
+                    value: _settingsProvider.preventBasketKeyboard,
+                    onChanged: (value) {
+                      setState(() {
+                        _settingsProvider.preventBasketKeyboard = value;
+                      });
+                    },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                  ),
+                ],
+              ),
+              Text(
+                "When enabled, clicking the basket icon in vertical mode will not automatically open the keyboard, "
+                "preventing layout shifts.",
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 12,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     ];
     return buildSectionWithRows(
       title: 'TRAVEL',
