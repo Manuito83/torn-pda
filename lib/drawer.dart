@@ -160,6 +160,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   bool _retalsRedirection = false;
 
+  // Tracks the enqueued PDA update version to avoid duplicate dialogs in a session
+  int? _pdaUpdateDialogEnqueuedVersion;
+
   String _userUID = "";
   bool _drawerUserChecked = false;
 
@@ -3064,6 +3067,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
     if (updateDetails == null || updateDetails.latestVersionCode == 0) return;
 
+    // Stop if this version is already queued during this app session
+    // (initial fetch + onConfigUpdated can both call here)
+    if (_pdaUpdateDialogEnqueuedVersion == updateDetails.latestVersionCode) return;
+
     final currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
     final currentCompilationInt = int.tryParse(currentCompilation) ?? 0;
     if (currentCompilationInt == 0) return;
@@ -3081,6 +3088,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Check if we already showed this update version dialog
     final lastShownVersion = await Prefs().getPdaUpdateDialogVersion();
     if (!_debugShowAllDialogs && lastShownVersion == updateDetails.latestVersionCode) return false;
+
+    _pdaUpdateDialogEnqueuedVersion = updateDetails.latestVersionCode;
 
     if (mounted) {
       DialogQueue.enqueue(
