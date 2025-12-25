@@ -64,6 +64,27 @@ String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
 
   var preventBasketKeyboard = $preventBasketKeyboard;
 
+  function parseMoney(text) {
+    var clean = text.replace(/\\\$/g, '').trim().toLowerCase();
+    var multiplier = 1;
+    if (clean.endsWith('m')) {
+        multiplier = 1000000;
+        clean = clean.substring(0, clean.length - 1);
+    } else if (clean.endsWith('b')) {
+        multiplier = 1000000000;
+        clean = clean.substring(0, clean.length - 1);
+    } else if (clean.endsWith('k')) {
+        multiplier = 1000;
+        clean = clean.substring(0, clean.length - 1);
+    }
+    
+    clean = clean.replace(/[^0-9.]/g, '');
+    
+    var val = parseFloat(clean);
+    if (isNaN(val)) return 0;
+    return Math.floor(val * multiplier);
+  }
+
   function addFillMaxButtons() {
     
     // 0. SAFETY CHECK: Ensure we can detect user money
@@ -273,10 +294,7 @@ String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
                     for (const span of spans) {
                         const txt = span.textContent.trim();
                         if (txt.includes('\$') && span.getAttribute('aria-hidden') !== 'true') {
-                             const match = txt.match(/\\\$([\\d,]+)/);
-                             if (match) {
-                                 cost = parseInt(match[1].replace(/,/g, ''));
-                             }
+                             cost = parseMoney(txt);
                         }
                     }
                     
@@ -321,9 +339,9 @@ String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
                 if (buyPanel) {
                     const question = buyPanel.querySelector('p[class*="question___"]');
                     if (question) {
-                        const match = question.textContent.match(/for\\s*\\\$([\\d,]+)/);
-                        if (match) {
-                            cost = parseInt(match[1].replace(/,/g, ''));
+                        const parts = question.textContent.split('\$');
+                        if (parts.length > 1) {
+                            cost = parseMoney(parts[parts.length - 1]);
                         }
                     }
                 }
@@ -333,16 +351,15 @@ String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
                     for (const cell of cells) {
                         const txt = cell.textContent.toLowerCase();
                         if (txt.includes('cost') && txt.includes('\$')) {
-                            const match = cell.textContent.match(/\\\$([\\d,]+)/);
-                            if (match) {
-                                cost = parseInt(match[1].replace(/,/g, ''));
+                            const parts = cell.textContent.split('\$');
+                            if (parts.length > 1) {
+                                cost = parseMoney(parts[parts.length - 1]);
                                 break;
                             }
                         }
                     }
                 }
-                
-                if (li) {
+                    if (li) {
                     const inlineStock = li.querySelector('[class*="inlineStock___"]');
                     if (inlineStock) {
                         const match = inlineStock.textContent.match(/x([\\d,]+)/);

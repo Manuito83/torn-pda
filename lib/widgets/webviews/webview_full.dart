@@ -1267,6 +1267,7 @@ class WebViewFullState extends State<WebViewFull>
                   });
                 }
               },
+              settingsProvider: _settingsProvider,
             );
 
             // Clear cache (except for cookies) for each new session

@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "Dev Tools: added Scripts tab to manage active userscripts for the current page",
           "Fixed new version update dialog persistence",
+          "Fixed foreign stocks data submission to YATA and Prometheus",
         ],
     );
 

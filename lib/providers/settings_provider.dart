@@ -651,6 +651,20 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _yataUploadEnabledRemoteConfig = true;
+  bool get yataUploadEnabledRemoteConfig => _yataUploadEnabledRemoteConfig;
+  set yataUploadEnabledRemoteConfig(bool value) {
+    _yataUploadEnabledRemoteConfig = value;
+    notifyListeners();
+  }
+
+  bool _prometheusUploadEnabledRemoteConfig = true;
+  bool get prometheusUploadEnabledRemoteConfig => _prometheusUploadEnabledRemoteConfig;
+  set prometheusUploadEnabledRemoteConfig(bool value) {
+    _prometheusUploadEnabledRemoteConfig = value;
+    notifyListeners();
+  }
+
   bool _backupPrefsEnabledStatusRemoteConfig = true;
   bool get backupPrefsEnabledStatusRemoteConfig => _backupPrefsEnabledStatusRemoteConfig;
   set backupPrefsEnabledStatusRemoteConfig(bool value) {

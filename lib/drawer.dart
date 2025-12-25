@@ -696,6 +696,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       remoteConfig.setDefaults(const {
         "tsc_enabled": true,
         "yata_stats_enabled": true,
+        "yata_upload_enabled": true,
+        "prometheus_upload_enabled": true,
         "prefs_backup_enabled": true,
         "tornexchange_enabled": true,
         "webview_dialog_recovery_enabled_ios": false,
@@ -761,6 +763,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     try {
       _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+      _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
+      _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
       _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
       _webViewProvider.webviewDialogRecoveryEnabledIOS = remoteConfig.getBool("webview_dialog_recovery_enabled_ios");
