@@ -302,6 +302,7 @@ class Prefs {
   final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
+  final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -3076,6 +3077,17 @@ class Prefs {
 
   Future setUserScriptsFeatInjectionTimeShown(bool value) async {
     return await PrefsDatabase.setBool(_kUserScriptsFeatInjectionTimeShown, value);
+  }
+
+  // --
+
+  Future<String?> getUserScriptsGlobalDisableState() async {
+    final value = await PrefsDatabase.getString(_kUserScriptsGlobalDisableState, "");
+    return value.isEmpty ? null : value;
+  }
+
+  Future setUserScriptsGlobalDisableState(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsGlobalDisableState, value);
   }
 
   Future<List<String>> getUserScriptsForcedVersions() async {

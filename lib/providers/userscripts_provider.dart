@@ -60,6 +60,47 @@ class UserScriptsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Global Disable
+  Map<String, bool>? _scriptStatesBeforeGlobalDisable;
+  bool get isGlobalDisableActive => _scriptStatesBeforeGlobalDisable != null;
+
+  void toggleGlobalDisable() {
+    if (_scriptStatesBeforeGlobalDisable == null) {
+      // Activate Global Disable
+      _scriptStatesBeforeGlobalDisable = {};
+      for (var script in _userScriptList) {
+        _scriptStatesBeforeGlobalDisable![script.name] = script.enabled;
+        script.enabled = false;
+      }
+      Prefs().setUserScriptsGlobalDisableState(json.encode(_scriptStatesBeforeGlobalDisable));
+    } else {
+      // Restore Scripts
+      for (var script in _userScriptList) {
+        if (_scriptStatesBeforeGlobalDisable!.containsKey(script.name)) {
+          script.enabled = _scriptStatesBeforeGlobalDisable![script.name]!;
+        }
+      }
+      _scriptStatesBeforeGlobalDisable = null;
+      Prefs().setUserScriptsGlobalDisableState("");
+    }
+    notifyListeners();
+    _saveUserScriptsToStorage();
+  }
+
+  void _invalidateGlobalDisable() {
+    if (_scriptStatesBeforeGlobalDisable != null) {
+      _scriptStatesBeforeGlobalDisable = null;
+      Prefs().setUserScriptsGlobalDisableState("");
+      notifyListeners();
+      BotToast.showText(
+        text: "Global disable reset due to manual changes",
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.orange[800]!,
+        duration: const Duration(seconds: 4),
+      );
+    }
+  }
+
   List<String?> get defaultScriptUrls => UserScriptModel.exampleScriptURLs;
 
   UnmodifiableListView<UserScript> getHandlerSources({
@@ -162,6 +203,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void addUserScriptByModel(UserScriptModel model) {
+    _invalidateGlobalDisable();
     if (_addScript(_userScriptList, model, "addUserScriptByModel")) {
       _sort();
       _saveUserScriptsToStorage();
@@ -183,6 +225,7 @@ class UserScriptsProvider extends ChangeNotifier {
     String? customApiKey,
     bool? customApiKeyCandidate,
   }) async {
+    _invalidateGlobalDisable();
     final newScript = UserScriptModel(
       name: name,
       time: time,
@@ -216,6 +259,7 @@ class UserScriptsProvider extends ChangeNotifier {
     required String? customApiKey,
     required bool? customApiKeyCandidate,
   }) {
+    _invalidateGlobalDisable();
     List<String>? matches;
     bool couldParseHeader = true;
     try {
@@ -253,12 +297,14 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void removeUserScript(UserScriptModel removedModel) {
+    _invalidateGlobalDisable();
     _userScriptList.remove(removedModel);
     notifyListeners();
     _saveUserScriptsToStorage();
   }
 
   void changeUserScriptEnabled(UserScriptModel changedModel, bool enabled) {
+    _invalidateGlobalDisable();
     for (final script in userScriptList) {
       if (script == changedModel) {
         script.enabled = enabled;
@@ -270,6 +316,7 @@ class UserScriptsProvider extends ChangeNotifier {
   }
 
   void wipe() {
+    _invalidateGlobalDisable();
     _userScriptList.clear();
     notifyListeners();
     _saveUserScriptsToStorage();
@@ -281,6 +328,7 @@ class UserScriptsProvider extends ChangeNotifier {
     required String scriptsList,
     bool defaultToDisabled = false,
   }) async {
+    _invalidateGlobalDisable();
     // If we are restoring from a backup, we assume the data is valid and we can exit Safe Mode
     _isSafeToSave = true;
 
@@ -552,6 +600,18 @@ class UserScriptsProvider extends ChangeNotifier {
   Future<void> loadPreferencesAndScripts() async {
     _scriptsSectionNeverVisited = await Prefs().getUserScriptsSectionNeverVisited();
     _isSafeToSave = false; // Reset safety lock
+
+    // Load Global Disable State
+    final savedGlobalDisableState = await Prefs().getUserScriptsGlobalDisableState();
+    if (savedGlobalDisableState != null && savedGlobalDisableState.isNotEmpty) {
+      try {
+        final Map<String, dynamic> decodedMap = json.decode(savedGlobalDisableState);
+        _scriptStatesBeforeGlobalDisable = decodedMap.map((key, value) => MapEntry(key, value as bool));
+      } catch (e) {
+        log("Error loading global disable state: $e", name: "UserScriptsProvider");
+        _scriptStatesBeforeGlobalDisable = null;
+      }
+    }
 
     // 1. Always try to load existing scripts first (regardless of app version)
     // 2. Only check if it's "first time" if no scripts exist
