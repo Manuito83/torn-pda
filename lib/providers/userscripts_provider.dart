@@ -139,6 +139,11 @@ class UserScriptsProvider extends ChangeNotifier {
     return UnmodifiableListView(const <UserScript>[]);
   }
 
+  List<UserScriptModel> getActiveScriptsForUrl(String url) {
+    if (!_userScriptsEnabled) return [];
+    return _userScriptList.where((s) => s.shouldInject(url)).toList();
+  }
+
   List<String> getScriptsToRemove({
     required String url,
   }) {

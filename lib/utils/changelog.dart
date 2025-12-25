@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.10.1'
         ..date = '01 JAN 2026'
         ..features = [
+          "Dev Tools: added Scripts tab to manage active userscripts for the current page",
           "Fixed new version update dialog persistence",
         ],
     );

@@ -177,7 +177,7 @@ class WebViewFullState extends State<WebViewFull>
   final bool _debugScriptsInjection = false;
 
   InAppWebViewController? webViewController;
-  TravelHandler? _travelHandler;
+  ForeignStocksWebviewHandler? _travelHandler;
   var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
@@ -1258,7 +1258,7 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
-            _travelHandler = TravelHandler(
+            _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
               onTravelStatusChanged: (isAbroad) {
                 if (mounted) {
