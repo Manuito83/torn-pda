@@ -155,30 +155,30 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             ],
           ),
         ),
-        if (Platform.isAndroid)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Flexible(
-                  child: Text('Alarm'),
-                ),
-                const Padding(
-                  padding: EdgeInsets.only(left: 20),
-                ),
-                Flexible(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Flexible(
-                            child: _hospitalAlarmAheadDropDown(),
-                          ),
-                        ],
-                      ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(
+                child: Text('Alarm'),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: _hospitalAlarmAheadDropDown(),
+                        ),
+                      ],
+                    ),
+                    if (Platform.isAndroid)
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -193,12 +193,12 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
         if (Platform.isAndroid)
           Padding(
             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
@@ -314,75 +314,158 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   }
 
   DropdownButton _hospitalAlarmAheadDropDown() {
+    final items = Platform.isIOS
+        ? [
+            DropdownMenuItem(
+              value: 20,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "20 seconds before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 40,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "40 seconds before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 60,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "1 minute before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 120,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "2 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 300,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "5 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 600,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "10 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ]
+        : const [
+            DropdownMenuItem(
+              value: 0,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "Same minute",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 1,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "1 minute before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 2,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "2 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 5,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "5 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 10,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "10 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ];
+
     return DropdownButton<int>(
       value: _hospitalAlarmAheadDropDownValue,
-      items: const [
-        DropdownMenuItem(
-          value: 0,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "Same minute",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 1,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "1 minute before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 2,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "2 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 5,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "5 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 10,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "10 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ],
+      items: items,
       onChanged: (value) {
         Prefs().setHospitalAlarmAhead(value!);
         setState(() {
@@ -491,7 +574,35 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
 
     setState(() {
       _hospitalNotificationAheadValue = hospitalNotificationAhead;
-      _hospitalAlarmAheadDropDownValue = hospitalAlarmAhead;
+      if (Platform.isIOS) {
+        final allowed = <int>{20, 40, 60, 120, 300, 600};
+        if (allowed.contains(hospitalAlarmAhead)) {
+          _hospitalAlarmAheadDropDownValue = hospitalAlarmAhead;
+        } else {
+          // Map legacy minute-based values to seconds; default to 1 minute before.
+          switch (hospitalAlarmAhead) {
+            case 0:
+              _hospitalAlarmAheadDropDownValue = 60;
+              break;
+            case 1:
+              _hospitalAlarmAheadDropDownValue = 60;
+              break;
+            case 2:
+              _hospitalAlarmAheadDropDownValue = 120;
+              break;
+            case 5:
+              _hospitalAlarmAheadDropDownValue = 300;
+              break;
+            case 10:
+              _hospitalAlarmAheadDropDownValue = 600;
+              break;
+            default:
+              _hospitalAlarmAheadDropDownValue = 60;
+          }
+        }
+      } else {
+        _hospitalAlarmAheadDropDownValue = hospitalAlarmAhead;
+      }
       _hospitalTimerAheadDropDownValue = hospitalTimerAhead;
     });
   }

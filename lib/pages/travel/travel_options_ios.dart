@@ -27,6 +27,7 @@ class TravelOptionsIOS extends StatefulWidget {
 
 class TravelOptionsIOSState extends State<TravelOptionsIOS> {
   String? _travelNotificationAheadDropDownValue;
+  String? _travelAlarmAheadDropDownValue;
 
   Future? _preferencesLoaded;
 
@@ -165,6 +166,23 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
             ],
           ),
         ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(
+                child: Text('Alarm'),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: _travelAlarmAheadDropDown(),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -248,11 +266,128 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
     );
   }
 
+  DropdownButton _travelAlarmAheadDropDown() {
+    return DropdownButton<String>(
+      value: _travelAlarmAheadDropDownValue,
+      items: const [
+        DropdownMenuItem(
+          value: "20",
+          child: SizedBox(
+            width: 140,
+            child: Text(
+              "20 seconds before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "40",
+          child: SizedBox(
+            width: 140,
+            child: Text(
+              "40 seconds before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "60",
+          child: SizedBox(
+            width: 140,
+            child: Text(
+              "1 minute before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "120",
+          child: SizedBox(
+            width: 140,
+            child: Text(
+              "2 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "300",
+          child: SizedBox(
+            width: 140,
+            child: Text(
+              "5 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "600",
+          child: SizedBox(
+            width: 140,
+            child: Text(
+              "10 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        Prefs().setTravelAlarmAhead(value!);
+        setState(() {
+          _travelAlarmAheadDropDownValue = value;
+        });
+      },
+    );
+  }
+
   Future _restorePreferences() async {
     final travelNotificationAhead = await Prefs().getTravelNotificationAhead();
+    var travelAlarmAhead = await Prefs().getTravelAlarmAhead();
+
+    const allowedAlarmValues = <String>{"20", "40", "60", "120", "300", "600"};
+    if (!allowedAlarmValues.contains(travelAlarmAhead)) {
+      // Map legacy minute-based values to seconds; default to 1 minute before.
+      switch (travelAlarmAhead) {
+        case "0":
+        case "1":
+          travelAlarmAhead = "60";
+          break;
+        case "2":
+          travelAlarmAhead = "120";
+          break;
+        case "3":
+          travelAlarmAhead = "300";
+          break;
+        case "4":
+          travelAlarmAhead = "600";
+          break;
+        default:
+          // If it's any other numeric value, keep it; otherwise fallback to 1 minute.
+          travelAlarmAhead = int.tryParse(travelAlarmAhead) != null ? travelAlarmAhead : "60";
+      }
+    }
 
     setState(() {
       _travelNotificationAheadDropDownValue = travelNotificationAhead;
+      _travelAlarmAheadDropDownValue = travelAlarmAhead;
     });
   }
 

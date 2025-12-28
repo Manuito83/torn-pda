@@ -262,23 +262,18 @@ class WebviewHandlers {
     webview.addJavaScriptHandler(
       handlerName: 'setAlarm',
       callback: (args) async {
-        if (!Platform.isAndroid) {
-          const errorMsg = 'Error: Alarms are only supported on Android';
-          log('[Alarm Handler] $errorMsg');
-          return {'status': 'error', 'message': errorMsg};
-        }
-
         if (args.isEmpty || args[0]['timestamp'] == null) {
           const errorMsg = 'Missing required parameter: timestamp';
           log('[Alarm Handler] $errorMsg');
           return {'status': 'error', 'message': errorMsg};
         }
 
-        final result = await WebviewNotificationsHelper.setAndroidAlarm(
+        final result = await WebviewNotificationsHelper.setWebviewAlarm(
           timestampMillis: args[0]['timestamp'],
           vibrate: args[0]['vibrate'] ?? true,
           sound: args[0]['sound'] ?? true,
           message: args[0]['message'] ?? 'TORN PDA Alarm',
+          logicalId: args[0]['id']?.toString(),
         );
 
         if (result.startsWith('Error')) {

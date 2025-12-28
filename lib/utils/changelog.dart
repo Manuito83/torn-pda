@@ -102,12 +102,20 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.10.1 - Build 602 - 25/12/2025
+    // v3.10.1 - Build 602 - 27/12/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.10.1'
-        ..date = '01 JAN 2026'
+        ..date = '06 JAN 2026'
         ..features = [
+          if (Platform.isIOS)
+            ComplexFeature(
+              "Alarms can now be used in addition to notifications (iOS 26+)",
+              explanation: "All Profile, Loot, Travel Boarding, and browser notifications can now "
+                  "be activated as alarms instead.\n\n"
+                  "Under the hood, they use native iOS AlarmKit which is only supported on iOS 26 and later\n\n"
+                  "Current pending alarms can be seen (and cancelled) in Settings > Active Alarms",
+            ),
           "Scripts: added option to temporarily disable all user scripts",
           "Dev Tools: added Scripts tab to manage active userscripts for the current page",
           "Fixed new version update dialog persistence",

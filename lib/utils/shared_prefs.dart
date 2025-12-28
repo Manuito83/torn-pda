@@ -277,9 +277,14 @@ class Prefs {
   final String _kLootTimerAhead = "pda_lootTimerAhead";
   final String _kLootFiltered = "pda_lootFiltered";
 
-  // Browser scripts and widgets
+  // Android Alarm options
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
+
+  // Cache for iOS AlarmKit alarm metadata populated by AlarmKitServiceIos
+  final String _kIosAlarmMetadata = "pda_iosAlarmMetadata";
+
+  // Browser scripts and widgets
   final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kQuickItemsList = "pda_quickItemsList";
@@ -645,6 +650,7 @@ class Prefs {
   /// ----------------------------
   /// Methods for app version
   /// ----------------------------
+
   Future<String> getAppCompilation() async {
     return await PrefsDatabase.getString(_kAppVersion, "");
   }
@@ -1978,6 +1984,28 @@ class Prefs {
   }
 
   /// ----------------------------
+  /// Methods for manual alarms (Android)
+  /// ----------------------------
+
+  /// Whether manual alarms should vibrate (set from Settings > Notifications, used by alarm intents)
+  Future<bool> getManualAlarmVibration() async {
+    return await PrefsDatabase.getBool(_kManualAlarmVibration, true);
+  }
+
+  Future setManualAlarmVibration(bool value) async {
+    return await PrefsDatabase.setBool(_kManualAlarmVibration, value);
+  }
+
+  /// Whether manual alarms should play sound (set from Settings > Notifications, used by alarm intents)
+  Future<bool> getManualAlarmSound() async {
+    return await PrefsDatabase.getBool(_kManualAlarmSound, true);
+  }
+
+  Future setManualAlarmSound(bool value) async {
+    return await PrefsDatabase.setBool(_kManualAlarmSound, value);
+  }
+
+  /// ----------------------------
   /// Methods for notification types
   /// ----------------------------
   Future<String> getTravelNotificationType() async {
@@ -2201,22 +2229,6 @@ class Prefs {
   }
 
   //
-
-  Future<bool> getManualAlarmVibration() async {
-    return await PrefsDatabase.getBool(_kManualAlarmVibration, true);
-  }
-
-  Future setManualAlarmVibration(bool value) async {
-    return await PrefsDatabase.setBool(_kManualAlarmVibration, value);
-  }
-
-  Future<bool> getManualAlarmSound() async {
-    return await PrefsDatabase.getBool(_kManualAlarmSound, true);
-  }
-
-  Future setManualAlarmSound(bool value) async {
-    return await PrefsDatabase.setBool(_kManualAlarmSound, value);
-  }
 
   Future<bool> getShowHeaderWallet() async {
     return await PrefsDatabase.getBool(_kShowHeaderWallet, true);
@@ -3982,6 +3994,63 @@ class Prefs {
 
   Future setTctClockHighlightsEvents(bool value) async {
     return await PrefsDatabase.setBool(_kTctClockHighlightsEvents, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for iOS AlarmKit metadata
+  /// -----------------------------------
+
+  /// Metadata cache keyed by AlarmKit UUIDs to rebuild iOS alarms after app restarts
+  Future<Map<String, Map<String, dynamic>>> getIosAlarmMetadata() async {
+    final jsonString = await PrefsDatabase.getString(_kIosAlarmMetadata, '{}');
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is Map<String, dynamic>) {
+        final normalized = <String, Map<String, dynamic>>{};
+        decoded.forEach((key, value) {
+          if (value is Map) {
+            normalized[key] = Map<String, dynamic>.from(value);
+          }
+        });
+        return normalized;
+      }
+    } catch (e, stackTrace) {
+      log('Failed to decode iOS alarm metadata: $e', name: 'Prefs.getIosAlarmMetadata', stackTrace: stackTrace);
+    }
+    return {};
+  }
+
+  /// Internal helper to persist the AlarmKit metadata map
+  Future<void> _saveIosAlarmMetadata(Map<String, Map<String, dynamic>> metadata) async {
+    await PrefsDatabase.setString(_kIosAlarmMetadata, jsonEncode(metadata));
+  }
+
+  /// Inserts or updates metadata for a specific AlarmKit UUID (called from AlarmKitServiceIos)
+  Future<void> upsertIosAlarmMetadata(String uuid, Map<String, dynamic> metadata) async {
+    final current = await getIosAlarmMetadata();
+    current[uuid] = Map<String, dynamic>.from(metadata);
+    await _saveIosAlarmMetadata(current);
+  }
+
+  /// Removes stored metadata for a given AlarmKit UUID
+  Future<void> removeIosAlarmMetadata(String uuid) async {
+    final current = await getIosAlarmMetadata();
+    if (current.remove(uuid) != null) {
+      await _saveIosAlarmMetadata(current);
+    }
+  }
+
+  /// Deletes metadata entries for alarms that are no longer active (called after listAlarms)
+  Future<void> compactIosAlarmMetadata(Set<String> keepIds) async {
+    final current = await getIosAlarmMetadata();
+    final toRemove = current.keys.where((key) => !keepIds.contains(key)).toList();
+    if (toRemove.isEmpty) {
+      return;
+    }
+    for (final key in toRemove) {
+      current.remove(key);
+    }
+    await _saveIosAlarmMetadata(current);
   }
 
   /// -----------------------------------

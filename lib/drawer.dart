@@ -66,6 +66,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
@@ -350,6 +351,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       if (Platform.isIOS) {
         _messaging.setForegroundNotificationPresentationOptions();
+
+        // AlarmKit button taps back into the app stream on iOS
+        AlarmKitServiceIos.isAvailable().then((available) {
+          if (available) {
+            AlarmKitServiceIos.registerAlarmTapHandler((payload) {
+              selectNotificationStream.add(payload);
+            });
+          }
+        });
       }
     } catch (e, stackTrace) {
       log("Error initializing notifications: $e");
