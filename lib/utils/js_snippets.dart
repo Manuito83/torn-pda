@@ -632,162 +632,146 @@ String removeOwnBazaarFillButtonsJS() {
 
 String addOthersBazaarFillButtonsJS() {
   return r'''
-    // Credits
-    // Implementation logic partially based on TornTools by Mephiles and DKK
-    // New React 15/16 dispatch event based on Father's input
-        
     (async function() {  
+        if (window.bazaarMaxScriptActive) return;
+        window.bazaarMaxScriptActive = true;
+
         var doc = document;
-        
-      function sleep(ms) {
-          return new Promise(resolve => setTimeout(resolve, ms));
-        }
-      
-      var documentLoaded = doc.querySelectorAll("[class*='rowItems_").length;
-      if (documentLoaded === 0) {
-        console.log("waiting for bazaar");
-        await sleep(2000);
-      }
-      
-        var narrow_screen = false; 
-        if (doc.querySelector("[class*='searchBar_'] [class*='tablet_']") !== null 
-          || doc.querySelector("[class*='searchBar_'] [class*='mobile']") !== null) {
-          narrow_screen = true;
-        }
-        
-        function addFillMaxButtons(){
-        
-          function addStyle(styleString) {
-            const style = document.createElement('style');
-            style.textContent = styleString;
-            document.head.append(style);
-          }
-        
-          function dispatchClick(element, newValue) {
-            let input = element; 
+        if (!window.location.href.includes('bazaar.php')) return;
+
+        // Absolute positioning
+        const style = doc.createElement('style');
+        style.textContent = `
+            .max-buy {
+                border: 1px solid #ff8000 !important;
+                background: transparent !important;
+                color: #ff8000 !important;
+                border-radius: 10px !important;
+                position: absolute !important;
+                height: 15px;
+                width: 32px;
+                text-align: center;
+                line-height: 13px;
+                bottom: 3px; 
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 9px;
+                cursor: pointer;
+                z-index: 999;
+                font-weight: bold;
+                box-sizing: border-box;
+                text-decoration: none !important;
+            }
+            /* Ensure the container has space and relative positioning */
+            button[class*="buy___"], button[class*="activate-buy-button"] {
+                padding-bottom: 20px !important;
+                position: relative !important;
+            }
+            /* Wide popups container */
+            div[class*="field___"] {
+                position: relative !important;
+                overflow: visible !important;
+            }
+        `;
+        doc.head.append(style);
+
+        function dispatchClick(input, newValue) {
             let lastValue = input.value;
             input.value = newValue;
             let event = new Event('input', { bubbles: true });
-            // hack React15 (Torn seems to be using React 16)
-            event.simulated = true;
-            // hack React16 (This is what Torn uses)
             let tracker = input._valueTracker;
-            if (tracker) {
-              tracker.setValue(lastValue);
-            }
+            if (tracker) tracker.setValue(lastValue);
             input.dispatchEvent(event);
-          }
-          
-          // Creates our button
-          addStyle(`
-            .max-buy {
-            border: none !important;
-            position: absolute;
-            height: 15px;
-            line-height: 15px;
-            bottom: 0;
-            left: 10px;
-            font-size: 11px;
-            }
-          `);
-          
-          // Brings existing buy button a little up
-          addStyle(`
-            button[class^="buy___"] {
-            padding-bottom: 20px !important;
-            font-size: 11px !important;
-			      text-transform: uppercase;
-            }
-          `);
-        
-          // Narrow screen: load all buttons at once
-          if(narrow_screen){
-          
-            // Plenty of rowItems, one for each item
-            let item_boxes = doc.querySelectorAll("[class*='rowItems_");
-        
-            if(!item_boxes){
-              return;
-            }
-              
-            for(let item_box of item_boxes){
-              let buy_btn = item_box.querySelector("[class*='buy_']");
-              let max_span = doc.createElement('span');
-              max_span.innerHTML = '<a class="max-buy">MAX</a>';
-              buy_btn.parentElement.appendChild(max_span);
-        
-              max_span.addEventListener("click", function(event){
-                event.stopPropagation();
-                let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
-                let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
-                let user_money = parseInt(document.querySelector("#user-money").dataset.money);
-                if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
-                if (max > 10000) max = 10000;
-                amountBox = item_box.querySelector("[class*='buyAmountInput_']");
-                dispatchClick(amountBox, max);
-              });
-            }
+        }
+
+        function handleMaxClick(item_box) {
+            let amountEl = item_box.querySelector("[class*='amountValue_'], [class*='amount___']");
+            let priceEl = item_box.querySelector("[class*='price___']");
+            let moneyEl = doc.querySelector("#user-money");
             
-          // Wide screen: load button in the expandable box only when the cart is pressed
-          } else {
+            if (!amountEl || !priceEl || !moneyEl) return;
+
+            let max = parseInt(amountEl.innerText.replace(/\D/g, ""));
+            let price = parseInt(priceEl.innerText.replace(/[,$]/g, ""));
+            let user_money = parseInt(moneyEl.getAttribute("data-money") || moneyEl.innerText.replace(/\D/g, ""));
             
-            doc.addEventListener("click", (event) => {
-              
-              if (event.target.getAttribute("class").includes("controlPanelButton_") && event.target.getAttribute("aria-label").includes("Buy")) {
-                
-                // Only one buy menu opened at a time, no need to loop
-                let item_box = doc.querySelector("[class*='buyMenu_");
-        
-                if(!item_box){
-                  return;
+            let affordable = Math.floor(user_money / price);
+            if (affordable < max) max = affordable;
+            if (max > 10000) max = 10000;
+
+            let input = item_box.querySelector("input[class*='buyAmountInput_']");
+            if (input) {
+                dispatchClick(input, max);
+            } else {
+                // If input is not present (wide mode), click shopping cart first
+                let buyBtn = item_box.querySelector("button[aria-label*='Buy'], [class*='activate-buy-button']");
+                if (buyBtn) {
+                    buyBtn.click();
+                    setTimeout(() => {
+                        let retry = item_box.querySelector("input[class*='buyAmountInput_']");
+                        if (retry) dispatchClick(retry, max);
+                    }, 50);
                 }
-                        
-                var buy_btn = item_box.querySelector("[class*='buy_']");
-                let max_span = doc.createElement('span');
-                max_span.innerHTML = '<a class="max-buy">MAX</a>';
-                buy_btn.parentElement.appendChild(max_span);
-        
-                max_span.addEventListener("click", function(event){
-                  event.stopPropagation();
-                  let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
-                  let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
-                  let user_money = parseInt(document.querySelector("#user-money").dataset.money);
-                  if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
-                  if (max > 10000) max = 10000;
-                  amountBox = item_box.querySelector("[class*='buyAmountInput_']");
-                  dispatchClick(amountBox, max);
-                });
-              }
-            });
-                
-          }
-        }
-        
-        // Delete and recreate buttons when scrolling, otherwise they'll appear on top of each other
-        // Not needed for wide screen
-        if (narrow_screen) {
-          let moreItemsObserver = new MutationObserver(renewButtons);
-          moreItemsObserver.observe(
-            // The div's class is itemsContainner___xxxx, yes with a typo. Leaving it as Contain in case they fix the typo later
-            doc.querySelector("div[class*='itemsContain'] div[data-testid*='bazaar-items']"),
-            { childList: true }
-          );
-          function renewButtons() {
-            var existing_list = doc.querySelectorAll(".max-buy");
-            for(let item of existing_list){
-              item.remove();
             }
-            addFillMaxButtons();
-          }
-          
         }
+
+        // Injection
+        function fastInject(node) {
+            if (!node || node.nodeType !== 1) return;
+
+            // Search for both button types (narrow and wide)
+            let buyButtons = node.querySelectorAll("button[class*='buy___'], button[class*='activate-buy-button']");
+            
+            buyButtons.forEach(buyBtn => {
+                if (!buyBtn.parentElement.querySelector(".max-buy")) {
+                    let maxBtn = doc.createElement('a');
+                    maxBtn.className = 'max-buy';
+                    maxBtn.innerText = 'MAX';
+                    
+                    buyBtn.parentElement.style.position = "relative";
+                    buyBtn.parentElement.appendChild(maxBtn);
+
+                    maxBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        let itemContainer = buyBtn.closest("[class*='item___'], [class*='rowItems_']");
+                        handleMaxClick(itemContainer);
+                    });
+                }
+            });
+        }
+
+        // Observer to re-scan added fragments
+        const observer = new MutationObserver((mutations) => {
+            for (let i = 0; i < mutations.length; i++) {
+                mutations[i].addedNodes.forEach(node => {
+                    if (node.nodeType === 1) {
+                        fastInject(node);
+                        // Also scan sub-elements of the added node
+                        if (node.children && node.children.length > 0) {
+                            fastInject(node);
+                        }
+                    }
+                });
+            }
+        });
+
+        observer.observe(doc.body, { childList: true, subtree: true });
+
+        const urlHeartbeat = setInterval(() => {
+            if (!window.location.href.includes('bazaar.php?userId=')) {
+                observer.disconnect();
+                clearInterval(urlHeartbeat);
+                window.bazaarMaxScriptActive = false;
+                doc.querySelectorAll(".max-buy").forEach(el => el.remove());
+            }
+        }, 1000);
+
+        // Init
+        fastInject(doc.body);
         
-        // Launch main function at the start
-        addFillMaxButtons();
-        
-        // Return to avoid iOS WKErrorDomain
         123;
-    })();  
+    })();
   ''';
 }
 

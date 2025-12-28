@@ -102,7 +102,7 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.10.1 - Build 602 - 27/12/2025
+    // v3.10.1 - Build 603 - 28/12/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.10.1'
@@ -118,6 +118,7 @@ class ChangeLogState extends State<ChangeLog> {
             ),
           "Scripts: added option to temporarily disable all user scripts",
           "Dev Tools: added Scripts tab to manage active userscripts for the current page",
+          "Fixed max buy buttons for bazaars",
           "Fixed new version update dialog persistence",
           "Fixed foreign stocks data submission to YATA and Prometheus",
         ],
