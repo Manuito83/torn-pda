@@ -42,6 +42,7 @@ enum ApiSelection_v2 {
   tornCalendar,
   userCalendar,
   oc2UserCrime,
+  userTargetsList,
 }
 
 class ApiError {

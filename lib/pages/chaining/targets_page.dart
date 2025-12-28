@@ -3,18 +3,14 @@ import 'dart:async';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
-import 'package:get/get.dart';
 // Flutter imports:
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 // Project imports:
 import 'package:torn_pda/models/chaining/target_sort.dart';
-import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
-import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
 import 'package:torn_pda/pages/chaining/targets_backup_page.dart';
 import 'package:torn_pda/pages/chaining/targets_options_page.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
@@ -22,11 +18,10 @@ import 'package:torn_pda/providers/targets_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
-import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
-import 'package:torn_pda/widgets/chaining/yata/yata_targets_dialog.dart';
+import 'package:torn_pda/widgets/chaining/targets_sync_dialog.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class TargetsOptions {
@@ -82,7 +77,7 @@ class TargetsPageState extends State<TargetsPage> {
   final _focusSearch = FocusNode();
 
   /// Strictly whether we button is enabled in options
-  bool _yataButtonInProgress = true;
+  final bool _yataButtonInProgress = true;
 
   /// Dictates if it has been pressed and is showing a circular
   /// progress indicator while fetching data from Yata
@@ -370,38 +365,9 @@ class TargetsPageState extends State<TargetsPage> {
               if (_yataButtonEnabled!) {
                 if (_yataButtonInProgress) {
                   return IconButton(
-                    icon: const Icon(MdiIcons.alphaYCircleOutline),
+                    icon: const Icon(Icons.sync_alt),
                     onPressed: () async {
-                      setState(() {
-                        _yataButtonInProgress = false;
-                      });
-                      final yataTargets = await _targetsProvider.getTargetsFromYata();
-                      if (!yataTargets.errorConnection && !yataTargets.errorPlayer) {
-                        _openYataDialog(yataTargets);
-                      } else {
-                        String error;
-                        if (yataTargets.errorPlayer) {
-                          error = "We could not find your user in Yata, do you have an account?";
-                        } else {
-                          error = "There was an error contacting YATA, please try again later!";
-                          if (yataTargets.errorReason.isNotEmpty) {
-                            error += "\n\nError code is ${yataTargets.errorReason}";
-                          }
-                        }
-                        BotToast.showText(
-                          text: error,
-                          textStyle: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white,
-                          ),
-                          contentColor: Colors.red[800]!,
-                          duration: const Duration(seconds: 5),
-                          contentPadding: const EdgeInsets.all(10),
-                        );
-                      }
-                      setState(() {
-                        _yataButtonInProgress = true;
-                      });
+                      await _openTargetsSyncDialog();
                     },
                   );
                 } else {
@@ -728,106 +694,58 @@ class TargetsPageState extends State<TargetsPage> {
     }
   }
 
-  Future<void> _openYataDialog(YataTargetsImportModel importedTargets) {
-    // Before opening the dialog, we'll see how many new targets we have, so that we can
-    // show a count and some details before importing/exporting
-    final List<TargetsOnlyYata> onlyYata = [];
-    final List<TargetsOnlyLocal> onlyLocal = [];
-    final List<TargetsBothSides> bothSides = [];
-    // If we have no targets locally, we'll import all incoming (we assume that [bothSides] and
-    // [onlyLocal] are zero
-    if (_targetsProvider.allTargets.isEmpty) {
-      importedTargets.targets!.forEach((key, yataTarget) {
-        onlyYata.add(
-          TargetsOnlyYata()
-            ..id = key
-            ..name = yataTarget.name
-            ..noteYata = yataTarget.note
-            ..colorYata = yataTarget.color,
-        );
-      });
-    }
-    // Otherwise, we'll see how many are new or only local
-    else {
-      importedTargets.targets!.forEach((key, yataTarget) {
-        bool foundLocally = false;
-        for (final localTarget in _targetsProvider.allTargets) {
-          if (!foundLocally) {
-            if (key == localTarget.playerId.toString()) {
-              final playerNotesController = Get.find<PlayerNotesController>();
-              final playerNote = playerNotesController.getNoteForPlayer(localTarget.playerId.toString());
-              bothSides.add(
-                TargetsBothSides()
-                  ..id = key
-                  ..name = yataTarget.name
-                  ..noteYata = yataTarget.note
-                  ..noteLocal = playerNote?.note ?? ''
-                  ..colorLocal = _yataColorCode(playerNote?.color)
-                  ..colorYata = yataTarget.color,
-              );
-              foundLocally = true;
-            }
-          }
-        }
-        if (!foundLocally) {
-          onlyYata.add(
-            TargetsOnlyYata()
-              ..id = key
-              ..name = yataTarget.name
-              ..noteYata = yataTarget.note
-              ..colorYata = yataTarget.color,
-          );
-        }
-      });
+  Future<void> _openTargetsSyncDialog() async {
+    final tornCount = await _targetsProvider.countTargetsInTorn();
 
-      for (final localTarget in _targetsProvider.allTargets) {
-        bool foundInYata = false;
-        importedTargets.targets!.forEach((key, yataTarget) {
-          if (!foundInYata) {
-            if (localTarget.playerId.toString() == key) {
-              foundInYata = true;
-            }
-          }
-        });
-        if (!foundInYata) {
-          final playerNotesController = Get.find<PlayerNotesController>();
-          final playerNote = playerNotesController.getNoteForPlayer(localTarget.playerId.toString());
-          onlyLocal.add(
-            TargetsOnlyLocal()
-              ..id = localTarget.playerId.toString()
-              ..name = localTarget.name
-              ..noteLocal = playerNote?.note ?? ''
-              ..colorLocal = _yataColorCode(playerNote?.color),
-          );
-        }
-      }
-    }
-
-    return showDialog<void>(
+    final action = await showDialog<TargetsSyncAction>(
       context: context,
-      barrierDismissible: false, // user must tap button!
+      barrierDismissible: false,
       builder: (BuildContext context) {
-        return YataTargetsDialog(
-          bothSides: bothSides,
-          onlyYata: onlyYata,
-          onlyLocal: onlyLocal,
+        return TargetsSyncDialog(
+          tornTargetsCount: tornCount,
+          targetsProvider: _targetsProvider,
+          onImportFromTorn: (onProgress) {
+            return _targetsProvider.importTargetsFromTorn(onProgress: onProgress);
+          },
+          onImportFromYata: _targetsProvider.getTargetsFromYata,
         );
       },
     );
-  }
 
-  int _yataColorCode(String? colorString) {
-    switch (colorString) {
-      case "z":
-        return 0;
-      case "green":
-        return 1;
-      case "orange":
-        return 2;
-      case "red":
-        return 3;
+    if (!mounted || action == null) {
+      return;
     }
-    return 0;
+
+    switch (action) {
+      case TargetsSyncAction.importYata:
+      case TargetsSyncAction.exportYata:
+        // Handled inside dialog; keep for backward compatibility if needed.
+        break;
+      case TargetsSyncAction.tornImported:
+        BotToast.showText(
+          text: 'Targets imported from Torn.',
+          textStyle: const TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.green[800]!,
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(10),
+        );
+        break;
+      case TargetsSyncAction.tornFailed:
+        BotToast.showText(
+          text: 'Torn import failed.',
+          textStyle: const TextStyle(
+            fontSize: 13,
+            color: Colors.white,
+          ),
+          contentColor: Colors.red[800]!,
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(10),
+        );
+        break;
+    }
   }
 
   Future<void> _openWipeDialog() {

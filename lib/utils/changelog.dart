@@ -108,6 +108,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.10.1'
         ..date = '06 JAN 2026'
         ..features = [
+          "Chaining: TORN targets can now be imported to the targets list",
           if (Platform.isIOS)
             ComplexFeature(
               "Alarms can now be used in addition to notifications (iOS 26+)",
