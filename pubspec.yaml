@@ -97,6 +97,7 @@ dependencies:
       url: https://github.com/daadu/receive_intent
       ref: master
   rxdart: 0.28.0
+  synchronized: 3.4.0
   sendbird_chat_sdk: 4.7.0
   share_plus: 12.0.0
   shared_preferences: 2.5.3

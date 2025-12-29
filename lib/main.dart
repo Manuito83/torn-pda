@@ -30,6 +30,7 @@ import 'package:home_widget/home_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:toastification/toastification.dart';
+
 // Project imports:
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/firebase_options.dart';
@@ -61,11 +62,12 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_auth_provider.dart';
 import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
+import 'package:torn_pda/utils/background_inbox.dart';
+import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/http_overrides.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_travel_controller.dart';
 import 'package:torn_pda/utils/notification.dart';
-import 'package:torn_pda/utils/connectivity/connectivity_handler.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/shared_prefs_backup.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -128,37 +130,6 @@ class ReceivedNotification {
   final String payload;
 }
 
-@pragma('vm:entry-point')
-Future<void> _messagingBackgroundHandler(RemoteMessage message) async {
-  try {
-    if (message.data["channelId"]?.contains("Alerts stocks") == true) {
-      final oldData = await Prefs().getDataStockMarket();
-      var newData = "";
-      if (oldData.isNotEmpty) {
-        newData = "$oldData\n${message.notification!.body}";
-      } else {
-        newData = "$oldData${message.notification!.body}";
-      }
-      await Prefs().setDataStockMarket(newData);
-    }
-
-    if (message.data["sendbird"] != null) {
-      Map<String, dynamic> sendbirdData = jsonDecode(message.data["sendbird"]);
-      String channelUrl = sendbirdData['channel']['channel_url'];
-
-      String sender = "";
-      String msg = "";
-      List<String> parts = message.data["message"].split(":");
-      sender = parts.isNotEmpty ? parts[0].trim() : "";
-      msg = parts.length > 1 ? parts.sublist(1).join(":").trim() : "";
-
-      await showSendbirdNotification(sender, msg, channelUrl, fromBackground: true);
-    }
-  } catch (e) {
-    logErrorToCrashlytics("PDA Crash at Messaging Background Handler", "PDA Error: $e", null);
-  }
-}
-
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
@@ -166,6 +137,9 @@ Future<void> main() async {
 
   // Migrate SharedPreferences to Sembast (runs once)
   await Prefs().migratePrefsToSembast();
+
+  // Drain FCM inboxes saved in background (e.g., stock alerts) into Prefs so we can show them on launch
+  await drainFcmInbox();
 
   // Core initialization
   await _initializeAppCompilation();
@@ -737,7 +711,7 @@ Future<void> _initializeFirebase() async {
     _isFirebaseInitialized = true;
 
     if (!Platform.isWindows) {
-      FirebaseMessaging.onBackgroundMessage(_messagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(messagingBackgroundHandler);
 
       if (kDebugMode) {
         if (pointFunctionsEmulatorToLocal) {
