@@ -102,13 +102,14 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.10.1 - Build 603 - 28/12/2025
+    // v3.10.1 - Build 604 - 30/12/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.10.1'
         ..date = '06 JAN 2026'
         ..features = [
           "Chaining: TORN targets can now be imported to the targets list",
+          "Loot: added additional lead time options for alerts, manual notifications and alarms",
           if (Platform.isIOS)
             ComplexFeature(
               "Alarms can now be used in addition to notifications (iOS 26+)",

@@ -75,8 +75,8 @@ import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
 const String appVersion = '3.10.1';
-const String androidCompilation = '603';
-const String iosCompilation = '603';
+const String androidCompilation = '604';
+const String iosCompilation = '604';
 
 bool appHasBeenUpdated = false;
 bool appIsFirstRun = false;

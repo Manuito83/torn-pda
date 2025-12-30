@@ -1310,6 +1310,10 @@ class LootPageState extends State<LootPage> {
           _lootNotificationAhead = 480;
         } else if (notificationAhead == '7') {
           _lootNotificationAhead = 600;
+        } else if (notificationAhead == '8') {
+          _lootNotificationAhead = 900;
+        } else if (notificationAhead == '9') {
+          _lootNotificationAhead = 1200;
         }
 
         if (Platform.isIOS) {
@@ -1331,6 +1335,10 @@ class LootPageState extends State<LootPage> {
             _lootAlarmAheadSeconds = 480;
           } else if (alarmAhead == '6') {
             _lootAlarmAheadSeconds = 600;
+          } else if (alarmAhead == '7') {
+            _lootAlarmAheadSeconds = 900;
+          } else if (alarmAhead == '8') {
+            _lootAlarmAheadSeconds = 1200;
           } else {
             _lootAlarmAheadSeconds = 60; // default to 1 minute before on iOS
           }
@@ -1349,6 +1357,10 @@ class LootPageState extends State<LootPage> {
             _lootAlarmAheadSeconds = 480;
           } else if (alarmAhead == '6') {
             _lootAlarmAheadSeconds = 600;
+          } else if (alarmAhead == '7') {
+            _lootAlarmAheadSeconds = 900;
+          } else if (alarmAhead == '8') {
+            _lootAlarmAheadSeconds = 1200;
           } else {
             _lootAlarmAheadSeconds = 0;
           }
@@ -1370,6 +1382,10 @@ class LootPageState extends State<LootPage> {
           _lootTimerAhead = 480;
         } else if (timerAhead == '7') {
           _lootTimerAhead = 600;
+        } else if (timerAhead == '8') {
+          _lootTimerAhead = 900;
+        } else if (timerAhead == '9') {
+          _lootTimerAhead = 1200;
         }
       });
 

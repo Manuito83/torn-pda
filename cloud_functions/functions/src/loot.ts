@@ -4,6 +4,9 @@ import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
 const privateKey = require("../key/torn_key");
 
+const LOOT_DEFAULT_AHEAD = 360; // default before v3.10.1 (6 minutes)
+const LOOT_BUCKETS = [180, 360, 600, 900, 1200];
+
 
 async function getNpcHospital(npc: String, key: String) {
     const response = await fetch(`https://api.torn.com/user/${npc}?selections=&key=${key}`);
@@ -80,93 +83,122 @@ export const lootAlerts = onSchedule(
 
             // For each NPC in the DB, see if it's approaching level 4 or 5
             if (Object.keys(npcHospitalJSON).length > 0) {
+                const nowSeconds = Math.floor(Date.now() / 1000);
+
                 for (const npcId of Object.keys(npcHospitalJSON)) {
-                    let warnLevel = 0;
-                    let warnMessage = "";
-                    let npcName = "";
-
                     const npcTimeHospital = npcHospitalJSON[npcId];
-                    const npcTimeLevel4 = npcTimeHospital + 210 * 60;
-                    const npcTimeLevel5 = npcTimeHospital + 450 * 60;
+                    const levels = [
+                        { level: 4, ts: npcTimeHospital + 210 * 60 },
+                        { level: 5, ts: npcTimeHospital + 450 * 60 },
+                    ];
 
-                    const currentDateInMillis = Math.floor(Date.now() / 1000);
-                    const timeToLevel4 = npcTimeLevel4 - currentDateInMillis;
-                    const timeToLevel5 = npcTimeLevel5 - currentDateInMillis;
+                    // Track pending buckets per level
+                    const pendingByLevel: { level: number; ts: number; remaining: number; buckets: number[] }[] = [];
 
-                    if (timeToLevel4 > 0 && timeToLevel4 < 360) {
-                        const minutesRemaining = Math.round((timeToLevel4) / 60);
-                        warnLevel = 4;
-                        const npcApi = await getNpcHospital(npcId, privateKey.tornKey);
-                        npcName = npcApi.name;
-                        warnMessage = `${npcName} will reach level ${warnLevel} in about ${minutesRemaining} minutes!`;
-                    }
-                    else if (timeToLevel5 > 0 && timeToLevel5 < 360) {
-                        const minutesRemaining = Math.round((timeToLevel5) / 60);
-                        warnLevel = 5;
-                        const npcApi = await getNpcHospital(npcId, privateKey.tornKey);
-                        npcName = npcApi.name;
-                        warnMessage = `${npcName} will reach level ${warnLevel} in about ${minutesRemaining} minutes!`;
-                    } else {
-                        continue;
-                    }
+                    for (const lvl of levels) {
+                        const remaining = lvl.ts - nowSeconds;
+                        if (remaining <= 0) continue;
 
-                    // Once positive level 4/5, get last time we alerted about this (so to avoid alerting several times in a row)
-                    // Then pass if last alert was less than 10 minutes ago
-                    const refTimestamp = db.ref(`loot/alertsTimestamp/${npcId}`);
-                    let timestamp = 0;
-                    await refTimestamp.once("value", function (snapshot) {
-                        const lastAlerted = snapshot.val() || 0;
-                        timestamp = JSON.parse(JSON.stringify(lastAlerted));
-                    });
+                        // RTDB per NPC/level:
+                        //   key   = bucketSeconds (e.g. 300/600/900)
+                        //   value = hosp+delay timestamp for which we already notified
+                        // This prevents re-sending the same bucket for the same level
+                        const refTimestamp = db.ref(`loot/alertsTimestamp/${npcId}/${lvl.level}`);
+                        let bucketMap: Record<string, number> = {};
+                        await refTimestamp.once("value", function (snapshot) {
+                            bucketMap = snapshot.val() ?? {};
+                        });
 
-                    const lastAlertedInSeconds = currentDateInMillis - timestamp;
-                    console.log(lastAlertedInSeconds);
-                    if (lastAlertedInSeconds < 600) {
-                        continue;
-                    }
-
-                    // Notify users
-                    let usersNotified = 0;
-                    const response = await admin
-                        .firestore()
-                        .collection("players")
-                        .where("active", "==", true)
-                        .where("lootAlerts", "array-contains", `${npcId}:${warnLevel}`)
-                        .get();
-
-                    const subscribers = response.docs.map((d) => d.data());
-                    for (const key of Array.from(subscribers.keys())) {
-                        //console.log(subscribers[key].name);
-
-                        let title = `${npcName} level ${warnLevel}!`;
-                        let body = warnMessage;
-                        if (subscribers[key].discrete) {
-                            title = `L`;
-                            body = `${npcName} - ${warnLevel}`;
+                        // Legacy numeric value handling (older structure)
+                        if (typeof bucketMap === "number") {
+                            bucketMap = { legacy: bucketMap as any };
                         }
 
-                        promises.push(
-                            sendNotificationToUser({
-                                token: subscribers[key].token,
-                                title: title,
-                                body: body,
-                                icon: "notification_loot",
-                                color: "#FF0000",
-                                channelId: "Alerts loot",
-                                assistId: npcId,
-                                vibration: subscribers[key].vibration,
-                                sound: "sword_clash.aiff"
-                            })
-                        );
+                        // Buckets are pending only when BOTH are true:
+                        //   1) Window started: remaining <= bucket (we are inside its lead time)
+                        //   2) Not marked: bucketMap[bucket] !== lvl.ts (we haven't sent this bucket for this level ts)
+                        const pendingBuckets = LOOT_BUCKETS.filter((bucket) => {
+                            const sentForThis = bucketMap[bucket] === lvl.ts;
+                            const inWindow = remaining <= bucket;
+                            return inWindow && !sentForThis;
+                        });
 
-                        usersNotified++;
-                        logger.info(`Loot alert for ${npcId} level ${warnLevel}: ${usersNotified} players`);
-
+                        if (pendingBuckets.length > 0) {
+                            pendingByLevel.push({ level: lvl.level, ts: lvl.ts, remaining: remaining, buckets: pendingBuckets });
+                        }
                     }
 
-                    // And add the timestamp of the last notification, so that users are not notified twice
-                    db.ref(`loot/alertsTimestamp/${npcId}`).set(currentDateInMillis);
+                    if (pendingByLevel.length === 0) {
+                        continue;
+                    }
 
+                    // Fetch NPC details once per NPC
+                    const npcApi = await getNpcHospital(npcId, privateKey.tornKey);
+                    const npcName = npcApi.name;
+
+                    for (const pending of pendingByLevel) {
+                        const warnLevel = pending.level;
+                        const minutesRemaining = Math.round(pending.remaining / 60);
+                        const warnMessage = `${npcName} will reach level ${warnLevel} in about ${minutesRemaining} minutes!`;
+
+                        // Notify users subscribed to this NPC/level
+                        const response = await admin
+                            .firestore()
+                            .collection("players")
+                            .where("active", "==", true)
+                            .where("lootAlerts", "array-contains", `${npcId}:${warnLevel}`)
+                            .get();
+
+                        const subscribers = response.docs.map((d) => d.data());
+                        let usersNotified = 0;
+
+                        const bucketMapRef = db.ref(`loot/alertsTimestamp/${npcId}/${warnLevel}`);
+                        let bucketMap: Record<string, number> = {};
+                        await bucketMapRef.once("value", function (snapshot) {
+                            bucketMap = snapshot.val() ?? {};
+                        });
+                        if (typeof bucketMap === "number") {
+                            bucketMap = { legacy: bucketMap as any };
+                        }
+
+                        for (const key of Array.from(subscribers.keys())) {
+                            const sub = subscribers[key];
+                            const ahead = typeof sub.lootAlertAheadSeconds === "number" ? sub.lootAlertAheadSeconds : LOOT_DEFAULT_AHEAD;
+
+                            if (!pending.buckets.includes(ahead)) {
+                                continue;
+                            }
+
+                            let title = `${npcName} level ${warnLevel}!`;
+                            let body = warnMessage;
+                            if (sub.discrete) {
+                                title = `L`;
+                                body = `${npcName} - ${warnLevel}`;
+                            }
+
+                            promises.push(
+                                sendNotificationToUser({
+                                    token: sub.token,
+                                    title: title,
+                                    body: body,
+                                    icon: "notification_loot",
+                                    color: "#FF0000",
+                                    channelId: "Alerts loot",
+                                    assistId: npcId,
+                                    vibration: sub.vibration,
+                                    sound: "sword_clash.aiff"
+                                })
+                            );
+
+                            bucketMap[ahead] = pending.ts;
+                            usersNotified++;
+                        }
+
+                        if (usersNotified > 0) {
+                            promises.push(bucketMapRef.set(bucketMap));
+                            logger.info(`Loot alert for ${npcId} level ${warnLevel}: ${usersNotified} players`);
+                        }
+                    }
                 }
             }
 

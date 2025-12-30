@@ -57,6 +57,10 @@ class AlertsSettingsState extends State<AlertsSettings> {
 
   bool _togglingSendbirdNotifications = false;
 
+  String? _lootAheadSelection;
+  String? _lootRangersAheadSelection;
+  bool _aheadSelectionsInitialised = false;
+
   @override
   void initState() {
     super.initState();
@@ -106,6 +110,20 @@ class AlertsSettingsState extends State<AlertsSettings> {
             if (snapshot.connectionState == ConnectionState.done) {
               if (snapshot.data != null && snapshot.data[0] is FirebaseUserModel) {
                 _firebaseUserModel ??= snapshot.data[0] as FirebaseUserModel?;
+
+                if (!_aheadSelectionsInitialised && _firebaseUserModel != null) {
+                  const lootAllowed = {"180", "360", "600", "900", "1200"};
+                  const lrAllowed = {"180", "360", "600", "900", "1200"};
+
+                  final lootInit = (_firebaseUserModel!.lootAlertAheadSeconds ?? 360).toString();
+                  final lrInit = (_firebaseUserModel!.lootRangersAheadSeconds ?? 180).toString();
+
+                  _lootAheadSelection = lootAllowed.contains(lootInit) ? lootInit : "360";
+                  _lootRangersAheadSelection = lrAllowed.contains(lrInit) ? lrInit : "180";
+
+                  _aheadSelectionsInitialised = true;
+                }
+
                 return SingleChildScrollView(
                   controller: _scrollController,
                   child: Column(
@@ -445,6 +463,20 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      if (_firebaseUserModel!.lootAlerts.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(35, 0, 15, 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Loot alert lead time",
+                                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                              ),
+                              _lootAheadDropdown(),
+                            ],
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: CheckboxListTile(
@@ -488,6 +520,20 @@ class AlertsSettingsState extends State<AlertsSettings> {
                           },
                         ),
                       ),
+                      if (_firebaseUserModel!.lootRangersAlerts ?? false)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(35, 0, 15, 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text(
+                                "Loot Rangers lead time",
+                                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                              ),
+                              _lootRangersAheadDropdown(),
+                            ],
+                          ),
+                        ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(8, 5, 8, 0),
                         child: CheckboxListTile(
@@ -2058,6 +2104,70 @@ class AlertsSettingsState extends State<AlertsSettings> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _lootAheadDropdown() {
+    final options = <Map<String, String>>[
+      {"value": "180", "label": "3 minutes"},
+      {"value": "360", "label": "6 minutes"},
+      {"value": "600", "label": "10 minutes"},
+      {"value": "900", "label": "15 minutes"},
+      {"value": "1200", "label": "20 minutes"},
+    ];
+
+    return DropdownButton<String>(
+      value: _lootAheadSelection,
+      items: options
+          .map(
+            (opt) => DropdownMenuItem<String>(
+              value: opt["value"],
+              child: Text(opt["label"]!),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        final int? seconds = int.tryParse(value);
+        if (seconds == null) return;
+        setState(() {
+          _lootAheadSelection = value;
+          _firebaseUserModel?.lootAlertAheadSeconds = seconds;
+        });
+        FirestoreHelper().setLootAlertAheadSeconds(seconds);
+      },
+    );
+  }
+
+  Widget _lootRangersAheadDropdown() {
+    final options = <Map<String, String>>[
+      {"value": "180", "label": "3 minutes"},
+      {"value": "360", "label": "6 minutes"},
+      {"value": "600", "label": "10 minutes"},
+      {"value": "900", "label": "15 minutes"},
+      {"value": "1200", "label": "20 minutes"},
+    ];
+
+    return DropdownButton<String>(
+      value: _lootRangersAheadSelection,
+      items: options
+          .map(
+            (opt) => DropdownMenuItem<String>(
+              value: opt["value"],
+              child: Text(opt["label"]!),
+            ),
+          )
+          .toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        final int? seconds = int.tryParse(value);
+        if (seconds == null) return;
+        setState(() {
+          _lootRangersAheadSelection = value;
+          _firebaseUserModel?.lootRangersAheadSeconds = seconds;
+        });
+        FirestoreHelper().setLootRangersAheadSeconds(seconds);
+      },
     );
   }
 

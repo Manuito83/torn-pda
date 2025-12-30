@@ -382,6 +382,32 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             ),
           ),
         ),
+        DropdownMenuItem(
+          value: "8",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "15 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "9",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "20 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
       ],
       onChanged: (value) {
         Prefs().setLootNotificationAhead(value!);
@@ -480,6 +506,32 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             width: 120,
             child: Text(
               "10 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "7",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "15 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "8",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "20 minutes before",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -598,6 +650,32 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             width: 80,
             child: Text(
               "10 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "8",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "15 minutes",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "9",
+          child: SizedBox(
+            width: 80,
+            child: Text(
+              "20 minutes",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
