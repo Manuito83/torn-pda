@@ -204,17 +204,17 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
   final Set<String> _activeAlarmKitIdsIos = <String>{};
 
-  late NotificationType _travelNotificationType;
-  late NotificationType _energyNotificationType;
-  late NotificationType _nerveNotificationType;
-  late NotificationType _lifeNotificationType;
-  late NotificationType _drugsNotificationType;
-  late NotificationType _medicalNotificationType;
-  late NotificationType _boosterNotificationType;
-  late NotificationType _hospitalNotificationType;
-  late NotificationType _jailNotificationType;
-  late NotificationType _rankedWarNotificationType;
-  late NotificationType _raceStartNotificationType;
+  NotificationType _travelNotificationType = NotificationType.notification;
+  NotificationType _energyNotificationType = NotificationType.notification;
+  NotificationType _nerveNotificationType = NotificationType.notification;
+  NotificationType _lifeNotificationType = NotificationType.notification;
+  NotificationType _drugsNotificationType = NotificationType.notification;
+  NotificationType _medicalNotificationType = NotificationType.notification;
+  NotificationType _boosterNotificationType = NotificationType.notification;
+  NotificationType _hospitalNotificationType = NotificationType.notification;
+  NotificationType _jailNotificationType = NotificationType.notification;
+  NotificationType _rankedWarNotificationType = NotificationType.notification;
+  NotificationType _raceStartNotificationType = NotificationType.notification;
 
   int? _customEnergyTrigger;
   int? _customNerveTrigger;
