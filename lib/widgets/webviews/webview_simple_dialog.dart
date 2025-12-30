@@ -1,7 +1,6 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:developer';
-import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
@@ -102,15 +101,13 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
 
     PlatformInAppWebViewController.debugLoggingSettings.enabled = false;
 
+    final uaSuffix = _buildUserAgentSuffix();
+
     _initialWebViewSettings = InAppWebViewSettings(
       transparentBackground: true,
       useOnLoadResource: true,
       //javaScriptCanOpenWindowsAutomatically: true,
-      userAgent: Platform.isAndroid
-          ? "Mozilla/5.0 (Linux; Android Torn PDA) AppleWebKit/537.36 "
-              "(KHTML, like Gecko) Version/4.0 Chrome/91.0.4472.114 Mobile Safari/537.36 ${WebviewConfig.agent}"
-          : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-              "CriOS/103.0.5060.54 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent}",
+      applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
       //supportMultipleWindows: true,
       initialScale: _settingsProvider.androidBrowserScale,
       useWideViewPort: false,
@@ -119,6 +116,12 @@ class WebViewSimpleDialogState extends State<WebViewSimpleDialog> {
       disableLongPressContextMenuOnLinks: true,
       ignoresViewportScaleLimits: _settingsProvider.iosBrowserPinch,
     );
+  }
+
+  String _buildUserAgentSuffix() {
+    const unknown = "##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##";
+    final deviceInfo = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
+    return "${WebviewConfig.agent} $deviceInfo".trim();
   }
 
   @override
