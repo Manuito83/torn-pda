@@ -5,7 +5,7 @@ import { sendNotificationToUser } from "./notification";
 const privateKey = require("../key/torn_key");
 
 const LOOT_DEFAULT_AHEAD = 360; // default before v3.10.1 (6 minutes)
-const LOOT_BUCKETS = [180, 360, 600, 900, 1200];
+const LOOT_BUCKETS = [180, 360, 600];
 
 
 async function getNpcHospital(npc: String, key: String) {

@@ -112,8 +112,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
                 _firebaseUserModel ??= snapshot.data[0] as FirebaseUserModel?;
 
                 if (!_aheadSelectionsInitialised && _firebaseUserModel != null) {
-                  const lootAllowed = {"180", "360", "600", "900", "1200"};
-                  const lrAllowed = {"180", "360", "600", "900", "1200"};
+                  const lootAllowed = {"180", "360", "600"};
+                  const lrAllowed = {"180", "360", "600"};
 
                   final lootInit = (_firebaseUserModel!.lootAlertAheadSeconds ?? 360).toString();
                   final lrInit = (_firebaseUserModel!.lootRangersAheadSeconds ?? 180).toString();
@@ -2112,8 +2112,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
       {"value": "180", "label": "3 minutes"},
       {"value": "360", "label": "6 minutes"},
       {"value": "600", "label": "10 minutes"},
-      {"value": "900", "label": "15 minutes"},
-      {"value": "1200", "label": "20 minutes"},
     ];
 
     return DropdownButton<String>(
@@ -2144,8 +2142,6 @@ class AlertsSettingsState extends State<AlertsSettings> {
       {"value": "180", "label": "3 minutes"},
       {"value": "360", "label": "6 minutes"},
       {"value": "600", "label": "10 minutes"},
-      {"value": "900", "label": "15 minutes"},
-      {"value": "1200", "label": "20 minutes"},
     ];
 
     return DropdownButton<String>(

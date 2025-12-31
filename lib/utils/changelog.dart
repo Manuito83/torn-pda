@@ -109,7 +109,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '06 JAN 2026'
         ..features = [
           "Chaining: TORN targets can now be imported to the targets list",
-          "Loot: added additional lead time options for alerts, manual notifications and alarms",
+          "Loot: added customizable lead time options for automatic notifications (alerts)",
           if (Platform.isIOS)
             ComplexFeature(
               "Alarms can now be used in addition to notifications (iOS 26+)",

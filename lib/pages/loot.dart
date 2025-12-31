@@ -51,6 +51,12 @@ class LootPage extends StatefulWidget {
 }
 
 class LootPageState extends State<LootPage> {
+  // Allowed preference keys for manual loot notifications/alarms/timers (string codes stored in prefs)
+  static const List<String> _lootNotificationAheadAllowed = ["0", "1", "2", "3", "4", "5", "6", "7"];
+  static const List<String> _lootAlarmAheadAllowedIOS = ["s20", "s40", "0", "1", "2", "3", "4", "5", "6"];
+  static const List<String> _lootAlarmAheadAllowedAndroid = ["0", "1", "2", "3", "4", "5", "6"];
+  static const List<String> _lootTimerAheadAllowed = ["0", "1", "2", "3", "4", "5", "6", "7"];
+
   var _npcIds = <String>[];
   var _filterOutIds = <String>[];
   final _images = <NpcImagesModel>[];
@@ -1279,9 +1285,22 @@ class LootPageState extends State<LootPage> {
       lootTimeType == 'timer' ? _lootTimeType = LootTimeType.timer : _lootTimeType = LootTimeType.dateTime;
 
       final notification = await Prefs().getLootNotificationType();
-      final notificationAhead = await Prefs().getLootNotificationAhead();
-      final alarmAhead = await Prefs().getLootAlarmAhead();
-      final timerAhead = await Prefs().getLootTimerAhead();
+      final notificationAheadRaw = await Prefs().getLootNotificationAhead();
+      final alarmAheadRaw = await Prefs().getLootAlarmAhead();
+      final timerAheadRaw = await Prefs().getLootTimerAhead();
+
+      final notificationAhead = _lootNotificationAheadAllowed.contains(notificationAheadRaw)
+          ? notificationAheadRaw
+          : _lootNotificationAheadAllowed.last;
+
+      final timerAhead = _lootTimerAheadAllowed.contains(timerAheadRaw) ? timerAheadRaw : _lootTimerAheadAllowed.last;
+
+      final alarmAhead = Platform.isIOS
+          ? (_lootAlarmAheadAllowedIOS.contains(alarmAheadRaw) ? alarmAheadRaw : _lootAlarmAheadAllowedIOS.last)
+          : (_lootAlarmAheadAllowedAndroid.contains(alarmAheadRaw)
+              ? alarmAheadRaw
+              : _lootAlarmAheadAllowedAndroid.last);
+
       _alarmSound = await Prefs().getManualAlarmSound();
       _alarmVibration = await Prefs().getManualAlarmVibration();
 
@@ -1308,12 +1327,8 @@ class LootPageState extends State<LootPage> {
           _lootNotificationAhead = 360;
         } else if (notificationAhead == '6') {
           _lootNotificationAhead = 480;
-        } else if (notificationAhead == '7') {
+        } else {
           _lootNotificationAhead = 600;
-        } else if (notificationAhead == '8') {
-          _lootNotificationAhead = 900;
-        } else if (notificationAhead == '9') {
-          _lootNotificationAhead = 1200;
         }
 
         if (Platform.isIOS) {
@@ -1335,12 +1350,8 @@ class LootPageState extends State<LootPage> {
             _lootAlarmAheadSeconds = 480;
           } else if (alarmAhead == '6') {
             _lootAlarmAheadSeconds = 600;
-          } else if (alarmAhead == '7') {
-            _lootAlarmAheadSeconds = 900;
-          } else if (alarmAhead == '8') {
-            _lootAlarmAheadSeconds = 1200;
           } else {
-            _lootAlarmAheadSeconds = 60; // default to 1 minute before on iOS
+            _lootAlarmAheadSeconds = 600; // clamp to max allowed on iOS
           }
         } else {
           if (alarmAhead == '0') {
@@ -1357,12 +1368,8 @@ class LootPageState extends State<LootPage> {
             _lootAlarmAheadSeconds = 480;
           } else if (alarmAhead == '6') {
             _lootAlarmAheadSeconds = 600;
-          } else if (alarmAhead == '7') {
-            _lootAlarmAheadSeconds = 900;
-          } else if (alarmAhead == '8') {
-            _lootAlarmAheadSeconds = 1200;
           } else {
-            _lootAlarmAheadSeconds = 0;
+            _lootAlarmAheadSeconds = 600; // clamp to max allowed on Android
           }
         }
 
@@ -1382,10 +1389,8 @@ class LootPageState extends State<LootPage> {
           _lootTimerAhead = 480;
         } else if (timerAhead == '7') {
           _lootTimerAhead = 600;
-        } else if (timerAhead == '8') {
-          _lootTimerAhead = 900;
-        } else if (timerAhead == '9') {
-          _lootTimerAhead = 1200;
+        } else {
+          _lootTimerAhead = 600; // clamp
         }
       });
 

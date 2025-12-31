@@ -4,7 +4,7 @@ import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
 
 const LOOT_RANGERS_DEFAULT_AHEAD = 180; // seconds (3 minutes)
-const LOOT_RANGERS_BUCKETS = [180, 360, 600, 900, 1200];
+const LOOT_RANGERS_BUCKETS = [180, 360, 600];
 
 export const sendLootRangersNotification = onSchedule({
   schedule: "*/2 * * * *",

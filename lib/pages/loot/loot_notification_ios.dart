@@ -332,32 +332,6 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
             ),
           ),
         ),
-        DropdownMenuItem(
-          value: "7",
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "15 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "8",
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "20 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
       ],
       onChanged: (value) {
         if (value != null) {
@@ -478,32 +452,6 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
             ),
           ),
         ),
-        DropdownMenuItem(
-          value: "8",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "15 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "9",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "20 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
       ],
       onChanged: (value) {
         if (value != null) {
@@ -523,9 +471,12 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
     final lootAlarmAhead = await Prefs().getLootAlarmAhead();
     final lootType = await Prefs().getLootNotificationType();
 
+    const notifAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
+    const alarmAllowed = {"s20", "s40", "0", "1", "2", "3", "4", "5", "6"};
+
     setState(() {
-      _lootNotificationAheadDropDownValue = lootNotificationAhead;
-      _lootAlarmAheadDropDownValue = lootAlarmAhead;
+      _lootNotificationAheadDropDownValue = notifAllowed.contains(lootNotificationAhead) ? lootNotificationAhead : "7";
+      _lootAlarmAheadDropDownValue = alarmAllowed.contains(lootAlarmAhead) ? lootAlarmAhead : "6";
       _lootTypeDropDownValue = lootType;
     });
   }

@@ -382,32 +382,6 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             ),
           ),
         ),
-        DropdownMenuItem(
-          value: "8",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "15 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "9",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "20 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
       ],
       onChanged: (value) {
         Prefs().setLootNotificationAhead(value!);
@@ -506,32 +480,6 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             width: 120,
             child: Text(
               "10 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "7",
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "15 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "8",
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "20 minutes before",
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
@@ -657,32 +605,6 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
             ),
           ),
         ),
-        DropdownMenuItem(
-          value: "8",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "15 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: "9",
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "20 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
       ],
       onChanged: (value) {
         Prefs().setLootTimerAhead(value!);
@@ -699,11 +621,15 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     final lootAlarmAhead = await Prefs().getLootAlarmAhead();
     final lootTimerAhead = await Prefs().getLootTimerAhead();
 
+    const notifAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
+    const alarmAllowed = {"0", "1", "2", "3", "4", "5", "6"};
+    const timerAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
+
     setState(() {
       _lootTypeDropDownValue = lootType;
-      _lootNotificationAheadDropDownValue = lootNotificationAhead;
-      _lootAlarmAheadDropDownValue = lootAlarmAhead;
-      _lootTimerAheadDropDownValue = lootTimerAhead;
+      _lootNotificationAheadDropDownValue = notifAllowed.contains(lootNotificationAhead) ? lootNotificationAhead : "7";
+      _lootAlarmAheadDropDownValue = alarmAllowed.contains(lootAlarmAhead) ? lootAlarmAhead : "6";
+      _lootTimerAheadDropDownValue = timerAllowed.contains(lootTimerAhead) ? lootTimerAhead : "7";
     });
   }
 
