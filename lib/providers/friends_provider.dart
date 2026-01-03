@@ -9,6 +9,8 @@ import 'package:get/get.dart';
 import 'package:torn_pda/models/friends/friend_model.dart';
 import 'package:torn_pda/models/friends/friends_backup_model.dart';
 import 'package:torn_pda/models/friends/friends_sort.dart';
+import 'package:torn_pda/models/chaining/target_model.dart';
+import 'package:torn_pda/models/faction/faction_model.dart';
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
@@ -31,6 +33,26 @@ class UpdateFriendResult {
   UpdateFriendResult({required this.success, required this.numberErrors, required this.numberSuccessful});
 }
 
+class AddFriendsFromFactionResult {
+  bool success;
+  String? errorReason;
+  String? factionId;
+  String? factionName;
+  int added;
+  int alreadyExisting;
+  int errors;
+
+  AddFriendsFromFactionResult({
+    required this.success,
+    this.errorReason,
+    this.factionId,
+    this.factionName,
+    this.added = 0,
+    this.alreadyExisting = 0,
+    this.errors = 0,
+  });
+}
+
 class FriendsProvider extends ChangeNotifier {
   bool _initialized = false;
   bool get initialized => _initialized;
@@ -44,6 +66,12 @@ class FriendsProvider extends ChangeNotifier {
   String get currentFilter => _currentFilter;
 
   FriendSortType? _currentSort;
+
+  bool _cancelImport = false;
+
+  void cancelImport() {
+    _cancelImport = true;
+  }
 
   /// If providing [notes] or [notesColor], ensure that they are within 200
   /// chars and of an acceptable color (green, blue, red).
@@ -89,6 +117,171 @@ class FriendsProvider extends ChangeNotifier {
       return AddFriendResult(
         success: false,
         errorReason: myError.errorReason,
+      );
+    }
+  }
+
+  /// Adds all members of a faction to the friends list.
+  ///
+  /// - If [fromUserId] is true, [inputId] is treated as a player ID and is
+  ///   converted to a faction ID via `ApiCallsV1.getTarget()`
+  /// - Otherwise [inputId] is treated as a faction ID.
+  Future<AddFriendsFromFactionResult> addFriendsFromFaction({
+    required String inputId,
+    bool fromUserId = false,
+    Function(String currentName, int processed, int total)? onProgress,
+  }) async {
+    _cancelImport = false;
+    try {
+      String factionId = inputId;
+
+      if (fromUserId) {
+        final dynamic target = await ApiCallsV1.getTarget(playerId: inputId);
+        if (target is! TargetModel) {
+          final myError = target is ApiError ? target : null;
+          return AddFriendsFromFactionResult(
+            success: false,
+            errorReason: myError?.errorReason ?? "Can't locate the given target!",
+          );
+        }
+
+        final int resolvedFactionId = target.faction?.factionId ?? 0;
+        if (resolvedFactionId == 0) {
+          return AddFriendsFromFactionResult(
+            success: false,
+            errorReason: "${target.name} does not belong to a faction!",
+          );
+        }
+
+        factionId = resolvedFactionId.toString();
+      }
+
+      // Retry logic for "Too many requests"
+      dynamic factionResult;
+      int retries = 0;
+      bool factionSuccess = false;
+
+      while (!factionSuccess && retries < 5) {
+        factionResult = await ApiCallsV1.getFaction(factionId: factionId);
+
+        if (factionResult is ApiError &&
+            (factionResult.errorId == 5 || factionResult.errorReason.toLowerCase().contains('too many requests'))) {
+          retries++;
+          if (onProgress != null) {
+            onProgress('API Limit: Waiting... (Retry $retries)', 0, 1);
+          }
+          await Future.delayed(Duration(seconds: 5 * retries));
+        } else {
+          factionSuccess = true;
+        }
+      }
+
+      if (factionResult is ApiError || (factionResult is FactionModel && factionResult.id == null)) {
+        final myError = factionResult is ApiError ? factionResult : null;
+        return AddFriendsFromFactionResult(
+          success: false,
+          factionId: factionId,
+          errorReason: myError?.errorReason ?? "Can't locate the given faction!",
+        );
+      }
+
+      final FactionModel faction = factionResult as FactionModel;
+      final memberIds = faction.members?.keys.toList() ?? <String>[];
+      if (memberIds.isEmpty) {
+        return AddFriendsFromFactionResult(
+          success: false,
+          factionId: factionId,
+          factionName: faction.name,
+          errorReason: 'No members found for this faction!',
+        );
+      }
+
+      int added = 0;
+      int alreadyExisting = 0;
+      int errors = 0;
+
+      for (final memberId in memberIds) {
+        if (_cancelImport) break;
+
+        try {
+          if (_friends.any((fri) => fri.playerId.toString() == memberId)) {
+            alreadyExisting++;
+            if (onProgress != null) {
+              onProgress('Skipping existing...', added + alreadyExisting + errors, memberIds.length);
+            }
+            continue;
+          }
+
+          // Retry logic for "Too many requests"
+          dynamic friendResult;
+          int retries = 0;
+          bool success = false;
+          bool slowMode = false;
+
+          while (!success && retries < 5) {
+            if (_cancelImport) break;
+
+            friendResult = await ApiCallsV1.getFriends(playerId: memberId);
+
+            if (friendResult is ApiError &&
+                (friendResult.errorId == 5 || friendResult.errorReason.toLowerCase().contains('too many requests'))) {
+              retries++;
+              slowMode = true;
+              if (onProgress != null) {
+                onProgress(
+                  'API Limit: Waiting... (Retry $retries)',
+                  added + alreadyExisting + errors,
+                  memberIds.length,
+                );
+              }
+              await Future.delayed(Duration(seconds: 5 * retries));
+            } else {
+              success = true;
+            }
+          }
+
+          if (_cancelImport) break;
+
+          if (friendResult is FriendModel) {
+            _getFriendFaction(friendResult);
+            _friends.add(friendResult);
+            notifyListeners();
+            _saveFriendsSharedPrefs();
+            added++;
+            if (onProgress != null) {
+              onProgress(friendResult.name ?? 'Unknown', added + alreadyExisting + errors, memberIds.length);
+            }
+          } else {
+            errors++;
+            if (onProgress != null) {
+              onProgress('Error fetching...', added + alreadyExisting + errors, memberIds.length);
+            }
+          }
+
+          // Respect the API limit (100 calls/minute)
+          // If we hit the limit (slowMode) or if the list is long, we throttle
+          if (slowMode || memberIds.length > 90) {
+            await Future.delayed(const Duration(seconds: 1), () {});
+          }
+        } catch (_) {
+          errors++;
+        }
+      }
+
+      final bool success = added > 0 || alreadyExisting > 0;
+      return AddFriendsFromFactionResult(
+        success: success,
+        factionId: factionId,
+        factionName: faction.name,
+        added: added,
+        alreadyExisting: alreadyExisting,
+        errors: errors,
+        errorReason: success ? '' : 'No members could be added.',
+      );
+    } catch (e) {
+      return AddFriendsFromFactionResult(
+        success: false,
+        errorReason: 'Unexpected error while importing: $e',
       );
     }
   }
@@ -236,6 +429,8 @@ class FriendsProvider extends ChangeNotifier {
   /// CAREFUL!
   void wipeAllFriends() {
     _friends.clear();
+    notifyListeners();
+    _saveFriendsSharedPrefs();
   }
 
   void setFilterText(String newFilter) {

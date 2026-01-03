@@ -1,5 +1,6 @@
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 
 // Package imports:
@@ -210,6 +211,61 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                       color: Colors.grey[600],
                       fontSize: 11,
                       fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "Market selling fee (%)",
+                        style: TextStyle(
+                          fontSize: 13,
+                        ),
+                      ),
+                      SizedBox(
+                        width: 60,
+                        height: 30,
+                        child: TextFormField(
+                          initialValue: widget.settingsProvider!.foreignStockSellingFee.toString(),
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: const InputDecoration(
+                            contentPadding: EdgeInsets.all(5),
+                            border: OutlineInputBorder(),
+                            counterText: "",
+                          ),
+                          maxLength: 3,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            TextInputFormatter.withFunction((oldValue, newValue) {
+                              if (newValue.text.isEmpty) return newValue;
+                              final int? value = int.tryParse(newValue.text);
+                              if (value == null || value > 100) return oldValue;
+                              return newValue;
+                            }),
+                          ],
+                          onChanged: (value) {
+                            int? fee = int.tryParse(value);
+                            if (fee != null) {
+                              widget.settingsProvider!.changeForeignStockSellingFee = fee;
+                              _callBackValues();
+                            }
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Affects profit calculation',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 10),

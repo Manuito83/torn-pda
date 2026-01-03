@@ -102,18 +102,70 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.9.6 - Build 596 - 12/12/2025
+    // v3.10.1 - Build 604 - 30/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.10.1'
+        ..date = '06 JAN 2026'
+        ..features = [
+          "Chaining: TORN targets can now be imported to the targets list",
+          "Loot: added customizable lead time options for automatic notifications (alerts)",
+          if (Platform.isIOS)
+            ComplexFeature(
+              "Alarms can now be used in addition to notifications (iOS 26+)",
+              explanation: "All Profile, Loot, Travel Boarding, and browser notifications can now "
+                  "be activated as alarms instead.\n\n"
+                  "Under the hood, they use native iOS AlarmKit which is only supported on iOS 26 and later\n\n"
+                  "Current pending alarms can be seen (and cancelled) in Settings > Active Alarms",
+            ),
+          "Scripts: added option to temporarily disable all user scripts",
+          "Dev Tools: added Scripts tab to manage active userscripts for the current page",
+          "Fixed max buy buttons for bazaars",
+          "Fixed new version update dialog persistence",
+          "Fixed foreign stocks data submission to YATA and Prometheus",
+        ],
+    );
+
+    // v3.10.0 - Build 601 - 21/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.10.0'
+        ..date = '26 DEC 2025'
+        ..features = [
+          "Overhauled war target sorting: added smart score weighting, filters and improved hospital time handling",
+          "Foreign Stocks: added option to set a market selling fee for profit calculation",
+          "Foreign Stocks: added filter for OC items",
+          "Friends: added option to import an entire faction",
+          "Improved Torn Stats chart cache data handling",
+          ComplexFeature(
+            "Added browser handler to share files from user scripts (see details)",
+            explanation: "The new handler allows web content / user scripts to share files "
+                "(like CSVs or images) generated within the browser to the native side of the app, "
+                "triggering the system share sheet.\n\n"
+                "Please visit the ./docs section in Github for more information.",
+          ),
+          "Added option to prevent keyboard from opening when tapping basket icon abroad (enabled by default)",
+          "Updated images for new items",
+          "Fixed Foreign Stocks data submission to YATA and Prometheus",
+          "Fixed max buy buttons abroad",
+          "Fixed axis margin for foreign stocks charts",
+        ],
+    );
+
+    // v3.9.6 - Build 598 - 13/12/2025
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.9.6'
-        ..date = '15 DEC 2025'
+        ..date = '16 DEC 2025'
         ..features = [
           "Profile widget can now be hidden when attacking (shown by default)",
           "Added more time range filtering options for Torn Stats chart",
+          "Added colored time range and error messages for TS stats chart",
           "Fixed Foreign Stocks data submission to YATA and Prometheus",
           "Fixed option to option to hide foreign items info",
           "Fixed quick travel return button",
           "Fixed max buy buttons abroad",
+          "Fixed browser history navigation issues",
         ],
     );
 

@@ -6,6 +6,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:bot_toast/bot_toast.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/notification.dart';
 
 class WebviewNotificationsHelper {
@@ -120,18 +121,42 @@ class WebviewNotificationsHelper {
     return 'Notification scheduled successfully with ID $id';
   }
 
-  /// Set an Android Alarm via Intent
-  static Future<String> setAndroidAlarm({
+  /// Set an alarm (Android via intent, iOS via AlarmKit)
+  ///
+  /// iOS only: [logicalId] to dedupe/cancel AlarmKit alarms
+  static Future<String> setWebviewAlarm({
     required int timestampMillis,
     bool vibrate = true,
     bool sound = true,
     String message = 'TORN PDA Alarm',
+    String? logicalId,
   }) async {
-    if (!Platform.isAndroid) {
-      return 'Error: Alarms are only available on Android';
+    final alarmTime = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
+    final effectiveMessage = (Platform.isIOS && message == 'TORN PDA Alarm') ? 'Alarm' : message;
+
+    if (Platform.isIOS) {
+      final available = await AlarmKitServiceIos.isAvailable();
+      if (!available) {
+        return 'Error: Alarms are not available on this iOS device';
+      }
+
+      final id = logicalId ?? 'webview_alarm_$timestampMillis';
+      await AlarmKitServiceIos.setAlarmWithMetadata(
+        targetTime: alarmTime,
+        label: effectiveMessage,
+        id: id,
+        context: 'Webview alarm',
+        details: 'Triggers at ${alarmTime.toLocal()}',
+        payload: 'webview:alarm',
+        timeMillis: timestampMillis,
+      );
+      return 'Alarm set successfully for $alarmTime';
     }
 
-    final alarmTime = DateTime.fromMillisecondsSinceEpoch(timestampMillis);
+    if (!Platform.isAndroid) {
+      return 'Error: Alarms are only available on Android or iOS';
+    }
+
     final intent = AndroidIntent(
       action: 'android.intent.action.SET_ALARM',
       arguments: {

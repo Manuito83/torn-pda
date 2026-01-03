@@ -403,6 +403,18 @@ class FirestoreHelper {
     });
   }
 
+  Future<void> setLootAlertAheadSeconds(int seconds) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "lootAlertAheadSeconds": seconds,
+    });
+  }
+
+  Future<void> setLootRangersAheadSeconds(int seconds) async {
+    await _firestore.collection("players").doc(_uid).update({
+      "lootRangersAheadSeconds": seconds,
+    });
+  }
+
   Future<void> subscribeToForumsSubcriptionsNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({
       "forumsSubscriptionsNotification": subscribe,

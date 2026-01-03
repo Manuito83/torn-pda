@@ -98,9 +98,11 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                     _tornStatsKey(),
                     const SizedBox(height: 15),
                     const SizedBox(height: 40),
+                    /*
                     _tscKey(),
                     const SizedBox(height: 15),
                     const SizedBox(height: 40),
+                    */
                   ],
                 ),
               ),
@@ -255,6 +257,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
     );
   }
 
+  // ignore: unused_element
   Widget _tscKey() {
     return GetBuilder<UserController>(
       builder: (w) {

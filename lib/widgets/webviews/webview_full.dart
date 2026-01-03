@@ -177,7 +177,7 @@ class WebViewFullState extends State<WebViewFull>
   final bool _debugScriptsInjection = false;
 
   InAppWebViewController? webViewController;
-  TravelHandler? _travelHandler;
+  ForeignStocksWebviewHandler? _travelHandler;
   var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
@@ -195,6 +195,7 @@ class WebViewFullState extends State<WebViewFull>
   URLRequest? _initialUrl;
   String? _pageTitle = "";
   String _currentUrl = '';
+  String _lastReportedUrl = '';
 
   bool _backButtonPopsContext = true;
 
@@ -447,6 +448,8 @@ class WebViewFullState extends State<WebViewFull>
 
     _findController.addListener(onFindInputTextChange);
 
+    final uaSuffix = _buildUserAgentSuffix();
+
     _initialWebViewSettings = InAppWebViewSettings(
       cacheEnabled: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
           ? _settingsProvider.webviewCacheEnabled
@@ -457,11 +460,7 @@ class WebViewFullState extends State<WebViewFull>
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
       javaScriptCanOpenWindowsAutomatically: true,
-      userAgent: Platform.isAndroid
-          ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 "
-              "Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
-          : "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-              "CriOS/132.0.6834.100 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
+      applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
@@ -528,6 +527,12 @@ class WebViewFullState extends State<WebViewFull>
         });
       }
     });
+  }
+
+  String _buildUserAgentSuffix() {
+    const unknown = "##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##";
+    final deviceInfo = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
+    return "${WebviewConfig.agent} $deviceInfo".trim();
   }
 
   @override
@@ -1257,7 +1262,7 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
-            _travelHandler = TravelHandler(
+            _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
               onTravelStatusChanged: (isAbroad) {
                 if (mounted) {
@@ -1266,6 +1271,7 @@ class WebViewFullState extends State<WebViewFull>
                   });
                 }
               },
+              settingsProvider: _settingsProvider,
             );
 
             // Clear cache (except for cookies) for each new session
@@ -1335,6 +1341,8 @@ class WebViewFullState extends State<WebViewFull>
               webview: webViewController!,
               exitFullScreenCallback: _exitFullScreenFromJS,
             );
+
+            WebviewHandlers.addShareFileHandler(webview: webViewController!, context: context);
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
@@ -1524,8 +1532,7 @@ class WebViewFullState extends State<WebViewFull>
 
               if (lastCallAgo > 0.5) {
                 // If reportTabLoadUrl wasn't called in the last 0.5 seconds
-                _webViewProvider.reportTabLoadUrl(widget.key, uri.toString());
-                _lastReportTabLoadUrlTime = now;
+                _reportUrlVisit(uri, bypassThrottle: true);
               }
             }
 
@@ -1574,9 +1581,9 @@ class WebViewFullState extends State<WebViewFull>
             if (progress > 10) {
               // Wait for some progress to avoid initial load noise
               final currentUri = await c.getUrl();
-              if (currentUri != null && _currentUrl != currentUri.toString()) {
+              if (currentUri != null && _lastReportedUrl != currentUri.toString()) {
                 log(
-                  "🔄 onProgressChanged URL change detected: $_currentUrl -> ${currentUri.toString()}",
+                  "🔄 onProgressChanged URL change detected: $_lastReportedUrl -> ${currentUri.toString()}",
                   name: "WEBVIEW FULL",
                 );
                 _currentUrl = currentUri.toString();
@@ -2422,6 +2429,10 @@ class WebViewFullState extends State<WebViewFull>
       }
     }
 
+    if (_webViewProvider.areUrlsEquivalent(_lastReportedUrl, uri.toString())) {
+      return;
+    }
+
     // For certain URLs (e.g. forums or personal stats in iOS) we might be reporting this twice.
     // Once from [onUpdateVisitedHistory] and again from [onResourceLoad].
     // There are also sections such as personal stats that trigger [onUpdateVisitedHistory] several times
@@ -2431,6 +2442,7 @@ class WebViewFullState extends State<WebViewFull>
       return;
     }
     _urlTriggerTime = now;
+    _lastReportedUrl = uri.toString();
     //log(uri.toString());
 
     if (!_omitTabHistory) {
@@ -5257,7 +5269,7 @@ class WebViewFullState extends State<WebViewFull>
 
     // On Android, certain short cuts will revert to the main section (e.g. market search)
     // If we want to load the same URL again, we need to reload instead of loadUrl
-    if (inputUrl == _currentUrl) {
+    if (inputUrl == _lastReportedUrl) {
       webViewController!.reload();
       return;
     }

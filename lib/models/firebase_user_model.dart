@@ -16,6 +16,8 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool lifeLastCheckFull = true;
   List lootAlerts = [];
   bool? lootRangersAlerts = false;
+  int? lootAlertAheadSeconds;
+  int? lootRangersAheadSeconds;
   bool? hospitalNotification = false;
   bool? drugsNotification = false;
   bool drugsInfluence = false;
@@ -69,6 +71,8 @@ class FirebaseUserModel extends OwnProfileExtended {
       "lifeLastCheckFull": lifeLastCheckFull,
       "lootAlerts": lootAlerts,
       "lootRangersNotification": lootRangersAlerts,
+      "lootAlertAheadSeconds": lootAlertAheadSeconds,
+      "lootRangersAheadSeconds": lootRangersAheadSeconds,
       "hospitalNotification": hospitalNotification,
       "drugsNotification": drugsNotification,
       "drugsInfluence": drugsInfluence,
@@ -108,6 +112,8 @@ class FirebaseUserModel extends OwnProfileExtended {
       ..lifeLastCheckFull = data["lifeLastCheckFull"] ?? false
       ..lootAlerts = data["lootAlerts"] ?? []
       ..lootRangersAlerts = data["lootRangersNotification"] ?? false
+      ..lootAlertAheadSeconds = data["lootAlertAheadSeconds"]
+      ..lootRangersAheadSeconds = data["lootRangersAheadSeconds"]
       ..hospitalNotification = data["hospitalNotification"] ?? false
       ..drugsNotification = data["drugsNotification"] ?? false
       ..drugsInfluence = data["drugsInfluence"] ?? false

@@ -59,17 +59,79 @@ String hideItemInfoJS() {
   ''';
 }
 
-String buyMaxAbroadJS() {
+String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
   return '''
 
+  var preventBasketKeyboard = $preventBasketKeyboard;
+
+  function parseMoney(text) {
+    var clean = text.replace(/\\\$/g, '').trim().toLowerCase();
+    var multiplier = 1;
+    if (clean.endsWith('m')) {
+        multiplier = 1000000;
+        clean = clean.substring(0, clean.length - 1);
+    } else if (clean.endsWith('b')) {
+        multiplier = 1000000000;
+        clean = clean.substring(0, clean.length - 1);
+    } else if (clean.endsWith('k')) {
+        multiplier = 1000;
+        clean = clean.substring(0, clean.length - 1);
+    }
+    
+    clean = clean.replace(/[^0-9.]/g, '');
+    
+    var val = parseFloat(clean);
+    if (isNaN(val)) return 0;
+    return Math.floor(val * multiplier);
+  }
+
   function addFillMaxButtons() {
+    
+    // 0. SAFETY CHECK: Ensure we can detect user money
+    // If we can't find money, we might be elsewhere else (e.g. Bank)
+    // or simply can't calculate the max amount
+    const moneyElCheck = document.querySelector('#user-money') || document.querySelector('[data-currency-money]') || document.querySelector('.user-information .money');
+    if (!moneyElCheck) {
+        return;
+    }
+
+    // Improved Mode Detection
+    const isHorizontalMode = () => {
+        // 1. Check for VISIBLE "Type" header
+        const headers = Array.from(document.querySelectorAll('[class*="itemsHeader___"] > div'));
+        const visibleTypeHeader = headers.find(h => 
+            h.textContent.trim().toUpperCase() === 'TYPE' && h.offsetParent !== null
+        );
+        
+        if (visibleTypeHeader) {
+             return true;
+        }
+
+        // 2. Check Button Text
+        const buyBtn = document.querySelector('button.torn-btn[type="submit"]');
+        if (buyBtn) {
+            const text = buyBtn.innerText.trim().toUpperCase();
+            if (text === 'BUY') {
+                return true;
+            }
+        }
+        
+        // 3. Fallback to width
+        return window.innerWidth > 700;
+    };
+    
+    const isHorizontal = isHorizontalMode();
 
     // 1. CSS INJECTION
-    if (!document.getElementById('pda-buy-max-style')) {
-        const style = document.createElement('style');
+    let style = document.getElementById('pda-buy-max-style');
+    if (!style) {
+        style = document.createElement('style');
         style.id = 'pda-buy-max-style';
-        style.innerHTML = `
-            /* Global Reset: Eliminate gaps and auto-margins that waste space */
+        document.head.appendChild(style);
+    }
+    
+    // VERTICAL CSS
+    const verticalCSS = `
             [class*="row___"], [class*="stockHeader___"] {
                 gap: 0 !important;
             }
@@ -78,17 +140,10 @@ String buyMaxAbroadJS() {
                 padding-right: 2px !important;
                 margin: 0 !important; 
             }
-
-            /* Column Optimization:
-            * - Hide "Type" (3rd child) to save ~40px
-            * - Set "Cost" and "Stock" to auto-width to fit content tightly
-            * - Allow "Name" to flex and truncate if necessary
-            */
             [class*="stockHeader___"] > div:nth-child(3),
             [class*="row___"] > div:nth-child(3) {
                 display: none !important;
             }
-
             [class*="stockHeader___"] > div:nth-child(4),
             [class*="row___"] > div:nth-child(4),
             [class*="stockHeader___"] > div:nth-child(5),
@@ -98,14 +153,11 @@ String buyMaxAbroadJS() {
                 min-width: 0 !important;
                 max-width: none !important;
             }
-
             [class*="itemName___"] {
                 flex: 1 1 auto !important;
                 min-width: 40px !important;
                 overflow: hidden !important;
             }
-            
-            /* Ensure long item names don't break the row height */
             [class*="itemName___"] button {
                 white-space: nowrap !important;
                 overflow: hidden !important;
@@ -113,36 +165,76 @@ String buyMaxAbroadJS() {
                 max-width: 100% !important;
                 display: block !important;
             }
-
             [class*="buyCell___"] {
                 flex: 0 0 auto !important;
                 width: auto !important;
                 max-width: none !important;
             }
-        `;
-        document.head.appendChild(style);
+    `;
+    
+    // HORIZONTAL CSS
+    const horizontalCSS = `
+            /* Hide Type Column via CSS if possible */
+            /* We will also try JS hiding */
+            [class*="itemsHeader___"] > div:nth-child(3) {
+                display: none !important;
+            }
+            li > div[class*="row___"] > div:nth-child(3) {
+                display: none !important;
+            }
+            
+            /* Ensure buy column has enough space */
+            [class*="tabletColE___"] {
+                min-width: 100px !important;
+                overflow: visible !important;
+            }
+    `;
+
+    const desiredMode = isHorizontal ? 'horizontal' : 'vertical';
+    if (style.getAttribute('data-mode') !== desiredMode) {
+        style.setAttribute('data-mode', desiredMode);
+        style.innerHTML = isHorizontal ? horizontalCSS : verticalCSS;
     }
 
-    // 2. BUTTON INJECTION
+    // 2. JS HIDING FOR HORIZONTAL MODE (Type Column)
+    if (isHorizontal) {
+        // Hide Header
+        const headers = document.querySelectorAll('[class*="itemsHeader___"] > div');
+        headers.forEach((h, index) => {
+            if (h.textContent.trim().toUpperCase() === 'TYPE') {
+                h.style.display = 'none';
+                // Also try to hide the corresponding column in rows if we found the index
+                const rows = document.querySelectorAll('li > div[class*="row___"]');
+                rows.forEach(row => {
+                    if (row.children.length > index) {
+                        row.children[index].style.display = 'none';
+                    }
+                });
+            }
+        });
+    }
+
+    // 3. BUTTON INJECTION
     const buttons = document.querySelectorAll('button.torn-btn[type="submit"]');
     
     buttons.forEach(btn => {
-        // Prevent duplicate injection
         if (btn.dataset.pdaMaxAdded) return;
+        
+        // Ensure button is inside a list item (item row)
+        // in order to prevent injection on pages like Bank in Cayman
+        if (!btn.closest('li')) return;
+
         btn.dataset.pdaMaxAdded = 'true';
         
-        // Create the MAX button element
         const maxBtn = document.createElement('button');
         maxBtn.innerText = 'MAX';
         maxBtn.className = 'torn-btn pda-max-btn';
-        // Inline styles to match Torn's aesthetic while keeping it compact
         maxBtn.style.padding = '0 8px';
         maxBtn.style.fontSize = '11px';
         maxBtn.style.height = '30px'; 
         maxBtn.style.lineHeight = '12px';
         maxBtn.type = 'button'; 
         
-        // We wrap the two buttons in a flex container to align them horizontally
         if (btn.parentNode) {
             const wrapper = document.createElement('div');
             wrapper.style.display = 'inline-flex';
@@ -155,7 +247,6 @@ String buyMaxAbroadJS() {
             wrapper.appendChild(btn);
             wrapper.appendChild(maxBtn);
             
-            // Reset original button margins to fit the new wrapper
             btn.style.flex = '0 0 auto'; 
             btn.style.width = 'auto'; 
             btn.style.margin = '0'; 
@@ -166,74 +257,15 @@ String buyMaxAbroadJS() {
             maxBtn.style.margin = '0';
         }
         
-        // 3. CALCULATION LOGIC
+        // 4. CALCULATION LOGIC
         maxBtn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             
-            // 3A. Cost Detection
-            // We attempt to find the cost in the expanded mobile panel first,
-            // falling back to the table row cells for desktop views
-            let cost = 0;
-            
-            const buyPanel = btn.closest('div[class*="buyPanel___"]');
-            if (buyPanel) {
-                const question = buyPanel.querySelector('p[class*="question___"]');
-                if (question) {
-                    // Regex to extract price from "Buy X for \$1,234"
-                    const match = question.textContent.match(/for\\s*\\\$([\\d,]+)/);
-                    if (match) {
-                        cost = parseInt(match[1].replace(/,/g, ''));
-                    }
-                }
-            }
-            
-            if (cost === 0) {
-                const li = btn.closest('li');
-                if (li) {
-                    const cells = li.querySelectorAll('div[class*="cell___"]');
-                    for (const cell of cells) {
-                        const txt = cell.textContent.toLowerCase();
-                        if (txt.includes('cost') && txt.includes('\$')) {
-                            const match = cell.textContent.match(/\\\$([\\d,]+)/);
-                            if (match) {
-                                cost = parseInt(match[1].replace(/,/g, ''));
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // 3B. Stock Detection
-            // "x" followed by the quantity (e.g. "x50").
-            let stock = 0;
+            const form = btn.form;
             const li = btn.closest('li');
-            if (li) {
-                const inlineStock = li.querySelector('[class*="inlineStock___"]');
-                if (inlineStock) {
-                    const match = inlineStock.textContent.match(/x([\\d,]+)/);
-                    if (match) {
-                        stock = parseInt(match[1].replace(/,/g, ''));
-                    }
-                }
-                
-                if (stock === 0) {
-                    const cells = li.querySelectorAll('div[class*="cell___"]');
-                    for (const cell of cells) {
-                        const txt = cell.textContent.toLowerCase();
-                        if (txt.includes('stock')) {
-                            const match = cell.textContent.match(/stock\\s*([\\d,]+)/i) || cell.textContent.match(/([\\d,]+)/);
-                            if (match) {
-                                stock = parseInt(match[1].replace(/,/g, ''));
-                            }
-                        }
-                    }
-                }
-            }
+            const currentIsHorizontal = isHorizontalMode();
             
-            // 3C. User Money Detection
-            // Extracted from the sidebar or header data attributes
             let money = 0;
             const moneyEl = document.querySelector('#user-money') || document.querySelector('[data-currency-money]');
             if (moneyEl) {
@@ -241,29 +273,139 @@ String buyMaxAbroadJS() {
               money = parseInt(txt.replace(/[^0-9]/g, ''));
             }
             
-            // 3D. Capacity Detection
-            // Parsed from the items bar (e.g., "5/29")
+            let cost = 0;
+            let stock = 0;
             let capacityLeft = 1000;
-            const itemsBar = document.querySelector('[class*="items-"]');
-            if (itemsBar) {
-                const capMatch = itemsBar.textContent.match(/(\\d+)\\s*\\/\\s*(\\d+)/);
-                if (capMatch) {
-                    capacityLeft = parseInt(capMatch[2]) - parseInt(capMatch[1]);
+
+            let limitFromInput = 0;
+            if (form) {
+                const input = form.querySelector('input.input-money');
+                if (input && input.getAttribute('data-money')) {
+                    limitFromInput = parseInt(input.getAttribute('data-money'));
+                }
+            }
+
+            if (currentIsHorizontal) {
+                // ===== HORIZONTAL MODE =====
+                
+                if (li) {
+                    // 1. Cost Detection (Match Dart Logic: Scan spans)
+                    const spans = li.querySelectorAll('span');
+                    for (const span of spans) {
+                        const txt = span.textContent.trim();
+                        if (txt.includes('\$') && span.getAttribute('aria-hidden') !== 'true') {
+                             cost = parseMoney(txt);
+                        }
+                    }
+                    
+                    // 2. Stock Detection
+                    // Try specific class
+                    let stockCell = li.querySelector('[class*="tabletColC___"]');
+                    if (stockCell) {
+                        const stockText = stockCell.textContent.trim();
+                        const match = stockText.match(/([\\d,]+)/);
+                        if (match) {
+                            stock = parseInt(match[1].replace(/,/g, ''));
+                        }
+                    } else {
+                        // Fallback: Look for "Stock" text
+                         const all = li.querySelectorAll('*');
+                        for (let el of all) {
+                            if (el.textContent.toLowerCase().includes('stock')) {
+                                const match = el.textContent.match(/([\\d,]+)/);
+                                if (match) {
+                                    stock = parseInt(match[1].replace(/,/g, ''));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // 3. Capacity
+                const msgEl = document.querySelector('.messageContent___LhCmx');
+                if (msgEl) {
+                    const match = msgEl.textContent.match(/purchased\\s*(\\d+)\\s*\\/\\s*(\\d+)/);
+                    if (match) {
+                        const current = parseInt(match[1]);
+                        const maxCap = parseInt(match[2]);
+                        capacityLeft = maxCap - current;
+                    }
+                }
+                
+            } else {
+                // ===== VERTICAL MODE =====
+                const buyPanel = btn.closest('div[class*="buyPanel___"]');
+                if (buyPanel) {
+                    const question = buyPanel.querySelector('p[class*="question___"]');
+                    if (question) {
+                        const parts = question.textContent.split('\$');
+                        if (parts.length > 1) {
+                            cost = parseMoney(parts[parts.length - 1]);
+                        }
+                    }
+                }
+                
+                if (cost === 0 && li) {
+                    const cells = li.querySelectorAll('div[class*="cell___"]');
+                    for (const cell of cells) {
+                        const txt = cell.textContent.toLowerCase();
+                        if (txt.includes('cost') && txt.includes('\$')) {
+                            const parts = cell.textContent.split('\$');
+                            if (parts.length > 1) {
+                                cost = parseMoney(parts[parts.length - 1]);
+                                break;
+                            }
+                        }
+                    }
+                }
+                    if (li) {
+                    const inlineStock = li.querySelector('[class*="inlineStock___"]');
+                    if (inlineStock) {
+                        const match = inlineStock.textContent.match(/x([\\d,]+)/);
+                        if (match) {
+                            stock = parseInt(match[1].replace(/,/g, ''));
+                        }
+                    }
+                    
+                    if (stock === 0) {
+                        const cells = li.querySelectorAll('div[class*="cell___"]');
+                        for (const cell of cells) {
+                            const txt = cell.textContent.toLowerCase();
+                            if (txt.includes('stock')) {
+                                const match = cell.textContent.match(/stock\\s*([\\d,]+)/i) || cell.textContent.match(/([\\d,]+)/);
+                                if (match) {
+                                    stock = parseInt(match[1].replace(/,/g, ''));
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                const itemsBar = document.querySelector('[class*="items-"]');
+                if (itemsBar) {
+                    const capMatch = itemsBar.textContent.match(/(\\d+)\\s*\\/\\s*(\\d+)/);
+                    if (capMatch) {
+                        capacityLeft = parseInt(capMatch[2]) - parseInt(capMatch[1]);
+                    }
                 }
             }
             
-            // 3E. Final Calculation
-            let max = stock;
-            if (cost > 0 && money > 0) {
-                max = Math.min(max, Math.floor(money / cost));
-            }
-            if (capacityLeft >= 0) {
-              max = Math.min(max, capacityLeft);
+            let max = 0;
+            let maxAffordable = 999999;
+            if (cost > 0) {
+                maxAffordable = Math.floor(money / cost);
             }
             
-            // 3F. Input Injection
-            // We must dispatch 'input' and 'change' events for React to register the value
-            const form = btn.form;
+            const effectiveStock = stock > 0 ? stock : 999999;
+            const effectiveCapacity = capacityLeft >= 0 ? capacityLeft : 999999;
+            
+            max = Math.min(effectiveStock, effectiveCapacity, maxAffordable);
+            
+            if (limitFromInput > 0) {
+                max = Math.min(limitFromInput, maxAffordable);
+            }
+
             if (form) {
                 const input = form.querySelector('input.input-money');
                 if (input) {
@@ -274,9 +416,27 @@ String buyMaxAbroadJS() {
             }
         };
     });
+
+    // 5. PREVENT KEYBOARD ON BASKET CLICK (Vertical Mode)
+    if (preventBasketKeyboard) {
+      const basketButtons = document.querySelectorAll('button[class*="buyIconButton___"]');
+      basketButtons.forEach(btn => {
+          if (btn.dataset.pdaBlurAdded) return;
+          btn.dataset.pdaBlurAdded = 'true';
+          
+          btn.addEventListener('click', (e) => {
+              [50, 150, 300, 500].forEach(delay => {
+                  setTimeout(() => {
+                      if (document.activeElement && document.activeElement.tagName === 'INPUT') {
+                          document.activeElement.blur();
+                      }
+                  }, delay);
+              });
+          });
+      });
+    }
   }
 
-  // Initialize and observe for dynamic content changes
   addFillMaxButtons();
   const observer = new MutationObserver((mutations) => {
     addFillMaxButtons();
@@ -472,162 +632,146 @@ String removeOwnBazaarFillButtonsJS() {
 
 String addOthersBazaarFillButtonsJS() {
   return r'''
-    // Credits
-    // Implementation logic partially based on TornTools by Mephiles and DKK
-    // New React 15/16 dispatch event based on Father's input
-        
     (async function() {  
+        if (window.bazaarMaxScriptActive) return;
+        window.bazaarMaxScriptActive = true;
+
         var doc = document;
-        
-      function sleep(ms) {
-          return new Promise(resolve => setTimeout(resolve, ms));
-        }
-      
-      var documentLoaded = doc.querySelectorAll("[class*='rowItems_").length;
-      if (documentLoaded === 0) {
-        console.log("waiting for bazaar");
-        await sleep(2000);
-      }
-      
-        var narrow_screen = false; 
-        if (doc.querySelector("[class*='searchBar_'] [class*='tablet_']") !== null 
-          || doc.querySelector("[class*='searchBar_'] [class*='mobile']") !== null) {
-          narrow_screen = true;
-        }
-        
-        function addFillMaxButtons(){
-        
-          function addStyle(styleString) {
-            const style = document.createElement('style');
-            style.textContent = styleString;
-            document.head.append(style);
-          }
-        
-          function dispatchClick(element, newValue) {
-            let input = element; 
+        if (!window.location.href.includes('bazaar.php')) return;
+
+        // Absolute positioning
+        const style = doc.createElement('style');
+        style.textContent = `
+            .max-buy {
+                border: 1px solid #ff8000 !important;
+                background: transparent !important;
+                color: #ff8000 !important;
+                border-radius: 10px !important;
+                position: absolute !important;
+                height: 15px;
+                width: 32px;
+                text-align: center;
+                line-height: 13px;
+                bottom: 3px; 
+                left: 50%;
+                transform: translateX(-50%);
+                font-size: 9px;
+                cursor: pointer;
+                z-index: 999;
+                font-weight: bold;
+                box-sizing: border-box;
+                text-decoration: none !important;
+            }
+            /* Ensure the container has space and relative positioning */
+            button[class*="buy___"], button[class*="activate-buy-button"] {
+                padding-bottom: 20px !important;
+                position: relative !important;
+            }
+            /* Wide popups container */
+            div[class*="field___"] {
+                position: relative !important;
+                overflow: visible !important;
+            }
+        `;
+        doc.head.append(style);
+
+        function dispatchClick(input, newValue) {
             let lastValue = input.value;
             input.value = newValue;
             let event = new Event('input', { bubbles: true });
-            // hack React15 (Torn seems to be using React 16)
-            event.simulated = true;
-            // hack React16 (This is what Torn uses)
             let tracker = input._valueTracker;
-            if (tracker) {
-              tracker.setValue(lastValue);
-            }
+            if (tracker) tracker.setValue(lastValue);
             input.dispatchEvent(event);
-          }
-          
-          // Creates our button
-          addStyle(`
-            .max-buy {
-            border: none !important;
-            position: absolute;
-            height: 15px;
-            line-height: 15px;
-            bottom: 0;
-            left: 10px;
-            font-size: 11px;
-            }
-          `);
-          
-          // Brings existing buy button a little up
-          addStyle(`
-            button[class^="buy___"] {
-            padding-bottom: 20px !important;
-            font-size: 11px !important;
-			      text-transform: uppercase;
-            }
-          `);
-        
-          // Narrow screen: load all buttons at once
-          if(narrow_screen){
-          
-            // Plenty of rowItems, one for each item
-            let item_boxes = doc.querySelectorAll("[class*='rowItems_");
-        
-            if(!item_boxes){
-              return;
-            }
-              
-            for(let item_box of item_boxes){
-              let buy_btn = item_box.querySelector("[class*='buy_']");
-              let max_span = doc.createElement('span');
-              max_span.innerHTML = '<a class="max-buy">MAX</a>';
-              buy_btn.parentElement.appendChild(max_span);
-        
-              max_span.addEventListener("click", function(event){
-                event.stopPropagation();
-                let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
-                let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
-                let user_money = parseInt(document.querySelector("#user-money").dataset.money);
-                if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
-                if (max > 10000) max = 10000;
-                amountBox = item_box.querySelector("[class*='buyAmountInput_']");
-                dispatchClick(amountBox, max);
-              });
-            }
+        }
+
+        function handleMaxClick(item_box) {
+            let amountEl = item_box.querySelector("[class*='amountValue_'], [class*='amount___']");
+            let priceEl = item_box.querySelector("[class*='price___']");
+            let moneyEl = doc.querySelector("#user-money");
             
-          // Wide screen: load button in the expandable box only when the cart is pressed
-          } else {
+            if (!amountEl || !priceEl || !moneyEl) return;
+
+            let max = parseInt(amountEl.innerText.replace(/\D/g, ""));
+            let price = parseInt(priceEl.innerText.replace(/[,$]/g, ""));
+            let user_money = parseInt(moneyEl.getAttribute("data-money") || moneyEl.innerText.replace(/\D/g, ""));
             
-            doc.addEventListener("click", (event) => {
-              
-              if (event.target.getAttribute("class").includes("controlPanelButton_") && event.target.getAttribute("aria-label").includes("Buy")) {
-                
-                // Only one buy menu opened at a time, no need to loop
-                let item_box = doc.querySelector("[class*='buyMenu_");
-        
-                if(!item_box){
-                  return;
+            let affordable = Math.floor(user_money / price);
+            if (affordable < max) max = affordable;
+            if (max > 10000) max = 10000;
+
+            let input = item_box.querySelector("input[class*='buyAmountInput_']");
+            if (input) {
+                dispatchClick(input, max);
+            } else {
+                // If input is not present (wide mode), click shopping cart first
+                let buyBtn = item_box.querySelector("button[aria-label*='Buy'], [class*='activate-buy-button']");
+                if (buyBtn) {
+                    buyBtn.click();
+                    setTimeout(() => {
+                        let retry = item_box.querySelector("input[class*='buyAmountInput_']");
+                        if (retry) dispatchClick(retry, max);
+                    }, 50);
                 }
-                        
-                var buy_btn = item_box.querySelector("[class*='buy_']");
-                let max_span = doc.createElement('span');
-                max_span.innerHTML = '<a class="max-buy">MAX</a>';
-                buy_btn.parentElement.appendChild(max_span);
-        
-                max_span.addEventListener("click", function(event){
-                  event.stopPropagation();
-                  let max = parseInt(item_box.querySelector("[class*='amount_']").innerText.replace(/\D/g, ""));
-                  let price = parseInt(item_box.querySelector("[class*='price_']").innerText.replace(/[,$]/g, ""));
-                  let user_money = parseInt(document.querySelector("#user-money").dataset.money);
-                  if (Math.floor(user_money / price) < max) max = Math.floor(user_money / price);
-                  if (max > 10000) max = 10000;
-                  amountBox = item_box.querySelector("[class*='buyAmountInput_']");
-                  dispatchClick(amountBox, max);
-                });
-              }
-            });
-                
-          }
-        }
-        
-        // Delete and recreate buttons when scrolling, otherwise they'll appear on top of each other
-        // Not needed for wide screen
-        if (narrow_screen) {
-          let moreItemsObserver = new MutationObserver(renewButtons);
-          moreItemsObserver.observe(
-            // The div's class is itemsContainner___xxxx, yes with a typo. Leaving it as Contain in case they fix the typo later
-            doc.querySelector("div[class*='itemsContain'] div[data-testid*='bazaar-items']"),
-            { childList: true }
-          );
-          function renewButtons() {
-            var existing_list = doc.querySelectorAll(".max-buy");
-            for(let item of existing_list){
-              item.remove();
             }
-            addFillMaxButtons();
-          }
-          
         }
+
+        // Injection
+        function fastInject(node) {
+            if (!node || node.nodeType !== 1) return;
+
+            // Search for both button types (narrow and wide)
+            let buyButtons = node.querySelectorAll("button[class*='buy___'], button[class*='activate-buy-button']");
+            
+            buyButtons.forEach(buyBtn => {
+                if (!buyBtn.parentElement.querySelector(".max-buy")) {
+                    let maxBtn = doc.createElement('a');
+                    maxBtn.className = 'max-buy';
+                    maxBtn.innerText = 'MAX';
+                    
+                    buyBtn.parentElement.style.position = "relative";
+                    buyBtn.parentElement.appendChild(maxBtn);
+
+                    maxBtn.addEventListener("click", (e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        let itemContainer = buyBtn.closest("[class*='item___'], [class*='rowItems_']");
+                        handleMaxClick(itemContainer);
+                    });
+                }
+            });
+        }
+
+        // Observer to re-scan added fragments
+        const observer = new MutationObserver((mutations) => {
+            for (let i = 0; i < mutations.length; i++) {
+                mutations[i].addedNodes.forEach(node => {
+                    if (node.nodeType === 1) {
+                        fastInject(node);
+                        // Also scan sub-elements of the added node
+                        if (node.children && node.children.length > 0) {
+                            fastInject(node);
+                        }
+                    }
+                });
+            }
+        });
+
+        observer.observe(doc.body, { childList: true, subtree: true });
+
+        const urlHeartbeat = setInterval(() => {
+            if (!window.location.href.includes('bazaar.php?userId=')) {
+                observer.disconnect();
+                clearInterval(urlHeartbeat);
+                window.bazaarMaxScriptActive = false;
+                doc.querySelectorAll(".max-buy").forEach(el => el.remove());
+            }
+        }, 1000);
+
+        // Init
+        fastInject(doc.body);
         
-        // Launch main function at the start
-        addFillMaxButtons();
-        
-        // Return to avoid iOS WKErrorDomain
         123;
-    })();  
+    })();
   ''';
 }
 

@@ -66,6 +66,7 @@ import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/userscripts_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/appwidget_explanation.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
@@ -159,6 +160,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   bool _forceFireUserReload = false;
 
   bool _retalsRedirection = false;
+
+  // Tracks the enqueued PDA update version to avoid duplicate dialogs in a session
+  int? _pdaUpdateDialogEnqueuedVersion;
 
   String _userUID = "";
   bool _drawerUserChecked = false;
@@ -347,6 +351,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       if (Platform.isIOS) {
         _messaging.setForegroundNotificationPresentationOptions();
+
+        // AlarmKit button taps back into the app stream on iOS
+        AlarmKitServiceIos.isAvailable().then((available) {
+          if (available) {
+            AlarmKitServiceIos.registerAlarmTapHandler((payload) {
+              selectNotificationStream.add(payload);
+            });
+          }
+        });
       }
     } catch (e, stackTrace) {
       log("Error initializing notifications: $e");
@@ -693,6 +706,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       remoteConfig.setDefaults(const {
         "tsc_enabled": true,
         "yata_stats_enabled": true,
+        "yata_upload_enabled": true,
+        "prometheus_upload_enabled": true,
         "prefs_backup_enabled": true,
         "tornexchange_enabled": true,
         "webview_dialog_recovery_enabled_ios": false,
@@ -758,6 +773,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     try {
       _settingsProvider.tscEnabledStatusRemoteConfig = remoteConfig.getBool("tsc_enabled");
       _settingsProvider.yataStatsEnabledStatusRemoteConfig = remoteConfig.getBool("yata_stats_enabled");
+      _settingsProvider.yataUploadEnabledRemoteConfig = remoteConfig.getBool("yata_upload_enabled");
+      _settingsProvider.prometheusUploadEnabledRemoteConfig = remoteConfig.getBool("prometheus_upload_enabled");
       _settingsProvider.backupPrefsEnabledStatusRemoteConfig = remoteConfig.getBool("prefs_backup_enabled");
       _settingsProvider.tornExchangeEnabledStatusRemoteConfig = remoteConfig.getBool("tornexchange_enabled");
       _webViewProvider.webviewDialogRecoveryEnabledIOS = remoteConfig.getBool("webview_dialog_recovery_enabled_ios");
@@ -3065,6 +3082,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
     if (updateDetails == null || updateDetails.latestVersionCode == 0) return;
 
+    // Stop if this version is already queued during this app session
+    // (initial fetch + onConfigUpdated can both call here)
+    if (_pdaUpdateDialogEnqueuedVersion == updateDetails.latestVersionCode) return;
+
     final currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
     final currentCompilationInt = int.tryParse(currentCompilation) ?? 0;
     if (currentCompilationInt == 0) return;
@@ -3082,6 +3103,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     // Check if we already showed this update version dialog
     final lastShownVersion = await Prefs().getPdaUpdateDialogVersion();
     if (!_debugShowAllDialogs && lastShownVersion == updateDetails.latestVersionCode) return false;
+
+    _pdaUpdateDialogEnqueuedVersion = updateDetails.latestVersionCode;
 
     if (mounted) {
       DialogQueue.enqueue(

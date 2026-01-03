@@ -31,6 +31,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/widgets/loot/loot_filter_dialog.dart';
@@ -50,6 +51,12 @@ class LootPage extends StatefulWidget {
 }
 
 class LootPageState extends State<LootPage> {
+  // Allowed preference keys for manual loot notifications/alarms/timers (string codes stored in prefs)
+  static const List<String> _lootNotificationAheadAllowed = ["0", "1", "2", "3", "4", "5", "6", "7"];
+  static const List<String> _lootAlarmAheadAllowedIOS = ["s20", "s40", "0", "1", "2", "3", "4", "5", "6"];
+  static const List<String> _lootAlarmAheadAllowedAndroid = ["0", "1", "2", "3", "4", "5", "6"];
+  static const List<String> _lootTimerAheadAllowed = ["0", "1", "2", "3", "4", "5", "6", "7"];
+
   var _npcIds = <String>[];
   var _filterOutIds = <String>[];
   final _images = <NpcImagesModel>[];
@@ -74,7 +81,7 @@ class LootPageState extends State<LootPage> {
   LootTimeType? _lootTimeType;
   NotificationType? _lootNotificationType;
   late int _lootNotificationAhead;
-  late int _lootAlarmAhead;
+  late int _lootAlarmAheadSeconds;
   late int _lootTimerAhead;
   late bool _alarmSound;
   bool? _alarmVibration;
@@ -87,6 +94,7 @@ class LootPageState extends State<LootPage> {
 
   // Payload is: 400idlevel (new: 499 for Loot Rangers)
   final _activeNotificationsIds = <int>[];
+  final _activeAlarmKitIdsIOS = <String>{};
 
   @override
   void initState() {
@@ -430,31 +438,37 @@ class LootPageState extends State<LootPage> {
 
             Widget notificationIcon;
             if (!isPast && !isCurrent) {
-              bool isPending = false;
+              final alarmId = 'loot_alarm_${npcId}_$levelNumber';
+              bool isPendingNotification = false;
               for (final id in _activeNotificationsIds) {
                 if (id == int.parse('400$npcId$levelNumber')) {
-                  isPending = true;
+                  isPendingNotification = true;
                 }
               }
+
+              bool isPendingAlarm = _activeAlarmKitIdsIOS.contains(alarmId);
               notificationIcon = InkWell(
                 splashColor: Colors.transparent,
                 child: Icon(
                   iconData,
                   size: 20,
-                  color: _lootNotificationType == NotificationType.notification && isPending ? Colors.green : null,
+                  color: (_lootNotificationType == NotificationType.notification && isPendingNotification) ||
+                          (_lootNotificationType == NotificationType.alarm && isPendingAlarm)
+                      ? Colors.green
+                      : null,
                 ),
                 onTap: () async {
                   switch (_lootNotificationType!) {
                     case NotificationType.notification:
-                      if (isPending) {
+                      if (isPendingNotification) {
                         setState(() {
-                          isPending = false;
+                          isPendingNotification = false;
                         });
                         await flutterLocalNotificationsPlugin.cancel(int.parse('400$npcId$levelNumber'));
                         _activeNotificationsIds.removeWhere((element) => element == int.parse('400$npcId$levelNumber'));
                       } else {
                         setState(() {
-                          isPending = true;
+                          isPendingNotification = true;
                         });
                         _activeNotificationsIds.add(int.parse('400$npcId$levelNumber'));
 
@@ -489,23 +503,77 @@ class LootPageState extends State<LootPage> {
                           contentPadding: const EdgeInsets.all(10),
                         );
                       }
+                      break;
                     case NotificationType.alarm:
-                      _setAlarm(
-                        levelDateTime,
-                        "${npcDetails.name} level $levelNumber",
-                      );
-                      BotToast.showText(
-                        clickClose: true,
-                        text: 'Loot level $levelNumber'
-                            ' $typeString set for ${npcDetails.name}!',
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.green[700]!,
-                        duration: const Duration(milliseconds: 1500),
-                        contentPadding: const EdgeInsets.all(10),
-                      );
+                      if (isPendingAlarm) {
+                        setState(() {
+                          isPendingAlarm = false;
+                          _activeAlarmKitIdsIOS.remove(alarmId);
+                        });
+                        await AlarmKitServiceIos.cancelAlarm(alarmId);
+                        await _refreshAlarmKitActiveIOS();
+                        BotToast.showText(
+                          clickClose: true,
+                          text: 'Loot level $levelNumber alarm cancelled for ${npcDetails.name}!',
+                          textStyle: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                          contentColor: Colors.red[600]!,
+                          duration: const Duration(milliseconds: 1500),
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      } else {
+                        try {
+                          final alarmTitle = Platform.isIOS
+                              ? "${npcDetails.name} $levelNumber"
+                              : "${npcDetails.name} level $levelNumber";
+
+                          await _setAlarm(
+                            levelDateTime,
+                            alarmTitle,
+                            metadata: {
+                              'context': '${npcDetails.name ?? 'NPC'} level $levelNumber',
+                              'details': 'Loot level $levelNumber for ${npcDetails.name ?? 'NPC'}',
+                              'source': 'loot',
+                              'npcId': npcId,
+                              'levelNumber': int.tryParse(levelNumber) ?? 0,
+                              'section': 'Loot',
+                              'payload': '400-$npcId',
+                              'alarmId': alarmId,
+                            },
+                          );
+                          setState(() {
+                            isPendingAlarm = true;
+                            _activeAlarmKitIdsIOS.add(alarmId);
+                          });
+                          BotToast.showText(
+                            clickClose: true,
+                            text: 'Loot level $levelNumber'
+                                ' $typeString set for ${npcDetails.name}!',
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.green[700]!,
+                            duration: const Duration(milliseconds: 1500),
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                        } catch (e) {
+                          BotToast.showText(
+                            clickClose: true,
+                            text: 'Error setting alarm: $e',
+                            textStyle: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                            ),
+                            contentColor: Colors.red[700]!,
+                            duration: const Duration(milliseconds: 1500),
+                            contentPadding: const EdgeInsets.all(10),
+                          );
+                        }
+                      }
+                      break;
                     case NotificationType.timer:
                       _setTimer(
                         levelDateTime,
@@ -513,8 +581,7 @@ class LootPageState extends State<LootPage> {
                       );
                       BotToast.showText(
                         clickClose: true,
-                        text: 'Loot level $levelNumber'
-                            ' $typeString set for ${npcDetails.name}!',
+                        text: 'Loot level $levelNumber timer set for ${npcDetails.name}!',
                         textStyle: const TextStyle(
                           fontSize: 14,
                           color: Colors.white,
@@ -523,6 +590,7 @@ class LootPageState extends State<LootPage> {
                         duration: const Duration(milliseconds: 1500),
                         contentPadding: const EdgeInsets.all(10),
                       );
+                      break;
                   }
                 },
               );
@@ -745,31 +813,36 @@ class LootPageState extends State<LootPage> {
     }
 
     Widget notificationIcon;
-    bool isPending = false;
+    const alarmId = 'loot_alarm_rangers';
+    bool isPendingNotification = false;
     for (final id in _activeNotificationsIds) {
       if (id == int.parse('499')) {
-        isPending = true;
+        isPendingNotification = true;
       }
     }
+    bool isPendingAlarm = _activeAlarmKitIdsIOS.contains(alarmId);
     notificationIcon = InkWell(
       splashColor: Colors.transparent,
       child: Icon(
         iconData,
         size: 20,
-        color: _lootNotificationType == NotificationType.notification && isPending ? Colors.green : null,
+        color: (_lootNotificationType == NotificationType.notification && isPendingNotification) ||
+                (_lootNotificationType == NotificationType.alarm && isPendingAlarm)
+            ? Colors.green
+            : null,
       ),
       onTap: () async {
         switch (_lootNotificationType!) {
           case NotificationType.notification:
-            if (isPending) {
+            if (isPendingNotification) {
               setState(() {
-                isPending = false;
+                isPendingNotification = false;
               });
               await flutterLocalNotificationsPlugin.cancel(499);
               _activeNotificationsIds.removeWhere((element) => element == 499);
             } else {
               setState(() {
-                isPending = true;
+                isPendingNotification = true;
               });
               _activeNotificationsIds.add(499);
 
@@ -810,21 +883,74 @@ class LootPageState extends State<LootPage> {
               );
             }
           case NotificationType.alarm:
-            _setAlarm(
-              DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
-              "Loot Rangers",
-            );
-            BotToast.showText(
-              clickClose: true,
-              text: 'Loot Rangers $typeString set!',
-              textStyle: const TextStyle(
-                fontSize: 14,
-                color: Colors.white,
-              ),
-              contentColor: Colors.green[700]!,
-              duration: const Duration(milliseconds: 1500),
-              contentPadding: const EdgeInsets.all(10),
-            );
+            if (isPendingAlarm) {
+              setState(() {
+                isPendingAlarm = false;
+                _activeAlarmKitIdsIOS.remove(alarmId);
+              });
+              await AlarmKitServiceIos.cancelAlarm(alarmId);
+              await _refreshAlarmKitActiveIOS();
+              BotToast.showText(
+                clickClose: true,
+                text: 'Loot Rangers alarm cancelled!',
+                textStyle: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.white,
+                ),
+                contentColor: Colors.red[600]!,
+                duration: const Duration(milliseconds: 1500),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            } else {
+              try {
+                final formattedTime = TimeFormatter(
+                  inputTime: DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+                  timeFormatSetting: _settingsProvider.currentTimeFormat,
+                  timeZoneSetting: _settingsProvider.currentTimeZone,
+                ).formatHour;
+                await _setAlarm(
+                  DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
+                  "Loot Rangers",
+                  metadata: {
+                    'context': 'Loot Rangers',
+                    'details': 'Loot Rangers attack order',
+                    'source': 'loot_rangers',
+                    'ids': _lootRangersIdOrder.join(','),
+                    'names': _lootRangersNameOrder.join(','),
+                    'section': 'Loot',
+                    'payload': '499-${_lootRangersIdOrder.join(',')}-${_lootRangersNameOrder.join(',')}-$formattedTime',
+                    'alarmId': alarmId,
+                  },
+                );
+                setState(() {
+                  isPendingAlarm = true;
+                  _activeAlarmKitIdsIOS.add(alarmId);
+                });
+                BotToast.showText(
+                  clickClose: true,
+                  text: 'Loot Rangers $typeString set!',
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.green[700]!,
+                  duration: const Duration(milliseconds: 1500),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              } catch (e) {
+                BotToast.showText(
+                  clickClose: true,
+                  text: 'Error setting alarm: $e',
+                  textStyle: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  contentColor: Colors.red[700]!,
+                  duration: const Duration(milliseconds: 1500),
+                  contentPadding: const EdgeInsets.all(10),
+                );
+              }
+            }
           case NotificationType.timer:
             _setTimer(
               DateTime.fromMillisecondsSinceEpoch(_lootRangersTime),
@@ -961,6 +1087,7 @@ class LootPageState extends State<LootPage> {
         await _loadPreferences();
         // See if there is any pending notification (to paint the icon in green)
         await _retrievePendingNotifications();
+        await _refreshAlarmKitActiveIOS();
 
         // Get real time database and Torn (which fills level info)
         final dbSuccess = await _fetchDatabase();
@@ -1158,9 +1285,22 @@ class LootPageState extends State<LootPage> {
       lootTimeType == 'timer' ? _lootTimeType = LootTimeType.timer : _lootTimeType = LootTimeType.dateTime;
 
       final notification = await Prefs().getLootNotificationType();
-      final notificationAhead = await Prefs().getLootNotificationAhead();
-      final alarmAhead = await Prefs().getLootAlarmAhead();
-      final timerAhead = await Prefs().getLootTimerAhead();
+      final notificationAheadRaw = await Prefs().getLootNotificationAhead();
+      final alarmAheadRaw = await Prefs().getLootAlarmAhead();
+      final timerAheadRaw = await Prefs().getLootTimerAhead();
+
+      final notificationAhead = _lootNotificationAheadAllowed.contains(notificationAheadRaw)
+          ? notificationAheadRaw
+          : _lootNotificationAheadAllowed.last;
+
+      final timerAhead = _lootTimerAheadAllowed.contains(timerAheadRaw) ? timerAheadRaw : _lootTimerAheadAllowed.last;
+
+      final alarmAhead = Platform.isIOS
+          ? (_lootAlarmAheadAllowedIOS.contains(alarmAheadRaw) ? alarmAheadRaw : _lootAlarmAheadAllowedIOS.last)
+          : (_lootAlarmAheadAllowedAndroid.contains(alarmAheadRaw)
+              ? alarmAheadRaw
+              : _lootAlarmAheadAllowedAndroid.last);
+
       _alarmSound = await Prefs().getManualAlarmSound();
       _alarmVibration = await Prefs().getManualAlarmVibration();
 
@@ -1187,24 +1327,50 @@ class LootPageState extends State<LootPage> {
           _lootNotificationAhead = 360;
         } else if (notificationAhead == '6') {
           _lootNotificationAhead = 480;
-        } else if (notificationAhead == '7') {
+        } else {
           _lootNotificationAhead = 600;
         }
 
-        if (alarmAhead == '0') {
-          _lootAlarmAhead = 0;
-        } else if (alarmAhead == '1') {
-          _lootAlarmAhead = 2;
-        } else if (alarmAhead == '2') {
-          _lootAlarmAhead = 4;
-        } else if (alarmAhead == '3') {
-          _lootAlarmAhead = 5;
-        } else if (alarmAhead == '4') {
-          _lootAlarmAhead = 6;
-        } else if (alarmAhead == '5') {
-          _lootAlarmAhead = 8;
-        } else if (alarmAhead == '6') {
-          _lootAlarmAhead = 10;
+        if (Platform.isIOS) {
+          if (alarmAhead == 's20') {
+            _lootAlarmAheadSeconds = 20;
+          } else if (alarmAhead == 's40') {
+            _lootAlarmAheadSeconds = 40;
+          } else if (alarmAhead == '0') {
+            _lootAlarmAheadSeconds = 60;
+          } else if (alarmAhead == '1') {
+            _lootAlarmAheadSeconds = 120;
+          } else if (alarmAhead == '2') {
+            _lootAlarmAheadSeconds = 240;
+          } else if (alarmAhead == '3') {
+            _lootAlarmAheadSeconds = 300;
+          } else if (alarmAhead == '4') {
+            _lootAlarmAheadSeconds = 360;
+          } else if (alarmAhead == '5') {
+            _lootAlarmAheadSeconds = 480;
+          } else if (alarmAhead == '6') {
+            _lootAlarmAheadSeconds = 600;
+          } else {
+            _lootAlarmAheadSeconds = 600; // clamp to max allowed on iOS
+          }
+        } else {
+          if (alarmAhead == '0') {
+            _lootAlarmAheadSeconds = 0;
+          } else if (alarmAhead == '1') {
+            _lootAlarmAheadSeconds = 120;
+          } else if (alarmAhead == '2') {
+            _lootAlarmAheadSeconds = 240;
+          } else if (alarmAhead == '3') {
+            _lootAlarmAheadSeconds = 300;
+          } else if (alarmAhead == '4') {
+            _lootAlarmAheadSeconds = 360;
+          } else if (alarmAhead == '5') {
+            _lootAlarmAheadSeconds = 480;
+          } else if (alarmAhead == '6') {
+            _lootAlarmAheadSeconds = 600;
+          } else {
+            _lootAlarmAheadSeconds = 600; // clamp to max allowed on Android
+          }
         }
 
         if (timerAhead == '0') {
@@ -1223,6 +1389,8 @@ class LootPageState extends State<LootPage> {
           _lootTimerAhead = 480;
         } else if (timerAhead == '7') {
           _lootTimerAhead = 600;
+        } else {
+          _lootTimerAhead = 600; // clamp
         }
       });
 
@@ -1335,10 +1503,62 @@ class LootPageState extends State<LootPage> {
     }
   }
 
-  void _setAlarm(DateTime alarmTime, String title) {
-    alarmTime = alarmTime.add(Duration(minutes: -_lootAlarmAhead));
-    final int hour = alarmTime.hour;
-    final int minute = alarmTime.minute;
+  Future<void> _refreshAlarmKitActiveIOS() async {
+    if (!Platform.isIOS) return;
+    if (_lootNotificationType != NotificationType.alarm) return;
+    try {
+      final available = await AlarmKitServiceIos.isAvailable();
+      if (!available) return;
+      final activeIds = await AlarmKitServiceIos.listLogicalIds();
+      if (!mounted) return;
+      setState(() {
+        _activeAlarmKitIdsIOS
+          ..clear()
+          ..addAll(activeIds);
+      });
+    } catch (e) {
+      logToUser("Error loading @refreshAlarmKitActive: $e");
+    }
+  }
+
+  Future<void> _setAlarm(DateTime alarmTime, String title, {Map<String, dynamic>? metadata}) async {
+    final scheduledAlarmTime = alarmTime.add(Duration(seconds: -_lootAlarmAheadSeconds));
+    final combinedMetadata = <String, dynamic>{
+      'label': title,
+      'scheduledMillis': scheduledAlarmTime.millisecondsSinceEpoch,
+    };
+    if (metadata != null) {
+      combinedMetadata.addAll(metadata);
+    }
+
+    if (Platform.isIOS) {
+      final alarmId = metadata?['alarmId'] as String? ?? 'loot_alarm';
+
+      // Strip fields already passed as dedicated params; keep only custom extras for AlarmKit metadata cache
+      final extra = Map<String, dynamic>.from(combinedMetadata)
+        ..remove('alarmId')
+        ..remove('context')
+        ..remove('details')
+        ..remove('payload')
+        ..remove('label')
+        ..remove('timeMillis');
+
+      await AlarmKitServiceIos.setAlarmWithMetadata(
+        targetTime: scheduledAlarmTime,
+        label: title,
+        id: alarmId,
+        context: metadata?['context'] as String?,
+        details: metadata?['details'] as String?,
+        payload: metadata?['payload'] as String?,
+        timeMillis: (metadata?['timeMillis'] as int?) ?? scheduledAlarmTime.millisecondsSinceEpoch,
+        extraMetadata: extra,
+      );
+      await _refreshAlarmKitActiveIOS();
+      return;
+    }
+
+    final int hour = scheduledAlarmTime.hour;
+    final int minute = scheduledAlarmTime.minute;
     final String message = _settingsProvider.discreetNotifications ? "L" : title;
 
     String thisSound;
@@ -1363,7 +1583,10 @@ class LootPageState extends State<LootPage> {
   }
 
   void _setTimer(DateTime alarmTime, String title) {
+    if (Platform.isIOS) return;
+
     final int totalSeconds = alarmTime.difference(DateTime.now()).inSeconds;
+
     final String message = _settingsProvider.discreetNotifications ? "L" : title;
 
     final AndroidIntent intent = AndroidIntent(

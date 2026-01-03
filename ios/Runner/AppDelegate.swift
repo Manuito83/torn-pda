@@ -8,6 +8,10 @@ import UserNotifications  // for UNUserNotificationCenter
 import home_widget
 import workmanager_apple
 
+#if canImport(AppIntents)
+  import AppIntents
+#endif
+
 @main
 @objc class AppDelegate: FlutterAppDelegate {
 
@@ -64,6 +68,21 @@ import workmanager_apple
     WorkmanagerDebug.setCurrent(LoggingDebugHandler())
 
     let controller: FlutterViewController = window?.rootViewController as! FlutterViewController
+
+    // Set up the Flutter channel to handle AlarmKit
+    let alarmChannel = FlutterMethodChannel(
+      name: "tornpda/alarm", binaryMessenger: controller.binaryMessenger)
+    alarmChannel.setMethodCallHandler {
+      (call: FlutterMethodCall, result: @escaping FlutterResult) in
+
+      if #available(iOS 26.0, *) {
+        AlarmKitHandler.handle(call: call, result: result)
+      } else {
+        result(FlutterError(code: "UNAVAILABLE", message: "AlarmKit not available", details: nil))
+      }
+    }
+    // Expose the channel so AlarmKit callbacks can notify Flutter (e.g., alarm button taps)
+    AlarmKitHandler.channel = alarmChannel
 
     // Set up the Flutter channel to handle icon changes
     iconChannel = FlutterMethodChannel(
@@ -384,6 +403,9 @@ import workmanager_apple
       }
     }
   }
+
+  // MARK: - AlarmKit Handlers
+  // Handlers moved to AlarmKitHandler.swift
 }
 
 // MARK: - FlutterViewController Press Event Handling (Existing Functionality)

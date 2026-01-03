@@ -1235,6 +1235,7 @@ class WebViewProvider extends ChangeNotifier {
 
   void addToHistoryBack({required TabDetails tab, required String? currentUrl, String? newUrl}) {
     if (currentUrl == null) return;
+
     if (newUrl != null) {
       // Check if both currentUrl and newUrl are in the stuck list
       bool currentIsStuck = urlsWithStuckHistory.any((baseUrl) => currentUrl.startsWith(baseUrl));
@@ -1249,14 +1250,33 @@ class WebViewProvider extends ChangeNotifier {
       tab.historyBack.add(currentUrl);
     }
     if (tab.historyBack.length > 25) {
-      tab.historyBack.removeAt(0);
+      _removeConsecutiveDuplicates(tab.historyBack);
+      if (tab.historyBack.length > 25) {
+        tab.historyBack.removeAt(0);
+      }
     }
+    //log("🏛️👈 Current history back elements: ${tab.historyBack.toString()}");
   }
 
   void addToHistoryForward({required TabDetails tab, required String? url}) {
     tab.historyForward.add(url);
     if (tab.historyForward.length > 25) {
-      tab.historyForward.removeAt(0);
+      _removeConsecutiveDuplicates(tab.historyForward);
+      if (tab.historyForward.length > 25) {
+        tab.historyForward.removeAt(0);
+      }
+    }
+    //log("🏛️👉 Current history forward elements: ${tab.historyForward.toString()}");
+  }
+
+  void _removeConsecutiveDuplicates(List<String?> list) {
+    if (list.length < 2) return;
+    for (int i = list.length - 1; i > 0; i--) {
+      final current = list[i];
+      final previous = list[i - 1];
+      if (current != null && previous != null && areUrlsEquivalent(current, previous)) {
+        list.removeAt(i);
+      }
     }
   }
 
@@ -2165,5 +2185,44 @@ class WebViewProvider extends ChangeNotifier {
       intervalInHours: 24,
       executeImmediately: true,
     );
+  }
+
+  bool areUrlsEquivalent(String url1, String url2) {
+    if (url1 == url2) return true;
+
+    try {
+      final uri1 = Uri.parse(url1);
+      final uri2 = Uri.parse(url2);
+
+      // Check for index.php equivalence
+      // https://www.torn.com/index.php == https://www.torn.com/
+      if ((uri1.path == '/' || uri1.path.isEmpty || uri1.path == '/index.php') &&
+          (uri2.path == '/' || uri2.path.isEmpty || uri2.path == '/index.php')) {
+        if (uri1.query == uri2.query) {
+          return true;
+        }
+      }
+
+      // Special check for attack loader URLs which are equivalent
+      // https://www.torn.com/loader2.php?sid=getInAttack&user2ID=...
+      // https://www.torn.com/loader.php?sid=attack&user2ID=...
+      if ((uri1.path.contains('loader.php') || uri1.path.contains('loader2.php')) &&
+          (uri2.path.contains('loader.php') || uri2.path.contains('loader2.php'))) {
+        final user1 = uri1.queryParameters['user2ID'];
+        final user2 = uri2.queryParameters['user2ID'];
+
+        if (user1 != null && user1 == user2) {
+          final sid1 = uri1.queryParameters['sid'];
+          final sid2 = uri2.queryParameters['sid'];
+          if ((sid1 == 'attack' || sid1 == 'getInAttack') && (sid2 == 'attack' || sid2 == 'getInAttack')) {
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore
+    }
+
+    return false;
   }
 }

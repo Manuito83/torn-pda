@@ -36,6 +36,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/share_stats_dialog.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
+import 'package:torn_pda/widgets/chaining/war_settings_dialog.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
@@ -110,30 +111,6 @@ class WarPageState extends State<WarPage> {
   late WebViewProvider _webViewProvider;
 
   bool _quickUpdateActive = false;
-
-  final _popupSortChoices = <WarSort>[
-    WarSort(type: WarSortType.levelDes),
-    WarSort(type: WarSortType.levelAsc),
-    WarSort(type: WarSortType.respectDes),
-    WarSort(type: WarSortType.respectAsc),
-    WarSort(type: WarSortType.nameDes),
-    WarSort(type: WarSortType.nameAsc),
-    WarSort(type: WarSortType.lifeDes),
-    WarSort(type: WarSortType.lifeAsc),
-    WarSort(type: WarSortType.hospitalDes),
-    WarSort(type: WarSortType.hospitalAsc),
-    WarSort(type: WarSortType.statsDes),
-    WarSort(type: WarSortType.statsAsc),
-    WarSort(type: WarSortType.onlineDes),
-    WarSort(type: WarSortType.onlineAsc),
-    WarSort(type: WarSortType.colorAsc),
-    WarSort(type: WarSortType.colorDes),
-    WarSort(type: WarSortType.notesDes),
-    WarSort(type: WarSortType.notesAsc),
-    WarSort(type: WarSortType.bounty),
-    WarSort(type: WarSortType.travelDistanceDesc),
-    WarSort(type: WarSortType.travelDistanceAsc),
-  ];
 
   final _popupOptionsChoices = <WarOptions>[
     WarOptions(description: "Manage Spies"),
@@ -770,38 +747,68 @@ class WarPageState extends State<WarPage> {
             ),
           ),
         ),
-        PopupMenuButton<WarSort>(
-          icon: const Icon(
-            Icons.sort,
-          ),
-          onSelected: _selectSortPopup,
-          itemBuilder: (BuildContext context) {
-            return _popupSortChoices.map((WarSort choice) {
-              return PopupMenuItem<WarSort>(
-                value: choice,
-                child: Row(
-                  children: [
-                    if (_w.currentSort == choice.type)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Icon(
-                          Icons.arrow_forward_ios_outlined,
-                          color: _themeProvider!.mainText,
-                          size: 15,
-                        ),
-                      ),
-                    Flexible(
-                      child: Text(
-                        choice.description,
-                        style: const TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList();
+        GetBuilder<WarController>(
+          builder: (w) {
+            // Calculate max stats to see if filters are relevant
+            double maxS = 0;
+            double maxStr = 0;
+            double maxDef = 0;
+            double maxSpd = 0;
+            double maxDex = 0;
+
+            for (var faction in w.factions) {
+              if (faction.members != null) {
+                for (var member in faction.members!.values) {
+                  if (member == null) continue;
+                  double total = w.getMemberTotalStats(member);
+                  if (total > maxS) maxS = total;
+                  if (member.statsStr != null && member.statsStr! > maxStr) maxStr = member.statsStr!.toDouble();
+                  if (member.statsDef != null && member.statsDef! > maxDef) maxDef = member.statsDef!.toDouble();
+                  if (member.statsSpd != null && member.statsSpd! > maxSpd) maxSpd = member.statsSpd!.toDouble();
+                  if (member.statsDex != null && member.statsDex! > maxDex) maxDex = member.statsDex!.toDouble();
+                }
+              }
+            }
+
+            bool smartScoreActive = w.currentSort == WarSortType.smartScore &&
+                (w.warSettings.weightLevel != 0 ||
+                    w.warSettings.weightLife != 0 ||
+                    w.warSettings.weightFairFight != 0 ||
+                    w.warSettings.weightHospitalTime != 0 ||
+                    w.warSettings.weightStats != 0 ||
+                    w.warSettings.weightEstimatedStats != 0 ||
+                    w.warSettings.weightStrength != 0 ||
+                    w.warSettings.weightDefense != 0 ||
+                    w.warSettings.weightSpeed != 0 ||
+                    w.warSettings.weightDexterity != 0);
+
+            bool filtersActive = w.warSettings.filtersEnabled &&
+                (w.warSettings.levelRange != null ||
+                    w.warSettings.lifeRange != null ||
+                    w.warSettings.fairFightRange != null ||
+                    w.warSettings.hospitalTimeRange != null ||
+                    w.warSettings.estimatedStatsRange != null ||
+                    (w.warSettings.statsRange != null && maxS > 0) ||
+                    (w.warSettings.strengthRange != null && maxStr > 0) ||
+                    (w.warSettings.defenseRange != null && maxDef > 0) ||
+                    (w.warSettings.speedRange != null && maxSpd > 0) ||
+                    (w.warSettings.dexterityRange != null && maxDex > 0));
+
+            bool isActive = smartScoreActive || filtersActive;
+            return IconButton(
+              icon: Icon(
+                Icons.sort,
+                shadows: isActive ? _shadowList() : null,
+              ),
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => WarSettingsDialog(),
+                );
+              },
+            );
           },
         ),
         PopupMenuButton<WarOptions>(
@@ -1200,54 +1207,24 @@ class WarPageState extends State<WarPage> {
     );
   }
 
-  void _selectSortPopup(WarSort choice) {
-    switch (choice.type) {
-      case WarSortType.levelDes:
-        _w.sortTargets(WarSortType.levelDes);
-      case WarSortType.levelAsc:
-        _w.sortTargets(WarSortType.levelAsc);
-      case WarSortType.respectDes:
-        _w.sortTargets(WarSortType.respectDes);
-      case WarSortType.respectAsc:
-        _w.sortTargets(WarSortType.respectAsc);
-      case WarSortType.nameDes:
-        _w.sortTargets(WarSortType.nameDes);
-      case WarSortType.nameAsc:
-        _w.sortTargets(WarSortType.nameAsc);
-      case WarSortType.lifeDes:
-        _w.sortTargets(WarSortType.lifeDes);
-      case WarSortType.lifeAsc:
-        _w.sortTargets(WarSortType.lifeAsc);
-      case WarSortType.hospitalDes:
-        _w.sortTargets(WarSortType.hospitalDes);
-      case WarSortType.hospitalAsc:
-        _w.sortTargets(WarSortType.hospitalAsc);
-      case WarSortType.statsDes:
-        _w.sortTargets(WarSortType.statsDes);
-      case WarSortType.statsAsc:
-        _w.sortTargets(WarSortType.statsAsc);
-      case WarSortType.onlineDes:
-        _w.sortTargets(WarSortType.onlineDes);
-      case WarSortType.onlineAsc:
-        _w.sortTargets(WarSortType.onlineAsc);
-      case WarSortType.colorDes:
-        _w.sortTargets(WarSortType.colorDes);
-      case WarSortType.colorAsc:
-        _w.sortTargets(WarSortType.colorAsc);
-      case WarSortType.notesDes:
-        _w.sortTargets(WarSortType.notesDes);
-      case WarSortType.notesAsc:
-        _w.sortTargets(WarSortType.notesAsc);
-      case WarSortType.bounty:
-        _w.sortTargets(WarSortType.bounty);
-      case WarSortType.travelDistanceDesc:
-        _w.sortTargets(WarSortType.travelDistanceDesc);
-      case WarSortType.travelDistanceAsc:
-        _w.sortTargets(WarSortType.travelDistanceAsc);
-      default:
-        _w.sortTargets(WarSortType.nameAsc);
-        break;
-    }
+  List<Shadow> _shadowList() {
+    return [
+      Shadow(
+        color: Colors.orange.shade800.withValues(alpha: 1),
+        offset: const Offset(0, 0),
+        blurRadius: 20,
+      ),
+      Shadow(
+        color: Colors.orange.shade800.withValues(alpha: 1),
+        offset: const Offset(0, 0),
+        blurRadius: 20,
+      ),
+      Shadow(
+        color: Colors.orange.shade800.withValues(alpha: 1),
+        offset: const Offset(0, 0),
+        blurRadius: 5,
+      ),
+    ];
   }
 
   void _callBackChainOptions() {
@@ -1778,6 +1755,102 @@ class WarTargetsListState extends State<WarTargetsList> {
         if (countryCheck(state: thisMember.status!.state, description: thisMember.status!.description) != "Torn" ||
             isTraveling(state: thisMember.status!.state)) {
           continue;
+        }
+      }
+
+      // Range Filters
+      final settings = widget.warController.warSettings;
+      if (settings.filtersEnabled) {
+        if (settings.levelRange != null) {
+          if (thisMember.level == null ||
+              thisMember.level! < settings.levelRange!.start ||
+              thisMember.level! > settings.levelRange!.end) {
+            continue;
+          }
+        }
+
+        if (settings.lifeRange != null) {
+          if (thisMember.lifeCurrent == null ||
+              thisMember.lifeCurrent! < settings.lifeRange!.start ||
+              thisMember.lifeCurrent! > settings.lifeRange!.end) {
+            continue;
+          }
+        }
+
+        if (settings.respectRange != null) {
+          if (thisMember.respectGain == null ||
+              thisMember.respectGain! < settings.respectRange!.start ||
+              thisMember.respectGain! > settings.respectRange!.end) {
+            continue;
+          }
+        }
+
+        if (settings.hospitalTimeRange != null) {
+          int seconds = 0;
+          if (thisMember.status?.state == 'Hospital') {
+            int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+            seconds = (thisMember.status?.until ?? 0) - now;
+            if (seconds < 0) seconds = 0;
+          }
+          double minutes = seconds / 60.0;
+          if (minutes < settings.hospitalTimeRange!.start || minutes > settings.hospitalTimeRange!.end) {
+            continue;
+          }
+        }
+
+        // Stats Filters
+        if (settings.statsRange != null) {
+          double totalStats = widget.warController.getMemberTotalStats(thisMember);
+          if (totalStats < settings.statsRange!.start || totalStats > settings.statsRange!.end) {
+            continue;
+          }
+        }
+
+        if (settings.estimatedStatsRange != null) {
+          int estIndex = widget.warController.getMemberEstimatedStatsIndex(thisMember);
+          // If member has no estimate (index -1), and we are filtering, exclude them
+          // Range is 0-6.
+          if (estIndex == -1) {
+            continue;
+          }
+
+          if (estIndex < settings.estimatedStatsRange!.start.round() ||
+              estIndex > settings.estimatedStatsRange!.end.round()) {
+            continue;
+          }
+        }
+
+        if (settings.strengthRange != null) {
+          if (thisMember.statsStr == null ||
+              thisMember.statsStr == -1 ||
+              thisMember.statsStr! < settings.strengthRange!.start ||
+              thisMember.statsStr! > settings.strengthRange!.end) {
+            continue;
+          }
+        }
+        if (settings.defenseRange != null) {
+          if (thisMember.statsDef == null ||
+              thisMember.statsDef == -1 ||
+              thisMember.statsDef! < settings.defenseRange!.start ||
+              thisMember.statsDef! > settings.defenseRange!.end) {
+            continue;
+          }
+        }
+        if (settings.speedRange != null) {
+          if (thisMember.statsSpd == null ||
+              thisMember.statsSpd == -1 ||
+              thisMember.statsSpd! < settings.speedRange!.start ||
+              thisMember.statsSpd! > settings.speedRange!.end) {
+            continue;
+          }
+        }
+        if (settings.dexterityRange != null) {
+          if (thisMember.statsDex == null ||
+              thisMember.statsDex == -1 ||
+              thisMember.statsDex! < settings.dexterityRange!.start ||
+              thisMember.statsDex! > settings.dexterityRange!.end) {
+            continue;
+          }
         }
       }
 

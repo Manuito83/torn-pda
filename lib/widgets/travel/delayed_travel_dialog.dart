@@ -13,6 +13,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -43,11 +44,14 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
   late SettingsProvider _settingsProvider;
 
   bool _notificationActive = false;
+  bool _alarmKitActive = false;
 
   int? _delayMinutes = 0;
 
   bool _alarmSound = true;
   bool _alarmVibration = true;
+
+  String get _alarmKitId => 'delayed_travel_${widget.countryId}_${widget.itemId}';
 
   @override
   void initState() {
@@ -150,6 +154,42 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
                             },
                           ),
                           const SizedBox(width: 5),
+                          if (Platform.isIOS)
+                            ActionChip(
+                              label: Icon(
+                                Icons.notifications_none,
+                                color: _alarmKitActive ? Colors.green : _themeProvider.mainText,
+                              ),
+                              onPressed: () async {
+                                if (_alarmKitActive) {
+                                  await _cancelAlarmIOS();
+                                  BotToast.showText(
+                                    text: 'Boarding call alarm cancelled!',
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.orange[700]!,
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
+                                  );
+                                } else {
+                                  await _scheduleAlarmIOS();
+                                  BotToast.showText(
+                                    text: 'Boarding call alarm set for '
+                                        '${_timeFormatter(widget.boardingTime.add(Duration(minutes: _delayMinutes!)))}',
+                                    textStyle: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.white,
+                                    ),
+                                    contentColor: Colors.green[700]!,
+                                    duration: const Duration(seconds: 5),
+                                    contentPadding: const EdgeInsets.all(10),
+                                  );
+                                }
+                              },
+                            ),
+                          if (Platform.isIOS) const SizedBox(width: 5),
                           if (Platform.isAndroid)
                             ActionChip(
                               label: const Icon(
@@ -372,6 +412,35 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     );
   }
 
+  Future<void> _scheduleAlarmIOS() async {
+    if (!Platform.isIOS) return;
+    final available = await AlarmKitServiceIos.isAvailable();
+    if (!available) {
+      BotToast.showText(
+        text: 'Alarms are not available on this iOS device!',
+        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+        contentColor: Colors.orange[700]!,
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
+      );
+      return;
+    }
+
+    final targetTime = widget.boardingTime.add(Duration(minutes: _delayMinutes!));
+
+    await AlarmKitServiceIos.setAlarmWithMetadata(
+      targetTime: targetTime,
+      label: _settingsProvider.discreetNotifications ? 'Fl' : widget.stockName,
+      id: _alarmKitId,
+      context: 'Boarding alarm',
+      details: '${widget.country}: ${widget.stockName}',
+      // Use same payload as notification taps so Drawer handler matches
+      payload: '211',
+      timeMillis: targetTime.millisecondsSinceEpoch,
+    );
+    await _refreshAlarmKitState();
+  }
+
   Future _retrievePendingNotifications() async {
     final pendingNotificationRequests = await flutterLocalNotificationsPlugin.pendingNotificationRequests();
 
@@ -383,6 +452,8 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
         });
       }
     }
+
+    await _refreshAlarmKitState();
   }
 
   Future<void> _cancelNotifications() async {
@@ -390,6 +461,24 @@ class DelayedTravelDialogState extends State<DelayedTravelDialog> {
     setState(() {
       _notificationActive = false;
     });
+  }
+
+  Future<void> _refreshAlarmKitState() async {
+    if (!Platform.isIOS) return;
+    final available = await AlarmKitServiceIos.isAvailable();
+    if (!available) return;
+    final active = (await AlarmKitServiceIos.listLogicalIds()).contains(_alarmKitId);
+    if (mounted) {
+      setState(() {
+        _alarmKitActive = active;
+      });
+    }
+  }
+
+  Future<void> _cancelAlarmIOS() async {
+    if (!Platform.isIOS) return;
+    await AlarmKitServiceIos.cancelAlarm(_alarmKitId);
+    await _refreshAlarmKitState();
   }
 
   void _setAlarm() {

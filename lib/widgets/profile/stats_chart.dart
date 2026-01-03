@@ -9,6 +9,7 @@ import 'package:toastification/toastification.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart.dart';
 import 'package:torn_pda/models/profile/external/torn_stats_chart_update.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
+import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -22,6 +23,7 @@ class StatsChart extends StatefulWidget {
   final StatsChartTornStats? statsData;
   final UserController userController;
   final Function callbackStatsUpdate;
+  final bool isCachedData;
 
   StatsChart({
     super.key,
@@ -29,6 +31,7 @@ class StatsChart extends StatefulWidget {
     required this.statsData,
     required this.userController,
     required this.callbackStatsUpdate,
+    this.isCachedData = false,
   });
 
   @override
@@ -44,6 +47,7 @@ class _StatsChartState extends State<StatsChart> {
     bool showBoth = settingsProvider.tornStatsChartShowBoth;
 
     bool isOldData = false;
+    bool isStaleData = false;
     if (widget.statsData?.data != null && widget.statsData!.data!.isNotEmpty) {
       int maxTimestamp = 0;
       for (var element in widget.statsData!.data!) {
@@ -57,6 +61,8 @@ class _StatsChartState extends State<StatsChart> {
         final difference = now.difference(latestDate);
         if (difference.inDays > 30) {
           isOldData = true;
+        } else if (difference.inDays > 5 && widget.isCachedData) {
+          isStaleData = true;
         }
       }
     }
@@ -72,6 +78,25 @@ class _StatsChartState extends State<StatsChart> {
             const SizedBox(width: 5),
             Text(
               "TS sent data older than 1 month",
+              style: TextStyle(
+                fontSize: 10,
+                color: Colors.orange[800],
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (isStaleData) {
+      warningWidget = Padding(
+        padding: const EdgeInsets.only(bottom: 5),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.warning, size: 12, color: Colors.orange[800]),
+            const SizedBox(width: 5),
+            Text(
+              "Displaying old cached data (> 5 days)",
               style: TextStyle(
                 fontSize: 10,
                 color: Colors.orange[800],
@@ -546,7 +571,7 @@ class _StatsChartState extends State<StatsChart> {
               final int currentYear = DateTime.now().year;
               Color yearColor;
               if (dt.year == currentYear) {
-                yearColor = Colors.black;
+                yearColor = context.read<ThemeProvider>().mainText;
               } else if (dt.year == currentYear - 1) {
                 yearColor = Colors.blue;
               } else if (dt.year == currentYear - 2) {

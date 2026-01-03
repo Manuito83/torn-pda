@@ -48,6 +48,18 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
   late double _energyTrigger;
   late double _nerveTrigger;
 
+  String? _travelDropDownValue;
+  String? _energyDropDownValue;
+  String? _nerveDropDownValue;
+  String? _lifeDropDownValue;
+  String? _drugDropDownValue;
+  String? _medicalDropDownValue;
+  String? _boosterDropDownValue;
+  String? _hospitalDropDownValue;
+  String? _jailDropDownValue;
+  String? _rankedWarDropDownValue;
+  String? _raceStartDropDownValue;
+
   Future? _preferencesLoaded;
 
   late SettingsProvider _settingsProvider;
@@ -162,7 +174,65 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
 
   Widget _rowsWithTypes() {
     final types = <Widget>[];
+    late String typeString;
+    ProfileNotification profileType;
     for (final element in ProfileNotification.values) {
+      switch (element) {
+        case ProfileNotification.travel:
+          typeString = 'Travel';
+          profileType = ProfileNotification.travel;
+        case ProfileNotification.energy:
+          typeString = 'Energy';
+          profileType = ProfileNotification.energy;
+        case ProfileNotification.nerve:
+          typeString = 'Nerve';
+          profileType = ProfileNotification.nerve;
+        case ProfileNotification.life:
+          typeString = 'Life';
+          profileType = ProfileNotification.life;
+        case ProfileNotification.drugs:
+          typeString = 'Drugs';
+          profileType = ProfileNotification.drugs;
+        case ProfileNotification.medical:
+          typeString = 'Medical';
+          profileType = ProfileNotification.medical;
+        case ProfileNotification.booster:
+          typeString = 'Booster';
+          profileType = ProfileNotification.booster;
+        case ProfileNotification.hospital:
+          typeString = 'Hospital';
+          profileType = ProfileNotification.hospital;
+        case ProfileNotification.jail:
+          typeString = 'Jail';
+          profileType = ProfileNotification.jail;
+        case ProfileNotification.rankedWar:
+          typeString = 'Ranked War';
+          profileType = ProfileNotification.rankedWar;
+        case ProfileNotification.raceStart:
+          typeString = 'Race Start';
+          profileType = ProfileNotification.raceStart;
+      }
+
+      types.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              Flexible(
+                child: Text(typeString),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: _typeDropDown(profileType),
+              ),
+            ],
+          ),
+        ),
+      );
+
       if (element == ProfileNotification.travel) {
         types.add(
           Padding(
@@ -174,25 +244,14 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
                 IconButton(
                   icon: const Icon(Icons.keyboard_arrow_right_outlined),
                   onPressed: () {
-                    if (Platform.isAndroid) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const TravelOptionsAndroid();
-                          },
-                        ),
-                      );
-                    } else {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return const TravelOptionsIOS();
-                          },
-                        ),
-                      );
-                    }
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return Platform.isAndroid ? const TravelOptionsAndroid() : const TravelOptionsIOS();
+                        },
+                      ),
+                    );
                   },
                 ),
               ],
@@ -209,7 +268,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Flexible(child: Text('Energy')),
+                const Flexible(child: Text('Trigger')),
                 const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
@@ -266,7 +325,7 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                const Flexible(child: Text('Nerve')),
+                const Flexible(child: Text('Trigger')),
                 const Padding(
                   padding: EdgeInsets.only(left: 20),
                 ),
@@ -418,10 +477,34 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
       nerveTrigger = widget.nerveMax!;
     }
 
+    final travelType = await Prefs().getTravelNotificationType();
+    final energyType = await Prefs().getEnergyNotificationType();
+    final nerveType = await Prefs().getNerveNotificationType();
+    final lifeType = await Prefs().getLifeNotificationType();
+    final drugType = await Prefs().getDrugNotificationType();
+    final medicalType = await Prefs().getMedicalNotificationType();
+    final boosterType = await Prefs().getBoosterNotificationType();
+    final hospitalType = await Prefs().getHospitalNotificationType();
+    final jailType = await Prefs().getJailNotificationType();
+    final rankedWarType = await Prefs().getRankedWarNotificationType();
+    final raceStartType = await Prefs().getRaceStartNotificationType();
+
     setState(() {
       _energyDivisions = ((widget.energyMax! - _energyMin) / 5).floor();
       _energyTrigger = energyTrigger.toDouble();
       _nerveTrigger = nerveTrigger.toDouble();
+
+      _travelDropDownValue = travelType;
+      _energyDropDownValue = energyType;
+      _nerveDropDownValue = nerveType;
+      _lifeDropDownValue = lifeType;
+      _drugDropDownValue = drugType;
+      _medicalDropDownValue = medicalType;
+      _boosterDropDownValue = boosterType;
+      _hospitalDropDownValue = hospitalType;
+      _jailDropDownValue = jailType;
+      _rankedWarDropDownValue = rankedWarType;
+      _raceStartDropDownValue = raceStartType;
     });
   }
 
@@ -430,5 +513,133 @@ class ProfileNotificationsIOSState extends State<ProfileNotificationsIOS> {
     routeName = "profile_options";
     routeWithDrawer = false;
     Navigator.of(context).pop();
+  }
+
+  DropdownButton<String> _typeDropDown(ProfileNotification profileType) {
+    String? value;
+    switch (profileType) {
+      case ProfileNotification.travel:
+        value = _travelDropDownValue;
+      case ProfileNotification.energy:
+        value = _energyDropDownValue;
+      case ProfileNotification.nerve:
+        value = _nerveDropDownValue;
+      case ProfileNotification.life:
+        value = _lifeDropDownValue;
+      case ProfileNotification.drugs:
+        value = _drugDropDownValue;
+      case ProfileNotification.medical:
+        value = _medicalDropDownValue;
+      case ProfileNotification.booster:
+        value = _boosterDropDownValue;
+      case ProfileNotification.hospital:
+        value = _hospitalDropDownValue;
+      case ProfileNotification.jail:
+        value = _jailDropDownValue;
+      case ProfileNotification.rankedWar:
+        value = _rankedWarDropDownValue;
+      case ProfileNotification.raceStart:
+        value = _raceStartDropDownValue;
+    }
+
+    // Timers are not supported on iOS; normalize any legacy timer value to alarm.
+    if (value == '2') {
+      value = '1';
+    }
+
+    value ??= '0';
+
+    return DropdownButton<String>(
+      value: value,
+      items: const [
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 95,
+            child: Text(
+              "Notification",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 95,
+            child: Text(
+              "Alarm",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (newValue) {
+        if (newValue == null) return;
+
+        switch (profileType) {
+          case ProfileNotification.travel:
+            Prefs().setTravelNotificationType(newValue);
+            setState(() {
+              _travelDropDownValue = newValue;
+            });
+          case ProfileNotification.energy:
+            Prefs().setEnergyNotificationType(newValue);
+            setState(() {
+              _energyDropDownValue = newValue;
+            });
+          case ProfileNotification.nerve:
+            Prefs().setNerveNotificationType(newValue);
+            setState(() {
+              _nerveDropDownValue = newValue;
+            });
+          case ProfileNotification.life:
+            Prefs().setLifeNotificationType(newValue);
+            setState(() {
+              _lifeDropDownValue = newValue;
+            });
+          case ProfileNotification.drugs:
+            Prefs().setDrugNotificationType(newValue);
+            setState(() {
+              _drugDropDownValue = newValue;
+            });
+          case ProfileNotification.medical:
+            Prefs().setMedicalNotificationType(newValue);
+            setState(() {
+              _medicalDropDownValue = newValue;
+            });
+          case ProfileNotification.booster:
+            Prefs().setBoosterNotificationType(newValue);
+            setState(() {
+              _boosterDropDownValue = newValue;
+            });
+          case ProfileNotification.hospital:
+            Prefs().setHospitalNotificationType(newValue);
+            setState(() {
+              _hospitalDropDownValue = newValue;
+            });
+          case ProfileNotification.jail:
+            Prefs().setJailNotificationType(newValue);
+            setState(() {
+              _jailDropDownValue = newValue;
+            });
+          case ProfileNotification.rankedWar:
+            Prefs().setRankedWarNotificationType(newValue);
+            setState(() {
+              _rankedWarDropDownValue = newValue;
+            });
+          case ProfileNotification.raceStart:
+            Prefs().setRaceStartNotificationType(newValue);
+            setState(() {
+              _raceStartDropDownValue = newValue;
+            });
+        }
+      },
+    );
   }
 }

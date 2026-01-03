@@ -1,4 +1,5 @@
 // ignore: depend_on_referenced_packages
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -10,6 +11,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
@@ -259,23 +262,18 @@ class WebviewHandlers {
     webview.addJavaScriptHandler(
       handlerName: 'setAlarm',
       callback: (args) async {
-        if (!Platform.isAndroid) {
-          const errorMsg = 'Error: Alarms are only supported on Android';
-          log('[Alarm Handler] $errorMsg');
-          return {'status': 'error', 'message': errorMsg};
-        }
-
         if (args.isEmpty || args[0]['timestamp'] == null) {
           const errorMsg = 'Missing required parameter: timestamp';
           log('[Alarm Handler] $errorMsg');
           return {'status': 'error', 'message': errorMsg};
         }
 
-        final result = await WebviewNotificationsHelper.setAndroidAlarm(
+        final result = await WebviewNotificationsHelper.setWebviewAlarm(
           timestampMillis: args[0]['timestamp'],
           vibrate: args[0]['vibrate'] ?? true,
           sound: args[0]['sound'] ?? true,
           message: args[0]['message'] ?? 'TORN PDA Alarm',
+          logicalId: args[0]['id']?.toString(),
         );
 
         if (result.startsWith('Error')) {
@@ -565,6 +563,57 @@ class WebviewHandlers {
           return {'success': false, 'error': 'Invalid command'};
         } catch (e) {
           return {'success': false, 'error': e.toString()};
+        }
+      },
+    );
+  }
+
+  static void addShareFileHandler({
+    required InAppWebViewController webview,
+    required BuildContext context,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'shareFile',
+      callback: (args) async {
+        try {
+          if (args.isEmpty || args[0] is! Map) {
+            return {'status': 'error', 'message': 'Invalid arguments'};
+          }
+          final params = args[0] as Map;
+          final String? base64Data = params['base64Data'];
+          final String? fileName = params['fileName'];
+
+          if (base64Data == null || fileName == null) {
+            return {'status': 'error', 'message': 'Missing base64Data or fileName'};
+          }
+
+          // Remove header if present (e.g., "data:text/csv;base64,")
+          String cleanBase64 = base64Data;
+          if (base64Data.contains(',')) {
+            cleanBase64 = base64Data.split(',').last;
+          }
+
+          final bytes = base64Decode(cleanBase64);
+          final tempDir = await getTemporaryDirectory();
+          final file = File('${tempDir.path}/$fileName');
+          await file.writeAsBytes(bytes);
+
+          await SharePlus.instance.share(
+            ShareParams(
+                files: [XFile(file.path)],
+                sharePositionOrigin: Rect.fromLTWH(
+                  0,
+                  0,
+                  MediaQuery.of(context).size.width,
+                  MediaQuery.of(context).size.height / 2,
+                )),
+          );
+
+          return {'status': 'success', 'message': 'File shared successfully'};
+        } catch (e) {
+          BotToast.showText(text: "Script share file error: $e");
+          log('[Share File Error] $e');
+          return {'status': 'error', 'message': e.toString()};
         }
       },
     );

@@ -7,6 +7,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/widgets/webviews/webview_fab.dart';
@@ -53,6 +54,7 @@ class Prefs {
   final String _kTravelingFilterInWars = "pda_travelingFilterStatusInWars";
   final String _kShowChainWidgetInWars = "pda_showChainWidgetInWars";
   final String _kWarMembersSort = "pda_warMembersSort";
+  final String _kWarSettings = "pda_warSettings";
   final String _kRankedWarSortPerTab = "pda_rankedWarSortPerTab";
   final String _kYataSpies = "pda_yataSpies";
   final String _kYataSpiesTime = "pda_yataSpiesTime";
@@ -98,6 +100,9 @@ class Prefs {
   final String _kDiscreetNotifications = "pda_discreteNotifications"; // We need to accept this typo
   final String _kProfileCheckAttackEnabled = "pda_profileCheckAttackEnabled";
   final String _kDefaultSection = "pda_defaultSection";
+
+  // Foreign Stocks
+  final String _kForeignStockSellingFee = "pda_foreignStockSellingFee";
   final String _kDefaultBrowser = "pda_defaultBrowser";
   final String _kAllowScreenRotation = "pda_allowScreenRotation";
   final String _kIosAllowLinkPreview = "pda_allowIosLinkPreview";
@@ -156,6 +161,7 @@ class Prefs {
   final String _kTravelTimerAhead = "pda_travelTimerAhead";
   final String _kRemoveAirplane = "pda_removeAirplane";
   final String _kRemoveForeignItemsDetails = "pda_removeForeignItemsDetails";
+  final String _kPreventBasketKeyboard = "pda_preventBasketKeyboard";
   final String _kRemoveTravelQuickReturnButton = "pda_removeTravelQuickReturnButton";
   final String _kExtraPlayerInformation = "pda_extraPlayerInformation";
   final String _kFriendlyFactions = "pda_kFriendlyFactions";
@@ -271,9 +277,14 @@ class Prefs {
   final String _kLootTimerAhead = "pda_lootTimerAhead";
   final String _kLootFiltered = "pda_lootFiltered";
 
-  // Browser scripts and widgets
+  // Android Alarm options
   final String _kManualAlarmVibration = "pda_manualAlarmVibration";
   final String _kManualAlarmSound = "pda_manualAlarmSound";
+
+  // Cache for iOS AlarmKit alarm metadata populated by AlarmKitServiceIos
+  final String _kIosAlarmMetadata = "pda_iosAlarmMetadata";
+
+  // Browser scripts and widgets
   final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kActiveCrimesList = "pda_activeCrimesList";
   final String _kQuickItemsList = "pda_quickItemsList";
@@ -296,6 +307,7 @@ class Prefs {
   final String _kUserScriptsV2FirstTime = "pda_userScriptsV2FirstTime"; // Use new key to force a new dialog
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
+  final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -638,6 +650,7 @@ class Prefs {
   /// ----------------------------
   /// Methods for app version
   /// ----------------------------
+
   Future<String> getAppCompilation() async {
     return await PrefsDatabase.getString(_kAppVersion, "");
   }
@@ -875,6 +888,22 @@ class Prefs {
 
   Future setWarMembersSort(String value) async {
     return await PrefsDatabase.setString(_kWarMembersSort, value);
+  }
+
+  Future<WarSettings> getWarSettings() async {
+    String jsonString = await PrefsDatabase.getString(_kWarSettings, '');
+    if (jsonString.isEmpty) {
+      return WarSettings();
+    }
+    try {
+      return WarSettings.fromJson(jsonDecode(jsonString));
+    } catch (e) {
+      return WarSettings();
+    }
+  }
+
+  Future setWarSettings(WarSettings value) async {
+    return await PrefsDatabase.setString(_kWarSettings, jsonEncode(value.toJson()));
   }
 
   Future<String> getRankerWarSortPerTab() async {
@@ -1712,6 +1741,14 @@ class Prefs {
     return await PrefsDatabase.setBool(_kRemoveForeignItemsDetails, value);
   }
 
+  Future<bool> getPreventBasketKeyboard() async {
+    return await PrefsDatabase.getBool(_kPreventBasketKeyboard, true);
+  }
+
+  Future setPreventBasketKeyboard(bool value) async {
+    return await PrefsDatabase.setBool(_kPreventBasketKeyboard, value);
+  }
+
   Future<bool> getRemoveTravelQuickReturnButton() async {
     return await PrefsDatabase.getBool(_kRemoveTravelQuickReturnButton, false);
   }
@@ -1851,7 +1888,7 @@ class Prefs {
   }
 
   Future<List<String>> getStockTypeFilter() async {
-    return await PrefsDatabase.getStringList(_kStockTypeFilter, List<String>.filled(4, '1'));
+    return await PrefsDatabase.getStringList(_kStockTypeFilter, List<String>.filled(5, '1'));
   }
 
   Future setStockTypeFilter(List<String> value) async {
@@ -1944,6 +1981,28 @@ class Prefs {
 
   Future setCountriesAlphabeticalFilter(bool value) async {
     return await PrefsDatabase.setBool(_kCountriesAlphabeticalFilter, value);
+  }
+
+  /// ----------------------------
+  /// Methods for manual alarms (Android)
+  /// ----------------------------
+
+  /// Whether manual alarms should vibrate (set from Settings > Notifications, used by alarm intents)
+  Future<bool> getManualAlarmVibration() async {
+    return await PrefsDatabase.getBool(_kManualAlarmVibration, true);
+  }
+
+  Future setManualAlarmVibration(bool value) async {
+    return await PrefsDatabase.setBool(_kManualAlarmVibration, value);
+  }
+
+  /// Whether manual alarms should play sound (set from Settings > Notifications, used by alarm intents)
+  Future<bool> getManualAlarmSound() async {
+    return await PrefsDatabase.getBool(_kManualAlarmSound, true);
+  }
+
+  Future setManualAlarmSound(bool value) async {
+    return await PrefsDatabase.setBool(_kManualAlarmSound, value);
   }
 
   /// ----------------------------
@@ -2170,22 +2229,6 @@ class Prefs {
   }
 
   //
-
-  Future<bool> getManualAlarmVibration() async {
-    return await PrefsDatabase.getBool(_kManualAlarmVibration, true);
-  }
-
-  Future setManualAlarmVibration(bool value) async {
-    return await PrefsDatabase.setBool(_kManualAlarmVibration, value);
-  }
-
-  Future<bool> getManualAlarmSound() async {
-    return await PrefsDatabase.getBool(_kManualAlarmSound, true);
-  }
-
-  Future setManualAlarmSound(bool value) async {
-    return await PrefsDatabase.setBool(_kManualAlarmSound, value);
-  }
 
   Future<bool> getShowHeaderWallet() async {
     return await PrefsDatabase.getBool(_kShowHeaderWallet, true);
@@ -3048,6 +3091,17 @@ class Prefs {
     return await PrefsDatabase.setBool(_kUserScriptsFeatInjectionTimeShown, value);
   }
 
+  // --
+
+  Future<String?> getUserScriptsGlobalDisableState() async {
+    final value = await PrefsDatabase.getString(_kUserScriptsGlobalDisableState, "");
+    return value.isEmpty ? null : value;
+  }
+
+  Future setUserScriptsGlobalDisableState(String value) async {
+    return await PrefsDatabase.setString(_kUserScriptsGlobalDisableState, value);
+  }
+
   Future<List<String>> getUserScriptsForcedVersions() async {
     return await PrefsDatabase.getStringList(_kUserScriptsForcedVersions, []);
   }
@@ -3211,6 +3265,14 @@ class Prefs {
 
   Future setStockExchangeInMenu(bool value) async {
     return await PrefsDatabase.setBool(_kStockExchangeInMenu, value);
+  }
+
+  Future<int> getForeignStockSellingFee() async {
+    return await PrefsDatabase.getInt(_kForeignStockSellingFee, 0);
+  }
+
+  Future setForeignStockSellingFee(int value) async {
+    return await PrefsDatabase.setInt(_kForeignStockSellingFee, value);
   }
 
   /// -----------------------------
@@ -3932,6 +3994,63 @@ class Prefs {
 
   Future setTctClockHighlightsEvents(bool value) async {
     return await PrefsDatabase.setBool(_kTctClockHighlightsEvents, value);
+  }
+
+  /// -----------------------------------
+  /// Methods for iOS AlarmKit metadata
+  /// -----------------------------------
+
+  /// Metadata cache keyed by AlarmKit UUIDs to rebuild iOS alarms after app restarts
+  Future<Map<String, Map<String, dynamic>>> getIosAlarmMetadata() async {
+    final jsonString = await PrefsDatabase.getString(_kIosAlarmMetadata, '{}');
+    try {
+      final decoded = jsonDecode(jsonString);
+      if (decoded is Map<String, dynamic>) {
+        final normalized = <String, Map<String, dynamic>>{};
+        decoded.forEach((key, value) {
+          if (value is Map) {
+            normalized[key] = Map<String, dynamic>.from(value);
+          }
+        });
+        return normalized;
+      }
+    } catch (e, stackTrace) {
+      log('Failed to decode iOS alarm metadata: $e', name: 'Prefs.getIosAlarmMetadata', stackTrace: stackTrace);
+    }
+    return {};
+  }
+
+  /// Internal helper to persist the AlarmKit metadata map
+  Future<void> _saveIosAlarmMetadata(Map<String, Map<String, dynamic>> metadata) async {
+    await PrefsDatabase.setString(_kIosAlarmMetadata, jsonEncode(metadata));
+  }
+
+  /// Inserts or updates metadata for a specific AlarmKit UUID (called from AlarmKitServiceIos)
+  Future<void> upsertIosAlarmMetadata(String uuid, Map<String, dynamic> metadata) async {
+    final current = await getIosAlarmMetadata();
+    current[uuid] = Map<String, dynamic>.from(metadata);
+    await _saveIosAlarmMetadata(current);
+  }
+
+  /// Removes stored metadata for a given AlarmKit UUID
+  Future<void> removeIosAlarmMetadata(String uuid) async {
+    final current = await getIosAlarmMetadata();
+    if (current.remove(uuid) != null) {
+      await _saveIosAlarmMetadata(current);
+    }
+  }
+
+  /// Deletes metadata entries for alarms that are no longer active (called after listAlarms)
+  Future<void> compactIosAlarmMetadata(Set<String> keepIds) async {
+    final current = await getIosAlarmMetadata();
+    final toRemove = current.keys.where((key) => !keepIds.contains(key)).toList();
+    if (toRemove.isEmpty) {
+      return;
+    }
+    for (final key in toRemove) {
+      current.remove(key);
+    }
+    await _saveIosAlarmMetadata(current);
   }
 
   /// -----------------------------------

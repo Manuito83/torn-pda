@@ -40,9 +40,12 @@ window.flutter_inappwebview.callHandler('scheduleNotification', {
 ---
 <br/><br/>
 
-## Handler #2 - Set Alarm (Android)
+## Handler #2 - Set Alarm (Android / iOS)
 
-Sets an alarm on Android from JavaScript.
+Sets an alarm from JavaScript.
+
+- Android: uses the native alarm intent (as before).
+- iOS: uses AlarmKit (available on supported iOS versions). If AlarmKit is not available, the handler returns an error.
 
 ### 🔹 Usage Example:
 ```javascript
@@ -55,7 +58,7 @@ window.flutter_inappwebview.callHandler('setAlarm', {
 ```
 
 🔸 Error Cases:
-- Alarms are only supported on Android.
+- Alarms require AlarmKit on iOS; if unavailable, an error is returned.
 - Missing parameters: id or timestamp.
 - Native helper errors (e.g., issues during scheduling) will return an error message.
 

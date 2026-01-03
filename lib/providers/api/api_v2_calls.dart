@@ -3,6 +3,7 @@
 import 'dart:developer';
 
 import 'package:get/get.dart';
+import 'package:torn_pda/models/api_v2/torn_v2.enums.swagger.dart' as enums;
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/profile/other_profile_model/other_profile_pda.dart';
 import 'package:torn_pda/models/profile/own_profile_misc.dart';
@@ -135,5 +136,26 @@ class ApiCallsV2 {
 
     log("No OC2 crime found");
     return null;
+  }
+
+  static Future<dynamic> getUserTargetsList_v2({
+    int limit = 50,
+    int offset = 0,
+    enums.ApiSortAsc? sort,
+  }) async {
+    final apiCaller = Get.find<ApiCallerController>();
+    final apiResponse = await apiCaller.enqueueApiCall<UserListResponse>(
+      apiSelection_v2: ApiSelection_v2.userTargetsList,
+      apiCall: (client, apiKey) {
+        return client.userListGet(
+          cat: enums.UserListEnum.targets,
+          limit: limit,
+          offset: offset,
+          sort: sort,
+        );
+      },
+    );
+
+    return apiResponse;
   }
 }
