@@ -197,13 +197,11 @@ class AndroidLiveUpdateAdapter(
             // Set subtext to assist system in identifying context
             builder.setSubText(context.getString(R.string.live_update_channel_name))
             
-            // Attempt to enable promoted ongoing notification for Android 16+
-            try {
-                val method = builder.javaClass.getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
-                method.invoke(builder, true)
-            } catch (e: Exception) {
-                // Feature not supported on this device or SDK version
-            }
+            // Enable promoted ongoing (Live Update) when supported (Android 15+); fallback is no-op on older SDKs
+            enablePromotedOngoing(builder)
+
+            // Provide a compact status-chip text for Android 15+ surfaces (if available)
+            applyShortCriticalText(builder, payload)
             
             scheduleArrivedAlarm(payload, arrivalMillis)
         }
@@ -260,6 +258,39 @@ class AndroidLiveUpdateAdapter(
         val totalSeconds = max(1L, arrival - departure)
         val elapsedSeconds = min(totalSeconds, max(0L, reference - departure))
         return ProgressInfo(totalSeconds, elapsedSeconds)
+    }
+
+    private fun applyShortCriticalText(builder: NotificationCompat.Builder, payload: LiveUpdatePayload) {
+        val shortText = buildShortCriticalText(payload) ?: return
+        // setShortCriticalText is framework-only (API 35+); call reflectively to keep backward compatibility
+        try {
+            val method = builder.javaClass.getMethod("setShortCriticalText", CharSequence::class.java)
+            method.invoke(builder, shortText)
+        } catch (_: Exception) {
+            // Safely ignore on older devices or when the compat shim lacks the API
+        }
+    }
+
+    private fun buildShortCriticalText(payload: LiveUpdatePayload): String? {
+        if (payload.hasArrived) {
+            return context.getString(R.string.live_update_arrived_label)
+        }
+
+        val arrival = payload.arrivalTimeTimestamp ?: return null
+        val date = java.util.Date(arrival * 1000)
+        val format = android.text.format.DateFormat.getTimeFormat(context)
+        val formatted = format.format(date)
+        // Short hint prefixed with T(Travel), keeps under chip width constraints (~7-8 chars typical)
+        return "T $formatted"
+    }
+
+    private fun enablePromotedOngoing(builder: NotificationCompat.Builder) {
+        try {
+            val method = builder.javaClass.getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
+            method.invoke(builder, true)
+        } catch (_: Exception) {
+            // Ignore if not supported by current SDK or compat library
+        }
     }
 
     private data class ProgressInfo(

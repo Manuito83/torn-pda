@@ -1520,6 +1520,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
           "They'll show in the lock screen and dynamic island.";
     } else if (Platform.isAndroid) {
       laHeader = "Live Updates will show a persistent notification with a countdown timer for your travel.\n\n"
+          "They start when you trigger them from the app or open Torn PDA while you are already traveling.\n\n"
           "If you have battery optimization enabled, the update might stop when the app is in the background.";
     }
 
@@ -1542,11 +1543,11 @@ class AlertsSettingsState extends State<AlertsSettings> {
             checkColor: Colors.white,
             activeColor: Colors.blueGrey,
             value: _settingsProvider.iosLiveActivityTravelEnabled,
-            title: const Column(
+            title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Travel"),
-                Text("Live Activity", style: TextStyle(fontSize: 10)),
+                const Text("Travel"),
+                Text(Platform.isAndroid ? "Live Update" : "Live Activity", style: const TextStyle(fontSize: 10)),
               ],
             ),
             onChanged: (enabled) async {
