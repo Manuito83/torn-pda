@@ -1057,48 +1057,70 @@ class WarController extends GetxController {
     switch (currentSort ??= WarSortType.nameAsc) {
       case WarSortType.levelDes:
         sortToSave = 'levelDes';
+        break;
       case WarSortType.levelAsc:
         sortToSave = 'levelAsc';
+        break;
       case WarSortType.respectDes:
         sortToSave = 'respectDes';
+        break;
       case WarSortType.respectAsc:
         sortToSave = 'respectAsc';
+        break;
       case WarSortType.nameDes:
         sortToSave = 'nameDes';
+        break;
       case WarSortType.nameAsc:
         sortToSave = 'nameAsc';
+        break;
       case WarSortType.lifeDes:
         sortToSave = 'lifeDes';
+        break;
       case WarSortType.lifeAsc:
         sortToSave = 'lifeAsc';
+        break;
       case WarSortType.hospitalDes:
         sortToSave = 'hospitalDes';
+        break;
       case WarSortType.hospitalAsc:
         sortToSave = 'hospitalAsc';
+        break;
       case WarSortType.statsDes:
         sortToSave = 'statsDes';
+        break;
       case WarSortType.statsAsc:
         sortToSave = 'statsAsc';
+        break;
       case WarSortType.onlineDes:
         sortToSave = 'onlineDes';
+        break;
       case WarSortType.onlineAsc:
         sortToSave = 'onlineAsc';
+        break;
       case WarSortType.colorDes:
         sortToSave = 'colorDes';
+        break;
       case WarSortType.colorAsc:
         sortToSave = 'colorAsc';
+        break;
       case WarSortType.notesDes:
         sortToSave = 'notesDes';
+        break;
       case WarSortType.notesAsc:
         sortToSave = 'notesAsc';
+        break;
       case WarSortType.bounty:
         sortToSave = 'bounty';
+        break;
       case WarSortType.travelDistanceDesc:
         sortToSave = 'travelDistanceDes';
+        break;
       case WarSortType.travelDistanceAsc:
         sortToSave = 'travelDistanceAsc';
+        break;
       case WarSortType.smartScore:
         sortToSave = 'smartScore';
+        break;
     }
     Prefs().setWarMembersSort(sortToSave);
   }
@@ -1497,6 +1519,48 @@ class WarController extends GetxController {
     return 0.0;
   }
 
+  double _getPartialExactStats(Member member) {
+    // Use precomputed known total if available
+    if (member.statsExactTotalKnown != null && member.statsExactTotalKnown! > 0) {
+      return member.statsExactTotalKnown!.toDouble();
+    }
+
+    double sum = 0.0;
+    bool hasAny = false;
+    if (member.statsStr != null && member.statsStr! > 0) {
+      sum += member.statsStr!;
+      hasAny = true;
+    }
+    if (member.statsSpd != null && member.statsSpd! > 0) {
+      sum += member.statsSpd!;
+      hasAny = true;
+    }
+    if (member.statsDef != null && member.statsDef! > 0) {
+      sum += member.statsDef!;
+      hasAny = true;
+    }
+    if (member.statsDex != null && member.statsDex! > 0) {
+      sum += member.statsDex!;
+      hasAny = true;
+    }
+
+    return hasAny ? sum : 0.0;
+  }
+
+  /// Returns stats for sorting with grouping: 0 exact (total or partial), 1 estimate, 2 unknown
+  ({int group, double value}) getMemberStatsForSorting(Member member) {
+    final double exact = getMemberTotalStats(member);
+    if (exact > 0) return (group: 0, value: exact);
+
+    final double partialExact = _getPartialExactStats(member);
+    if (partialExact > 0) return (group: 0, value: partialExact);
+
+    final double estimated = getMemberEstimatedStats(member);
+    if (estimated > 0) return (group: 1, value: estimated);
+
+    return (group: 2, value: 0.0);
+  }
+
   static const List<String> estimateCategories = [
     "< 2k",
     "2k - 25k",
@@ -1748,9 +1812,29 @@ class WarController extends GetxController {
           return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
         }
       case WarSortType.statsDes:
-        return getMemberTotalStats(b).compareTo(getMemberTotalStats(a));
+        final statsA = getMemberStatsForSorting(a);
+        final statsB = getMemberStatsForSorting(b);
+
+        // Group order: exact (0) -> estimated (1) -> unknown (2)
+        if (statsA.group != statsB.group) {
+          return statsA.group.compareTo(statsB.group);
+        }
+
+        final int statsComparison = statsB.value.compareTo(statsA.value);
+        if (statsComparison != 0) return statsComparison;
+        return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
       case WarSortType.statsAsc:
-        return getMemberTotalStats(a).compareTo(getMemberTotalStats(b));
+        final statsA = getMemberStatsForSorting(a);
+        final statsB = getMemberStatsForSorting(b);
+
+        // Group order: exact (0) -> estimated (1) -> unknown (2)
+        if (statsA.group != statsB.group) {
+          return statsA.group.compareTo(statsB.group);
+        }
+
+        final int statsComparison = statsA.value.compareTo(statsB.value);
+        if (statsComparison != 0) return statsComparison;
+        return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
       case WarSortType.smartScore:
         // Ensure ranges are calculated before sorting
         if (attributeRanges.isEmpty) {

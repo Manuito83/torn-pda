@@ -197,10 +197,23 @@ class WarSettingsDialogState extends State<WarSettingsDialog> with SingleTickerP
     bool isSelected = _warController.currentSort == type;
     bool showHospitalSettings = isSelected && (type == WarSortType.hospitalDes || type == WarSortType.hospitalAsc);
 
+    String? subtitle;
+    if (type == WarSortType.statsAsc) {
+      subtitle = "Spied low to high, then estimates low to high, then unknown estimates.";
+    } else if (type == WarSortType.statsDes) {
+      subtitle = "Spied high to low, then estimates high to low, then unknown estimates.";
+    }
+
     return Column(
       children: [
         RadioListTile<WarSortType>(
           title: Text(WarSort(type: type).description),
+          subtitle: subtitle != null
+              ? Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                )
+              : null,
           value: type,
           secondary: IconButton(
             icon: Icon(isFav ? Icons.star : Icons.star_border, color: isFav ? Colors.orange : Colors.grey),

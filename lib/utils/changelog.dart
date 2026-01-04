@@ -108,13 +108,14 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.10.2'
         ..date = '15 JAN 2026'
         ..features = [
+          "War: fixed war targets sorting by stats",
+          "War: improved API limits management when updating many war targets",
           ComplexFeature(
-            "Browser: added tab state handler (see details)",
+            "Dev: added tab state handler (see details)",
             explanation: "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"
                 " and browser visibility) and stay in sync across tab switches.\n\n"
                 "Please visit the ./docs section in Github for more information.",
           ),
-          "Improved API limits management when updating many war targets",
         ],
     );
 
