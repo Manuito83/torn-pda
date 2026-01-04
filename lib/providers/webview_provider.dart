@@ -191,13 +191,13 @@ class WebViewProvider extends ChangeNotifier {
       notifyListeners();
 
       resumeAllWebviews();
-      unawaited(broadcastTabState());
+      broadcastTabState();
     } else {
       // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
       notifyListeners();
 
-      unawaited(broadcastTabState());
+      broadcastTabState();
 
       // Signal that the browser has closed to listener (e.g.: Profile page)
       browserHasClosedStream.add(true);
@@ -222,7 +222,7 @@ class WebViewProvider extends ChangeNotifier {
     _isBrowserForeground = true;
     notifyListeners();
     resumeAllWebviews();
-    unawaited(broadcastTabState());
+    broadcastTabState();
   }
 
   void pdaIconActivation({
@@ -891,13 +891,12 @@ class WebViewProvider extends ChangeNotifier {
     final deactivated = _tabList[previousIndex];
     deactivated.webViewKey?.currentState?.pauseThisWebview();
     // Notify the tab being deactivated
-    unawaited(
       deactivated.webViewKey?.currentState?.publishTabState(
             isActiveTab: false,
             isWebViewVisible: _isBrowserForeground,
           ) ??
-          Future.value(),
-    );
+          Future.value()
+    ;
 
     currentTab = newActiveTab;
     final activated = _tabList[currentTab];
@@ -914,13 +913,12 @@ class WebViewProvider extends ChangeNotifier {
     activated.webViewKey?.currentState?.resumeThisWebview(publish: false);
 
     // Notify the tab being activated
-    unawaited(
       activated.webViewKey?.currentState?.publishTabState(
             isActiveTab: true,
             isWebViewVisible: _isBrowserForeground,
           ) ??
-          Future.value(),
-    );
+          Future.value()
+    ;
 
     _callAssessMethods();
     notifyListeners();

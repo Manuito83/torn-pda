@@ -266,7 +266,7 @@ class StakeoutsPageState extends State<StakeoutsPage> {
                 BotToast.showText(text: "Stakeouts ${value ? 'enabled' : 'disabled'}!");
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             );
           },
         ),

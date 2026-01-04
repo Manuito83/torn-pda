@@ -306,7 +306,7 @@ class ChangeLogState extends State<ChangeLog> {
                       onChanged: (bool value) {
                         settings.removeForeignItemsDetails = value;
                       },
-                      activeColor: Theme.of(context).colorScheme.primary,
+                      activeThumbColor: Theme.of(context).colorScheme.primary,
                     ),
                   ],
                 ),
@@ -412,7 +412,7 @@ class ChangeLogState extends State<ChangeLog> {
                         onChanged: (bool value) {
                           settings.iosLiveActivityTravelEnabled = value;
                         },
-                        activeColor: Theme.of(context).colorScheme.primary,
+                        activeThumbColor: Theme.of(context).colorScheme.primary,
                       ),
                     ],
                   ),

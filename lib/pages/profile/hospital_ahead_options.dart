@@ -316,7 +316,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
   DropdownButton _hospitalAlarmAheadDropDown() {
     final items = Platform.isIOS
         ? [
-            DropdownMenuItem(
+            const DropdownMenuItem(
               value: 20,
               child: SizedBox(
                 width: 120,
@@ -329,7 +329,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                 ),
               ),
             ),
-            DropdownMenuItem(
+            const DropdownMenuItem(
               value: 40,
               child: SizedBox(
                 width: 120,
@@ -342,7 +342,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                 ),
               ),
             ),
-            DropdownMenuItem(
+            const DropdownMenuItem(
               value: 60,
               child: SizedBox(
                 width: 120,
@@ -355,7 +355,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                 ),
               ),
             ),
-            DropdownMenuItem(
+            const DropdownMenuItem(
               value: 120,
               child: SizedBox(
                 width: 120,
@@ -368,7 +368,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                 ),
               ),
             ),
-            DropdownMenuItem(
+            const DropdownMenuItem(
               value: 300,
               child: SizedBox(
                 width: 120,
@@ -381,7 +381,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
                 ),
               ),
             ),
-            DropdownMenuItem(
+            const DropdownMenuItem(
               value: 600,
               child: SizedBox(
                 width: 120,

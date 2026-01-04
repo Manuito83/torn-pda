@@ -1356,7 +1356,7 @@ class WebViewFullState extends State<WebViewFull>
 
             WebviewHandlers.addShareFileHandler(webview: webViewController!, context: context);
 
-            unawaited(publishTabState());
+            publishTabState();
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
@@ -1554,7 +1554,7 @@ class WebViewFullState extends State<WebViewFull>
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
             _webViewProvider.updateLastTabUse();
-            unawaited(publishTabState());
+            publishTabState();
 
             _webViewProvider.verticalMenuClose();
             if (!mounted) return;
@@ -1800,7 +1800,7 @@ class WebViewFullState extends State<WebViewFull>
               // the checks performed in this method
             }
 
-            unawaited(publishTabState());
+            publishTabState();
 
             //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
           },
@@ -5269,16 +5269,16 @@ class WebViewFullState extends State<WebViewFull>
           (function() {
             const root = (window.__tornpda = window.__tornpda || {});
             root.tab = root.tab || {};
-            if (root.tab.uid !== ${uidJson}) {
+            if (root.tab.uid !== $uidJson) {
               try {
-                Object.defineProperty(root.tab, 'uid', { value: ${uidJson}, writable: false, configurable: false });
+                Object.defineProperty(root.tab, 'uid', { value: $uidJson, writable: false, configurable: false });
               } catch (_) {
-                root.tab.uid = ${uidJson};
+                root.tab.uid = $uidJson;
               }
             }
-            root.tab.state = ${payloadJson};
+            root.tab.state = $payloadJson;
             try {
-              window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: ${payloadJson} }));
+              window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: $payloadJson }));
             } catch (_) {}
           })();
         ''',

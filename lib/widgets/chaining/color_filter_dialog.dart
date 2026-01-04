@@ -58,7 +58,7 @@ class ColorFilterDialogState extends State<ColorFilterDialog> {
                       }
                     },
                     activeTrackColor: Colors.redAccent[100],
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     inactiveThumbColor: Colors.green[100],
                   ),
                 ],
@@ -87,7 +87,7 @@ class ColorFilterDialogState extends State<ColorFilterDialog> {
                       }
                     },
                     activeTrackColor: Colors.redAccent[100],
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     inactiveThumbColor: Colors.green[100],
                   ),
                 ],
@@ -116,7 +116,7 @@ class ColorFilterDialogState extends State<ColorFilterDialog> {
                       }
                     },
                     activeTrackColor: Colors.redAccent[100],
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     inactiveThumbColor: Colors.green[100],
                   ),
                 ],
@@ -145,7 +145,7 @@ class ColorFilterDialogState extends State<ColorFilterDialog> {
                       }
                     },
                     activeTrackColor: Colors.redAccent[100],
-                    activeColor: Colors.red,
+                    activeThumbColor: Colors.red,
                     inactiveThumbColor: Colors.green[100],
                   ),
                 ],

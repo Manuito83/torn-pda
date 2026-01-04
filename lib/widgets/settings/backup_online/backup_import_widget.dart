@@ -134,7 +134,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                     widget.overwritteCallback(BackupPrefs.shortcuts, value);
                   },
                   activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),
@@ -217,7 +217,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                     widget.overwritteCallback(BackupPrefs.userscripts, value);
                   },
                   activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),
@@ -286,7 +286,7 @@ class BackupImportWidgeState extends State<BackupImportWidget> {
                     widget.overwritteCallback(BackupPrefs.targets, value);
                   },
                   activeTrackColor: Colors.lightGreenAccent,
-                  activeColor: Colors.green,
+                  activeThumbColor: Colors.green,
                 ),
               ],
             ),

@@ -173,7 +173,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 chainP.changeSoundEnabled = value;
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -187,7 +187,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 chainP.changeVibrationEnabled = value;
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -201,7 +201,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 chainP.changeNotificationsEnabled = value;
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -232,7 +232,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 chainP.panicModeEnabled ? chainP.disablePanicMode() : chainP.enablePanicMode();
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -354,7 +354,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 chainP.apiFailureAlert = enabled;
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -388,7 +388,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                       chainP.apiFailurePanic = value;
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -439,7 +439,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 }
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -555,7 +555,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 }
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -665,7 +665,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 }
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -774,7 +774,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 }
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),
@@ -883,7 +883,7 @@ class ChainWidgetOptionsState extends State<ChainWidgetOptions> {
                 }
               },
               activeTrackColor: Colors.lightGreenAccent,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
             ),
           ],
         ),

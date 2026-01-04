@@ -131,7 +131,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
+                                      activeThumbColor: Colors.green,
                                     ),
                                   ],
                                 ),
@@ -168,7 +168,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                               });
                                             },
                                             activeTrackColor: Colors.lightGreenAccent,
-                                            activeColor: Colors.green,
+                                            activeThumbColor: Colors.green,
                                           ),
                                         ],
                                       ),
@@ -206,7 +206,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                               });
                                             },
                                             activeTrackColor: Colors.lightGreenAccent,
-                                            activeColor: Colors.green,
+                                            activeThumbColor: Colors.green,
                                           ),
                                         ],
                                       ),
@@ -241,7 +241,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
+                                      activeThumbColor: Colors.green,
                                     ),
                                   ],
                                 ),
@@ -277,7 +277,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                               });
                                             },
                                             activeTrackColor: Colors.lightGreenAccent,
-                                            activeColor: Colors.green,
+                                            activeThumbColor: Colors.green,
                                           ),
                                         ],
                                       ),
@@ -326,7 +326,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
+                                      activeThumbColor: Colors.green,
                                     ),
                                   ],
                                 ),
@@ -358,7 +358,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
+                                      activeThumbColor: Colors.green,
                                     ),
                                   ],
                                 ),
@@ -405,7 +405,7 @@ class TargetsOptionsPageState extends State<TargetsOptionsPage> {
                                         });
                                       },
                                       activeTrackColor: Colors.lightGreenAccent,
-                                      activeColor: Colors.green,
+                                      activeThumbColor: Colors.green,
                                     ),
                                   ],
                                 ),
