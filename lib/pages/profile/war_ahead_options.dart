@@ -157,30 +157,30 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
             ],
           ),
         ),
-        if (Platform.isAndroid)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Flexible(
-                  child: Text('Alarm'),
-                ),
-                const Padding(
-                  padding: EdgeInsets.only(left: 20),
-                ),
-                Flexible(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Flexible(
-                            child: _warAlarmAheadDropDown(),
-                          ),
-                        ],
-                      ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(
+                child: Text('Alarm'),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: _warAlarmAheadDropDown(),
+                        ),
+                      ],
+                    ),
+                    if (Platform.isAndroid)
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -195,12 +195,12 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
         if (Platform.isAndroid)
           Padding(
             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
@@ -303,75 +303,197 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
   }
 
   DropdownButton _warAlarmAheadDropDown() {
+    final items = Platform.isIOS
+        ? <DropdownMenuItem<int>>[
+            const DropdownMenuItem(
+              value: 20,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "20 seconds before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 40,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "40 seconds before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 60,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "1 minute before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 120,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "2 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 300,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "5 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 600,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "10 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 1800,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "30 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 3600,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "1 hour before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 21600,
+              child: SizedBox(
+                width: 140,
+                child: Text(
+                  "6 hours before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ]
+        : const <DropdownMenuItem<int>>[
+            DropdownMenuItem(
+              value: 1,
+              child: SizedBox(
+                width: 80,
+                child: Text(
+                  "1 minute",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 10,
+              child: SizedBox(
+                width: 80,
+                child: Text(
+                  "10 minutes",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 30,
+              child: SizedBox(
+                width: 80,
+                child: Text(
+                  "30 minutes",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 60,
+              child: SizedBox(
+                width: 80,
+                child: Text(
+                  "1 hour",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 360,
+              child: SizedBox(
+                width: 80,
+                child: Text(
+                  "6 hours",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ];
+
     return DropdownButton<int>(
       value: _warAlarmAheadDropDownValue,
-      items: const [
-        DropdownMenuItem(
-          value: 1,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "1 minute",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 10,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "10 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 30,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "30 minutes",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 60,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "1 hour",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 360,
-          child: SizedBox(
-            width: 80,
-            child: Text(
-              "6 hours",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ],
+      items: items,
       onChanged: (value) {
         Prefs().setRankedWarAlarmAhead(value!);
         setState(() {
@@ -463,7 +585,42 @@ class WarAheadOptionsState extends State<WarAheadOptions> {
   Future _restorePreferences() async {
     final warNotificationAhead = await Prefs().getRankedWarNotificationAhead();
     var warAlarmAhead = await Prefs().getRankedWarAlarmAhead();
-    if (warAlarmAhead == 0) warAlarmAhead = 1; // Correction from Shared Prefs
+    if (Platform.isIOS) {
+      const allowed = <int>{20, 40, 60, 120, 300, 600, 1800, 3600, 21600};
+      if (allowed.contains(warAlarmAhead)) {
+        // Value already stored as seconds.
+      } else {
+        // Map legacy minute-based values to seconds; default to 1 minute.
+        switch (warAlarmAhead) {
+          case 0:
+          case 1:
+            warAlarmAhead = 60;
+            break;
+          case 2:
+            warAlarmAhead = 120;
+            break;
+          case 5:
+            warAlarmAhead = 300;
+            break;
+          case 10:
+            warAlarmAhead = 600;
+            break;
+          case 30:
+            warAlarmAhead = 1800;
+            break;
+          case 60:
+            warAlarmAhead = 3600;
+            break;
+          case 360:
+            warAlarmAhead = 21600;
+            break;
+          default:
+            warAlarmAhead = 60;
+        }
+      }
+    } else {
+      if (warAlarmAhead == 0) warAlarmAhead = 1; // Correction from Shared Prefs
+    }
     final warTimerAhead = await Prefs().getRankedWarTimerAhead();
 
     setState(() {

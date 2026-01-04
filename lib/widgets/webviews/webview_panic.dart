@@ -1,13 +1,13 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
 // Flutter imports:
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:get/get.dart';
 import 'package:provider/provider.dart';
@@ -119,13 +119,6 @@ class WebViewPanicState extends State<WebViewPanic> {
     _webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0x00000000))
-      ..setUserAgent(
-        Platform.isAndroid
-            ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 "
-                "Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
-            : "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-                "CriOS/132.0.6834.100 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
-      )
       ..addJavaScriptChannel(
         'loadoutChangeHandler',
         onMessageReceived: (JavaScriptMessage message) async {
@@ -168,8 +161,24 @@ class WebViewPanicState extends State<WebViewPanic> {
             _highlightChat(page);
           },
         ),
-      )
-      ..loadRequest(Uri.parse(_initialUrl));
+      );
+
+    _setUserAgentWithSuffix();
+
+    _webViewController!.loadRequest(Uri.parse(_initialUrl));
+  }
+
+  Future<void> _setUserAgentWithSuffix() async {
+    final defaultUa = await InAppWebViewController.getDefaultUserAgent();
+    final uaParts = <String?>[defaultUa, _buildUserAgentSuffix()];
+    final ua = uaParts.where((value) => value != null && value.trim().isNotEmpty).join(' ').trim();
+    await _webViewController?.setUserAgent(ua.isEmpty ? null : ua);
+  }
+
+  String _buildUserAgentSuffix() {
+    const unknown = "##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##";
+    final deviceInfo = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
+    return "${WebviewConfig.agent} $deviceInfo".trim();
   }
 
   @override

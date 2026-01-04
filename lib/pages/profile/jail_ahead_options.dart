@@ -130,9 +130,7 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
       title: const Text("Jail notification", style: TextStyle(color: Colors.white)),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        onPressed: () {
-          _goBack();
-        },
+        onPressed: () => _goBack(),
       ),
     );
   }
@@ -157,30 +155,30 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
             ],
           ),
         ),
-        if (Platform.isAndroid)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Flexible(
-                  child: Text('Alarm'),
-                ),
-                const Padding(
-                  padding: EdgeInsets.only(left: 20),
-                ),
-                Flexible(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          Flexible(
-                            child: _jailAlarmAheadDropDown(),
-                          ),
-                        ],
-                      ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Flexible(
+                child: Text('Alarm'),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(left: 20),
+              ),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Flexible(
+                          child: _jailAlarmAheadDropDown(),
+                        ),
+                      ],
+                    ),
+                    if (Platform.isAndroid)
                       const Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -195,12 +193,12 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
         if (Platform.isAndroid)
           Padding(
             padding: const EdgeInsets.fromLTRB(15, 10, 15, 0),
@@ -303,62 +301,158 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
   }
 
   DropdownButton _jailAlarmAheadDropDown() {
+    final items = Platform.isIOS
+        ? <DropdownMenuItem<int>>[
+            const DropdownMenuItem(
+              value: 20,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "20 seconds before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 40,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "40 seconds before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 60,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "1 minute before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 120,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "2 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 300,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "5 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            const DropdownMenuItem(
+              value: 600,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "10 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ]
+        : const <DropdownMenuItem<int>>[
+            DropdownMenuItem(
+              value: 0,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "Same minute",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 1,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "1 minute before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 2,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "2 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 5,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "5 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+            DropdownMenuItem(
+              value: 10,
+              child: SizedBox(
+                width: 120,
+                child: Text(
+                  "10 minutes before",
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ];
+
     return DropdownButton<int>(
       value: _jailAlarmAheadDropDownValue,
-      items: const [
-        DropdownMenuItem(
-          value: 0,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "Same minute",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 1,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "1 minute before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 2,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "2 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-        DropdownMenuItem(
-          value: 5,
-          child: SizedBox(
-            width: 120,
-            child: Text(
-              "5 minutes before",
-              textAlign: TextAlign.right,
-              style: TextStyle(
-                fontSize: 14,
-              ),
-            ),
-          ),
-        ),
-      ],
+      items: items,
       onChanged: (value) {
         Prefs().setJailAlarmAhead(value!);
         setState(() {
@@ -454,7 +548,34 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
 
     setState(() {
       _jailNotificationAheadValue = jailNotificationAhead;
-      _jailAlarmAheadDropDownValue = jailAlarmAhead;
+      if (Platform.isIOS) {
+        final allowed = <int>{20, 40, 60, 120, 300, 600};
+        if (allowed.contains(jailAlarmAhead)) {
+          _jailAlarmAheadDropDownValue = jailAlarmAhead;
+        } else {
+          switch (jailAlarmAhead) {
+            case 0:
+              _jailAlarmAheadDropDownValue = 60;
+              break;
+            case 1:
+              _jailAlarmAheadDropDownValue = 60;
+              break;
+            case 2:
+              _jailAlarmAheadDropDownValue = 120;
+              break;
+            case 5:
+              _jailAlarmAheadDropDownValue = 300;
+              break;
+            case 10:
+              _jailAlarmAheadDropDownValue = 600;
+              break;
+            default:
+              _jailAlarmAheadDropDownValue = 60;
+          }
+        }
+      } else {
+        _jailAlarmAheadDropDownValue = jailAlarmAhead;
+      }
       _jailTimerAheadDropDownValue = jailTimerAhead;
     });
   }

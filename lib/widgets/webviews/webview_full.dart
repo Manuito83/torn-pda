@@ -177,7 +177,7 @@ class WebViewFullState extends State<WebViewFull>
   final bool _debugScriptsInjection = false;
 
   InAppWebViewController? webViewController;
-  TravelHandler? _travelHandler;
+  ForeignStocksWebviewHandler? _travelHandler;
   var _initialWebViewSettings = InAppWebViewSettings();
 
   //int _loadTimeMill = 0;
@@ -448,6 +448,8 @@ class WebViewFullState extends State<WebViewFull>
 
     _findController.addListener(onFindInputTextChange);
 
+    final uaSuffix = _buildUserAgentSuffix();
+
     _initialWebViewSettings = InAppWebViewSettings(
       cacheEnabled: _settingsProvider.webviewCacheEnabledRemoteConfig == "user"
           ? _settingsProvider.webviewCacheEnabled
@@ -458,11 +460,7 @@ class WebViewFullState extends State<WebViewFull>
       useOnLoadResource: true,
       useShouldOverrideUrlLoading: true,
       javaScriptCanOpenWindowsAutomatically: true,
-      userAgent: Platform.isAndroid
-          ? "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 "
-              "Mobile Safari/537.36 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}"
-          : "Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) "
-              "CriOS/132.0.6834.100 Mobile/15E148 Safari/604.1 ${WebviewConfig.agent} ${WebviewConfig.userAgentForUser}",
+      applicationNameForUserAgent: uaSuffix.isEmpty ? null : uaSuffix,
 
       /// [useShouldInterceptAjaxRequest] This is deactivated sometimes as it interferes with
       /// hospital timer, company applications, etc. There is a bug on iOS if we activate it
@@ -529,6 +527,12 @@ class WebViewFullState extends State<WebViewFull>
         });
       }
     });
+  }
+
+  String _buildUserAgentSuffix() {
+    const unknown = "##deviceBrand=unknown##deviceModel=unknown##deviceSoftware=unknown##";
+    final deviceInfo = WebviewConfig.userAgentForUser.isNotEmpty ? WebviewConfig.userAgentForUser : unknown;
+    return "${WebviewConfig.agent} $deviceInfo".trim();
   }
 
   @override
@@ -1258,7 +1262,7 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
-            _travelHandler = TravelHandler(
+            _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
               onTravelStatusChanged: (isAbroad) {
                 if (mounted) {
@@ -1267,6 +1271,7 @@ class WebViewFullState extends State<WebViewFull>
                   });
                 }
               },
+              settingsProvider: _settingsProvider,
             );
 
             // Clear cache (except for cookies) for each new session

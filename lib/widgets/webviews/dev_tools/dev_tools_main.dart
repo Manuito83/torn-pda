@@ -15,6 +15,7 @@ import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_network.dart';
+import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_scripts.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_storage.dart';
 import 'package:torn_pda/widgets/webviews/dev_tools/dev_tools_terminal.dart'; // Asegúrate de que esta ruta sea correcta
 
@@ -44,7 +45,7 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
   void initState() {
     super.initState();
     _tabController = TabController(
-      length: 3,
+      length: 4,
       vsync: this,
       initialIndex: widget.initialIndex,
     );
@@ -85,6 +86,7 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
               ),
               DevToolsNetworkTab(webViewController: widget.webViewController),
               DevToolsStorageTab(webViewController: widget.webViewController),
+              DevToolsScriptsTab(webViewController: widget.webViewController),
             ],
           ),
         ),
@@ -121,6 +123,10 @@ class _DevToolsMainPageState extends State<DevToolsMainPage> with SingleTickerPr
           Tab(
             icon: Icon(Icons.storage),
             text: "Storage",
+          ),
+          Tab(
+            icon: Icon(Icons.javascript),
+            text: "Scripts",
           ),
         ],
       ),

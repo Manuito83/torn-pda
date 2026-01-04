@@ -3,6 +3,9 @@ import { logger } from "firebase-functions/v2";
 import * as admin from "firebase-admin";
 import { sendNotificationToUser } from "./notification";
 
+const LOOT_RANGERS_DEFAULT_AHEAD = 180; // seconds (3 minutes)
+const LOOT_RANGERS_BUCKETS = [180, 360, 600];
+
 export const sendLootRangersNotification = onSchedule({
   schedule: "*/2 * * * *",
   region: 'us-east4',
@@ -22,8 +25,8 @@ export const sendLootRangersNotification = onSchedule({
 
   try {
     const currentDateInSeconds = Date.now() / 1000;
-    const timeMargin = 150; // 2,5 minutes-margin in the worst-case scenario
-    const nextTwoMinutes = currentDateInSeconds + timeMargin;
+    const maxBucket = Math.max(...LOOT_RANGERS_BUCKETS);
+    const nextWindow = currentDateInSeconds + maxBucket;
 
     // Get LootRangers last timestamp
     const lrJson = await getLootRangersApi();
@@ -46,26 +49,32 @@ export const sendLootRangersNotification = onSchedule({
       return;
     }
 
-    // Return if we are not inside of 2 minutes-ish to the attack
-    if (nextTwoMinutes - nextAttackLR > timeMargin
-      || nextTwoMinutes - nextAttackLR < 0) {
-      console.log("Not inside 2.5 minutes!");
+    // Return if we are not inside of the largest bucket window
+    if (nextWindow - nextAttackLR > maxBucket || nextWindow - nextAttackLR < 0) {
+      console.log("Not inside alert window!");
       return;
     }
 
-    // Return if we have tried to alert twice
-    let lastAlertedTs = 0;
-    const refSavedTime = db.ref("lootRangers/lastAlerted");
-    await refSavedTime.once("value", function (snapshot) {
-      lastAlertedTs = snapshot.val() ?? 0;
+    // Read bucket map for this attack
+    // Per-attack: one entry per bucket (seconds) marked with this attack ts once sent
+    const refBuckets = db.ref(`lootRangers/lastAlertedBuckets/${nextAttackLR}`);
+    let bucketMap: Record<string, number> = {};
+    await refBuckets.once("value", function (snapshot) {
+      bucketMap = snapshot.val() ?? {};
     });
 
-    if (lastAlertedTs === nextAttackLR) {
-      console.log("Skipping alert, already sent!");
+    const pendingBuckets = LOOT_RANGERS_BUCKETS.filter((bucket) => {
+      const sentForThis = bucketMap[bucket] === nextAttackLR;
+      const inWindow = currentDateInSeconds >= nextAttackLR - bucket;
+      return inWindow && !sentForThis;
+    });
+
+    if (pendingBuckets.length === 0) {
+      console.log("No buckets pending, exit.");
       return;
     }
 
-    // Get the list of subscribers
+    // Get the list of subscribers (single query)
     const response = await admin
       .firestore()
       .collection("players")
@@ -76,11 +85,6 @@ export const sendLootRangersNotification = onSchedule({
     const subscribers = response.docs.map((d) => d.data());
 
     console.log("Sending Loot Rangers to: " + subscribers.length + " users");
-
-    // Store our last alerted time
-    promises.push(
-      db.ref(`lootRangers/lastAlerted`).set(nextAttackLR)
-    );
 
     // Build name order
     const orderArray = [];
@@ -109,23 +113,35 @@ export const sendLootRangersNotification = onSchedule({
     const attackTime = `${hours}:${minutes}`;
 
     for (const key of Array.from(subscribers.keys())) {
+      const sub = subscribers[key];
+      const ahead = typeof sub.lootRangersAheadSeconds === "number" ? sub.lootRangersAheadSeconds : LOOT_RANGERS_DEFAULT_AHEAD;
+
+      if (!pendingBuckets.includes(ahead)) {
+        continue;
+      }
+
       promises.push(
         sendNotificationToUser({
-          token: subscribers[key].token,
-          title: subscribers[key].discrete ? discreetTitle : fullTitle,
-          body: subscribers[key].discrete ? discreetSubtitle : fullSubtitle,
+          token: sub.token,
+          title: sub.discrete ? discreetTitle : fullTitle,
+          body: sub.discrete ? discreetSubtitle : fullSubtitle,
           icon: "notification_loot",
           color: "#FF0000",
           channelId: "Alerts loot",
           assistId: orderArray.join(","),
           bulkDetails: attackTime,
-          vibration: subscribers[key].vibration,
+          vibration: sub.vibration,
           sound: "sword_clash.aiff"
         }).catch((e) => {
-          logger.warn(`ERROR LOOT RANGERS SEND for ${subscribers[key].uid}\n${e}`);
+          logger.warn(`ERROR LOOT RANGERS SEND for ${sub.uid}\n${e}`);
         })
       );
+
+      bucketMap[ahead] = nextAttackLR;
     }
+
+    // Persist dedupe map after processing
+    promises.push(refBuckets.set(bucketMap));
 
     await Promise.all(promises);
 

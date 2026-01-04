@@ -43,6 +43,26 @@ class TimeFormatter {
     return hourFormatted;
   }
 
+  /// Returns the time with seconds precision, using the configured format and zone
+  String formatHourWithSeconds() {
+    late DateTime timeZonedTime;
+    String zoneId;
+    switch (timeZoneSetting) {
+      case TimeZoneSetting.localTime:
+        timeZonedTime = inputTime!.toLocal();
+        zoneId = 'LT';
+        break;
+      case TimeZoneSetting.tornTime:
+        timeZonedTime = inputTime!.toUtc();
+        zoneId = 'TCT';
+        break;
+    }
+
+    final formatPattern = timeFormatSetting == TimeFormatSetting.h24 ? 'HH:mm:ss' : 'hh:mm:ss a';
+    final formatter = DateFormat(formatPattern);
+    return '${formatter.format(timeZonedTime)} $zoneId';
+  }
+
   /// Returns the formatted hour with relative day information
   ///
   /// Examples:

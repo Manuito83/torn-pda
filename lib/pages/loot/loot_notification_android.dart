@@ -621,11 +621,15 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     final lootAlarmAhead = await Prefs().getLootAlarmAhead();
     final lootTimerAhead = await Prefs().getLootTimerAhead();
 
+    const notifAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
+    const alarmAllowed = {"0", "1", "2", "3", "4", "5", "6"};
+    const timerAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
+
     setState(() {
       _lootTypeDropDownValue = lootType;
-      _lootNotificationAheadDropDownValue = lootNotificationAhead;
-      _lootAlarmAheadDropDownValue = lootAlarmAhead;
-      _lootTimerAheadDropDownValue = lootTimerAhead;
+      _lootNotificationAheadDropDownValue = notifAllowed.contains(lootNotificationAhead) ? lootNotificationAhead : "7";
+      _lootAlarmAheadDropDownValue = alarmAllowed.contains(lootAlarmAhead) ? lootAlarmAhead : "6";
+      _lootTimerAheadDropDownValue = timerAllowed.contains(lootTimerAhead) ? lootTimerAhead : "7";
     });
   }
 

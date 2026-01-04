@@ -46,6 +46,8 @@ import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
 import 'package:torn_pda/utils/notification.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
+import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -124,6 +126,8 @@ class SettingsPageState extends State<SettingsPage> {
   Map<String, dynamic> _refreshRateInfo = {};
   bool _isUpdatingRefreshRate = false;
 
+  Future<List<Map<String, dynamic>>>? _iosAlarmsFuture;
+
   // SEARCH ##########
   bool _isSearching = false;
   String _searchText = '';
@@ -192,6 +196,17 @@ class SettingsPageState extends State<SettingsPage> {
 
     routeWithDrawer = true;
     routeName = "settings";
+  }
+
+  void _refreshIosAlarms() {
+    setState(() {
+      _iosAlarmsFuture = AlarmKitServiceIos.listAlarms();
+    });
+  }
+
+  Future<void> _clearAllIosAlarms() async {
+    await AlarmKitServiceIos.cancelAllAlarms();
+    _refreshIosAlarms();
   }
 
   AppBar buildAppBar() {
@@ -842,6 +857,151 @@ class SettingsPageState extends State<SettingsPage> {
                 )
               ],
             ),
+          ),
+        ),
+      if (Platform.isIOS)
+        SearchableRow(
+          label: "Active Alarms",
+          searchText: _searchText,
+          child: FutureBuilder<bool>(
+            future: AlarmKitServiceIos.isAvailable(),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || !snapshot.data!) {
+                return const SizedBox.shrink();
+              }
+              _iosAlarmsFuture ??= AlarmKitServiceIos.listAlarms();
+              return Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text("Active Alarms", style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 6),
+                        IconButton(
+                          icon: const Icon(Icons.info_outline, size: 18, color: Colors.grey),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                          tooltip: 'What is this?',
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('Active alarms'),
+                                content: const Text(
+                                  'These are the alarms scheduled by Torn PDA. On iOS they are handled directly by the app.'
+                                  '\n\nYou can lear them here if you no longer need them.',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(),
+                                    child: const Text('Got it'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.refresh, size: 18),
+                          tooltip: 'Refresh',
+                          onPressed: _refreshIosAlarms,
+                        ),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          icon: const Icon(Icons.delete_sweep, size: 18),
+                          tooltip: 'Clear all',
+                          onPressed: () async {
+                            await _clearAllIosAlarms();
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: _iosAlarmsFuture,
+                      builder: (context, alarmSnapshot) {
+                        if (alarmSnapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: CircularProgressIndicator());
+                        }
+                        if (!alarmSnapshot.hasData || alarmSnapshot.data!.isEmpty) {
+                          return const Text("No active alarms");
+                        }
+                        return Column(
+                          children: alarmSnapshot.data!.map((alarm) {
+                            final display = AlarmKitServiceIos.displayInfoFromAlarm(alarm);
+                            final scheduledMillis = alarm['scheduledMillis'] as int?;
+                            DateTime? scheduledTime;
+                            if (scheduledMillis != null) {
+                              scheduledTime = DateTime.fromMillisecondsSinceEpoch(scheduledMillis);
+                            } else {
+                              final hour = alarm['hour'] as int?;
+                              final minute = alarm['minute'] as int?;
+                              if (hour != null && minute != null) {
+                                final now = DateTime.now();
+                                scheduledTime = DateTime(now.year, now.month, now.day, hour, minute);
+                                if (scheduledTime.isBefore(DateTime.now())) {
+                                  scheduledTime = scheduledTime.add(const Duration(days: 1));
+                                }
+                              }
+                            }
+
+                            String timeString = '';
+                            if (scheduledTime != null) {
+                              timeString = TimeFormatter(
+                                inputTime: scheduledTime,
+                                timeFormatSetting: _settingsProvider.currentTimeFormat,
+                                timeZoneSetting: _settingsProvider.currentTimeZone,
+                              ).formatHourWithSeconds();
+                            }
+
+                            String? detailsText = display.details;
+                            if (detailsText != null && detailsText.toLowerCase().startsWith('triggers at')) {
+                              detailsText = null; // Avoid repeating the scheduled time twice
+                            }
+
+                            return ListTile(
+                              leading: CircleAvatar(
+                                radius: 18,
+                                backgroundColor: Colors.green[700],
+                                child: const Icon(Icons.notifications_active, color: Colors.white, size: 18),
+                              ),
+                              title: Text(display.label),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (timeString.isNotEmpty)
+                                    Text(
+                                      timeString,
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                  if (detailsText != null)
+                                    Text(
+                                      detailsText,
+                                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                    ),
+                                ],
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () async {
+                                  await AlarmKitServiceIos.cancelAlarm(alarm['id']);
+                                  _refreshIosAlarms();
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
     ];

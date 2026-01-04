@@ -102,6 +102,30 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.10.1 - Build 604 - 30/12/2025
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.10.1'
+        ..date = '06 JAN 2026'
+        ..features = [
+          "Chaining: TORN targets can now be imported to the targets list",
+          "Loot: added customizable lead time options for automatic notifications (alerts)",
+          if (Platform.isIOS)
+            ComplexFeature(
+              "Alarms can now be used in addition to notifications (iOS 26+)",
+              explanation: "All Profile, Loot, Travel Boarding, and browser notifications can now "
+                  "be activated as alarms instead.\n\n"
+                  "Under the hood, they use native iOS AlarmKit which is only supported on iOS 26 and later\n\n"
+                  "Current pending alarms can be seen (and cancelled) in Settings > Active Alarms",
+            ),
+          "Scripts: added option to temporarily disable all user scripts",
+          "Dev Tools: added Scripts tab to manage active userscripts for the current page",
+          "Fixed max buy buttons for bazaars",
+          "Fixed new version update dialog persistence",
+          "Fixed foreign stocks data submission to YATA and Prometheus",
+        ],
+    );
+
     // v3.10.0 - Build 601 - 21/12/2025
     itemList.add(
       ChangeLogItem()

@@ -11,6 +11,8 @@ import 'package:get/get.dart';
 // Package imports:
 import 'package:http/http.dart' as http;
 // Project imports:
+import 'package:torn_pda/models/api_v2/torn_v2.enums.swagger.dart' as enums;
+import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
@@ -18,8 +20,10 @@ import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/yata/yata_distribution_models.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_export.dart';
 import 'package:torn_pda/models/chaining/yata/yata_targets_import.dart';
+import 'package:torn_pda/models/profile/own_profile_basic.dart' show Status;
 import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/api/api_v2_calls.dart';
 import 'package:torn_pda/providers/player_notes_controller.dart';
 import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
@@ -39,6 +43,14 @@ class UpdateTargetsResult {
   int numberSuccessful;
 
   UpdateTargetsResult({required this.success, required this.numberErrors, required this.numberSuccessful});
+}
+
+class TornTargetsImportResult {
+  final bool success;
+  final int imported;
+  final String? errorReason;
+
+  TornTargetsImportResult({required this.success, required this.imported, this.errorReason});
 }
 
 class TargetsProvider extends ChangeNotifier {
@@ -730,6 +742,198 @@ class TargetsProvider extends ChangeNotifier {
       amountStr = amountStr.replaceAll(",", "").replaceAll("\$", "");
       return int.tryParse(amountStr);
     }
+    return null;
+  }
+
+  Future<TornTargetsImportResult> importTargetsFromTorn({
+    int maxTargets = 500,
+    void Function(int fetched)? onProgress,
+  }) async {
+    const int pageSize = 50;
+    final int cappedMax = maxTargets.clamp(pageSize, 500).toInt();
+    final List<TargetModel> fetchedTargets = [];
+
+    int offset = 0;
+    while (fetchedTargets.length < cappedMax) {
+      final dynamic apiResponse = await ApiCallsV2.getUserTargetsList_v2(
+        limit: pageSize,
+        offset: offset,
+        sort: enums.ApiSortAsc.asc,
+      );
+
+      if (apiResponse is ApiError) {
+        return TornTargetsImportResult(
+          success: false,
+          imported: fetchedTargets.length,
+          errorReason: apiResponse.errorReason,
+        );
+      }
+
+      if (apiResponse is! UserListResponse) {
+        return TornTargetsImportResult(
+          success: false,
+          imported: fetchedTargets.length,
+          errorReason: 'Unexpected response while fetching Torn targets.',
+        );
+      }
+
+      if (apiResponse.list.isEmpty) {
+        break;
+      }
+
+      final int now = DateTime.now().millisecondsSinceEpoch;
+      for (var i = 0; i < apiResponse.list.length; i++) {
+        final user = apiResponse.list[i];
+        final mappedTarget = _mapUserListToTargetModel(
+          user,
+          now + fetchedTargets.length + i,
+        );
+        fetchedTargets.add(mappedTarget);
+      }
+
+      onProgress?.call(fetchedTargets.length);
+
+      if (fetchedTargets.length >= cappedMax) {
+        break;
+      }
+
+      if (apiResponse.list.length < pageSize) {
+        break;
+      }
+
+      offset += pageSize;
+    }
+
+    if (fetchedTargets.isEmpty) {
+      return TornTargetsImportResult(
+        success: false,
+        imported: 0,
+        errorReason: 'No targets returned by Torn.',
+      );
+    }
+
+    _targets = fetchedTargets;
+    sortTargets(currentSort ?? TargetSortType.nameAsc);
+
+    return TornTargetsImportResult(
+      success: true,
+      imported: fetchedTargets.length,
+      errorReason: null,
+    );
+  }
+
+  /// Returns how many targets Torn reports without mutating local state.
+  Future<int?> countTargetsInTorn({int maxTargets = 500}) async {
+    const int pageSize = 50;
+    final int cappedMax = maxTargets.clamp(pageSize, 500).toInt();
+    int total = 0;
+    int offset = 0;
+
+    try {
+      while (total < cappedMax) {
+        final dynamic apiResponse = await ApiCallsV2.getUserTargetsList_v2(
+          limit: pageSize,
+          offset: offset,
+          sort: enums.ApiSortAsc.asc,
+        );
+
+        if (apiResponse is ApiError) {
+          return null;
+        }
+
+        if (apiResponse is! UserListResponse) {
+          return null;
+        }
+
+        if (apiResponse.list.isEmpty) {
+          break;
+        }
+
+        total += apiResponse.list.length;
+
+        if (total >= cappedMax || apiResponse.list.length < pageSize) {
+          break;
+        }
+
+        offset += pageSize;
+      }
+
+      return total;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  TargetModel _mapUserListToTargetModel(UserList user, int timeAddedSeed) {
+    final status = Status(
+      description: user.status.description,
+      details: user.status.details?.toString(),
+      state: user.status.state,
+      until: _coerceInt(user.status.until) ?? 0,
+    );
+
+    final lastAction = LastAction(
+      status: user.lastAction.status,
+      timestamp: user.lastAction.timestamp,
+      relative: user.lastAction.relative,
+    );
+
+    final int factionId = _coerceInt(user.factionId) ?? 0;
+    final faction = Faction(
+      factionId: factionId,
+      factionName: '',
+      position: '',
+      daysInFaction: null,
+    );
+
+    final job = Job(
+      job: '',
+      position: '',
+      companyId: 0,
+      companyName: '',
+      companyType: 0,
+    );
+
+    final married = Married(
+      spouseId: 0,
+      spouseName: '',
+      duration: 0,
+    );
+
+    final states = States(
+      hospitalTimestamp: null,
+      jailTimestamp: null,
+    );
+
+    final signupDate = DateTime.fromMillisecondsSinceEpoch(0);
+
+    return TargetModel(
+      respectGain: -1,
+      fairFight: -1,
+      userWonOrDefended: true,
+      lastUpdated: DateTime.now(),
+      hasFaction: factionId != 0,
+      hospitalSort: status.state == 'Hospital' ? status.until ?? 0 : 0,
+      timeAdded: timeAddedSeed,
+      signup: signupDate,
+      level: user.level,
+      playerId: user.id,
+      name: user.name,
+      status: status,
+      lastAction: lastAction,
+      faction: faction,
+      job: job,
+      married: married,
+      states: states,
+      life: Life(current: 0, maximum: 0, increment: 0, interval: 0, ticktime: 0, fulltime: 0),
+    );
+  }
+
+  int? _coerceInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is double) return value.floor();
+    if (value is String) return int.tryParse(value);
     return null;
   }
 

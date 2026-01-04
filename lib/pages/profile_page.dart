@@ -53,6 +53,7 @@ import 'package:torn_pda/providers/user_controller.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/number_formatter.dart';
@@ -201,17 +202,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   bool _rankedWarNotificationsPending = false;
   bool _raceStartNotificationsPending = false;
 
-  late NotificationType _travelNotificationType;
-  late NotificationType _energyNotificationType;
-  late NotificationType _nerveNotificationType;
-  late NotificationType _lifeNotificationType;
-  late NotificationType _drugsNotificationType;
-  late NotificationType _medicalNotificationType;
-  late NotificationType _boosterNotificationType;
-  late NotificationType _hospitalNotificationType;
-  late NotificationType _jailNotificationType;
-  late NotificationType _rankedWarNotificationType;
-  late NotificationType _raceStartNotificationType;
+  final Set<String> _activeAlarmKitIdsIos = <String>{};
+
+  NotificationType _travelNotificationType = NotificationType.notification;
+  NotificationType _energyNotificationType = NotificationType.notification;
+  NotificationType _nerveNotificationType = NotificationType.notification;
+  NotificationType _lifeNotificationType = NotificationType.notification;
+  NotificationType _drugsNotificationType = NotificationType.notification;
+  NotificationType _medicalNotificationType = NotificationType.notification;
+  NotificationType _boosterNotificationType = NotificationType.notification;
+  NotificationType _hospitalNotificationType = NotificationType.notification;
+  NotificationType _jailNotificationType = NotificationType.notification;
+  NotificationType _rankedWarNotificationType = NotificationType.notification;
+  NotificationType _raceStartNotificationType = NotificationType.notification;
 
   int? _customEnergyTrigger;
   int? _customNerveTrigger;
@@ -2453,6 +2456,34 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _refreshActiveAlarmKitIds() async {
+    if (!Platform.isIOS) return;
+    if (!_hasProfileAlarmMode()) return;
+    final ids = await AlarmKitServiceIos.listLogicalIds();
+
+    if (mounted) {
+      setState(() {
+        _activeAlarmKitIdsIos
+          ..clear()
+          ..addAll(ids);
+      });
+    }
+  }
+
+  bool _hasProfileAlarmMode() {
+    return _travelNotificationType == NotificationType.alarm ||
+        _energyNotificationType == NotificationType.alarm ||
+        _nerveNotificationType == NotificationType.alarm ||
+        _lifeNotificationType == NotificationType.alarm ||
+        _drugsNotificationType == NotificationType.alarm ||
+        _medicalNotificationType == NotificationType.alarm ||
+        _boosterNotificationType == NotificationType.alarm ||
+        _hospitalNotificationType == NotificationType.alarm ||
+        _jailNotificationType == NotificationType.alarm ||
+        _rankedWarNotificationType == NotificationType.alarm ||
+        _raceStartNotificationType == NotificationType.alarm;
+  }
+
   Widget _notificationIcon(
     ProfileNotification profileNotification, {
     double size = 22,
@@ -2460,13 +2491,17 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }) {
     int? secondsToGo = 0;
     bool percentageError = false;
-    late bool notificationsPending;
+    bool notificationsPending = false;
     late String notificationSetString;
     late String notificationCancelString;
     late String alarmSetString;
+    late String alarmCancelString;
     late String timerSetString;
     NotificationType notificationType = NotificationType.notification;
     IconData? notificationIcon;
+    final descriptor = AlarmKitServiceIos.profileDescriptor(profileNotification.string ?? '');
+    final logicalAlarmId = descriptor.alarmId;
+    final bool isIOS = Platform.isIOS;
 
     String semanticsLabel = "Tap to activate notification";
     if (notificationType == NotificationType.notification) {
@@ -2492,7 +2527,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           timeZoneSetting: _settingsProvider!.currentTimeZone,
         ).formatHourWithDaysElapsed();
 
-        final alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
+        final alarmTime = _travelArrivalTime.add(
+          Platform.isIOS ? Duration(seconds: -_travelAlarmAhead) : Duration(minutes: -_travelAlarmAhead),
+        );
         final formattedTimeAlarm = TimeFormatter(
           inputTime: alarmTime,
           timeFormatSetting: _settingsProvider!.currentTimeFormat,
@@ -2509,6 +2546,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Travel notification set for $formattedTimeNotification';
         notificationCancelString = 'Travel notification cancelled!';
         alarmSetString = 'Travel alarm set for $formattedTimeAlarm';
+        alarmCancelString = 'Travel alarm cancelled!';
         timerSetString = 'Travel timer set for $formattedTimeTimer';
 
         if (forcedTravelIcon == null) {
@@ -2576,6 +2614,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
 
           notificationCancelString = 'Energy notification cancelled!';
+          alarmCancelString = 'Energy alarm cancelled!';
           notificationType = _energyNotificationType;
           notificationIcon = _energyNotificationIcon;
           notificationsPending = _energyNotificationsPending;
@@ -2631,6 +2670,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
           }
 
           notificationCancelString = 'Nerve notification cancelled!';
+          alarmCancelString = 'Nerve alarm cancelled!';
           notificationType = _nerveNotificationType;
           notificationIcon = _nerveNotificationIcon;
           notificationsPending = _nerveNotificationsPending;
@@ -2649,6 +2689,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Life notification set for $formattedTime';
         notificationCancelString = 'Life notification cancelled!';
         alarmSetString = 'Life alarm set for $formattedTime';
+        alarmCancelString = 'Life alarm cancelled!';
         timerSetString = 'Life timer set for $formattedTime';
         notificationType = _lifeNotificationType;
         notificationIcon = _lifeNotificationIcon;
@@ -2666,6 +2707,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Drugs cooldown notification set for $formattedTime';
         notificationCancelString = 'Drugs cooldown notification cancelled!';
         alarmSetString = 'Drugs cooldown alarm set for $formattedTime';
+        alarmCancelString = 'Drugs cooldown alarm cancelled!';
         timerSetString = 'Drugs cooldown timer set for $formattedTime';
         notificationType = _drugsNotificationType;
         notificationIcon = _drugsNotificationIcon;
@@ -2683,6 +2725,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Medical cooldown notification set for $formattedTime';
         notificationCancelString = 'Medical cooldown notification cancelled!';
         alarmSetString = 'Medical cooldown alarm set for $formattedTime';
+        alarmCancelString = 'Medical cooldown alarm cancelled!';
         timerSetString = 'Medical cooldown timer set for $formattedTime';
         notificationType = _medicalNotificationType;
         notificationIcon = _medicalNotificationIcon;
@@ -2700,6 +2743,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Booster cooldown notification set for $formattedTime';
         notificationCancelString = 'Booster cooldown notification cancelled!';
         alarmSetString = 'Booster cooldown alarm set for $formattedTime';
+        alarmCancelString = 'Booster cooldown alarm cancelled!';
         timerSetString = 'Booster cooldown timer set for $formattedTime';
         notificationType = _boosterNotificationType;
         notificationIcon = _boosterNotificationIcon;
@@ -2734,6 +2778,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Hospital release notification set for $formattedTime';
         notificationCancelString = 'Hospital release notification cancelled!';
         alarmSetString = 'Hospital release alarm set for $formattedTimeAlarm';
+        alarmCancelString = 'Hospital release alarm cancelled!';
         timerSetString = 'Hospital release timer set for $formattedTimeTimer';
         notificationType = _hospitalNotificationType;
         notificationIcon = _hospitalNotificationIcon;
@@ -2768,6 +2813,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Jail release notification set for $formattedTime';
         notificationCancelString = 'Jail release notification cancelled!';
         alarmSetString = 'Jail release alarm set for $formattedTimeAlarm';
+        alarmCancelString = 'Jail release alarm cancelled!';
         timerSetString = 'Jail release timer set for $formattedTimeTimer';
         notificationType = _jailNotificationType;
         notificationIcon = _jailNotificationIcon;
@@ -2802,6 +2848,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Ranked war notification set for $formattedTime';
         notificationCancelString = 'Ranked war notification cancelled!';
         alarmSetString = 'Ranked war alarm set for $formattedTimeAlarm';
+        alarmCancelString = 'Ranked war alarm cancelled!';
         timerSetString = 'Ranked war timer set for $formattedTimeTimer';
         notificationType = _rankedWarNotificationType;
         notificationIcon = _rankedWarNotificationIcon;
@@ -2838,9 +2885,19 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         notificationSetString = 'Race start notification set for $formattedTime';
         notificationCancelString = 'Race start notification cancelled!';
         alarmSetString = 'Race start alarm set for $formattedTimeAlarm';
+        alarmCancelString = 'Race start alarm cancelled!';
         timerSetString = 'Race start timer set for $formattedTimeTimer';
         notificationType = _raceStartNotificationType;
         notificationIcon = _raceStartNotificationIcon;
+    }
+
+    if (isIOS && notificationType == NotificationType.timer) {
+      notificationType = NotificationType.alarm;
+      notificationIcon = Icons.notifications_none;
+    }
+
+    if (isIOS && notificationType == NotificationType.alarm) {
+      notificationsPending = _activeAlarmKitIdsIos.contains(logicalAlarmId);
     }
 
     if (secondsToGo == 0 && !percentageError) {
@@ -2848,6 +2905,10 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     } else {
       Color? thisColor;
       if (notificationsPending && notificationType == NotificationType.notification) {
+        thisColor = Colors.green;
+      } else if (notificationType == NotificationType.alarm &&
+          isIOS &&
+          _activeAlarmKitIdsIos.contains(logicalAlarmId)) {
         thisColor = Colors.green;
       } else {
         if (percentageError) {
@@ -2866,7 +2927,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
             size: size,
             color: thisColor,
           ),
-          onTap: () {
+          onTap: () async {
             switch (notificationType) {
               case NotificationType.notification:
                 if (!notificationsPending) {
@@ -2896,8 +2957,25 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     contentPadding: const EdgeInsets.all(10),
                   );
                 }
+                break;
               case NotificationType.alarm:
-                _setAlarm(profileNotification, alarmSetString, percentageError);
+                if (isIOS && _activeAlarmKitIdsIos.contains(logicalAlarmId)) {
+                  await AlarmKitServiceIos.cancelAlarm(logicalAlarmId);
+                  await _refreshActiveAlarmKitIds();
+                  BotToast.showText(
+                    text: alarmCancelString,
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.white,
+                    ),
+                    contentColor: _themeProvider!.getTextColor(Colors.orange[800]),
+                    duration: const Duration(seconds: 5),
+                    contentPadding: const EdgeInsets.all(10),
+                  );
+                } else {
+                  await _setAlarm(profileNotification, alarmSetString, percentageError);
+                }
+                break;
 
               case NotificationType.timer:
                 _setTimer(profileNotification);
@@ -2913,6 +2991,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                   duration: const Duration(seconds: 5),
                   contentPadding: const EdgeInsets.all(10),
                 );
+                break;
             }
           },
         ),
@@ -6697,6 +6776,8 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         _raceStartNotificationsPending = raceStart;
       });
     }
+
+    await _refreshActiveAlarmKitIds();
   }
 
   Future<void> _cancelNotifications(ProfileNotification profileNotification) async {
@@ -7192,6 +7273,32 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       Prefs().setProfileSectionOrder(savedUserOrder);
     }
 
+    int normalizeAlarmAheadForIOS(int value) {
+      if (!Platform.isIOS) return value;
+      const allowedSeconds = <int>{20, 40, 60, 120, 300, 600, 1800, 3600, 21600};
+      if (allowedSeconds.contains(value)) return value;
+
+      switch (value) {
+        case 0:
+        case 1:
+          return 60;
+        case 2:
+          return 120;
+        case 5:
+          return 300;
+        case 10:
+          return 600;
+        case 30:
+          return 1800;
+        case 60:
+          return 3600;
+        case 360:
+          return 21600;
+        default:
+          return 60;
+      }
+    }
+
     // TRAVEL
     final travel = await Prefs().getTravelNotificationType();
     final travelNotificationAhead = await Prefs().getTravelNotificationAhead();
@@ -7210,14 +7317,37 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _travelNotificationAhead = 300;
     }
 
-    if (travelAlarmAhead == '0') {
-      _travelAlarmAhead = 0;
-    } else if (travelAlarmAhead == '1') {
-      _travelAlarmAhead = 1;
-    } else if (travelAlarmAhead == '2') {
-      _travelAlarmAhead = 2;
-    } else if (travelAlarmAhead == '3') {
-      _travelAlarmAhead = 5;
+    if (Platform.isIOS) {
+      if (travelAlarmAhead == '0' || travelAlarmAhead == '1') {
+        _travelAlarmAhead = 60;
+      } else if (travelAlarmAhead == '2') {
+        _travelAlarmAhead = 120;
+      } else if (travelAlarmAhead == '3') {
+        _travelAlarmAhead = 300;
+      } else if (travelAlarmAhead == '4') {
+        _travelAlarmAhead = 600;
+      } else {
+        final parsedAlarmAhead = int.tryParse(travelAlarmAhead);
+        if (parsedAlarmAhead == null) {
+          _travelAlarmAhead = 60; // default to 1 minute before
+        } else if (parsedAlarmAhead <= 12) {
+          // Legacy minute-based values coming from Android defaults.
+          _travelAlarmAhead = parsedAlarmAhead * 60;
+        } else {
+          // Already stored as seconds.
+          _travelAlarmAhead = parsedAlarmAhead;
+        }
+      }
+    } else {
+      if (travelAlarmAhead == '0') {
+        _travelAlarmAhead = 0;
+      } else if (travelAlarmAhead == '1') {
+        _travelAlarmAhead = 1;
+      } else if (travelAlarmAhead == '2') {
+        _travelAlarmAhead = 2;
+      } else if (travelAlarmAhead == '3') {
+        _travelAlarmAhead = 5;
+      }
     }
 
     if (travelTimerAhead == '0') {
@@ -7252,17 +7382,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
     final hospital = await Prefs().getHospitalNotificationType();
     _hospitalNotificationAhead = await Prefs().getHospitalNotificationAhead();
-    _hospitalAlarmAhead = await Prefs().getHospitalAlarmAhead();
+    _hospitalAlarmAhead = normalizeAlarmAheadForIOS(await Prefs().getHospitalAlarmAhead());
     _hospitalTimerAhead = await Prefs().getHospitalTimerAhead();
 
     final jail = await Prefs().getJailNotificationType();
     _jailNotificationAhead = await Prefs().getJailNotificationAhead();
-    _jailAlarmAhead = await Prefs().getJailAlarmAhead();
+    _jailAlarmAhead = normalizeAlarmAheadForIOS(await Prefs().getJailAlarmAhead());
     _jailTimerAhead = await Prefs().getJailTimerAhead();
 
     final rankedWar = await Prefs().getRankedWarNotificationType();
     _rankedWarNotificationAhead = await Prefs().getRankedWarNotificationAhead();
-    _rankedWarAlarmAhead = await Prefs().getRankedWarAlarmAhead();
+    _rankedWarAlarmAhead = normalizeAlarmAheadForIOS(await Prefs().getRankedWarAlarmAhead());
+    if (!Platform.isIOS && _rankedWarAlarmAhead == 0) {
+      _rankedWarAlarmAhead = 1; // Correction from legacy shared prefs on Android
+    }
     _rankedWarTimerAhead = await Prefs().getRankedWarTimerAhead();
 
     final raceStart = await Prefs().getRaceStartNotificationType();
@@ -7416,87 +7549,157 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       _messagesShowNumber = messagesNumber;
       _basicInfoExpController.expanded = expandBasicInfo;
       _networthExpController.expanded = expandNetworth;
+
+      if (Platform.isIOS) {
+        if (_travelNotificationType == NotificationType.timer) {
+          _travelNotificationType = NotificationType.alarm;
+          _travelNotificationIcon = Icons.notifications_none;
+        }
+        if (_energyNotificationType == NotificationType.timer) {
+          _energyNotificationType = NotificationType.alarm;
+          _energyNotificationIcon = Icons.notifications_none;
+        }
+        if (_nerveNotificationType == NotificationType.timer) {
+          _nerveNotificationType = NotificationType.alarm;
+          _nerveNotificationIcon = Icons.notifications_none;
+        }
+        if (_lifeNotificationType == NotificationType.timer) {
+          _lifeNotificationType = NotificationType.alarm;
+          _lifeNotificationIcon = Icons.notifications_none;
+        }
+        if (_drugsNotificationType == NotificationType.timer) {
+          _drugsNotificationType = NotificationType.alarm;
+          _drugsNotificationIcon = Icons.notifications_none;
+        }
+        if (_medicalNotificationType == NotificationType.timer) {
+          _medicalNotificationType = NotificationType.alarm;
+          _medicalNotificationIcon = Icons.notifications_none;
+        }
+        if (_boosterNotificationType == NotificationType.timer) {
+          _boosterNotificationType = NotificationType.alarm;
+          _boosterNotificationIcon = Icons.notifications_none;
+        }
+        if (_hospitalNotificationType == NotificationType.timer) {
+          _hospitalNotificationType = NotificationType.alarm;
+          _hospitalNotificationIcon = Icons.notifications_none;
+        }
+        if (_jailNotificationType == NotificationType.timer) {
+          _jailNotificationType = NotificationType.alarm;
+          _jailNotificationIcon = Icons.notifications_none;
+        }
+        if (_rankedWarNotificationType == NotificationType.timer) {
+          _rankedWarNotificationType = NotificationType.alarm;
+          _rankedWarNotificationIcon = Icons.notifications_none;
+        }
+        if (_raceStartNotificationType == NotificationType.timer) {
+          _raceStartNotificationType = NotificationType.alarm;
+          _raceStartNotificationIcon = Icons.notifications_none;
+        }
+      }
     });
   }
 
-  void _setAlarm(ProfileNotification profileNotification, String alarmSetString, bool percentageError) {
+  Future<void> _setAlarm(ProfileNotification profileNotification, String alarmSetString, bool percentageError) async {
     bool moreThan24Hours = false;
     int? hour;
     int? minute;
     String? message;
+    DateTime? alarmDateTime;
+    final descriptor = AlarmKitServiceIos.profileDescriptor(profileNotification.string ?? '');
 
     DateTime currentTime = DateTime.now();
 
+    final bool isIOS = Platform.isIOS;
+
     switch (profileNotification) {
       case ProfileNotification.travel:
-        final alarmTime = _travelArrivalTime.add(Duration(minutes: -_travelAlarmAhead));
+        final alarmTime = _travelArrivalTime.add(
+          Platform.isIOS ? Duration(seconds: -_travelAlarmAhead) : Duration(minutes: -_travelAlarmAhead),
+        );
         hour = alarmTime.hour;
         minute = alarmTime.minute;
-        message = 'Torn PDA Travel';
+        message = isIOS ? 'Travel' : 'Torn PDA Travel';
+        alarmDateTime = alarmTime;
         Duration difference = currentTime.difference(alarmTime);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.energy:
         hour = _energyNotificationTime!.hour;
         minute = _energyNotificationTime!.minute;
-        message = 'Torn PDA Energy';
+        message = isIOS ? 'Energy' : 'Torn PDA Energy';
+        alarmDateTime = _energyNotificationTime;
         Duration difference = currentTime.difference(_energyNotificationTime!);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.nerve:
         hour = _nerveNotificationTime!.hour;
         minute = _nerveNotificationTime!.minute;
-        message = 'Torn PDA Nerve';
+        message = isIOS ? 'Nerve' : 'Torn PDA Nerve';
+        alarmDateTime = _nerveNotificationTime;
         Duration difference = currentTime.difference(_nerveNotificationTime!);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.life:
         hour = _lifeNotificationTime!.hour;
         minute = _lifeNotificationTime!.minute;
-        message = 'Torn PDA Life';
+        message = isIOS ? 'Life' : 'Torn PDA Life';
+        alarmDateTime = _lifeNotificationTime;
         Duration difference = currentTime.difference(_lifeNotificationTime!);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.drugs:
         hour = _drugsNotificationTime!.hour;
         minute = _drugsNotificationTime!.minute;
-        message = 'Torn PDA Drugs';
+        message = isIOS ? 'Drugs CD' : 'Torn PDA Drugs';
+        alarmDateTime = _drugsNotificationTime;
         Duration difference = currentTime.difference(_drugsNotificationTime!);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.medical:
         hour = _medicalNotificationTime!.hour;
         minute = _medicalNotificationTime!.minute;
-        message = 'Torn PDA Medical';
+        message = isIOS ? 'Medical CD' : 'Torn PDA Medical';
+        alarmDateTime = _medicalNotificationTime;
         Duration difference = currentTime.difference(_medicalNotificationTime!);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.booster:
         hour = _boosterNotificationTime!.hour;
         minute = _boosterNotificationTime!.minute;
-        message = 'Torn PDA Booster';
+        message = isIOS ? 'Booster CD' : 'Torn PDA Booster';
+        alarmDateTime = _boosterNotificationTime;
         Duration difference = currentTime.difference(_boosterNotificationTime!);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.hospital:
-        final alarmTime = _hospitalReleaseTime.add(Duration(minutes: -_hospitalAlarmAhead));
+        final alarmTime = _hospitalReleaseTime.add(
+          Platform.isIOS ? Duration(seconds: -_hospitalAlarmAhead) : Duration(minutes: -_hospitalAlarmAhead),
+        );
         hour = alarmTime.hour;
         minute = alarmTime.minute;
-        message = 'Torn PDA Hospital';
+        message = isIOS ? 'Hospital' : 'Torn PDA Hospital';
+        alarmDateTime = alarmTime;
         Duration difference = currentTime.difference(alarmTime);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.jail:
-        final alarmTime = _jailReleaseTime.add(Duration(minutes: -_jailAlarmAhead));
+        final alarmTime = _jailReleaseTime.add(
+          Platform.isIOS ? Duration(seconds: -_jailAlarmAhead) : Duration(minutes: -_jailAlarmAhead),
+        );
         hour = alarmTime.hour;
         minute = alarmTime.minute;
-        message = 'Torn PDA Jail';
+        message = isIOS ? 'Jail' : 'Torn PDA Jail';
+        alarmDateTime = alarmTime;
         Duration difference = currentTime.difference(alarmTime);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.rankedWar:
-        final alarmTime = _rankedWarTime.add(Duration(minutes: -_rankedWarAlarmAhead));
+        final alarmTime = _rankedWarTime.add(
+          Platform.isIOS ? Duration(seconds: -_rankedWarAlarmAhead) : Duration(minutes: -_rankedWarAlarmAhead),
+        );
         hour = alarmTime.hour;
         minute = alarmTime.minute;
-        message = 'Torn PDA War';
+        message = isIOS ? 'Ranked War' : 'Torn PDA War';
+        alarmDateTime = alarmTime;
         Duration difference = currentTime.difference(alarmTime);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
       case ProfileNotification.raceStart:
         final alarmTime = _raceStartTime.add(Duration(minutes: -_raceStartAlarmAhead));
         hour = alarmTime.hour;
         minute = alarmTime.minute;
-        message = 'Torn PDA Race Start';
+        message = isIOS ? 'Race Start' : 'Torn PDA Race Start';
+        alarmDateTime = alarmTime;
         Duration difference = currentTime.difference(alarmTime);
         moreThan24Hours = difference.inMinutes.abs() > 1439;
     }
@@ -7512,6 +7715,43 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         duration: const Duration(seconds: 5),
         contentPadding: const EdgeInsets.all(10),
       );
+      return;
+    }
+
+    if (Platform.isIOS) {
+      if (alarmDateTime == null) return;
+      final available = await AlarmKitServiceIos.isAvailable();
+      if (!available) {
+        BotToast.showText(
+          text: 'Alarms are not available on this iOS device!',
+          textStyle: const TextStyle(
+            fontSize: 14,
+            color: Colors.white,
+          ),
+          contentColor: _themeProvider!.getTextColor(Colors.red),
+          duration: const Duration(seconds: 5),
+          contentPadding: const EdgeInsets.all(10),
+        );
+        return;
+      }
+
+      await AlarmKitServiceIos.setAlarm(
+        targetTime: alarmDateTime,
+        label: message,
+        id: descriptor.alarmId,
+        metadata: AlarmKitServiceIos.buildMetadata(
+          alarmId: descriptor.alarmId,
+          context: descriptor.context,
+          details: 'Triggers at ${TimeFormatter(
+            inputTime: alarmDateTime,
+            timeFormatSetting: _settingsProvider!.currentTimeFormat,
+            timeZoneSetting: _settingsProvider!.currentTimeZone,
+          ).formatHourWithDaysElapsed()}',
+          payload: descriptor.payload,
+          timeMillis: alarmDateTime.millisecondsSinceEpoch,
+        ),
+      );
+      await _refreshActiveAlarmKitIds();
       return;
     }
 
@@ -7574,6 +7814,20 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   void _setTimer(ProfileNotification profileNotification) {
+    if (Platform.isIOS) {
+      BotToast.showText(
+        text: 'Timers are not supported on iOS',
+        textStyle: const TextStyle(
+          fontSize: 14,
+          color: Colors.white,
+        ),
+        contentColor: _themeProvider!.getTextColor(Colors.red),
+        duration: const Duration(seconds: 5),
+        contentPadding: const EdgeInsets.all(10),
+      );
+      return;
+    }
+
     int? totalSeconds;
     String? message;
 

@@ -12,6 +12,7 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LootNotificationsIOS extends StatefulWidget {
@@ -29,6 +30,9 @@ class LootNotificationsIOS extends StatefulWidget {
 
 class LootNotificationsIOSState extends State<LootNotificationsIOS> {
   String? _lootNotificationAheadDropDownValue;
+  String? _lootAlarmAheadDropDownValue;
+  String? _lootTypeDropDownValue;
+  bool _isAlarmKitAvailable = false;
 
   Future? _preferencesLoaded;
 
@@ -145,6 +149,25 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
   Widget _rowsWithTypes() {
     return Column(
       children: <Widget>[
+        if (_isAlarmKitAvailable)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                const Flexible(
+                  child: Text('Alert type'),
+                ),
+                const Padding(
+                  padding: EdgeInsets.only(left: 20),
+                ),
+                Flexible(
+                  child: _lootTypeDropDown(),
+                ),
+              ],
+            ),
+          ),
+        if (_isAlarmKitAvailable) const SizedBox(height: 20),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15.0),
           child: Row(
@@ -157,12 +180,167 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
                 padding: EdgeInsets.only(left: 20),
               ),
               Flexible(
-                child: _lootTimerDropDown(),
+                child: _lootTypeDropDownValue == '1' ? _lootAlarmAheadDropDown() : _lootTimerDropDown(),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  DropdownButton _lootTypeDropDown() {
+    return DropdownButton<String>(
+      value: _lootTypeDropDownValue,
+      items: const [
+        DropdownMenuItem(
+          value: "0",
+          child: Text("Notification"),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: Text("Alarm"),
+        ),
+      ],
+      onChanged: (value) {
+        Prefs().setLootNotificationType(value!);
+        setState(() {
+          _lootTypeDropDownValue = value;
+        });
+      },
+    );
+  }
+
+  DropdownButton _lootAlarmAheadDropDown() {
+    return DropdownButton<String>(
+      value: _lootAlarmAheadDropDownValue,
+      items: const [
+        DropdownMenuItem(
+          value: "s20",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "20 seconds before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "s40",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "40 seconds before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "0",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "1 minute before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "1",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "2 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "2",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "4 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "3",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "5 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "4",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "6 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "5",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "8 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "6",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "10 minutes before",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+      ],
+      onChanged: (value) {
+        if (value != null) {
+          Prefs().setLootAlarmAhead(value);
+          setState(() {
+            _lootAlarmAheadDropDownValue = value;
+          });
+        }
+      },
     );
   }
 
@@ -276,19 +454,30 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
         ),
       ],
       onChanged: (value) {
-        Prefs().setLootNotificationAhead(value!);
-        setState(() {
-          _lootNotificationAheadDropDownValue = value;
-        });
+        if (value != null) {
+          Prefs().setLootNotificationAhead(value);
+          Prefs().setLootTimerAhead(value);
+          setState(() {
+            _lootNotificationAheadDropDownValue = value;
+          });
+        }
       },
     );
   }
 
   Future _restorePreferences() async {
+    _isAlarmKitAvailable = await AlarmKitServiceIos.isAvailable();
     final lootNotificationAhead = await Prefs().getLootNotificationAhead();
+    final lootAlarmAhead = await Prefs().getLootAlarmAhead();
+    final lootType = await Prefs().getLootNotificationType();
+
+    const notifAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
+    const alarmAllowed = {"s20", "s40", "0", "1", "2", "3", "4", "5", "6"};
 
     setState(() {
-      _lootNotificationAheadDropDownValue = lootNotificationAhead;
+      _lootNotificationAheadDropDownValue = notifAllowed.contains(lootNotificationAhead) ? lootNotificationAhead : "7";
+      _lootAlarmAheadDropDownValue = alarmAllowed.contains(lootAlarmAhead) ? lootAlarmAhead : "6";
+      _lootTypeDropDownValue = lootType;
     });
   }
 

@@ -89,6 +89,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
     _webViewProvider = Provider.of<WebViewProvider>(context);
+    _userScriptsProvider = Provider.of<UserScriptsProvider>(context);
     return Container(
       color: _themeProvider.currentTheme == AppTheme.light
           ? MediaQuery.orientationOf(context) == Orientation.portrait
@@ -147,58 +148,127 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           minWidth: 1.0,
                           child: ElevatedButton(
                             style: ButtonStyle(
-                              backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
-                              shape: WidgetStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(18),
-                                  side: const BorderSide(
-                                    width: 2,
-                                    color: Colors.blueGrey,
-                                  ),
-                                ),
+                              backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                                (Set<WidgetState> states) {
+                                  if (states.contains(WidgetState.disabled)) {
+                                    return Colors.grey;
+                                  }
+                                  return _themeProvider.secondBackground;
+                                },
+                              ),
+                              shape: WidgetStateProperty.resolveWith<OutlinedBorder>(
+                                (Set<WidgetState> states) {
+                                  return RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(18),
+                                    side: BorderSide(
+                                      width: 2,
+                                      color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
+                                    ),
+                                  );
+                                },
                               ),
                             ),
+                            onPressed: _userScriptsProvider.userScriptList.isEmpty
+                                ? null
+                                : () => _userScriptsProvider.checkForUpdates().then((i) => BotToast.showText(
+                                      text: i > 0
+                                          ? "$i script${i == 1 ? " is" : "s are"} ready to update"
+                                          : "No updates found",
+                                      textStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.white,
+                                      ),
+                                      contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
+                                      contentPadding: const EdgeInsets.all(10),
+                                    )),
                             child: Icon(
                               Icons.refresh,
                               size: 20,
                               color: _themeProvider.mainText,
                             ),
-                            onPressed: () => _userScriptsProvider.checkForUpdates().then((i) => BotToast.showText(
-                                  text: i > 0
-                                      ? "$i script${i == 1 ? " is" : "s are"} ready to update"
-                                      : "No updates found",
-                                  textStyle: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                  ),
-                                  contentColor: i > 0 ? Colors.green[800]! : Colors.grey[800]!,
-                                  contentPadding: const EdgeInsets.all(10),
-                                )),
                           )),
                       const SizedBox(width: 15),
                       ButtonTheme(
                         minWidth: 1.0,
                         child: ElevatedButton(
                           style: ButtonStyle(
-                            backgroundColor: WidgetStateProperty.all<Color?>(_themeProvider.secondBackground),
-                            shape: WidgetStateProperty.all<OutlinedBorder>(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(18),
-                                side: const BorderSide(
-                                  width: 2,
-                                  color: Colors.blueGrey,
-                                ),
-                              ),
+                            backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                              (Set<WidgetState> states) {
+                                if (states.contains(WidgetState.disabled)) {
+                                  return Colors.grey;
+                                }
+                                return _userScriptsProvider.isGlobalDisableActive
+                                    ? Colors.orange[700]
+                                    : _themeProvider.secondBackground;
+                              },
+                            ),
+                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>(
+                              (Set<WidgetState> states) {
+                                return RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(
+                                    width: 2,
+                                    color: states.contains(WidgetState.disabled)
+                                        ? Colors.grey
+                                        : _userScriptsProvider.isGlobalDisableActive
+                                            ? Colors.orange[900]!
+                                            : Colors.blueGrey,
+                                  ),
+                                );
+                              },
                             ),
                           ),
+                          onPressed: _userScriptsProvider.userScriptList.isEmpty
+                              ? null
+                              : () {
+                                  if (_userScriptsProvider.isGlobalDisableActive) {
+                                    _userScriptsProvider.toggleGlobalDisable();
+                                  } else {
+                                    _showGlobalDisableDialog(context);
+                                  }
+                                },
+                          child: Icon(
+                            Icons.remove_circle_outline,
+                            size: 20,
+                            color: _themeProvider.mainText,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 15),
+                      ButtonTheme(
+                        minWidth: 1.0,
+                        child: ElevatedButton(
+                          style: ButtonStyle(
+                            backgroundColor: WidgetStateProperty.resolveWith<Color?>(
+                              (Set<WidgetState> states) {
+                                if (states.contains(WidgetState.disabled)) {
+                                  return Colors.grey;
+                                }
+                                return _themeProvider.secondBackground;
+                              },
+                            ),
+                            shape: WidgetStateProperty.resolveWith<OutlinedBorder>(
+                              (Set<WidgetState> states) {
+                                return RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  side: BorderSide(
+                                    width: 2,
+                                    color: states.contains(WidgetState.disabled) ? Colors.grey : Colors.blueGrey,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          onPressed: _userScriptsProvider.userScriptList.isEmpty
+                              ? null
+                              : () {
+                                  _openWipeDialog();
+                                },
                           child: Icon(
                             Icons.delete_outline,
                             size: 20,
                             color: _themeProvider.mainText,
                           ),
-                          onPressed: () {
-                            _openWipeDialog();
-                          },
                         ),
                       ),
                     ],
@@ -919,6 +989,53 @@ class UserScriptsPageState extends State<UserScriptsPage> {
     } catch (e) {
       BotToast.showText(text: "Error importing scripts: $e");
     }
+  }
+
+  Future<void> _showGlobalDisableDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Temporarily disable all scripts and remember state?'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                  'This feature allows you to temporarily disable all scripts, while remembering '
+                  'their current enabled/disabled state.',
+                ),
+                SizedBox(height: 10),
+                Text('This might be useful, for example, to quickly disable the additional features '
+                    'they provide or to test if any of them is causing issues in the browser.'),
+                SizedBox(height: 10),
+                Text('If you proceed, all scripts will be disabled but you will be able to restore '
+                    'their previous state by tapping this button again.'),
+                SizedBox(height: 10),
+                Text('IMPORTANT: if you perform any action on the script list, such as '
+                    'manually enabling/disabling, editing, adding or removing any script while '
+                    'this mode is active, the "restore" functionality will be disabled.'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Proceed'),
+              onPressed: () {
+                _userScriptsProvider.toggleGlobalDisable();
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<void> _openWipeDialog() {

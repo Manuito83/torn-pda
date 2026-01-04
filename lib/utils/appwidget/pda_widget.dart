@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:torn_pda/models/appwidget/appwidget_api_model.dart';
@@ -45,6 +46,7 @@ Future<List<HomeWidgetInfo>> getInstalledHomeWidgets() async {
 /// Purpose: Single entry-point for Android/iOS background tasks (must be a VM entry-point).
 @pragma("vm:entry-point")
 void widgetBackgroundTaskDispatcher() {
+  WidgetsFlutterBinding.ensureInitialized();
   Workmanager().executeTask((taskName, inputData) async {
     log("Workmanager callbackDispatcher triggered for task: $taskName");
 

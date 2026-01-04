@@ -3,25 +3,49 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:html/dom.dart' as dom;
 import 'package:html/parser.dart';
 import 'package:http/http.dart' as http;
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/travel/foreign_stock_out.dart';
+import 'package:torn_pda/providers/api/api_v1_calls.dart';
+import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
-class TravelHandler {
+class ForeignStocksWebviewHandler {
   final InAppWebViewController? webViewController;
   final Function(bool) onTravelStatusChanged;
+  final SettingsProvider settingsProvider;
 
   DateTime? _foreignStocksSentTime;
 
-  TravelHandler({
+  ForeignStocksWebviewHandler({
     required this.webViewController,
     required this.onTravelStatusChanged,
+    required this.settingsProvider,
   });
+
+  int _parseCost(String text) {
+    text = text.replaceAll('\$', '').trim().toLowerCase();
+    double multiplier = 1;
+    if (text.endsWith('m')) {
+      multiplier = 1000000;
+      text = text.substring(0, text.length - 1);
+    } else if (text.endsWith('b')) {
+      multiplier = 1000000000;
+      text = text.substring(0, text.length - 1);
+    } else if (text.endsWith('k')) {
+      text = text.substring(0, text.length - 1);
+    }
+
+    text = text.replaceAll(',', '');
+    final value = double.tryParse(text) ?? 0;
+    return (value * multiplier).toInt();
+  }
 
   Future<void> assessTravel(dom.Document document) async {
     var abroad = document.querySelectorAll(".travel-home, .travel-home-header-button");
@@ -112,7 +136,7 @@ class TravelHandler {
             final text = span.text.trim();
             // Cost
             if (text.contains('\$') && span.attributes['aria-hidden'] != 'true') {
-              cost = int.tryParse(text.replaceAll(RegExp(r"[^0-9]"), "")) ?? 0;
+              cost = _parseCost(text);
             }
             // Stock
             if (text.toLowerCase().contains('stock')) {
@@ -151,6 +175,10 @@ class TravelHandler {
           country: country,
           items: items,
         );
+
+        if (kDebugMode) {
+          await _printItemFoundFlutterSide(stockModel);
+        }
 
         Future<void> sendToYATA() async {
           String error = "";
@@ -221,13 +249,61 @@ class TravelHandler {
         }
         _foreignStocksSentTime = DateTime.now();
 
-        await Future.wait([
-          sendToYATA(),
-          sendToPrometheus(),
-        ]);
+        var futures = <Future>[];
+        if (settingsProvider.yataUploadEnabledRemoteConfig) {
+          futures.add(sendToYATA());
+        }
+        if (settingsProvider.prometheusUploadEnabledRemoteConfig) {
+          futures.add(sendToPrometheus());
+        }
+
+        await Future.wait(futures);
       } catch (e) {
         // Error parsing
       }
     }
+  }
+
+  Future<void> _printItemFoundFlutterSide(ForeignStockOutModel stockModel) async {
+    var logMsg = StringBuffer();
+    logMsg.writeln('\n--------------------------------------------------');
+    logMsg.writeln('SENDING TRAVEL DATA');
+    logMsg.writeln('Country: ${stockModel.country}');
+    logMsg.writeln('Client: ${stockModel.client} (v${stockModel.version})');
+    logMsg.writeln('Author: ${stockModel.authorName} (${stockModel.authorId})');
+    logMsg.writeln('--------------------------------------------------');
+
+    Map<String, String> itemNames = {};
+    try {
+      var apiResult = await ApiCallsV1.getItems();
+      if (apiResult is ItemsModel && apiResult.items != null) {
+        for (var item in stockModel.items) {
+          if (apiResult.items!.containsKey(item.id.toString())) {
+            itemNames[item.id.toString()] = apiResult.items![item.id.toString()]!.name ?? "Unknown";
+          }
+        }
+      }
+    } catch (e) {
+      log("Error fetching items for debug log: $e");
+    }
+
+    if (itemNames.isNotEmpty) {
+      logMsg.writeln('${"ID".padRight(10)} | ${"Name".padRight(25)} | ${"Cost".padRight(15)} | Quantity');
+      logMsg.writeln('--------------------------------------------------');
+      for (var item in stockModel.items) {
+        String name = itemNames[item.id.toString()] ?? "Unknown";
+        if (name.length > 24) name = "${name.substring(0, 21)}...";
+        logMsg.writeln(
+            '${item.id.toString().padRight(10)} | ${name.padRight(25)} | ${item.cost.toString().padRight(15)} | ${item.quantity}');
+      }
+    } else {
+      logMsg.writeln('${"ID".padRight(10)} | ${"Cost".padRight(15)} | Quantity');
+      logMsg.writeln('--------------------------------------------------');
+      for (var item in stockModel.items) {
+        logMsg.writeln('${item.id.toString().padRight(10)} | ${item.cost.toString().padRight(15)} | ${item.quantity}');
+      }
+    }
+    logMsg.writeln('--------------------------------------------------');
+    log(logMsg.toString());
   }
 }
