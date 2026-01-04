@@ -36,6 +36,7 @@ import 'package:torn_pda/utils/webview_interaction_recovery.dart';
 import 'package:torn_pda/widgets/webviews/webview_full.dart';
 import 'package:torn_pda/widgets/webviews/webview_stackview.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 
 enum UiMode {
   window,
@@ -58,8 +59,10 @@ class RotatedDisposedTabDetails {
 }
 
 class TabDetails {
-  // Unique identifier
-  final String id = DateTime.now().millisecondsSinceEpoch.toString() + (DateTime.now().microsecond % 1000).toString();
+  // Unique identifier persisted across sleep/restore
+  final String id;
+
+  TabDetails({required this.id});
 
   bool sleepTab = false;
   bool initialised = false;
@@ -81,6 +84,7 @@ class TabDetails {
 }
 
 class SleepingWebView {
+  final String tabUid;
   final String? customUrl;
   final GlobalKey<WebViewFullState>? key;
   //final bool dialog;
@@ -91,6 +95,7 @@ class SleepingWebView {
   final bool allowDownloads;
 
   const SleepingWebView({
+    required this.tabUid,
     this.customUrl = 'https://www.torn.com',
     //this.dialog = false,
     this.useTabs = false,
@@ -103,6 +108,8 @@ class SleepingWebView {
 }
 
 class WebViewProvider extends ChangeNotifier {
+  static const Uuid _uuid = Uuid();
+
   final List<TabDetails> _tabList = <TabDetails>[];
   List<TabDetails> get tabList => _tabList;
 
@@ -184,10 +191,13 @@ class WebViewProvider extends ChangeNotifier {
       notifyListeners();
 
       resumeAllWebviews();
+      unawaited(broadcastTabState());
     } else {
       // Change browser visibility early to avoid issues if device returns an error
       _isBrowserForeground = bringToForeground;
       notifyListeners();
+
+      unawaited(broadcastTabState());
 
       // Signal that the browser has closed to listener (e.g.: Profile page)
       browserHasClosedStream.add(true);
@@ -212,6 +222,7 @@ class WebViewProvider extends ChangeNotifier {
     _isBrowserForeground = true;
     notifyListeners();
     resumeAllWebviews();
+    unawaited(broadcastTabState());
   }
 
   void pdaIconActivation({
@@ -570,6 +581,7 @@ class WebViewProvider extends ChangeNotifier {
           chatRemovalActive: savedMain.tabsSave![0].chatRemovalActive,
           historyBack: savedMain.tabsSave![0].historyBack,
           historyForward: savedMain.tabsSave![0].historyForward,
+          tabUid: savedMain.tabsSave![0].tabUid,
         );
       } else {
         String? authUrl = await _assessNativeAuth(inputUrl: "https://www.torn.com", context: context);
@@ -632,6 +644,7 @@ class WebViewProvider extends ChangeNotifier {
           customNameInTitle: wv.customNameInTitle,
           customNameInTab: wv.customNameInTab,
           lastUsedTime: wv.lastUsedTime,
+          tabUid: wv.tabUid,
         );
       } else {
         await addHiddenTab(
@@ -645,6 +658,7 @@ class WebViewProvider extends ChangeNotifier {
           customName: wv.customName,
           customNameInTitle: wv.customNameInTitle,
           customNameInTab: wv.customNameInTab,
+          tabUid: wv.tabUid,
         );
       }
     }
@@ -690,16 +704,19 @@ class WebViewProvider extends ChangeNotifier {
     bool customNameInTitle = false,
     bool customNameInTab = true,
     int lastUsedTime = 0,
+    String? tabUid,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
     final key = GlobalKey<WebViewFullState>();
+    final tab = TabDetails(id: _generateUniqueTabUid(requestedUid: tabUid));
     _tabList.add(
-      TabDetails()
+      tab
         ..sleepTab = sleepTab
         ..webViewKey = key
         ..webView = sleepTab
             ? null
             : WebViewFull(
+                tabUid: tab.id,
                 windowId: windowId,
                 customUrl: url,
                 key: key,
@@ -711,6 +728,7 @@ class WebViewProvider extends ChangeNotifier {
               )
         ..sleepingWebView = sleepTab
             ? SleepingWebView(
+                tabUid: tab.id,
                 customUrl: url,
                 key: key,
                 useTabs: true,
@@ -751,10 +769,12 @@ class WebViewProvider extends ChangeNotifier {
     String customName = "",
     bool customNameInTitle = false,
     bool customNameInTab = true,
+    String? tabUid,
   }) async {
     chatRemovalActive = chatRemovalActive ?? chatRemovalActiveGlobal;
+    final tab = TabDetails(id: _generateUniqueTabUid(requestedUid: tabUid));
     _tabList.add(
-      TabDetails()
+      tab
         ..currentUrl = url
         ..pageTitle = pageTitle
         ..chatRemovalActiveTab = chatRemovalActive
@@ -867,8 +887,17 @@ class WebViewProvider extends ChangeNotifier {
     // Avoid activating the same tab again (pause/resume could cause issues if call on iOS)
     if (newActiveTab == currentTab) return;
 
-    final deactivated = _tabList[currentTab];
+    final previousIndex = currentTab;
+    final deactivated = _tabList[previousIndex];
     deactivated.webViewKey?.currentState?.pauseThisWebview();
+    // Notify the tab being deactivated
+    unawaited(
+      deactivated.webViewKey?.currentState?.publishTabState(
+            isActiveTab: false,
+            isWebViewVisible: _isBrowserForeground,
+          ) ??
+          Future.value(),
+    );
 
     currentTab = newActiveTab;
     final activated = _tabList[currentTab];
@@ -882,7 +911,16 @@ class WebViewProvider extends ChangeNotifier {
       activated.webView = _buildRealWebViewFromSleeping(activated.sleepingWebView!);
     }
 
-    activated.webViewKey?.currentState?.resumeThisWebview();
+    activated.webViewKey?.currentState?.resumeThisWebview(publish: false);
+
+    // Notify the tab being activated
+    unawaited(
+      activated.webViewKey?.currentState?.publishTabState(
+            isActiveTab: true,
+            isWebViewVisible: _isBrowserForeground,
+          ) ??
+          Future.value(),
+    );
 
     _callAssessMethods();
     notifyListeners();
@@ -911,6 +949,7 @@ class WebViewProvider extends ChangeNotifier {
         newSleeper.sleepTab = true;
         newSleeper.webView = null;
         newSleeper.sleepingWebView = SleepingWebView(
+          tabUid: _tabList[i].id,
           customUrl: _tabList[i].currentUrl,
           key: _tabList[i].webViewKey,
           useTabs: true,
@@ -929,6 +968,7 @@ class WebViewProvider extends ChangeNotifier {
 
   Widget _buildRealWebViewFromSleeping(SleepingWebView sleeping) {
     return WebViewFull(
+      tabUid: sleeping.tabUid,
       customUrl: sleeping.customUrl,
       key: sleeping.key,
       useTabs: true,
@@ -946,6 +986,7 @@ class WebViewProvider extends ChangeNotifier {
     final newKey = GlobalKey<WebViewFullState>();
 
     crashedTab.webView = WebViewFull(
+      tabUid: crashedTab.id,
       customUrl: crashedTab.currentUrl,
       key: newKey,
       useTabs: true,
@@ -1475,6 +1516,7 @@ class WebViewProvider extends ChangeNotifier {
       if (i == 0) {
         saveMainModel.tabsSave!.add(
           TabsSave()
+            ..tabUid = _tabList[0].id
             ..url = _tabList[0].currentUrl
             ..pageTitle = _tabList[0].pageTitle
             ..chatRemovalActive = _tabList[0].chatRemovalActiveTab
@@ -1484,6 +1526,7 @@ class WebViewProvider extends ChangeNotifier {
       } else {
         saveSecondaryModel.tabsSave!.add(
           TabsSave()
+            ..tabUid = _tabList[i].id
             ..url = _tabList[i].currentUrl
             ..pageTitle = _tabList[i].pageTitle
             ..chatRemovalActive = _tabList[i].chatRemovalActiveTab
@@ -1524,7 +1567,7 @@ class WebViewProvider extends ChangeNotifier {
   TabDetails? getTabFromKey(Key? reporterKey) {
     for (final tab in _tabList) {
       // Null check because not all webview have a key (sleeping tabs!)
-      if (tab.webView?.key == reporterKey) {
+      if (tab.webView?.key == reporterKey || tab.sleepingWebView?.key == reporterKey) {
         return tab;
       }
     }
@@ -1854,6 +1897,40 @@ class WebViewProvider extends ChangeNotifier {
   Color? getSpecialUserColor(String userId) {
     return _specialUsers[userId];
   }
+
+  // ### TAB UID ###
+  // Preserve a provided UID when possible; regenerate if it collides with existing tabs
+  String _generateUniqueTabUid({String? requestedUid}) {
+    final existingIds = _tabList.map((tab) => tab.id).toSet();
+    var candidate = requestedUid ?? _uuid.v4();
+
+    while (existingIds.contains(candidate)) {
+      candidate = _uuid.v4();
+    }
+
+    return candidate;
+  }
+
+  bool isTabUidActive(String tabUid) {
+    if (_tabList.isEmpty) return false;
+    return _tabList[currentTab].id == tabUid;
+  }
+
+  Future<void> broadcastTabState() async {
+    final bool isVisible = _isBrowserForeground;
+    if (_tabList.isEmpty || currentTab >= _tabList.length) return;
+
+    final state = _tabList[currentTab].webViewKey?.currentState;
+    if (state == null) return;
+
+    try {
+      await state.publishTabState(
+        isActiveTab: true,
+        isWebViewVisible: isVisible,
+      );
+    } catch (_) {}
+  }
+  // END TAB UID ###
 
   /// Get icon for specific tab index - automatically updates when theme changes
   Widget getTabIcon(int index, BuildContext context) {

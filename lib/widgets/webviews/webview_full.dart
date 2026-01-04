@@ -137,6 +137,7 @@ final chainingAidPopupChoices = <HealingPages>[
 ];
 
 class WebViewFull extends StatefulWidget {
+  final String tabUid;
   final int? windowId;
   final String customTitle;
   final String? customUrl;
@@ -153,6 +154,7 @@ class WebViewFull extends StatefulWidget {
   final ChainingPayload? chainingPayload;
 
   const WebViewFull({
+    required this.tabUid,
     this.windowId,
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
@@ -196,6 +198,7 @@ class WebViewFullState extends State<WebViewFull>
   String? _pageTitle = "";
   String _currentUrl = '';
   String _lastReportedUrl = '';
+  late final String _tabUid;
 
   bool _backButtonPopsContext = true;
 
@@ -375,6 +378,8 @@ class WebViewFullState extends State<WebViewFull>
   @override
   void initState() {
     super.initState();
+
+    _tabUid = widget.tabUid;
 
     WidgetsBinding.instance.addObserver(this);
 
@@ -1283,6 +1288,7 @@ class WebViewFullState extends State<WebViewFull>
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: UserHelper.apiKey,
+                tabUid: _tabUid,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
@@ -1305,6 +1311,12 @@ class WebViewFullState extends State<WebViewFull>
             }
 
             // ### HANDLERS ###
+
+            WebviewHandlers.addTabStateHandler(
+              webview: webViewController!,
+              webViewProvider: _webViewProvider,
+              tabUid: _tabUid,
+            );
 
             WebviewHandlers.addTornPDACheckHandler(webview: webViewController!);
 
@@ -1343,6 +1355,8 @@ class WebViewFullState extends State<WebViewFull>
             );
 
             WebviewHandlers.addShareFileHandler(webview: webViewController!, context: context);
+
+            unawaited(publishTabState());
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
@@ -1404,6 +1418,7 @@ class WebViewFullState extends State<WebViewFull>
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: UserHelper.apiKey,
+                tabUid: _tabUid,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
@@ -1539,6 +1554,7 @@ class WebViewFullState extends State<WebViewFull>
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
             _webViewProvider.updateLastTabUse();
+            unawaited(publishTabState());
 
             _webViewProvider.verticalMenuClose();
             if (!mounted) return;
@@ -1783,6 +1799,8 @@ class WebViewFullState extends State<WebViewFull>
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
               // the checks performed in this method
             }
+
+            unawaited(publishTabState());
 
             //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
           },
@@ -5209,7 +5227,7 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  Future<void> resumeThisWebview() async {
+  Future<void> resumeThisWebview({bool publish = true}) async {
     if (Platform.isAndroid) {
       webViewController?.resume();
     } else if (Platform.isIOS) {
@@ -5226,6 +5244,46 @@ class WebViewFullState extends State<WebViewFull>
     } catch (e) {
       _webViewProvider.reviveUrl();
     }
+
+    if (publish) {
+      await publishTabState();
+    }
+  }
+
+  Future<void> publishTabState({bool? isActiveTab, bool? isWebViewVisible}) async {
+    if (!mounted) return;
+    if (webViewController == null) return;
+
+    final payload = {
+      'uid': _tabUid,
+      'isActiveTab': isActiveTab ?? _webViewProvider.isTabUidActive(_tabUid),
+      'isWebViewVisible': isWebViewVisible ?? _webViewProvider.browserShowInForeground,
+    };
+
+    final payloadJson = jsonEncode(payload);
+    final uidJson = jsonEncode(_tabUid);
+
+    try {
+      await webViewController!.evaluateJavascript(
+        source: '''
+          (function() {
+            const root = (window.__tornpda = window.__tornpda || {});
+            root.tab = root.tab || {};
+            if (root.tab.uid !== ${uidJson}) {
+              try {
+                Object.defineProperty(root.tab, 'uid', { value: ${uidJson}, writable: false, configurable: false });
+              } catch (_) {
+                root.tab.uid = ${uidJson};
+              }
+            }
+            root.tab.state = ${payloadJson};
+            try {
+              window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: ${payloadJson} }));
+            } catch (_) {}
+          })();
+        ''',
+      );
+    } catch (_) {}
   }
 
   Future _loadUrl(String? inputUrl) async {

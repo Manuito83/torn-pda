@@ -16,11 +16,29 @@ import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WebviewHandlers {
+  static void addTabStateHandler({
+    required InAppWebViewController webview,
+    required WebViewProvider webViewProvider,
+    required String tabUid,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_getTabState',
+      callback: (args) async {
+        return {
+          'uid': tabUid,
+          'isActiveTab': webViewProvider.isTabUidActive(tabUid),
+          'isWebViewVisible': webViewProvider.browserShowInForeground,
+        };
+      },
+    );
+  }
+
   static void addTornPDACheckHandler({
     required InAppWebViewController webview,
   }) {

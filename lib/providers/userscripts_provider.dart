@@ -105,9 +105,18 @@ class UserScriptsProvider extends ChangeNotifier {
 
   UnmodifiableListView<UserScript> getHandlerSources({
     required String apiKey,
+    required String tabUid,
   }) {
     final scriptList = <UserScript>[];
     if (_userScriptsEnabled) {
+      scriptList.add(
+        UserScript(
+          groupName: "__TornPDA_TabContext__",
+          injectionTime: UserScriptInjectionTime.AT_DOCUMENT_START,
+          source: handler_tabContext(tabUid),
+        ),
+      );
+
       // Add the main event to let other handlers that the platform is ready
       scriptList.add(
         UserScript(

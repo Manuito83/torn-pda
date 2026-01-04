@@ -102,6 +102,21 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
+    // v3.10.2 - Build 605 - 05/01/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.10.2'
+        ..date = '15 JAN 2026'
+        ..features = [
+          ComplexFeature(
+            "Browser: added tab state handler (see details)",
+            explanation: "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"
+                " and browser visibility) and stay in sync across tab switches.\n\n"
+                "Please visit the ./docs section in Github for more information.",
+          ),
+        ],
+    );
+
     // v3.10.1 - Build 604 - 30/12/2025
     itemList.add(
       ChangeLogItem()
