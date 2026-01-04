@@ -323,9 +323,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _initializeLiveActivities() {
     try {
-      if (Platform.isIOS) {
-        _initialiseLiveActivitiesBridgeService();
-      }
+      // Live Updates are supported on both platforms; the bridge init already
+      // guards by platform + SDK + user toggle, so call it unconditionally.
+      _initialiseLiveActivitiesBridgeService();
     } catch (e, stackTrace) {
       log("Error initializing live activities: $e");
       logErrorToCrashlytics("Error initializing live activities", e, stackTrace);
