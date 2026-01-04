@@ -702,7 +702,7 @@ class WarPageState extends State<WarPage> {
                         if (allMembers > 60) {
                           BotToast.showText(
                             clickClose: true,
-                            text: "Updating $allMembers war targets, this might take a while. Extra time needed to "
+                            text: "Updating $allMembers war targets, this might take a while.\n\nExtra time needed to "
                                 "avoid issues with API request limits!",
                             textStyle: const TextStyle(
                               fontSize: 14,
