@@ -6022,7 +6022,17 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
 
       // Calculate time difference from last time we obtained events
       final DateTime lastEventsTs = DateTime.fromMillisecondsSinceEpoch(await Prefs().getEventsLastRetrieved());
-      final int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
+      int minutesDiff = DateTime.now().difference(lastEventsTs).inMinutes;
+
+      // ### DEBUG ###
+      /*
+      if (kDebugMode) {
+        minutesDiff = 30;
+      } else if (minutesDiff < 0) {
+        minutesDiff = 30;
+      }
+      */
+      // #############
 
       // If less than 30 minutes have elapse, we'll just query for new events and fill the list
       if (minutesDiff < 30 && eventsSave.isNotEmpty) {

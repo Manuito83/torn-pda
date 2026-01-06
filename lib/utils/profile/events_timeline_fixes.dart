@@ -21,10 +21,11 @@ String fixHrefAttributes(String message) {
   message = message.replaceAllMapped(hrefExp, (match) {
     String hrefValue = match.group(1) ?? '';
 
-    // Remove any leading and trailing quotes and spaces
+    // Remove any leading/trailing quotes/spaces and stray spaces after commas in query params
     // Example found in:
     // <a href = http://www.torn.com/"http://www.torn.com/http://www.torn.com/profiles.php?XID=123456">
     hrefValue = hrefValue.trim().replaceAll('"', '').replaceAll("'", '');
+    hrefValue = hrefValue.replaceAll(RegExp(r',\s+'), ',');
 
     // Find the last occurrence of 'www.torn.com' in hrefValue
     int index = hrefValue.lastIndexOf('www.torn.com');
@@ -71,13 +72,28 @@ String processEventMessage(String message) {
   return newMessage;
 }
 
+String stripUnsupportedHtmlTags(String message) {
+  // Turn line breaks into actual new lines for readability.
+  final breakFixed = message.replaceAll(RegExp(r'<br\s*/?>', caseSensitive: false), '\n');
+
+  // Strip everything except <a> and <b> tags.
+  final cleaned = breakFixed.replaceAll(RegExp(r'<(?!/?(?:a|b)\b)[^>]+>', caseSensitive: false), '');
+
+  return cleaned;
+}
+
+String _normalizePunctuationSpacing(String text) {
+  // Remove stray spaces before punctuation such as commas.
+  return text.replaceAll(RegExp(r'\s+([,.;:!?])'), r'$1');
+}
+
 Widget buildEventMessageWidget(
   String message,
   FontWeight fontWeight,
   Function launchBrowser,
   ThemeProvider themeProvider,
 ) {
-  String fixedMessage = fixHrefAttributes(message);
+  String fixedMessage = stripUnsupportedHtmlTags(fixHrefAttributes(message));
   List<InlineSpan> spans = [];
 
   // Regular expression for detecting <a> tags
@@ -94,7 +110,7 @@ Widget buildEventMessageWidget(
 
     // Add any text before the <a> tag
     if (matchStart > currentIndex) {
-      String textBeforeLink = fixedMessage.substring(currentIndex, matchStart);
+      String textBeforeLink = _normalizePunctuationSpacing(fixedMessage.substring(currentIndex, matchStart));
 
       // Parse and add bold text spans if <b> tags are found within textBeforeLink
       spans.addAll(_parseBoldText(textBeforeLink, fontWeight));
@@ -102,7 +118,7 @@ Widget buildEventMessageWidget(
 
     // Extract href and link text for <a> tag
     String href = match.group(1) ?? '';
-    String linkText = match.group(2) ?? '';
+    String linkText = _normalizePunctuationSpacing(match.group(2) ?? '');
 
     spans.add(WidgetSpan(
       child: GestureDetector(
@@ -131,7 +147,7 @@ Widget buildEventMessageWidget(
 
   // Add any remaining text after the last <a> tag
   if (currentIndex < fixedMessage.length) {
-    String textAfterLastLink = fixedMessage.substring(currentIndex);
+    String textAfterLastLink = _normalizePunctuationSpacing(fixedMessage.substring(currentIndex));
     spans.addAll(_parseBoldText(textAfterLastLink, fontWeight));
   }
 
