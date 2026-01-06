@@ -319,7 +319,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             const DropdownMenuItem(
               value: 20,
               child: SizedBox(
-                width: 120,
+                width: 130,
                 child: Text(
                   "20 seconds before",
                   textAlign: TextAlign.right,
@@ -332,7 +332,7 @@ class HospitalAheadOptionsState extends State<HospitalAheadOptions> {
             const DropdownMenuItem(
               value: 40,
               child: SizedBox(
-                width: 120,
+                width: 130,
                 child: Text(
                   "40 seconds before",
                   textAlign: TextAlign.right,

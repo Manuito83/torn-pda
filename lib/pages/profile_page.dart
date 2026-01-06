@@ -7305,7 +7305,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     final travelAlarmAhead = await Prefs().getTravelAlarmAhead();
     final travelTimerAhead = await Prefs().getTravelTimerAhead();
 
-    if (travelNotificationAhead == '0') {
+    if (travelNotificationAhead == 'exact') {
+      _travelNotificationAhead = 0;
+    } else if (travelNotificationAhead == '0') {
       _travelNotificationAhead = 20;
     } else if (travelNotificationAhead == '1') {
       _travelNotificationAhead = 40;
@@ -7318,7 +7320,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
     }
 
     if (Platform.isIOS) {
-      if (travelAlarmAhead == '0' || travelAlarmAhead == '1') {
+      if (travelAlarmAhead == 'exact') {
+        _travelAlarmAhead = 0;
+      } else if (travelAlarmAhead == '0' || travelAlarmAhead == '1') {
         _travelAlarmAhead = 60;
       } else if (travelAlarmAhead == '2') {
         _travelAlarmAhead = 120;
@@ -7339,7 +7343,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         }
       }
     } else {
-      if (travelAlarmAhead == '0') {
+      if (travelAlarmAhead == 'exact') {
+        _travelAlarmAhead = 0;
+      } else if (travelAlarmAhead == '0') {
         _travelAlarmAhead = 0;
       } else if (travelAlarmAhead == '1') {
         _travelAlarmAhead = 1;
@@ -7350,7 +7356,9 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
       }
     }
 
-    if (travelTimerAhead == '0') {
+    if (travelTimerAhead == 'exact') {
+      _travelTimerAhead = 0;
+    } else if (travelTimerAhead == '0') {
       // Time left is recalculated each 10 seconds, so we give here 20 + 10 extra, as otherwise
       // it's too tight. Worse case scenario: the user is quick and checks the travel screen when
       // there are still 25-30 seconds to go. Best case, he still has 20 seconds to spare.

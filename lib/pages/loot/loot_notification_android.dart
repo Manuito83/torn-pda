@@ -279,6 +279,19 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
       value: _lootNotificationAheadDropDownValue,
       items: const [
         DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "0",
           child: SizedBox(
             width: 80,
@@ -397,6 +410,19 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
       value: _lootAlarmAheadDropDownValue,
       items: const [
         DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 120,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "0",
           child: SizedBox(
             width: 120,
@@ -501,6 +527,19 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     return DropdownButton<String>(
       value: _lootTimerAheadDropDownValue,
       items: const [
+        DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -621,9 +660,9 @@ class LootNotificationsAndroidState extends State<LootNotificationsAndroid> {
     final lootAlarmAhead = await Prefs().getLootAlarmAhead();
     final lootTimerAhead = await Prefs().getLootTimerAhead();
 
-    const notifAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
-    const alarmAllowed = {"0", "1", "2", "3", "4", "5", "6"};
-    const timerAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
+    const notifAllowed = {"exact", "0", "1", "2", "3", "4", "5", "6", "7"};
+    const alarmAllowed = {"exact", "0", "1", "2", "3", "4", "5", "6"};
+    const timerAllowed = {"exact", "0", "1", "2", "3", "4", "5", "6", "7"};
 
     setState(() {
       _lootTypeDropDownValue = lootType;

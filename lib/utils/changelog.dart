@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "War: fixed war targets sorting by stats",
           "War: improved API limits management when updating many war targets",
+          "Added on time option for local notifications, alarms and timers where applicable",
           ComplexFeature(
             "Dev: added tab state handler (see details)",
             explanation: "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"

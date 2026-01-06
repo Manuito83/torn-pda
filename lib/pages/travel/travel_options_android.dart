@@ -236,6 +236,19 @@ class TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
       value: _travelNotificationAheadDropDownValue,
       items: const [
         DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "0",
           child: SizedBox(
             width: 80,
@@ -380,6 +393,19 @@ class TravelOptionsAndroidState extends State<TravelOptionsAndroid> {
     return DropdownButton<String>(
       value: _travelTimerAheadDropDownValue,
       items: const [
+        DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
         DropdownMenuItem(
           value: "0",
           child: SizedBox(

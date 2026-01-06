@@ -1023,7 +1023,9 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
     final alarmAhead = await Prefs().getTravelAlarmAhead();
     final timerAhead = await Prefs().getTravelTimerAhead();
 
-    if (notificationAhead == '0') {
+    if (notificationAhead == 'exact') {
+      _travelNotificationAhead = 0;
+    } else if (notificationAhead == '0') {
       _travelNotificationAhead = 20;
     } else if (notificationAhead == '1') {
       _travelNotificationAhead = 40;
@@ -1035,7 +1037,9 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       _travelNotificationAhead = 300;
     }
 
-    if (alarmAhead == '0') {
+    if (alarmAhead == 'exact') {
+      _travelAlarmAhead = 0;
+    } else if (alarmAhead == '0') {
       _travelAlarmAhead = 0;
     } else if (alarmAhead == '1') {
       _travelAlarmAhead = 1;
@@ -1045,7 +1049,9 @@ class TravelPageState extends State<TravelPage> with WidgetsBindingObserver {
       _travelAlarmAhead = 5;
     }
 
-    if (timerAhead == '0') {
+    if (timerAhead == 'exact') {
+      _travelTimerAhead = 0;
+    } else if (timerAhead == '0') {
       // Time left is recalculated each 10 seconds, so we give here 20 + 10 extra, as otherwise
       // it's too tight. Worse case scenario: the user is quick and checks the travel screen when
       // there are still 25-30 seconds to go. Best case, he still has 20 seconds to spare.
