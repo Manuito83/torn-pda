@@ -117,6 +117,7 @@ class ChangeLogState extends State<ChangeLog> {
                 " and browser visibility) and stay in sync across tab switches.\n\n"
                 "Please visit the ./docs section in Github for more information.",
           ),
+          "Added option to avoid keyboard overlapping the website in certain devices (disabled by default)",
           "Fixed events timeline text formatting in Profile",
         ],
     );

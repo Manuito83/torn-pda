@@ -782,6 +782,14 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
       _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
           remoteConfig.getBool("browser_center_editing_text_field_allowed");
+      _settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed =
+          remoteConfig.getBool("browser_extend_height_for_keyboard_allowed");
+
+      if (!_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed &&
+          _settingsProvider.browserExtendHeightForKeyboard) {
+        // If RC disables the feature, also turn off the user toggle to avoid confusion
+        _settingsProvider.browserExtendHeightForKeyboard = false;
+      }
 
       // Revives
       _settingsProvider.reviveWolverinesPrice = remoteConfig.getString("revive_wolverines");

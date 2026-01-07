@@ -186,6 +186,21 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _browserExtendHeightForKeyboard = false;
+  bool get browserExtendHeightForKeyboard => _browserExtendHeightForKeyboard;
+  set browserExtendHeightForKeyboard(bool value) {
+    _browserExtendHeightForKeyboard = value;
+    Prefs().setBrowserExtendHeightForKeyboard(_browserExtendHeightForKeyboard);
+    notifyListeners();
+  }
+
+  bool _browserExtendHeightForKeyboardRemoteConfigAllowed = true;
+  bool get browserExtendHeightForKeyboardRemoteConfigAllowed => _browserExtendHeightForKeyboardRemoteConfigAllowed;
+  set browserExtendHeightForKeyboardRemoteConfigAllowed(bool value) {
+    _browserExtendHeightForKeyboardRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   bool _browserCenterEditingTextFieldRemoteConfigAllowed = true;
   bool get browserCenterEditingTextFieldRemoteConfigAllowed => _browserCenterEditingTextFieldRemoteConfigAllowed;
   set browserCenterEditingTextFieldRemoteConfigAllowed(bool value) {
@@ -1408,6 +1423,7 @@ class SettingsProvider extends ChangeNotifier {
     _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();
     _browserReverseNavigationSwipe = await Prefs().getBrowserReverseNavigationSwipe();
     _browserCenterEditingTextField = await Prefs().getBrowserCenterEditingTextField();
+    _browserExtendHeightForKeyboard = await Prefs().getBrowserExtendHeightForKeyboard();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
     _highRefreshRateEnabled = await Prefs().getHighRefreshRateEnabled();

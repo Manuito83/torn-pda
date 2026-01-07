@@ -141,6 +141,7 @@ class Prefs {
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
   final String _kBrowserCenterEditingTextField = "pda_browserCenterEditingTextField";
+  final String _kBrowserExtendHeightForKeyboard = "pda_browserExtendHeightForKeyboard";
 
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -1502,6 +1503,14 @@ class Prefs {
 
   Future setBrowserCenterEditingTextField(bool value) async {
     return await PrefsDatabase.setBool(_kBrowserCenterEditingTextField, value);
+  }
+
+  Future<bool> getBrowserExtendHeightForKeyboard() async {
+    return await PrefsDatabase.getBool(_kBrowserExtendHeightForKeyboard, false);
+  }
+
+  Future setBrowserExtendHeightForKeyboard(bool value) async {
+    return await PrefsDatabase.setBool(_kBrowserExtendHeightForKeyboard, value);
   }
 
   /// ----------------------------

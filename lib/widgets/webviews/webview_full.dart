@@ -200,6 +200,8 @@ class WebViewFullState extends State<WebViewFull>
   String _lastReportedUrl = '';
   late final String _tabUid;
 
+  bool _heightExtendInjected = false;
+
   bool _backButtonPopsContext = true;
 
   var _travelAbroad = false;
@@ -1539,6 +1541,8 @@ class WebViewFullState extends State<WebViewFull>
           onLoadStart: (c, uri) async {
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
 
+            _heightExtendInjected = false;
+
             // FALLBACK: Always try to force update if reportTabLoadUrl wasn't called recently
             if (uri != null) {
               final now = DateTime.now();
@@ -1603,6 +1607,7 @@ class WebViewFullState extends State<WebViewFull>
                   name: "WEBVIEW FULL",
                 );
                 _currentUrl = currentUri.toString();
+                _heightExtendInjected = false;
                 _reportUrlVisit(currentUri);
               }
             }
@@ -1626,6 +1631,8 @@ class WebViewFullState extends State<WebViewFull>
                 // We reset here the triggers for the sections that are called every
                 // time so that they can be called again
                 _resetSectionsWithWidgets();
+
+                await _maybeEnsureMinHeight(c);
               }
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
@@ -1662,6 +1669,8 @@ class WebViewFullState extends State<WebViewFull>
                   ''',
               );
             }
+
+            await _maybeEnsureMinHeight(c);
 
             _firstLoadCompleted = true;
 
@@ -1806,6 +1815,13 @@ class WebViewFullState extends State<WebViewFull>
           },
           onUpdateVisitedHistory: (c, uri, androidReload) async {
             if (!mounted) return;
+
+            final sameUrl = uri?.toString() == _currentUrl;
+            if (!sameUrl) {
+              _heightExtendInjected = false;
+            }
+
+            await _maybeEnsureMinHeight(c);
             _reportUrlVisit(uri);
             _assessOCnnb(uri.toString()); // Using a more direct call for OCnnb
             return;
@@ -2982,6 +2998,21 @@ class WebViewFullState extends State<WebViewFull>
         await webViewController!.goForward();
       }
     }
+  }
+
+  Future<void> _maybeEnsureMinHeight(InAppWebViewController controller) async {
+    if (!_settingsProvider.browserExtendHeightForKeyboard ||
+        !_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed) {
+      return;
+    }
+
+    if (_heightExtendInjected) return;
+
+    _heightExtendInjected = true;
+
+    await controller.evaluateJavascript(
+      source: ensureMinDocumentHeightForKeyboardJS(minViewportMultiple: 1.5),
+    );
   }
 
   /// Note: several other modules are called in onProgressChanged, since it's

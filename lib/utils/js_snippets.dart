@@ -59,6 +59,56 @@ String hideItemInfoJS() {
   ''';
 }
 
+String ensureMinDocumentHeightForKeyboardJS({double minViewportMultiple = 1.5}) {
+  final multiplier = minViewportMultiple.toStringAsFixed(2);
+
+  return '''
+    (function applyHeightExtension(runLate) {
+      const minHeightPx = Math.ceil(window.innerHeight * $multiplier);
+      const doc = document.documentElement;
+      const body = document.body || doc;
+      const scrolling = document.scrollingElement || doc;
+
+      const scrollingHeight = scrolling ? scrolling.scrollHeight || scrolling.clientHeight || 0 : 0;
+      const viewportHeight = window.innerHeight;
+
+      // Enforce a minimum height unconditionally; min-height is harmless on tall pages and ensures space on short ones
+      const currentHeight = Math.max(scrollingHeight, viewportHeight);
+
+      let spacer = document.getElementById('pda-height-spacer');
+
+      if (true) {
+        const targetHeight = minHeightPx;
+        if (body) {
+          body.style.minHeight = targetHeight + 'px';
+        }
+
+        if (doc) {
+          doc.style.minHeight = targetHeight + 'px';
+        }
+
+        const gap = Math.max(minHeightPx - currentHeight, 0);
+
+        if (!spacer) {
+          spacer = document.createElement('div');
+          spacer.id = 'pda-height-spacer';
+          spacer.style.width = '100%';
+          spacer.style.pointerEvents = 'none';
+          spacer.style.background = 'transparent';
+          (body || document.documentElement).appendChild(spacer);
+        }
+
+        spacer.style.height = gap + 'px';
+      }
+
+      // Re-evaluate shortly after load to catch late layout changes; silent on the second pass.
+      if (!runLate) {
+        setTimeout(() => applyHeightExtension(true), 500);
+      }
+    })(false);
+  ''';
+}
+
 String buyMaxAbroadJS({bool preventBasketKeyboard = true}) {
   return '''
 

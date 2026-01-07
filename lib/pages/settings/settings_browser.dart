@@ -3198,9 +3198,60 @@ class SettingsBrowserPageState extends State<SettingsBrowserPage> {
           ),
         ),
       ),
+      SearchableRow(
+        label: "Extend page height for keyboard",
+        searchText: _searchText,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Flexible(child: Text("Extend page height for keyboard")),
+                  Switch(
+                    value: _settingsProvider.browserExtendHeightForKeyboard &&
+                        _settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed,
+                    onChanged: !_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed
+                        ? null
+                        : (value) {
+                            setState(() {
+                              _settingsProvider.browserExtendHeightForKeyboard = value;
+                            });
+                          },
+                    activeTrackColor: Colors.lightGreenAccent,
+                    activeThumbColor: Colors.green,
+                    inactiveThumbColor:
+                        !_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed ? Colors.grey[800] : null,
+                  ),
+                ],
+              ),
+              if (_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed)
+                Text(
+                  'Adds extra scroll room when pages are shorter than the screen to avoid the keyboard covering inputs.',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                )
+              else
+                Text(
+                  "This option is temporarily disabled from Torn PDA and can't be changed right now",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
     ];
     return buildSectionWithRows(
-      title: "GESTURES",
+      title: "GESTURES & SCROLL",
       rows: rows,
       searchText: _searchText,
     );
