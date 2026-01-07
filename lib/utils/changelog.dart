@@ -120,6 +120,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added option to avoid keyboard overlapping the website in certain devices (disabled by default)",
           "Fixed events timeline text formatting in Profile",
           "Fixed foreign stocks data submission to YATA and Prometheus",
+          "Fixed scroll behavior in Foreign Stocks page",
         ],
     );
 

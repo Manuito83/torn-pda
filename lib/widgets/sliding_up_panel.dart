@@ -254,20 +254,13 @@ class CustomSlidingUpPanelState extends State<CustomSlidingUpPanel> with SingleT
               AnimatedBuilder(
                 animation: _ac,
                 builder: (context, child) {
-                  final scale = 1.0 - (_ac.value * 0.02);
-                  final borderRadius = BorderRadius.circular(_ac.value * 24.0);
-
-                  return Transform.translate(
-                    offset: Offset(0.0, widget.parallaxEnabled ? _getParallax() : 0.0),
-                    child: Transform.scale(
-                      scale: scale,
-                      alignment: Alignment.topCenter,
-                      child: ClipRRect(
-                        borderRadius: borderRadius,
-                        child: child,
-                      ),
-                    ),
-                  );
+                  if (widget.parallaxEnabled) {
+                    return Transform.translate(
+                      offset: Offset(0.0, _getParallax()),
+                      child: child,
+                    );
+                  }
+                  return child ?? const SizedBox.shrink();
                 },
                 child: widget.body,
               )
