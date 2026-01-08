@@ -812,7 +812,26 @@ class TargetsProvider extends ChangeNotifier {
       );
     }
 
-    _targets = fetchedTargets;
+    // Merge fetched targets
+    final Map<String, TargetModel> existingById = {
+      for (final t in _targets)
+        if (t.playerId != null) t.playerId.toString(): t,
+    };
+
+    final List<TargetModel> merged = [];
+    for (final fetched in fetchedTargets) {
+      final existing = existingById.remove(fetched.playerId?.toString());
+      if (existing != null) {
+        merged.add(_mergeTargetFromTorn(existing, fetched));
+      } else {
+        merged.add(fetched);
+      }
+    }
+
+    // Keep local-only targets that are not in Torn
+    merged.addAll(existingById.values);
+
+    _targets = merged;
     sortTargets(currentSort ?? TargetSortType.nameAsc);
 
     return TornTargetsImportResult(
@@ -927,6 +946,21 @@ class TargetsProvider extends ChangeNotifier {
       states: states,
       life: Life(current: 0, maximum: 0, increment: 0, interval: 0, ticktime: 0, fulltime: 0),
     );
+  }
+
+  TargetModel _mergeTargetFromTorn(TargetModel existing, TargetModel fetched) {
+    existing
+      ..level = fetched.level ?? existing.level
+      ..name = fetched.name ?? existing.name
+      ..status = fetched.status ?? existing.status
+      ..lastAction = fetched.lastAction ?? existing.lastAction
+      ..faction = fetched.faction ?? existing.faction
+      ..hasFaction = fetched.hasFaction ?? existing.hasFaction
+      ..hospitalSort = fetched.hospitalSort ?? existing.hospitalSort
+      ..life = fetched.life ?? existing.life
+      ..states = fetched.states ?? existing.states
+      ..lastUpdated = DateTime.now();
+    return existing;
   }
 
   int? _coerceInt(dynamic value) {

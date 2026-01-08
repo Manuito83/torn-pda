@@ -121,6 +121,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed events timeline text formatting in Profile",
           "Fixed foreign stocks data submission to YATA and Prometheus",
           "Fixed scroll behavior in Foreign Stocks page",
+          "Fixed TORN targets import erasing existing targets",
         ],
     );
 
