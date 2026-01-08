@@ -672,6 +672,8 @@ class TargetCardState extends State<TargetCard> {
         flag = 'images/flags/stock/uae.png';
       } else if (destination.contains('Canada')) {
         flag = 'images/flags/stock/canada.png';
+      } else {
+        flag = 'images/icons/world_icon.png';
       }
 
       return Material(
