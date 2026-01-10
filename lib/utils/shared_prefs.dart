@@ -315,6 +315,19 @@ class Prefs {
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
+  // DevTools sorting
+  final String _kDevToolsNetworkSortColumn = "pda_devToolsNetworkSortColumn";
+  final String _kDevToolsNetworkSortAscending = "pda_devToolsNetworkSortAscending";
+  final String _kDevToolsStorageCookiesSortColumn = "pda_devToolsStorageCookiesSortColumn";
+  final String _kDevToolsStorageCookiesSortAscending = "pda_devToolsStorageCookiesSortAscending";
+  final String _kDevToolsStorageLocalSortColumn = "pda_devToolsStorageLocalSortColumn";
+  final String _kDevToolsStorageLocalSortAscending = "pda_devToolsStorageLocalSortAscending";
+  final String _kDevToolsStorageSessionSortColumn = "pda_devToolsStorageSessionSortColumn";
+  final String _kDevToolsStorageSessionSortAscending = "pda_devToolsStorageSessionSortAscending";
+  final String _kDevToolsStorageIosDataSortColumn = "pda_devToolsStorageIosDataSortColumn";
+  final String _kDevToolsStorageIosDataSortAscending = "pda_devToolsStorageIosDataSortAscending";
+  final String _kDevToolsStorageHttpAuthSortColumn = "pda_devToolsStorageHttpAuthSortColumn";
+  final String _kDevToolsStorageHttpAuthSortAscending = "pda_devToolsStorageHttpAuthSortAscending";
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -2451,6 +2464,106 @@ class Prefs {
 
   Future setTerminalEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kTerminalEnabled, value);
+  }
+
+  /// ----------------------------
+  /// Methods for DevTools sorting
+  /// ----------------------------
+
+  Future<int> getDevToolsNetworkSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsNetworkSortColumn, 2); // default: start
+  }
+
+  Future setDevToolsNetworkSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsNetworkSortColumn, value);
+  }
+
+  Future<bool> getDevToolsNetworkSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsNetworkSortAscending, true);
+  }
+
+  Future setDevToolsNetworkSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsNetworkSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageCookiesSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageCookiesSortColumn, 0); // default: name
+  }
+
+  Future setDevToolsStorageCookiesSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageCookiesSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageCookiesSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageCookiesSortAscending, true);
+  }
+
+  Future setDevToolsStorageCookiesSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageCookiesSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageLocalSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageLocalSortColumn, 0); // default: key
+  }
+
+  Future setDevToolsStorageLocalSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageLocalSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageLocalSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageLocalSortAscending, true);
+  }
+
+  Future setDevToolsStorageLocalSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageLocalSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageSessionSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageSessionSortColumn, 0); // default: key
+  }
+
+  Future setDevToolsStorageSessionSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageSessionSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageSessionSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageSessionSortAscending, true);
+  }
+
+  Future setDevToolsStorageSessionSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageSessionSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageIosDataSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageIosDataSortColumn, 0); // default: display name
+  }
+
+  Future setDevToolsStorageIosDataSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageIosDataSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageIosDataSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageIosDataSortAscending, true);
+  }
+
+  Future setDevToolsStorageIosDataSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageIosDataSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageHttpAuthSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageHttpAuthSortColumn, 0); // default: username
+  }
+
+  Future setDevToolsStorageHttpAuthSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageHttpAuthSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageHttpAuthSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageHttpAuthSortAscending, true);
+  }
+
+  Future setDevToolsStorageHttpAuthSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageHttpAuthSortAscending, value);
   }
 
   // -- Events

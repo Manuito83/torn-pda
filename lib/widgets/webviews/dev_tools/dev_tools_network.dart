@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:mime/mime.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum SortColumn { name, type, start, time }
 
@@ -23,6 +24,12 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
   SortColumn _currentSortColumn = SortColumn.start;
   bool _isAscending = true;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSortPrefs();
+  }
+
   Future<List<dynamic>> _fetchPerformanceEntries() async {
     if (widget.webViewController == null) return [];
     try {
@@ -37,15 +44,35 @@ class _DevToolsNetworkTabState extends State<DevToolsNetworkTab> {
     return [];
   }
 
-  void _onSort(SortColumn column) {
+  Future<void> _loadSortPrefs() async {
+    final prefs = Prefs();
+    final savedColumn = await prefs.getDevToolsNetworkSortColumn();
+    final savedAscending = await prefs.getDevToolsNetworkSortAscending();
+    if (!mounted) return;
     setState(() {
-      if (_currentSortColumn == column) {
-        _isAscending = !_isAscending;
-      } else {
-        _currentSortColumn = column;
-        _isAscending = true;
-      }
+      final clampedIndex = min(max(savedColumn, 0), SortColumn.values.length - 1);
+      _currentSortColumn = SortColumn.values[clampedIndex];
+      _isAscending = savedAscending;
     });
+  }
+
+  Future<void> _onSort(SortColumn column) async {
+    var nextColumn = _currentSortColumn;
+    var nextAscending = _isAscending;
+    if (_currentSortColumn == column) {
+      nextAscending = !_isAscending;
+    } else {
+      nextColumn = column;
+      nextAscending = true;
+    }
+
+    setState(() {
+      _currentSortColumn = nextColumn;
+      _isAscending = nextAscending;
+    });
+
+    await Prefs().setDevToolsNetworkSortColumn(nextColumn.index);
+    await Prefs().setDevToolsNetworkSortAscending(nextAscending);
   }
 
   String _formatMilliseconds(num ms) {
