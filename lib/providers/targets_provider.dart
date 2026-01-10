@@ -14,6 +14,7 @@ import 'package:http/http.dart' as http;
 import 'package:torn_pda/models/api_v2/torn_v2.enums.swagger.dart' as enums;
 import 'package:torn_pda/models/api_v2/torn_v2.swagger.dart';
 import 'package:torn_pda/models/chaining/attack_model.dart';
+import 'package:torn_pda/models/chaining/targets_filters.dart';
 import 'package:torn_pda/models/chaining/target_backup_model.dart';
 import 'package:torn_pda/models/chaining/target_model.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
@@ -66,6 +67,14 @@ class TargetsProvider extends ChangeNotifier {
 
   List<String> _currentColorFilterOut = [];
   List<String> get currentColorFilterOut => _currentColorFilterOut;
+
+  List<String> _favoriteSorts = [];
+  List<String> get favoriteSorts => _favoriteSorts;
+
+  TargetsFilters filters = TargetsFilters();
+
+  bool hospitalOkayAtTop = false;
+  TargetSortType secondarySortForOkay = TargetSortType.levelDes;
 
   TargetSortType? currentSort;
 
@@ -454,6 +463,35 @@ class TargetsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setFilters(TargetsFilters newFilters) {
+    filters = newFilters;
+    Prefs().setTargetsFilters(jsonEncode(filters.toJson()));
+    notifyListeners();
+  }
+
+  Future<void> setHospitalOkayAtTop(bool value) async {
+    hospitalOkayAtTop = value;
+    await Prefs().setTargetsHospitalOkayAtTop(value);
+    notifyListeners();
+  }
+
+  Future<void> setSecondarySortForOkay(TargetSortType type) async {
+    secondarySortForOkay = type;
+    await Prefs().setTargetsSecondarySortForOkay(type.index);
+    notifyListeners();
+  }
+
+  void toggleFavoriteSort(TargetSortType type) {
+    final key = type.toString();
+    if (_favoriteSorts.contains(key)) {
+      _favoriteSorts.remove(key);
+    } else {
+      _favoriteSorts.add(key);
+    }
+    Prefs().setTargetsSortFavorites(_favoriteSorts);
+    notifyListeners();
+  }
+
   void sortTargets(TargetSortType? sortType) async {
     currentSort = sortType ?? TargetSortType.nameAsc;
     switch (sortType!) {
@@ -479,20 +517,45 @@ class TargetsProvider extends ChangeNotifier {
         _targets.sort((a, b) => a.life!.current!.compareTo(b.life!.current!));
       case TargetSortType.hospitalDes:
         _targets.sort((a, b) {
-          return b.hospitalSort!.compareTo(a.hospitalSort!);
+          final aOkay = (a.status?.state ?? 'Okay') == 'Okay';
+          final bOkay = (b.status?.state ?? 'Okay') == 'Okay';
+
+          if (hospitalOkayAtTop) {
+            if (aOkay && !bOkay) return -1;
+            if (!aOkay && bOkay) return 1;
+          }
+
+          if (aOkay && bOkay && hospitalOkayAtTop) {
+            return _compareForSecondary(a, b, secondarySortForOkay);
+          }
+
+          return (b.hospitalSort ?? 0).compareTo(a.hospitalSort ?? 0);
         });
       case TargetSortType.hospitalAsc:
         _targets.sort((a, b) {
-          // First sort by hospitalSort
-          if (a.hospitalSort! > 0 && b.hospitalSort! > 0) {
-            return a.hospitalSort!.compareTo(b.hospitalSort!);
-          } else if (a.hospitalSort! > 0) {
+          final aOkay = (a.status?.state ?? 'Okay') == 'Okay';
+          final bOkay = (b.status?.state ?? 'Okay') == 'Okay';
+
+          if (hospitalOkayAtTop) {
+            if (aOkay && !bOkay) return -1;
+            if (!aOkay && bOkay) return 1;
+          } else {
+            if (aOkay && !bOkay) return 1;
+            if (!aOkay && bOkay) return -1;
+          }
+
+          if (aOkay && bOkay) {
+            return _compareForSecondary(a, b, secondarySortForOkay);
+          }
+
+          if ((a.hospitalSort ?? 0) > 0 && (b.hospitalSort ?? 0) > 0) {
+            return (a.hospitalSort ?? 0).compareTo(b.hospitalSort ?? 0);
+          } else if ((a.hospitalSort ?? 0) > 0) {
             return -1;
-          } else if (b.hospitalSort! > 0) {
+          } else if ((b.hospitalSort ?? 0) > 0) {
             return 1;
           } else {
-            // If both hospitalSort values are 0, sort by name
-            return a.name!.toLowerCase().compareTo(b.name!.toLowerCase());
+            return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
           }
         });
       case TargetSortType.colorDes:
@@ -639,6 +702,110 @@ class TargetsProvider extends ChangeNotifier {
     Prefs().setTargetsSort(sortToSave);
   }
 
+  int _compareForSecondary(TargetModel a, TargetModel b, TargetSortType sortType) {
+    switch (sortType) {
+      case TargetSortType.levelDes:
+        return (b.level ?? 0).compareTo(a.level ?? 0);
+      case TargetSortType.levelAsc:
+        return (a.level ?? 0).compareTo(b.level ?? 0);
+      case TargetSortType.respectDes:
+        return (b.respectGain ?? -1).compareTo(a.respectGain ?? -1);
+      case TargetSortType.respectAsc:
+        return (a.respectGain ?? -1).compareTo(b.respectGain ?? -1);
+      case TargetSortType.ffDes:
+        return (b.fairFight ?? -1).compareTo(a.fairFight ?? -1);
+      case TargetSortType.ffAsc:
+        return (a.fairFight ?? -1).compareTo(b.fairFight ?? -1);
+      case TargetSortType.nameDes:
+        return (b.name ?? '').toLowerCase().compareTo((a.name ?? '').toLowerCase());
+      case TargetSortType.nameAsc:
+        return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
+      case TargetSortType.lifeDes:
+        return (b.life?.current ?? 0).compareTo(a.life?.current ?? 0);
+      case TargetSortType.lifeAsc:
+        return (a.life?.current ?? 0).compareTo(b.life?.current ?? 0);
+      case TargetSortType.hospitalDes:
+        return (b.hospitalSort ?? 0).compareTo(a.hospitalSort ?? 0);
+      case TargetSortType.hospitalAsc:
+        return (a.hospitalSort ?? 0).compareTo(b.hospitalSort ?? 0);
+      case TargetSortType.colorDes:
+        final notesController = Get.find<PlayerNotesController>();
+        final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+        final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+        return (bNote?.color ?? '').toLowerCase().compareTo((aNote?.color ?? '').toLowerCase());
+      case TargetSortType.colorAsc:
+        final notesController = Get.find<PlayerNotesController>();
+        final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+        final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+        return (aNote?.color ?? '').toLowerCase().compareTo((bNote?.color ?? '').toLowerCase());
+      case TargetSortType.onlineDes:
+        return (b.lastAction?.timestamp ?? 0).compareTo(a.lastAction?.timestamp ?? 0);
+      case TargetSortType.onlineAsc:
+        return (a.lastAction?.timestamp ?? 0).compareTo(b.lastAction?.timestamp ?? 0);
+      case TargetSortType.notesDes:
+        final notesController = Get.find<PlayerNotesController>();
+        final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+        final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+        return (bNote?.note ?? '').toLowerCase().compareTo((aNote?.note ?? '').toLowerCase());
+      case TargetSortType.notesAsc:
+        final notesController = Get.find<PlayerNotesController>();
+        final aNote = notesController.getNoteForPlayer(a.playerId.toString());
+        final bNote = notesController.getNoteForPlayer(b.playerId.toString());
+        final aText = aNote?.note ?? '';
+        final bText = bNote?.note ?? '';
+        if (aText.isEmpty && bText.isNotEmpty) return 1;
+        if (aText.isNotEmpty && bText.isEmpty) return -1;
+        if (aText.isEmpty && bText.isEmpty) return 0;
+        return aText.toLowerCase().compareTo(bText.toLowerCase());
+      case TargetSortType.bounty:
+        return (b.bountyAmount ?? 0).compareTo(a.bountyAmount ?? 0);
+      case TargetSortType.timeAddedDes:
+        return b.timeAdded.compareTo(a.timeAdded);
+      case TargetSortType.timeAddedAsc:
+        return a.timeAdded.compareTo(b.timeAdded);
+    }
+  }
+
+  bool targetPassesFilters(TargetModel t) {
+    if (!filters.enabled) return true;
+
+    // Level
+    if (filters.levelRange != null) {
+      final lvl = t.level;
+      if (lvl == null || lvl < filters.levelRange!.start || lvl > filters.levelRange!.end) return false;
+    }
+
+    // Life current
+    if (filters.lifeRange != null) {
+      final life = t.life?.current;
+      if (life == null || life < filters.lifeRange!.start || life > filters.lifeRange!.end) return false;
+    }
+
+    // Fair fight
+    if (filters.fairFightRange != null) {
+      final ff = t.fairFight;
+      if (ff == null || ff < filters.fairFightRange!.start || ff > filters.fairFightRange!.end) return false;
+    }
+
+    // Hospital time (minutes). hospitalSort stores epoch seconds when hospital ends.
+    if (filters.hospitalTimeRange != null) {
+      int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      if (t.status?.state == 'Hospital' && t.status?.until != null) {
+        final remainingMinutes = ((t.status!.until! - now).clamp(0, double.maxFinite) / 60).toDouble();
+        if (remainingMinutes < filters.hospitalTimeRange!.start || remainingMinutes > filters.hospitalTimeRange!.end) {
+          return false;
+        }
+      } else {
+        // Not in hospital; only include if range covers 0 minutes
+        if (!(filters.hospitalTimeRange!.start <= 0 && filters.hospitalTimeRange!.end >= 0)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   Future<void> restorePreferences() async {
     // Target list
     List<String> jsonTargets = await Prefs().getTargetsList();
@@ -686,6 +853,25 @@ class TargetsProvider extends ChangeNotifier {
 
     // Targets color filter
     _currentColorFilterOut = await Prefs().getTargetsColorFilter();
+
+    // Favorite sorts
+    _favoriteSorts = await Prefs().getTargetsSortFavorites();
+
+    // Filters
+    final filtersJson = await Prefs().getTargetsFilters();
+    if (filtersJson.isNotEmpty) {
+      try {
+        filters = TargetsFilters.fromJson(jsonDecode(filtersJson));
+      } catch (_) {
+        filters = TargetsFilters();
+      }
+    }
+
+    hospitalOkayAtTop = await Prefs().getTargetsHospitalOkayAtTop();
+    final secondaryIndex = await Prefs().getTargetsSecondarySortForOkay();
+    if (secondaryIndex >= 0 && secondaryIndex < TargetSortType.values.length) {
+      secondarySortForOkay = TargetSortType.values[secondaryIndex];
+    }
 
     // Apply the restored sort if we have targets
     if (_targets.isNotEmpty && currentSort != null) {

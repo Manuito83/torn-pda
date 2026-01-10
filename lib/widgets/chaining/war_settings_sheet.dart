@@ -10,12 +10,12 @@ import 'package:torn_pda/providers/war_controller.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 
-class WarSettingsDialog extends StatefulWidget {
+class WarSettingsSheet extends StatefulWidget {
   @override
-  WarSettingsDialogState createState() => WarSettingsDialogState();
+  WarSettingsSheetState createState() => WarSettingsSheetState();
 }
 
-class WarSettingsDialogState extends State<WarSettingsDialog> with SingleTickerProviderStateMixin {
+class WarSettingsSheetState extends State<WarSettingsSheet> with SingleTickerProviderStateMixin {
   bool _applyFiltersInPreview = false;
   late TabController _tabController;
   final WarController _warController = Get.find<WarController>();
@@ -50,7 +50,6 @@ class WarSettingsDialogState extends State<WarSettingsDialog> with SingleTickerP
     double maxDef = 0;
     double maxSpd = 0;
     double maxDex = 0;
-    double maxHosp = 0;
 
     for (var faction in _warController.factions) {
       if (faction.members != null) {
@@ -65,15 +64,6 @@ class WarSettingsDialogState extends State<WarSettingsDialog> with SingleTickerP
           if (member.statsDef != null && member.statsDef! > maxDef) maxDef = member.statsDef!.toDouble();
           if (member.statsSpd != null && member.statsSpd! > maxSpd) maxSpd = member.statsSpd!.toDouble();
           if (member.statsDex != null && member.statsDex! > maxDex) maxDex = member.statsDex!.toDouble();
-
-          // Hospital Time (minutes)
-          if (member.status?.state == 'Hospital') {
-            int now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
-            int remaining = (member.status?.until ?? 0) - now;
-            if (remaining < 0) remaining = 0;
-            double mins = remaining / 60.0;
-            if (mins > maxHosp) maxHosp = mins;
-          }
         }
       }
     }
@@ -496,7 +486,7 @@ class WarSettingsDialogState extends State<WarSettingsDialog> with SingleTickerP
       minVal = pow(10, minLog).toDouble() - 1;
       maxVal = pow(10, maxLog).toDouble() - 1;
 
-      // Special formatting for Hospital Time
+      // Formatting for Hospital Time
       if (rangeKey == 'Hospital') {
         if (count == 0) {
           rangeText = "No targets in hospital";

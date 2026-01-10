@@ -7,6 +7,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
@@ -43,6 +44,11 @@ class Prefs {
   // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
+  final String _kTargetsSortTabIndex = "pda_targetsSortTabIndex";
+  final String _kTargetsSortFavorites = "pda_targetsSortFavorites";
+  final String _kTargetsFilters = "pda_targetsFilters";
+  final String _kTargetsHospitalOkayAtTop = "pda_targetsHospitalOkayAtTop";
+  final String _kTargetsSecondarySortForOkay = "pda_targetsSecondarySortForOkay";
   final String _kTargetsColorFilter = "pda_targetsColorFilter";
 
   // War targets
@@ -815,6 +821,46 @@ class Prefs {
 
   Future setTargetsSort(String value) async {
     return await PrefsDatabase.setString(_kTargetsSort, value);
+  }
+
+  Future<int> getTargetsSortTabIndex() async {
+    return await PrefsDatabase.getInt(_kTargetsSortTabIndex, 0);
+  }
+
+  Future setTargetsSortTabIndex(int value) async {
+    return await PrefsDatabase.setInt(_kTargetsSortTabIndex, value);
+  }
+
+  Future<List<String>> getTargetsSortFavorites() async {
+    return await PrefsDatabase.getStringList(_kTargetsSortFavorites, <String>[]);
+  }
+
+  Future setTargetsSortFavorites(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kTargetsSortFavorites, value);
+  }
+
+  Future<String> getTargetsFilters() async {
+    return await PrefsDatabase.getString(_kTargetsFilters, '');
+  }
+
+  Future setTargetsFilters(String value) async {
+    return await PrefsDatabase.setString(_kTargetsFilters, value);
+  }
+
+  Future<bool> getTargetsHospitalOkayAtTop() async {
+    return await PrefsDatabase.getBool(_kTargetsHospitalOkayAtTop, false);
+  }
+
+  Future setTargetsHospitalOkayAtTop(bool value) async {
+    return await PrefsDatabase.setBool(_kTargetsHospitalOkayAtTop, value);
+  }
+
+  Future<int> getTargetsSecondarySortForOkay() async {
+    return await PrefsDatabase.getInt(_kTargetsSecondarySortForOkay, TargetSortType.levelDes.index);
+  }
+
+  Future setTargetsSecondarySortForOkay(int value) async {
+    return await PrefsDatabase.setInt(_kTargetsSecondarySortForOkay, value);
   }
 
   //**************

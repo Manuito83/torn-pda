@@ -110,6 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           "War: fixed war targets sorting by stats",
           "War: improved API limits management when updating many war targets",
+          "Added new target target sorting sheet",
           "Added on time option for local notifications, alarms and timers where applicable",
           ComplexFeature(
             "Dev: added tab state handler (see details)",
