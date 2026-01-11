@@ -4,6 +4,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
@@ -106,8 +107,55 @@ class ChangeLogState extends State<ChangeLog> {
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.10.2'
-        ..date = '15 JAN 2026'
+        ..date = '20 JAN 2026'
         ..features = [
+          if (Platform.isAndroid)
+            ComplexFeature(
+              "Travel Live Updates are now available on Android",
+              explanation: "Use the switch below to enable them.\n\n"
+                  "When enabling, you'll be prompted to review battery optimization "
+                  "settings to keep updates running in the background.\n\n"
+                  "You can change this setting in the Alerts section later on.",
+            ),
+          if (Platform.isAndroid)
+            Consumer<SettingsProvider>(
+              builder: (context, settings, child) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 45.0, right: 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Travel Live Update",
+                              style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "(disabled by default)",
+                              style: TextStyle(fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: settings.androidLiveActivityTravelEnabled,
+                        onChanged: (bool value) async {
+                          settings.androidLiveActivityTravelEnabled = value;
+
+                          if (value) {
+                            await _checkAndroidBatteryOptimization();
+                          }
+                        },
+                        activeThumbColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ComplexFeature(
             "Overhauled Quick Items selection and categories (wiped existing ones)",
             explanation: "Quick Items have been redesigned to that they can be selected from TORN's item list.\n\n"
@@ -2668,6 +2716,42 @@ class ChangeLogState extends State<ChangeLog> {
 
     for (var i = 0; i < itemList.length; i++) {
       _changeLogItems.putIfAbsent(itemList[i], () => itemList[i].features);
+    }
+  }
+
+  Future<void> _checkAndroidBatteryOptimization() async {
+    if (!Platform.isAndroid) return;
+
+    const channel = MethodChannel('tornpda.channel');
+    try {
+      final bool isRestricted = await channel.invokeMethod('checkBatteryOptimization');
+
+      if (isRestricted && mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Battery Optimization Detected"),
+            content: const Text(
+              "To ensure Live Updates work correctly in the background, please disable battery optimization for Torn PDA.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  channel.invokeMethod('openBatterySettings');
+                },
+                child: const Text("Open Settings"),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (_) {
+      // Ignore errors
     }
   }
 

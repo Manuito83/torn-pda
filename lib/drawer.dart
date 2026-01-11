@@ -3418,7 +3418,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       final bool isIos = Platform.isIOS;
 
       if (!isAndroid && !isIos) return;
-      if (!_settingsProvider.iosLiveActivityTravelEnabled) return;
+      final bool enabledForPlatform = isAndroid
+          ? _settingsProvider.androidLiveActivityTravelEnabled
+          : _settingsProvider.iosLiveActivityTravelEnabled;
+      if (!enabledForPlatform) return;
 
       if (isIos && kSdkIos < 16.2) {
         // Regardless of user settings, disable Live Activities on iOS versions below 16.2

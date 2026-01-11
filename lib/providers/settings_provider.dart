@@ -1397,6 +1397,14 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
+  bool _androidLiveActivitiesTravelEnabled = false;
+  bool get androidLiveActivityTravelEnabled => _androidLiveActivitiesTravelEnabled;
+  set androidLiveActivityTravelEnabled(bool enabled) {
+    _androidLiveActivitiesTravelEnabled = enabled;
+    Prefs().setAndroidLiveActivityTravelEnabled(enabled);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1417,6 +1425,8 @@ class SettingsProvider extends ChangeNotifier {
 
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
     _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
+
+    _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
 
     // Gestures
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
@@ -1644,6 +1654,7 @@ class SettingsProvider extends ChangeNotifier {
     _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
+    _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
     _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
 
     _joblessWarningEnabled = await Prefs().getJoblessWarningEnabled();

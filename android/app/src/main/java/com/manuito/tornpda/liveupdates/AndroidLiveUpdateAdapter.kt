@@ -164,6 +164,20 @@ class AndroidLiveUpdateAdapter(
             }
         }
 
+        // On Android 15+ build with the framework Builder to set shortCriticalText natively.
+        if (Build.VERSION.SDK_INT >= 35) {
+            return buildFrameworkNotification(
+                payload = payload,
+                title = title,
+                destination = destination,
+                etaText = etaText,
+                secondary = secondary,
+                extrasBundle = extrasBundle,
+                tapIntent = tapIntent,
+                dismissIntent = dismissIntent,
+            )
+        }
+
         val builder = NotificationCompat.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
             .setSmallIcon(R.drawable.notification_travel)
             .setContentTitle("$title $destination")
@@ -291,6 +305,74 @@ class AndroidLiveUpdateAdapter(
         } catch (_: Exception) {
             // Ignore if not supported by current SDK or compat library
         }
+    }
+
+    private fun invokeFrameworkPromotedOngoing(builder: Notification.Builder) {
+        try {
+            val method = builder.javaClass.getMethod("setRequestPromotedOngoing", Boolean::class.javaPrimitiveType)
+            method.invoke(builder, true)
+        } catch (_: Exception) {
+            // Ignore if not supported on this SDK
+        }
+    }
+
+    private fun invokeFrameworkShortCriticalText(builder: Notification.Builder, text: CharSequence) {
+        try {
+            val method = builder.javaClass.getMethod("setShortCriticalText", CharSequence::class.java)
+            method.invoke(builder, text)
+        } catch (_: Exception) {
+            // Ignore if not supported on this SDK
+        }
+    }
+
+    @SuppressLint("NewApi")
+    private fun buildFrameworkNotification(
+        payload: LiveUpdatePayload,
+        title: String,
+        destination: String,
+        etaText: String,
+        secondary: String,
+        extrasBundle: android.os.Bundle,
+        tapIntent: android.app.PendingIntent,
+        dismissIntent: android.app.PendingIntent,
+    ): Notification {
+        val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
+        val builder = Notification.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
+            .setSmallIcon(R.drawable.notification_travel)
+            .setContentTitle("$title $destination")
+            .setContentText(etaText)
+            .setContentIntent(tapIntent)
+            .setDeleteIntent(dismissIntent)
+            .setOnlyAlertOnce(true)
+            .setOngoing(!payload.hasArrived)
+            .setAutoCancel(payload.hasArrived)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .setExtras(extrasBundle)
+            .setCategory(Notification.CATEGORY_STATUS)
+
+        // BigTextStyle
+        builder.setStyle(Notification.BigTextStyle().bigText("$etaText • $secondary"))
+
+        // Progress
+        val progress = computeProgress(payload)
+        if (progress != null) {
+            builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
+        }
+
+        if (!payload.hasArrived && arrivalMillis > 0) {
+            builder.setShowWhen(true)
+            builder.setUsesChronometer(true)
+            builder.setChronometerCountDown(true)
+            builder.setWhen(arrivalMillis)
+            builder.setSubText(context.getString(R.string.live_update_channel_name))
+            invokeFrameworkPromotedOngoing(builder)
+
+            buildShortCriticalText(payload)?.let { invokeFrameworkShortCriticalText(builder, it) }
+
+            scheduleArrivedAlarm(payload, arrivalMillis)
+        }
+
+        return builder.build()
     }
 
     private data class ProgressInfo(

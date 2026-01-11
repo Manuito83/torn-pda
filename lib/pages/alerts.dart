@@ -1519,8 +1519,8 @@ class AlertsSettingsState extends State<AlertsSettings> {
           "when it's in the background or completely closed.\n\n"
           "They'll show in the lock screen and dynamic island.";
     } else if (Platform.isAndroid) {
-      laHeader = "Live Updates will show a persistent notification with a countdown timer for your travel.\n\n"
-          "They start when you trigger them from the app or open Torn PDA while you are already traveling.\n\n"
+      laHeader = "Live Updates will show a persistent notification with a countdown timer for your travel. "
+          "They are triggered when Torn PDA is in the foreground while you are already traveling.\n\n"
           "If you have battery optimization enabled, the update might stop when the app is in the background.";
     }
 
@@ -1542,7 +1542,9 @@ class AlertsSettingsState extends State<AlertsSettings> {
           child: CheckboxListTile(
             checkColor: Colors.white,
             activeColor: Colors.blueGrey,
-            value: _settingsProvider.iosLiveActivityTravelEnabled,
+            value: Platform.isAndroid
+                ? _settingsProvider.androidLiveActivityTravelEnabled
+                : _settingsProvider.iosLiveActivityTravelEnabled,
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1552,12 +1554,23 @@ class AlertsSettingsState extends State<AlertsSettings> {
             ),
             onChanged: (enabled) async {
               if (enabled == null) return;
-              setState(() {
-                // This setter will eventually also get or delete token from Firestore
-                _settingsProvider.iosLiveActivityTravelEnabled = enabled;
-              });
 
-              if (enabled) {
+              if (Platform.isAndroid) {
+                setState(() {
+                  _settingsProvider.androidLiveActivityTravelEnabled = enabled;
+                });
+              } else {
+                setState(() {
+                  // This setter will eventually also get or delete token from Firestore
+                  _settingsProvider.iosLiveActivityTravelEnabled = enabled;
+                });
+              }
+
+              final bool nowEnabled = Platform.isAndroid
+                  ? _settingsProvider.androidLiveActivityTravelEnabled
+                  : _settingsProvider.iosLiveActivityTravelEnabled;
+
+              if (nowEnabled) {
                 if (Platform.isAndroid) {
                   _checkAndroidBatteryOptimization();
                 }
@@ -1576,7 +1589,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
   }
 
   Future<void> _checkAndroidBatteryOptimization() async {
-    final channel = MethodChannel('tornpda.channel');
+    const channel = MethodChannel('tornpda.channel');
     try {
       final bool isRestricted = await channel.invokeMethod('checkBatteryOptimization');
       if (isRestricted && mounted) {

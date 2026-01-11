@@ -10,10 +10,12 @@ import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LiveActivityTravelController extends GetxController {
   final _chainStatusProvider = Get.find<ChainStatusController>();
   final _bridgeController = Get.find<LiveActivityBridgeController>();
+  final _prefs = Prefs();
 
   // Ensure that special "initial check" logic (like ignoring stale old arrivals)
   // is applied only once, specifically during the first processing run that has valid API data
@@ -22,6 +24,7 @@ class LiveActivityTravelController extends GetxController {
   int _currentLAArrivalTimestamp = 0;
   bool _isLALogicallyActive = false;
   String _lastProcessedTravelIdentifier = "";
+  String _lastArrivalNotifiedTravelId = "";
   bool _hasArrivedNotified = false;
 
   bool _isMonitoring = false;
@@ -57,6 +60,13 @@ class LiveActivityTravelController extends GetxController {
     _statusListenerWorker = ever(_chainStatusProvider.laStatusInputData, _onStatusDataChanged);
     _statusEventSubscription?.cancel();
     _statusEventSubscription = _bridgeController.statusEvents.listen(handleStatusEvent);
+
+    if (Platform.isAndroid) {
+      final storedArrivalId = await _prefs.getAndroidLiveActivityTravelLastArrivalId();
+      if (storedArrivalId != null && storedArrivalId.isNotEmpty) {
+        _lastArrivalNotifiedTravelId = storedArrivalId;
+      }
+    }
 
     // Sync LA State
     _isLALogicallyActive = await _bridgeController.isAnyActivityActive();
@@ -199,7 +209,9 @@ class LiveActivityTravelController extends GetxController {
         }
       }
       // CASE 1: Player has arrived (and if it's the first valid run, it's not stale), and arrival not yet notified by LA
-      else if (hasPlayerArrived && !_hasArrivedNotified && travelId != _lastProcessedTravelIdentifier) {
+      else if (hasPlayerArrived &&
+          !_hasArrivedNotified &&
+          (!Platform.isAndroid || travelId != _lastArrivalNotifiedTravelId)) {
         log("TravelLiveActivityHandler: CASE 1 - Arrival detected for ${apiData['destination']}. Preparing 'Arrived' LA.");
         laArgs = _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true);
         shouldStartOrUpdateLA = true;
@@ -249,6 +261,7 @@ class LiveActivityTravelController extends GetxController {
 
     // --- Perform the LA start/update if decided
     if (shouldStartOrUpdateLA && laArgs != null) {
+      final bool isArrivalUpdate = laArgs['hasArrived'] == true;
       // log("TravelLiveActivityHandler: Calling bridge to start/update LA with args: $laArgs");
       final LiveUpdateStartResult result = await _bridgeController.startActivity(arguments: laArgs);
       applyStartResult(result);
@@ -258,6 +271,12 @@ class LiveActivityTravelController extends GetxController {
       }
       _currentLAArrivalTimestamp = arrivalTimestamp;
       _lastProcessedTravelIdentifier = travelId;
+      if (isArrivalUpdate) {
+        _lastArrivalNotifiedTravelId = travelId;
+        if (Platform.isAndroid) {
+          await _prefs.setAndroidLiveActivityTravelLastArrivalId(travelId);
+        }
+      }
 
       // Sync with Firebase so that a Cloud Function won't start for this LA
       log("Syncing arrival timestamp $arrivalTimestamp with server...");
