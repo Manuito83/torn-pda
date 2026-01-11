@@ -294,9 +294,12 @@ class Prefs {
   // Browser scripts and widgets
   final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kActiveCrimesList = "pda_activeCrimesList";
-  final String _kQuickItemsList = "pda_quickItemsList";
-  final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
+  // Quick Items
+  final String _kQuickItemsListV2 = "pda_quickItemsList_v2"; // v2 (wipe personal)
+  final String _kQuickItemsListFaction = "pda_quickItemsListFaction"; // keep faction data
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
+  final String _kQuickItemsRefreshAfterEquip = "pda_quickItemsRefreshAfterEquip";
+  //
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
   final String _kTornExchangeEnabled = "pda_tornExchangeActive";
@@ -2806,11 +2809,11 @@ class Prefs {
   /// Methods for quick items
   /// ----------------------------
   Future<List<String>> getQuickItemsList() async {
-    return await PrefsDatabase.getStringList(_kQuickItemsList, <String>[]);
+    return await PrefsDatabase.getStringList(_kQuickItemsListV2, <String>[]);
   }
 
   Future setQuickItemsList(List<String> value) async {
-    return await PrefsDatabase.setStringList(_kQuickItemsList, value);
+    return await PrefsDatabase.setStringList(_kQuickItemsListV2, value);
   }
 
   Future<List<String>> getQuickItemsListFaction() async {
@@ -2827,6 +2830,14 @@ class Prefs {
 
   Future setNumberOfLoadouts(int value) async {
     return await PrefsDatabase.setInt(_kQuickItemsLoadoutsNumber, value);
+  }
+
+  Future<bool> getQuickItemsRefreshAfterEquip() async {
+    return await PrefsDatabase.getBool(_kQuickItemsRefreshAfterEquip, false);
+  }
+
+  Future setQuickItemsRefreshAfterEquip(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsRefreshAfterEquip, value);
   }
 
   /// ----------------------------

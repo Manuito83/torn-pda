@@ -1269,6 +1269,7 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
+
             _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
               onTravelStatusChanged: (isAbroad) {
@@ -1357,6 +1358,11 @@ class WebViewFullState extends State<WebViewFull>
             );
 
             WebviewHandlers.addShareFileHandler(webview: webViewController!, context: context);
+
+            WebviewHandlers.addQuickItemPickerHandler(
+              webview: webViewController!,
+              quickItemsProvider: context.read<QuickItemsProvider>(),
+            );
 
             publishTabState();
           },

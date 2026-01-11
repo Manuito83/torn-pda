@@ -102,12 +102,18 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.10.2 - Build 605 - 05/01/2026
+    // v3.10.2 - Build 605 - 11/01/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.10.2'
         ..date = '15 JAN 2026'
         ..features = [
+          ComplexFeature(
+            "Overhauled Quick Items selection and categories (wiped existing ones)",
+            explanation: "Quick Items have been redesigned to that they can be selected from TORN's item list.\n\n"
+                "This also allows new categories of quick items (e.g. weapons, armor, etc.) to be selected.\n\n"
+                "Faction quick items remain unchanged.\n\n",
+          ),
           "War: fixed war targets sorting by stats",
           "War: improved API limits management when updating many war targets",
           "Added new target target sorting sheet",
