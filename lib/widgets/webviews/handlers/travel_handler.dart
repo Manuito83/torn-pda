@@ -39,6 +39,7 @@ class ForeignStocksWebviewHandler {
       multiplier = 1000000000;
       text = text.substring(0, text.length - 1);
     } else if (text.endsWith('k')) {
+      multiplier = 1000;
       text = text.substring(0, text.length - 1);
     }
 

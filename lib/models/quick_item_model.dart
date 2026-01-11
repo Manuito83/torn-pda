@@ -5,6 +5,9 @@
 // Dart imports:
 import 'dart:convert';
 
+// Project imports:
+import 'package:torn_pda/models/items_model.dart';
+
 QuickItem quickItemFromJson(String str) => QuickItem.fromJson(json.decode(str));
 
 String quickItemToJson(QuickItem data) => json.encode(data.toJson());
@@ -22,6 +25,12 @@ class QuickItem {
     this.loadoutName = "",
     this.isEnergyPoints = false,
     this.isNervePoints = false,
+    this.itemType,
+    this.instanceId,
+    this.armoryId,
+    this.damage,
+    this.accuracy,
+    this.defense,
   });
 
   bool? active;
@@ -35,6 +44,12 @@ class QuickItem {
   String? loadoutName;
   bool? isEnergyPoints;
   bool? isNervePoints;
+  ItemType? itemType;
+  String? instanceId;
+  String? armoryId;
+  double? damage;
+  double? accuracy;
+  double? defense;
 
   factory QuickItem.fromJson(Map<String, dynamic> json) => QuickItem(
         active: json["active"],
@@ -48,6 +63,12 @@ class QuickItem {
         loadoutName: json["loadoutName"] == "" ? null : json["loadoutName"],
         isEnergyPoints: json["isEnergyPoints"] ?? false,
         isNervePoints: json["isNervePoints"] ?? false,
+        itemType: json["itemType"] == null ? null : typeValues.map[json["itemType"]],
+        instanceId: json["instanceId"],
+        armoryId: json["armoryId"],
+        damage: (json["damage"] is num) ? (json["damage"] as num).toDouble() : null,
+        accuracy: (json["accuracy"] is num) ? (json["accuracy"] as num).toDouble() : null,
+        defense: (json["defense"] is num) ? (json["defense"] as num).toDouble() : null,
       );
 
   Map<String, dynamic> toJson() => {
@@ -62,5 +83,11 @@ class QuickItem {
         "loadoutName": loadoutName,
         "isEnergyPoints": isEnergyPoints ?? false,
         "isNervePoints": isNervePoints ?? false,
+        "itemType": itemType == null ? null : typeValues.reverse![itemType],
+        "instanceId": instanceId,
+        "armoryId": armoryId,
+        "damage": damage,
+        "accuracy": accuracy,
+        "defense": defense,
       };
 }

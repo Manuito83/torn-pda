@@ -59,7 +59,7 @@ class AwardsPageState extends State<AwardsPage> {
   String? _errorReason = "";
 
   late SettingsProvider _settingsProvider;
-  
+
   late ThemeProvider _themeProvider;
   late AwardsProvider _pinProvider;
   late WebViewProvider _webViewProvider;
@@ -94,7 +94,7 @@ class AwardsPageState extends State<AwardsPage> {
   void initState() {
     super.initState();
     _settingsProvider = Provider.of<SettingsProvider>(context, listen: false);
-    
+
     _pinProvider = Provider.of<AwardsProvider>(context, listen: false);
     _getAwardsPayload = _fetchYataAndPopulate();
 
@@ -347,7 +347,7 @@ class AwardsPageState extends State<AwardsPage> {
                         });
                       },
                       activeTrackColor: Colors.lightGreenAccent,
-                      activeColor: Colors.green,
+                      activeThumbColor: Colors.green,
                     ),
                   ],
                 ),

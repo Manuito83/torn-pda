@@ -40,7 +40,7 @@ class OnAppExitDialogState extends State<OnAppExitDialog> {
             ),
             CheckboxListTile(
               checkColor: Colors.white,
-              activeColor: Colors.blueGrey,
+              activeThumbColor: Colors.blueGrey,
               dense: true,
               value: _remember,
               title: Text("Remember choice"),

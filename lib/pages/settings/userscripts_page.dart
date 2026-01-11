@@ -322,7 +322,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                         child: Switch(
                           value: script.enabled,
                           activeTrackColor: Colors.green[100],
-                          activeColor: Colors.green,
+                          activeThumbColor: Colors.green,
                           inactiveThumbColor: Colors.grey,
                           inactiveTrackColor: Colors.grey[300],
                           onChanged: (value) {
@@ -701,7 +701,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                           return SwitchListTile(
                             title: Text(script.name, style: const TextStyle(fontSize: 14)),
                             value: selectedScripts.contains(script),
-                            activeColor: Colors.green,
+                            activeThumbColor: Colors.green,
                             inactiveThumbColor: Colors.grey,
                             inactiveTrackColor: Colors.grey[300],
                             onChanged: (bool? value) {
@@ -931,7 +931,7 @@ class UserScriptsPageState extends State<UserScriptsPage> {
                                   )
                                 : null,
                             value: selectedScripts.contains(script),
-                            activeColor: Colors.green,
+                            activeThumbColor: Colors.green,
                             inactiveThumbColor: Colors.grey,
                             inactiveTrackColor: Colors.grey[300],
                             onChanged: (bool? value) {

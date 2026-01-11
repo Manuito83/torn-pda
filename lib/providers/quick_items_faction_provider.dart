@@ -30,10 +30,13 @@ class QuickItemsProviderFaction extends ChangeNotifier {
     ItemType.DRUG,
     ItemType.ENERGY_DRINK,
     ItemType.MEDICAL,
+    ItemType.SUPPLY_PACK,
+    ItemType.SPECIAL,
   ];
 
   final _quickItemExceptions = [
     "box of tissues",
+    "donator pack",
   ];
 
   Future loadItems() async {
@@ -169,7 +172,8 @@ class QuickItemsProviderFaction extends ChangeNotifier {
               ..name = itemProperties.name
               ..description = itemProperties.description
               ..number = int.parse(itemNumber)
-              ..active = savedActive,
+              ..active = savedActive
+              ..itemType = itemProperties.type,
           );
         }
       });

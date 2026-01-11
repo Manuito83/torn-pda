@@ -36,7 +36,7 @@ import 'package:torn_pda/utils/html_parser.dart';
 import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/share_stats_dialog.dart';
 import 'package:torn_pda/widgets/chaining/war_card.dart';
-import 'package:torn_pda/widgets/chaining/war_settings_dialog.dart';
+import 'package:torn_pda/widgets/chaining/war_settings_sheet.dart';
 import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
@@ -702,7 +702,7 @@ class WarPageState extends State<WarPage> {
                         if (allMembers > 60) {
                           BotToast.showText(
                             clickClose: true,
-                            text: "Updating $allMembers war targets, this might take a while. Extra time needed to "
+                            text: "Updating $allMembers war targets, this might take a while.\n\nExtra time needed to "
                                 "avoid issues with API request limits!",
                             textStyle: const TextStyle(
                               fontSize: 14,
@@ -805,7 +805,7 @@ class WarPageState extends State<WarPage> {
                   context: context,
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
-                  builder: (context) => WarSettingsDialog(),
+                  builder: (context) => WarSettingsSheet(),
                 );
               },
             );
@@ -1781,6 +1781,14 @@ class WarTargetsListState extends State<WarTargetsList> {
           if (thisMember.respectGain == null ||
               thisMember.respectGain! < settings.respectRange!.start ||
               thisMember.respectGain! > settings.respectRange!.end) {
+            continue;
+          }
+        }
+
+        if (settings.fairFightRange != null) {
+          if (thisMember.fairFight == null ||
+              thisMember.fairFight! < settings.fairFightRange!.start ||
+              thisMember.fairFight! > settings.fairFightRange!.end) {
             continue;
           }
         }

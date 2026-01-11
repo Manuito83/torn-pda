@@ -14,6 +14,27 @@ String handler_flutterPlatformReady() {
   ''';
 }
 
+String handler_tabContext(String tabUid) {
+  return '''
+		(function() {
+			const root = (window.__tornpda = window.__tornpda || {});
+			root.tab = root.tab || {};
+
+			if (root.tab.uid !== '$tabUid') {
+				try {
+					Object.defineProperty(root.tab, 'uid', { value: '$tabUid', writable: false, configurable: false });
+				} catch (_) {
+					root.tab.uid = '$tabUid';
+				}
+			}
+
+			if (!root.tab.state) {
+				root.tab.state = { uid: '$tabUid', isActiveTab: false, isWebViewVisible: false };
+			}
+		})();
+	''';
+}
+
 String handler_pdaAPI() {
   return '''
     // Performs a GET request to the provided URL

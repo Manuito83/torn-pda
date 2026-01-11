@@ -306,7 +306,7 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
             const DropdownMenuItem(
               value: 20,
               child: SizedBox(
-                width: 120,
+                width: 130,
                 child: Text(
                   "20 seconds before",
                   textAlign: TextAlign.right,
@@ -319,7 +319,7 @@ class JailAheadOptionsState extends State<JailAheadOptions> {
             const DropdownMenuItem(
               value: 40,
               child: SizedBox(
-                width: 120,
+                width: 130,
                 child: Text(
                   "40 seconds before",
                   textAlign: TextAlign.right,

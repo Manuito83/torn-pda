@@ -154,7 +154,7 @@ class IconsFilterPageState extends State<IconsFilterPage> {
                   },
                 ),
               Switch(
-                activeColor: Colors.green,
+                activeThumbColor: Colors.green,
                 activeTrackColor: Colors.green[200],
                 inactiveThumbColor: Colors.red,
                 inactiveTrackColor: Colors.red[200],

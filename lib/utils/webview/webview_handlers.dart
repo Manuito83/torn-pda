@@ -16,11 +16,30 @@ import 'package:share_plus/share_plus.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
+import 'package:torn_pda/providers/webview_provider.dart';
+import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WebviewHandlers {
+  static void addTabStateHandler({
+    required InAppWebViewController webview,
+    required WebViewProvider webViewProvider,
+    required String tabUid,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'PDA_getTabState',
+      callback: (args) async {
+        return {
+          'uid': tabUid,
+          'isActiveTab': webViewProvider.isTabUidActive(tabUid),
+          'isWebViewVisible': webViewProvider.browserShowInForeground,
+        };
+      },
+    );
+  }
+
   static void addTornPDACheckHandler({
     required InAppWebViewController webview,
   }) {
@@ -614,6 +633,79 @@ class WebviewHandlers {
           BotToast.showText(text: "Script share file error: $e");
           log('[Share File Error] $e');
           return {'status': 'error', 'message': e.toString()};
+        }
+      },
+    );
+  }
+
+  static void addQuickItemPickerHandler({
+    required InAppWebViewController webview,
+    required QuickItemsProvider quickItemsProvider,
+  }) {
+    webview.addJavaScriptHandler(
+      handlerName: 'quickItemPicker',
+      callback: (args) async {
+        if (args.isEmpty || args[0] is! Map) {
+          return {'status': 'error', 'message': 'Invalid arguments'};
+        }
+
+        final Map data = args[0] as Map;
+        final int? itemNumber = int.tryParse('${data['item']}');
+        final String instanceId = data['instanceId']?.toString() ?? '';
+
+        if (itemNumber == null || instanceId.isEmpty) {
+          return {'status': 'error', 'message': 'Missing item number or instance id'};
+        }
+
+        final qtyRaw = data['qty'];
+        final int? quantity = qtyRaw is int
+            ? qtyRaw
+            : qtyRaw is num
+                ? qtyRaw.toInt()
+                : null;
+
+        final equipData = QuickItemEquipScanData(
+          instanceId: instanceId,
+          quantity: quantity,
+          name: data['name'] as String?,
+          category: data['category'] as String?,
+          equipped: data['equipped'] as bool?,
+          damage: data['damage'] is num ? (data['damage'] as num).toDouble() : null,
+          accuracy: data['accuracy'] is num ? (data['accuracy'] as num).toDouble() : null,
+          defense: data['defense'] is num ? (data['defense'] as num).toDouble() : null,
+          armoryId: data['armoryId']?.toString(),
+        );
+
+        final result = quickItemsProvider.addPickedItem(itemNumber: itemNumber, data: equipData);
+
+        switch (result) {
+          case AddPickedItemResult.added:
+            BotToast.showText(
+              text: '${equipData.name ?? 'Item'} added to quick items',
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.green[700]!,
+              duration: const Duration(seconds: 3),
+              contentPadding: const EdgeInsets.all(12),
+            );
+            return {'status': 'success'};
+          case AddPickedItemResult.duplicate:
+            BotToast.showText(
+              text: '${equipData.name ?? 'Item'} is already in quick items',
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.orange[700]!,
+              duration: const Duration(seconds: 3),
+              contentPadding: const EdgeInsets.all(12),
+            );
+            return {'status': 'duplicate'};
+          case AddPickedItemResult.missing:
+            BotToast.showText(
+              text: 'Item not in Torn catalog, not added',
+              textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+              contentColor: Colors.red[700]!,
+              duration: const Duration(seconds: 3),
+              contentPadding: const EdgeInsets.all(12),
+            );
+            return {'status': 'missing'};
         }
       },
     );

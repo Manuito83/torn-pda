@@ -107,7 +107,7 @@ class VaultOptionsPageState extends State<VaultOptionsPage> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),

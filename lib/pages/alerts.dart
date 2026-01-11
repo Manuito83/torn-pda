@@ -184,7 +184,7 @@ class AlertsSettingsState extends State<AlertsSettings> {
                                 });
                               },
                               activeTrackColor: Colors.lightGreenAccent,
-                              activeColor: Colors.green,
+                              activeThumbColor: Colors.green,
                             ),
                           ],
                         ),

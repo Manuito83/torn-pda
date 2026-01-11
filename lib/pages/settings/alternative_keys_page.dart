@@ -144,7 +144,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -216,7 +216,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),
@@ -289,7 +289,7 @@ class AlternativeKeysPageState extends State<AlternativeKeysPage> {
                       w.update(); // Notify GetBuilder observers
                     },
                     activeTrackColor: Colors.lightGreenAccent,
-                    activeColor: Colors.green,
+                    activeThumbColor: Colors.green,
                   ),
                 ],
               ),

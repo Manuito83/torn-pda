@@ -79,7 +79,7 @@ class LootFilterDialogState extends State<LootFilterDialog> {
                 Prefs().setLootFiltered(widget.filteredNpcs);
               },
               activeTrackColor: Colors.redAccent[100],
-              activeColor: Colors.red,
+              activeThumbColor: Colors.red,
               inactiveThumbColor: Colors.green[100],
             ),
           ],

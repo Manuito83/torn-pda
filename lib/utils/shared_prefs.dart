@@ -7,6 +7,7 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/sembast_db.dart';
@@ -43,6 +44,11 @@ class Prefs {
   // Targets
   final String _kTargetsList = "pda_targetsList";
   final String _kTargetsSort = "pda_targetsSort";
+  final String _kTargetsSortTabIndex = "pda_targetsSortTabIndex";
+  final String _kTargetsSortFavorites = "pda_targetsSortFavorites";
+  final String _kTargetsFilters = "pda_targetsFilters";
+  final String _kTargetsHospitalOkayAtTop = "pda_targetsHospitalOkayAtTop";
+  final String _kTargetsSecondarySortForOkay = "pda_targetsSecondarySortForOkay";
   final String _kTargetsColorFilter = "pda_targetsColorFilter";
 
   // War targets
@@ -141,6 +147,7 @@ class Prefs {
   final String _kIosDisallowOverscroll = "pda_iosDisallowOverscroll";
   final String _kBrowserReverseNavigationSwipe = "pda_browserReverseNavigationSwipe";
   final String _kBrowserCenterEditingTextField = "pda_browserCenterEditingTextField";
+  final String _kBrowserExtendHeightForKeyboard = "pda_browserExtendHeightForKeyboard";
 
   final String _kRemoveNotificationsOnLaunch = "pda_removeNotificationsOnLaunch";
   final String _kTestBrowserActive = "pda_testBrowserActive";
@@ -287,9 +294,12 @@ class Prefs {
   // Browser scripts and widgets
   final String _kTerminalEnabled = "pda_terminalEnabled";
   final String _kActiveCrimesList = "pda_activeCrimesList";
-  final String _kQuickItemsList = "pda_quickItemsList";
-  final String _kQuickItemsListFaction = "pda_quickItemsListFaction";
+  // Quick Items
+  final String _kQuickItemsListV2 = "pda_quickItemsList_v2"; // v2 (wipe personal)
+  final String _kQuickItemsListFaction = "pda_quickItemsListFaction"; // keep faction data
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
+  final String _kQuickItemsRefreshAfterEquip = "pda_quickItemsRefreshAfterEquip";
+  //
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
   final String _kTornExchangeEnabled = "pda_tornExchangeActive";
@@ -308,6 +318,19 @@ class Prefs {
   final String _kUserScriptsFeatInjectionTimeShown = "pda_userScriptsFeatInjectionTimeShown";
   final String _kUserScriptsForcedVersions = "pda_userScriptsForcedVersions";
   final String _kUserScriptsGlobalDisableState = "pda_userScriptsGlobalDisableState";
+  // DevTools sorting
+  final String _kDevToolsNetworkSortColumn = "pda_devToolsNetworkSortColumn";
+  final String _kDevToolsNetworkSortAscending = "pda_devToolsNetworkSortAscending";
+  final String _kDevToolsStorageCookiesSortColumn = "pda_devToolsStorageCookiesSortColumn";
+  final String _kDevToolsStorageCookiesSortAscending = "pda_devToolsStorageCookiesSortAscending";
+  final String _kDevToolsStorageLocalSortColumn = "pda_devToolsStorageLocalSortColumn";
+  final String _kDevToolsStorageLocalSortAscending = "pda_devToolsStorageLocalSortAscending";
+  final String _kDevToolsStorageSessionSortColumn = "pda_devToolsStorageSessionSortColumn";
+  final String _kDevToolsStorageSessionSortAscending = "pda_devToolsStorageSessionSortAscending";
+  final String _kDevToolsStorageIosDataSortColumn = "pda_devToolsStorageIosDataSortColumn";
+  final String _kDevToolsStorageIosDataSortAscending = "pda_devToolsStorageIosDataSortAscending";
+  final String _kDevToolsStorageHttpAuthSortColumn = "pda_devToolsStorageHttpAuthSortColumn";
+  final String _kDevToolsStorageHttpAuthSortAscending = "pda_devToolsStorageHttpAuthSortAscending";
 
   // Shortcuts
   final String _kEnableShortcuts = "pda_enableShortcuts";
@@ -814,6 +837,46 @@ class Prefs {
 
   Future setTargetsSort(String value) async {
     return await PrefsDatabase.setString(_kTargetsSort, value);
+  }
+
+  Future<int> getTargetsSortTabIndex() async {
+    return await PrefsDatabase.getInt(_kTargetsSortTabIndex, 0);
+  }
+
+  Future setTargetsSortTabIndex(int value) async {
+    return await PrefsDatabase.setInt(_kTargetsSortTabIndex, value);
+  }
+
+  Future<List<String>> getTargetsSortFavorites() async {
+    return await PrefsDatabase.getStringList(_kTargetsSortFavorites, <String>[]);
+  }
+
+  Future setTargetsSortFavorites(List<String> value) async {
+    return await PrefsDatabase.setStringList(_kTargetsSortFavorites, value);
+  }
+
+  Future<String> getTargetsFilters() async {
+    return await PrefsDatabase.getString(_kTargetsFilters, '');
+  }
+
+  Future setTargetsFilters(String value) async {
+    return await PrefsDatabase.setString(_kTargetsFilters, value);
+  }
+
+  Future<bool> getTargetsHospitalOkayAtTop() async {
+    return await PrefsDatabase.getBool(_kTargetsHospitalOkayAtTop, false);
+  }
+
+  Future setTargetsHospitalOkayAtTop(bool value) async {
+    return await PrefsDatabase.setBool(_kTargetsHospitalOkayAtTop, value);
+  }
+
+  Future<int> getTargetsSecondarySortForOkay() async {
+    return await PrefsDatabase.getInt(_kTargetsSecondarySortForOkay, TargetSortType.levelDes.index);
+  }
+
+  Future setTargetsSecondarySortForOkay(int value) async {
+    return await PrefsDatabase.setInt(_kTargetsSecondarySortForOkay, value);
   }
 
   //**************
@@ -1502,6 +1565,14 @@ class Prefs {
 
   Future setBrowserCenterEditingTextField(bool value) async {
     return await PrefsDatabase.setBool(_kBrowserCenterEditingTextField, value);
+  }
+
+  Future<bool> getBrowserExtendHeightForKeyboard() async {
+    return await PrefsDatabase.getBool(_kBrowserExtendHeightForKeyboard, false);
+  }
+
+  Future setBrowserExtendHeightForKeyboard(bool value) async {
+    return await PrefsDatabase.setBool(_kBrowserExtendHeightForKeyboard, value);
   }
 
   /// ----------------------------
@@ -2398,6 +2469,106 @@ class Prefs {
     return await PrefsDatabase.setBool(_kTerminalEnabled, value);
   }
 
+  /// ----------------------------
+  /// Methods for DevTools sorting
+  /// ----------------------------
+
+  Future<int> getDevToolsNetworkSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsNetworkSortColumn, 2); // default: start
+  }
+
+  Future setDevToolsNetworkSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsNetworkSortColumn, value);
+  }
+
+  Future<bool> getDevToolsNetworkSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsNetworkSortAscending, true);
+  }
+
+  Future setDevToolsNetworkSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsNetworkSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageCookiesSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageCookiesSortColumn, 0); // default: name
+  }
+
+  Future setDevToolsStorageCookiesSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageCookiesSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageCookiesSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageCookiesSortAscending, true);
+  }
+
+  Future setDevToolsStorageCookiesSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageCookiesSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageLocalSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageLocalSortColumn, 0); // default: key
+  }
+
+  Future setDevToolsStorageLocalSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageLocalSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageLocalSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageLocalSortAscending, true);
+  }
+
+  Future setDevToolsStorageLocalSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageLocalSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageSessionSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageSessionSortColumn, 0); // default: key
+  }
+
+  Future setDevToolsStorageSessionSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageSessionSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageSessionSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageSessionSortAscending, true);
+  }
+
+  Future setDevToolsStorageSessionSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageSessionSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageIosDataSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageIosDataSortColumn, 0); // default: display name
+  }
+
+  Future setDevToolsStorageIosDataSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageIosDataSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageIosDataSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageIosDataSortAscending, true);
+  }
+
+  Future setDevToolsStorageIosDataSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageIosDataSortAscending, value);
+  }
+
+  Future<int> getDevToolsStorageHttpAuthSortColumn() async {
+    return await PrefsDatabase.getInt(_kDevToolsStorageHttpAuthSortColumn, 0); // default: username
+  }
+
+  Future setDevToolsStorageHttpAuthSortColumn(int value) async {
+    return await PrefsDatabase.setInt(_kDevToolsStorageHttpAuthSortColumn, value);
+  }
+
+  Future<bool> getDevToolsStorageHttpAuthSortAscending() async {
+    return await PrefsDatabase.getBool(_kDevToolsStorageHttpAuthSortAscending, true);
+  }
+
+  Future setDevToolsStorageHttpAuthSortAscending(bool value) async {
+    return await PrefsDatabase.setBool(_kDevToolsStorageHttpAuthSortAscending, value);
+  }
+
   // -- Events
 
   Future<bool> getExpandEvents() async {
@@ -2638,11 +2809,11 @@ class Prefs {
   /// Methods for quick items
   /// ----------------------------
   Future<List<String>> getQuickItemsList() async {
-    return await PrefsDatabase.getStringList(_kQuickItemsList, <String>[]);
+    return await PrefsDatabase.getStringList(_kQuickItemsListV2, <String>[]);
   }
 
   Future setQuickItemsList(List<String> value) async {
-    return await PrefsDatabase.setStringList(_kQuickItemsList, value);
+    return await PrefsDatabase.setStringList(_kQuickItemsListV2, value);
   }
 
   Future<List<String>> getQuickItemsListFaction() async {
@@ -2659,6 +2830,14 @@ class Prefs {
 
   Future setNumberOfLoadouts(int value) async {
     return await PrefsDatabase.setInt(_kQuickItemsLoadoutsNumber, value);
+  }
+
+  Future<bool> getQuickItemsRefreshAfterEquip() async {
+    return await PrefsDatabase.getBool(_kQuickItemsRefreshAfterEquip, false);
+  }
+
+  Future setQuickItemsRefreshAfterEquip(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsRefreshAfterEquip, value);
   }
 
   /// ----------------------------

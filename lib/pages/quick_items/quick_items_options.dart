@@ -8,6 +8,7 @@ import 'package:flutter_material_design_icons/flutter_material_design_icons.dart
 import 'package:provider/provider.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
+import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 // Project imports:
@@ -15,7 +16,6 @@ import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/widgets/quick_items/loadouts_name_dialog.dart';
-import 'package:torn_pda/widgets/quick_items/loadouts_number_dialog.dart';
 
 class QuickItemsOptions extends StatefulWidget {
   final bool isFaction;
@@ -58,6 +58,69 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
     super.dispose();
   }
 
+  bool _isEquip(QuickItem item) {
+    final type = item.itemType;
+    return type == ItemType.PRIMARY ||
+        type == ItemType.SECONDARY ||
+        type == ItemType.MELEE ||
+        type == ItemType.DEFENSIVE ||
+        type == ItemType.TEMPORARY;
+  }
+
+  Widget? _statLine(QuickItem item) {
+    if (!_isEquip(item)) return null;
+
+    double? dmg = item.damage;
+    double? acc = item.accuracy;
+    double? def = item.defense;
+
+    String fmt(double? v) => v == null ? '?' : v.toStringAsFixed(1);
+
+    final parts = <String>[];
+    if (dmg != null || acc != null) {
+      if (dmg != null) parts.add('DMG ${fmt(dmg)}');
+      if (acc != null) parts.add('ACC ${fmt(acc)}');
+    }
+    if (def != null) parts.add('DEF ${fmt(def)}');
+    final text = parts.isEmpty ? 'Stats unavailable (expand item in Items view)' : parts.join(' | ');
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 10,
+          color: _themeProvider!.mainText,
+        ),
+      ),
+    );
+  }
+
+  Widget _equipRefreshTile() {
+    return Consumer<QuickItemsProvider>(
+      builder: (context, itemsProvider, child) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text("Refresh after equipping"),
+            subtitle: const Text(
+              'Torn may not immediately show newly equipped items when using Quick Items. '
+              'Enable to auto-refresh after each equip (slower). NOTE: loadout changes will always refresh.',
+              style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic),
+            ),
+            trailing: Switch(
+              value: itemsProvider.refreshAfterEquip,
+              onChanged: (value) {
+                itemsProvider.setRefreshAfterEquip(value);
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _themeProvider = Provider.of<ThemeProvider>(context);
@@ -93,6 +156,8 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       const SizedBox(height: 20),
+                      if (!widget.isFaction) _equipRefreshTile(),
+                      if (!widget.isFaction) const SizedBox(height: 10),
                       const Padding(
                         padding: EdgeInsets.symmetric(horizontal: 15),
                         child: SizedBox(
@@ -100,7 +165,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Text("QUICK ITEMS ACTIVE"),
+                              Text("ACTIVE QUICK ITEMS"),
                               Padding(
                                 padding: EdgeInsets.only(left: 10),
                                 child: Text(
@@ -123,9 +188,11 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                       if ((!widget.isFaction && _itemsProvider!.activeQuickItems.isEmpty) ||
                           (widget.isFaction && _itemsProviderFaction.activeQuickItemsFaction.isEmpty))
                         Padding(
-                          padding: const EdgeInsets.fromLTRB(40, 10, 0, 10),
+                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
                           child: Text(
-                            'No quick items active, add some below!',
+                            widget.isFaction
+                                ? 'No quick items active, add some below!'
+                                : 'No quick items yet. Add them from Items with the "+" button, or pick loadouts below.',
                             style: TextStyle(
                               color: Colors.orange[800],
                               fontStyle: FontStyle.italic,
@@ -136,9 +203,9 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                       else
                         _activeCardsList(),
                       const SizedBox(height: 40),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15),
-                        child: Text("ALL AVAILABLE ITEMS"),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                        child: Text(widget.isFaction ? "ALL AVAILABLE ITEMS" : "LOADOUTS"),
                       ),
                       const SizedBox(height: 10),
                       if ((!widget.isFaction && _itemsProvider!.fullQuickItems.isEmpty) ||
@@ -148,7 +215,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                             padding: EdgeInsets.all(50),
                             child: Column(
                               children: [
-                                Text('Loading available items...'),
+                                Text('Loading loadouts...'),
                                 SizedBox(height: 40),
                                 CircularProgressIndicator(),
                                 SizedBox(height: 40),
@@ -193,15 +260,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
         },
       ),
       actions: <Widget>[
-        if (!widget.isFaction)
-          IconButton(
-            icon: Image.asset(
-              'images/icons/loadout.png',
-            ),
-            onPressed: () async {
-              _openLoadoutsNumberDialog();
-            },
-          ),
         IconButton(
           icon: Icon(
             Icons.delete,
@@ -255,9 +313,13 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                     ),
                     child: SizedBox(
                       height: 60,
+                      width: double.infinity,
                       child: Padding(
                         padding: EdgeInsets.symmetric(horizontal: item.isEnergyPoints! || item.isNervePoints! ? 20 : 0),
                         child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                             child: Row(
@@ -277,6 +339,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           'images/torn_items/small/${item.number}_small.png',
                                           width: 35,
                                           height: 35,
+                                          errorBuilder: (_, __, ___) => const Icon(Icons.inventory_2_outlined),
                                         ),
                                 ),
                                 const SizedBox(width: 10),
@@ -362,9 +425,18 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                     ),
                     child: SizedBox(
                       height: 60,
+                      width: double.infinity,
                       child: Padding(
-                        padding: EdgeInsets.symmetric(horizontal: item.isLoadout! ? 20 : 0),
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
                         child: Card(
+                          shape: item.isLoadout!
+                              ? RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: const BorderSide(color: Colors.blue, width: 1),
+                                )
+                              : RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                             child: Row(
@@ -378,6 +450,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                         : 'images/torn_items/small/${item.number}_small.png',
                                     width: item.isLoadout! ? 25 : 35,
                                     height: item.isLoadout! ? 25 : 35,
+                                    errorBuilder: (_, __, ___) => const Icon(Icons.inventory_2_outlined),
                                   ),
                                 ),
                                 const SizedBox(width: 10),
@@ -403,6 +476,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                           "(inv: x${item.inventory})",
                                           style: const TextStyle(fontSize: 10),
                                         ),
+                                      if (_statLine(item) != null) _statLine(item)!,
                                     ],
                                   ),
                                 ),
@@ -412,10 +486,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                     onTap: () {
                                       BotToast.showText(
                                         text: '${item.name}\n\n${item.description}',
-                                        /* Inventory not shown in API v2 yet
-                                          text: '${item.name}\n\n${item.description}\n\n'
-                                          'You have ${item.inventory} in your inventory',
-                                        */
                                         textStyle: const TextStyle(
                                           fontSize: 14,
                                           color: Colors.white,
@@ -539,6 +609,7 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
                                               'images/torn_items/small/${item.number}_small.png',
                                               width: 35,
                                               height: 35,
+                                              errorBuilder: (_, __, ___) => const Icon(Icons.inventory_2_outlined),
                                             ),
                                     ),
                                     const SizedBox(width: 10),
@@ -630,144 +701,83 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
         padding: const EdgeInsets.symmetric(horizontal: 10),
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextField(
-                controller: _searchController,
-                maxLength: 30,
-                decoration: const InputDecoration(
-                  isDense: true,
-                  labelText: "Search",
-                  counterText: "",
-                  prefixIcon: Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(
-                      Radius.circular(6.0),
-                    ),
-                  ),
-                ),
-              ),
-            ),
             Consumer<QuickItemsProvider>(
               builder: (context, itemsProvider, child) {
-                final allQuickItems = <Widget>[];
+                final loadoutCards = <Widget>[];
                 for (final item in itemsProvider.fullQuickItems) {
-                  if (item.name!.toLowerCase().contains(_itemsProvider!.searchFilter.toLowerCase())) {
-                    if (item.active! ||
-                        (item.isLoadout! && item.loadoutNumber! > itemsProvider.numberOfLoadoutsToShow)) {
-                      continue;
-                    }
-
-                    allQuickItems.add(
-                      AnimatedOpacity(
-                        opacity: item.visible! ? 1 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: SizedBox(
-                          height: 60,
+                  if (!item.isLoadout!) continue;
+                  loadoutCards.add(
+                    AnimatedOpacity(
+                      opacity: item.visible! ? 1 : 0,
+                      duration: const Duration(milliseconds: 300),
+                      child: SizedBox(
+                        height: 60,
+                        child: Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            side: const BorderSide(color: Colors.blue, width: 1),
+                          ),
                           child: Padding(
-                            padding: EdgeInsets.symmetric(horizontal: item.isLoadout! ? 20 : 0),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                child: Row(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.all(2),
-                                      child: Image.asset(
-                                        item.isLoadout!
-                                            ? 'images/icons/loadout.png'
-                                            : 'images/torn_items/small/${item.number}_small.png',
-                                        width: item.isLoadout! ? 25 : 35,
-                                        height: item.isLoadout! ? 25 : 35,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Flexible(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Flexible(
-                                            child: Row(
-                                              children: [
-                                                Flexible(
-                                                  child: Text(
-                                                    item.name!,
-                                                    style: const TextStyle(fontSize: 13),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          if (!item.isLoadout! && item.inventory != null)
-                                            Text(
-                                              "(inv: x${item.inventory})",
-                                              style: const TextStyle(fontSize: 10),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                    if (!item.isLoadout!)
-                                      GestureDetector(
-                                        onTap: () {
-                                          BotToast.showText(
-                                            text: '${item.name}\n\n${item.description}',
-                                            /* Inventory not shown in API v2 yet
-                                            text: '${item.name}\n\n${item.description}\n\n'
-                                                'You have ${item.inventory} in your inventory',
-                                            */
-                                            textStyle: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.white,
-                                            ),
-                                            contentColor: Colors.green[800]!,
-                                            duration: const Duration(seconds: 5),
-                                            contentPadding: const EdgeInsets.all(10),
-                                          );
-                                        },
-                                        child: const Icon(
-                                          Icons.info_outline,
-                                          size: 19,
+                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                            child: Row(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(2),
+                                  child: item.isLoadout!
+                                      ? Image.asset(
+                                          'images/icons/loadout.png',
+                                          width: 25,
+                                          height: 25,
+                                          errorBuilder: (_, __, ___) => const Icon(Icons.inventory_2_outlined),
+                                        )
+                                      : Image.asset(
+                                          'images/torn_items/small/${item.number}_small.png',
+                                          width: 35,
+                                          height: 35,
+                                          errorBuilder: (_, __, ___) => const Icon(Icons.inventory_2_outlined),
                                         ),
-                                      ),
-                                    TextButton(
-                                      onPressed: !item.visible!
-                                          // Avoid double press
-                                          ? null
-                                          : () async {
-                                              // Start animation
-                                              setState(() {
-                                                item.visible = false;
-                                              });
-
-                                              await Future.delayed(const Duration(milliseconds: 300));
-
-                                              setState(() {
-                                                itemsProvider.activateQuickItem(item);
-                                              });
-
-                                              // Reset visibility after animation
-                                              item.visible = true;
-                                            },
-                                      child: Text(
-                                        'ADD',
-                                        style: TextStyle(color: Colors.green[500]),
-                                      ),
-                                    ),
-                                  ],
                                 ),
-                              ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    item.name ?? '',
+                                    style: const TextStyle(fontSize: 13),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: !item.visible!
+                                      ? null
+                                      : () async {
+                                          setState(() {
+                                            item.visible = false;
+                                          });
+
+                                          await Future.delayed(const Duration(milliseconds: 200));
+
+                                          setState(() {
+                                            itemsProvider.activateQuickItem(item);
+                                          });
+
+                                          item.visible = true;
+                                        },
+                                  child: Text(
+                                    'ADD',
+                                    style: TextStyle(color: Colors.green[500]),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                    );
-                  }
+                    ),
+                  );
                 }
                 return ListView(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  children: allQuickItems,
+                  children: loadoutCards,
                 );
               },
             ),
@@ -868,19 +878,6 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
               ],
             ),
           ),
-        );
-      },
-    );
-  }
-
-  Future<void> _openLoadoutsNumberDialog() {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false, // user must tap button!
-      builder: (BuildContext context) {
-        return LoadoutsNumberDialog(
-          themeProvider: _themeProvider,
-          itemsProvider: _itemsProvider,
         );
       },
     );

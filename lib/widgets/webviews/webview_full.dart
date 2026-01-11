@@ -137,6 +137,7 @@ final chainingAidPopupChoices = <HealingPages>[
 ];
 
 class WebViewFull extends StatefulWidget {
+  final String tabUid;
   final int? windowId;
   final String customTitle;
   final String? customUrl;
@@ -153,6 +154,7 @@ class WebViewFull extends StatefulWidget {
   final ChainingPayload? chainingPayload;
 
   const WebViewFull({
+    required this.tabUid,
     this.windowId,
     this.customUrl = 'https://www.torn.com',
     this.customTitle = '',
@@ -196,6 +198,9 @@ class WebViewFullState extends State<WebViewFull>
   String? _pageTitle = "";
   String _currentUrl = '';
   String _lastReportedUrl = '';
+  late final String _tabUid;
+
+  bool _heightExtendInjected = false;
 
   bool _backButtonPopsContext = true;
 
@@ -375,6 +380,8 @@ class WebViewFullState extends State<WebViewFull>
   @override
   void initState() {
     super.initState();
+
+    _tabUid = widget.tabUid;
 
     WidgetsBinding.instance.addObserver(this);
 
@@ -1262,6 +1269,7 @@ class WebViewFullState extends State<WebViewFull>
           // EVENTS
           onWebViewCreated: (c) async {
             webViewController = c;
+
             _travelHandler = ForeignStocksWebviewHandler(
               webViewController: webViewController,
               onTravelStatusChanged: (isAbroad) {
@@ -1283,6 +1291,7 @@ class WebViewFullState extends State<WebViewFull>
             if (Platform.isAndroid || ((Platform.isIOS || Platform.isWindows) && widget.windowId == null)) {
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: UserHelper.apiKey,
+                tabUid: _tabUid,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
@@ -1305,6 +1314,12 @@ class WebViewFullState extends State<WebViewFull>
             }
 
             // ### HANDLERS ###
+
+            WebviewHandlers.addTabStateHandler(
+              webview: webViewController!,
+              webViewProvider: _webViewProvider,
+              tabUid: _tabUid,
+            );
 
             WebviewHandlers.addTornPDACheckHandler(webview: webViewController!);
 
@@ -1343,6 +1358,13 @@ class WebViewFullState extends State<WebViewFull>
             );
 
             WebviewHandlers.addShareFileHandler(webview: webViewController!, context: context);
+
+            WebviewHandlers.addQuickItemPickerHandler(
+              webview: webViewController!,
+              quickItemsProvider: context.read<QuickItemsProvider>(),
+            );
+
+            publishTabState();
           },
           shouldOverrideUrlLoading: (c, action) async {
             final incomingUrl = action.request.url.toString();
@@ -1404,6 +1426,7 @@ class WebViewFullState extends State<WebViewFull>
               // Userscripts load before webpage begins loading
               UnmodifiableListView<UserScript> handlersScriptsToAdd = _userScriptsProvider.getHandlerSources(
                 apiKey: UserHelper.apiKey,
+                tabUid: _tabUid,
               );
               await webViewController!.addUserScripts(userScripts: handlersScriptsToAdd);
 
@@ -1524,6 +1547,8 @@ class WebViewFullState extends State<WebViewFull>
           onLoadStart: (c, uri) async {
             log("🌐 onLoadStart: $uri", name: "WEBVIEW FULL");
 
+            _heightExtendInjected = false;
+
             // FALLBACK: Always try to force update if reportTabLoadUrl wasn't called recently
             if (uri != null) {
               final now = DateTime.now();
@@ -1539,6 +1564,7 @@ class WebViewFullState extends State<WebViewFull>
             //_loadTimeMill = DateTime.now().millisecondsSinceEpoch;
 
             _webViewProvider.updateLastTabUse();
+            publishTabState();
 
             _webViewProvider.verticalMenuClose();
             if (!mounted) return;
@@ -1587,6 +1613,7 @@ class WebViewFullState extends State<WebViewFull>
                   name: "WEBVIEW FULL",
                 );
                 _currentUrl = currentUri.toString();
+                _heightExtendInjected = false;
                 _reportUrlVisit(currentUri);
               }
             }
@@ -1610,6 +1637,8 @@ class WebViewFullState extends State<WebViewFull>
                 // We reset here the triggers for the sections that are called every
                 // time so that they can be called again
                 _resetSectionsWithWidgets();
+
+                await _maybeEnsureMinHeight(c);
               }
             } catch (e) {
               // Prevents issue if webView is closed too soon, in between the 'mounted' check and the rest of
@@ -1646,6 +1675,8 @@ class WebViewFullState extends State<WebViewFull>
                   ''',
               );
             }
+
+            await _maybeEnsureMinHeight(c);
 
             _firstLoadCompleted = true;
 
@@ -1784,10 +1815,19 @@ class WebViewFullState extends State<WebViewFull>
               // the checks performed in this method
             }
 
+            publishTabState();
+
             //log("Stop @ ${DateTime.now().millisecondsSinceEpoch - _loadTimeMill} ms");
           },
           onUpdateVisitedHistory: (c, uri, androidReload) async {
             if (!mounted) return;
+
+            final sameUrl = uri?.toString() == _currentUrl;
+            if (!sameUrl) {
+              _heightExtendInjected = false;
+            }
+
+            await _maybeEnsureMinHeight(c);
             _reportUrlVisit(uri);
             _assessOCnnb(uri.toString()); // Using a more direct call for OCnnb
             return;
@@ -2964,6 +3004,21 @@ class WebViewFullState extends State<WebViewFull>
         await webViewController!.goForward();
       }
     }
+  }
+
+  Future<void> _maybeEnsureMinHeight(InAppWebViewController controller) async {
+    if (!_settingsProvider.browserExtendHeightForKeyboard ||
+        !_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed) {
+      return;
+    }
+
+    if (_heightExtendInjected) return;
+
+    _heightExtendInjected = true;
+
+    await controller.evaluateJavascript(
+      source: ensureMinDocumentHeightForKeyboardJS(minViewportMultiple: 1.5),
+    );
   }
 
   /// Note: several other modules are called in onProgressChanged, since it's
@@ -5209,7 +5264,7 @@ class WebViewFullState extends State<WebViewFull>
     }
   }
 
-  Future<void> resumeThisWebview() async {
+  Future<void> resumeThisWebview({bool publish = true}) async {
     if (Platform.isAndroid) {
       webViewController?.resume();
     } else if (Platform.isIOS) {
@@ -5226,6 +5281,46 @@ class WebViewFullState extends State<WebViewFull>
     } catch (e) {
       _webViewProvider.reviveUrl();
     }
+
+    if (publish) {
+      await publishTabState();
+    }
+  }
+
+  Future<void> publishTabState({bool? isActiveTab, bool? isWebViewVisible}) async {
+    if (!mounted) return;
+    if (webViewController == null) return;
+
+    final payload = {
+      'uid': _tabUid,
+      'isActiveTab': isActiveTab ?? _webViewProvider.isTabUidActive(_tabUid),
+      'isWebViewVisible': isWebViewVisible ?? _webViewProvider.browserShowInForeground,
+    };
+
+    final payloadJson = jsonEncode(payload);
+    final uidJson = jsonEncode(_tabUid);
+
+    try {
+      await webViewController!.evaluateJavascript(
+        source: '''
+          (function() {
+            const root = (window.__tornpda = window.__tornpda || {});
+            root.tab = root.tab || {};
+            if (root.tab.uid !== $uidJson) {
+              try {
+                Object.defineProperty(root.tab, 'uid', { value: $uidJson, writable: false, configurable: false });
+              } catch (_) {
+                root.tab.uid = $uidJson;
+              }
+            }
+            root.tab.state = $payloadJson;
+            try {
+              window.dispatchEvent(new CustomEvent('tornpda:tabState', { detail: $payloadJson }));
+            } catch (_) {}
+          })();
+        ''',
+      );
+    } catch (_) {}
   }
 
   Future _loadUrl(String? inputUrl) async {

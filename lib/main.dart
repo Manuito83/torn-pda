@@ -74,9 +74,9 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.10.1';
-const String androidCompilation = '604';
-const String iosCompilation = '604';
+const String appVersion = '3.10.2';
+const String androidCompilation = '605';
+const String iosCompilation = '605';
 
 bool appHasBeenUpdated = false;
 bool appIsFirstRun = false;
@@ -627,8 +627,15 @@ Future<void> _initializeHomeWidget() async {
     } else if (Platform.isIOS) {
       HomeWidget.setAppGroupId('group.com.manuito.tornpda');
     }
-    HomeWidget.registerInteractivityCallback(onWidgetInteractivityCallback);
-    syncBackgroundRefreshWithWidgetInstallation();
+    final bool widgetInteractivitySupported = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 17.0);
+
+    if (widgetInteractivitySupported) {
+      await HomeWidget.registerInteractivityCallback(onWidgetInteractivityCallback);
+    } else {
+      log("HomeWidget interactivity requires iOS 17.0; skipping registration (kSdkIos=$kSdkIos)");
+    }
+
+    await syncBackgroundRefreshWithWidgetInstallation();
   } catch (e, stackTrace) {
     log("Error initializing HomeWidget: $e");
     logErrorToCrashlytics("Error initializing HomeWidget", "HomeWidget initialization failed: $e", stackTrace);

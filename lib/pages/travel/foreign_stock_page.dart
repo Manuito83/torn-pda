@@ -236,8 +236,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       minHeight: _panelHeightClosed,
                       renderPanelSheet: false,
                       backdropEnabled: true,
-                      parallaxEnabled: true,
-                      parallaxOffset: .1,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(18.0),
                         topRight: Radius.circular(18.0),
@@ -250,8 +248,16 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                         ),
                         controller: _refreshController,
                         onRefresh: _onRefresh,
-                        child: ListView(
-                          children: _stockItems(),
+                        child: Builder(
+                          builder: (context) {
+                            final visibleStocks = _visibleStocks;
+                            final itemCount = visibleStocks.length + 2;
+
+                            return ListView.builder(
+                              itemCount: itemCount,
+                              itemBuilder: (context, index) => _buildStockListItem(index, visibleStocks),
+                            );
+                          },
                         ),
                       ),
 
@@ -720,9 +726,41 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  List<Widget> _stockItems() {
-    final thisStockList = <Widget>[];
+  List<ForeignStock> get _visibleStocks {
+    if (_hiddenStocks.isEmpty) {
+      return List<ForeignStock>.from(_filteredStocksCards);
+    }
 
+    return _filteredStocksCards.where((stock) {
+      for (final h in _hiddenStocks) {
+        if (h.id == stock.id && h.countryCode == stock.countryCode) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
+  }
+
+  Widget _buildStockListItem(int index, List<ForeignStock> visibleStocks) {
+    if (index == 0) {
+      return Column(
+        children: [
+          if (_isTourismDay()) _tourismBanner(),
+          _buildHeader(),
+        ],
+      );
+    }
+
+    if (index == visibleStocks.length + 1) {
+      return const SizedBox(height: 100);
+    }
+
+    final stock = visibleStocks[index - 1];
+    final displayShowcase = index == 1; // showcase only on first card
+    return _buildStockCard(stock, displayShowcase: displayShowcase);
+  }
+
+  Widget _buildHeader() {
     final Widget lastUpdateDetails = Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Row(
@@ -742,7 +780,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                   ),
                 ),
               ],
-              // Icon of successful provider
             ),
           ),
         ],
@@ -867,7 +904,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       );
     }
 
-    Widget header = Row(
+    return Row(
       children: [
         Flexible(
           child: Column(
@@ -885,92 +922,66 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         ),
       ],
     );
+  }
 
-    // Tourism Day banner
-    if (_isTourismDay()) {
-      thisStockList.add(
-        Container(
-          margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.orange, width: 1),
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.transparent,
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.card_travel, color: Colors.orange, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Tourism Day: capacity doubled ($_capacity → $_effectiveCapacity)\n',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                    ),
-                    const Text(
-                      '(affects total cost and profit calculations)',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
-                    ),
-                  ],
+  Widget _buildStockCard(ForeignStock stock, {required bool displayShowcase}) {
+    return ForeignStockCard(
+      foreignStock: stock,
+      capacity: _effectiveCapacity,
+      inventoryEnabled: _inventoryEnabled,
+      showArrivalTime: _showArrivalTime,
+      showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
+      profile: _profile,
+      flagPressedCallback: _onFlagPressed,
+      requestMoneyRefresh: _refreshMoney,
+      memberHiddenCallback: _hideMember,
+      ticket: _settingsProvider!.travelTicket,
+      activeRestocks: _activeRestocks,
+      travelingTimeStamp: _profile!.travel!.timestamp,
+      travelingCountry: _returnCountryName(_profile!.travel!.destination),
+      travelingCountryFullName: _profile!.travel!.destination,
+      displayShowcase: displayShowcase,
+      isDataFromCache: _isDataFromCache,
+      providerName: _yataSuccess
+          ? "YATA"
+          : _prometheusSuccess
+              ? "Prometheus"
+              : null,
+      key: ValueKey('${stock.id}-${stock.countryCode}'),
+    );
+  }
+
+  Widget _tourismBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.orange, width: 1),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.transparent,
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.card_travel, color: Colors.orange, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Tourism Day: capacity doubled ($_capacity → $_effectiveCapacity)\n',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                 ),
-              ),
-            ],
+                const Text(
+                  '(affects total cost and profit calculations)',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    }
-
-    thisStockList.add(header);
-
-    bool displayShowcase = true; // Add showcase to first card only
-    for (final stock in _filteredStocksCards) {
-      // Do not show hidden stock cards
-      bool hidden = false;
-      for (final h in _hiddenStocks) {
-        if (h.id == stock.id && h.countryCode == stock.countryCode) {
-          hidden = true;
-          break;
-        }
-      }
-      if (hidden) continue;
-
-      thisStockList.add(
-        ForeignStockCard(
-          foreignStock: stock,
-          capacity: _effectiveCapacity,
-          inventoryEnabled: _inventoryEnabled,
-          showArrivalTime: _showArrivalTime,
-          showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
-          profile: _profile,
-          flagPressedCallback: _onFlagPressed,
-          requestMoneyRefresh: _refreshMoney,
-          memberHiddenCallback: _hideMember,
-          ticket: _settingsProvider!.travelTicket,
-          activeRestocks: _activeRestocks,
-          travelingTimeStamp: _profile!.travel!.timestamp,
-          travelingCountry: _returnCountryName(_profile!.travel!.destination),
-          travelingCountryFullName: _profile!.travel!.destination,
-          displayShowcase: displayShowcase,
-          isDataFromCache: _isDataFromCache,
-          providerName: _yataSuccess
-              ? "YATA"
-              : _prometheusSuccess
-                  ? "Prometheus"
-                  : null,
-          key: UniqueKey(),
-        ),
-      );
-      displayShowcase = false;
-    }
-
-    thisStockList.add(
-      const SizedBox(
-        height: 100,
+        ],
       ),
     );
-    return thisStockList;
   }
 
   Future<void> _fetchApiInformation() async {

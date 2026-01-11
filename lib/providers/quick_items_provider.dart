@@ -3,6 +3,7 @@ import 'dart:collection';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:collection/collection.dart';
 
 // Project imports:
 //import 'package:torn_pda/models/inventory_model.dart';
@@ -11,9 +12,14 @@ import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
+enum AddPickedItemResult { added, duplicate, missing }
+
 class QuickItemsProvider extends ChangeNotifier {
   bool _firstLoad = true;
   bool _itemSuccess = false;
+  bool _refreshAfterEquip = false;
+
+  bool get refreshAfterEquip => _refreshAfterEquip;
 
   final _activeQuickItemsList = <QuickItem>[];
   UnmodifiableListView<QuickItem> get activeQuickItems => UnmodifiableListView(_activeQuickItemsList);
@@ -28,16 +34,24 @@ class QuickItemsProvider extends ChangeNotifier {
   int get numberOfLoadoutsToShow => _numberOfLoadoutsToShow;
 
   final _quickItemTypes = [
+    ItemType.PRIMARY,
+    ItemType.SECONDARY,
+    ItemType.MELEE,
+    ItemType.DEFENSIVE,
     ItemType.ALCOHOL,
     ItemType.BOOSTER,
     ItemType.CANDY,
     ItemType.DRUG,
     ItemType.ENERGY_DRINK,
     ItemType.MEDICAL,
+    ItemType.SUPPLY_PACK,
+    ItemType.SPECIAL,
+    ItemType.TEMPORARY,
   ];
 
   final _quickItemExceptions = [
     "box of tissues",
+    "donator pack",
   ];
 
   Future loadItems() async {
@@ -69,9 +83,20 @@ class QuickItemsProvider extends ChangeNotifier {
     }
 
     _numberOfLoadoutsToShow = await Prefs().getNumberOfLoadouts();
+    _refreshAfterEquip = await Prefs().getQuickItemsRefreshAfterEquip();
   }
 
   void activateQuickItem(QuickItem newItem) {
+    // Prevent duplicate loadouts
+    if (newItem.isLoadout == true) {
+      final already = _activeQuickItemsList.firstWhereOrNull(
+        (i) => i.isLoadout == true && i.loadoutNumber == newItem.loadoutNumber,
+      );
+      if (already != null) {
+        return;
+      }
+    }
+
     newItem.active = true;
     _activeQuickItemsList.add(newItem);
     _saveListAfterChanges();
@@ -133,6 +158,12 @@ class QuickItemsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setRefreshAfterEquip(bool value) async {
+    _refreshAfterEquip = value;
+    await Prefs().setQuickItemsRefreshAfterEquip(value);
+    notifyListeners();
+  }
+
   void changeLoadoutName(QuickItem loadout, String name) {
     if (!loadout.isLoadout!) return;
     for (final QuickItem item in _activeQuickItemsList) {
@@ -143,6 +174,67 @@ class QuickItemsProvider extends ChangeNotifier {
     }
     _saveListAfterChanges();
     notifyListeners();
+  }
+
+  AddPickedItemResult addPickedItem({required int itemNumber, required QuickItemEquipScanData data}) {
+    final target = _fullQuickItemsList.firstWhereOrNull((i) => i.number == itemNumber);
+    if (target == null) {
+      // Only allow adding items that already exist in the Torn catalog
+      return AddPickedItemResult.missing;
+    }
+
+    target.instanceId = data.instanceId;
+    target.armoryId = data.armoryId;
+    target.damage = data.damage ?? target.damage;
+    target.accuracy = data.accuracy ?? target.accuracy;
+    target.defense = data.defense ?? target.defense;
+    if (data.quantity != null) {
+      target.inventory = data.quantity;
+    }
+
+    // Block duplicates only when the same instanceId is already active; allow multiple variants
+    final existingSameItem = _activeQuickItemsList.firstWhereOrNull(
+      (i) =>
+          i.number == itemNumber &&
+          i.isLoadout != true &&
+          ((data.instanceId.isNotEmpty)
+              ? i.instanceId == data.instanceId
+              : (i.instanceId == null || i.instanceId!.isEmpty)),
+    );
+
+    bool added = false;
+
+    if (existingSameItem == null) {
+      final newItem = QuickItem()
+        ..name = target.name
+        ..description = target.description
+        ..number = target.number
+        ..active = true
+        ..itemType = target.itemType
+        ..inventory = target.inventory
+        ..instanceId = data.instanceId
+        ..armoryId = data.armoryId
+        ..damage = data.damage ?? target.damage
+        ..accuracy = data.accuracy ?? target.accuracy
+        ..defense = data.defense ?? target.defense;
+      _activeQuickItemsList.add(newItem);
+      added = true;
+    } else {
+      // Update the existing entry and report as duplicate
+      existingSameItem.instanceId = data.instanceId;
+      existingSameItem.armoryId = data.armoryId;
+      existingSameItem.damage = data.damage ?? existingSameItem.damage;
+      existingSameItem.accuracy = data.accuracy ?? existingSameItem.accuracy;
+      existingSameItem.defense = data.defense ?? existingSameItem.defense;
+      if (data.quantity != null) {
+        existingSameItem.inventory = data.quantity;
+      }
+    }
+
+    _saveListAfterChanges();
+    notifyListeners();
+
+    return added ? AddPickedItemResult.added : AddPickedItemResult.duplicate;
   }
 
   void _saveListAfterChanges() {
@@ -188,7 +280,8 @@ class QuickItemsProvider extends ChangeNotifier {
               ..name = itemProperties.name
               ..description = itemProperties.description
               ..number = int.parse(itemNumber)
-              ..active = savedActive,
+              ..active = savedActive
+              ..itemType = itemProperties.type,
           );
         }
       });
@@ -225,6 +318,10 @@ class QuickItemsProvider extends ChangeNotifier {
   /// [fullUpdate] is true, it will also update the inactive/stock items, which are not
   /// visible in the widget. Only makes sense if entering the options page
   Future updateInventoryQuantities({bool fullUpdate = false}) async {
+    if (!fullUpdate) {
+      return true;
+    }
+
     // Items removed as per https://www.torn.com/forums.php#/p=threads&f=63&t=16146310&b=0&a=0&start=20&to=24014610
     for (final quickItem in _fullQuickItemsList) {
       quickItem.inventory = null;
@@ -274,4 +371,28 @@ class QuickItemsProvider extends ChangeNotifier {
     return false;
     */
   }
+}
+
+class QuickItemEquipScanData {
+  final String instanceId;
+  final int? quantity;
+  final String? name;
+  final String? category;
+  final bool? equipped;
+  final double? damage;
+  final double? accuracy;
+  final double? defense;
+  final String? armoryId;
+
+  const QuickItemEquipScanData({
+    required this.instanceId,
+    this.quantity,
+    this.name,
+    this.category,
+    this.equipped,
+    this.damage,
+    this.accuracy,
+    this.defense,
+    this.armoryId,
+  });
 }
