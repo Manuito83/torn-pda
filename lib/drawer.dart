@@ -323,9 +323,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _initializeLiveActivities() {
     try {
-      if (Platform.isIOS) {
-        _initialiseLiveActivitiesBridgeService();
-      }
+      // Live Updates are supported on both platforms; the bridge init already
+      // guards by platform + SDK + user toggle, so call it unconditionally.
+      _initialiseLiveActivitiesBridgeService();
     } catch (e, stackTrace) {
       log("Error initializing live activities: $e");
       logErrorToCrashlytics("Error initializing live activities", e, stackTrace);
@@ -1137,6 +1137,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
           for (final not in activeNotifications) {
             if (not.id == null) continue;
+            if (not.channelId == 'travel_live_updates') continue;
             // Platform channel to cancel direct Firebase notifications (we can call
             // "cancelAll()" there without affecting scheduled notifications, which is
             // a problem with the local plugin)
@@ -3413,12 +3414,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _initialiseLiveActivitiesBridgeService() async {
     _preferencesCompleter.future.whenComplete(() async {
-      if (!Platform.isIOS) return;
-      if (!_settingsProvider.iosLiveActivityTravelEnabled) return;
+      final bool isAndroid = Platform.isAndroid;
+      final bool isIos = Platform.isIOS;
 
-      if (kSdkIos < 16.2) {
+      if (!isAndroid && !isIos) return;
+      final bool enabledForPlatform = isAndroid
+          ? _settingsProvider.androidLiveActivityTravelEnabled
+          : _settingsProvider.iosLiveActivityTravelEnabled;
+      if (!enabledForPlatform) return;
+
+      if (isIos && kSdkIos < 16.2) {
         // Regardless of user settings, disable Live Activities on iOS versions below 16.2
         _settingsProvider.iosLiveActivityTravelEnabled = false;
+        return;
+      }
+
+      if (isAndroid && kSdkAndroid < 26) {
         return;
       }
 

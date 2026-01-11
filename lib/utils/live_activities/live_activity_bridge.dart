@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:developer';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:torn_pda/utils/firebase_functions.dart';
+import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 
 enum LiveActivityType {
@@ -10,7 +12,10 @@ enum LiveActivityType {
 }
 
 class LiveActivityBridgeController extends GetxController {
-  static const MethodChannel _channel = MethodChannel('com.tornpda.liveactivity');
+  LiveActivityBridgeController({MethodChannel? channel})
+      : _channel = channel ?? const MethodChannel('com.tornpda.liveactivity');
+
+  final MethodChannel _channel;
 
   // Stores the most recent push token received from the native side for the current Live Activity
   // This token is specific to an active Live Activity instance and would be used if sending
@@ -20,6 +25,14 @@ class LiveActivityBridgeController extends GetxController {
   String? get currentActivityPushToken => _currentActivityPushToken;
 
   bool _isInitialized = false;
+
+  final _statusEvents = StreamController<LiveUpdateStatusEvent>.broadcast();
+  final _capabilitySnapshots = StreamController<LiveUpdateCapabilitySnapshot>.broadcast();
+  LiveUpdateCapabilitySnapshot? _latestCapabilitySnapshot;
+
+  Stream<LiveUpdateStatusEvent> get statusEvents => _statusEvents.stream;
+  Stream<LiveUpdateCapabilitySnapshot> get capabilitySnapshots => _capabilitySnapshots.stream;
+  LiveUpdateCapabilitySnapshot? get latestCapabilitySnapshot => _latestCapabilitySnapshot;
 
   void initializeHandler() {
     if (_isInitialized) return;
@@ -32,10 +45,22 @@ class LiveActivityBridgeController extends GetxController {
     log("LiveActivityBridgeService: Received call from native: ${call.method}");
     if (call.method == "liveActivityTokenUpdated") {
       _currentActivityPushToken = call.arguments as String?;
+    } else if (call.method == "liveUpdateStatusChanged") {
+      final args = (call.arguments as Map?)?.cast<String, dynamic>();
+      if (args != null) {
+        final event = LiveUpdateStatusEvent.fromJson(args);
+        _statusEvents.add(event);
+      }
+    } else if (call.method == "liveUpdateCapabilityChanged") {
+      final args = (call.arguments as Map?)?.cast<String, dynamic>();
+      if (args != null) {
+        final snapshot = LiveUpdateCapabilitySnapshot.fromJson(args);
+        _emitCapabilitySnapshot(snapshot);
+      }
     }
   }
 
-  Future<void> startActivity({
+  Future<LiveUpdateStartResult> startActivity({
     required Map<String, dynamic> arguments,
   }) async {
     if (!_isInitialized) {
@@ -43,24 +68,39 @@ class LiveActivityBridgeController extends GetxController {
       initializeHandler();
     }
     try {
-      await _channel.invokeMethod('startTravelActivity', arguments);
-      //log("LiveActivityBridgeService: Invoking startTravelActivity with args: $arguments");
+      final dynamic response = await _channel.invokeMethod('startTravelActivity', arguments);
+      final result = LiveUpdateStartResult.fromDynamic(response);
+      if (result.capabilitySnapshot != null) {
+        _emitCapabilitySnapshot(result.capabilitySnapshot!);
+      }
+      return result;
     } on PlatformException catch (e) {
       log("LiveActivityBridgeService: PlatformException during start/update: ${e.message} - Details: ${e.details}");
+      return LiveUpdateStartResult(
+        status: LiveUpdateRequestStatus.error,
+        errorMessage: e.message,
+      );
     } catch (e) {
       log("LiveActivityBridgeService: Generic error during start/update: $e");
+      return const LiveUpdateStartResult(status: LiveUpdateRequestStatus.error);
     }
   }
 
-  Future<void> endActivity() async {
+  Future<LiveUpdateEndResult> endActivity({String? sessionId}) async {
     if (!_isInitialized) initializeHandler();
     try {
-      await _channel.invokeMethod('endTravelActivity');
+      final dynamic response = await _channel.invokeMethod(
+        'endTravelActivity',
+        sessionId == null ? null : {'sessionId': sessionId},
+      );
       log("LiveActivityBridgeService: endTravelActivity method invoked.");
+      return LiveUpdateEndResult.fromDynamic(response);
     } on PlatformException catch (e) {
       log("LiveActivityBridgeService: PlatformException ending activity: ${e.message} - Details: ${e.details}");
+      return LiveUpdateEndResult(success: false, errorMessage: e.message);
     } catch (e) {
       log("LiveActivityBridgeService: Generic error ending activity: $e");
+      return const LiveUpdateEndResult(success: false);
     }
   }
 
@@ -73,6 +113,21 @@ class LiveActivityBridgeController extends GetxController {
       log("LiveActivityBridgeService: Error checking if any activity is active: $e");
       return false;
     }
+  }
+
+  Future<LiveUpdateCapabilitySnapshot?> getLiveUpdateCapabilities() async {
+    if (!_isInitialized) initializeHandler();
+    try {
+      final dynamic response = await _channel.invokeMethod('getLiveUpdateCapabilities');
+      if (response is Map) {
+        final snapshot = LiveUpdateCapabilitySnapshot.fromJson(response.cast<String, dynamic>());
+        _emitCapabilitySnapshot(snapshot);
+        return snapshot;
+      }
+    } catch (e) {
+      log("LiveActivityBridgeService: Error getting capability snapshot: $e");
+    }
+    return _latestCapabilitySnapshot;
   }
 
   Future<void> getPushToStartTokenAndSendToFirebase({
@@ -140,5 +195,24 @@ class LiveActivityBridgeController extends GetxController {
       log("LiveActivityBridge: Error getting token for '${activityType.name}': $e");
       return null;
     }
+  }
+
+  void _emitCapabilitySnapshot(LiveUpdateCapabilitySnapshot snapshot) {
+    _latestCapabilitySnapshot = snapshot;
+    if (!_capabilitySnapshots.isClosed) {
+      _capabilitySnapshots.add(snapshot);
+    }
+  }
+
+  @visibleForTesting
+  Future<void> handleMockMethodCall(String method, Map<String, dynamic> arguments) {
+    return _handleNativeMethodCalls(MethodCall(method, arguments));
+  }
+
+  @override
+  void onClose() {
+    _statusEvents.close();
+    _capabilitySnapshots.close();
+    super.onClose();
   }
 }

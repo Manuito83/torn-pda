@@ -45,6 +45,8 @@ import 'package:torn_pda/torn-pda-native/stats/stats_controller.dart';
 import 'package:torn_pda/utils/appwidget/pda_widget.dart';
 import 'package:torn_pda/utils/firebase_auth.dart';
 import 'package:torn_pda/utils/firebase_firestore.dart';
+import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/alarm_kit_service_ios.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
@@ -80,7 +82,60 @@ class SettingsPage extends StatefulWidget {
   SettingsPageState createState() => SettingsPageState();
 }
 
+class _MockTravelScenario {
+  final String label;
+  final String description;
+  final int secondsRemaining;
+  final bool defaultHasArrived;
+
+  const _MockTravelScenario({
+    required this.label,
+    required this.description,
+    required this.secondsRemaining,
+    required this.defaultHasArrived,
+  });
+}
+
+enum _MockLiveUpdateDirection {
+  outbound,
+  returnToTorn,
+  repatriation,
+}
+
 class SettingsPageState extends State<SettingsPage> {
+  static const List<_MockTravelScenario> _mockTravelScenarioPresets = [
+    _MockTravelScenario(
+      label: "Already landed",
+      description: "Simulates the message after touchdown.",
+      secondsRemaining: 0,
+      defaultHasArrived: true,
+    ),
+    _MockTravelScenario(
+      label: "Final approach (< 1 min)",
+      description: "Matches the less-than-a-minute warning.",
+      secondsRemaining: 45,
+      defaultHasArrived: false,
+    ),
+    _MockTravelScenario(
+      label: "Landing in 1 minute",
+      description: "Uses the one minute remaining wording.",
+      secondsRemaining: 75,
+      defaultHasArrived: false,
+    ),
+    _MockTravelScenario(
+      label: "Landing in ~5 minutes",
+      description: "Typical mid-flight alert with a few minutes to go.",
+      secondsRemaining: 300,
+      defaultHasArrived: false,
+    ),
+    _MockTravelScenario(
+      label: "Landing in ~15 minutes",
+      description: "Longer lead time for extended flights.",
+      secondsRemaining: 900,
+      defaultHasArrived: false,
+    ),
+  ];
+
   final _formKey = GlobalKey<FormState>();
   Timer? _ticker;
 
@@ -113,6 +168,7 @@ class SettingsPageState extends State<SettingsPage> {
   final _expandableController = ExpandableController();
 
   final _apiKeyInputController = TextEditingController();
+  final TextEditingController _mockLiveUpdateLocationController = TextEditingController(text: "Mexico");
 
   String? _appBarPosition = "top";
 
@@ -133,6 +189,16 @@ class SettingsPageState extends State<SettingsPage> {
   String _searchText = '';
   final FocusNode _searchFocusNode = FocusNode();
   final TextEditingController _searchController = TextEditingController();
+  _MockTravelScenario _selectedMockTravelScenario =
+      _mockTravelScenarioPresets.length > 1 ? _mockTravelScenarioPresets[1] : _mockTravelScenarioPresets.first;
+  _MockLiveUpdateDirection _mockLiveUpdateDirection = _MockLiveUpdateDirection.outbound;
+  bool _mockLiveUpdateHasArrived =
+      (_mockTravelScenarioPresets.length > 1 ? _mockTravelScenarioPresets[1] : _mockTravelScenarioPresets.first)
+          .defaultHasArrived;
+  bool _sendingMockLiveUpdate = false;
+  LiveUpdateRequestStatus? _lastMockLiveUpdateStatus;
+  LiveUpdateUnsupportedReason? _lastMockLiveUpdateReason;
+  String? _lastMockLiveUpdateSessionId;
   List<Widget> buildFilteredSections() {
     List<Widget> sections = [
       _browserSection(),
@@ -299,6 +365,7 @@ class SettingsPageState extends State<SettingsPage> {
     _ticker?.cancel();
     _expandableController.dispose();
     _apiKeyInputController.dispose();
+    _mockLiveUpdateLocationController.dispose();
     _searchController.dispose();
     super.dispose();
   }
@@ -859,6 +926,12 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Mock travel live update",
+          searchText: _searchText,
+          child: _mockLiveUpdateRow(),
+        ),
       if (Platform.isIOS)
         SearchableRow(
           label: "Active Alarms",
@@ -1010,6 +1083,388 @@ class SettingsPageState extends State<SettingsPage> {
       rows: rows,
       searchText: _searchText,
     );
+  }
+
+  Widget _mockLiveUpdateRow() {
+    final bool liveUpdatesSupported = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Trigger a travel Live Update using mock data so you can inspect the Android lock screen, notification shade, or OEM capsule surfaces without needing a real flight.',
+            style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+          ),
+          if (!liveUpdatesSupported)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'Live Updates require Android 14+ (or iOS 16.2+) with the latest Torn PDA beta.',
+                style: TextStyle(color: Colors.orange[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            )
+          else ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _mockLiveUpdateLocationController,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.done,
+              decoration: const InputDecoration(
+                labelText: "Foreign location",
+                hintText: "Mexico",
+                helperText: "Used as the destination when traveling abroad or as the origin when returning to Torn.",
+              ),
+            ),
+            const SizedBox(height: 12),
+            DropdownButton<_MockLiveUpdateDirection>(
+              isExpanded: true,
+              value: _mockLiveUpdateDirection,
+              items: const [
+                DropdownMenuItem(
+                  value: _MockLiveUpdateDirection.outbound,
+                  child: Text("Traveling abroad"),
+                ),
+                DropdownMenuItem(
+                  value: _MockLiveUpdateDirection.returnToTorn,
+                  child: Text("Returning to Torn"),
+                ),
+                DropdownMenuItem(
+                  value: _MockLiveUpdateDirection.repatriation,
+                  child: Text("Repatriating from hospital"),
+                ),
+              ],
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  _mockLiveUpdateDirection = value;
+                });
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButton<_MockTravelScenario>(
+              isExpanded: true,
+              value: _selectedMockTravelScenario,
+              items: _mockTravelScenarioPresets
+                  .map(
+                    (scenario) => DropdownMenuItem<_MockTravelScenario>(
+                      value: scenario,
+                      child: Text(scenario.label),
+                    ),
+                  )
+                  .toList(),
+              onChanged: (value) {
+                if (value == null) return;
+                setState(() {
+                  _selectedMockTravelScenario = value;
+                  _mockLiveUpdateHasArrived = value.defaultHasArrived;
+                });
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 4),
+              child: Text(
+                _selectedMockTravelScenario.description,
+                style: TextStyle(color: Colors.grey[600], fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+            ),
+            SwitchListTile(
+              dense: true,
+              contentPadding: EdgeInsets.zero,
+              title: const Text("Mark session as arrived"),
+              subtitle: Text(
+                "Useful to preview the landed state and capsule copy.",
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+              value: _mockLiveUpdateHasArrived,
+              onChanged: (value) {
+                setState(() {
+                  _mockLiveUpdateHasArrived = value;
+                });
+              },
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _sendingMockLiveUpdate ? null : _sendMockLiveUpdate,
+                    icon: _sendingMockLiveUpdate
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Icon(Icons.play_arrow),
+                    label: Text(_sendingMockLiveUpdate ? "Starting..." : "Start mock live update"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _endMockLiveUpdate,
+                    icon: const Icon(Icons.stop),
+                    label: const Text("End live update"),
+                  ),
+                ),
+              ],
+            ),
+            if (_lastMockLiveUpdateStatus != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  _describeLastMockLiveUpdate(),
+                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
+                ),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _sendMockLiveUpdate() async {
+    final bool liveUpdatesSupported = (Platform.isAndroid && kSdkAndroid >= 26) || (Platform.isIOS && kSdkIos >= 16.2);
+    if (!liveUpdatesSupported) {
+      BotToast.showText(text: "Live Updates are only available on Android 8+ or iOS 16.2+.");
+      return;
+    }
+
+    if (_sendingMockLiveUpdate) return;
+
+    final LiveActivityBridgeController? controller = _ensureLiveActivityBridge();
+    if (controller == null) {
+      BotToast.showText(text: "Live Update bridge is unavailable.");
+      return;
+    }
+
+    final scenario = _selectedMockTravelScenario;
+    final bool hasArrived = _mockLiveUpdateHasArrived;
+    final String foreignLocation = _mockLiveUpdateLocationController.text.trim().isEmpty
+        ? "Mexico"
+        : _mockLiveUpdateLocationController.text.trim();
+
+    final int nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+    final int arrivalTimestamp = hasArrived ? nowSeconds : nowSeconds + scenario.secondsRemaining;
+    final int travelDuration = (scenario.secondsRemaining > 0 ? scenario.secondsRemaining + 600 : 1800);
+    final int departureTimestamp = arrivalTimestamp - travelDuration;
+
+    final Map<String, dynamic> args = _buildMockLiveUpdateArgs(
+      foreignLocation: foreignLocation,
+      direction: _mockLiveUpdateDirection,
+      arrivalTimestamp: arrivalTimestamp,
+      departureTimestamp: departureTimestamp,
+      hasArrived: hasArrived,
+    );
+
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _sendingMockLiveUpdate = true;
+    });
+
+    try {
+      controller.initializeHandler();
+      final LiveUpdateStartResult result = await controller.startActivity(arguments: args);
+      if (!mounted) return;
+      setState(() {
+        _sendingMockLiveUpdate = false;
+        _lastMockLiveUpdateStatus = result.status;
+        _lastMockLiveUpdateReason = result.reason;
+        if (result.sessionId != null) {
+          _lastMockLiveUpdateSessionId = result.sessionId;
+        }
+      });
+
+      if (result.isSuccess) {
+        BotToast.showText(text: "Mock Live Update ${result.status.name} (${result.sessionId ?? "no session"})");
+      } else {
+        final reason = result.reason != null ? " (${_formatUnsupportedReason(result.reason!)})" : "";
+        BotToast.showText(text: "Live Update unsupported$reason");
+      }
+    } catch (error, stackTrace) {
+      log("Mock Live Update failed: $error");
+      logErrorToCrashlytics("Mock Live Update failed", error, stackTrace);
+      if (mounted) {
+        setState(() {
+          _sendingMockLiveUpdate = false;
+        });
+      } else {
+        _sendingMockLiveUpdate = false;
+      }
+      BotToast.showText(text: "Unable to start Live Update");
+    }
+  }
+
+  Future<void> _endMockLiveUpdate() async {
+    final LiveActivityBridgeController? controller = _ensureLiveActivityBridge();
+    if (controller == null) {
+      BotToast.showText(text: "Live Update bridge is unavailable.");
+      return;
+    }
+
+    try {
+      final result = await controller.endActivity(sessionId: _lastMockLiveUpdateSessionId);
+      if (result.success) {
+        setState(() {
+          _lastMockLiveUpdateSessionId = null;
+          _lastMockLiveUpdateStatus = null;
+          _lastMockLiveUpdateReason = null;
+        });
+        BotToast.showText(text: "Live Update ended");
+      } else {
+        final reason = result.reason != null ? " (${_formatUnsupportedReason(result.reason!)})" : "";
+        BotToast.showText(text: "Unable to end Live Update$reason");
+      }
+    } catch (error, stackTrace) {
+      log("Ending Live Update failed: $error");
+      logErrorToCrashlytics("Ending Live Update failed", error, stackTrace);
+      BotToast.showText(text: "Error ending Live Update");
+    }
+  }
+
+  LiveActivityBridgeController? _ensureLiveActivityBridge() {
+    try {
+      if (Get.isRegistered<LiveActivityBridgeController>()) {
+        return Get.find<LiveActivityBridgeController>();
+      }
+      return Get.put(LiveActivityBridgeController(), permanent: true);
+    } catch (error, stackTrace) {
+      log("Unable to obtain LiveActivityBridgeController: $error");
+      logErrorToCrashlytics("LiveActivityBridgeController missing", error, stackTrace);
+      return null;
+    }
+  }
+
+  Map<String, dynamic> _buildMockLiveUpdateArgs({
+    required String foreignLocation,
+    required _MockLiveUpdateDirection direction,
+    required int arrivalTimestamp,
+    required int departureTimestamp,
+    required bool hasArrived,
+  }) {
+    final String normalizedForeign = foreignLocation.isEmpty ? "Abroad" : foreignLocation;
+    final int nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+    final int travelDuration = arrivalTimestamp - departureTimestamp;
+    String currentDestinationDisplayName;
+    String currentDestinationFlagAsset;
+    String originDisplayName;
+    String originFlagAsset;
+    String vehicleAssetName;
+    String activityStateTitle;
+    int? earliestReturnTimestamp;
+    bool showProgressBar = !hasArrived;
+
+    final bool isChristmasSeason = _isChristmasSeason();
+
+    switch (direction) {
+      case _MockLiveUpdateDirection.outbound:
+        currentDestinationDisplayName = normalizedForeign;
+        currentDestinationFlagAsset = _flagAssetForLocation(normalizedForeign);
+        originDisplayName = "Torn";
+        originFlagAsset = "ball_torn";
+        vehicleAssetName = isChristmasSeason ? "sleigh" : "plane_right";
+        activityStateTitle = hasArrived ? "Arrived in" : "Traveling to";
+        if (!hasArrived) {
+          earliestReturnTimestamp = arrivalTimestamp + travelDuration.abs();
+        }
+        break;
+      case _MockLiveUpdateDirection.returnToTorn:
+        currentDestinationDisplayName = "Torn";
+        currentDestinationFlagAsset = "ball_torn";
+        originDisplayName = normalizedForeign.isEmpty ? "Abroad" : normalizedForeign;
+        originFlagAsset = normalizedForeign.isEmpty ? "world_origin_icon" : _flagAssetForLocation(normalizedForeign);
+        vehicleAssetName = isChristmasSeason ? "sleigh" : "plane_left";
+        activityStateTitle = hasArrived ? "Returned to" : "Returning to";
+        break;
+      case _MockLiveUpdateDirection.repatriation:
+        currentDestinationDisplayName = "Torn";
+        currentDestinationFlagAsset = "ball_torn";
+        originDisplayName = "Hospital";
+        originFlagAsset = "hospital_origin_icon";
+        vehicleAssetName = isChristmasSeason ? "sleigh" : "plane_left";
+        activityStateTitle = hasArrived ? "Repatriated to" : "Repatriating to";
+        break;
+    }
+
+    final args = <String, dynamic>{
+      'currentDestinationDisplayName': currentDestinationDisplayName,
+      'currentDestinationFlagAsset': currentDestinationFlagAsset,
+      'originDisplayName': originDisplayName,
+      'originFlagAsset': originFlagAsset,
+      'arrivalTimeTimestamp': arrivalTimestamp,
+      'departureTimeTimestamp': departureTimestamp,
+      'currentServerTimestamp': nowSeconds,
+      'vehicleAssetName': vehicleAssetName,
+      'activityStateTitle': activityStateTitle,
+      'showProgressBar': showProgressBar,
+      'hasArrived': hasArrived,
+    };
+
+    if (earliestReturnTimestamp != null) {
+      args['earliestReturnTimestamp'] = earliestReturnTimestamp;
+    }
+
+    return args;
+  }
+
+  String _flagAssetForLocation(String location) {
+    if (location.isEmpty) return "ball_torn";
+    String normalized = location.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-');
+    switch (normalized) {
+      case 'united-kingdom':
+        normalized = 'uk';
+        break;
+      case 'cayman-islands':
+        normalized = 'cayman';
+        break;
+      case 'united-arab-emirates':
+        normalized = 'uae';
+        break;
+      case 'south-africa':
+        normalized = 'south-africa';
+        break;
+    }
+    return "ball_$normalized";
+  }
+
+  bool _isChristmasSeason() {
+    final now = DateTime.now();
+    final christmasStart = DateTime(now.year, 12, 19);
+    final christmasEnd = DateTime(now.year, 12, 31, 23, 59, 59);
+    return now.isAfter(christmasStart) && now.isBefore(christmasEnd);
+  }
+
+  String _describeLastMockLiveUpdate() {
+    final status = _lastMockLiveUpdateStatus;
+    if (status == null) return "";
+    final buffer = StringBuffer("Last request: ${status.name.toUpperCase()}");
+    if (_lastMockLiveUpdateReason != null) {
+      buffer.write(" • ${_formatUnsupportedReason(_lastMockLiveUpdateReason!)}");
+    }
+    if (_lastMockLiveUpdateSessionId != null) {
+      buffer.write(" • session $_lastMockLiveUpdateSessionId");
+    }
+    return buffer.toString();
+  }
+
+  String _formatUnsupportedReason(LiveUpdateUnsupportedReason reason) {
+    switch (reason) {
+      case LiveUpdateUnsupportedReason.apiTooOld:
+        return "API too old";
+      case LiveUpdateUnsupportedReason.oemUnavailable:
+        return "OEM capsule unavailable";
+      case LiveUpdateUnsupportedReason.permissionDenied:
+        return "Permission denied";
+      case LiveUpdateUnsupportedReason.batteryRestricted:
+        return "Battery optimization";
+      case LiveUpdateUnsupportedReason.internalError:
+        return "Internal error";
+      case LiveUpdateUnsupportedReason.unknown:
+        return "Unknown reason";
+    }
   }
 
   Widget _appWidgetSection() {

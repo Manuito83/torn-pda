@@ -529,7 +529,10 @@ class Prefs {
 
   // Live Activities
   final String _kIosLiveActivityTravelEnabled = "pda_iosLiveActivityTravelEnabled";
+  final String _kAndroidLiveActivityTravelEnabled = "pda_androidLiveActivityTravelEnabled";
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
+  // Android-only: used to avoid repeating "Arrived" Live Update after app relaunch
+  final String _kAndroidLiveActivityTravelLastArrivalId = "pda_androidLiveActivityTravelLastArrivalId";
 
   /// =====================================
   /// MIGRATION SharedPreferences > Sembast
@@ -4281,6 +4284,25 @@ class Prefs {
 
   Future setIosLiveActivityTravelEnabled(bool value) async {
     return await PrefsDatabase.setBool(_kIosLiveActivityTravelEnabled, value);
+  }
+
+  Future<bool> getAndroidLiveActivityTravelEnabled() async {
+    return await PrefsDatabase.getBool(_kAndroidLiveActivityTravelEnabled, false);
+  }
+
+  Future setAndroidLiveActivityTravelEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kAndroidLiveActivityTravelEnabled, value);
+  }
+
+  /// Android-only: persisted to avoid duplicating the last "Arrived" Live Update after relaunch
+  Future<String?> getAndroidLiveActivityTravelLastArrivalId() async {
+    final String value = await PrefsDatabase.getString(_kAndroidLiveActivityTravelLastArrivalId, "");
+    return value.isEmpty ? null : value;
+  }
+
+  /// Android-only: persisted to avoid duplicating the last "Arrived" Live Update after relaunch
+  Future setAndroidLiveActivityTravelLastArrivalId(String travelId) async {
+    return await PrefsDatabase.setString(_kAndroidLiveActivityTravelLastArrivalId, travelId);
   }
 
   /// ----------------------------

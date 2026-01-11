@@ -113,6 +113,7 @@ bool justImportedFromLocalBackup = false;
 bool isStatusBarShown = false;
 
 double kSdkIos = 0;
+int kSdkAndroid = 0;
 
 bool _isFirebaseInitialized = false;
 
@@ -572,6 +573,11 @@ Future<void> _initializePlatformSpecifics() async {
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       kSdkIos = double.tryParse(iosInfo.systemVersion) ?? 99;
       log("iOS SDK Version: $kSdkIos");
+    } else if (Platform.isAndroid) {
+      final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      kSdkAndroid = androidInfo.version.sdkInt;
+      log("Android SDK Version: $kSdkAndroid");
     }
   } catch (e, stackTrace) {
     log("Error initializing platform specifics: $e");
@@ -648,8 +654,11 @@ Future<void> _initializeGetXControllers() async {
     Get.put(PeriodicExecutionController(), permanent: true);
     Get.put(ChainStatusController(), permanent: true);
 
-    if (Platform.isIOS && kSdkIos >= 16.2) {
+    final bool enableLiveUpdateBridge = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
+    if (enableLiveUpdateBridge) {
       Get.put(LiveActivityBridgeController(), permanent: true);
+    }
+    if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26)) {
       Get.put(LiveActivityTravelController(), permanent: true);
     }
   } catch (e, stackTrace) {

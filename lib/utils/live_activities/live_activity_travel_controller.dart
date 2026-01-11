@@ -2,16 +2,20 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/bars_model.dart';
 import 'package:torn_pda/providers/chain_status_controller.dart';
 import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/live_activities/live_update_models.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class LiveActivityTravelController extends GetxController {
   final _chainStatusProvider = Get.find<ChainStatusController>();
   final _bridgeController = Get.find<LiveActivityBridgeController>();
+  final _prefs = Prefs();
 
   // Ensure that special "initial check" logic (like ignoring stale old arrivals)
   // is applied only once, specifically during the first processing run that has valid API data
@@ -20,13 +24,22 @@ class LiveActivityTravelController extends GetxController {
   int _currentLAArrivalTimestamp = 0;
   bool _isLALogicallyActive = false;
   String _lastProcessedTravelIdentifier = "";
+  String _lastArrivalNotifiedTravelId = "";
   bool _hasArrivedNotified = false;
 
   bool _isMonitoring = false;
   Worker? _statusListenerWorker;
+  StreamSubscription<LiveUpdateStatusEvent>? _statusEventSubscription;
 
   static const int _staleArrivalThresholdSeconds = 15 * 60;
   static const int _arrivedLAAutoEndMinutes = 10;
+  String? _activeSessionId;
+
+  @visibleForTesting
+  bool get isLiveActivityActiveForTest => _isLALogicallyActive;
+
+  @visibleForTesting
+  String? get activeSessionIdForTest => _activeSessionId;
 
   Future<void> activate() async {
     if (_isMonitoring) {
@@ -34,12 +47,7 @@ class LiveActivityTravelController extends GetxController {
       return;
     }
 
-    if (!Platform.isIOS) {
-      log("TravelLiveActivityHandler: Not on iOS, activation skipped.");
-      return;
-    }
-
-    if (kSdkIos < 16.2) {
+    if (Platform.isIOS && kSdkIos < 16.2) {
       log("TravelLiveActivityHandler: iOS SDK < 16.2, LA not supported. Activation skipped.");
       return;
     }
@@ -50,6 +58,15 @@ class LiveActivityTravelController extends GetxController {
     _bridgeController.initializeHandler();
 
     _statusListenerWorker = ever(_chainStatusProvider.laStatusInputData, _onStatusDataChanged);
+    _statusEventSubscription?.cancel();
+    _statusEventSubscription = _bridgeController.statusEvents.listen(handleStatusEvent);
+
+    if (Platform.isAndroid) {
+      final storedArrivalId = await _prefs.getAndroidLiveActivityTravelLastArrivalId();
+      if (storedArrivalId != null && storedArrivalId.isNotEmpty) {
+        _lastArrivalNotifiedTravelId = storedArrivalId;
+      }
+    }
 
     // Sync LA State
     _isLALogicallyActive = await _bridgeController.isAnyActivityActive();
@@ -74,6 +91,8 @@ class LiveActivityTravelController extends GetxController {
 
     _statusListenerWorker?.dispose();
     _statusListenerWorker = null;
+    _statusEventSubscription?.cancel();
+    _statusEventSubscription = null;
 
     if (_isLALogicallyActive) {
       log("TravelLiveActivityHandler: Deactivating. Ending any active LA via bridge.");
@@ -190,7 +209,9 @@ class LiveActivityTravelController extends GetxController {
         }
       }
       // CASE 1: Player has arrived (and if it's the first valid run, it's not stale), and arrival not yet notified by LA
-      else if (hasPlayerArrived && !_hasArrivedNotified) {
+      else if (hasPlayerArrived &&
+          !_hasArrivedNotified &&
+          (!Platform.isAndroid || travelId != _lastArrivalNotifiedTravelId)) {
         log("TravelLiveActivityHandler: CASE 1 - Arrival detected for ${apiData['destination']}. Preparing 'Arrived' LA.");
         laArgs = _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true);
         shouldStartOrUpdateLA = true;
@@ -240,11 +261,22 @@ class LiveActivityTravelController extends GetxController {
 
     // --- Perform the LA start/update if decided
     if (shouldStartOrUpdateLA && laArgs != null) {
+      final bool isArrivalUpdate = laArgs['hasArrived'] == true;
       // log("TravelLiveActivityHandler: Calling bridge to start/update LA with args: $laArgs");
-      _bridgeController.startActivity(arguments: laArgs);
-      _isLALogicallyActive = true;
+      final LiveUpdateStartResult result = await _bridgeController.startActivity(arguments: laArgs);
+      applyStartResult(result);
+      if (!result.isSuccess) {
+        log("TravelLiveActivityHandler: Native layer reported ${result.status} (${result.reason})");
+        return;
+      }
       _currentLAArrivalTimestamp = arrivalTimestamp;
       _lastProcessedTravelIdentifier = travelId;
+      if (isArrivalUpdate) {
+        _lastArrivalNotifiedTravelId = travelId;
+        if (Platform.isAndroid) {
+          await _prefs.setAndroidLiveActivityTravelLastArrivalId(travelId);
+        }
+      }
 
       // Sync with Firebase so that a Cloud Function won't start for this LA
       log("Syncing arrival timestamp $arrivalTimestamp with server...");
@@ -258,14 +290,14 @@ class LiveActivityTravelController extends GetxController {
       log("TravelLiveActivityHandler: Internal state reset (native LA might still exist)");
     }
     _isLALogicallyActive = false;
+    _activeSessionId = null;
     _currentLAArrivalTimestamp = 0;
-    _lastProcessedTravelIdentifier = "internal_reset_${DateTime.now().millisecondsSinceEpoch}";
     _hasArrivedNotified = false;
   }
 
   // Ends the native Live Activity and resets the internal state
   void _resetLAState() {
-    _bridgeController.endActivity();
+    _bridgeController.endActivity(sessionId: _activeSessionId);
     _resetLAStateInternal(calledFromDeactivate: true);
     _clearTimestamp();
   }
@@ -354,6 +386,9 @@ class LiveActivityTravelController extends GetxController {
   }
 
   void _syncTimestamp(int arrivalTimestamp) {
+    // This is currently only used for iOS Live Activities sync
+    if (!Platform.isIOS) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       FirebaseRtdbHelper().liveActivityTravelTimestampSync(
@@ -364,9 +399,48 @@ class LiveActivityTravelController extends GetxController {
   }
 
   void _clearTimestamp() {
+    // This is currently only used for iOS Live Activities sync
+    if (!Platform.isIOS) return;
+
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       FirebaseRtdbHelper().liveActivityClearTimeStamp(uid: user.uid);
     }
+  }
+
+  @visibleForTesting
+  void applyStartResult(LiveUpdateStartResult result) {
+    if (!result.isSuccess) {
+      _resetLAStateInternal();
+      return;
+    }
+    if (result.sessionId != null) {
+      _activeSessionId = result.sessionId;
+    }
+    _isLALogicallyActive = true;
+  }
+
+  @visibleForTesting
+  void handleStatusEvent(LiveUpdateStatusEvent event) {
+    // Ignore events for other sessions when we have a known session id.
+    if (event.sessionId != null && _activeSessionId != null && event.sessionId != _activeSessionId) {
+      return;
+    }
+
+    switch (event.status) {
+      case LiveUpdateLifecycleStatus.timeout:
+      case LiveUpdateLifecycleStatus.dismissed:
+      case LiveUpdateLifecycleStatus.ended:
+        _resetLAStateInternal();
+        break;
+      default:
+        break;
+    }
+  }
+
+  @override
+  void onClose() {
+    _statusEventSubscription?.cancel();
+    super.onClose();
   }
 }
