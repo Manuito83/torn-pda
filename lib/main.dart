@@ -172,9 +172,6 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  // Migrate SharedPreferences to Sembast (runs once)
-  await Prefs().migratePrefsToSembast();
-
   // Drain FCM inboxes saved in background (e.g., stock alerts) into Prefs so we can show them on launch
   await drainFcmInbox();
 

@@ -5,7 +5,6 @@ import 'dart:developer';
 
 // Package imports:
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
@@ -17,11 +16,6 @@ class Prefs {
   static final Prefs _instance = Prefs._internal();
   factory Prefs() => _instance;
   Prefs._internal();
-
-  // Migration control
-  static bool _migrationInProgress = false;
-  static bool _migrationCompleted = false;
-  static const String _kSembastMigrationCompleted = "pda_sembast_migration_completed_v1";
 
   // General
   final String _kAppVersion = "pda_appVersion";
@@ -534,145 +528,6 @@ class Prefs {
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
   // Android-only: used to avoid repeating "Arrived" Live Update after app relaunch
   final String _kAndroidLiveActivityTravelLastArrivalId = "pda_androidLiveActivityTravelLastArrivalId";
-
-  /// =====================================
-  /// MIGRATION SharedPreferences > Sembast
-  /// =====================================
-  Future<void> migratePrefsToSembast() async {
-    if (_migrationCompleted) return;
-
-    if (_migrationInProgress) {
-      while (_migrationInProgress) {
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-      return;
-    }
-
-    try {
-      _migrationInProgress = true;
-
-      final alreadyMigrated = await PrefsDatabase.getBool(_kSembastMigrationCompleted, false);
-      if (alreadyMigrated) {
-        _migrationCompleted = true;
-        log(name: 'Prefs Migration', 'Migration already completed, skipping');
-        return;
-      }
-
-      log(name: 'Prefs Migration', 'Starting migration from SharedPreferences to Sembast...');
-
-      await _migrateFromSharedPrefs();
-
-      await PrefsDatabase.setBool(_kSembastMigrationCompleted, true);
-      _migrationCompleted = true;
-      log(name: 'Prefs Migration', 'Migration completed successfully');
-    } catch (e, stackTrace) {
-      log(
-        name: 'Prefs Migration',
-        'CRITICAL ERROR during migration: $e',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      rethrow;
-    } finally {
-      _migrationInProgress = false;
-    }
-  }
-
-  /// Migrates all data from SharedPreferences to Sembast
-  Future<void> _migrateFromSharedPrefs() async {
-    try {
-      // Check if migration already completed
-      final migrationCompleted = await PrefsDatabase.getBool(_kSembastMigrationCompleted, false);
-      if (migrationCompleted) {
-        log(name: 'Prefs Migration', 'Migration already completed previously - skipping');
-        return;
-      }
-
-      final prefs = SharedPreferencesAsync();
-      final keys = await prefs.getKeys();
-
-      log(name: 'Prefs Migration', 'Found ${keys.length} keys in SharedPreferences to migrate');
-
-      // Skip migration for new users (no data in SharedPreferences to migrate)
-      if (keys.isEmpty) {
-        log(name: 'Prefs Migration', 'No keys found in SharedPreferences - skipping migration (new installation)');
-        return;
-      }
-
-      int successCount = 0;
-      int errorCount = 0;
-
-      // Order matters: List MUST be checked before String
-      final migrationStrategies = [
-        (prefs, key) => prefs.getStringList(key),
-        (prefs, key) => prefs.getString(key),
-        (prefs, key) => prefs.getDouble(key),
-        (prefs, key) => prefs.getInt(key),
-        (prefs, key) => prefs.getBool(key),
-      ];
-
-      // Setters
-      final migrationSetters = [
-        (key, value) => PrefsDatabase.setStringList(key, value as List<String>),
-        (key, value) => PrefsDatabase.setString(key, value as String),
-        (key, value) => PrefsDatabase.setDouble(key, value as double),
-        (key, value) => PrefsDatabase.setInt(key, value as int),
-        (key, value) => PrefsDatabase.setBool(key, value as bool),
-      ];
-
-      for (final key in keys) {
-        try {
-          // Skip the migration flag itself
-          if (key == _kSembastMigrationCompleted) continue;
-
-          bool migrated = false;
-
-          for (int i = 0; i < migrationStrategies.length; i++) {
-            try {
-              final value = await migrationStrategies[i](prefs, key);
-              if (value != null) {
-                await migrationSetters[i](key, value);
-                migrated = true;
-                successCount++;
-                break;
-              }
-            } catch (_) {}
-          }
-
-          if (!migrated) {
-            log(name: 'Prefs Migration', 'Warning: Could not migrate key "$key" (unknown type or null)');
-            errorCount++;
-          }
-        } catch (e) {
-          log(name: 'Prefs Migration', 'Error migrating key "$key": $e');
-          errorCount++;
-        }
-      }
-
-      log(name: 'Prefs Migration', 'Migration complete: $successCount succeeded, $errorCount errors');
-
-      if (errorCount > 0) {
-        log(name: 'Prefs Migration', 'WARNING: $errorCount keys could not be migrated');
-      }
-
-      await PrefsDatabase.setBool(_kSembastMigrationCompleted, true);
-      log(name: 'Prefs Migration', 'Migration flag saved to Sembast');
-
-      // Clear SharedPreferences after successful migration to free up space
-      if (errorCount == 0 && successCount > 0) {
-        await prefs.clear();
-        log(name: 'Prefs Migration', 'SharedPreferences cleared after successful migration');
-      }
-    } catch (e, stackTrace) {
-      log(
-        name: 'Prefs Migration',
-        'FATAL ERROR during migration process: $e',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      rethrow;
-    }
-  }
 
   /// ----------------------------
   /// Methods for app version
