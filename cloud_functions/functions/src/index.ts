@@ -109,3 +109,5 @@ export const liveActivities = {
   registerPushToStartToken: registerPushToStartToken,
   sendTestTravelPushToManuito: sendTestTravelPushToManuito,
 };
+
+export { lookupPlayerByApiKey } from "./players";

@@ -1,4 +1,5 @@
 import { onDocumentCreated, onDocumentDeleted, onDocumentUpdated } from "firebase-functions/v2/firestore";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 
 export const onPlayerAdded = onDocumentCreated(
@@ -139,7 +140,7 @@ export const onPlayerDeleted = onDocumentDeleted(
 
     await Promise.all(promises);
 
-  })
+  });
 
 export const onPlayerUpdated = onDocumentUpdated({
   document: "players/{uid}",
@@ -345,7 +346,7 @@ export const onPlayerUpdated = onDocumentUpdated({
       if (!snapshot.exists()) {
         db.ref(`retals/factions/${afterStat.faction}`).set("");
       }
-    });;
+    });
   }
 
   await Promise.all(promises);
@@ -358,3 +359,68 @@ async function manageStats(statName: string, changeInValue: number) {
   totalUsers = totalUsers + changeInValue;
   await totalUserRef.set(totalUsers);
 }
+
+export const lookupPlayerByApiKey = onCall({
+  region: "us-east4",
+  memory: "256MiB",
+  timeoutSeconds: 30,
+}, async (request) => {
+  const { apiKey, currentUid, platform: requestedPlatform } = request.data || {};
+
+  if (!request.auth) {
+    throw new HttpsError("unauthenticated", "Auth required");
+  }
+
+  if (!apiKey || typeof apiKey !== "string" || apiKey.length === 0) {
+    throw new HttpsError("invalid-argument", "apiKey is required");
+  }
+
+  if (!currentUid || typeof currentUid !== "string" || currentUid.length === 0) {
+    throw new HttpsError("invalid-argument", "currentUid is required");
+  }
+
+  if (request.auth.uid !== currentUid) {
+    throw new HttpsError("permission-denied", "UID mismatch");
+  }
+
+  const db = admin.firestore();
+  const currentSnap = await db.collection("players").doc(currentUid).get();
+
+  if (!currentSnap.exists) {
+    throw new HttpsError("not-found", "Current user doc not found");
+  }
+
+  const storedApiKey = currentSnap.get("apiKey");
+  if (storedApiKey !== apiKey) {
+    throw new HttpsError("permission-denied", "API key does not match current user doc");
+  }
+
+  const query = await db
+    .collection("players")
+    .where("apiKey", "==", apiKey)
+    .orderBy("lastActive", "desc")
+    .limit(5)
+    .get();
+
+  if (query.empty) {
+    return { uid: null, data: null };
+  }
+
+  // Pick the most recent doc that is NOT the current UID
+  // Prefer same-platform matches only when the caller specifies the platform explicitly
+  const requestedPlatformValue = (requestedPlatform || "").toString();
+
+  const samePlatform = requestedPlatformValue.isEmpty
+    ? undefined
+    : query.docs.find(
+      (d) => d.id !== currentUid && (d.get("platform") || "").toString() === requestedPlatformValue,
+    );
+
+  const anyOther = samePlatform ?? query.docs.find((d) => d.id !== currentUid);
+
+  if (!anyOther) {
+    return { uid: null, data: null };
+  }
+
+  return { uid: anyOther.id, data: anyOther.data() };
+});

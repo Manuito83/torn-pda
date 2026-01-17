@@ -32,6 +32,7 @@ class FirebaseUserModel extends OwnProfileExtended {
   bool? refillsNotification = false;
   int? refillsTime = 22;
   List refillsRequested = [];
+  Map<String, dynamic> restockActiveAlerts = {};
   bool racingSent = true;
   bool? stockMarketNotification = false;
   List stockMarketShares = [];
@@ -87,6 +88,7 @@ class FirebaseUserModel extends OwnProfileExtended {
       "refillsNotification": refillsNotification,
       "refillsTime": refillsTime,
       "refillsRequested": refillsRequested,
+      "restockActiveAlerts": restockActiveAlerts,
       "racingSent": racingSent,
       "stockMarketNotification": stockMarketNotification,
       "stockMarketShares": stockMarketShares,

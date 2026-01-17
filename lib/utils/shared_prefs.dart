@@ -31,6 +31,7 @@ class Prefs {
   final String _kOwnDetails = "pda_ownDetails";
   final String _kLastAppUse = "pda_lastAppUse";
   final String _kPdaConnectivityCheckRC = "pda_connectivityCheckRC";
+  final String _kAuthRecoveryEnabledRC = "pda_authRecoveryEnabledRC";
 
   final String _kLastKnownFaction = "pfa_lastKnownFaction";
   final String _kLastKnownCompany = "pfa_lastKnownCompany";
@@ -744,6 +745,17 @@ class Prefs {
 
   Future setPdaConnectivityCheck(bool value) async {
     return await PrefsDatabase.setBool(_kPdaConnectivityCheckRC, value);
+  }
+
+  /// ----------------------------
+  /// Methods for auth recovery RC flag (kill switch)
+  /// ----------------------------
+  Future<bool> getAuthRecoveryEnabledRC() async {
+    return await PrefsDatabase.getBool(_kAuthRecoveryEnabledRC, true);
+  }
+
+  Future setAuthRecoveryEnabledRC(bool value) async {
+    return await PrefsDatabase.setBool(_kAuthRecoveryEnabledRC, value);
   }
 
   /// ----------------------------

@@ -174,6 +174,7 @@ class ChangeLogState extends State<ChangeLog> {
           ),
           "Added sorting to Dev Tools tabs and size data for storage items",
           "Added option to avoid keyboard overlapping the website in certain devices (disabled by default)",
+          "Improved user auth recovery process",
           "Fixed events timeline text formatting in Profile",
           "Fixed foreign stocks data submission to YATA and Prometheus",
           "Fixed scroll behavior in Foreign Stocks page",

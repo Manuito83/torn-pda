@@ -16,8 +16,30 @@ class DialogQueue {
   static bool _startupDelayActive = false;
   static VoidCallback? _onQueueEmptyCallback;
 
+  /// Auth gate to wait for AuthRecoveryWidget to complete before showing dialogs
+  /// This prevents dialogs from appearing over the auth loading/timeout screens
+  ///
+  /// The 15-second timeout is in case AuthRecoveryWidget fails to
+  /// complete the gate. If the timeout fires while
+  /// the user is reading the "Understood" timeout screen, dialogs may appear over it
+  static Completer<void>? _authGate;
+
   static void setOnQueueEmptyCallback(VoidCallback? callback) {
     _onQueueEmptyCallback = callback;
+  }
+
+  /// Set the auth gate that dialogs will wait for before showing
+  /// Call [completeAuthGate] when auth recovery is complete
+  static void setAuthGate(Completer<void> gate) {
+    _authGate = gate;
+  }
+
+  /// Complete the auth gate, allowing queued dialogs to start showing
+  static void completeAuthGate() {
+    if (_authGate != null && !_authGate!.isCompleted) {
+      log("DialogQueue: Auth gate completed");
+      _authGate!.complete();
+    }
   }
 
   /// 500ms startup delay to allow dialogs to accumulate before processing
@@ -64,9 +86,19 @@ class DialogQueue {
     }
   }
 
-  static void _processNext() {
+  static Future<void> _processNext() async {
     if (_startupDelayActive || _isDialogActive) {
       return;
+    }
+
+    // Wait for auth gate if set (with 15s safety timeout)
+    if (_authGate != null && !_authGate!.isCompleted) {
+      log("DialogQueue: Waiting for auth gate...");
+      try {
+        await _authGate!.future.timeout(const Duration(seconds: 15));
+      } on TimeoutException {
+        log("DialogQueue: Auth gate timeout (15s), proceeding anyway");
+      }
     }
 
     if (_pendingDialogs.isEmpty) {

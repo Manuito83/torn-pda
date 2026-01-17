@@ -78,6 +78,42 @@ const String appVersion = '3.10.2';
 const String androidCompilation = '605';
 const String iosCompilation = '605';
 
+/// All Firestore fields related to alerts configuration
+/// Used for auth recovery and local backup restoration
+/// (add new alert fields here when implementing new alerts)
+const List<String> kAlertFirestoreFields = [
+  "discrete",
+  "vibration",
+  "travelNotification",
+  "foreignRestockNotification",
+  "foreignRestockNotificationOnlyCurrentCountry",
+  "energyNotification",
+  "nerveNotification",
+  "lifeNotification",
+  "hospitalNotification",
+  "drugsNotification",
+  "medicalNotification",
+  "boosterNotification",
+  "racingNotification",
+  "messagesNotification",
+  "eventsNotification",
+  "eventsFilter",
+  "refillsNotification",
+  "refillsTime",
+  "refillsRequested",
+  "stockMarketNotification",
+  "stockMarketShares",
+  "factionAssistMessage",
+  "retalsNotification",
+  "retalsNotificationHost",
+  "retalsNotificationDonor",
+  "forumsSubscriptionsNotification",
+  "lootAlerts",
+  "lootRangersNotification",
+  "lootAlertAheadSeconds",
+  "lootRangersAheadSeconds",
+];
+
 bool appHasBeenUpdated = false;
 bool appIsFirstRun = false;
 

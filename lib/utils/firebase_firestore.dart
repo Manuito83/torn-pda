@@ -14,7 +14,9 @@ import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/firebase_user_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
+import 'package:torn_pda/utils/sembast_db.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:torn_pda/utils/user_helper.dart';
 
 class FirestoreHelper {
   static final FirestoreHelper _instance = FirestoreHelper._internal();
@@ -66,33 +68,32 @@ class FirestoreHelper {
     // Otherwise, an empty object will be returned
     _firebaseUserModel = await getUserProfile(force: true);
 
-    await _firestore.collection("players").doc(_uid).set(
-      {
-        "uid": _uid,
-        "name": profile.name,
-        "level": profile.level,
-        "apiKey": profile.userApiKey,
-        "life": profile.life!.current,
-        "playerId": profile.playerId,
-        "energyLastCheckFull": _firebaseUserModel!.energyLastCheckFull, // Defaults
-        "nerveLastCheckFull": _firebaseUserModel!.nerveLastCheckFull, // Defaults
-        "drugsInfluence": _firebaseUserModel!.drugsInfluence, // Defaults
-        "medicalInfluence": _firebaseUserModel!.medicalInfluence, // Defaults
-        "boosterInfluence": _firebaseUserModel!.boosterInfluence, // Defaults
-        "racingSent": _firebaseUserModel!.racingSent, // Defaults
-        "platform": platform,
-        "version": appVersion,
-        "faction": profile.faction!.factionId,
-        // Ensures all users have a refill time after v2.6.0.
-        "refillsTime": _firebaseUserModel!.refillsTime, // Defaults to 22 if null (new user)
-        "factionAssistMessage": _firebaseUserModel!.factionAssistMessage, // Defaults to true
+    final payload = {
+      "uid": _uid,
+      "name": profile.name,
+      "level": profile.level,
+      "apiKey": profile.userApiKey,
+      "life": profile.life!.current,
+      "playerId": profile.playerId,
+      "energyLastCheckFull": _firebaseUserModel!.energyLastCheckFull, // Defaults
+      "nerveLastCheckFull": _firebaseUserModel!.nerveLastCheckFull, // Defaults
+      "drugsInfluence": _firebaseUserModel!.drugsInfluence, // Defaults
+      "medicalInfluence": _firebaseUserModel!.medicalInfluence, // Defaults
+      "boosterInfluence": _firebaseUserModel!.boosterInfluence, // Defaults
+      "racingSent": _firebaseUserModel!.racingSent, // Defaults
+      "platform": platform,
+      "version": appVersion,
+      "faction": profile.faction!.factionId,
+      // Ensures all users have a refill time after v2.6.0.
+      "refillsTime": _firebaseUserModel!.refillsTime, // Defaults to 22 if null (new user)
+      "factionAssistMessage": _firebaseUserModel!.factionAssistMessage, // Defaults to true
 
-        // This is a unique identifier to identify this user and target notification
-        "token": token,
-        "tokenErrors": 0,
-      },
-      SetOptions(merge: true),
-    );
+      // This is a unique identifier to identify this user and target notification
+      "token": token,
+      "tokenErrors": 0,
+    };
+
+    await _firestore.collection("players").doc(_uid).set(payload, SetOptions(merge: true));
 
     return _firebaseUserModel;
   }
@@ -281,6 +282,11 @@ class FirestoreHelper {
         "active": true,
       };
 
+      final apiKey = UserHelper.apiKey;
+      if (apiKey.isNotEmpty) {
+        updatePayload["apiKey"] = apiKey;
+      }
+
       if (Platform.isIOS && kSdkIos >= 17.2) {
         final laTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
         if (laTravelEnabled) {
@@ -314,7 +320,81 @@ class FirestoreHelper {
       // New user does not return anything, so we use default fields in the model
       return FirebaseUserModel();
     }
-    return _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data()!);
+    _firebaseUserModel = FirebaseUserModel.fromMap(userReceived.data()!);
+    // Always persist a local snapshot when we fetch a fresh profile, so we have a backup
+    // in case that Firebase auth fails (in which case the Auth Recovery in Drawer will try to restore from it)
+    _persistLocalSnapshot();
+    return _firebaseUserModel;
+  }
+
+  Future<String?> findMostRecentUidByApiKey(String apiKey) async {
+    try {
+      final query = await _firestore
+          .collection("players")
+          .where("apiKey", isEqualTo: apiKey)
+          .orderBy("lastActive", descending: true)
+          .limit(1)
+          .get();
+
+      if (query.docs.isEmpty) return null;
+      return query.docs.first.id;
+    } catch (e, s) {
+      log("Error finding UID by apiKey: $e", stackTrace: s);
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> cloneUserProfileFromPayload(Map<String, dynamic> payload) async {
+    if (_uid == null) return null;
+
+    try {
+      final cloned = Map<String, dynamic>.from(payload);
+      cloned.remove("uid");
+      cloned.remove("token");
+      cloned.remove("tokenErrors");
+
+      await _firestore.collection("players").doc(_uid).set(cloned);
+
+      cloned["uid"] = _uid;
+      _firebaseUserModel = FirebaseUserModel.fromMap(cloned);
+      return cloned;
+    } catch (e, s) {
+      log("Error cloning profile from payload into $_uid: $e", stackTrace: s);
+      return null;
+    }
+  }
+
+  Future<bool> applyAlertsFromPayload(Map<String, dynamic> payload, {bool resetRestockTimestamps = false}) async {
+    if (_uid == null) return false;
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    Map<String, dynamic> restocks = {};
+    if (payload.containsKey("restockActiveAlerts") && payload["restockActiveAlerts"] is Map) {
+      restocks = Map<String, dynamic>.from(payload["restockActiveAlerts"] as Map);
+      if (resetRestockTimestamps) {
+        restocks = restocks.map((k, _) => MapEntry(k.toString(), now));
+      }
+    }
+
+    final Map<String, dynamic> updates = {};
+    void addIfPresent(String key) {
+      if (payload.containsKey(key)) updates[key] = payload[key];
+    }
+
+    // Use centralized list from main.dart
+    for (final field in kAlertFirestoreFields) {
+      addIfPresent(field);
+    }
+
+    if (restocks.isNotEmpty) {
+      updates["restockActiveAlerts"] = restocks;
+    }
+
+    if (updates.isEmpty) return false;
+
+    await _firestore.collection("players").doc(_uid).set(updates, SetOptions(merge: true));
+    return true;
   }
 
   Future deleteUserProfile() async {
@@ -327,6 +407,32 @@ class FirestoreHelper {
       "vibration": pattern,
     });
   }
+
+  // --- Local Snapshot Logic ---
+  static const String _kLocalUserSnapshot = "_local_user_model_snapshot";
+
+  Future<void> _persistLocalSnapshot() async {
+    if (_firebaseUserModel == null) return;
+    try {
+      final jsonStr = jsonEncode(_firebaseUserModel!.toMap());
+      await PrefsDatabase.setString(_kLocalUserSnapshot, jsonStr);
+    } catch (e) {
+      log("Snapshot save failed: $e");
+    }
+  }
+
+  Future<FirebaseUserModel?> loadLocalSnapshot() async {
+    try {
+      final jsonStr = await PrefsDatabase.getString(_kLocalUserSnapshot, "");
+      if (jsonStr.isEmpty) return null;
+      final map = jsonDecode(jsonStr);
+      return FirebaseUserModel.fromMap(map);
+    } catch (e) {
+      log("Snapshot load failed: $e");
+      return null;
+    }
+  }
+  // ----------------------------
 
   Future<void> subscribeToStockMarketNotification(bool? subscribe) async {
     await _firestore.collection("players").doc(_uid).update({

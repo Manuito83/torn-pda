@@ -165,6 +165,37 @@ class _FirebaseFunctions {
     }
   }
 
+  Future<Map<String, dynamic>?> lookupUserByApiKey({
+    required String apiKey,
+    required String currentUid,
+    String? platform,
+  }) async {
+    const String functionName = 'lookupPlayerByApiKey';
+
+    final Map<String, dynamic> data = {
+      'apiKey': apiKey,
+      'currentUid': currentUid,
+      if (platform != null && platform.isNotEmpty) 'platform': platform,
+    };
+
+    try {
+      if (Platform.isWindows) {
+        final result = await _callHttpFunctionForDesktop(functionName, data, wrapDataAsJsonString: false);
+        return result as Map<String, dynamic>?;
+      } else {
+        final HttpsCallable callable = FirebaseFunctions.instanceFor(region: region).httpsCallable(functionName);
+        final HttpsCallableResult results = await callable.call(data);
+        if (results.data is Map<String, dynamic>) {
+          return results.data as Map<String, dynamic>;
+        }
+        return null;
+      }
+    } catch (e, trace) {
+      log("Error in lookupUserByApiKey: $e\n$trace");
+    }
+    return null;
+  }
+
   Future<Map<String, dynamic>> getUserPrefs({
     required String apiKey,
     required int userId,
@@ -292,28 +323,6 @@ class _FirebaseFunctions {
       log("Successfully called registerPushToStartToken for type: $activityType");
     } catch (e) {
       log("Error calling registerPushToStartToken: $e");
-    }
-  }
-
-  Future<void> syncLiveActivityTimestamp({
-    required int arrivalTimestamp,
-  }) async {
-    if (!Platform.isIOS) return;
-
-    final String functionName = 'liveActivities-syncActiveLATimestamp';
-
-    Map<String, dynamic> data = {
-      'arrivalTimestamp': arrivalTimestamp,
-    };
-
-    try {
-      final HttpsCallable callable = FirebaseFunctions.instanceFor(
-        region: 'us-east4',
-      ).httpsCallable(functionName);
-      await callable.call(data);
-      log("Successfully synced LA timestamp ($arrivalTimestamp) with server");
-    } catch (e) {
-      log("Error syncing LA timestamp with server: $e");
     }
   }
 }
