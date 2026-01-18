@@ -947,15 +947,24 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
       console.log("Only current country alerts: " + subscriber.foreignRestockNotificationOnlyCurrentCountry);
       */
 
-      const databaseCountryName = dbStocks[userCodeName].country;
-      let playerDestination = userStats.travel.destination;
+      const stockEntry = dbStocks[userCodeName];
+      if (!stockEntry) {
+        continue;
+      }
+
+      const databaseCountryName = stockEntry.country;
+      let playerDestination = userStats?.travel?.destination;
 
       // If the user has activated the option in Torn PDA only to be notified if the restock is happening
       // in the country he is flying to / staying in, we need to check whether they match before proceeding
       if (subscriber.foreignRestockNotificationOnlyCurrentCountry) {
         // We are looking for the SPECIFIC country of the item here
 
-        if (userStats.travel.destination === "United Kingdom") {
+        if (!playerDestination || !databaseCountryName) {
+          continue;
+        }
+
+        if (playerDestination === "United Kingdom") {
           // Standardize with values in the database and API
           playerDestination = "UK";
         }
@@ -969,7 +978,10 @@ export function sendForeignRestockNotification(userStats: any, dbStocks: any, su
       }
 
       if (userCodeName in dbStocks) {
-        const dbTime = dbStocks[userCodeName].restock;
+        const dbTime = stockEntry.restock;
+        if (typeof dbTime !== "number") {
+          continue;
+        }
         const timeDifference = <number>userTime - dbTime * 1000;
 
         if (timeDifference < 0) {
