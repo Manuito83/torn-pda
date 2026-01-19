@@ -168,7 +168,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Added new target sorting sheet",
           "Added on time option for local notifications, alarms and timers where applicable",
           ComplexFeature(
-            "Dev: added tab state handler (see details)",
+            "Dev: added 'tab state' webview handler (see details)",
             explanation: "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"
                 " and browser visibility) and stay in sync across tab switches.\n\n"
                 "Please visit the ./docs section in Github for more information.",
