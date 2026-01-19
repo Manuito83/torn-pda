@@ -2438,6 +2438,19 @@ class WebViewFullState extends State<WebViewFull>
           await Future.delayed(const Duration(seconds: 4));
           _webViewProvider.loginErrorRetrySeconds = 0;
         } else {
+          if (loginResponse.transientError) {
+            BotToast.showText(
+              text: "Temporary authentication issue (timeout or server error). Please retry in a moment.",
+              textStyle: const TextStyle(
+                fontSize: 14,
+                color: Colors.white,
+              ),
+              contentColor: Colors.orange,
+              duration: const Duration(seconds: 4),
+              contentPadding: const EdgeInsets.all(10),
+            );
+            return;
+          }
           BotToast.showText(
             text: "Browser error while authenticating: please log in again or verify your user / pass combination "
                 "in the Settings section!",
