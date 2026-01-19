@@ -891,12 +891,11 @@ class WebViewProvider extends ChangeNotifier {
     final deactivated = _tabList[previousIndex];
     deactivated.webViewKey?.currentState?.pauseThisWebview();
     // Notify the tab being deactivated
-      deactivated.webViewKey?.currentState?.publishTabState(
-            isActiveTab: false,
-            isWebViewVisible: _isBrowserForeground,
-          ) ??
-          Future.value()
-    ;
+    deactivated.webViewKey?.currentState?.publishTabState(
+          isActiveTab: false,
+          isWebViewVisible: _isBrowserForeground,
+        ) ??
+        Future.value();
 
     currentTab = newActiveTab;
     final activated = _tabList[currentTab];
@@ -913,12 +912,11 @@ class WebViewProvider extends ChangeNotifier {
     activated.webViewKey?.currentState?.resumeThisWebview(publish: false);
 
     // Notify the tab being activated
-      activated.webViewKey?.currentState?.publishTabState(
-            isActiveTab: true,
-            isWebViewVisible: _isBrowserForeground,
-          ) ??
-          Future.value()
-    ;
+    activated.webViewKey?.currentState?.publishTabState(
+          isActiveTab: true,
+          isWebViewVisible: _isBrowserForeground,
+        ) ??
+        Future.value();
 
     _callAssessMethods();
     notifyListeners();
@@ -1752,6 +1750,7 @@ class WebViewProvider extends ChangeNotifier {
   Future<String?> _assessNativeAuth({required String? inputUrl, required BuildContext context}) async {
     final NativeUserProvider nativeUser = context.read<NativeUserProvider>();
     final NativeAuthProvider nativeAuth = context.read<NativeAuthProvider>();
+    TornLoginResponseContainer? loginResponse;
 
     if (nativeUser.playerLastLoginMethod == NativeLoginType.none) {
       log("No native user enabled, skipping auth!");
@@ -1775,7 +1774,7 @@ class WebViewProvider extends ChangeNotifier {
         nativeAuth.lastAuthRedirect = DateTime.now();
         log("Getting auth URL!");
         try {
-          final TornLoginResponseContainer loginResponse = await nativeAuth.requestTornRecurrentInitData(
+          loginResponse = await nativeAuth.requestTornRecurrentInitData(
             context: context,
             loginData: GetInitDataModel(
               playerId: UserHelper.playerId,
@@ -1801,6 +1800,15 @@ class WebViewProvider extends ChangeNotifier {
           Future.delayed(const Duration(seconds: 2)).then((_) {
             nativeAuth.lastAuthRedirect = DateTime.fromMicrosecondsSinceEpoch(elapsedSinceLastAuth);
           });
+
+          if (loginResponse?.transientError == true) {
+            if (!Platform.isWindows) {
+              FirebaseCrashlytics.instance.log(
+                "Transient native auth error: ${loginResponse?.message} (status: ${loginResponse?.httpStatus ?? 'n/a'})",
+              );
+            }
+            return inputUrl;
+          }
 
           String errorMessage = "Authentication error, please check your username and password in Settings!";
           if (nativeAuth.authErrorsInSession >= 3) {
