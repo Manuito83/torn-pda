@@ -111,11 +111,12 @@ class ChangeLogState extends State<ChangeLog> {
         ..features = [
           if (Platform.isAndroid)
             ComplexFeature(
-              "Travel Live Updates are now available on Android",
+              "Travel Live Updates are now available on Android [bombel]",
               explanation: "Use the switch below to enable them.\n\n"
                   "When enabling, you'll be prompted to review battery optimization "
                   "settings to keep updates running in the background.\n\n"
-                  "You can change this setting in the Alerts section later on.",
+                  "You can change this setting in the Alerts section later on.\n\n"
+                  "Credits for the implementation go to bombel [2362436]",
             ),
           if (Platform.isAndroid)
             Consumer<SettingsProvider>(
