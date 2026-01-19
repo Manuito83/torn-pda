@@ -5,6 +5,7 @@ import 'dart:developer';
 
 // Package imports:
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/chaining/target_sort.dart';
 import 'package:torn_pda/models/chaining/war_settings.dart';
@@ -577,7 +578,35 @@ class Prefs {
   }
 
   Future setOwnDetails(String value) async {
-    return await PrefsDatabase.setString(_kOwnDetails, value);
+    await PrefsDatabase.setString(_kOwnDetails, value);
+    final prefs = SharedPreferencesAsync();
+    await prefs.setString(_kOwnDetails, value);
+  }
+
+  /// ----------------------------
+  /// Background-safe mirror sync
+  /// ----------------------------
+  /// Seeds SharedPreferencesAsync with the minimal keys needed by background workers
+  Future<void> syncBackgroundPrefs() async {
+    final prefs = SharedPreferencesAsync();
+
+    final ownDetails = await PrefsDatabase.getString(_kOwnDetails, "");
+    final existingOwnDetails = await prefs.getString(_kOwnDetails);
+    if (ownDetails.isNotEmpty || existingOwnDetails == null) {
+      await prefs.setString(_kOwnDetails, ownDetails);
+    }
+
+    final defaultTimeFormat = await PrefsDatabase.getString(_kDefaultTimeFormat, '24');
+    await prefs.setString(_kDefaultTimeFormat, defaultTimeFormat);
+
+    final defaultTimeZone = await PrefsDatabase.getString(_kDefaultTimeZone, 'local');
+    await prefs.setString(_kDefaultTimeZone, defaultTimeZone);
+
+    final activeShortcuts = await PrefsDatabase.getStringList(_kActiveShortcutsList, <String>[]);
+    final existingShortcuts = await prefs.getStringList(_kActiveShortcutsList);
+    if (activeShortcuts.isNotEmpty || existingShortcuts == null) {
+      await prefs.setStringList(_kActiveShortcutsList, activeShortcuts);
+    }
   }
 
   /// ----------------------------
@@ -1475,7 +1504,9 @@ class Prefs {
   }
 
   Future setDefaultTimeFormat(String value) async {
-    return await PrefsDatabase.setString(_kDefaultTimeFormat, value);
+    await PrefsDatabase.setString(_kDefaultTimeFormat, value);
+    final prefs = SharedPreferencesAsync();
+    await prefs.setString(_kDefaultTimeFormat, value);
   }
 
   Future<String> getDefaultTimeZone() async {
@@ -1483,7 +1514,9 @@ class Prefs {
   }
 
   Future setDefaultTimeZone(String value) async {
-    return await PrefsDatabase.setString(_kDefaultTimeZone, value);
+    await PrefsDatabase.setString(_kDefaultTimeZone, value);
+    final prefs = SharedPreferencesAsync();
+    await prefs.setString(_kDefaultTimeZone, value);
   }
 
   Future<String> getShowDateInClock() async {
@@ -2661,7 +2694,9 @@ class Prefs {
   }
 
   Future setActiveShortcutsList(List<String> value) async {
-    return await PrefsDatabase.setStringList(_kActiveShortcutsList, value);
+    await PrefsDatabase.setStringList(_kActiveShortcutsList, value);
+    final prefs = SharedPreferencesAsync();
+    await prefs.setStringList(_kActiveShortcutsList, value);
   }
 
   /// ----------------------------

@@ -175,6 +175,9 @@ Future<void> main() async {
   // Drain FCM inboxes saved in background (e.g., stock alerts) into Prefs so we can show them on launch
   await drainFcmInbox();
 
+  // Sync background-safe preferences
+  await Prefs().syncBackgroundPrefs();
+
   // Core initialization
   await _initializeAppCompilation();
   await _initializePlatformSpecifics();

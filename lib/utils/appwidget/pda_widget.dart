@@ -15,8 +15,8 @@ import 'package:torn_pda/providers/api/api_utils.dart';
 import 'package:torn_pda/providers/api/api_v1_calls.dart';
 import 'package:torn_pda/providers/settings_provider.dart';
 import 'package:torn_pda/utils/appwidget/installed_widgets_info.dart';
+import 'package:torn_pda/utils/background_prefs.dart';
 import 'package:torn_pda/utils/country_check.dart';
-import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/time_formatter.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -171,7 +171,7 @@ Future<void> fetchAndPersistWidgetData() async {
     final bool isRankedWarWidgetInstalled = installedWidgets.isRankedWarWidgetInstalled;
 
     String apiKey = "";
-    var savedUserRaw = await Prefs().getOwnDetails();
+    var savedUserRaw = await BackgroundPrefs().getOwnDetails();
     if (savedUserRaw.isNotEmpty) {
       try {
         apiKey = ownProfileBasicFromJson(savedUserRaw).userApiKey ?? "";
@@ -181,7 +181,7 @@ Future<void> fetchAndPersistWidgetData() async {
     }
 
     // Set last updated time globally for all widgets that might need it
-    String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
+    String restoredTimeFormat = await BackgroundPrefs().getDefaultTimeFormat();
     TimeFormatSetting timePrefs = restoredTimeFormat == '24' ? TimeFormatSetting.h24 : TimeFormatSetting.h12;
     DateFormat formatter;
     switch (timePrefs) {
@@ -192,7 +192,7 @@ Future<void> fetchAndPersistWidgetData() async {
         formatter = DateFormat('hh:mm a');
         break;
     }
-    bool timeZoneIsLocal = (await Prefs().getDefaultTimeZone()) != 'torn';
+    bool timeZoneIsLocal = (await BackgroundPrefs().getDefaultTimeZone()) != 'torn';
     HomeWidget.saveWidgetData<String>(
         'last_updated',
         "${formatter.format(timeZoneIsLocal ? DateTime.now() : DateTime.now().toUtc())} "
@@ -406,7 +406,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
             final warStartDateTime = DateTime.fromMillisecondsSinceEpoch(warStarts);
             final dateFormat = DateFormat('MMM d, HH:mm');
             // Use same timezone preference as other widget times
-            bool timeZoneIsLocal = (await Prefs().getDefaultTimeZone()) != 'torn';
+            bool timeZoneIsLocal = (await BackgroundPrefs().getDefaultTimeZone()) != 'torn';
             final displayDateTime = timeZoneIsLocal ? warStartDateTime : warStartDateTime.toUtc();
             HomeWidget.saveWidgetData<String>('rw_date_string', dateFormat.format(displayDateTime));
 
@@ -460,7 +460,7 @@ Future<void> _refreshRankedWarWidgetData(String savedUserRaw, String apiKey) asy
       final warEndDateTime = DateTime.fromMillisecondsSinceEpoch(finishedWar.war!.end! * 1000);
       final dateFormat = DateFormat('MMM d, HH:mm');
       // Use same timezone preference as other widget times
-      bool timeZoneIsLocal = (await Prefs().getDefaultTimeZone()) != 'torn';
+      bool timeZoneIsLocal = (await BackgroundPrefs().getDefaultTimeZone()) != 'torn';
       final displayDateTime = timeZoneIsLocal ? warEndDateTime : warEndDateTime.toUtc();
       HomeWidget.saveWidgetData<String>('rw_end_date_string', dateFormat.format(displayDateTime));
     }
@@ -662,7 +662,7 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<String>('money', money);
 
     // Last Updated
-    String restoredTimeFormat = await Prefs().getDefaultTimeFormat();
+    String restoredTimeFormat = await BackgroundPrefs().getDefaultTimeFormat();
     TimeFormatSetting timePrefs = restoredTimeFormat == '24' ? TimeFormatSetting.h24 : TimeFormatSetting.h12;
     DateFormat formatter;
     switch (timePrefs) {
@@ -674,7 +674,7 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
         break;
     }
 
-    bool timeZoneIsLocal = (await Prefs().getDefaultTimeZone()) != 'torn';
+    bool timeZoneIsLocal = (await BackgroundPrefs().getDefaultTimeZone()) != 'torn';
     HomeWidget.saveWidgetData<String>(
         'last_updated',
         "${formatter.format(timeZoneIsLocal ? DateTime.now() : DateTime.now().toUtc())} "
@@ -778,7 +778,7 @@ Future<void> _refreshMainPdaWidgetData(String apiKey) async {
     HomeWidget.saveWidgetData<String>('booster_string', boosterString);
 
     // SHORTCUTS
-    var savedShortcuts = await Prefs().getActiveShortcutsList();
+    var savedShortcuts = await BackgroundPrefs().getActiveShortcutsList();
     List<Shortcut> shortcuts = <Shortcut>[];
     for (var savedShortRaw in savedShortcuts) {
       shortcuts.add(shortcutFromJson(savedShortRaw));
