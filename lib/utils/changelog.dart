@@ -180,6 +180,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed foreign stocks data submission to YATA and Prometheus",
           "Fixed scroll behavior in Foreign Stocks page",
           "Fixed TORN targets import erasing existing targets",
+          if (Platform.isIOS) "Fixed webview URL dialog closing rapidly on certain devices",
         ],
     );
 

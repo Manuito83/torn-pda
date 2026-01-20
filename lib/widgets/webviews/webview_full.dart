@@ -4479,6 +4479,8 @@ class WebViewFullState extends State<WebViewFull>
     final url = await webViewController!.getUrl();
     return showWebviewDialog<void>(
       context: context,
+      // iOS can dismiss immediately due to the opening gesture; keep the dialog open.
+      barrierDismissible: !Platform.isIOS,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _pageTitle,

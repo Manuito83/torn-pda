@@ -1,6 +1,7 @@
 // Dart imports:
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 // Package imports:
 import 'package:bot_toast/bot_toast.dart';
@@ -407,6 +408,8 @@ class WebViewPanicState extends State<WebViewPanic> {
     final url = await _webViewController!.currentUrl();
     return showWebviewDialog<void>(
       context: context,
+      // iOS can dismiss immediately on iOS 26+... because... Apple
+      barrierDismissible: !Platform.isIOS,
       builder: (BuildContext context) {
         return WebviewUrlDialog(
           title: _currentPageTitle,
