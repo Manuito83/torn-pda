@@ -59,36 +59,58 @@ String hideItemInfoJS() {
   ''';
 }
 
-String ensureMinDocumentHeightForKeyboardJS({double minViewportMultiple = 1.5}) {
+String ensureMinDocumentHeightForKeyboardJS({
+  double minViewportMultiple = 1.5,
+  bool debugForceMinHeight = false,
+  double debugMinViewportMultiple = 3.0,
+}) {
   final multiplier = minViewportMultiple.toStringAsFixed(2);
+  final debugMultiplier = debugMinViewportMultiple.toStringAsFixed(2);
+  final debugForce = debugForceMinHeight ? 'true' : 'false';
 
   return '''
-    (function applyHeightExtension(runLate) {
-      const minHeightPx = Math.ceil(window.innerHeight * $multiplier);
+    (function() {
       const doc = document.documentElement;
       const body = document.body || doc;
       const scrolling = document.scrollingElement || doc;
+      let lastViewportHeight = 0;
+      let stableFrames = 0;
+      let debounceTimer = null;
+      const STABLE_FRAME_TARGET = 4;
 
-      const scrollingHeight = scrolling ? scrolling.scrollHeight || scrolling.clientHeight || 0 : 0;
-      const viewportHeight = window.innerHeight;
+      function getViewportHeight() {
+        // visualViewport to avoid transient toolbar sizes on Android
+        return (window.visualViewport && window.visualViewport.height) || window.innerHeight || 0;
+      }
 
-      // Enforce a minimum height unconditionally; min-height is harmless on tall pages and ensures space on short ones
-      const currentHeight = Math.max(scrollingHeight, viewportHeight);
+      function getScrollingHeight() {
+        return scrolling ? (scrolling.scrollHeight || scrolling.clientHeight || 0) : 0;
+      }
 
-      let spacer = document.getElementById('pda-height-spacer');
+      function applyHeightExtension() {
+        // Apply only if content is shorter than the minimum target height
+        const viewportHeight = getViewportHeight();
+        const effectiveMultiplier = ($debugForce) ? $debugMultiplier : $multiplier;
+        let minHeightPx = Math.ceil(viewportHeight * effectiveMultiplier);
+        const currentHeight = Math.max(getScrollingHeight(), viewportHeight);
+        let spacer = document.getElementById('pda-height-spacer');
 
-      if (true) {
-        const targetHeight = minHeightPx;
-        if (body) {
-          body.style.minHeight = targetHeight + 'px';
+        if (currentHeight >= minHeightPx) {
+          if ($debugForce) {
+            // Force extra space for debugging, even on tall pages
+            minHeightPx = currentHeight + Math.ceil(viewportHeight * 0.5);
+          } else {
+          if (body) body.style.minHeight = '';
+          if (doc) doc.style.minHeight = '';
+          if (spacer) spacer.remove();
+          return;
+          }
         }
 
-        if (doc) {
-          doc.style.minHeight = targetHeight + 'px';
-        }
+        if (body) body.style.minHeight = minHeightPx + 'px';
+        if (doc) doc.style.minHeight = minHeightPx + 'px';
 
         const gap = Math.max(minHeightPx - currentHeight, 0);
-
         if (!spacer) {
           spacer = document.createElement('div');
           spacer.id = 'pda-height-spacer';
@@ -97,15 +119,48 @@ String ensureMinDocumentHeightForKeyboardJS({double minViewportMultiple = 1.5}) 
           spacer.style.background = 'transparent';
           (body || document.documentElement).appendChild(spacer);
         }
-
         spacer.style.height = gap + 'px';
       }
 
-      // Re-evaluate shortly after load to catch late layout changes; silent on the second pass.
-      if (!runLate) {
-        setTimeout(() => applyHeightExtension(true), 500);
+      function tick() {
+        // Wait for the viewport height to stabilize across a few frames
+        const viewportHeight = getViewportHeight();
+        if (Math.abs(viewportHeight - lastViewportHeight) < 1) {
+          stableFrames += 1;
+        } else {
+          stableFrames = 0;
+        }
+        lastViewportHeight = viewportHeight;
+
+        if (stableFrames >= STABLE_FRAME_TARGET) {
+          applyHeightExtension();
+        } else {
+          requestAnimationFrame(tick);
+        }
       }
-    })(false);
+
+      function schedule() {
+        // Debounce resize bursts (URL bar show/hide) before re-measuring
+        if (debounceTimer) {
+          clearTimeout(debounceTimer);
+        }
+        debounceTimer = setTimeout(() => {
+          stableFrames = 0;
+          lastViewportHeight = getViewportHeight();
+          requestAnimationFrame(tick);
+        }, 50);
+      }
+
+      schedule();
+
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', schedule);
+      }
+      // Also respond to classic resize/orientation/load events
+      window.addEventListener('resize', schedule);
+      window.addEventListener('orientationchange', schedule);
+      window.addEventListener('load', schedule);
+    })();
   ''';
 }
 
