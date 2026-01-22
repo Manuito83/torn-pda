@@ -475,39 +475,63 @@ export const oneTimeClean = onSchedule({
   logger.info("🧹 ONETIMECLEAN STARTING");
 
   const db = admin.firestore();
-  const snapshot = await db.collection("stocks-main").get();
-
-  logger.info(`📊 Analyzing ${snapshot.size} stock documents for periodicMap cleanup`);
-
+  const batchSize = 500;
+  let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | null = null;
   let numberCleared = 0;
+  let totalProcessed = 0;
 
-  const cleanupPromises = snapshot.docs.map(async doc => {
-    const docData = doc.data();
-    if (docData.periodicMap && typeof docData.periodicMap === 'object') {
-      const bigMap = docData.periodicMap;
-      const allKeys = Object.keys(bigMap)
-        .map(Number)
-        .filter(k => !isNaN(k))
-        .sort((a, b) => b - a);
+  while (true) {
+    let query = db.collection("stocks-main")
+      .orderBy(admin.firestore.FieldPath.documentId())
+      .limit(batchSize);
 
-      if (allKeys.length > 200) {
-        const keysToKeep = allKeys.slice(0, 200);
-        const filteredMap: { [key: number]: number } = {};
-        for (const k of keysToKeep) {
-          filteredMap[k] = bigMap[k];
+    if (lastDoc) {
+      query = query.startAfter(lastDoc);
+    }
+
+    const snapshot = await query.get();
+    if (snapshot.empty) {
+      break;
+    }
+
+    logger.info(`📊 Analyzing ${snapshot.size} stock documents for periodicMap cleanup`);
+
+    const batch = db.batch();
+    let batchOps = 0;
+
+    for (const doc of snapshot.docs) {
+      const docData = doc.data();
+      if (docData.periodicMap && typeof docData.periodicMap === "object") {
+        const bigMap = docData.periodicMap;
+        const allKeys = Object.keys(bigMap)
+          .map(Number)
+          .filter((k) => !isNaN(k))
+          .sort((a, b) => b - a);
+
+        if (allKeys.length > 200) {
+          const keysToKeep = allKeys.slice(0, 200);
+          const filteredMap: { [key: number]: number } = {};
+          for (const k of keysToKeep) {
+            filteredMap[k] = bigMap[k];
+          }
+
+          batch.set(doc.ref, { periodicMap: filteredMap }, { merge: true });
+          batchOps++;
+          logger.info(`🔧 Cleaned ${doc.id}: reduced from ${allKeys.length} to 200 entries`);
+          numberCleared++;
         }
-
-        await doc.ref.set({ periodicMap: filteredMap }, { merge: true });
-
-        logger.info(`🔧 Cleaned ${doc.id}: reduced from ${allKeys.length} to 200 entries`);
-        numberCleared++;
       }
     }
-  });
 
-  await Promise.all(cleanupPromises);
+    if (batchOps > 0) {
+      await batch.commit();
+    }
 
-  logger.info(`✅ Cleanup completed: ${numberCleared} documents cleaned out of ${snapshot.size} total`);
+    totalProcessed += snapshot.size;
+    lastDoc = snapshot.docs[snapshot.docs.length - 1];
+  }
+
+  logger.info(`✅ Cleanup completed: ${numberCleared} documents cleaned out of ${totalProcessed} total`);
 });
 
 // UTIL FUNCTION

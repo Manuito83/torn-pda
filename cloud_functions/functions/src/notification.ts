@@ -1200,7 +1200,21 @@ export async function sendNotificationToUser({
     },
   };
 
-  return admin.messaging().send(payload);
+  try {
+    return await admin.messaging().send(payload);
+  } catch (error: any) {
+    const message = (error && error.message) ? error.message : String(error);
+    if (
+      message.includes("registration token is not a valid FCM registration token") ||
+      message.includes("Requested entity was not found")
+    ) {
+      logger.warn(`Invalid FCM token. Skipping notification. (${message})`);
+      return null;
+    }
+
+    logger.warn(`FCM send failed: ${message}`);
+    throw error;
+  }
 
 }
 
