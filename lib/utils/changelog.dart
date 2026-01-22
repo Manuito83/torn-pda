@@ -103,10 +103,10 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.10.2 - Build 608 - built 22/01/2026
+    // v3.11.0 - Build 609 - built 22/01/2026
     itemList.add(
       ChangeLogItem()
-        ..version = 'Torn PDA v3.10.2'
+        ..version = 'Torn PDA v3.11.0'
         ..date = '01 FEB 2026'
         ..features = [
           if (Platform.isAndroid)
@@ -180,7 +180,7 @@ class ChangeLogState extends State<ChangeLog> {
           "Fixed foreign stocks data submission to YATA and Prometheus",
           "Fixed scroll behavior in Foreign Stocks page",
           "Fixed TORN targets import erasing existing targets",
-          if (Platform.isIOS) "Fixed webview URL dialog closing rapidly on certain devices",
+          if (Platform.isIOS) "Fixed webview dialogs closing rapidly on certain devices",
         ],
     );
 

@@ -2750,6 +2750,7 @@ class WebViewFullState extends State<WebViewFull>
           },
           onLongPress: () {
             showWebviewDialog<void>(
+              barrierDismissible: !Platform.isIOS,
               context: context,
               builder: (BuildContext context) {
                 return WebviewShortcutsDialog(
@@ -4479,7 +4480,7 @@ class WebViewFullState extends State<WebViewFull>
     final url = await webViewController!.getUrl();
     return showWebviewDialog<void>(
       context: context,
-      // iOS can dismiss immediately due to the opening gesture; keep the dialog open.
+      // iOS can dismiss immediately due to the opening gesture; keep the dialog open
       barrierDismissible: !Platform.isIOS,
       builder: (BuildContext context) {
         return WebviewUrlDialog(

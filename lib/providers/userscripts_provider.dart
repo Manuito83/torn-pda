@@ -415,6 +415,7 @@ class UserScriptsProvider extends ChangeNotifier {
   Future<void> showSafeModeWarning() async {
     if (navigatorKey.currentContext != null) {
       await showWebviewDialog(
+        barrierDismissible: !Platform.isIOS,
         context: navigatorKey.currentContext!,
         builder: (context) => AlertDialog(
           title: const Text("⚠️ Error restoring scripts"),
