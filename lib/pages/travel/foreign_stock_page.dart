@@ -414,73 +414,76 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Widget _filterSheetContent() {
-    return Container(
-      decoration: BoxDecoration(
-        color: _themeProvider!.secondBackground,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24.0),
-          topRight: Radius.circular(24.0),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _themeProvider!.secondBackground,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24.0),
+            topRight: Radius.circular(24.0),
+          ),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 2.0,
+              color: Colors.orange[800]!,
+            ),
+          ],
         ),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 2.0,
-            color: Colors.orange[800]!,
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          const SizedBox(height: 18.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                width: 30,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: const BorderRadius.all(Radius.circular(12.0)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 40.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(width: 40),
-              SizedBox(height: 90, width: 220, child: _toggleFlagsFilterWidget()),
-              SizedBox(
-                width: 40,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GestureDetector(
-                    child: const Icon(MdiIcons.filterVariant, size: 30),
-                    onTap: () {
-                      var orderType = "";
-                      if (!_alphabeticalFilter) {
-                        orderType = "Showing countries alphabetically";
-                      } else {
-                        orderType = "Showing countries by flight time";
-                      }
-                      _transformAlphabeticalTime();
-                      BotToast.showText(
-                        text: orderType,
-                        textStyle: const TextStyle(fontSize: 14, color: Colors.white),
-                        contentColor: Colors.grey[700]!,
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const SizedBox(height: 18.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 30,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: const BorderRadius.all(Radius.circular(12.0)),
                   ),
                 ),
-              )
-            ],
-          ),
-          const SizedBox(height: 20.0),
-          SizedBox(height: 35, child: _toggleTypeFilterWidget()),
-          const SizedBox(height: 30.0),
-        ],
+              ],
+            ),
+            const SizedBox(height: 40.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 40),
+                SizedBox(height: 90, width: 220, child: _toggleFlagsFilterWidget()),
+                SizedBox(
+                  width: 40,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GestureDetector(
+                      child: const Icon(MdiIcons.filterVariant, size: 30),
+                      onTap: () {
+                        var orderType = "";
+                        if (!_alphabeticalFilter) {
+                          orderType = "Showing countries alphabetically";
+                        } else {
+                          orderType = "Showing countries by flight time";
+                        }
+                        _transformAlphabeticalTime();
+                        BotToast.showText(
+                          text: orderType,
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                          contentColor: Colors.grey[700]!,
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      },
+                    ),
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 20.0),
+            SizedBox(height: 35, child: _toggleTypeFilterWidget()),
+            const SizedBox(height: 30.0),
+          ],
+        ),
       ),
     );
   }
