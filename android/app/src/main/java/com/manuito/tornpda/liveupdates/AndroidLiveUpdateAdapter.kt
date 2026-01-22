@@ -113,6 +113,17 @@ class AndroidLiveUpdateAdapter(
             activeSessionId = null
         }
     }
+
+    /**
+     * Returns the appropriate drawable resource ID for the given travel destination
+     * Uses plane_left when returning to Torn, plane_right when traveling abroad
+     */
+    private fun getDestinationIcon(destination: String?): Int {
+        return when (destination?.lowercase()) {
+            "torn" -> R.drawable.plane_left
+            else -> R.drawable.plane_right
+        }
+    }
     
     /**
      * Starts a coroutine loop to update the notification every minute
@@ -178,8 +189,9 @@ class AndroidLiveUpdateAdapter(
             )
         }
 
+        val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
         val builder = NotificationCompat.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
-            .setSmallIcon(R.drawable.notification_travel)
+            .setSmallIcon(destinationIcon)
             .setContentTitle("$title $destination")
             .setContentText(etaText)
             .setContentIntent(tapIntent)
@@ -337,8 +349,9 @@ class AndroidLiveUpdateAdapter(
         dismissIntent: android.app.PendingIntent,
     ): Notification {
         val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
+        val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
         val builder = Notification.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
-            .setSmallIcon(R.drawable.notification_travel)
+            .setSmallIcon(destinationIcon)
             .setContentTitle("$title $destination")
             .setContentText(etaText)
             .setContentIntent(tapIntent)

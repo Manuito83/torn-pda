@@ -34,8 +34,9 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             PendingIntent.getActivity(context, 0, it, PendingIntent.FLAG_IMMUTABLE)
         }
 
+        val destinationIcon = getDestinationIcon(destination)
         val notification = androidx.core.app.NotificationCompat.Builder(context, channelId)
-            .setSmallIcon(com.manuito.tornpda.R.drawable.notification_travel)
+            .setSmallIcon(destinationIcon)
             .setContentTitle("Arrived at $destination")
             .setContentText("Travel completed")
             .setContentIntent(tapIntent)
@@ -47,6 +48,17 @@ class LiveUpdateNotificationReceiver : BroadcastReceiver() {
             .build()
 
         androidx.core.app.NotificationManagerCompat.from(context).notify(sessionId.hashCode(), notification)
+    }
+
+    /**
+     * Returns the appropriate drawable resource ID for the given travel destination
+     * Uses plane_left when returning to Torn, plane_right when traveling abroad
+     */
+    private fun getDestinationIcon(destination: String?): Int {
+        return when (destination?.lowercase()) {
+            "torn" -> com.manuito.tornpda.R.drawable.plane_left
+            else -> com.manuito.tornpda.R.drawable.plane_right
+        }
     }
 
     companion object {
