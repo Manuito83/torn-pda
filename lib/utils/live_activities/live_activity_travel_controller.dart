@@ -209,9 +209,12 @@ class LiveActivityTravelController extends GetxController {
         }
       }
       // CASE 1: Player has arrived (and if it's the first valid run, it's not stale), and arrival not yet notified by LA
+      // On Android, we also check _lastArrivalNotifiedTravelId to avoid re-notifying the same arrival after app restart,
+      // BUT if an LA is currently active showing "en route" (_isLALogicallyActive && !_hasArrivedNotified),
+      // we MUST update it to "Arrived" regardless of _lastArrivalNotifiedTravelId
       else if (hasPlayerArrived &&
           !_hasArrivedNotified &&
-          (!Platform.isAndroid || travelId != _lastArrivalNotifiedTravelId)) {
+          (!Platform.isAndroid || travelId != _lastArrivalNotifiedTravelId || _isLALogicallyActive)) {
         log("TravelLiveActivityHandler: CASE 1 - Arrival detected for ${apiData['destination']}. Preparing 'Arrived' LA.");
         laArgs = _buildArgs(apiTravelData: apiData, isRepatriation: repatriating, hasArrived: true);
         shouldStartOrUpdateLA = true;
