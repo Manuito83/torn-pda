@@ -166,7 +166,7 @@ class ChangeLogState extends State<ChangeLog> {
           "War: fixed war targets sorting by stats",
           "War: improved API limits management when updating many war targets",
           "Added new target sorting sheet",
-          "Added on time option for local notifications, alarms and timers where applicable",
+          "Added on time option for local notifications, alarms, and timers where applicable",
           ComplexFeature(
             "Dev: added 'tab state' webview handler (see details)",
             explanation: "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"
@@ -174,13 +174,13 @@ class ChangeLogState extends State<ChangeLog> {
                 "Please visit the ./docs section in Github for more information.",
           ),
           "Added sorting to Dev Tools tabs and size data for storage items",
-          "Added option to avoid keyboard overlapping the website in certain devices (disabled by default)",
+          "Added option to avoid keyboard overlapping the browser in certain devices (disabled by default)",
           "Improved user auth recovery process",
           "Fixed events timeline text formatting in Profile",
           "Fixed foreign stocks data submission to YATA and Prometheus",
           "Fixed scroll behavior in Foreign Stocks page",
           "Fixed TORN targets import erasing existing targets",
-          if (Platform.isIOS) "Fixed webview dialogs closing rapidly on certain devices",
+          if (Platform.isIOS) "Fixed browser dialogs closing rapidly on certain devices",
         ],
     );
 
