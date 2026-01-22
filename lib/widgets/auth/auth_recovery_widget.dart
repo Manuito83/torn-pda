@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -80,7 +81,39 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   bool _drawerUserChecked = false;
   String _userUid = '';
 
+  // Detailed logging state
+  final Stopwatch _totalRecoveryStopwatch = Stopwatch();
+  final List<String> _recoveryLog = [];
+  bool _isOriginalUserRecovered = false; // true = original session, false = new anonymous
+  String? _initialCurrentUserState; // 'null', 'present', or 'error'
+  String? _apiKeyStateAtRecovery; // 'valid', 'empty', or 'error'
+  int _authStateChangesCount = 0;
+  bool? _iosProtectedDataAvailable; // iOS only: tracks if keychain is accessible
+
   final Completer<void> _authenticationTimeoutCompleter = Completer<void>();
+
+  void _logStep(String step, {Map<String, dynamic>? details}) {
+    final elapsed = _totalRecoveryStopwatch.elapsedMilliseconds;
+    final entry =
+        '[$elapsed ms] $step${details != null ? ' | ${details.entries.map((e) => '${e.key}=${e.value}').join(', ')}' : ''}';
+    _recoveryLog.add(entry);
+    log(entry, name: 'AUTH_RECOVERY_TRACE');
+  }
+
+  /// [iOS only] Check if protected data (Keychain) is available
+  /// This is for diagnostics only, to confirm if keychain access issues cause auth loss
+  Future<void> _logProtectedDataAvailability() async {
+    try {
+      const channel = MethodChannel('tornpda/protected_data');
+      final bool isAvailable = await channel.invokeMethod('isProtectedDataAvailable') ?? true;
+      _iosProtectedDataAvailable = isAvailable;
+      _logStep('IOS_PROTECTED_DATA', details: {'available': isAvailable});
+    } catch (e) {
+      // Channel not implemented yet - just log the error
+      _iosProtectedDataAvailable = null;
+      _logStep('IOS_PROTECTED_DATA_ERROR', details: {'error': e.toString()});
+    }
+  }
 
   @override
   void initState() {
@@ -101,16 +134,26 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   // ---------------------------------------------------------------------------
 
   Future<void> _startAuthRecovery() async {
-    log("AUTH_DEBUG: Starting auth recovery", name: "AUTH_DEBUG");
+    _totalRecoveryStopwatch.start();
+    _logStep('START', details: {
+      'appUpdated': widget.appHasBeenUpdated,
+      'platform': Platform.isIOS ? 'iOS' : 'Android',
+    });
+
+    // Capture API key state early
+    _apiKeyStateAtRecovery = UserHelper.isApiKeyValid ? 'valid' : 'empty';
+    _logStep('API_KEY_STATE', details: {'state': _apiKeyStateAtRecovery});
 
     // Wait for preferences FIRST - this ensures _authRecoveryEnabledRC is loaded
     // before we check widget.enabled
     if (!widget.preferencesCompleter.isCompleted) {
-      log("AUTH_DEBUG: Waiting for preferences", name: "AUTH_DEBUG");
+      _logStep('WAITING_PREFS');
       try {
         await widget.preferencesCompleter.future.timeout(const Duration(seconds: 10));
+        _logStep('PREFS_LOADED');
       } catch (_) {
-        log("AUTH_DEBUG: Preferences timeout, skipping recovery", name: "AUTH_DEBUG");
+        _logStep('PREFS_TIMEOUT');
+        _flushLogToCrashlytics(outcome: 'prefs_timeout');
         widget.onAuthCompleted?.call();
         return;
       }
@@ -118,20 +161,20 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
 
     // Kill switch via Remote Config (checked AFTER preferences load)
     if (!widget.enabled) {
-      log("AUTH_DEBUG: Auth recovery disabled via Remote Config", name: "AUTH_DEBUG");
+      _logStep('DISABLED_RC');
       widget.onAuthCompleted?.call();
       return;
     }
 
     if (Platform.isWindows || _drawerUserChecked) {
-      log("AUTH_DEBUG: Early return (Windows or already checked)", name: "AUTH_DEBUG");
+      _logStep('EARLY_RETURN', details: {'reason': Platform.isWindows ? 'windows' : 'already_checked'});
       widget.onAuthCompleted?.call();
       return;
     }
 
     // No API key... no user to recover
     if (!UserHelper.isApiKeyValid) {
-      log("AUTH_DEBUG: No valid API key, skipping recovery", name: "AUTH_DEBUG");
+      _logStep('NO_API_KEY');
       widget.onAuthCompleted?.call();
       return;
     }
@@ -141,11 +184,14 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     // Ensure Firebase is ready before any auth operations
     try {
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    } catch (_) {}
+      _logStep('FIREBASE_INIT_OK');
+    } catch (e) {
+      _logStep('FIREBASE_INIT_ERROR', details: {'error': e.toString()});
+    }
 
     // [Debug] Force sign-out to simulate lost session
     if (_debugForceSignOut) {
-      log("AUTH_DEBUG: Debug flag forcing sign-out", name: "AUTH_DEBUG");
+      _logStep('DEBUG_FORCE_SIGNOUT');
       try {
         await FirebaseAuth.instance.signOut();
       } catch (_) {}
@@ -155,23 +201,37 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     // Small delay after app update to let Firebase settle
     // Show loading UI during this delay to prevent Profile from flashing briefly
     if (widget.appHasBeenUpdated) {
-      log("AUTH_DEBUG: App updated, adding delay", name: "AUTH_DEBUG");
+      _logStep('APP_UPDATE_DELAY_START');
       if (mounted) setState(() => _hasAuthenticationError = true);
       await Future.delayed(const Duration(seconds: 1));
+      _logStep('APP_UPDATE_DELAY_END');
+    }
+
+    // [iOS only] Log protected data availability for diagnostics
+    if (Platform.isIOS) {
+      await _logProtectedDataAvailability();
     }
 
     // Check if user session already exists
-    User? user = FirebaseAuth.instance.currentUser;
-    log("AUTH_DEBUG: Initial user check: ${user == null ? 'null' : 'present'}", name: "AUTH_DEBUG");
+    User? user;
+    try {
+      user = FirebaseAuth.instance.currentUser;
+      _initialCurrentUserState = user == null ? 'null' : 'present';
+    } catch (e) {
+      _initialCurrentUserState = 'error';
+      _logStep('CURRENT_USER_ERROR', details: {'error': e.toString()});
+    }
+    _logStep('INITIAL_USER_CHECK', details: {'state': _initialCurrentUserState, 'uid': user?.uid ?? 'none'});
 
     // User already exists -> done (no recovery needed)
     if (user != null && !_debugForceSignOut) {
-      log("AUTH_DEBUG: User found immediately", name: "AUTH_DEBUG");
+      _isOriginalUserRecovered = true;
+      _logStep('USER_FOUND_IMMEDIATE', details: {'uid': user.uid});
       FirebaseAnalytics.instance.logEvent(
         name: 'auth_restoration_success',
         parameters: {
           'method': 'immediate',
-          'time_ms': 0,
+          'time_ms': _totalRecoveryStopwatch.elapsedMilliseconds,
           'success': 'true',
           'platform': Platform.isIOS ? 'iOS' : 'Android',
           'app_updated': widget.appHasBeenUpdated.toString(),
@@ -184,23 +244,25 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       });
       await FirestoreHelper().setUID(_userUid);
       _drawerUserChecked = true;
+      _totalRecoveryStopwatch.stop();
       widget.onAuthCompleted?.call();
       return;
     }
 
     // After app update, try re-initializing Firebase once more
     if (widget.appHasBeenUpdated) {
-      log("AUTH_DEBUG: Re-init due to app update", name: "AUTH_DEBUG");
+      _logStep('APP_UPDATE_REINIT_START');
       try {
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
         user = FirebaseAuth.instance.currentUser;
         if (user != null && !_debugForceSignOut) {
-          log("AUTH_DEBUG: User found after re-init.", name: "AUTH_DEBUG");
+          _isOriginalUserRecovered = true;
+          _logStep('USER_FOUND_REINIT', details: {'uid': user.uid});
           FirebaseAnalytics.instance.logEvent(
             name: 'auth_restoration_success',
             parameters: {
               'method': 'firebase_reinit',
-              'time_ms': 0,
+              'time_ms': _totalRecoveryStopwatch.elapsedMilliseconds,
               'success': 'true',
               'platform': Platform.isIOS ? 'iOS' : 'Android',
               'app_updated': 'true',
@@ -213,11 +275,13 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
           });
           await FirestoreHelper().setUID(_userUid);
           _drawerUserChecked = true;
+          _totalRecoveryStopwatch.stop();
           widget.onAuthCompleted?.call();
           return;
         }
+        _logStep('APP_UPDATE_REINIT_NO_USER');
       } catch (e) {
-        log("Firebase re-initialization failed: $e", name: "AUTH CHECKS");
+        _logStep('APP_UPDATE_REINIT_ERROR', details: {'error': e.toString()});
       }
     }
 
@@ -230,29 +294,28 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   // ---------------------------------------------------------------------------
 
   Future<void> _retryUserRecovery() async {
-    log("AUTH_DEBUG: Entering retry loop", name: "AUTH_DEBUG");
+    _logStep('RETRY_LOOP_START');
 
     if (mounted) {
       setState(() => _hasAuthenticationError = true);
     }
 
-    // Timing synced with AuthenticationLoadingWidget (15s total):
+    // Extended timing for post-update recovery:
     //   Phase 0 (0-2s)  -> "Checking existing session"
-    //   Phase 1 (2-5s)  -> "Retrying sign-in (1/2)"
-    //   Phase 2 (5-8s)  -> "Retrying sign-in (2/2)"
-    //   Phase 3+ (8-15s) -> Final recovery window
-    const retryDelays = [2, 3, 3];
-    final retryStopwatch = Stopwatch()..start();
-    log("AUTH_DEBUG: Starting retry loop", name: "AUTH_DEBUG");
+    //   Phase 1 (2-5s)  -> "Retrying sign-in (1/3)"
+    //   Phase 2 (5-8s)  -> "Retrying sign-in (2/3)"
+    //   Phase 3 (8-12s) -> "Retrying sign-in (3/3)" [EXTENDED for app updates]
+    //   Phase 4+ (12-20s) -> Final recovery window
+    final retryDelays = widget.appHasBeenUpdated ? [2, 3, 3, 4] : [2, 3, 3];
 
     for (int attempt = 1; attempt <= retryDelays.length; attempt++) {
       if (_authenticationTimedOut) {
-        log("AUTH_DEBUG: Authentication timed out break from loop", name: "AUTH_DEBUG");
+        _logStep('RETRY_TIMEOUT_BREAK', details: {'attempt': attempt});
         break;
       }
 
       final delaySeconds = retryDelays[attempt - 1];
-      log("AUTH_DEBUG: Waiting $delaySeconds seconds (attempt $attempt)...", name: "AUTH_DEBUG");
+      _logStep('RETRY_WAIT_START', details: {'attempt': attempt, 'delay': delaySeconds});
 
       await Future.delayed(Duration(seconds: delaySeconds));
 
@@ -261,22 +324,47 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
       try {
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       } catch (e) {
-        log("Firebase re-initialization failed on retry attempt $attempt: $e", name: "AUTH CHECKS");
+        _logStep('RETRY_FIREBASE_INIT_ERROR', details: {'attempt': attempt, 'error': e.toString()});
       }
 
-      final user = FirebaseAuth.instance.currentUser;
-      log("AUTH_DEBUG: After wait, user is ${user == null ? 'null' : 'present'}", name: "AUTH_DEBUG");
+      // Check currentUser
+      User? user;
+      try {
+        user = FirebaseAuth.instance.currentUser;
+      } catch (e) {
+        _logStep('RETRY_CURRENT_USER_ERROR', details: {'attempt': attempt, 'error': e.toString()});
+      }
+
+      // Also listen to authStateChanges briefly to catch delayed auth events
+      if (user == null && attempt == retryDelays.length) {
+        _logStep('RETRY_CHECKING_AUTH_STREAM');
+        try {
+          user = await FirebaseAuth.instance.authStateChanges().first.timeout(
+                const Duration(seconds: 2),
+                onTimeout: () => null,
+              );
+          _authStateChangesCount++;
+        } catch (e) {
+          _logStep('RETRY_AUTH_STREAM_ERROR', details: {'error': e.toString()});
+        }
+      }
+
+      _logStep('RETRY_USER_CHECK', details: {
+        'attempt': attempt,
+        'userState': user == null ? 'null' : 'present',
+        'uid': user?.uid ?? 'none',
+      });
 
       // Original user recovered - alerts are already linked to this UID
       if (user != null && !_debugForceSignOut) {
-        log("AUTH_DEBUG: User recovered in retry loop", name: "AUTH_DEBUG");
-        final elapsedMs = retryStopwatch.elapsedMilliseconds;
+        _isOriginalUserRecovered = true;
+        _logStep('RETRY_USER_RECOVERED', details: {'attempt': attempt, 'uid': user.uid});
 
         FirebaseAnalytics.instance.logEvent(
           name: 'auth_restoration_success',
           parameters: {
             'method': 'retry_exponential_backoff',
-            'time_ms': elapsedMs,
+            'time_ms': _totalRecoveryStopwatch.elapsedMilliseconds,
             'attempt': attempt,
             'success': 'true',
             'platform': Platform.isIOS ? 'iOS' : 'Android',
@@ -285,28 +373,25 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         );
 
         await _finalizeOriginalUser(user.uid);
-        retryStopwatch.stop();
         return;
       }
     }
 
-    retryStopwatch.stop();
-
     // Defensive... race condition where timeout occurred during loop iteration?
     if (_authenticationTimedOut) {
-      log("AUTH_DEBUG: Already timed out, waiting for ack", name: "AUTH_DEBUG");
+      _logStep('RETRY_ALREADY_TIMED_OUT');
       await _awaitAuthTimeoutAck();
       _drawerUserChecked = true;
       return;
     }
 
     // Retries exhausted without recovering user -> try creating anonymous user
-    log("AUTH_DEBUG: retries exhausted, entering final recovery", name: "AUTH_DEBUG");
+    _logStep('RETRY_EXHAUSTED_CREATING_ANON', details: {'totalAttempts': retryDelays.length});
     await _createAnonymousUserAndRecover();
 
     // Final recovery also failed -> show timeout UI
     if (_userUid.isEmpty && mounted) {
-      log("AUTH_DEBUG: Final recovery failed, showing timeout", name: "AUTH_DEBUG");
+      _logStep('FINAL_RECOVERY_FAILED_SHOWING_TIMEOUT');
 
       setState(() {
         _authenticationTimedOut = true;
@@ -336,11 +421,11 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
 
   Future<void> _createAnonymousUserAndRecover() {
     if (_finalRecoveryFuture != null) {
-      log("AUTH_DEBUG: Final recovery in progress, reusing", name: "AUTH_DEBUG");
+      _logStep('ANON_CREATION_REUSING_FUTURE');
       return _finalRecoveryFuture!;
     }
 
-    log("AUTH_DEBUG: Starting final recovery", name: "AUTH_DEBUG");
+    _logStep('ANON_CREATION_START');
     _finalRecoveryFuture = _executeAnonymousUserCreation();
     return _finalRecoveryFuture!;
   }
@@ -355,11 +440,12 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
 
     try {
       if (!widget.preferencesCompleter.isCompleted) {
-        final waitTimer = Stopwatch()..start();
+        _logStep('ANON_WAITING_PREFS');
         try {
           await widget.preferencesCompleter.future.timeout(const Duration(seconds: 6));
+          _logStep('ANON_PREFS_LOADED');
         } catch (_) {
-          log("Final recovery prefs wait timed out after ${waitTimer.elapsed.inSeconds}s", name: "AUTH RECOVERY");
+          _logStep('ANON_PREFS_TIMEOUT');
         }
       }
 
@@ -367,40 +453,65 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       } catch (_) {}
 
-      User? user = FirebaseAuth.instance.currentUser;
-      retriesUsed = 0;
-      log("AUTH_DEBUG: Final recovery - user is ${user == null ? 'null' : 'present'}", name: "AUTH_DEBUG");
+      // Final check before creating anonymous - maybe user appeared now
+      User? user;
+      try {
+        user = FirebaseAuth.instance.currentUser;
+      } catch (e) {
+        _logStep('ANON_CURRENT_USER_ERROR', details: {'error': e.toString()});
+      }
+
+      _logStep('ANON_PRE_CREATE_CHECK', details: {
+        'userState': user == null ? 'null' : 'present',
+        'uid': user?.uid ?? 'none',
+        'apiKeyValid': UserHelper.isApiKeyValid,
+      });
 
       // [Debug] Block anonymous user creation to force timeout UI
       if (_debugBlockAnonCreation) {
-        log("AUTH_DEBUG: Debug flag blocking anon creation", name: "AUTH_DEBUG");
+        _logStep('DEBUG_BLOCK_ANON');
         failure = Exception('debug_blocked_recovery');
         return;
       }
 
       // No existing user -> create anonymous
       if (user == null) {
-        log("AUTH_DEBUG: Creating anonymous user", name: "AUTH_DEBUG");
+        _isOriginalUserRecovered = false; // Mark that we're creating a NEW user
+        _logStep('ANON_CREATING_USER');
         final AuthService authService = AuthService();
         user = await authService.signInAnon(
           isAppUpdate: widget.appHasBeenUpdated,
           maxRetries: widget.appHasBeenUpdated ? 5 : 3,
         );
         retriesUsed = widget.appHasBeenUpdated ? 5 : 3;
+        _logStep('ANON_SIGN_IN_RESULT', details: {
+          'success': user != null,
+          'uid': user?.uid ?? 'none',
+          'retries': retriesUsed,
+        });
+      } else {
+        // User appeared! This is actually the original user recovered late
+        _isOriginalUserRecovered = true;
+        _logStep('ANON_USER_APPEARED_LATE', details: {'uid': user.uid});
       }
 
       // Still no user after anonymous sign-in -> fail
       if (user == null) {
-        log("AUTH_DEBUG: Failed to create anonymous user", name: "AUTH_DEBUG");
+        _logStep('ANON_CREATION_FAILED');
         failure = Exception('final_recovery_no_user');
         return;
       }
 
-      // New anonymous user obtained -> try to recover alerts from previous UID
-      log("AUTH_DEBUG: User obtained (${user.uid}), recovering alerts", name: "AUTH_DEBUG");
-      await _finalizeNewUserAndRecoverAlerts(user.uid, retriesUsed: retriesUsed);
+      // User obtained -> finalize (either original recovered late, or new anonymous)
+      if (_isOriginalUserRecovered) {
+        _logStep('ANON_FINALIZING_ORIGINAL_USER', details: {'uid': user.uid});
+        await _finalizeOriginalUser(user.uid);
+      } else {
+        _logStep('ANON_FINALIZING_NEW_USER', details: {'uid': user.uid});
+        await _finalizeNewUserAndRecoverAlerts(user.uid, retriesUsed: retriesUsed);
+      }
     } catch (e, s) {
-      log("AUTH_DEBUG: Final recovery exception: $e", name: "AUTH_DEBUG");
+      _logStep('ANON_EXCEPTION', details: {'error': e.toString()});
       failure = Exception('final_recovery_exception');
       _logResults(
         restoredUser: _userUid.isNotEmpty,
@@ -423,13 +534,18 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   }
 
   Future<_AlertsRecoveryOutcome> _tryRecoverAlerts({required String currentUid}) async {
+    _logStep('ALERTS_RECOVERY_START', details: {'currentUid': currentUid});
+
     bool clonedAlerts = false;
     bool snapshotRestored = false;
     String? sourceUid;
     bool platformMatch = true;
 
     // First: try local snapshot
+    _logStep('ALERTS_TRYING_LOCAL_SNAPSHOT');
     snapshotRestored = await _restoreFromLocalSnapshot();
+    _logStep('ALERTS_LOCAL_SNAPSHOT_RESULT', details: {'restored': snapshotRestored});
+
     if (snapshotRestored) {
       clonedAlerts = true;
       return _AlertsRecoveryOutcome(
@@ -442,17 +558,36 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
 
     // Second: try Firestore clone (6s timeout)
     final apiKey = UserHelper.apiKey;
+    _logStep('ALERTS_TRYING_FIRESTORE_CLONE', details: {
+      'hasApiKey': apiKey.isNotEmpty,
+      'hasUid': currentUid.isNotEmpty,
+    });
+
     if (apiKey.isNotEmpty && currentUid.isNotEmpty) {
       try {
         final recovery = await _cloneFromApiKey(apiKey: apiKey, currentUid: currentUid)
-            .timeout(const Duration(seconds: 6), onTimeout: () => {'hasClonedData': false});
+            .timeout(const Duration(seconds: 6), onTimeout: () {
+          _logStep('ALERTS_CLONE_TIMEOUT');
+          return {'hasClonedData': false};
+        });
+
+        _logStep('ALERTS_CLONE_RESULT', details: {
+          'hasClonedData': recovery['hasClonedData'],
+          'sourceUid': recovery['sourceUid'] ?? 'none',
+        });
 
         if (recovery['hasClonedData'] == true) {
           sourceUid = recovery['sourceUid'];
           clonedAlerts = true;
           platformMatch = recovery['platformMatch'] ?? true;
         }
-      } catch (_) {}
+      } catch (e) {
+        _logStep('ALERTS_CLONE_ERROR', details: {'error': e.toString()});
+      }
+    } else {
+      _logStep('ALERTS_CLONE_SKIPPED', details: {
+        'reason': apiKey.isEmpty ? 'no_api_key' : 'no_uid',
+      });
     }
 
     return _AlertsRecoveryOutcome(
@@ -551,12 +686,21 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
   // ---------------------------------------------------------------------------
 
   Future<void> _finalizeOriginalUser(String uid) async {
+    _logStep('FINALIZE_ORIGINAL_USER', details: {'uid': uid});
+    _isOriginalUserRecovered = true;
+
     if (mounted) {
       setState(() => _userUid = uid);
     }
 
     await FirestoreHelper().setUID(_userUid);
     await _syncProfileToFirebase();
+
+    _totalRecoveryStopwatch.stop();
+    _logStep('ORIGINAL_USER_FINALIZED', details: {'totalTimeMs': _totalRecoveryStopwatch.elapsedMilliseconds});
+
+    // Log success to Crashlytics
+    _flushLogToCrashlytics(outcome: 'original_user_recovered', recoverySource: 'original');
 
     _drawerUserChecked = true;
     widget.onAuthCompleted?.call();
@@ -663,6 +807,8 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
     Exception? failure,
     StackTrace? stack,
   }) {
+    _totalRecoveryStopwatch.stop();
+
     // Source labels: "Firestore" (cloud), "Local" (snapshot), "None"
     final recoverySource = clonedAlerts
         ? 'Firestore'
@@ -671,10 +817,44 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
             : 'None';
 
     final success = restoredUser && (clonedAlerts || snapshotRestored);
+
+    _logStep('FINAL_RESULT', details: {
+      'success': success,
+      'recoverySource': recoverySource,
+      'isOriginalUser': _isOriginalUserRecovered,
+      'totalTimeMs': _totalRecoveryStopwatch.elapsedMilliseconds,
+    });
+
+    // Always flush detailed log to Crashlytics for debugging
+    _flushLogToCrashlytics(
+      outcome: success ? 'success' : (failure?.toString() ?? 'failed'),
+      recoverySource: recoverySource,
+    );
+
     final summary = "AuthRecovery outcome | success=$success source=$recoverySource"
         " clonedAlerts=$clonedAlerts snapshot=$snapshotRestored "
-        "sourceUid=${sourceUid ?? 'none'} retries=$retries timedOut=$timedOut";
+        "sourceUid=${sourceUid ?? 'none'} retries=$retries timedOut=$timedOut"
+        " isOriginalUser=$_isOriginalUserRecovered totalMs=${_totalRecoveryStopwatch.elapsedMilliseconds}";
     log(summary, name: "AUTH RECOVERY");
+
+    FirebaseAnalytics.instance.logEvent(
+      name: success ? 'auth_recovery_success' : 'auth_recovery_failed',
+      parameters: {
+        'recoverySource': recoverySource,
+        'restoredUser': restoredUser.toString(),
+        'clonedAlerts': clonedAlerts.toString(),
+        'snapshotRestored': snapshotRestored.toString(),
+        'retries': retries,
+        'timedOut': timedOut.toString(),
+        'sourceUid': sourceUid ?? 'none',
+        'isOriginalUser': _isOriginalUserRecovered.toString(),
+        'totalTimeMs': _totalRecoveryStopwatch.elapsedMilliseconds,
+        'platform': Platform.isIOS ? 'iOS' : 'Android',
+        'appUpdated': widget.appHasBeenUpdated.toString(),
+        'initialUserState': _initialCurrentUserState ?? 'unknown',
+        'apiKeyState': _apiKeyStateAtRecovery ?? 'unknown',
+      },
+    );
 
     if (success) {
       FirebaseCrashlytics.instance.recordError(
@@ -689,6 +869,10 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
           'retries: $retries',
           'timedOut: $timedOut',
           'sourceUid: ${sourceUid ?? 'none'}',
+          'isOriginalUser: $_isOriginalUserRecovered',
+          'totalTimeMs: ${_totalRecoveryStopwatch.elapsedMilliseconds}',
+          'initialUserState: ${_initialCurrentUserState ?? 'unknown'}',
+          'apiKeyState: ${_apiKeyStateAtRecovery ?? 'unknown'}',
         ],
         fatal: false,
       );
@@ -707,6 +891,43 @@ class _AuthRecoveryWidgetState extends State<AuthRecoveryWidget> {
         'retries: $retries',
         'timedOut: $timedOut',
         'sourceUid: ${sourceUid ?? 'none'}',
+        'isOriginalUser: $_isOriginalUserRecovered',
+        'totalTimeMs: ${_totalRecoveryStopwatch.elapsedMilliseconds}',
+        'initialUserState: ${_initialCurrentUserState ?? 'unknown'}',
+        'apiKeyState: ${_apiKeyStateAtRecovery ?? 'unknown'}',
+      ],
+      fatal: false,
+    );
+  }
+
+  /// Sends the detailed recovery log to Crashlytics for debugging
+  void _flushLogToCrashlytics({required String outcome, String? recoverySource}) {
+    if (_recoveryLog.isEmpty) return;
+
+    // Combine log entries (limit to last 50 to avoid huge payloads)
+    final logEntries = _recoveryLog.length > 50 ? _recoveryLog.sublist(_recoveryLog.length - 50) : _recoveryLog;
+
+    FirebaseCrashlytics.instance.log('AUTH_RECOVERY_TRACE: outcome=$outcome');
+    for (final entry in logEntries) {
+      FirebaseCrashlytics.instance.log(entry);
+    }
+
+    FirebaseCrashlytics.instance.recordError(
+      Exception('auth_recovery_trace_$outcome'),
+      StackTrace.current,
+      reason: 'Auth recovery trace',
+      information: [
+        'outcome: $outcome',
+        'recoverySource: ${recoverySource ?? 'unknown'}',
+        'platform: ${Platform.isIOS ? 'iOS' : 'Android'}',
+        'appUpdated: ${widget.appHasBeenUpdated}',
+        'totalSteps: ${_recoveryLog.length}',
+        'totalTimeMs: ${_totalRecoveryStopwatch.elapsedMilliseconds}',
+        'initialUserState: ${_initialCurrentUserState ?? 'unknown'}',
+        'apiKeyState: ${_apiKeyStateAtRecovery ?? 'unknown'}',
+        'isOriginalUser: $_isOriginalUserRecovered',
+        'authStateChangesCount: $_authStateChangesCount',
+        if (Platform.isIOS) 'iosProtectedDataAvailable: ${_iosProtectedDataAvailable ?? 'unknown'}',
       ],
       fatal: false,
     );

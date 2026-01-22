@@ -36,6 +36,7 @@ class Prefs {
   final String _kLastAuthRedirect = "pda_lastAuthRedirect";
   final String _kTryAutomaticLogins = "pda_tryAutomaticLogins";
   final String _kPlayerLastLoginMethod = "pda_playerLastLoginMethod";
+  final String _kNativeLoginKeychainMigrated = "pda_nativeLoginKeychainMigrated";
 
   // Targets
   final String _kTargetsList = "pda_targetsList";
@@ -670,6 +671,14 @@ class Prefs {
 
   Future setNativePlayerEmail(String value) async {
     return await PrefsDatabase.setString(_kNativePlayerEmail, value);
+  }
+
+  Future<bool> getNativeLoginKeychainMigrated() async {
+    return await PrefsDatabase.getBool(_kNativeLoginKeychainMigrated, false);
+  }
+
+  Future setNativeLoginKeychainMigrated(bool value) async {
+    return await PrefsDatabase.setBool(_kNativeLoginKeychainMigrated, value);
   }
 
   Future<int> getLastAuthRedirect() async {

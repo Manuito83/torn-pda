@@ -38,6 +38,7 @@ import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/pages/alerts_windows.dart';
 import 'package:torn_pda/pages/awards_page.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
@@ -907,6 +908,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       syncBackgroundRefreshWithWidgetInstallation();
 
       checkForScriptUpdates();
+
+      final nativeUserProvider = Provider.of<NativeUserProvider>(context, listen: false);
+      if (nativeUserProvider.keychainAccessDenied) {
+        nativeUserProvider.loadPreferences();
+      }
 
       _syncThemeWithDeviceSettings();
     }
