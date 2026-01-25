@@ -897,6 +897,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _getBackgroundNotificationSavedData();
       _removeExistingNotifications();
 
+      // Resume webviews if the browser is in foreground or split screen is active
+      if (_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive) {
+        _webViewProvider.resumeAllWebviews();
+      }
+
       // Resume stakeouts
       _s.startTimer();
       log("Stakeouts resumed");
