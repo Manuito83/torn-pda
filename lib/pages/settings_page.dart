@@ -964,7 +964,7 @@ class SettingsPageState extends State<SettingsPage> {
                                 title: const Text('Active alarms'),
                                 content: const Text(
                                   'These are the alarms scheduled by Torn PDA. On iOS they are handled directly by the app.'
-                                  '\n\nYou can lear them here if you no longer need them.',
+                                  '\n\nYou can clear them here if you no longer need them.',
                                 ),
                                 actions: [
                                   TextButton(
