@@ -204,7 +204,7 @@ class BountiesWidgetState extends State<BountiesWidget> {
           children: [
             Switch(
               value: _bountiesModel.removeRed,
-              activeColor: Colors.green,
+              activeThumbColor: Colors.green,
               activeTrackColor: Colors.green[200],
               inactiveThumbColor: Colors.red,
               inactiveTrackColor: Colors.red[200],

@@ -96,7 +96,7 @@ class TradesOptionsState extends State<TradesOptions> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),
@@ -278,7 +278,7 @@ class TradesOptionsState extends State<TradesOptions> {
 
   Switch awhSwitch() {
     return Switch(
-      activeColor: Colors.orange[900],
+      activeThumbColor: Colors.orange[900],
       activeTrackColor: Colors.orange,
       value: _awhEnabled,
       onChanged: _tradeCalculatorEnabled
@@ -294,7 +294,7 @@ class TradesOptionsState extends State<TradesOptions> {
 
   Switch tornExchangeSwitch() {
     return Switch(
-      activeColor: const Color(0xffd186cf),
+      activeThumbColor: const Color(0xffd186cf),
       activeTrackColor: Colors.pink,
       value: _tornExchangeEnabled,
       onChanged: _tradeCalculatorEnabled
@@ -310,7 +310,7 @@ class TradesOptionsState extends State<TradesOptions> {
 
   Switch tornExchangeProfitSwitch() {
     return Switch(
-      activeColor: const Color(0xffd186cf),
+      activeThumbColor: const Color(0xffd186cf),
       activeTrackColor: Colors.pink,
       value: _tornExchangeProfitEnabled,
       onChanged: _tradeCalculatorEnabled

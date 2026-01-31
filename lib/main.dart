@@ -74,9 +74,45 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:workmanager/workmanager.dart';
 
 // TODO (App release)
-const String appVersion = '3.10.1';
-const String androidCompilation = '604';
-const String iosCompilation = '604';
+const String appVersion = '3.11.0';
+const String androidCompilation = '611';
+const String iosCompilation = '611';
+
+/// All Firestore fields related to alerts configuration
+/// Used for auth recovery and local backup restoration
+/// (add new alert fields here when implementing new alerts)
+const List<String> kAlertFirestoreFields = [
+  "discrete",
+  "vibration",
+  "travelNotification",
+  "foreignRestockNotification",
+  "foreignRestockNotificationOnlyCurrentCountry",
+  "energyNotification",
+  "nerveNotification",
+  "lifeNotification",
+  "hospitalNotification",
+  "drugsNotification",
+  "medicalNotification",
+  "boosterNotification",
+  "racingNotification",
+  "messagesNotification",
+  "eventsNotification",
+  "eventsFilter",
+  "refillsNotification",
+  "refillsTime",
+  "refillsRequested",
+  "stockMarketNotification",
+  "stockMarketShares",
+  "factionAssistMessage",
+  "retalsNotification",
+  "retalsNotificationHost",
+  "retalsNotificationDonor",
+  "forumsSubscriptionsNotification",
+  "lootAlerts",
+  "lootRangersNotification",
+  "lootAlertAheadSeconds",
+  "lootRangersAheadSeconds",
+];
 
 bool appHasBeenUpdated = false;
 bool appIsFirstRun = false;
@@ -113,6 +149,7 @@ bool justImportedFromLocalBackup = false;
 bool isStatusBarShown = false;
 
 double kSdkIos = 0;
+int kSdkAndroid = 0;
 
 bool _isFirebaseInitialized = false;
 
@@ -135,11 +172,11 @@ final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 Future<void> main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
 
-  // Migrate SharedPreferences to Sembast (runs once)
-  await Prefs().migratePrefsToSembast();
-
   // Drain FCM inboxes saved in background (e.g., stock alerts) into Prefs so we can show them on launch
   await drainFcmInbox();
+
+  // Sync background-safe preferences
+  await Prefs().syncBackgroundPrefs();
 
   // Core initialization
   await _initializeAppCompilation();
@@ -572,6 +609,11 @@ Future<void> _initializePlatformSpecifics() async {
       final IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
       kSdkIos = double.tryParse(iosInfo.systemVersion) ?? 99;
       log("iOS SDK Version: $kSdkIos");
+    } else if (Platform.isAndroid) {
+      final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+      final AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+      kSdkAndroid = androidInfo.version.sdkInt;
+      log("Android SDK Version: $kSdkAndroid");
     }
   } catch (e, stackTrace) {
     log("Error initializing platform specifics: $e");
@@ -621,8 +663,15 @@ Future<void> _initializeHomeWidget() async {
     } else if (Platform.isIOS) {
       HomeWidget.setAppGroupId('group.com.manuito.tornpda');
     }
-    HomeWidget.registerInteractivityCallback(onWidgetInteractivityCallback);
-    syncBackgroundRefreshWithWidgetInstallation();
+    final bool widgetInteractivitySupported = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 17.0);
+
+    if (widgetInteractivitySupported) {
+      await HomeWidget.registerInteractivityCallback(onWidgetInteractivityCallback);
+    } else {
+      log("HomeWidget interactivity requires iOS 17.0; skipping registration (kSdkIos=$kSdkIos)");
+    }
+
+    await syncBackgroundRefreshWithWidgetInstallation();
   } catch (e, stackTrace) {
     log("Error initializing HomeWidget: $e");
     logErrorToCrashlytics("Error initializing HomeWidget", "HomeWidget initialization failed: $e", stackTrace);
@@ -641,8 +690,11 @@ Future<void> _initializeGetXControllers() async {
     Get.put(PeriodicExecutionController(), permanent: true);
     Get.put(ChainStatusController(), permanent: true);
 
-    if (Platform.isIOS && kSdkIos >= 16.2) {
+    final bool enableLiveUpdateBridge = Platform.isAndroid || (Platform.isIOS && kSdkIos >= 16.2);
+    if (enableLiveUpdateBridge) {
       Get.put(LiveActivityBridgeController(), permanent: true);
+    }
+    if ((Platform.isIOS && kSdkIos >= 16.2) || (Platform.isAndroid && kSdkAndroid >= 26)) {
       Get.put(LiveActivityTravelController(), permanent: true);
     }
   } catch (e, stackTrace) {

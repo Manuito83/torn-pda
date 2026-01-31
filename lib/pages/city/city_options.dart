@@ -100,7 +100,7 @@ class CityOptionsState extends State<CityOptions> {
                                           });
                                         },
                                         activeTrackColor: Colors.lightGreenAccent,
-                                        activeColor: Colors.green,
+                                        activeThumbColor: Colors.green,
                                       ),
                                     ],
                                   ),

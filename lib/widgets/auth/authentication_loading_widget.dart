@@ -3,14 +3,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 
+enum _PhaseStatus { pending, active, completed }
+
 class AuthenticationLoadingWidget extends StatefulWidget {
   final ThemeProvider themeProvider;
   final VoidCallback? onCaptiveFinished;
+  final VoidCallback? onFinalWindowStarted;
 
   const AuthenticationLoadingWidget({
     super.key,
     required this.themeProvider,
     this.onCaptiveFinished,
+    this.onFinalWindowStarted,
   });
 
   @override
@@ -18,11 +22,21 @@ class AuthenticationLoadingWidget extends StatefulWidget {
 }
 
 class _AuthenticationLoadingWidgetState extends State<AuthenticationLoadingWidget> with TickerProviderStateMixin {
-  static const int _captiveDurationSeconds = 10;
+  static const int _captiveDurationSeconds = 15;
+  static const int _finalWindowSeconds = 7; // trigger final recovery from second 8 onward
+  static const List<String> _phases = [
+    'Checking existing session',
+    'Reconnecting...',
+    'Still trying...',
+    'Checking local data',
+    'Syncing from cloud',
+    'Creating new session',
+  ];
   late List<AnimationController> _waveControllers;
   late List<Animation<double>> _waveAnimations;
   Timer? _captiveTimer;
   bool _hasNotifiedCompletion = false;
+  bool _finalWindowNotified = false;
   int _secondsRemaining = _captiveDurationSeconds;
 
   @override
@@ -67,6 +81,10 @@ class _AuthenticationLoadingWidgetState extends State<AuthenticationLoadingWidge
       }
 
       final nextRemaining = _captiveDurationSeconds - timer.tick;
+      if (!_finalWindowNotified && nextRemaining <= _finalWindowSeconds) {
+        _finalWindowNotified = true;
+        widget.onFinalWindowStarted?.call();
+      }
       if (nextRemaining <= 0) {
         setState(() {
           _secondsRemaining = 0;
@@ -135,8 +153,91 @@ class _AuthenticationLoadingWidgetState extends State<AuthenticationLoadingWidge
             fontStyle: FontStyle.italic,
           ),
         ),
+        const SizedBox(height: 24),
+        _buildPhases(),
       ],
     );
+  }
+
+  Widget _buildPhases() {
+    final activeIndex = _currentPhaseIndex();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: _phases.asMap().entries.map((entry) {
+          final index = entry.key;
+          final label = entry.value;
+          final status = index < activeIndex
+              ? _PhaseStatus.completed
+              : index == activeIndex
+                  ? _PhaseStatus.active
+                  : _PhaseStatus.pending;
+
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildPhaseIcon(status),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: _phaseColor(status),
+                      fontSize: 14,
+                      fontWeight: status == _PhaseStatus.active ? FontWeight.w600 : FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  int _currentPhaseIndex() {
+    if (_finalWindowNotified) return _phases.length - 1;
+
+    if (_secondsRemaining > 12) return 0; // Initial checks
+    if (_secondsRemaining > 9) return 1; // Retry 1
+    if (_secondsRemaining > 6) return 2; // Retry 2
+    if (_secondsRemaining > 3) return 3; // Local snapshot
+    return 4; // Cloud sync before final window
+  }
+
+  Color _phaseColor(_PhaseStatus status) {
+    switch (status) {
+      case _PhaseStatus.completed:
+        return widget.themeProvider.mainText.withValues(alpha: 0.6);
+      case _PhaseStatus.active:
+        return widget.themeProvider.mainText;
+      case _PhaseStatus.pending:
+        return widget.themeProvider.mainText.withValues(alpha: 0.45);
+    }
+  }
+
+  Widget _buildPhaseIcon(_PhaseStatus status) {
+    switch (status) {
+      case _PhaseStatus.completed:
+        return Icon(Icons.check_circle, color: widget.themeProvider.mainText.withValues(alpha: 0.7), size: 18);
+      case _PhaseStatus.active:
+        return SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(widget.themeProvider.mainText),
+          ),
+        );
+      case _PhaseStatus.pending:
+        return Icon(Icons.radio_button_unchecked,
+            color: widget.themeProvider.mainText.withValues(alpha: 0.35), size: 18);
+    }
   }
 
   Widget _buildSignalRow() {

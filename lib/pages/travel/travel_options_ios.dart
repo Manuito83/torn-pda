@@ -192,6 +192,19 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
       value: _travelNotificationAheadDropDownValue,
       items: const [
         DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
           value: "0",
           child: SizedBox(
             width: 80,
@@ -270,6 +283,19 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
     return DropdownButton<String>(
       value: _travelAlarmAheadDropDownValue,
       items: const [
+        DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 140,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
         DropdownMenuItem(
           value: "20",
           child: SizedBox(
@@ -362,7 +388,9 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
     final travelNotificationAhead = await Prefs().getTravelNotificationAhead();
     var travelAlarmAhead = await Prefs().getTravelAlarmAhead();
 
-    const allowedAlarmValues = <String>{"20", "40", "60", "120", "300", "600"};
+    const allowedNotificationValues = <String>{"exact", "0", "1", "2", "3", "4"};
+    const allowedAlarmValues = <String>{"exact", "20", "40", "60", "120", "300", "600"};
+
     if (!allowedAlarmValues.contains(travelAlarmAhead)) {
       // Map legacy minute-based values to seconds; default to 1 minute before.
       switch (travelAlarmAhead) {
@@ -386,7 +414,8 @@ class TravelOptionsIOSState extends State<TravelOptionsIOS> {
     }
 
     setState(() {
-      _travelNotificationAheadDropDownValue = travelNotificationAhead;
+      _travelNotificationAheadDropDownValue =
+          allowedNotificationValues.contains(travelNotificationAhead) ? travelNotificationAhead : "0";
       _travelAlarmAheadDropDownValue = travelAlarmAhead;
     });
   }

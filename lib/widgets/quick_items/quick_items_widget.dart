@@ -3,20 +3,22 @@ import 'dart:async';
 
 // Flutter imports:
 import 'package:animations/animations.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'package:flutter/material.dart';
-// Package imports:
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+// Project imports:
+import 'package:torn_pda/models/items_model.dart';
 import 'package:torn_pda/models/quick_item_model.dart';
 import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
-// Project imports:
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
 import 'package:torn_pda/utils/js_snippets.dart';
-import 'package:webview_flutter/webview_flutter.dart';
 
 class QuickItemsWidget extends StatefulWidget {
   final InAppWebViewController? inAppWebViewController;
@@ -40,16 +42,30 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   late Timer _inventoryRefreshTimer;
 
   final _scrollController = ScrollController();
+  bool _pickerActive = false;
+  bool _pickerBusy = false;
+  bool _cleanupHandlerAttached = false;
 
   @override
   void initState() {
     super.initState();
+    _registerPickerCleanupHandler();
     _inventoryRefreshTimer = Timer.periodic(const Duration(seconds: 40), (Timer t) => _refreshInventory());
+  }
+
+  @override
+  void didUpdateWidget(covariant QuickItemsWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.inAppWebViewController != oldWidget.inAppWebViewController) {
+      _cleanupHandlerAttached = false;
+      _registerPickerCleanupHandler();
+    }
   }
 
   @override
   void dispose() {
     _inventoryRefreshTimer.cancel();
+    _disablePickerSilently();
     _scrollController.dispose();
     super.dispose();
   }
@@ -58,8 +74,13 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   Widget build(BuildContext context) {
     _itemsProvider = context.watch<QuickItemsProvider>();
     _itemsProviderFaction = context.watch<QuickItemsProviderFaction>();
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 5),
+    return Container(
+      decoration: _pickerActive
+          ? BoxDecoration(
+              border: Border.all(color: Colors.orangeAccent, width: 1),
+            )
+          : null,
+      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -101,6 +122,61 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       itemList = List.from(_itemsProvider.activeQuickItems);
     }
 
+    if (itemList.isEmpty) {
+      myList.add(
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (!widget.faction) ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _pickerChip(),
+                    const SizedBox(width: 8),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 5),
+                      child: Text(
+                        'Tap to add quick items from your list',
+                        style: TextStyle(color: Colors.orangeAccent, fontSize: 12),
+                        textAlign: TextAlign.center,
+                        softWrap: true,
+                      ),
+                    ),
+                  ],
+                ),
+              ] else ...[
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Configure your faction's armoury quick items",
+                      style: TextStyle(
+                        color: Colors.orangeAccent,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                      softWrap: true,
+                    ),
+                    const SizedBox(width: 8),
+                    _settingsIcon(),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      );
+
+      return myList;
+    }
+
+    if (!widget.faction) {
+      myList.add(_pickerChip());
+    }
+
     for (final item in itemList) {
       Color? qtyColor;
       if (item.inventory == 0) {
@@ -112,7 +188,11 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       double qtyFontSize = 12;
       String? itemQty;
       if (!item.isLoadout! && !widget.faction) {
-        if (item.inventory == null) {
+        // Unique equip variants: hide aggregated counts when instanceId is known
+        final hasInstance = item.instanceId != null && item.instanceId!.isNotEmpty;
+        if (hasInstance) {
+          itemQty = null;
+        } else if (item.inventory == null) {
           itemQty = null;
         } else {
           itemQty = item.inventory.toString();
@@ -196,11 +276,19 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                 final js = changeLoadOutJS(item: item.name!.split(" ")[1], attackWebview: false);
                 await widget.inAppWebViewController!.evaluateJavascript(source: js);
               } else {
+                final isEquip = item.itemType == ItemType.PRIMARY ||
+                    item.itemType == ItemType.SECONDARY ||
+                    item.itemType == ItemType.MELEE ||
+                    item.itemType == ItemType.DEFENSIVE ||
+                    item.itemType == ItemType.TEMPORARY;
                 final js = quickItemsJS(
                   item: item.number.toString(),
                   faction: widget.faction,
                   eRefill: item.isEnergyPoints,
                   nRefill: item.isNervePoints,
+                  instanceId: item.instanceId,
+                  isEquip: isEquip,
+                  refreshAfterEquip: _itemsProvider.refreshAfterEquip,
                 );
                 await widget.inAppWebViewController!.evaluateJavascript(source: js);
                 if (!widget.faction) {
@@ -208,29 +296,6 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                 }
               }
             },
-          ),
-        ),
-      );
-    }
-
-    if (myList.isEmpty) {
-      myList.add(
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                widget.faction
-                    ? "Configure your faction's armoury quick items"
-                    : "Configure your preferred quick items",
-                style: const TextStyle(
-                  color: Colors.orangeAccent,
-                  fontSize: 12,
-                ),
-              ),
-              _settingsIcon(),
-            ],
           ),
         ),
       );
@@ -268,6 +333,100 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   void _refreshInventory() {
     if (!widget.faction) {
       _itemsProvider.updateInventoryQuantities();
+    }
+  }
+
+  void _registerPickerCleanupHandler() {
+    final controller = widget.inAppWebViewController;
+    if (controller == null || _cleanupHandlerAttached) return;
+    try {
+      controller.addJavaScriptHandler(
+        handlerName: 'quickItemPickerCleanup',
+        callback: (args) {
+          if (mounted) {
+            setState(() {
+              _pickerActive = false;
+              _pickerBusy = false;
+            });
+          }
+          return {'status': 'ok'};
+        },
+      );
+      _cleanupHandlerAttached = true;
+    } catch (_) {}
+  }
+
+  Widget _pickerChip() {
+    final icon = _pickerActive ? Icons.close : Icons.add;
+    final borderColor = _pickerActive ? Colors.redAccent : Colors.green[600];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, right: 8),
+      child: InkWell(
+        onTap: _pickerBusy ? null : () => _togglePicker(!_pickerActive),
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: 26,
+          height: 26,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: borderColor ?? Colors.green, width: 1.6),
+            color: Colors.transparent,
+          ),
+          alignment: Alignment.center,
+          child: Icon(icon, color: borderColor, size: 16),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _togglePicker(bool enable) async {
+    if (widget.inAppWebViewController == null) return;
+    setState(() {
+      _pickerBusy = true;
+    });
+    try {
+      final result = await widget.inAppWebViewController!.evaluateJavascript(
+        source: quickItemPickerJS(enable: enable),
+      );
+      if (!mounted) return;
+      final resultStr = result?.toString();
+      final nextActive = enable && resultStr != 'picker-disabled';
+      setState(() {
+        _pickerActive = nextActive;
+      });
+      if (nextActive) {
+        BotToast.showText(
+          text: 'Choose the items you want to add from your items list',
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+          contentColor: Colors.blue[800]!,
+          duration: const Duration(seconds: 3),
+          contentPadding: const EdgeInsets.all(12),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _pickerActive = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _pickerBusy = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _disablePickerSilently() async {
+    if (!_pickerActive || widget.inAppWebViewController == null) return;
+    try {
+      await widget.inAppWebViewController!.evaluateJavascript(
+        source: quickItemPickerJS(enable: false),
+      );
+    } catch (_) {
+      // Ignore errors on dispose
     }
   }
 

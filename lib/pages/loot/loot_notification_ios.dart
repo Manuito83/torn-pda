@@ -216,9 +216,22 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
       value: _lootAlarmAheadDropDownValue,
       items: const [
         DropdownMenuItem(
-          value: "s20",
+          value: "exact",
           child: SizedBox(
             width: 120,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
+        DropdownMenuItem(
+          value: "s20",
+          child: SizedBox(
+            width: 130,
             child: Text(
               "20 seconds before",
               textAlign: TextAlign.right,
@@ -231,7 +244,7 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
         DropdownMenuItem(
           value: "s40",
           child: SizedBox(
-            width: 120,
+            width: 130,
             child: Text(
               "40 seconds before",
               textAlign: TextAlign.right,
@@ -348,6 +361,19 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
     return DropdownButton<String>(
       value: _lootNotificationAheadDropDownValue,
       items: const [
+        DropdownMenuItem(
+          value: "exact",
+          child: SizedBox(
+            width: 90,
+            child: Text(
+              "On time",
+              textAlign: TextAlign.right,
+              style: TextStyle(
+                fontSize: 14,
+              ),
+            ),
+          ),
+        ),
         DropdownMenuItem(
           value: "0",
           child: SizedBox(
@@ -471,8 +497,8 @@ class LootNotificationsIOSState extends State<LootNotificationsIOS> {
     final lootAlarmAhead = await Prefs().getLootAlarmAhead();
     final lootType = await Prefs().getLootNotificationType();
 
-    const notifAllowed = {"0", "1", "2", "3", "4", "5", "6", "7"};
-    const alarmAllowed = {"s20", "s40", "0", "1", "2", "3", "4", "5", "6"};
+    const notifAllowed = {"exact", "0", "1", "2", "3", "4", "5", "6", "7"};
+    const alarmAllowed = {"exact", "s20", "s40", "0", "1", "2", "3", "4", "5", "6"};
 
     setState(() {
       _lootNotificationAheadDropDownValue = notifAllowed.contains(lootNotificationAhead) ? lootNotificationAhead : "7";

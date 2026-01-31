@@ -226,7 +226,7 @@ class JailWidgetState extends State<JailWidget> {
         const SizedBox(width: 10),
         Switch(
           value: _jailModel.bailTicked,
-          activeColor: Colors.green,
+          activeThumbColor: Colors.green,
           activeTrackColor: Colors.green[200],
           inactiveThumbColor: Colors.red,
           inactiveTrackColor: Colors.red[200],
@@ -255,7 +255,7 @@ class JailWidgetState extends State<JailWidget> {
         const SizedBox(width: 10),
         Switch(
           value: _jailModel.bustTicked,
-          activeColor: Colors.green,
+          activeThumbColor: Colors.green,
           activeTrackColor: Colors.green[200],
           inactiveThumbColor: Colors.red,
           inactiveTrackColor: Colors.red[200],
@@ -284,7 +284,7 @@ class JailWidgetState extends State<JailWidget> {
         const SizedBox(width: 10),
         Switch(
           value: _jailModel.filtersEnabled,
-          activeColor: Colors.green,
+          activeThumbColor: Colors.green,
           activeTrackColor: Colors.green[200],
           inactiveThumbColor: Colors.red,
           inactiveTrackColor: Colors.red[200],
@@ -313,7 +313,7 @@ class JailWidgetState extends State<JailWidget> {
         const SizedBox(width: 10),
         Switch(
           value: _jailModel.excludeSelf,
-          activeColor: Colors.green,
+          activeThumbColor: Colors.green,
           activeTrackColor: Colors.green[200],
           inactiveThumbColor: Colors.red,
           inactiveTrackColor: Colors.red[200],

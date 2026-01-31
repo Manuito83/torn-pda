@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:torn_pda/drawer.dart';
 import 'package:torn_pda/main.dart';
 // Project imports:
@@ -31,7 +30,6 @@ import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/travel/travel_times.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
-import 'package:torn_pda/widgets/sliding_up_panel.dart';
 import 'package:torn_pda/widgets/travel/foreign_stock_card.dart';
 import 'package:torn_pda/widgets/travel/stock_options_dialog.dart';
 
@@ -58,14 +56,11 @@ class ForeignStockPage extends StatefulWidget {
 }
 
 class ForeignStockPageState extends State<ForeignStockPage> {
-  final CustomPanelController _pc = CustomPanelController();
-
-  final double _initFabHeight = 25.0;
-  final double _panelHeightOpen = 300;
-  final double _panelHeightClosed = 75.0;
-
   ThemeProvider? _themeProvider;
   SettingsProvider? _settingsProvider;
+
+  // Filter sheet state
+  bool _isFilterSheetOpen = false;
 
   Future? _apiCalled;
   late bool _apiSuccess;
@@ -172,8 +167,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     StockSort(type: StockSortType.arrivalTime),
   ];
 
-  RefreshController _refreshController = RefreshController();
-
   final List<ForeignStock> _hiddenStocks = <ForeignStock>[];
 
   late StreamSubscription _willPopSubscription;
@@ -230,50 +223,48 @@ class ForeignStockPageState extends State<ForeignStockPage> {
               builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                 if (snapshot.connectionState == ConnectionState.done) {
                   if (_apiSuccess) {
-                    return CustomSlidingUpPanel(
-                      controller: _pc,
-                      maxHeight: _panelHeightOpen,
-                      minHeight: _panelHeightClosed,
-                      renderPanelSheet: false,
-                      backdropEnabled: true,
-                      parallaxEnabled: true,
-                      parallaxOffset: .1,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(18.0),
-                        topRight: Radius.circular(18.0),
-                      ),
+                    return Stack(
+                      children: [
+                        // Main list
+                        RefreshIndicator(
+                          onRefresh: _onRefresh,
+                          child: Builder(
+                            builder: (context) {
+                              final visibleStocks = _visibleStocks;
+                              final itemCount = visibleStocks.length + 2;
 
-                      // The main listview
-                      body: SmartRefresher(
-                        header: WaterDropMaterialHeader(
-                          backgroundColor: Theme.of(context).primaryColor,
+                              return ListView.builder(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                itemCount: itemCount,
+                                itemBuilder: (context, index) => _buildStockListItem(index, visibleStocks),
+                              );
+                            },
+                          ),
                         ),
-                        controller: _refreshController,
-                        onRefresh: _onRefresh,
-                        child: ListView(
-                          children: _stockItems(),
+                        // Filter sheet (animated from bottom)
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOut,
+                          left: 0,
+                          right: 0,
+                          bottom: _isFilterSheetOpen ? 0 : -200,
+                          child: _filterSheetContent(),
                         ),
-                      ),
-
-                      // The panel content
-                      panelBuilder: (sc) => _bottomPanel(sc),
-
-                      // FAB
-                      floatingActionButton: FloatingActionButton.extended(
-                        icon: const Icon(Icons.filter_list),
-                        label: const Text("Filter"),
-                        elevation: 4,
-                        onPressed: () {
-                          if (_pc.isPanelAnimating) return;
-                          if (!_pc.isPanelClosed) {
-                            _pc.close();
-                          } else {
-                            _pc.open();
-                          }
-                        },
-                        backgroundColor: Colors.orange,
-                      ),
-                      floatingActionButtonOffset: _initFabHeight,
+                        // FAB (always on top)
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 250),
+                          curve: Curves.easeOut,
+                          right: 35.0,
+                          bottom: _isFilterSheetOpen ? 215.0 : 25.0,
+                          child: FloatingActionButton.extended(
+                            icon: Icon(_isFilterSheetOpen ? Icons.close : Icons.filter_list),
+                            label: Text(_isFilterSheetOpen ? "Close" : "Filter"),
+                            elevation: 4,
+                            onPressed: _toggleFilterSheet,
+                            backgroundColor: Colors.orange,
+                          ),
+                        ),
+                      ],
                     );
                   } else {
                     // Error case handling
@@ -303,13 +294,10 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                       ),
                     );
 
-                    return SmartRefresher(
-                      header: WaterDropMaterialHeader(
-                        backgroundColor: Theme.of(context).primaryColor,
-                      ),
-                      controller: _refreshController,
+                    return RefreshIndicator(
                       onRefresh: _onRefresh,
                       child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
                         children: [
                           SizedBox(
                             height: MediaQuery.sizeOf(context).height / 2,
@@ -421,85 +409,199 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     );
   }
 
-  Widget _bottomPanel(ScrollController sc) {
-    return Container(
-      decoration: BoxDecoration(
-        color: _themeProvider!.secondBackground,
-        borderRadius: const BorderRadius.all(Radius.circular(24.0)),
-        boxShadow: [
-          BoxShadow(
-            blurRadius: 2.0,
-            color: Colors.orange[800]!,
+  void _toggleFilterSheet() {
+    setState(() => _isFilterSheetOpen = !_isFilterSheetOpen);
+  }
+
+  Widget _filterSheetContent() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _themeProvider!.secondBackground,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(24.0),
+            topRight: Radius.circular(24.0),
           ),
-        ],
-      ),
-      margin: const EdgeInsets.all(22.0),
-      child: Column(
-        children: <Widget>[
-          const SizedBox(
-            height: 18.0,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                width: 30,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: const BorderRadius.all(
-                    Radius.circular(12.0),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 2.0,
+              color: Colors.orange[800]!,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            const SizedBox(height: 18.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  width: 30,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[400],
+                    borderRadius: const BorderRadius.all(Radius.circular(12.0)),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 40.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(width: 40),
-              SizedBox(height: 90, width: 220, child: _toggleFlagsFilter()),
-              SizedBox(
-                width: 40,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: GestureDetector(
-                    child: const Icon(
-                      MdiIcons.filterVariant,
-                      size: 30,
+              ],
+            ),
+            const SizedBox(height: 40.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(width: 40),
+                SizedBox(height: 90, width: 220, child: _toggleFlagsFilterWidget()),
+                SizedBox(
+                  width: 40,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: GestureDetector(
+                      child: const Icon(MdiIcons.filterVariant, size: 30),
+                      onTap: () {
+                        var orderType = "";
+                        if (!_alphabeticalFilter) {
+                          orderType = "Showing countries alphabetically";
+                        } else {
+                          orderType = "Showing countries by flight time";
+                        }
+                        _transformAlphabeticalTime();
+                        BotToast.showText(
+                          text: orderType,
+                          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                          contentColor: Colors.grey[700]!,
+                          contentPadding: const EdgeInsets.all(10),
+                        );
+                      },
                     ),
-                    onTap: () {
-                      var orderType = "";
-                      if (!_alphabeticalFilter) {
-                        orderType = "Showing countries alphabetically";
-                      }
-                      // We are changing to time
-                      else {
-                        orderType = "Showing countries by flight time";
-                      }
-
-                      _transformAlphabeticalTime();
-
-                      BotToast.showText(
-                        text: orderType,
-                        textStyle: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.white,
-                        ),
-                        contentColor: Colors.grey[700]!,
-                        contentPadding: const EdgeInsets.all(10),
-                      );
-                    },
                   ),
-                ),
-              )
-            ],
-          ),
-          const SizedBox(height: 20.0),
-          SizedBox(height: 35, child: _toggleTypeFilter()),
-        ],
+                )
+              ],
+            ),
+            const SizedBox(height: 20.0),
+            SizedBox(height: 35, child: _toggleTypeFilterWidget()),
+            const SizedBox(height: 30.0),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _toggleFlagsFilterWidget() {
+    var flags = [];
+    if (_alphabeticalFilter) {
+      flags = [
+        Image.asset('images/flags/stock/argentina.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/canada.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/cayman.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/china.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/hawaii.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/japan.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/mexico.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/south-africa.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/switzerland.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uae.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uk.png', width: 25, height: 25),
+        Icon(Icons.select_all, color: _themeProvider!.mainText),
+      ];
+    } else {
+      flags = [
+        Image.asset('images/flags/stock/mexico.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/cayman.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/canada.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/hawaii.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uk.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/argentina.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/switzerland.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/japan.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/china.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/uae.png', width: 25, height: 25),
+        Image.asset('images/flags/stock/south-africa.png', width: 25, height: 25),
+        Icon(Icons.select_all, color: _themeProvider!.mainText),
+      ];
+    }
+
+    return GridView.count(
+      shrinkWrap: true,
+      crossAxisCount: 6,
+      mainAxisSpacing: 2.0,
+      crossAxisSpacing: 2.0,
+      children: flags.asMap().entries.map((widget) {
+        return ToggleButtons(
+          constraints: const BoxConstraints(minWidth: 30.0),
+          highlightColor: Colors.orange,
+          selectedBorderColor: Colors.green,
+          isSelected: [_filteredFlags[widget.key]],
+          children: [widget.value],
+          onPressed: (_) {
+            setState(() {
+              if (widget.key == 11) {
+                if (_filteredFlags[widget.key]) {
+                  for (int i = 0; i < _filteredFlags.length; i++) {
+                    _filteredFlags[i] = false;
+                  }
+                } else {
+                  for (int i = 0; i < _filteredFlags.length; i++) {
+                    _filteredFlags[i] = true;
+                  }
+                }
+              } else {
+                _filteredFlags[widget.key] = !_filteredFlags[widget.key];
+                bool allFlagsSelected = true;
+                for (int i = 0; i < _filteredFlags.length - 1; i++) {
+                  if (_filteredFlags[i] == false) {
+                    allFlagsSelected = false;
+                  }
+                }
+                _filteredFlags[11] = allFlagsSelected;
+              }
+            });
+            _saveFilteredFlags();
+            _filterAndSortTopLists();
+          },
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _toggleTypeFilterWidget() {
+    return GridView.count(
+      shrinkWrap: true,
+      crossAxisCount: 1,
+      scrollDirection: Axis.horizontal,
+      mainAxisSpacing: 2.0,
+      crossAxisSpacing: 2.0,
+      children: [
+        Image.asset('images/icons/ic_flower_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
+        Image.asset('images/icons/ic_dog_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
+        Image.asset('images/icons/ic_pill_black_48dp.png', width: 25, height: 25, color: _themeProvider!.mainText),
+        Icon(MdiIcons.fingerprint, color: _themeProvider!.mainText),
+        Icon(MdiIcons.packageVariantClosed, color: _themeProvider!.mainText),
+      ].asMap().entries.map((widget) {
+        int dataIndex = widget.key;
+        if (widget.key == 3) dataIndex = 4;
+        if (widget.key == 4) dataIndex = 3;
+
+        return ToggleButtons(
+          constraints: const BoxConstraints(minWidth: 30.0),
+          highlightColor: Colors.orange,
+          selectedBorderColor: Colors.green,
+          isSelected: [_filteredTypes[dataIndex]],
+          onPressed: (_) {
+            setState(() {
+              _filteredTypes[dataIndex] = !_filteredTypes[dataIndex];
+            });
+            final saveList = <String>[];
+            for (final b in _filteredTypes) {
+              b ? saveList.add('1') : saveList.add('0');
+            }
+            Prefs().setStockTypeFilter(saveList);
+            _filterAndSortTopLists();
+          },
+          children: [widget.value],
+        );
+      }).toList(),
     );
   }
 
@@ -557,172 +659,41 @@ class ForeignStockPageState extends State<ForeignStockPage> {
     Prefs().setStockCountryFilter(saveList);
   }
 
-  Widget _toggleFlagsFilter() {
-    var flags = [];
-    if (_alphabeticalFilter) {
-      flags = [
-        Image.asset('images/flags/stock/argentina.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/canada.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/cayman.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/china.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/hawaii.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/japan.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/mexico.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/south-africa.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/switzerland.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/uae.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/uk.png', width: 25, height: 25),
-        Icon(
-          Icons.select_all,
-          color: _themeProvider!.mainText,
-        ),
-      ];
-    } else {
-      flags = [
-        Image.asset('images/flags/stock/mexico.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/cayman.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/canada.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/hawaii.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/uk.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/argentina.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/switzerland.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/japan.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/china.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/uae.png', width: 25, height: 25),
-        Image.asset('images/flags/stock/south-africa.png', width: 25, height: 25),
-        Icon(
-          Icons.select_all,
-          color: _themeProvider!.mainText,
-        ),
-      ];
+  List<ForeignStock> get _visibleStocks {
+    if (_hiddenStocks.isEmpty) {
+      return List<ForeignStock>.from(_filteredStocksCards);
     }
 
-    return GridView.count(
-      shrinkWrap: true,
-      crossAxisCount: 6,
-      mainAxisSpacing: 2.0,
-      crossAxisSpacing: 2.0,
-      children: flags.asMap().entries.map((widget) {
-        return ToggleButtons(
-          constraints: const BoxConstraints(minWidth: 30.0),
-          highlightColor: Colors.orange,
-          selectedBorderColor: Colors.green,
-          isSelected: [_filteredFlags[widget.key]],
-          children: [widget.value],
-          onPressed: (_) {
-            setState(() {
-              // Item 11 is the icon for selecting/deselecting all
-              if (widget.key == 11) {
-                if (_filteredFlags[widget.key]) {
-                  for (int i = 0; i < _filteredFlags.length; i++) {
-                    _filteredFlags[i] = false;
-                  }
-                } else {
-                  for (int i = 0; i < _filteredFlags.length; i++) {
-                    _filteredFlags[i] = true;
-                  }
-                }
-              } else {
-                // Any country flag state change is handled here
-                _filteredFlags[widget.key] = !_filteredFlags[widget.key];
-                // Then, we check if we need to select Item 11
-                bool allFlagsSelected = true;
-                for (int i = 0; i < _filteredFlags.length - 1; i++) {
-                  if (_filteredFlags[i] == false) {
-                    allFlagsSelected = false;
-                  }
-                }
-                if (allFlagsSelected) {
-                  _filteredFlags[11] = true;
-                } else {
-                  _filteredFlags[11] = false;
-                }
-              }
-            });
-
-            // Saving to shared preferences
-            _saveFilteredFlags();
-
-            // Applying filter
-            _filterAndSortTopLists();
-          },
-        );
-      }).toList(),
-    );
+    return _filteredStocksCards.where((stock) {
+      for (final h in _hiddenStocks) {
+        if (h.id == stock.id && h.countryCode == stock.countryCode) {
+          return false;
+        }
+      }
+      return true;
+    }).toList();
   }
 
-  Widget _toggleTypeFilter() {
-    return GridView.count(
-      shrinkWrap: true,
-      crossAxisCount: 1,
-      scrollDirection: Axis.horizontal,
-      mainAxisSpacing: 2.0,
-      crossAxisSpacing: 2.0,
-      children: [
-        Image.asset(
-          'images/icons/ic_flower_black_48dp.png',
-          width: 25,
-          height: 25,
-          color: _themeProvider!.mainText,
-        ),
-        Image.asset(
-          'images/icons/ic_dog_black_48dp.png',
-          width: 25,
-          height: 25,
-          color: _themeProvider!.mainText,
-        ),
-        Image.asset(
-          'images/icons/ic_pill_black_48dp.png',
-          width: 25,
-          height: 25,
-          color: _themeProvider!.mainText,
-        ),
-        Icon(
-          MdiIcons.fingerprint,
-          color: _themeProvider!.mainText,
-        ),
-        Icon(
-          MdiIcons.packageVariantClosed,
-          color: _themeProvider!.mainText,
-        ),
-      ].asMap().entries.map((widget) {
-        // Map visual index to data index
-        // Visual: 0(F), 1(P), 2(D), 3(OC), 4(Others)
-        // Data:   0(F), 1(P), 2(D), 4(OC), 3(Others)
-        int dataIndex = widget.key;
-        if (widget.key == 3) dataIndex = 4;
-        if (widget.key == 4) dataIndex = 3;
+  Widget _buildStockListItem(int index, List<ForeignStock> visibleStocks) {
+    if (index == 0) {
+      return Column(
+        children: [
+          if (_isTourismDay()) _tourismBanner(),
+          _buildHeader(),
+        ],
+      );
+    }
 
-        return ToggleButtons(
-          constraints: const BoxConstraints(minWidth: 30.0),
-          highlightColor: Colors.orange,
-          selectedBorderColor: Colors.green,
-          isSelected: [_filteredTypes[dataIndex]],
-          onPressed: (_) {
-            setState(() {
-              // Any item type state change is handled here
-              _filteredTypes[dataIndex] = !_filteredTypes[dataIndex];
-            });
+    if (index == visibleStocks.length + 1) {
+      return const SizedBox(height: 100);
+    }
 
-            // Saving to shared preferences
-            final saveList = <String>[];
-            for (final b in _filteredTypes) {
-              b ? saveList.add('1') : saveList.add('0');
-            }
-            Prefs().setStockTypeFilter(saveList);
-
-            // Applying filter
-            _filterAndSortTopLists();
-          },
-          children: [widget.value],
-        );
-      }).toList(),
-    );
+    final stock = visibleStocks[index - 1];
+    final displayShowcase = index == 1; // showcase only on first card
+    return _buildStockCard(stock, displayShowcase: displayShowcase);
   }
 
-  List<Widget> _stockItems() {
-    final thisStockList = <Widget>[];
-
+  Widget _buildHeader() {
     final Widget lastUpdateDetails = Padding(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
       child: Row(
@@ -742,7 +713,6 @@ class ForeignStockPageState extends State<ForeignStockPage> {
                   ),
                 ),
               ],
-              // Icon of successful provider
             ),
           ),
         ],
@@ -867,7 +837,7 @@ class ForeignStockPageState extends State<ForeignStockPage> {
       );
     }
 
-    Widget header = Row(
+    return Row(
       children: [
         Flexible(
           child: Column(
@@ -885,92 +855,66 @@ class ForeignStockPageState extends State<ForeignStockPage> {
         ),
       ],
     );
+  }
 
-    // Tourism Day banner
-    if (_isTourismDay()) {
-      thisStockList.add(
-        Container(
-          margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.orange, width: 1),
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.transparent,
-          ),
-          child: Row(
-            children: [
-              const Icon(Icons.card_travel, color: Colors.orange, size: 18),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Tourism Day: capacity doubled ($_capacity → $_effectiveCapacity)\n',
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                    ),
-                    const Text(
-                      '(affects total cost and profit calculations)',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
-                    ),
-                  ],
+  Widget _buildStockCard(ForeignStock stock, {required bool displayShowcase}) {
+    return ForeignStockCard(
+      foreignStock: stock,
+      capacity: _effectiveCapacity,
+      inventoryEnabled: _inventoryEnabled,
+      showArrivalTime: _showArrivalTime,
+      showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
+      profile: _profile,
+      flagPressedCallback: _onFlagPressed,
+      requestMoneyRefresh: _refreshMoney,
+      memberHiddenCallback: _hideMember,
+      ticket: _settingsProvider!.travelTicket,
+      activeRestocks: _activeRestocks,
+      travelingTimeStamp: _profile!.travel!.timestamp,
+      travelingCountry: _returnCountryName(_profile!.travel!.destination),
+      travelingCountryFullName: _profile!.travel!.destination,
+      displayShowcase: displayShowcase,
+      isDataFromCache: _isDataFromCache,
+      providerName: _yataSuccess
+          ? "YATA"
+          : _prometheusSuccess
+              ? "Prometheus"
+              : null,
+      key: ValueKey('${stock.id}-${stock.countryCode}'),
+    );
+  }
+
+  Widget _tourismBanner() {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(20, 10, 20, 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.orange, width: 1),
+        borderRadius: BorderRadius.circular(8),
+        color: Colors.transparent,
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.card_travel, color: Colors.orange, size: 18),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Tourism Day: capacity doubled ($_capacity → $_effectiveCapacity)\n',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
                 ),
-              ),
-            ],
+                const Text(
+                  '(affects total cost and profit calculations)',
+                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-    }
-
-    thisStockList.add(header);
-
-    bool displayShowcase = true; // Add showcase to first card only
-    for (final stock in _filteredStocksCards) {
-      // Do not show hidden stock cards
-      bool hidden = false;
-      for (final h in _hiddenStocks) {
-        if (h.id == stock.id && h.countryCode == stock.countryCode) {
-          hidden = true;
-          break;
-        }
-      }
-      if (hidden) continue;
-
-      thisStockList.add(
-        ForeignStockCard(
-          foreignStock: stock,
-          capacity: _effectiveCapacity,
-          inventoryEnabled: _inventoryEnabled,
-          showArrivalTime: _showArrivalTime,
-          showBarsCooldownAnalysis: _showBarsCooldownAnalysis,
-          profile: _profile,
-          flagPressedCallback: _onFlagPressed,
-          requestMoneyRefresh: _refreshMoney,
-          memberHiddenCallback: _hideMember,
-          ticket: _settingsProvider!.travelTicket,
-          activeRestocks: _activeRestocks,
-          travelingTimeStamp: _profile!.travel!.timestamp,
-          travelingCountry: _returnCountryName(_profile!.travel!.destination),
-          travelingCountryFullName: _profile!.travel!.destination,
-          displayShowcase: displayShowcase,
-          isDataFromCache: _isDataFromCache,
-          providerName: _yataSuccess
-              ? "YATA"
-              : _prometheusSuccess
-                  ? "Prometheus"
-                  : null,
-          key: UniqueKey(),
-        ),
-      );
-      displayShowcase = false;
-    }
-
-    thisStockList.add(
-      const SizedBox(
-        height: 100,
+        ],
       ),
     );
-    return thisStockList;
   }
 
   Future<void> _fetchApiInformation() async {
@@ -1931,15 +1875,8 @@ class ForeignStockPageState extends State<ForeignStockPage> {
   }
 
   Future<void> _onRefresh() async {
-    await Future.delayed(const Duration(milliseconds: 500));
     await _fetchApiInformation();
-
-    if (!mounted) return;
-
-    setState(() {});
-    _refreshController.refreshCompleted();
-    // Initialize the controller again to avoid errors
-    _refreshController = RefreshController();
+    if (mounted) setState(() {});
   }
 
   CountryName _returnCountryName(String? country) {

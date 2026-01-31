@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
+import 'package:bot_toast/bot_toast.dart';
 import 'package:csv/csv.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +83,20 @@ class WarController extends GetxController {
     Prefs().setUseUhcRevive(value);
     _uhcReviveActive = value;
   }
+
+  // Shared limiter to avoid flooding profile calls (Torn: 100/min)
+  Future<void> _apiRateLimiter = Future.value();
+  DateTime _lastApiCall = DateTime.fromMillisecondsSinceEpoch(0);
+  static const int _apiGapMsBase = 400; // Faster path when no limits hit
+  static const int _apiGapMsBackoff = 1200; // Backoff when rate limited
+  int _apiGapMsCurrent = _apiGapMsBase;
+  bool _throttleToastShown = false;
+  int _fullUpdateTotal = 0;
+  int _fullUpdateSuccess = 0;
+  bool _fullUpdateInProgress = false;
+  static const int _concurrencyBase = 6;
+  static const int _concurrencyBackoff = 1;
+  int _concurrencyCurrent = _concurrencyBase;
 
   bool _helaReviveActive = false;
   bool get helaReviveActive => _helaReviveActive;
@@ -259,13 +274,35 @@ class WarController extends GetxController {
     final String memberKey = member.memberId.toString();
     bool error = false;
 
-    // Perform update
+    bool hitRateLimit = false;
+
+    // Perform update with retry on rate limit
     try {
-      final dynamic updatedTarget = await ApiCallsV2.getOtherUserProfile_v2(
-        payload: {
-          "id": memberKey,
-        },
-      );
+      dynamic updatedTarget;
+      int retries = 0;
+      final int maxRetries = (_fullUpdateInProgress && _apiGapMsCurrent == _apiGapMsBackoff) ? 10 : 5;
+      bool requestCompleted = false;
+
+      while (!requestCompleted && retries < maxRetries) {
+        await _waitForApiSlot();
+        updatedTarget = await ApiCallsV2.getOtherUserProfile_v2(
+          payload: {
+            "id": memberKey,
+          },
+        );
+
+        if (_isRateLimitError(updatedTarget)) {
+          hitRateLimit = true;
+          if (_fullUpdateInProgress) {
+            _enterThrottleMode();
+          }
+          retries++;
+          await Future.delayed(Duration(seconds: 5 * retries));
+          continue;
+        }
+
+        requestCompleted = true;
+      }
 
       if (updatedTarget is OtherProfilePDA) {
         member.name = updatedTarget.name;
@@ -343,10 +380,19 @@ class WarController extends GetxController {
           }
         }
       } else {
+        // If we got an API error (including rate limits) or null, mark error and show throttling toast once
+        if (_fullUpdateInProgress) {
+          _enterThrottleMode();
+        }
         error = true;
       }
     } catch (e) {
       error = true;
+    }
+
+    // If we hit rate limiting, add a small delay to avoid flooding
+    if (hitRateLimit) {
+      await Future.delayed(const Duration(seconds: 1));
     }
 
     // End animation and update
@@ -362,14 +408,70 @@ class WarController extends GetxController {
       assessPendingNotifications();
     }
 
+    final bool success = !error;
+    if (_fullUpdateInProgress && success) {
+      _fullUpdateSuccess++;
+    }
+
     // Return result and save if successful
-    if (!error) {
+    if (success) {
       _updateResultAnimation(member: member, success: true);
       savePreferences();
       return true;
     }
     _updateResultAnimation(member: member, success: false);
     return false;
+  }
+
+  bool _isRateLimitError(dynamic result) {
+    if (result is! ApiError) return false;
+    final lowerReason = result.errorReason.toLowerCase();
+    return result.errorId == 5 || lowerReason.contains('too many requests');
+  }
+
+  Future<void> _waitForApiSlot() async {
+    final int elapsedMs = DateTime.now().difference(_lastApiCall).inMilliseconds;
+    final int waitMs = elapsedMs >= _apiGapMsCurrent ? 0 : _apiGapMsCurrent - elapsedMs;
+    _apiRateLimiter = _apiRateLimiter.then((_) => Future.delayed(Duration(milliseconds: waitMs)));
+    await _apiRateLimiter;
+    _lastApiCall = DateTime.now();
+  }
+
+  void _showThrottleToastIfNeeded() {
+    if (_throttleToastShown) return;
+
+    final int remaining = (_fullUpdateTotal - _fullUpdateSuccess).clamp(0, _fullUpdateTotal);
+    if (remaining <= 0) return;
+
+    _throttleToastShown = true;
+    final int estSeconds = _estimateRemainingSeconds();
+
+    BotToast.showText(
+      clickClose: true,
+      text:
+          "Many targets to update. Throttling to avoid API limits. Remaining: $remaining targets (~${estSeconds}s).\n\n"
+          "Failed updates will be retried automatically.",
+      duration: const Duration(seconds: 5),
+      contentColor: Colors.orange[700] ?? Colors.orange,
+      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+      contentPadding: const EdgeInsets.all(10),
+    );
+
+    log("Throttling updates to avoid API limits. Estimated remaining time: ${estSeconds}s for $remaining targets.");
+  }
+
+  int _estimateRemainingSeconds() {
+    final int remaining = (_fullUpdateTotal - _fullUpdateSuccess).clamp(0, _fullUpdateTotal);
+    final double seconds = remaining * (_apiGapMsCurrent / 1000.0);
+    return seconds.ceil();
+  }
+
+  void _enterThrottleMode() {
+    _apiGapMsCurrent = _apiGapMsBackoff;
+    _concurrencyCurrent = _concurrencyBackoff;
+
+    // Show toast after switching to backoff values so the estimate reflects throttle mode
+    _showThrottleToastIfNeeded();
   }
 
   Future<List<int>> updateAllMembersFull() async {
@@ -380,6 +482,12 @@ class WarController extends GetxController {
     final dynamic ownStatsSuccess = await getOwnStats();
     int numberUpdated = 0;
 
+    _throttleToastShown = false;
+    _fullUpdateSuccess = 0;
+    _fullUpdateInProgress = true;
+    _apiGapMsCurrent = _apiGapMsBase;
+    _concurrencyCurrent = _concurrencyBase;
+
     updating = true;
     update();
 
@@ -388,87 +496,99 @@ class WarController extends GetxController {
     List<WarCardDetails> thisCards = List.from(orderedCardsDetails);
     List<FactionModel> thisFactions = List.from(factions);
 
-    int callsPerBatch = 0;
-    int delayBetweenCalls = 0;
+    _fullUpdateTotal = thisCards.length;
 
-    // If there are less than or equal to 75 members, set the batch size and delay accordingly
-    if (thisCards.length <= 75) {
-      callsPerBatch = thisCards.length;
-      // No delay for less than 75 members
-      delayBetweenCalls = 0;
-    } else {
-      // Limit the calls to 75 per minute
-      callsPerBatch = 75;
-      // Calculate the required delay between calls
-      delayBetweenCalls = (60 / callsPerBatch).floor();
+    // Process with limited concurrency and shared rate limiter to avoid bursts/rate limits
+    int index = 0;
+    final List<Future<void>> inFlight = [];
+    final List<WarCardDetails> failedCards = [];
+
+    Future<void> startTask(WarCardDetails card) async {
+      for (final FactionModel f in thisFactions) {
+        if (_stopUpdate) return;
+        if (f.members!.containsKey(card.memberId.toString())) {
+          final bool result = await updateSingleMemberFull(
+            f.members![card.memberId.toString()]!,
+            allAttacks: allAttacksSuccess,
+            ownStats: ownStatsSuccess,
+          );
+          if (result) {
+            numberUpdated++;
+          } else {
+            failedCards.add(card);
+          }
+          return;
+        }
+      }
     }
 
-    // If there are less than 75 members, make API calls concurrently
-    if (thisCards.length <= 75) {
-      // Create a list to store the update tasks
-      List<Future<bool>> updateTasks = [];
+    while (index < thisCards.length || inFlight.isNotEmpty) {
+      while (!_stopUpdate && index < thisCards.length && inFlight.length < _concurrencyCurrent) {
+        final WarCardDetails card = thisCards[index++];
+        final future = startTask(card);
+        inFlight.add(future);
+        future.whenComplete(() {
+          inFlight.remove(future);
+        });
+      }
 
-      // Loop through each card in thisCards
-      for (final WarCardDetails card in thisCards) {
-        // Loop through each faction in thisFactions
+      if (_stopUpdate) {
+        _stopUpdate = false;
+        updating = false;
+        _fullUpdateInProgress = false;
+        update();
+        return [thisCards.length, numberUpdated];
+      }
+
+      if (inFlight.isNotEmpty) {
+        await Future.any(inFlight);
+      }
+    }
+
+    // Retry failed ones sequentially under throttle
+    if (failedCards.isNotEmpty && !_stopUpdate) {
+      _enterThrottleMode();
+      _concurrencyCurrent = _concurrencyBackoff;
+      _apiGapMsCurrent = _apiGapMsBackoff;
+
+      for (final WarCardDetails card in failedCards) {
+        if (_stopUpdate) {
+          _stopUpdate = false;
+          updating = false;
+          _fullUpdateInProgress = false;
+          update();
+          return [thisCards.length, numberUpdated];
+        }
+
         for (final FactionModel f in thisFactions) {
-          // If the member is found in the faction, add the update task to the list
           if (f.members!.containsKey(card.memberId.toString())) {
-            updateTasks.add(
-              updateSingleMemberFull(
+            bool retrySuccess = false;
+            int attempts = 0;
+            while (!retrySuccess && attempts < 10 && !_stopUpdate) {
+              final bool result = await updateSingleMemberFull(
                 f.members![card.memberId.toString()]!,
                 allAttacks: allAttacksSuccess,
                 ownStats: ownStatsSuccess,
-              ),
-            );
-            break;
-          }
-        }
-      }
-
-      // Execute all update tasks concurrently and store the results
-      List<bool> results = await Future.wait(updateTasks);
-      // Count the number of successful updates
-      numberUpdated = results.where((result) => result).length;
-    } else {
-      // If there are more than 60 members, use the rate limiting logic
-      for (int i = 0; i < thisCards.length; i++) {
-        final WarCardDetails card = thisCards[i];
-        for (final FactionModel f in thisFactions) {
-          // If the update process is stopped, reset the state and return the results
-          if (_stopUpdate) {
-            _stopUpdate = false;
-            updating = false;
-            update();
-            return [thisCards.length, numberUpdated];
-          }
-
-          // If the member is found in the faction, update the member
-          if (f.members!.containsKey(card.memberId.toString())) {
-            final bool result = await updateSingleMemberFull(
-              f.members![card.memberId.toString()]!,
-              allAttacks: allAttacksSuccess,
-              ownStats: ownStatsSuccess,
-            );
-            // If the update is successful, increment the numberUpdated counter
-            if (result) {
-              numberUpdated++;
+              );
+              retrySuccess = result;
+              if (result) {
+                numberUpdated++;
+              } else {
+                attempts++;
+                if (attempts < 10) {
+                  await Future.delayed(const Duration(seconds: 2));
+                }
+              }
             }
             break;
           }
-          // If the member is not found in the faction, continue searching
-          continue;
-        }
-
-        // Add a delay between calls if required
-        if (callsPerBatch > 0 && (i + 1) % callsPerBatch == 0) {
-          await Future.delayed(Duration(seconds: delayBetweenCalls));
         }
       }
     }
 
     _stopUpdate = false;
     updating = false;
+    _fullUpdateInProgress = false;
     update();
 
     return [thisCards.length, numberUpdated];
@@ -937,48 +1057,70 @@ class WarController extends GetxController {
     switch (currentSort ??= WarSortType.nameAsc) {
       case WarSortType.levelDes:
         sortToSave = 'levelDes';
+        break;
       case WarSortType.levelAsc:
         sortToSave = 'levelAsc';
+        break;
       case WarSortType.respectDes:
         sortToSave = 'respectDes';
+        break;
       case WarSortType.respectAsc:
         sortToSave = 'respectAsc';
+        break;
       case WarSortType.nameDes:
         sortToSave = 'nameDes';
+        break;
       case WarSortType.nameAsc:
         sortToSave = 'nameAsc';
+        break;
       case WarSortType.lifeDes:
         sortToSave = 'lifeDes';
+        break;
       case WarSortType.lifeAsc:
         sortToSave = 'lifeAsc';
+        break;
       case WarSortType.hospitalDes:
         sortToSave = 'hospitalDes';
+        break;
       case WarSortType.hospitalAsc:
         sortToSave = 'hospitalAsc';
+        break;
       case WarSortType.statsDes:
         sortToSave = 'statsDes';
+        break;
       case WarSortType.statsAsc:
         sortToSave = 'statsAsc';
+        break;
       case WarSortType.onlineDes:
         sortToSave = 'onlineDes';
+        break;
       case WarSortType.onlineAsc:
         sortToSave = 'onlineAsc';
+        break;
       case WarSortType.colorDes:
         sortToSave = 'colorDes';
+        break;
       case WarSortType.colorAsc:
         sortToSave = 'colorAsc';
+        break;
       case WarSortType.notesDes:
         sortToSave = 'notesDes';
+        break;
       case WarSortType.notesAsc:
         sortToSave = 'notesAsc';
+        break;
       case WarSortType.bounty:
         sortToSave = 'bounty';
+        break;
       case WarSortType.travelDistanceDesc:
         sortToSave = 'travelDistanceDes';
+        break;
       case WarSortType.travelDistanceAsc:
         sortToSave = 'travelDistanceAsc';
+        break;
       case WarSortType.smartScore:
         sortToSave = 'smartScore';
+        break;
     }
     Prefs().setWarMembersSort(sortToSave);
   }
@@ -1377,6 +1519,48 @@ class WarController extends GetxController {
     return 0.0;
   }
 
+  double _getPartialExactStats(Member member) {
+    // Use precomputed known total if available
+    if (member.statsExactTotalKnown != null && member.statsExactTotalKnown! > 0) {
+      return member.statsExactTotalKnown!.toDouble();
+    }
+
+    double sum = 0.0;
+    bool hasAny = false;
+    if (member.statsStr != null && member.statsStr! > 0) {
+      sum += member.statsStr!;
+      hasAny = true;
+    }
+    if (member.statsSpd != null && member.statsSpd! > 0) {
+      sum += member.statsSpd!;
+      hasAny = true;
+    }
+    if (member.statsDef != null && member.statsDef! > 0) {
+      sum += member.statsDef!;
+      hasAny = true;
+    }
+    if (member.statsDex != null && member.statsDex! > 0) {
+      sum += member.statsDex!;
+      hasAny = true;
+    }
+
+    return hasAny ? sum : 0.0;
+  }
+
+  /// Returns stats for sorting with grouping: 0 exact (total or partial), 1 estimate, 2 unknown
+  ({int group, double value}) getMemberStatsForSorting(Member member) {
+    final double exact = getMemberTotalStats(member);
+    if (exact > 0) return (group: 0, value: exact);
+
+    final double partialExact = _getPartialExactStats(member);
+    if (partialExact > 0) return (group: 0, value: partialExact);
+
+    final double estimated = getMemberEstimatedStats(member);
+    if (estimated > 0) return (group: 1, value: estimated);
+
+    return (group: 2, value: 0.0);
+  }
+
   static const List<String> estimateCategories = [
     "< 2k",
     "2k - 25k",
@@ -1628,9 +1812,29 @@ class WarController extends GetxController {
           return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
         }
       case WarSortType.statsDes:
-        return getMemberTotalStats(b).compareTo(getMemberTotalStats(a));
+        final statsA = getMemberStatsForSorting(a);
+        final statsB = getMemberStatsForSorting(b);
+
+        // Group order: exact (0) -> estimated (1) -> unknown (2)
+        if (statsA.group != statsB.group) {
+          return statsA.group.compareTo(statsB.group);
+        }
+
+        final int statsComparison = statsB.value.compareTo(statsA.value);
+        if (statsComparison != 0) return statsComparison;
+        return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
       case WarSortType.statsAsc:
-        return getMemberTotalStats(a).compareTo(getMemberTotalStats(b));
+        final statsA = getMemberStatsForSorting(a);
+        final statsB = getMemberStatsForSorting(b);
+
+        // Group order: exact (0) -> estimated (1) -> unknown (2)
+        if (statsA.group != statsB.group) {
+          return statsA.group.compareTo(statsB.group);
+        }
+
+        final int statsComparison = statsA.value.compareTo(statsB.value);
+        if (statsComparison != 0) return statsComparison;
+        return (a.name ?? '').toLowerCase().compareTo((b.name ?? '').toLowerCase());
       case WarSortType.smartScore:
         // Ensure ranges are calculated before sorting
         if (attributeRanges.isEmpty) {

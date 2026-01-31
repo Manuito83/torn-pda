@@ -4,6 +4,7 @@ import 'dart:io';
 
 // Flutter imports:
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 import 'package:torn_pda/main.dart';
@@ -101,6 +102,87 @@ class ChangeLogState extends State<ChangeLog> {
     final itemList = <ChangeLogItem>[];
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
+
+    // v3.11.0 - Build 611 - built 26/01/2026
+    itemList.add(
+      ChangeLogItem()
+        ..version = 'Torn PDA v3.11.0'
+        ..date = '01 FEB 2026'
+        ..features = [
+          if (Platform.isAndroid)
+            ComplexFeature(
+              "Travel Live Updates are now available on Android [bombel]",
+              explanation: "Use the switch below to enable them.\n\n"
+                  "When enabling, you'll be prompted to review battery optimization "
+                  "settings to keep updates running in the background.\n\n"
+                  "You can change this setting in the Alerts section later on.\n\n"
+                  "Credits for the implementation go to bombel [2362436]",
+            ),
+          if (Platform.isAndroid)
+            Consumer<SettingsProvider>(
+              builder: (context, settings, child) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 45.0, right: 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Flexible(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Travel Live Update",
+                              style: TextStyle(fontStyle: FontStyle.italic, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "(disabled by default)",
+                              style: TextStyle(fontStyle: FontStyle.italic),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Switch(
+                        value: settings.androidLiveActivityTravelEnabled,
+                        onChanged: (bool value) async {
+                          settings.androidLiveActivityTravelEnabled = value;
+
+                          if (value) {
+                            await _checkAndroidBatteryOptimization();
+                          }
+                        },
+                        activeThumbColor: Theme.of(context).colorScheme.primary,
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ComplexFeature(
+            "Overhauled Quick Items selection and categories (wiped existing ones)",
+            explanation: "Quick Items have been redesigned to that they can be selected from TORN's item list.\n\n"
+                "This also allows new categories of quick items (e.g. weapons, armor, etc.) to be selected.\n\n"
+                "Faction quick items remain unchanged.\n\n",
+          ),
+          "War: fixed war targets sorting by stats",
+          "War: improved API limits management when updating many war targets",
+          "Added new target sorting sheet",
+          "Added on time option for local notifications, alarms, and timers where applicable",
+          ComplexFeature(
+            "Dev: added 'tab state' webview handler (see details)",
+            explanation: "Adds a handler and event so user scripts can read tab state (UUID, active tab flag,"
+                " and browser visibility) and stay in sync across tab switches.\n\n"
+                "Please visit the ./docs section in Github for more information.",
+          ),
+          "Added sorting to Dev Tools tabs and size data for storage items",
+          "Added option to avoid keyboard overlapping the browser in certain devices (disabled by default)",
+          "Improved user auth recovery process",
+          "Fixed events timeline text formatting in Profile",
+          "Fixed foreign stocks data submission to YATA and Prometheus",
+          "Fixed scroll behavior in Foreign Stocks page",
+          "Fixed TORN targets import erasing existing targets",
+          if (Platform.isIOS) "Fixed browser dialogs closing rapidly on certain devices",
+        ],
+    );
 
     // v3.10.1 - Build 604 - 30/12/2025
     itemList.add(
@@ -290,7 +372,7 @@ class ChangeLogState extends State<ChangeLog> {
                       onChanged: (bool value) {
                         settings.removeForeignItemsDetails = value;
                       },
-                      activeColor: Theme.of(context).colorScheme.primary,
+                      activeThumbColor: Theme.of(context).colorScheme.primary,
                     ),
                   ],
                 ),
@@ -396,7 +478,7 @@ class ChangeLogState extends State<ChangeLog> {
                         onChanged: (bool value) {
                           settings.iosLiveActivityTravelEnabled = value;
                         },
-                        activeColor: Theme.of(context).colorScheme.primary,
+                        activeThumbColor: Theme.of(context).colorScheme.primary,
                       ),
                     ],
                   ),
@@ -2637,6 +2719,42 @@ class ChangeLogState extends State<ChangeLog> {
 
     for (var i = 0; i < itemList.length; i++) {
       _changeLogItems.putIfAbsent(itemList[i], () => itemList[i].features);
+    }
+  }
+
+  Future<void> _checkAndroidBatteryOptimization() async {
+    if (!Platform.isAndroid) return;
+
+    const channel = MethodChannel('tornpda.channel');
+    try {
+      final bool isRestricted = await channel.invokeMethod('checkBatteryOptimization');
+
+      if (isRestricted && mounted) {
+        await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Battery Optimization Detected"),
+            content: const Text(
+              "To ensure Live Updates work correctly in the background, please disable battery optimization for Torn PDA.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  channel.invokeMethod('openBatterySettings');
+                },
+                child: const Text("Open Settings"),
+              ),
+            ],
+          ),
+        );
+      }
+    } catch (_) {
+      // Ignore errors
     }
   }
 

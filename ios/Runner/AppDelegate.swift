@@ -84,6 +84,18 @@ import workmanager_apple
     // Expose the channel so AlarmKit callbacks can notify Flutter (e.g., alarm button taps)
     AlarmKitHandler.channel = alarmChannel
 
+    // Set up the Flutter channel to check protected data availability (Keychain diagnostics)
+    let protectedDataChannel = FlutterMethodChannel(
+      name: "tornpda/protected_data", binaryMessenger: controller.binaryMessenger)
+    protectedDataChannel.setMethodCallHandler {
+      (call: FlutterMethodCall, result: @escaping FlutterResult) in
+      if call.method == "isProtectedDataAvailable" {
+        result(UIApplication.shared.isProtectedDataAvailable)
+      } else {
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
     // Set up the Flutter channel to handle icon changes
     iconChannel = FlutterMethodChannel(
       name: "tornpda/icon", binaryMessenger: controller.binaryMessenger)

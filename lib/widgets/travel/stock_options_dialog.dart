@@ -99,7 +99,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                           _callBackValues();
                         },
                         activeTrackColor: Colors.lightGreenAccent,
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                       ),
                     ],
                   ),
@@ -123,7 +123,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                           _callBackValues();
                         },
                         activeTrackColor: Colors.lightGreenAccent,
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                       ),
                     ],
                   ),
@@ -147,7 +147,7 @@ class StocksOptionsDialogState extends State<StocksOptionsDialog> {
                           _callBackValues();
                         },
                         activeTrackColor: Colors.lightGreenAccent,
-                        activeColor: Colors.green,
+                        activeThumbColor: Colors.green,
                       ),
                     ],
                   ),

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:torn_pda/providers/webview_provider.dart';
@@ -6,7 +8,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 Future<T?> showWebviewDialog<T>({
   required BuildContext context,
   required WidgetBuilder builder,
-  bool barrierDismissible = true,
+  bool? barrierDismissible,
   bool useRootNavigator = true,
   RouteSettings? routeSettings,
   Color? barrierColor,
@@ -15,7 +17,8 @@ Future<T?> showWebviewDialog<T>({
 }) async {
   final result = await showDialog<T>(
     context: context,
-    barrierDismissible: barrierDismissible,
+    // iOS can dismiss immediately due to the opening gesture; keep the dialog open
+    barrierDismissible: barrierDismissible ?? !Platform.isIOS,
     useRootNavigator: useRootNavigator,
     routeSettings: routeSettings,
     barrierColor: barrierColor,

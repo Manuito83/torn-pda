@@ -8,9 +8,7 @@ import 'dart:math' as math;
 // Package imports:
 import 'package:app_links/app_links.dart';
 import 'package:bot_toast/bot_toast.dart';
-import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -30,7 +28,6 @@ import 'package:quick_actions/quick_actions.dart';
 import 'package:receive_intent/receive_intent.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 // Project imports:
-import 'package:torn_pda/firebase_options.dart';
 import 'package:torn_pda/main.dart';
 import 'package:torn_pda/models/faction/faction_attacks_model.dart';
 import 'package:torn_pda/models/profile/own_profile_basic.dart';
@@ -41,6 +38,7 @@ import 'package:torn_pda/pages/alerts.dart';
 import 'package:torn_pda/pages/alerts/stockmarket_alerts_page.dart';
 import 'package:torn_pda/pages/alerts_windows.dart';
 import 'package:torn_pda/pages/awards_page.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_user_provider.dart';
 import 'package:torn_pda/pages/chaining/ranked_wars_page.dart';
 import 'package:torn_pda/pages/chaining_page.dart';
 import 'package:torn_pda/pages/friends_page.dart';
@@ -80,9 +78,8 @@ import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_after_import_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/prefs_backup_from_file_dialog.dart';
 import 'package:torn_pda/widgets/settings/backup_local/backup_reminder_dialog.dart';
-import 'package:torn_pda/widgets/drawer/authentication_loading_widget.dart';
-import 'package:torn_pda/widgets/drawer/authentication_timeout_widget.dart';
 import 'package:torn_pda/widgets/drawer/connectivity_ui.dart';
+import 'package:torn_pda/widgets/auth/auth_recovery_widget.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
 import 'package:torn_pda/utils/user_helper.dart';
 import 'utils/dialog_queue.dart';
@@ -166,6 +163,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   String _userUID = "";
   bool _drawerUserChecked = false;
+  bool _authRecoveryEnabledRC = true;
+
+  // Completer to gate DialogQueue until auth recovery completes
+  final Completer<void> _authGateCompleter = Completer<void>();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
@@ -190,13 +191,6 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   // Connectivity delay tracking
   bool _hasWaitedInitialDelay = false;
-
-  // Authentication error control (similar to connectivity)
-  bool _hasAuthenticationError = false;
-  bool _authenticationTimedOut = false;
-  final Completer<void> _authenticationTimeoutCompleter = Completer<void>();
-  bool _authFailureLogged = false;
-  Stopwatch? _authFailureStopwatch;
 
   // Script updates check rate limiting (1 hour between checks)
   DateTime _lastScriptUpdateCheck = DateTime.now().subtract(const Duration(hours: 2));
@@ -323,9 +317,9 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   void _initializeLiveActivities() {
     try {
-      if (Platform.isIOS) {
-        _initialiseLiveActivitiesBridgeService();
-      }
+      // Live Updates are supported on both platforms; the bridge init already
+      // guards by platform + SDK + user toggle, so call it unconditionally.
+      _initialiseLiveActivitiesBridgeService();
     } catch (e, stackTrace) {
       log("Error initializing live activities: $e");
       logErrorToCrashlytics("Error initializing live activities", e, stackTrace);
@@ -515,6 +509,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _loadPreferencesAndDialogs() async {
+    // Load auth recovery flag FIRST, before anything else
+    // This ensures AuthRecoveryWidget has the correct value before it starts
+    _authRecoveryEnabledRC = await Prefs().getAuthRecoveryEnabledRC();
+
     // Wait for initial connectivity check to complete
     if (ConnectivityHandler.instance.connectivityCheckEnabled) {
       await _ensureConnectivity();
@@ -523,6 +521,10 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     await _loadPreferencesAsync();
 
     if (mounted) {
+      // Set up auth gate so dialogs wait for AuthRecoveryWidget to complete
+      // This prevents dialogs from appearing over loading/timeout screens
+      DialogQueue.setAuthGate(_authGateCompleter);
+
       // Start collecting dialogs for 500ms before processing
       // This ensures proper priority ordering during app startup
       DialogQueue.startCollectingDialogs();
@@ -714,6 +716,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "use_browser_cache": "user", // user, on, off
         "dynamic_appIcon_enabled": "false",
         "browser_center_editing_text_field_allowed": true,
+        "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
         "revive_hela": "1.8 million or 2 Xanax",
@@ -782,6 +785,18 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _settingsProvider.dynamicAppIconEnabledRemoteConfig = remoteConfig.getBool("dynamic_appIcon_enabled");
       _settingsProvider.browserCenterEditingTextFieldRemoteConfigAllowed =
           remoteConfig.getBool("browser_center_editing_text_field_allowed");
+      _settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed =
+          remoteConfig.getBool("browser_extend_height_for_keyboard_allowed");
+
+      // Auth recovery (also persist to SharedPrefs for next app launch)
+      _authRecoveryEnabledRC = remoteConfig.getBool("auth_recovery_enabled");
+      Prefs().setAuthRecoveryEnabledRC(_authRecoveryEnabledRC);
+
+      if (!_settingsProvider.browserExtendHeightForKeyboardRemoteConfigAllowed &&
+          _settingsProvider.browserExtendHeightForKeyboard) {
+        // If RC disables the feature, also turn off the user toggle to avoid confusion
+        _settingsProvider.browserExtendHeightForKeyboard = false;
+      }
 
       // Revives
       _settingsProvider.reviveWolverinesPrice = remoteConfig.getString("revive_wolverines");
@@ -882,6 +897,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       _getBackgroundNotificationSavedData();
       _removeExistingNotifications();
 
+      // Resume webviews if the browser is in foreground or split screen is active
+      if (_webViewProvider.browserShowInForeground || _webViewProvider.webViewSplitActive) {
+        _webViewProvider.resumeAllWebviews();
+      }
+
       // Resume stakeouts
       _s.startTimer();
       log("Stakeouts resumed");
@@ -893,6 +913,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       syncBackgroundRefreshWithWidgetInstallation();
 
       checkForScriptUpdates();
+
+      final nativeUserProvider = Provider.of<NativeUserProvider>(context, listen: false);
+      if (nativeUserProvider.keychainAccessDenied) {
+        nativeUserProvider.loadPreferences();
+      }
 
       _syncThemeWithDeviceSettings();
     }
@@ -1129,6 +1154,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
           for (final not in activeNotifications) {
             if (not.id == null) continue;
+            if (not.channelId == 'travel_live_updates') continue;
             // Platform channel to cancel direct Firebase notifications (we can call
             // "cancelAll()" there without affecting scheduled notifications, which is
             // a problem with the local plugin)
@@ -1884,58 +1910,42 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     _webViewProvider = Provider.of<WebViewProvider>(context);
 
     _s.callbackBrowser = _openBrowserFromToast;
-    return FutureBuilder(
-      future: _finishedWithPreferencesAndDialogs,
-      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        // While the Future is running (loading preferences AND waiting for connectivity)
-        if (snapshot.connectionState != ConnectionState.done) {
-          // Always show default loading first, then check connectivity with delay
-          return Container(
-            color: _themeProvider!.currentTheme == AppTheme.light
-                ? MediaQuery.orientationOf(context) == Orientation.portrait
-                    ? Colors.blueGrey
-                    : isStatusBarShown
-                        ? _themeProvider!.statusBar
-                        : _themeProvider!.canvas
-                : _themeProvider!.canvas,
-            child: SafeArea(
-              child: Scaffold(
-                body: Container(
-                  color: _themeProvider!.canvas,
-                  child: Center(
-                    child: _authenticationTimedOut
-                        ? AuthenticationTimeoutWidget(
-                            themeProvider: _themeProvider!,
-                            webViewProvider: _webViewProvider,
-                            onUnderstoodPressed: () {
-                              setState(() {
-                                _authenticationTimedOut = false;
-                                _hasAuthenticationError = false;
-                              });
-                              // Complete to allow _initializeAndHandleFirebaseAuth to continue
-                              if (!_authenticationTimeoutCompleter.isCompleted) {
-                                _authenticationTimeoutCompleter.complete();
-                              }
-                            },
-                          )
-                        : _hasAuthenticationError
-                            ? AuthenticationLoadingWidget(
-                                themeProvider: _themeProvider!,
-                                onCaptiveFinished: _handleAuthenticationCaptiveFinished,
-                              )
-                            : ConnectivityUI(
-                                themeProvider: _themeProvider!,
-                                hasWaitedInitialDelay: _hasWaitedInitialDelay,
-                              ),
+    return AuthRecoveryWidget(
+      preferencesCompleter: _preferencesCompleter,
+      appHasBeenUpdated: appHasBeenUpdated,
+      enabled: _authRecoveryEnabledRC,
+      onAuthCompleted: () => DialogQueue.completeAuthGate(),
+      child: FutureBuilder(
+        future: _finishedWithPreferencesAndDialogs,
+        builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+          // While the Future is running (loading preferences AND waiting for connectivity)
+          if (snapshot.connectionState != ConnectionState.done) {
+            // Always show default loading first, then check connectivity with delay
+            return Container(
+              color: _themeProvider!.currentTheme == AppTheme.light
+                  ? MediaQuery.orientationOf(context) == Orientation.portrait
+                      ? Colors.blueGrey
+                      : isStatusBarShown
+                          ? _themeProvider!.statusBar
+                          : _themeProvider!.canvas
+                  : _themeProvider!.canvas,
+              child: SafeArea(
+                child: Scaffold(
+                  body: Container(
+                    color: _themeProvider!.canvas,
+                    child: Center(
+                      child: ConnectivityUI(
+                        themeProvider: _themeProvider!,
+                        hasWaitedInitialDelay: _hasWaitedInitialDelay,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        }
+            );
+          }
 
-        // Future completed - show main app
-        if (snapshot.connectionState == ConnectionState.done) {
+          // Future completed - show main app
           // This container is needed in all pages for certain devices with appbar at the bottom, otherwise the
           // safe area will be black
           return Container(
@@ -1991,17 +2001,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
               ),
             ),
           );
-        } else {
-          return Container(
-            color: _themeProvider!.secondBackground,
-            child: const SafeArea(
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
-            ),
-          );
-        }
-      },
+        },
+      ),
     );
   }
 
@@ -2482,56 +2483,17 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     }
   }
 
-  void _handleAuthenticationCaptiveFinished() {
-    if (!mounted) {
-      return;
-    }
-
-    if (_authenticationTimedOut) {
-      return;
-    }
-
-    setState(() {
-      _authenticationTimedOut = true;
-      _hasAuthenticationError = false;
-    });
-
-    final int elapsedMs = _authFailureStopwatch?.elapsedMilliseconds ?? 0;
-    // Telemetry: loader countdown finished with no Firebase user recovered
-    _reportAuthenticationFailure(
-      method: 'captive_timeout',
-      reason: 'captive_timer_elapsed',
-      elapsedMs: elapsedMs,
-    );
-    _stopAuthFailureStopwatch();
-  }
-
-  // ## Firebase Auth Restoration Process ##
-  // - Post-import case: Create new anonymous user if needed after local backup import
-  // - Immediate check: Try to get current Firebase user (fastest path)
-  // - App update re-init: For updates, try Firebase.initializeApp again to fix initialization issues
-  // - Start retries UI
-  // - Retries: 4 attempts with exponential increase (2s, 4s, 8s, 16s) + Firebase re-init + auth state refresh
-  // - Final attempt: Listen to authStateChanges for remaining 30s timeout period
-  // - Show timeout UI
+  // ## Firebase Auth Quick Check ##
+  // Handles post-import user creation and immediate auth check
+  // AuthRecoveryWidget handles all retry/timeout logic for standard auth recovery
   Future<void> _initializeAndHandleFirebaseAuth() async {
     if (Platform.isWindows || _drawerUserChecked) {
       return;
     }
 
-    // NOTE: we have already checked this before, but it's important!
-    // (so be leave this as a reminder)
     if (!UserHelper.isApiKeyValid) return;
 
-    _authFailureLogged = false;
-    _authFailureStopwatch = Stopwatch()..start();
-
-    // Add extra delay for app updates to ensure Firebase is fully initialized
-    if (appHasBeenUpdated) {
-      await Future.delayed(const Duration(seconds: 1));
-    }
-
-    // Case 1: Post-import user creation
+    // Case 1: Post-import user creation (NOT part of auth recovery, it's the LOCAL BACKUP)
     if (justImportedFromLocalBackup) {
       if (!_debugForceFirebaseAuthMissing && FirebaseAuth.instance.currentUser == null) {
         log(
@@ -2550,14 +2512,50 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
             FirestoreHelper().setUID(_userUID);
             await _updateFirebaseDetails();
 
+            // Try to restore alerts from local snapshot (included in the backup)
+            bool alertsRestored = false;
+            try {
+              final snapshot = await FirestoreHelper().loadLocalSnapshot();
+              if (snapshot != null) {
+                alertsRestored = await FirestoreHelper().applyAlertsFromPayload(
+                  snapshot.toMap(),
+                  resetRestockTimestamps: true,
+                );
+                if (alertsRestored) {
+                  log(
+                    "🔒 Drawer: Alerts restored from local snapshot after import.",
+                    name: "AUTH CHECKS",
+                  );
+                }
+              }
+            } catch (e) {
+              log(
+                "🔒 Drawer: Failed to restore alerts from snapshot: $e",
+                name: "AUTH CHECKS",
+              );
+            }
+
+            // Show dialog only if alerts could NOT be restored (no snapshot or failed)
             // This dialog can be shown here with no postframe callback as it is inside
             // of the Preferences Completer, so the main FutureBuilder hasn't loaded
-            await showDialog(
-              useRootNavigator: false,
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => const PrefsLocalAfterImportDialog(),
-            );
+            if (!alertsRestored) {
+              await showDialog(
+                useRootNavigator: false,
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => const PrefsLocalAfterImportDialog(),
+              );
+            } else {
+              // Brief confirmation that everything was restored successfully
+              BotToast.showText(
+                clickClose: true,
+                text: "Local backup restored successfully, including your alerts configuration!",
+                textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                contentColor: Colors.green,
+                duration: const Duration(seconds: 5),
+                contentPadding: const EdgeInsets.all(10),
+              );
+            }
 
             log(
               "🔒 Drawer: Firebase user created successfully after local import. UID: ${newAnonUser.uid}",
@@ -2615,259 +2613,31 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       justImportedFromLocalBackup = false;
       if (!_debugForceFirebaseAuthMissing) {
         _drawerUserChecked = true;
-        _stopAuthFailureStopwatch();
         return;
       }
     }
 
-    // Case 2: Standard app launch
-    User? user = FirebaseAuth.instance.currentUser;
+    // Case 2: Quick check for existing user (standard app launch)
+    final User? user = FirebaseAuth.instance.currentUser;
 
     if (user != null && !_debugForceFirebaseAuthMissing) {
       log(
-        "🔒 Drawer: Session restored immediately. UID: ${user.uid}",
+        "🔒 Drawer: Session found immediately. UID: ${user.uid}",
         name: "AUTH CHECKS",
       );
-
-      // Analytics: Auth success immediately
-      FirebaseAnalytics.instance.logEvent(
-        name: 'auth_restoration_success',
-        parameters: {
-          'method': 'immediate',
-          'time_ms': 0,
-          'success': 'true',
-          'platform': Platform.isIOS ? 'iOS' : 'Android',
-          'app_updated': appHasBeenUpdated.toString(),
-        },
-      );
-
       _userUID = user.uid;
       FirestoreHelper().setUID(_userUID);
       _drawerUserChecked = true;
-      _stopAuthFailureStopwatch();
       return;
     }
 
-    // For app updates, try Firebase.initializeApp again to ensure proper initialization
-    if (appHasBeenUpdated) {
-      log(
-        "🔒 Drawer: App updated and no immediate user found, re-initializing Firebase...",
-        name: "AUTH CHECKS",
-      );
-      try {
-        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-        user = FirebaseAuth.instance.currentUser;
-        if (user != null && !_debugForceFirebaseAuthMissing) {
-          log(
-            "🔒 Drawer: Session restored after Firebase re-initialization. UID: ${user.uid}",
-            name: "AUTH CHECKS",
-          );
-
-          FirebaseAnalytics.instance.logEvent(
-            name: 'auth_restoration_success',
-            parameters: {
-              'method': 'firebase_reinit',
-              'time_ms': 0,
-              'success': 'true',
-              'platform': Platform.isIOS ? 'iOS' : 'Android',
-              'app_updated': 'true',
-            },
-          );
-
-          _userUID = user.uid;
-          FirestoreHelper().setUID(_userUID);
-          _drawerUserChecked = true;
-          _stopAuthFailureStopwatch();
-          return;
-        }
-      } catch (e) {
-        log(
-          "🔒 Drawer: Firebase re-initialization failed: $e",
-          name: "AUTH CHECKS",
-        );
-        // Continue with normal flow
-      }
-    }
-
+    // No immediate user >> AuthRecoveryWidget will handle the recovery flow
+    // Just mark as checked so we don't run this again
     log(
-      "🔒 Drawer: No user found on first attempt. Trying enhanced retry with exponential backoff...",
+      "🔒 Drawer: No immediate user found. AuthRecoveryWidget will handle recovery.",
       name: "AUTH CHECKS",
     );
-
-    if (mounted) {
-      setState(() {
-        _hasAuthenticationError = true;
-      });
-    }
-
-    // Retry with exponential increase for Firebase Auth
-    const int maxRetries = 4;
-    final retryStopwatch = Stopwatch()..start();
-
-    for (int attempt = 1; attempt <= maxRetries; attempt++) {
-      if (_authenticationTimedOut) {
-        break;
-      }
-
-      final delaySeconds = math.pow(2, attempt).toInt();
-
-      log(
-        "🔒 Drawer: Retry attempt $attempt/$maxRetries after ${delaySeconds}s delay (app_updated: $appHasBeenUpdated)",
-        name: "AUTH CHECKS",
-      );
-
-      await Future.delayed(Duration(seconds: delaySeconds));
-
-      if (_authenticationTimedOut) {
-        break;
-      }
-
-      // Try Firebase.initializeApp on each retry attempt
-      try {
-        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-      } catch (e) {
-        log("🔒 Drawer: Firebase re-initialization failed on retry attempt $attempt: $e", name: "AUTH CHECKS");
-      }
-
-      if (_authenticationTimedOut) {
-        break;
-      }
-
-      // Force refresh auth state
-      try {
-        await FirebaseAuth.instance.authStateChanges().first.timeout(
-              const Duration(seconds: 5),
-              onTimeout: () => null,
-            );
-      } catch (e) {
-        log("🔒 Drawer: Auth state refresh failed on attempt $attempt: $e", name: "AUTH CHECKS");
-      }
-
-      if (_authenticationTimedOut) {
-        break;
-      }
-
-      user = FirebaseAuth.instance.currentUser;
-
-      if (user != null && !_debugForceFirebaseAuthMissing) {
-        final elapsedMs = retryStopwatch.elapsedMilliseconds;
-        log(
-          "🔒 Drawer: Session restored after ${elapsedMs}ms on attempt $attempt. UID: ${user.uid}",
-          name: "AUTH CHECKS",
-        );
-
-        FirebaseAnalytics.instance.logEvent(
-          name: 'auth_restoration_success',
-          parameters: {
-            'method': 'retry_exponential_backoff',
-            'time_ms': elapsedMs,
-            'attempt': attempt,
-            'success': 'true',
-            'platform': Platform.isIOS ? 'iOS' : 'Android',
-            'app_updated': appHasBeenUpdated.toString(),
-          },
-        );
-
-        _userUID = user.uid;
-        FirestoreHelper().setUID(_userUID);
-        _drawerUserChecked = true;
-        retryStopwatch.stop();
-        _stopAuthFailureStopwatch();
-
-        // Reset authentication error UI on success durante retry
-        if (mounted) {
-          setState(() {
-            _hasAuthenticationError = false;
-          });
-        }
-
-        return;
-      }
-    }
-
-    retryStopwatch.stop();
-
-    if (_authenticationTimedOut) {
-      if (!_authFailureLogged) {
-        // Telemetry: final timeout reached after retries without obtaining a user
-        _reportAuthenticationFailure(
-          method: 'captive_timeout',
-          reason: 'captive_timer_elapsed',
-          elapsedMs: retryStopwatch.elapsedMilliseconds,
-        );
-      }
-      _stopAuthFailureStopwatch();
-      await _authenticationTimeoutCompleter.future;
-      _drawerUserChecked = true;
-      return;
-    }
-
-    log(
-      "🔒 Drawer: No user found after enhanced retry. Showing final recovery guidance.",
-      name: "AUTH CHECKS",
-    );
-
-    // Telemetry: retries exhausted without an authenticated user
-    _reportAuthenticationFailure(
-      method: 'retry_exponential_backoff',
-      reason: 'retry_exhausted_no_user',
-      elapsedMs: retryStopwatch.elapsedMilliseconds,
-    );
-    _stopAuthFailureStopwatch();
-
-    if (mounted) {
-      setState(() {
-        _authenticationTimedOut = true;
-        _hasAuthenticationError = false;
-      });
-    }
-
-    await _authenticationTimeoutCompleter.future;
-
     _drawerUserChecked = true;
-  }
-
-  /// Logs the auth restoration failure exactly once, tagging it with the
-  /// relevant context for Crashlytics and analytics
-  void _reportAuthenticationFailure({
-    required String method,
-    required String reason,
-    required int elapsedMs,
-  }) {
-    if (_authFailureLogged) {
-      return;
-    }
-
-    _authFailureLogged = true;
-
-    FirebaseAnalytics.instance.logEvent(
-      name: 'auth_restoration_failure',
-      parameters: {
-        'method': method,
-        'time_ms': elapsedMs,
-        'success': 'false',
-        'reason': reason,
-        'platform': Platform.isIOS ? 'iOS' : 'Android',
-        'app_updated': appHasBeenUpdated.toString(),
-      },
-    );
-
-    FirebaseCrashlytics.instance.recordError(
-      Exception('Auth Restoration: $reason'),
-      StackTrace.current,
-      reason: 'Auth Restoration: $reason',
-      information: [
-        'Method: $method',
-        'Elapsed ms: $elapsedMs',
-        'API: ${UserHelper.apiKey}',
-      ],
-      fatal: true,
-    );
-  }
-
-  void _stopAuthFailureStopwatch() {
-    _authFailureStopwatch?.stop();
-    _authFailureStopwatch = null;
   }
 
   Future<void> _updateLastActiveTime() async {
@@ -2897,25 +2667,39 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   }
 
   Future<void> _updateFirebaseDetails() async {
+    // Realign FirestoreHelper UID with the currently authenticated user
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) {
+      log("Drawer: skip _updateFirebaseDetails, no Firebase user", name: "AUTH CHECKS");
+      return;
+    }
+    _userUID = currentUser.uid;
+    FirestoreHelper().setUID(_userUID);
+
     // We save the key because the API call will reset it
     // Then get user's profile and update
     final savedKey = UserHelper.apiKey;
     if (savedKey.isEmpty) return;
-    final dynamic prof = await ApiCallsV1.getOwnProfileBasic();
-    if (prof is OwnProfileBasic) {
-      // Update profile with the two fields it does not contain
-      prof
-        ..userApiKey = savedKey
-        ..userApiKeyValid = true;
 
-      await FirestoreHelper().uploadUsersProfileDetail(prof, userTriggered: true);
-    }
+    try {
+      final dynamic prof = await ApiCallsV1.getOwnProfileBasic();
+      if (prof is OwnProfileBasic) {
+        // Update profile with the two fields it does not contain
+        prof
+          ..userApiKey = savedKey
+          ..userApiKeyValid = true;
 
-    // Uploads last active time to Firebase
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final success = await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(now);
-    if (success) {
-      _settingsProvider.updateLastUsed = now;
+        await FirestoreHelper().uploadUsersProfileDetail(prof, userTriggered: true);
+      }
+
+      // Uploads last active time to Firebase
+      final now = DateTime.now().millisecondsSinceEpoch;
+      final success = await FirestoreHelper().uploadLastActiveTimeAndTokensToFirebase(now);
+      if (success) {
+        _settingsProvider.updateLastUsed = now;
+      }
+    } catch (e, s) {
+      log("Failed to update Firebase details: $e", name: "AUTH CHECKS", stackTrace: s);
     }
   }
 
@@ -3405,12 +3189,22 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
   Future<void> _initialiseLiveActivitiesBridgeService() async {
     _preferencesCompleter.future.whenComplete(() async {
-      if (!Platform.isIOS) return;
-      if (!_settingsProvider.iosLiveActivityTravelEnabled) return;
+      final bool isAndroid = Platform.isAndroid;
+      final bool isIos = Platform.isIOS;
 
-      if (kSdkIos < 16.2) {
+      if (!isAndroid && !isIos) return;
+      final bool enabledForPlatform = isAndroid
+          ? _settingsProvider.androidLiveActivityTravelEnabled
+          : _settingsProvider.iosLiveActivityTravelEnabled;
+      if (!enabledForPlatform) return;
+
+      if (isIos && kSdkIos < 16.2) {
         // Regardless of user settings, disable Live Activities on iOS versions below 16.2
         _settingsProvider.iosLiveActivityTravelEnabled = false;
+        return;
+      }
+
+      if (isAndroid && kSdkAndroid < 26) {
         return;
       }
 

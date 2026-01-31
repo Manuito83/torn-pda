@@ -64,7 +64,8 @@ class TargetsListState extends State<TargetsList> {
     final noteColor = playerNote?.color ?? PlayerNoteColor.none;
 
     if (!widget.targets[index].name!.toUpperCase().contains(_targetsProvider.currentWordFilter.toUpperCase()) ||
-        _targetsProvider.currentColorFilterOut.contains(noteColor)) {
+        _targetsProvider.currentColorFilterOut.contains(noteColor) ||
+        !_targetsProvider.targetPassesFilters(widget.targets[index])) {
       return const SizedBox.shrink();
     }
 

@@ -22,6 +22,7 @@ import 'package:torn_pda/widgets/chaining/chain_widget.dart';
 import 'package:torn_pda/widgets/chaining/color_filter_dialog.dart';
 import 'package:torn_pda/widgets/chaining/targets_list.dart';
 import 'package:torn_pda/widgets/chaining/targets_sync_dialog.dart';
+import 'package:torn_pda/widgets/chaining/targets_sort_sheet.dart';
 import 'package:torn_pda/widgets/pda_browser_icon.dart';
 
 class TargetsOptions {
@@ -82,30 +83,6 @@ class TargetsPageState extends State<TargetsPage> {
   /// Dictates if it has been pressed and is showing a circular
   /// progress indicator while fetching data from Yata
   bool? _yataButtonEnabled = true;
-
-  final _popupSortChoices = <TargetSort>[
-    TargetSort(type: TargetSortType.levelDes),
-    TargetSort(type: TargetSortType.levelAsc),
-    TargetSort(type: TargetSortType.respectDes),
-    TargetSort(type: TargetSortType.respectAsc),
-    TargetSort(type: TargetSortType.ffDes),
-    TargetSort(type: TargetSortType.ffAsc),
-    TargetSort(type: TargetSortType.nameDes),
-    TargetSort(type: TargetSortType.nameAsc),
-    TargetSort(type: TargetSortType.lifeDes),
-    TargetSort(type: TargetSortType.lifeAsc),
-    TargetSort(type: TargetSortType.hospitalDes),
-    TargetSort(type: TargetSortType.hospitalAsc),
-    TargetSort(type: TargetSortType.onlineAsc),
-    TargetSort(type: TargetSortType.onlineDes),
-    TargetSort(type: TargetSortType.colorAsc),
-    TargetSort(type: TargetSortType.colorDes),
-    TargetSort(type: TargetSortType.notesDes),
-    TargetSort(type: TargetSortType.notesAsc),
-    TargetSort(type: TargetSortType.bounty),
-    TargetSort(type: TargetSortType.timeAddedDes),
-    TargetSort(type: TargetSortType.timeAddedAsc),
-  ];
 
   final _popupOptionsChoices = <TargetsOptions>[
     TargetsOptions(description: "Options"),
@@ -395,39 +372,12 @@ class TargetsPageState extends State<TargetsPage> {
             }
           },
         ),
-        PopupMenuButton<TargetSort>(
-          icon: const Icon(
+        IconButton(
+          icon: Icon(
             Icons.sort,
+            shadows: _sortHighlight(),
           ),
-          onSelected: _selectSortPopup,
-          itemBuilder: (BuildContext context) {
-            return _popupSortChoices.map((TargetSort choice) {
-              return PopupMenuItem<TargetSort>(
-                value: choice,
-                child: Row(
-                  children: [
-                    if (_targetsProvider.currentSort == choice.type)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Icon(
-                          Icons.arrow_forward_ios_outlined,
-                          color: _themeProvider.mainText,
-                          size: 15,
-                        ),
-                      ),
-                    Flexible(
-                      child: Text(
-                        choice.description,
-                        style: const TextStyle(
-                          fontSize: 13,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList();
-          },
+          onPressed: _openSortSheet,
         ),
         _optionsPopUp(),
       ],
@@ -588,55 +538,26 @@ class TargetsPageState extends State<TargetsPage> {
     Provider.of<TargetsProvider>(context, listen: false).setFilterText(_searchController.text);
   }
 
-  void _selectSortPopup(TargetSort choice) {
-    switch (choice.type) {
-      case TargetSortType.levelDes:
-        _targetsProvider.sortTargets(TargetSortType.levelDes);
-      case TargetSortType.levelAsc:
-        _targetsProvider.sortTargets(TargetSortType.levelAsc);
-      case TargetSortType.respectDes:
-        _targetsProvider.sortTargets(TargetSortType.respectDes);
-      case TargetSortType.respectAsc:
-        _targetsProvider.sortTargets(TargetSortType.respectAsc);
-      case TargetSortType.ffDes:
-        _targetsProvider.sortTargets(TargetSortType.ffDes);
-      case TargetSortType.ffAsc:
-        _targetsProvider.sortTargets(TargetSortType.ffAsc);
-      case TargetSortType.nameDes:
-        _targetsProvider.sortTargets(TargetSortType.nameDes);
-      case TargetSortType.nameAsc:
-        _targetsProvider.sortTargets(TargetSortType.nameAsc);
-      case TargetSortType.lifeDes:
-        _targetsProvider.sortTargets(TargetSortType.lifeDes);
-      case TargetSortType.lifeAsc:
-        _targetsProvider.sortTargets(TargetSortType.lifeAsc);
-      case TargetSortType.hospitalDes:
-        _targetsProvider.sortTargets(TargetSortType.hospitalDes);
-      case TargetSortType.hospitalAsc:
-        _targetsProvider.sortTargets(TargetSortType.hospitalAsc);
-      case TargetSortType.colorDes:
-        _targetsProvider.sortTargets(TargetSortType.colorDes);
-      case TargetSortType.colorAsc:
-        _targetsProvider.sortTargets(TargetSortType.colorAsc);
-      case TargetSortType.onlineDes:
-        _targetsProvider.sortTargets(TargetSortType.onlineDes);
-      case TargetSortType.onlineAsc:
-        _targetsProvider.sortTargets(TargetSortType.onlineAsc);
-      case TargetSortType.notesDes:
-        _targetsProvider.sortTargets(TargetSortType.notesDes);
-      case TargetSortType.notesAsc:
-        _targetsProvider.sortTargets(TargetSortType.notesAsc);
-      case TargetSortType.bounty:
-        _targetsProvider.sortTargets(TargetSortType.bounty);
-      case TargetSortType.timeAddedDes:
-        _targetsProvider.sortTargets(TargetSortType.timeAddedDes);
-      case TargetSortType.timeAddedAsc:
-        _targetsProvider.sortTargets(TargetSortType.timeAddedAsc);
+  List<Shadow>? _sortHighlight() {
+    final f = _targetsProvider.filters;
+    final hasAnyRange =
+        f.levelRange != null || f.lifeRange != null || f.fairFightRange != null || f.hospitalTimeRange != null;
 
-      default:
-        _targetsProvider.sortTargets(TargetSortType.ffAsc);
-        break;
-    }
+    if (!f.enabled || !hasAnyRange) return null;
+    return const [Shadow(color: Colors.orange, blurRadius: 8)];
+  }
+
+  Future<void> _openSortSheet() async {
+    final current = _targetsProvider.currentSort ?? TargetSortType.levelDes;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return TargetsSortSheet(currentSort: current);
+      },
+    );
   }
 
   Widget _optionsPopUp() {

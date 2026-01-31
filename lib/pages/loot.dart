@@ -52,10 +52,10 @@ class LootPage extends StatefulWidget {
 
 class LootPageState extends State<LootPage> {
   // Allowed preference keys for manual loot notifications/alarms/timers (string codes stored in prefs)
-  static const List<String> _lootNotificationAheadAllowed = ["0", "1", "2", "3", "4", "5", "6", "7"];
-  static const List<String> _lootAlarmAheadAllowedIOS = ["s20", "s40", "0", "1", "2", "3", "4", "5", "6"];
-  static const List<String> _lootAlarmAheadAllowedAndroid = ["0", "1", "2", "3", "4", "5", "6"];
-  static const List<String> _lootTimerAheadAllowed = ["0", "1", "2", "3", "4", "5", "6", "7"];
+  static const List<String> _lootNotificationAheadAllowed = ["exact", "0", "1", "2", "3", "4", "5", "6", "7"];
+  static const List<String> _lootAlarmAheadAllowedIOS = ["exact", "s20", "s40", "0", "1", "2", "3", "4", "5", "6"];
+  static const List<String> _lootAlarmAheadAllowedAndroid = ["exact", "0", "1", "2", "3", "4", "5", "6"];
+  static const List<String> _lootTimerAheadAllowed = ["exact", "0", "1", "2", "3", "4", "5", "6", "7"];
 
   var _npcIds = <String>[];
   var _filterOutIds = <String>[];
@@ -363,6 +363,15 @@ class LootPageState extends State<LootPage> {
       // Loop every NPC
       _mainLootInfo.forEach((npcId, npcDetails) {
         if (!_filterOutIds.contains(npcId)) {
+          final timings = npcDetails.timings;
+          final currentLevel = npcDetails.levels?.current ?? 0;
+          final nextLevel = npcDetails.levels?.next ?? 0;
+
+          // Skip NPCs without timings to avoid null access
+          if (timings == null || timings.isEmpty) {
+            return;
+          }
+
           // Get npcLevels in a column and format them
           int thisIndex = 1;
           final npcLevels = <Widget>[];
@@ -371,7 +380,10 @@ class LootPageState extends State<LootPage> {
             children: npcLevels,
           );
 
-          npcDetails.timings!.forEach((levelNumber, levelDetails) {
+          timings.forEach((levelNumber, levelDetails) {
+            if (levelDetails.ts == null) {
+              return;
+            }
             // Time formatting
             final levelDateTime = DateTime.fromMillisecondsSinceEpoch(levelDetails.ts! * 1000);
             final time = TimeFormatter(
@@ -386,7 +398,7 @@ class LootPageState extends State<LootPage> {
               isPast = true;
             }
             bool isCurrent = false;
-            if (levelNumber == npcDetails.levels!.current.toString()) {
+            if (levelNumber == currentLevel.toString()) {
               isCurrent = true;
             }
 
@@ -410,7 +422,7 @@ class LootPageState extends State<LootPage> {
                 timeString += " at $time";
               }
               if (timeDiff.inMinutes < 10) {
-                if (npcDetails.levels!.next! >= 4) {
+                if (nextLevel >= 4) {
                   style = TextStyle(
                     color: _themeProvider!.getTextColor(Colors.orange),
                     fontWeight: FontWeight.bold,
@@ -637,7 +649,7 @@ class LootPageState extends State<LootPage> {
             child: GestureDetector(
               child: Icon(
                 MdiIcons.knifeMilitary,
-                color: npcDetails.levels!.current! >= 4 ? Colors.red : _themeProvider!.mainText,
+                color: currentLevel >= 4 ? Colors.red : _themeProvider!.mainText,
               ),
               onTap: () async {
                 final url = 'https://www.torn.com/loader.php?sid=attack&user2ID=$npcId';
@@ -659,14 +671,27 @@ class LootPageState extends State<LootPage> {
           );
 
           Color cardBorderColor() {
-            if (npcDetails.levels!.current! >= 4) {
+            if (currentLevel >= 4) {
               return Colors.orange;
             } else {
               return Colors.transparent;
             }
           }
 
-          final Widget thisNpcImage = _images.firstWhere((element) => element.id == npcId).image;
+          final imageModel = _images.firstWhere(
+            (element) => element.id == npcId,
+            orElse: () {
+              final model = NpcImagesModel()
+                ..id = npcId
+                ..image = NpcImage(
+                  npcId: npcId,
+                  level: currentLevel,
+                );
+              _images.add(model);
+              return model;
+            },
+          );
+          final Widget thisNpcImage = imageModel.image;
 
           npcBoxes.add(
             Card(
@@ -1313,7 +1338,9 @@ class LootPageState extends State<LootPage> {
           _lootNotificationType = NotificationType.timer;
         }
 
-        if (notificationAhead == '0') {
+        if (notificationAhead == 'exact') {
+          _lootNotificationAhead = 0;
+        } else if (notificationAhead == '0') {
           _lootNotificationAhead = 30;
         } else if (notificationAhead == '1') {
           _lootNotificationAhead = 60;
@@ -1332,7 +1359,9 @@ class LootPageState extends State<LootPage> {
         }
 
         if (Platform.isIOS) {
-          if (alarmAhead == 's20') {
+          if (alarmAhead == 'exact') {
+            _lootAlarmAheadSeconds = 0;
+          } else if (alarmAhead == 's20') {
             _lootAlarmAheadSeconds = 20;
           } else if (alarmAhead == 's40') {
             _lootAlarmAheadSeconds = 40;
@@ -1354,7 +1383,9 @@ class LootPageState extends State<LootPage> {
             _lootAlarmAheadSeconds = 600; // clamp to max allowed on iOS
           }
         } else {
-          if (alarmAhead == '0') {
+          if (alarmAhead == 'exact') {
+            _lootAlarmAheadSeconds = 0;
+          } else if (alarmAhead == '0') {
             _lootAlarmAheadSeconds = 0;
           } else if (alarmAhead == '1') {
             _lootAlarmAheadSeconds = 120;
@@ -1373,7 +1404,9 @@ class LootPageState extends State<LootPage> {
           }
         }
 
-        if (timerAhead == '0') {
+        if (timerAhead == 'exact') {
+          _lootTimerAhead = 0;
+        } else if (timerAhead == '0') {
           _lootTimerAhead = 30;
         } else if (timerAhead == '1') {
           _lootTimerAhead = 60;
@@ -1624,7 +1657,8 @@ class NpcImage extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget npcImage;
     List<BoxShadow>? shadow = <BoxShadow>[];
-    if (level! >= 4) {
+    final safeLevel = level ?? 0;
+    if (safeLevel >= 4) {
       shadow = [
         const BoxShadow(
           color: Colors.red,

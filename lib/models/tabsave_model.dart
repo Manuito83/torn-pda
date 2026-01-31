@@ -29,6 +29,7 @@ class TabSaveModel {
 
 class TabsSave {
   TabsSave({
+    this.tabUid,
     this.tabKey,
     this.url,
     this.pageTitle,
@@ -43,6 +44,7 @@ class TabsSave {
     this.lastUsedTime = 0,
   });
 
+  String? tabUid;
   GlobalKey? tabKey;
   String? url;
   String? pageTitle;
@@ -57,6 +59,7 @@ class TabsSave {
   int lastUsedTime;
 
   factory TabsSave.fromJson(Map<String, dynamic> json) => TabsSave(
+        tabUid: json["tabUid"],
         tabKey: json["tabKey"],
         url: json["url"],
         pageTitle: json["pageTitle"],
@@ -72,6 +75,7 @@ class TabsSave {
       );
 
   Map<String, dynamic> toJson() => {
+        "tabUid": tabUid,
         "tabKey": tabKey,
         "url": url,
         "pageTitle": pageTitle,

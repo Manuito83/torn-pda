@@ -7,12 +7,15 @@ import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugins.GeneratedPluginRegistrant;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.service.notification.StatusBarNotification;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import java.util.List;
 import io.flutter.plugin.common.MethodChannel;
+import com.manuito.tornpda.liveupdates.LiveUpdatePlugin;
+import com.manuito.tornpda.liveupdates.LiveUpdateNotificationChannel;
 import android.os.Bundle;
 import android.window.SplashScreenView;
 import androidx.core.view.WindowCompat;
@@ -126,6 +129,8 @@ public class MainActivity extends FlutterActivity {
                             result.notImplemented();
                     }
                 });
+
+        LiveUpdatePlugin.register(flutterEngine, this);
     }
 
     // This cancels Firebase notifications upon request from the Flutter app, as the
@@ -135,7 +140,20 @@ public class MainActivity extends FlutterActivity {
     // There is an alternative which is preparing multiple tags.
     private void cancelNotifications() {
         NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancelAll();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            StatusBarNotification[] activeNotifications = notificationManager.getActiveNotifications();
+            for (StatusBarNotification notification : activeNotifications) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    String channelId = notification.getNotification().getChannelId();
+                    if (LiveUpdateNotificationChannel.CHANNEL_ID.equals(channelId)) {
+                        continue;
+                    }
+                }
+                notificationManager.cancel(notification.getTag(), notification.getId());
+            }
+        } else {
+            notificationManager.cancelAll();
+        }
     }
 
     // Deletes all notification channels

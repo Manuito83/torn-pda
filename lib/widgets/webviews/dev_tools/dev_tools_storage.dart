@@ -6,6 +6,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:torn_pda/utils/shared_prefs.dart';
 
 class DevToolsStorageTab extends StatefulWidget {
   final InAppWebViewController? webViewController;
@@ -16,6 +17,11 @@ class DevToolsStorageTab extends StatefulWidget {
 }
 
 class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
+  static const List<String> _cookiesSortOptions = ['name', 'value'];
+  static const List<String> _kvSortOptions = ['key', 'value', 'size'];
+  static const List<String> _iosDataSortOptions = ['displayName', 'dataTypes'];
+  static const List<String> _httpAuthSortOptions = ['username', 'password'];
+
   final CookieManager _cookieManager = CookieManager.instance();
   final WebStorageManager? _webStorageManager = !Platform.isWindows ? WebStorageManager.instance() : null;
   final HttpAuthCredentialDatabase? _httpAuthCredentialDatabase =
@@ -38,10 +44,26 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
   bool _newCookieIsSecure = false;
   DateTime? _newCookieExpiresDate;
 
+  String _cookiesSortField = _cookiesSortOptions.first;
+  bool _cookiesAscending = true;
+
+  String _localSortField = _kvSortOptions.first;
+  bool _localAscending = true;
+
+  String _sessionSortField = _kvSortOptions.first;
+  bool _sessionAscending = true;
+
+  String _iosDataSortField = _iosDataSortOptions.first;
+  bool _iosDataAscending = true;
+
+  String _httpAuthSortField = _httpAuthSortOptions.first;
+  bool _httpAuthAscending = true;
+
   @override
   void initState() {
     super.initState();
     _newCookiePathController.text = "/";
+    _loadSortPrefs();
   }
 
   @override
@@ -232,21 +254,6 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             ));
   }
 
-  Widget _buildTableHeader(String col1, String col2, String col3) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-      color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
-      child: Row(
-        children: [
-          Expanded(flex: 3, child: Text(col1, style: const TextStyle(fontWeight: FontWeight.bold))),
-          const SizedBox(width: 8),
-          Expanded(flex: 5, child: Text(col2, style: const TextStyle(fontWeight: FontWeight.bold))),
-          SizedBox(width: 48, child: Center(child: Text(col3, style: const TextStyle(fontWeight: FontWeight.bold)))),
-        ],
-      ),
-    );
-  }
-
   Widget _buildDataRow(
       {required String keyText, required String valueText, required VoidCallback onCellTap, Widget? deleteWidget}) {
     return InkWell(
@@ -266,11 +273,75 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
     );
   }
 
+  Widget _buildStorageItemRow({
+    required String keyText,
+    required String valueText,
+    required String sizeText,
+    required VoidCallback onCellTap,
+    Widget? deleteWidget,
+  }) {
+    return InkWell(
+      onTap: onCellTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(flex: 3, child: Text(keyText, maxLines: 2, overflow: TextOverflow.ellipsis)),
+            const SizedBox(width: 8),
+            Expanded(flex: 4, child: Text(valueText, maxLines: 2, overflow: TextOverflow.ellipsis)),
+            Expanded(
+              flex: 2,
+              child: Text(sizeText, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.right),
+            ),
+            SizedBox(width: 48, child: deleteWidget ?? Container()),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortableHeaderCell({
+    required String title,
+    required bool isActive,
+    required bool isAscending,
+    required VoidCallback onTap,
+    int flex = 1,
+    TextAlign alignment = TextAlign.left,
+  }) {
+    return Expanded(
+      flex: flex,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: alignment == TextAlign.right
+                ? MainAxisAlignment.end
+                : (alignment == TextAlign.center ? MainAxisAlignment.center : MainAxisAlignment.start),
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+              if (isActive) const SizedBox(width: 4),
+              if (isActive) Icon(isAscending ? Icons.arrow_upward : Icons.arrow_downward, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   String _formatBytes(num bytes) {
     if (bytes <= 0) return "0 B";
     const suffixes = ["B", "KB", "MB", "GB"];
     var i = (bytes.abs() == 0) ? 0 : (log(bytes.abs()) / log(1024)).floor();
     return "${(bytes / pow(1024, i)).toStringAsFixed(2)} ${suffixes[i]}";
+  }
+
+  int _calculateItemSizeBytes(WebStorageItem item) {
+    int totalBytes = 0;
+    totalBytes += utf8.encode(item.key ?? '').length;
+    totalBytes += utf8.encode(item.value).length;
+    return totalBytes;
   }
 
   String _calculateStorageSize(List<WebStorageItem> items) {
@@ -280,6 +351,115 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
       totalBytes += utf8.encode(item.value).length;
     }
     return _formatBytes(totalBytes);
+  }
+
+  Future<void> _onSortCookies(String field) async {
+    var nextField = _cookiesSortField;
+    var nextAscending = _cookiesAscending;
+    if (_cookiesSortField == field) {
+      nextAscending = !_cookiesAscending;
+    } else {
+      nextField = field;
+      nextAscending = true;
+    }
+    setState(() {
+      _cookiesSortField = nextField;
+      _cookiesAscending = nextAscending;
+    });
+    final idx = _cookiesSortOptions.indexOf(nextField);
+    await Prefs().setDevToolsStorageCookiesSortColumn(idx >= 0 ? idx : 0);
+    await Prefs().setDevToolsStorageCookiesSortAscending(nextAscending);
+  }
+
+  Future<void> _onSortLocal(String field) async {
+    var nextField = _localSortField;
+    var nextAscending = _localAscending;
+    if (_localSortField == field) {
+      nextAscending = !_localAscending;
+    } else {
+      nextField = field;
+      nextAscending = true;
+    }
+    setState(() {
+      _localSortField = nextField;
+      _localAscending = nextAscending;
+    });
+    final idx = _kvSortOptions.indexOf(nextField);
+    await Prefs().setDevToolsStorageLocalSortColumn(idx >= 0 ? idx : 0);
+    await Prefs().setDevToolsStorageLocalSortAscending(nextAscending);
+  }
+
+  Future<void> _onSortSession(String field) async {
+    var nextField = _sessionSortField;
+    var nextAscending = _sessionAscending;
+    if (_sessionSortField == field) {
+      nextAscending = !_sessionAscending;
+    } else {
+      nextField = field;
+      nextAscending = true;
+    }
+    setState(() {
+      _sessionSortField = nextField;
+      _sessionAscending = nextAscending;
+    });
+    final idx = _kvSortOptions.indexOf(nextField);
+    await Prefs().setDevToolsStorageSessionSortColumn(idx >= 0 ? idx : 0);
+    await Prefs().setDevToolsStorageSessionSortAscending(nextAscending);
+  }
+
+  Future<void> _onSortIosData(String field) async {
+    var nextField = _iosDataSortField;
+    var nextAscending = _iosDataAscending;
+    if (_iosDataSortField == field) {
+      nextAscending = !_iosDataAscending;
+    } else {
+      nextField = field;
+      nextAscending = true;
+    }
+    setState(() {
+      _iosDataSortField = nextField;
+      _iosDataAscending = nextAscending;
+    });
+    final idx = _iosDataSortOptions.indexOf(nextField);
+    await Prefs().setDevToolsStorageIosDataSortColumn(idx >= 0 ? idx : 0);
+    await Prefs().setDevToolsStorageIosDataSortAscending(nextAscending);
+  }
+
+  Future<void> _onSortHttpAuth(String field) async {
+    var nextField = _httpAuthSortField;
+    var nextAscending = _httpAuthAscending;
+    if (_httpAuthSortField == field) {
+      nextAscending = !_httpAuthAscending;
+    } else {
+      nextField = field;
+      nextAscending = true;
+    }
+    setState(() {
+      _httpAuthSortField = nextField;
+      _httpAuthAscending = nextAscending;
+    });
+    final idx = _httpAuthSortOptions.indexOf(nextField);
+    await Prefs().setDevToolsStorageHttpAuthSortColumn(idx >= 0 ? idx : 0);
+    await Prefs().setDevToolsStorageHttpAuthSortAscending(nextAscending);
+  }
+
+  List<dynamic> _sortedHttpCredentials(List<dynamic> credentials) {
+    final sorted = [...credentials];
+    sorted.sort((a, b) {
+      int comparison;
+      switch (_httpAuthSortField) {
+        case 'username':
+          comparison = (a.username ?? '').compareTo(b.username ?? '');
+          break;
+        case 'password':
+          comparison = (a.password ?? '').compareTo(b.password ?? '');
+          break;
+        default:
+          comparison = 0;
+      }
+      return _httpAuthAscending ? comparison : -comparison;
+    });
+    return sorted;
   }
 
   @override
@@ -310,6 +490,21 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
           .then((url) => url == null ? Future.value(<Cookie>[]) : _cookieManager.getCookies(url: url)),
       builder: (context, snapshot) {
         final cookies = snapshot.data ?? [];
+        final sortedCookies = [...cookies];
+        sortedCookies.sort((a, b) {
+          int comparison;
+          switch (_cookiesSortField) {
+            case 'name':
+              comparison = a.name.compareTo(b.name);
+              break;
+            case 'value':
+              comparison = a.value.compareTo(b.value);
+              break;
+            default:
+              comparison = 0;
+          }
+          return _cookiesAscending ? comparison : -comparison;
+        });
         return ExpansionTile(
           key: const ValueKey('cookies'),
           title: const Text("Cookies", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0)),
@@ -319,11 +514,34 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             else
               Column(
                 children: [
-                  _buildTableHeader("Name", "Value", "Del"),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+                    child: Row(
+                      children: [
+                        _buildSortableHeaderCell(
+                            title: "Name",
+                            isActive: _cookiesSortField == 'name',
+                            isAscending: _cookiesAscending,
+                            onTap: () => _onSortCookies('name'),
+                            flex: 3),
+                        const SizedBox(width: 8),
+                        _buildSortableHeaderCell(
+                            title: "Value",
+                            isActive: _cookiesSortField == 'value',
+                            isAscending: _cookiesAscending,
+                            onTap: () => _onSortCookies('value'),
+                            flex: 5),
+                        const SizedBox(
+                            width: 48,
+                            child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                      ],
+                    ),
+                  ),
                   const Divider(height: 1, thickness: 1),
-                  if (cookies.isEmpty)
+                  if (sortedCookies.isEmpty)
                     const Padding(padding: EdgeInsets.all(16.0), child: Text("No cookies for this domain.")),
-                  for (final cookie in cookies)
+                  for (final cookie in sortedCookies)
                     _buildDataRow(
                       keyText: cookie.name,
                       valueText: cookie.value,
@@ -397,6 +615,24 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
         final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
         final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
         final size = _calculateStorageSize(items);
+        final sortedItems = [...items];
+        sortedItems.sort((a, b) {
+          int comparison;
+          switch (_localSortField) {
+            case 'key':
+              comparison = (a.key ?? '').compareTo(b.key ?? '');
+              break;
+            case 'value':
+              comparison = a.value.compareTo(b.value);
+              break;
+            case 'size':
+              comparison = _calculateItemSizeBytes(a).compareTo(_calculateItemSizeBytes(b));
+              break;
+            default:
+              comparison = 0;
+          }
+          return _localAscending ? comparison : -comparison;
+        });
 
         return ExpansionTile(
           key: const ValueKey('local_storage'),
@@ -408,14 +644,45 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             else
               Column(
                 children: [
-                  _buildTableHeader("Key", "Value", "Del"),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+                    child: Row(
+                      children: [
+                        _buildSortableHeaderCell(
+                            title: "Key",
+                            isActive: _localSortField == 'key',
+                            isAscending: _localAscending,
+                            onTap: () => _onSortLocal('key'),
+                            flex: 3),
+                        const SizedBox(width: 8),
+                        _buildSortableHeaderCell(
+                            title: "Value",
+                            isActive: _localSortField == 'value',
+                            isAscending: _localAscending,
+                            onTap: () => _onSortLocal('value'),
+                            flex: 4),
+                        _buildSortableHeaderCell(
+                            title: "Size",
+                            isActive: _localSortField == 'size',
+                            isAscending: _localAscending,
+                            onTap: () => _onSortLocal('size'),
+                            flex: 2,
+                            alignment: TextAlign.right),
+                        const SizedBox(
+                            width: 48,
+                            child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                      ],
+                    ),
+                  ),
                   const Divider(height: 1, thickness: 1),
-                  if (items.isEmpty)
+                  if (sortedItems.isEmpty)
                     const Padding(padding: EdgeInsets.all(16.0), child: Text("Local Storage is empty.")),
-                  for (final item in items)
-                    _buildDataRow(
+                  for (final item in sortedItems)
+                    _buildStorageItemRow(
                         keyText: item.key ?? '',
                         valueText: item.value,
+                        sizeText: _formatBytes(_calculateItemSizeBytes(item)),
                         onCellTap: () => _showActionDialog(
                             title: item.key!,
                             value: item.value,
@@ -462,6 +729,24 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
         final items = (snapshot.data?['items'] as List<WebStorageItem>?) ?? [];
         final origin = snapshot.data?['origin'] as String? ?? 'Loading...';
         final size = _calculateStorageSize(items);
+        final sortedItems = [...items];
+        sortedItems.sort((a, b) {
+          int comparison;
+          switch (_sessionSortField) {
+            case 'key':
+              comparison = (a.key ?? '').compareTo(b.key ?? '');
+              break;
+            case 'value':
+              comparison = a.value.compareTo(b.value);
+              break;
+            case 'size':
+              comparison = _calculateItemSizeBytes(a).compareTo(_calculateItemSizeBytes(b));
+              break;
+            default:
+              comparison = 0;
+          }
+          return _sessionAscending ? comparison : -comparison;
+        });
 
         return ExpansionTile(
           key: const ValueKey('session_storage'),
@@ -473,14 +758,45 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
             else
               Column(
                 children: [
-                  _buildTableHeader("Key", "Value", "Del"),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                    color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+                    child: Row(
+                      children: [
+                        _buildSortableHeaderCell(
+                            title: "Key",
+                            isActive: _sessionSortField == 'key',
+                            isAscending: _sessionAscending,
+                            onTap: () => _onSortSession('key'),
+                            flex: 3),
+                        const SizedBox(width: 8),
+                        _buildSortableHeaderCell(
+                            title: "Value",
+                            isActive: _sessionSortField == 'value',
+                            isAscending: _sessionAscending,
+                            onTap: () => _onSortSession('value'),
+                            flex: 4),
+                        _buildSortableHeaderCell(
+                            title: "Size",
+                            isActive: _sessionSortField == 'size',
+                            isAscending: _sessionAscending,
+                            onTap: () => _onSortSession('size'),
+                            flex: 2,
+                            alignment: TextAlign.right),
+                        const SizedBox(
+                            width: 48,
+                            child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                      ],
+                    ),
+                  ),
                   const Divider(height: 1, thickness: 1),
-                  if (items.isEmpty)
+                  if (sortedItems.isEmpty)
                     const Padding(padding: EdgeInsets.all(16.0), child: Text("Session Storage is empty.")),
-                  for (final item in items)
-                    _buildDataRow(
+                  for (final item in sortedItems)
+                    _buildStorageItemRow(
                         keyText: item.key ?? '',
                         valueText: item.value,
+                        sizeText: _formatBytes(_calculateItemSizeBytes(item)),
                         onCellTap: () => _showActionDialog(
                             title: item.key!,
                             value: item.value,
@@ -754,11 +1070,49 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
               );
             }
 
+            final dataRecords = [...snapshot.data!];
+            dataRecords.sort((a, b) {
+              int comparison;
+              switch (_iosDataSortField) {
+                case 'displayName':
+                  comparison = (a.displayName ?? '').compareTo(b.displayName ?? '');
+                  break;
+                case 'dataTypes':
+                  comparison = (a.dataTypes?.join(", ") ?? '').compareTo(b.dataTypes?.join(", ") ?? '');
+                  break;
+                default:
+                  comparison = 0;
+              }
+              return _iosDataAscending ? comparison : -comparison;
+            });
+
             return Column(
               children: [
-                _buildTableHeader("Display Name", "Data Types", "Del"),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                  color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+                  child: Row(
+                    children: [
+                      _buildSortableHeaderCell(
+                          title: "Display Name",
+                          isActive: _iosDataSortField == 'displayName',
+                          isAscending: _iosDataAscending,
+                          onTap: () => _onSortIosData('displayName'),
+                          flex: 3),
+                      const SizedBox(width: 8),
+                      _buildSortableHeaderCell(
+                          title: "Data Types",
+                          isActive: _iosDataSortField == 'dataTypes',
+                          isAscending: _iosDataAscending,
+                          onTap: () => _onSortIosData('dataTypes'),
+                          flex: 5),
+                      const SizedBox(
+                          width: 48, child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                    ],
+                  ),
+                ),
                 const Divider(height: 1, thickness: 1),
-                for (final dataRecord in snapshot.data!)
+                for (final dataRecord in dataRecords)
                   _buildDataRow(
                     keyText: dataRecord.displayName ?? '',
                     valueText: dataRecord.dataTypes?.join(", ") ?? '',
@@ -824,9 +1178,32 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
                           child: Text("Protection Space: ${p.protectionSpace?.host ?? ""}",
                               style: const TextStyle(fontWeight: FontWeight.bold))),
-                      _buildTableHeader("Username", "Password", "Del"),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                        color: Theme.of(context).scaffoldBackgroundColor.withAlpha(200),
+                        child: Row(
+                          children: [
+                            _buildSortableHeaderCell(
+                                title: "Username",
+                                isActive: _httpAuthSortField == 'username',
+                                isAscending: _httpAuthAscending,
+                                onTap: () => _onSortHttpAuth('username'),
+                                flex: 3),
+                            const SizedBox(width: 8),
+                            _buildSortableHeaderCell(
+                                title: "Password",
+                                isActive: _httpAuthSortField == 'password',
+                                isAscending: _httpAuthAscending,
+                                onTap: () => _onSortHttpAuth('password'),
+                                flex: 5),
+                            const SizedBox(
+                                width: 48,
+                                child: Center(child: Text("Del", style: TextStyle(fontWeight: FontWeight.bold)))),
+                          ],
+                        ),
+                      ),
                       const Divider(height: 1, thickness: 1),
-                      for (var c in p.credentials ?? [])
+                      for (var c in _sortedHttpCredentials(p.credentials == null ? <dynamic>[] : p.credentials!))
                         _buildDataRow(
                           keyText: c.username ?? '',
                           valueText: '••••••••',
@@ -856,5 +1233,39 @@ class _DevToolsStorageTabState extends State<DevToolsStorageTab> {
         ),
       ],
     );
+  }
+
+  Future<void> _loadSortPrefs() async {
+    final prefs = Prefs();
+    final cookiesColumn = await prefs.getDevToolsStorageCookiesSortColumn();
+    final cookiesAscending = await prefs.getDevToolsStorageCookiesSortAscending();
+    final localColumn = await prefs.getDevToolsStorageLocalSortColumn();
+    final localAscending = await prefs.getDevToolsStorageLocalSortAscending();
+    final sessionColumn = await prefs.getDevToolsStorageSessionSortColumn();
+    final sessionAscending = await prefs.getDevToolsStorageSessionSortAscending();
+    final iosColumn = await prefs.getDevToolsStorageIosDataSortColumn();
+    final iosAscending = await prefs.getDevToolsStorageIosDataSortAscending();
+    final httpAuthColumn = await prefs.getDevToolsStorageHttpAuthSortColumn();
+    final httpAuthAscending = await prefs.getDevToolsStorageHttpAuthSortAscending();
+
+    if (!mounted) return;
+
+    setState(() {
+      _cookiesSortField = _fieldFromIndex(_cookiesSortOptions, cookiesColumn, _cookiesSortOptions.first);
+      _cookiesAscending = cookiesAscending;
+      _localSortField = _fieldFromIndex(_kvSortOptions, localColumn, _kvSortOptions.first);
+      _localAscending = localAscending;
+      _sessionSortField = _fieldFromIndex(_kvSortOptions, sessionColumn, _kvSortOptions.first);
+      _sessionAscending = sessionAscending;
+      _iosDataSortField = _fieldFromIndex(_iosDataSortOptions, iosColumn, _iosDataSortOptions.first);
+      _iosDataAscending = iosAscending;
+      _httpAuthSortField = _fieldFromIndex(_httpAuthSortOptions, httpAuthColumn, _httpAuthSortOptions.first);
+      _httpAuthAscending = httpAuthAscending;
+    });
+  }
+
+  String _fieldFromIndex(List<String> values, int index, String fallback) {
+    if (index < 0 || index >= values.length) return fallback;
+    return values[index];
   }
 }

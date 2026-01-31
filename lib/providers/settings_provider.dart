@@ -186,6 +186,21 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  bool _browserExtendHeightForKeyboard = false;
+  bool get browserExtendHeightForKeyboard => _browserExtendHeightForKeyboard;
+  set browserExtendHeightForKeyboard(bool value) {
+    _browserExtendHeightForKeyboard = value;
+    Prefs().setBrowserExtendHeightForKeyboard(_browserExtendHeightForKeyboard);
+    notifyListeners();
+  }
+
+  bool _browserExtendHeightForKeyboardRemoteConfigAllowed = true;
+  bool get browserExtendHeightForKeyboardRemoteConfigAllowed => _browserExtendHeightForKeyboardRemoteConfigAllowed;
+  set browserExtendHeightForKeyboardRemoteConfigAllowed(bool value) {
+    _browserExtendHeightForKeyboardRemoteConfigAllowed = value;
+    notifyListeners();
+  }
+
   bool _browserCenterEditingTextFieldRemoteConfigAllowed = true;
   bool get browserCenterEditingTextFieldRemoteConfigAllowed => _browserCenterEditingTextFieldRemoteConfigAllowed;
   set browserCenterEditingTextFieldRemoteConfigAllowed(bool value) {
@@ -1382,6 +1397,14 @@ class SettingsProvider extends ChangeNotifier {
     }
   }
 
+  bool _androidLiveActivitiesTravelEnabled = false;
+  bool get androidLiveActivityTravelEnabled => _androidLiveActivitiesTravelEnabled;
+  set androidLiveActivityTravelEnabled(bool enabled) {
+    _androidLiveActivitiesTravelEnabled = enabled;
+    Prefs().setAndroidLiveActivityTravelEnabled(enabled);
+    notifyListeners();
+  }
+
   Future<void> loadPreferences() async {
     _lastAppUse = await Prefs().getLastAppUse();
 
@@ -1403,11 +1426,14 @@ class SettingsProvider extends ChangeNotifier {
     _androidBrowserScale = await Prefs().getAndroidBrowserScale();
     _androidBrowserTextScale = await Prefs().getAndroidBrowserTextScale();
 
+    _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
+
     // Gestures
     _iosBrowserPinch = await Prefs().getIosBrowserPinch();
     _iosDisallowOverscroll = await Prefs().getIosDisallowOverscroll();
     _browserReverseNavigationSwipe = await Prefs().getBrowserReverseNavigationSwipe();
     _browserCenterEditingTextField = await Prefs().getBrowserCenterEditingTextField();
+    _browserExtendHeightForKeyboard = await Prefs().getBrowserExtendHeightForKeyboard();
 
     _loadBarBrowser = await Prefs().getLoadBarBrowser();
     _highRefreshRateEnabled = await Prefs().getHighRefreshRateEnabled();
@@ -1628,6 +1654,7 @@ class SettingsProvider extends ChangeNotifier {
     _showMemoryInDrawer = await Prefs().getShowMemoryInDrawer();
     _showMemoryInWebview = await Prefs().getShowMemoryInWebview();
 
+    _androidLiveActivitiesTravelEnabled = await Prefs().getAndroidLiveActivityTravelEnabled();
     _iosLiveActivitiesTravelEnabled = await Prefs().getIosLiveActivityTravelEnabled();
 
     _joblessWarningEnabled = await Prefs().getJoblessWarningEnabled();
