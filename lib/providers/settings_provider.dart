@@ -1299,12 +1299,14 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /*
   String _reviveHelaPrice = "1.8 million or 2 Xanax each";
   String get reviveHelaPrice => _reviveHelaPrice;
   set reviveHelaPrice(String value) {
     _reviveHelaPrice = value;
     notifyListeners();
   }
+  */
 
   String _reviveMidnightPrice = "1.8 million or 2 Xanax each";
   String get reviveMidnightPrice => _reviveMidnightPrice;

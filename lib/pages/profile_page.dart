@@ -71,7 +71,6 @@ import 'package:torn_pda/widgets/profile/oc_v2_widget.dart';
 import 'package:torn_pda/widgets/profile/ranked_war_mini.dart';
 import 'package:torn_pda/widgets/profile/stats_chart.dart';
 import 'package:torn_pda/widgets/profile/status_icons_wrap.dart';
-import 'package:torn_pda/widgets/revive/hela_revive_button.dart';
 import 'package:torn_pda/widgets/revive/midnightx_revive_button.dart';
 import 'package:torn_pda/widgets/revive/nuke_revive_button.dart';
 import 'package:torn_pda/widgets/revive/uhc_revive_button.dart';
@@ -1556,6 +1555,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               settingsProvider: _settingsProvider,
                             ),
                           ),
+                        /*
                         if (_user!.status!.state == 'Hospital' && _w.helaReviveActive)
                           Padding(
                             padding: const EdgeInsets.only(left: 13, top: 10),
@@ -1566,6 +1566,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                               settingsProvider: _settingsProvider,
                             ),
                           ),
+                        */
                         if (_user!.status!.state == 'Hospital' && _w.wtfReviveActive)
                           Padding(
                             padding: const EdgeInsets.only(left: 13, top: 10),
@@ -4933,7 +4934,7 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                         _launchBrowser(url: 'https://www.torn.com/joblist.php#!p=main', shortTap: true);
                       },
                   ),
-                  const TextSpan(text: ", in the "),
+                  const TextSpan(text: "or in the "),
                   TextSpan(
                     text: "recruitment forum",
                     style: const TextStyle(
@@ -4943,19 +4944,6 @@ class ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
                     recognizer: TapGestureRecognizer()
                       ..onTap = () {
                         _launchBrowser(url: 'https://www.torn.com/forums.php#/p=forums&f=46&b=0&a=0', shortTap: true);
-                      },
-                  ),
-                  const TextSpan(text: " or by using "),
-                  TextSpan(
-                    text: "Hire Haven's services",
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        _launchBrowser(
-                            url: 'https://www.torn.com/forums.php#/p=search&q=hire+haven&f=0&y=3', shortTap: true);
                       },
                   ),
                   const TextSpan(text: "."),

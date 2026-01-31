@@ -112,6 +112,7 @@ class ChangeLogState extends State<ChangeLog> {
           if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
           "Restricted quick items selector to list view mode only",
           "Added seconds to targets cards red-status countdown",
+          "Removed obsolete providers",
           "Fixed app update dialog",
         ],
     );

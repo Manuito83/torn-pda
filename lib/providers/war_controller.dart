@@ -98,12 +98,14 @@ class WarController extends GetxController {
   static const int _concurrencyBackoff = 1;
   int _concurrencyCurrent = _concurrencyBase;
 
+  /*
   bool _helaReviveActive = false;
   bool get helaReviveActive => _helaReviveActive;
   set helaReviveActive(bool value) {
     Prefs().setUseHelaRevive(value);
     _helaReviveActive = value;
   }
+  */
 
   bool _wtfReviveActive = false;
   bool get wtfReviveActive => _wtfReviveActive;
@@ -959,7 +961,7 @@ class WarController extends GetxController {
 
     nukeReviveActive = await Prefs().getUseNukeRevive();
     uhcReviveActive = await Prefs().getUseUhcRevive();
-    helaReviveActive = await Prefs().getUseHelaRevive();
+    //helaReviveActive = await Prefs().getUseHelaRevive();
     wtfReviveActive = await Prefs().getUseWtfRevive();
     midnightXReviveActive = await Prefs().getUseMidnightXRevive();
     wolverinesReviveActive = await Prefs().getUseWolverinesRevive();

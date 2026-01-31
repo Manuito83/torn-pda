@@ -721,7 +721,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
         "auth_recovery_enabled": true,
         // Revives
         "revive_wolverines": "1 million or 1 Xanax",
-        "revive_hela": "1.8 million or 2 Xanax",
+        //"revive_hela": "1.8 million or 2 Xanax",
         "revive_midnight": "1.8 million or 2 Xanax",
         "revive_nuke": "1.8 million or 2 Xanax",
         "revive_uhc": "1.8 million or 2 Xanax",
@@ -802,7 +802,7 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
 
       // Revives
       _settingsProvider.reviveWolverinesPrice = remoteConfig.getString("revive_wolverines");
-      _settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
+      //_settingsProvider.reviveHelaPrice = remoteConfig.getString("revive_hela");
       _settingsProvider.reviveMidnightPrice = remoteConfig.getString("revive_midnight");
       _settingsProvider.reviveNukePrice = remoteConfig.getString("revive_nuke");
       _settingsProvider.reviveUhcPrice = remoteConfig.getString("revive_uhc");
