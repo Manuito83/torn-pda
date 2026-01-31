@@ -1200,6 +1200,14 @@ String quickItemPickerJS({required bool enable}) {
   return '''
   (function() {
     try {
+      // Check if in grid/thumbnails mode (not supported)
+      if ($enabled) {
+        const thumbnailsIcon = document.querySelector('.link-icon-svg.thumbnails-icon.active, .link-icon-svg.thumbnails.active');
+        if (thumbnailsIcon) {
+          return 'grid-mode';
+        }
+      }
+
       // Config
       const BTN_CLASS = 'pda-item-picker-btn';
       const WRAP_CLASS = 'pda-item-picker-wrap';

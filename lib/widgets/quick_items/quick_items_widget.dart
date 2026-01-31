@@ -134,7 +134,7 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _pickerChip(),
+                    _pickerChip(allowSingleTap: true),
                     const SizedBox(width: 8),
                     const Padding(
                       padding: EdgeInsets.only(top: 5),
@@ -356,18 +356,37 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
     } catch (_) {}
   }
 
-  Widget _pickerChip() {
+  Widget _pickerChip({bool allowSingleTap = false}) {
     final icon = _pickerActive ? Icons.close : Icons.add;
     final borderColor = _pickerActive ? Colors.redAccent : Colors.green[600];
 
     return Padding(
-      padding: const EdgeInsets.only(top: 6, right: 8),
+      padding: EdgeInsets.only(top: allowSingleTap ? 6 : 10, right: 14),
       child: InkWell(
-        onTap: _pickerBusy ? null : () => _togglePicker(!_pickerActive),
+        onTap: _pickerBusy
+            ? null
+            : () {
+                if (!_pickerActive) {
+                  if (allowSingleTap) {
+                    _togglePicker(true);
+                  } else {
+                    BotToast.showText(
+                      text: 'Hold to activate!',
+                      textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+                      contentColor: Colors.blue[700]!,
+                      duration: const Duration(seconds: 2),
+                      contentPadding: const EdgeInsets.all(12),
+                    );
+                  }
+                } else {
+                  _togglePicker(false);
+                }
+              },
+        onLongPress: _pickerBusy || _pickerActive || allowSingleTap ? null : () => _togglePicker(true),
         customBorder: const CircleBorder(),
         child: Container(
-          width: 26,
-          height: 26,
+          width: 20,
+          height: 20,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(color: borderColor ?? Colors.green, width: 1.6),
@@ -391,6 +410,19 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       );
       if (!mounted) return;
       final resultStr = result?.toString();
+
+      // Check if page is in grid/thumbnails mode
+      if (resultStr == 'grid-mode') {
+        BotToast.showText(
+          text: 'Quick item picker requires List view mode. Please switch from Grid to List view.',
+          textStyle: const TextStyle(fontSize: 14, color: Colors.white),
+          contentColor: Colors.orange[800]!,
+          duration: const Duration(seconds: 4),
+          contentPadding: const EdgeInsets.all(12),
+        );
+        return;
+      }
+
       final nextActive = enable && resultStr != 'picker-disabled';
       setState(() {
         _pickerActive = nextActive;
