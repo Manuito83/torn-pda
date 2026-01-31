@@ -133,3 +133,4 @@ ios/firebase_app_id_file.json
 .crashlytics/libssp-0.dll
 .crashlytics/libstdc++-6.dll
 .crashlytics/libwinpthread-1.dll
+/.agent/*
