@@ -198,6 +198,8 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
   // DEBUG ## DEBUG
   // Force all dialogs to show during development
   static const bool _debugShowAllDialogs = kDebugMode && false;
+  // Force PDA update dialog for testing
+  static const bool _debugForcePdaUpdateDialog = kDebugMode && false;
   // Force Firebase auth restoration to fail for testing
   static const bool _debugForceFirebaseAuthMissing = kDebugMode && false;
   // DEBUG ## DEBUG
@@ -2865,13 +2867,15 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
     final updateDetails = PdaUpdateDetails.fromJsonString(pdaUpdateDetailsString);
     if (updateDetails == null || updateDetails.latestVersionCode == 0) return;
 
+    final bool forceDialog = _debugForcePdaUpdateDialog;
+
     // Stop if this version is already queued during this app session
     // (initial fetch + onConfigUpdated can both call here)
-    if (_pdaUpdateDialogEnqueuedVersion == updateDetails.latestVersionCode) return;
+    if (!forceDialog && _pdaUpdateDialogEnqueuedVersion == updateDetails.latestVersionCode) return;
 
     final currentCompilation = Platform.isAndroid ? androidCompilation : iosCompilation;
     final currentCompilationInt = int.tryParse(currentCompilation) ?? 0;
-    if (currentCompilationInt == 0) return;
+    if (!forceDialog && currentCompilationInt == 0) return;
 
     // Check if there's an update available for the current platform
     bool hasUpdate = false;
@@ -2881,11 +2885,11 @@ class DrawerPageState extends State<DrawerPage> with WidgetsBindingObserver, Aut
       hasUpdate = updateDetails.latestVersionCode > currentCompilationInt;
     }
 
-    if (!hasUpdate) return;
+    if (!forceDialog && !hasUpdate) return;
 
     // Check if we already showed this update version dialog
     final lastShownVersion = await Prefs().getPdaUpdateDialogVersion();
-    if (!_debugShowAllDialogs && lastShownVersion == updateDetails.latestVersionCode) return false;
+    if (!forceDialog && !_debugShowAllDialogs && lastShownVersion == updateDetails.latestVersionCode) return false;
 
     _pdaUpdateDialogEnqueuedVersion = updateDetails.latestVersionCode;
 
