@@ -109,7 +109,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..version = 'Torn PDA v3.11.1'
         ..date = '05 FEB 2026'
         ..features = [
-          //if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
+          if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
           "Fixed app update dialog",
         ],
     );
