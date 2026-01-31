@@ -316,6 +316,7 @@ class LiveActivityTravelController extends GetxController {
     String originFlagAsset;
     String vehicleAssetName;
     String activityStateTitle;
+    String destinationEmoji;
     int? earliestReturnTimestamp;
     bool showProgressBar = !hasArrived;
 
@@ -328,6 +329,7 @@ class LiveActivityTravelController extends GetxController {
       originFlagAsset = "hospital_origin_icon";
       vehicleAssetName = isChristmasTimeValue ? "sleigh" : "plane_left";
       activityStateTitle = hasArrived ? "Repatriated to" : "Repatriating to";
+      destinationEmoji = "\u{1F3E0}"; // Home emoji for Torn
     } else {
       final String destination = apiTravelData['destination']!;
       if (destination == "Torn") {
@@ -337,6 +339,7 @@ class LiveActivityTravelController extends GetxController {
         originFlagAsset = "world_origin_icon";
         vehicleAssetName = isChristmasTimeValue ? "sleigh" : "plane_left";
         activityStateTitle = hasArrived ? "Returned to" : "Returning to";
+        destinationEmoji = "\u{1F3E0}"; // Home emoji for Torn
       } else {
         currentDestinationDisplayName = destination;
         currentDestinationFlagAsset = "ball_${_normalizeCountryNameForAsset(destination)}";
@@ -344,6 +347,7 @@ class LiveActivityTravelController extends GetxController {
         originFlagAsset = "ball_torn";
         vehicleAssetName = isChristmasTimeValue ? "sleigh" : "plane_right";
         activityStateTitle = hasArrived ? "Arrived in" : "Traveling to";
+        destinationEmoji = _getCountryEmoji(destination);
 
         if (!hasArrived) {
           int travelDuration = apiTravelData['arrivalTimestamp']! - apiTravelData['departureTimestamp']!;
@@ -369,7 +373,27 @@ class LiveActivityTravelController extends GetxController {
       'activityStateTitle': activityStateTitle,
       'showProgressBar': showProgressBar,
       'hasArrived': hasArrived,
+      'destinationEmoji': destinationEmoji,
     };
+  }
+
+  String _getCountryEmoji(String countryName) {
+    // Unicode flag emojis use regional indicator symbols
+    // Each flag is composed of two regional indicator symbols
+    const Map<String, String> countryEmojis = {
+      'United Kingdom': '\u{1F1EC}\u{1F1E7}', // 🇬🇧
+      'Japan': '\u{1F1EF}\u{1F1F5}', // 🇯🇵
+      'Hawaii': '\u{1F1FA}\u{1F1F8}', // 🇺🇸 (US flag for Hawaii)
+      'China': '\u{1F1E8}\u{1F1F3}', // 🇨🇳
+      'Argentina': '\u{1F1E6}\u{1F1F7}', // 🇦🇷
+      'Canada': '\u{1F1E8}\u{1F1E6}', // 🇨🇦
+      'Cayman Islands': '\u{1F1F0}\u{1F1FE}', // 🇰🇾
+      'Mexico': '\u{1F1F2}\u{1F1FD}', // 🇲🇽
+      'South Africa': '\u{1F1FF}\u{1F1E6}', // 🇿🇦
+      'Switzerland': '\u{1F1E8}\u{1F1ED}', // 🇨🇭
+      'United Arab Emirates': '\u{1F1E6}\u{1F1EA}', // 🇦🇪
+    };
+    return countryEmojis[countryName] ?? '\u{1F30D}'; // Default to globe emoji
   }
 
   bool _isChristmas() {

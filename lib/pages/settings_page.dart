@@ -926,12 +926,6 @@ class SettingsPageState extends State<SettingsPage> {
             ),
           ),
         ),
-      if (Platform.isAndroid)
-        SearchableRow(
-          label: "Mock travel live update",
-          searchText: _searchText,
-          child: _mockLiveUpdateRow(),
-        ),
       if (Platform.isIOS)
         SearchableRow(
           label: "Active Alarms",
@@ -3420,6 +3414,12 @@ class SettingsPageState extends State<SettingsPage> {
           ),
         ),
       ),
+      if (Platform.isAndroid)
+        SearchableRow(
+          label: "Mock travel live update",
+          searchText: _searchText,
+          child: _mockLiveUpdateRow(),
+        ),
     ];
 
     return buildSectionWithRows(

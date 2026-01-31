@@ -115,13 +115,24 @@ class AndroidLiveUpdateAdapter(
     }
 
     /**
-     * Returns the appropriate drawable resource ID for the given travel destination
-     * Uses plane_left when returning to Torn, plane_right when traveling abroad
+     * Returns the appropriate composite drawable resource ID for the given travel destination
+     * Combines plane icon with country flag overlay (or home icon for Torn)
      */
     private fun getDestinationIcon(destination: String?): Int {
         return when (destination?.lowercase()) {
-            "torn" -> R.drawable.plane_left
-            else -> R.drawable.plane_right
+            "torn" -> R.drawable.travel_pill_torn
+            "united kingdom" -> R.drawable.travel_pill_uk
+            "japan" -> R.drawable.travel_pill_japan
+            "hawaii" -> R.drawable.travel_pill_hawaii
+            "china" -> R.drawable.travel_pill_china
+            "argentina" -> R.drawable.travel_pill_argentina
+            "canada" -> R.drawable.travel_pill_canada
+            "cayman islands" -> R.drawable.travel_pill_cayman
+            "mexico" -> R.drawable.travel_pill_mexico
+            "south africa" -> R.drawable.travel_pill_south_africa
+            "switzerland" -> R.drawable.travel_pill_switzerland
+            "united arab emirates" -> R.drawable.travel_pill_uae
+            else -> R.drawable.plane_right // Fallback for unknown destinations
         }
     }
     
@@ -141,7 +152,7 @@ class AndroidLiveUpdateAdapter(
 
         updateJob = scope.launch {
             while (isActive) {
-                delay(60_000) 
+                delay(15_000)
                 
                 if (activeSessionId != sessionId) break
                 val current = cachedPayload ?: break
@@ -161,8 +172,14 @@ class AndroidLiveUpdateAdapter(
         val destination = payload.currentDestinationDisplayName ?: context.getString(R.string.live_update_destination_unknown)
         val origin = payload.originDisplayName ?: context.getString(R.string.live_update_destination_unknown)
         val title = payload.activityStateTitle ?: context.getString(R.string.live_update_channel_name)
+        val emoji = payload.destinationEmoji ?: ""
         val etaText = formatEta(payload)
         val secondary = context.getString(R.string.live_update_notification_secondary, origin, destination)
+
+        // Calculate actual arrival status based on real time, not just Flutter's hasArrived flag
+        val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
+        val nowMillis = System.currentTimeMillis()
+        val hasActuallyArrived = payload.hasArrived || (arrivalMillis > 0 && arrivalMillis <= nowMillis)
 
         val extrasBundle = android.os.Bundle()
         payload.extras.forEach { (key, value) ->
@@ -181,6 +198,7 @@ class AndroidLiveUpdateAdapter(
                 payload = payload,
                 title = title,
                 destination = destination,
+                emoji = emoji,
                 etaText = etaText,
                 secondary = secondary,
                 extrasBundle = extrasBundle,
@@ -192,13 +210,13 @@ class AndroidLiveUpdateAdapter(
         val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
         val builder = NotificationCompat.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
             .setSmallIcon(destinationIcon)
-            .setContentTitle("$title $destination")
+            .setContentTitle("$title $destination $emoji")
             .setContentText(etaText)
             .setContentIntent(tapIntent)
             .setDeleteIntent(dismissIntent)
             .setOnlyAlertOnce(true)
-            .setOngoing(!payload.hasArrived)
-            .setAutoCancel(payload.hasArrived)
+            .setOngoing(!hasActuallyArrived)
+            .setAutoCancel(hasActuallyArrived)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setExtras(extrasBundle)
 
@@ -213,22 +231,21 @@ class AndroidLiveUpdateAdapter(
             builder.setProgress(0, 0, false)
         }
 
-        val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
-        if (!payload.hasArrived && arrivalMillis > 0) {
+        if (!hasActuallyArrived && arrivalMillis > 0) {
             builder.setShowWhen(true)
             builder.setUsesChronometer(true)
             builder.setChronometerCountDown(true)
             builder.setWhen(arrivalMillis)
-            
+
             // Set subtext to assist system in identifying context
             builder.setSubText(context.getString(R.string.live_update_channel_name))
-            
+
             // Enable promoted ongoing (Live Update) when supported (Android 15+); fallback is no-op on older SDKs
             enablePromotedOngoing(builder)
 
             // Provide a compact status-chip text for Android 15+ surfaces (if available)
             applyShortCriticalText(builder, payload)
-            
+
             scheduleArrivedAlarm(payload, arrivalMillis)
         }
 
@@ -262,17 +279,39 @@ class AndroidLiveUpdateAdapter(
 
     private fun formatEta(payload: LiveUpdatePayload): String {
         val arrival = payload.arrivalTimeTimestamp ?: return context.getString(R.string.live_update_unknown_eta)
-        
+
         // If arrived, show Arrived label
         if (payload.hasArrived) {
             return context.getString(R.string.live_update_arrived_label)
         }
-        
-        // Format as local clock time (e.g. 09:53 or 21:53)
+
+        // Calculate countdown
+        val nowSeconds = System.currentTimeMillis() / 1000
+        val remaining = arrival - nowSeconds
+        if (remaining <= 0) {
+            return context.getString(R.string.live_update_arrived_label)
+        }
+
+        val countdown = formatCountdown(remaining)
+
+        // Format arrival time as local clock time (e.g. 09:53 or 21:53)
         val date = java.util.Date(arrival * 1000)
         val format = android.text.format.DateFormat.getTimeFormat(context)
-        val formatted = format.format(date)
-        return context.getString(R.string.live_update_eta_pattern, formatted)
+        val arrivalTimeFormatted = format.format(date)
+
+        // "Arriving in: 1:23:45 at 09:53"
+        return context.getString(R.string.live_update_arriving_pattern, countdown, arrivalTimeFormatted)
+    }
+
+    private fun formatCountdown(remainingSeconds: Long): String {
+        val h = remainingSeconds / 3600
+        val m = (remainingSeconds % 3600) / 60
+        val s = remainingSeconds % 60
+        return if (h > 0) {
+            String.format("%d:%02d:%02d", h, m, s)
+        } else {
+            String.format("%d:%02d", m, s)
+        }
     }
 
     private fun computeProgress(payload: LiveUpdatePayload): ProgressInfo? {
@@ -303,11 +342,20 @@ class AndroidLiveUpdateAdapter(
         }
 
         val arrival = payload.arrivalTimeTimestamp ?: return null
-        val date = java.util.Date(arrival * 1000)
-        val format = android.text.format.DateFormat.getTimeFormat(context)
-        val formatted = format.format(date)
-        // Short hint prefixed with T(Travel), keeps under chip width constraints (~7-8 chars typical)
-        return "T $formatted"
+        val nowSeconds = System.currentTimeMillis() / 1000
+        val remaining = arrival - nowSeconds
+        if (remaining <= 0) {
+            return context.getString(R.string.live_update_arrived_label)
+        }
+
+        val h = remaining / 3600
+        val m = (remaining % 3600) / 60
+        val s = remaining % 60
+        return if (h > 0) {
+            String.format("%d:%02d:%02d", h, m, s)
+        } else {
+            String.format("%d:%02d", m, s)
+        }
     }
 
     private fun enablePromotedOngoing(builder: NotificationCompat.Builder) {
@@ -342,6 +390,7 @@ class AndroidLiveUpdateAdapter(
         payload: LiveUpdatePayload,
         title: String,
         destination: String,
+        emoji: String,
         etaText: String,
         secondary: String,
         extrasBundle: android.os.Bundle,
@@ -349,16 +398,19 @@ class AndroidLiveUpdateAdapter(
         dismissIntent: android.app.PendingIntent,
     ): Notification {
         val arrivalMillis = (payload.arrivalTimeTimestamp ?: 0L) * 1000
+        val nowMillis = System.currentTimeMillis()
+        val hasActuallyArrived = payload.hasArrived || (arrivalMillis > 0 && arrivalMillis <= nowMillis)
+
         val destinationIcon = getDestinationIcon(payload.currentDestinationDisplayName)
         val builder = Notification.Builder(context, LiveUpdateNotificationChannel.CHANNEL_ID)
             .setSmallIcon(destinationIcon)
-            .setContentTitle("$title $destination")
+            .setContentTitle("$title $destination $emoji")
             .setContentText(etaText)
             .setContentIntent(tapIntent)
             .setDeleteIntent(dismissIntent)
             .setOnlyAlertOnce(true)
-            .setOngoing(!payload.hasArrived)
-            .setAutoCancel(payload.hasArrived)
+            .setOngoing(!hasActuallyArrived)
+            .setAutoCancel(hasActuallyArrived)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .setExtras(extrasBundle)
             .setCategory(Notification.CATEGORY_STATUS)
@@ -372,7 +424,7 @@ class AndroidLiveUpdateAdapter(
             builder.setProgress(progress.totalSeconds.toInt(), progress.elapsedSeconds.toInt(), false)
         }
 
-        if (!payload.hasArrived && arrivalMillis > 0) {
+        if (!hasActuallyArrived && arrivalMillis > 0) {
             builder.setShowWhen(true)
             builder.setUsesChronometer(true)
             builder.setChronometerCountDown(true)
