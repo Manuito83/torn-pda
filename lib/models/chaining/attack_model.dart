@@ -142,37 +142,37 @@ class Modifiers {
   factory Modifiers.fromJson(Map<String, dynamic> json) => Modifiers(
         // Make sure everything is a double
         fairFight: json["fair_fight"] is String
-            ? double.parse(json["fair_fight"])
+            ? double.tryParse(json["fair_fight"]) ?? 1.0
             : json["fair_fight"] is int
                 ? json["fair_fight"].toDouble()
                 : json["fair_fight"] ?? 1,
         war: json["war"] is String
-            ? double.parse(json["war"])
+            ? double.tryParse(json["war"]) ?? 1.0
             : json["war"] is int
                 ? json["war"].toDouble()
                 : json["war"] ?? 1,
         retaliation: json["retaliation"] is String
-            ? double.parse(json["retaliation"])
+            ? double.tryParse(json["retaliation"]) ?? 1.0
             : json["retaliation"] is int
                 ? json["retaliation"].toDouble()
                 : json["retaliation"] ?? 1,
         groupAttack: json["group_attack"] is String
-            ? double.parse(json["group_attack"])
+            ? double.tryParse(json["group_attack"]) ?? 1.0
             : json["group_attack"] is int
                 ? json["group_attack"].toDouble()
                 : json["group_attack"] ?? 1,
         overseas: json["overseas"] is String
-            ? double.parse(json["overseas"])
+            ? double.tryParse(json["overseas"]) ?? 1.0
             : json["overseas"] is int
                 ? json["overseas"].toDouble()
                 : json["overseas"] ?? 1,
         chainBonus: json["chain_bonus"] is String
-            ? double.parse(json["chain_bonus"])
+            ? double.tryParse(json["chain_bonus"]) ?? 1.0
             : json["chain_bonus"] is int
                 ? json["chain_bonus"].toDouble()
                 : json["chain_bonus"] ?? 1,
         warlordBonus: json["warlord_bonus"] is String
-            ? double.parse(json["warlord_bonus"])
+            ? double.tryParse(json["warlord_bonus"]) ?? 1.0
             : json["warlord_bonus"] is int
                 ? json["warlord_bonus"].toDouble()
                 : json["warlord_bonus"] ?? 1,
