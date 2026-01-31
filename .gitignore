@@ -1,9 +1,11 @@
 # PDA specifics
-/lib/config/
-/lib/torn-pda-native/
+# /lib/config/
+# /lib/torn-pda-native/
 /android/app/sign-key.jks
 .kiro/
 .shotgun/
+/.agent/*
+lib/config/secrets.dart
 
 # Miscellaneoussure
 *.class
@@ -133,4 +135,3 @@ ios/firebase_app_id_file.json
 .crashlytics/libssp-0.dll
 .crashlytics/libstdc++-6.dll
 .crashlytics/libwinpthread-1.dll
-/.agent/*

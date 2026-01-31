@@ -1,0 +1,11 @@
+import 'package:flutter/material.dart';
+import 'package:torn_pda/torn-pda-native/auth/native_auth_models.dart';
+
+class NativeUserProvider extends ChangeNotifier {
+  NativeLoginType get playerLastLoginMethod => NativeLoginType.none;
+  String get playerSToken => "";
+  bool get keychainAccessDenied => false;
+  
+  Future<void> loadPreferences() async {}
+  void eraseUserPreferences() {}
+}
