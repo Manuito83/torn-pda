@@ -353,7 +353,9 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
         },
       );
       _cleanupHandlerAttached = true;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Quick items: failed to attach cleanup handler: $e');
+    }
   }
 
   Widget _pickerChip() {
@@ -404,7 +406,8 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
           contentPadding: const EdgeInsets.all(12),
         );
       }
-    } catch (_) {
+    } catch (e) {
+      debugPrint('Quick items: picker toggle error: $e');
       if (mounted) {
         setState(() {
           _pickerActive = false;
@@ -425,8 +428,8 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       await widget.inAppWebViewController!.evaluateJavascript(
         source: quickItemPickerJS(enable: false),
       );
-    } catch (_) {
-      // Ignore errors on dispose
+    } catch (e) {
+      debugPrint('Quick items: disable picker on dispose error: $e');
     }
   }
 
