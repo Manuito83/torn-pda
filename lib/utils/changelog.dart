@@ -110,7 +110,7 @@ class ChangeLogState extends State<ChangeLog> {
         ..date = '05 FEB 2026'
         ..features = [
           if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
-          "Restricted quick items selector to list view mode only",
+          "Improved Quick Items selection interface",
           "Added seconds to targets cards red-status countdown",
           "Removed obsolete providers",
           "Fixed app update dialog",

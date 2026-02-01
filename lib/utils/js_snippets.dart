@@ -1535,7 +1535,7 @@ String quickItemPickerJS({required bool enable}) {
           addedCount++;
         });
         if (typeof console !== 'undefined') {
-          console.debug('[PDA picker] added buttons:', addedCount);
+          //console.debug('[PDA picker] added buttons:', addedCount);
         }
       }
 
