@@ -956,7 +956,6 @@ String quickItemsJS({
       let matches = str.match(regexp);
 
       if (matches == null || Object.keys(matches).length === 0) {
-        //console.log("null");
         return "";
       }
 
@@ -978,7 +977,6 @@ String quickItemsJS({
 
       var final = str;
       for (var m of matches) {
-        //console.log("M: " + m);
         let regTime = /data-time="([0-9:]+)"/
         let timeMatch = m.match(regTime);
         final = final.replace(m, secondsToHms(timeMatch[1]));
@@ -1045,6 +1043,54 @@ String quickItemsJS({
       url += (url.split("?").length > 1 ? "&" : "?") + "rfcv=" + getRFC();
       return url;
     }
+
+    // Function to trigger Torn UI refresh after item action
+    function triggerTornUIRefresh() {
+      // Call Torn's native function to refresh equipped items in the loadouts panel
+      try {
+        if (typeof window.loadEquippedItems === 'function') {
+          window.loadEquippedItems();
+        }
+      } catch(e) {
+        // Silently fail if function not available
+      }
+    }
+
+    // Use jQuery AJAX if available
+    function useItemWithJQuery(itemId, isEquipAction, equipId, forceReload, callback) {
+      if (typeof \$ !== 'undefined' && \$.ajax) {
+        var ajaxUrl = "item.php?rfcv=" + getRFC();
+        var ajaxData;
+        
+        if (isEquipAction) {
+          ajaxData = { step: "actionForm", confirm: 1, action: "equip", id: equipId };
+        } else {
+          ajaxData = { step: "useItem", itemID: itemId, item: itemId };
+        }
+        
+        \$.ajax({
+          url: ajaxUrl,
+          type: "POST",
+          data: ajaxData,
+          success: function(response) {
+            callback(response, null);
+            // Trigger Torn UI refresh after successful action
+            setTimeout(triggerTornUIRefresh, 200);
+            // If force reload is enabled, also do a full page reload
+            if (forceReload && isEquipAction) {
+              setTimeout(function() {
+                try { window.location.reload(); } catch (_) {}
+              }, 400);
+            }
+          },
+          error: function(xhr, status, error) {
+            callback(null, error);
+          }
+        });
+        return true;
+      }
+      return false;
+    }
     
     var url = "";
     if (!$eRefill && !$nRefill) {
@@ -1056,117 +1102,177 @@ String quickItemsJS({
     var resolvedId = "$instanceId";
     var abortEquip = false;
     var shouldRefreshAfterEquip = $refreshAfterEquip;
+    var itemId = "$item";
 
     if ($isEquip && (!$faction) && !$eRefill && !$nRefill) {
       if (resolvedId === "" || resolvedId === "null") {
         abortEquip = true;
-        if (typeof console !== 'undefined') {
-          console.warn('[PDA quickItems] Missing instanceId for equip item', $item);
-        }
       }
     }
 
     if (!abortEquip) {
       var canEquip = (!$faction) && $isEquip && resolvedId !== "" && resolvedId !== "null" && !$eRefill && !$nRefill;
 
-      if (canEquip) {
-        ajaxWrapper({
-          url: url,
-          type: 'POST',
-          data: 'step=actionForm&confirm=1&action=equip&id=' + resolvedId,
-          oncomplete: function(resp) {
-            var response = resp.responseText;
-            var topBox = document.querySelector('.content-title');
-            topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
-            resultBox = document.querySelector('.resultBox');
+      // Try jQuery AJAX first
+      var usedJQuery = false;
+      if (!$faction && !$eRefill && !$nRefill) {
+        usedJQuery = useItemWithJQuery(itemId, canEquip, resolvedId, shouldRefreshAfterEquip, function(response, error) {
+          if (error) {
+            return;
+          }
+          
+          // Check for "Wrong itemID" error in response
+          var responseText = typeof response === 'object' ? JSON.stringify(response) : response;
+          if (responseText && responseText.includes('Wrong itemID')) {
+            try {
+              window.flutter_inappwebview.callHandler('showToast', {
+                text: 'Wrong item ID - please update your quick items!',
+                seconds: 4,
+                bgColor: { a: 255, r: 255, g: 87, b: 34 }
+              });
+            } catch(e) {}
+            return;
+          }
+          
+          var topBox = document.querySelector('.content-title');
+          if (topBox) {
+            topBox.insertAdjacentHTML('afterend', '<div class="resultBox"></div>');
+            var resultBox = document.querySelector('.resultBox');
             resultBox.style.display = "block";
-            resultBox.innerHTML = response;
-            if (shouldRefreshAfterEquip) {
-              setTimeout(function() {
-                try { window.location.reload(); } catch (_) {}
-              }, 300);
+            
+            if (typeof response === 'object') {
+              if (response.text) {
+                let fixResult = fixTime(response.text);
+                resultBox.innerHTML = fixResult || response.text;
+              } else {
+                resultBox.innerHTML = JSON.stringify(response);
+              }
+            } else {
+              resultBox.innerHTML = response;
             }
-          },
-          onerror: function(e) {
-            console.error(e)
           }
         });
-      } else {
-        if (!$faction) {
+      }
+
+      // Fall back to ajaxWrapper if jQuery not available
+      if (!usedJQuery) {
+        if (canEquip) {
           ajaxWrapper({
             url: url,
             type: 'POST',
-            data: 'step=actionForm&id=$item&action=use',
+            data: 'step=actionForm&confirm=1&action=equip&id=' + resolvedId,
             oncomplete: function(resp) {
               var response = resp.responseText;
+              
+              // Check for "Wrong itemID" error
+              if (response && response.includes('Wrong itemID')) {
+                try {
+                  window.flutter_inappwebview.callHandler('showToast', {
+                    text: 'Wrong item ID - please update your quick items!',
+                    seconds: 4,
+                    bgColor: { a: 255, r: 255, g: 87, b: 34 }
+                  });
+                } catch(e) {}
+                return;
+              }
+              
               var topBox = document.querySelector('.content-title');
               topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
               resultBox = document.querySelector('.resultBox');
               resultBox.style.display = "block";
               resultBox.innerHTML = response;
-              // Trigger use action on the newly injected result anchor for this item
-              var resultLink = resultBox.querySelector("a[data-item='" + $item + "']");
-              if (resultLink) {
-                resultLink.click();
+              setTimeout(triggerTornUIRefresh, 200);
+              if (shouldRefreshAfterEquip) {
+                setTimeout(function() {
+                  try { window.location.reload(); } catch (_) {}
+                }, 400);
               }
             },
-            onerror: function(e) {
-              console.error(e)
-            }
+            onerror: function(e) {}
           });
         } else {
-          if (!$eRefill && !$nRefill) {
+          if (!$faction) {
             ajaxWrapper({
               url: url,
               type: 'POST',
-              data: 'step=useItem&itemID=$item&fac=1',
+              data: 'step=actionForm&id=$item&action=use',
               oncomplete: function(resp) {
-                var response = JSON.parse(resp.responseText);
+                var response = resp.responseText;
+                
+                // Check for "Wrong itemID" error
+                if (response && response.includes('Wrong itemID')) {
+                  try {
+                    window.flutter_inappwebview.callHandler('showToast', {
+                      text: 'Wrong item ID - please update your quick items!',
+                      seconds: 4,
+                      bgColor: { a: 255, r: 255, g: 87, b: 34 }
+                    });
+                  } catch(e) {}
+                  return;
+                }
+                
                 var topBox = document.querySelector('.content-title');
                 topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
                 resultBox = document.querySelector('.resultBox');
                 resultBox.style.display = "block";
-                response.text = response.text.replace("This item has already been used", "Not available");
-                
-                let fixResult = fixTime(response.text);
-                if (fixResult === "") {
-                  resultBox.innerHTML = response.text;
-                } else {
-                  resultBox.innerHTML = fixResult;
+                resultBox.innerHTML = response;
+                var resultLink = resultBox.querySelector("a[data-item='" + $item + "']");
+                if (resultLink) {
+                  resultLink.click();
                 }
+                setTimeout(triggerTornUIRefresh, 200);
               },
-              onerror: function(e) {
-                console.error(e)
-              }
+              onerror: function(e) {}
             });
           } else {
-            let step = $eRefill ? "step=armouryRefillEnergy" : "step=armouryRefillNerve";
+            if (!$eRefill && !$nRefill) {
+              ajaxWrapper({
+                url: url,
+                type: 'POST',
+                data: 'step=useItem&itemID=$item&fac=1',
+                oncomplete: function(resp) {
+                  var response = JSON.parse(resp.responseText);
+                  var topBox = document.querySelector('.content-title');
+                  topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+                  resultBox = document.querySelector('.resultBox');
+                  resultBox.style.display = "block";
+                  response.text = response.text.replace("This item has already been used", "Not available");
+                  
+                  let fixResult = fixTime(response.text);
+                  if (fixResult === "") {
+                    resultBox.innerHTML = response.text;
+                  } else {
+                    resultBox.innerHTML = fixResult;
+                  }
+                },
+                onerror: function(e) {}
+              });
+            } else {
+              let step = $eRefill ? "step=armouryRefillEnergy" : "step=armouryRefillNerve";
 
-            ajaxWrapper({
-              url: url,
-              type: 'POST',
-              data: step,
-              oncomplete: function(resp) {
-                var response = JSON.parse(resp.responseText);
-                var topBox = document.querySelector('.content-title');
-                topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
-                resultBox = document.querySelector('.resultBox');
-                resultBox.style.display = "block";
-                if (response.success === false) {
-                  resultBox.innerHTML = response.message;
-                } else {
-                  resultBox.innerHTML = response.message;
-                }
-              },
-              onerror: function(e) {
-                console.error(e)
-              }
-            });
+              ajaxWrapper({
+                url: url,
+                type: 'POST',
+                data: step,
+                oncomplete: function(resp) {
+                  var response = JSON.parse(resp.responseText);
+                  var topBox = document.querySelector('.content-title');
+                  topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
+                  resultBox = document.querySelector('.resultBox');
+                  resultBox.style.display = "block";
+                  if (response.success === false) {
+                    resultBox.innerHTML = response.message;
+                  } else {
+                    resultBox.innerHTML = response.message;
+                  }
+                },
+                onerror: function(e) {}
+              });
+            }
           }
         }
       }
     }
-    
     
     // Get rid of the resultBox on close
     document.addEventListener("click", (event) => {
@@ -1551,6 +1657,14 @@ String changeLoadOutJS({required String item, required bool attackWebview}) {
         } else {
           window.flutter_inappwebview.callHandler('loadoutChangeHandler', resp.responseText);
         }
+        // Trigger Torn UI refresh after loadout change
+        setTimeout(function() {
+          try {
+            if (typeof window.loadEquippedItems === 'function') {
+              window.loadEquippedItems();
+            }
+          } catch(e) {}
+        }, 200);
       },
       onerror: function(e) {
         console.error(e)
