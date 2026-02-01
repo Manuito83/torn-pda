@@ -338,7 +338,7 @@ class Prefs {
   // Reviving
   final String _kUseNukeRevive = "pda_useNukeRevive";
   final String _kUseUhcRevive = "pda_useUhcRevive";
-  final String _kUseHelaRevive = "pda_useHelaRevive";
+  //final String _kUseHelaRevive = "pda_useHelaRevive";
   final String _kUseWtfRevive = "pda_useWtfRevive";
   final String _kUseMidnightXRevive = "pda_useMidnightXRevive";
   final String _kUseWolverinesRevive = "pda_useWolverinesRevive";
@@ -2590,6 +2590,7 @@ class Prefs {
     return await PrefsDatabase.setBool(_kUseUhcRevive, value);
   }
 
+  /*
   Future<bool> getUseHelaRevive() async {
     return await PrefsDatabase.getBool(_kUseHelaRevive, false);
   }
@@ -2597,6 +2598,7 @@ class Prefs {
   Future setUseHelaRevive(bool value) async {
     return await PrefsDatabase.setBool(_kUseHelaRevive, value);
   }
+  */
 
   Future<bool> getUseWtfRevive() async {
     return await PrefsDatabase.getBool(_kUseWtfRevive, false);
