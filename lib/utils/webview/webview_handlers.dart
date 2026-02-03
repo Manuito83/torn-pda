@@ -20,6 +20,7 @@ import 'package:torn_pda/providers/webview_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/utils/notification.dart';
 import 'package:torn_pda/utils/webview/webview_notification_helper.dart';
+import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class WebviewHandlers {
@@ -653,8 +654,8 @@ class WebviewHandlers {
         final int? itemNumber = int.tryParse('${data['item']}');
         final String instanceId = data['instanceId']?.toString() ?? '';
 
-        if (itemNumber == null || instanceId.isEmpty) {
-          return {'status': 'error', 'message': 'Missing item number or instance id'};
+        if (itemNumber == null) {
+          return {'status': 'error', 'message': 'Missing item number'};
         }
 
         final qtyRaw = data['qty'];
@@ -674,6 +675,7 @@ class WebviewHandlers {
           accuracy: data['accuracy'] is num ? (data['accuracy'] as num).toDouble() : null,
           defense: data['defense'] is num ? (data['defense'] as num).toDouble() : null,
           armoryId: data['armoryId']?.toString(),
+          rowKey: data['rowKey']?.toString(),
         );
 
         final result = quickItemsProvider.addPickedItem(itemNumber: itemNumber, data: equipData);
@@ -687,6 +689,14 @@ class WebviewHandlers {
               duration: const Duration(seconds: 3),
               contentPadding: const EdgeInsets.all(12),
             );
+
+            // Trigger a single item verification immediately after adding
+            if (equipData.name != null && equipData.name!.isNotEmpty) {
+              try {
+                webview.evaluateJavascript(source: quickItemsMassCheckJS([equipData.name!]));
+              } catch (_) {}
+            }
+
             return {'status': 'success'};
           case AddPickedItemResult.duplicate:
             BotToast.showText(
@@ -706,6 +716,37 @@ class WebviewHandlers {
               contentPadding: const EdgeInsets.all(12),
             );
             return {'status': 'missing'};
+        }
+      },
+    );
+
+    webview.addJavaScriptHandler(
+      handlerName: 'quickItemMassUpdate',
+      callback: (args) async {
+        if (args.isEmpty || args[0] is! Map) return;
+        final data = args[0] as Map;
+        final originalName = data['originalName'] as String?;
+        final foundName = data['foundName'] as String?;
+        final qty = data['qty'] is int ? data['qty'] as int : int.tryParse('${data['qty']}');
+        final rowKey = data['rowKey'] as String?;
+
+        // log('[QuickItemMassUpdate] DEBUG: Received $originalName -> found: $foundName, qty: $qty, rowKey: $rowKey');
+
+        bool? isGrouped;
+        if (rowKey != null && rowKey.isNotEmpty) {
+          if (rowKey.startsWith('g')) {
+            isGrouped = true;
+          } else if (rowKey.startsWith('u')) {
+            isGrouped = false;
+          }
+        }
+
+        // log('[QuickItemMassUpdate] DEBUG: Derived isGrouped: $isGrouped');
+
+        if (originalName != null && foundName != null) {
+          if (originalName.trim().toLowerCase() == foundName.trim().toLowerCase()) {
+            quickItemsProvider.updateItemFromMassCheck(originalName: originalName, qty: qty, isGrouped: isGrouped);
+          }
         }
       },
     );

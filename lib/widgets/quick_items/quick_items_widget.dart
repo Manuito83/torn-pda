@@ -1,14 +1,17 @@
 // Dart imports:
 import 'dart:async';
+import 'dart:developer';
 
 // Flutter imports:
 import 'package:animations/animations.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 // ignore: depend_on_referenced_packages
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_material_design_icons/flutter_material_design_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:torn_pda/utils/js_snippets/js_quick_items.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 // Project imports:
@@ -18,7 +21,6 @@ import 'package:torn_pda/pages/quick_items/quick_items_options.dart';
 import 'package:torn_pda/providers/quick_items_faction_provider.dart';
 import 'package:torn_pda/providers/quick_items_provider.dart';
 import 'package:torn_pda/providers/theme_provider.dart';
-import 'package:torn_pda/utils/js_snippets.dart';
 
 class QuickItemsWidget extends StatefulWidget {
   final InAppWebViewController? inAppWebViewController;
@@ -39,7 +41,8 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   late QuickItemsProvider _itemsProvider;
   late QuickItemsProviderFaction _itemsProviderFaction;
 
-  late Timer _inventoryRefreshTimer;
+  // late Timer _inventoryRefreshTimer;
+  final Map<String, Timer> _itemUpdateTimers = {};
 
   final _scrollController = ScrollController();
   bool _pickerActive = false;
@@ -50,7 +53,12 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
   void initState() {
     super.initState();
     _registerPickerCleanupHandler();
-    _inventoryRefreshTimer = Timer.periodic(const Duration(seconds: 40), (Timer t) => _refreshInventory());
+    // _inventoryRefreshTimer = Timer.periodic(const Duration(seconds: 40), (Timer t) => _refreshInventory());
+
+    // Trigger initial check after a small delay to allow webview/provider to settle
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshInventory();
+    });
   }
 
   @override
@@ -64,7 +72,11 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
 
   @override
   void dispose() {
-    _inventoryRefreshTimer.cancel();
+    // _inventoryRefreshTimer.cancel();
+    for (var t in _itemUpdateTimers.values) {
+      if (t.isActive) t.cancel();
+    }
+    _itemUpdateTimers.clear();
     _disablePickerSilently();
     _scrollController.dispose();
     super.dispose();
@@ -114,6 +126,19 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
 
   List<Widget> _itemButtons() {
     final myList = <Widget>[];
+
+    if (!_itemsProvider.isInitialized) {
+      return [
+        const Padding(
+          padding: EdgeInsets.all(20),
+          child: SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ),
+      ];
+    }
 
     List<QuickItem> itemList = <QuickItem>[];
     if (widget.faction) {
@@ -188,11 +213,9 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
       double qtyFontSize = 12;
       String? itemQty;
       if (!item.isLoadout! && !widget.faction) {
-        // Unique equip variants: hide aggregated counts when instanceId is known
-        final hasInstance = item.instanceId != null && item.instanceId!.isNotEmpty;
-        if (hasInstance) {
-          itemQty = null;
-        } else if (item.inventory == null) {
+        // If we have a valid inventory count (e.g. from Mass Check), show it
+        // ONLY if it is a stackable/grouped item. Unique items (weapons/armor) should not show quantity
+        if (item.inventory == null || item.isGrouped == false) {
           itemQty = null;
         } else {
           itemQty = item.inventory.toString();
@@ -281,18 +304,31 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
                     item.itemType == ItemType.MELEE ||
                     item.itemType == ItemType.DEFENSIVE ||
                     item.itemType == ItemType.TEMPORARY;
-                final js = quickItemsJS(
+                final js = runQuickItemJS(
                   item: item.number.toString(),
+                  itemName: item.name!,
                   faction: widget.faction,
                   eRefill: item.isEnergyPoints,
                   nRefill: item.isNervePoints,
                   instanceId: item.instanceId,
                   isEquip: isEquip,
                   refreshAfterEquip: _itemsProvider.refreshAfterEquip,
+                  isTemporary: item.itemType == ItemType.TEMPORARY,
+                  kDebugMode: kDebugMode,
                 );
                 await widget.inAppWebViewController!.evaluateJavascript(source: js);
                 if (!widget.faction) {
                   _itemsProvider.decreaseInventory(item);
+
+                  // Debounce single item check: wait 3s of inactivity before checking logic
+                  if (_itemUpdateTimers.containsKey(item.name)) {
+                    _itemUpdateTimers[item.name]?.cancel();
+                  }
+
+                  _itemUpdateTimers[item.name!] = Timer(const Duration(seconds: 3), () {
+                    _triggerSingleItemCheck(item.name!);
+                    _itemUpdateTimers.remove(item.name);
+                  });
                 }
               }
             },
@@ -334,6 +370,51 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
     if (!widget.faction) {
       _itemsProvider.updateInventoryQuantities();
     }
+    // Also trigger mass check via JS if possible
+    _triggerMassCheck();
+  }
+
+  Future<void> _triggerSingleItemCheck(String itemName) async {
+    // Only for personal items, not faction
+    if (widget.faction) return;
+
+    final controller = widget.inAppWebViewController;
+    if (controller == null) return;
+
+    try {
+      final url = await controller.getUrl();
+      if (url == null || !url.toString().contains("torn.com")) return;
+
+      if (itemName.isNotEmpty) {
+        // log('[SingleItemUpdate] Triggering check for $itemName');
+        await controller.evaluateJavascript(source: quickItemsMassCheckJS([itemName]));
+      }
+    } catch (e) {
+      log('Error triggering single item check: $e');
+    }
+  }
+
+  Future<void> _triggerMassCheck() async {
+    // Only for personal items, not faction
+    if (widget.faction) return;
+
+    final controller = widget.inAppWebViewController;
+    if (controller == null) return;
+
+    try {
+      final url = await controller.getUrl();
+      if (url == null || !url.toString().contains("torn.com")) return;
+
+      final names =
+          _itemsProvider.activeQuickItems.map((e) => e.name ?? "").where((n) => n.isNotEmpty).toSet().toList();
+
+      if (names.isNotEmpty) {
+        // log('[MassUpdate] Triggering from QuickItemsWidget for ${names.length} items');
+        await controller.evaluateJavascript(source: quickItemsMassCheckJS(names));
+      }
+    } catch (e) {
+      log('Error triggering mass check: $e');
+    }
   }
 
   void _registerPickerCleanupHandler() {
@@ -352,6 +433,20 @@ class QuickItemsWidgetState extends State<QuickItemsWidget> {
           return {'status': 'ok'};
         },
       );
+
+      controller.addJavaScriptHandler(
+        handlerName: 'updateQuickItemInstanceId',
+        callback: (args) {
+          if (args.length >= 2) {
+            final itemId = int.tryParse(args[0].toString());
+            final instanceId = args[1].toString();
+            if (itemId != null && instanceId.isNotEmpty) {
+              _itemsProvider.updateActiveItemInstanceId(itemId, instanceId);
+            }
+          }
+        },
+      );
+
       _cleanupHandlerAttached = true;
     } catch (_) {}
   }

@@ -82,7 +82,9 @@ class QuickItemsOptionsState extends State<QuickItemsOptions> {
       if (acc != null) parts.add('ACC ${fmt(acc)}');
     }
     if (def != null) parts.add('DEF ${fmt(def)}');
-    final text = parts.isEmpty ? 'Stats unavailable' : parts.join(' | ');
+    final text = parts.isEmpty ? '' : parts.join(' | ');
+
+    if (text.isEmpty) return null;
 
     return Padding(
       padding: const EdgeInsets.only(top: 2),

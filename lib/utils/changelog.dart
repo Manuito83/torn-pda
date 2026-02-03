@@ -103,11 +103,11 @@ class ChangeLogState extends State<ChangeLog> {
 
     // TODO: UPDATE REMOTE CONFIG FOR CHANGELOG!
 
-    // v3.11.1 - Build 613 - built 31/01/2026
+    // v3.11.1 - Build 614 - built 02/02/2026
     itemList.add(
       ChangeLogItem()
         ..version = 'Torn PDA v3.11.1'
-        ..date = '05 FEB 2026'
+        ..date = '10 FEB 2026'
         ..features = [
           if (Platform.isAndroid) "Travel Live Updates: improvements and fixes [bombel]",
           "Improved Quick Items selection interface",

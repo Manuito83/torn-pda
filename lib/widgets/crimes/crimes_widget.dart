@@ -10,7 +10,7 @@ import 'package:provider/provider.dart';
 // Project imports:
 import 'package:torn_pda/pages/crimes/crimes_options.dart';
 import 'package:torn_pda/providers/crimes_provider.dart';
-import 'package:torn_pda/utils/js_snippets.dart';
+import 'package:torn_pda/utils/js_snippets/js_snippets.dart';
 
 class CrimesWidget extends StatefulWidget {
   final InAppWebViewController? controller;
