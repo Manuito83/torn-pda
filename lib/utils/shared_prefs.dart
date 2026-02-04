@@ -532,6 +532,7 @@ class Prefs {
   final String _kIosLiveActivityTravelPushToken = "pda_iosLiveActivityTravelPushToken";
   // Android-only: used to avoid repeating "Arrived" Live Update after app relaunch
   final String _kAndroidLiveActivityTravelLastArrivalId = "pda_androidLiveActivityTravelLastArrivalId";
+  final String _kLiveActivityCurrentTripBackup = "pda_liveActivityCurrentTripBackup";
 
   /// ----------------------------
   /// Methods for app version
@@ -4234,6 +4235,18 @@ class Prefs {
   /// Android-only: persisted to avoid duplicating the last "Arrived" Live Update after relaunch
   Future setAndroidLiveActivityTravelLastArrivalId(String travelId) async {
     return await PrefsDatabase.setString(_kAndroidLiveActivityTravelLastArrivalId, travelId);
+  }
+
+  Future<String?> getLiveActivityCurrentTripBackup() async {
+    final String value = await PrefsDatabase.getString(_kLiveActivityCurrentTripBackup, "");
+    return value.isEmpty ? null : value;
+  }
+
+  Future setLiveActivityCurrentTripBackup(String? jsonString) async {
+    if (jsonString == null) {
+      return await PrefsDatabase.setString(_kLiveActivityCurrentTripBackup, "");
+    }
+    return await PrefsDatabase.setString(_kLiveActivityCurrentTripBackup, jsonString);
   }
 
   /// ----------------------------

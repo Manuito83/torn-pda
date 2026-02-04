@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,6 +12,7 @@ import 'package:torn_pda/utils/firebase_rtdb.dart';
 import 'package:torn_pda/utils/live_activities/live_activity_bridge.dart';
 import 'package:torn_pda/utils/live_activities/live_update_models.dart';
 import 'package:torn_pda/utils/shared_prefs.dart';
+import 'package:workmanager/workmanager.dart';
 
 class LiveActivityTravelController extends GetxController {
   final _chainStatusProvider = Get.find<ChainStatusController>();
@@ -33,6 +35,7 @@ class LiveActivityTravelController extends GetxController {
 
   static const int _staleArrivalThresholdSeconds = 15 * 60;
   static const int _arrivedLAAutoEndMinutes = 10;
+  static const String _backupTaskUniqueName = "com.tornpda.liveactivity.arrival_backup";
   String? _activeSessionId;
 
   @visibleForTesting
@@ -140,6 +143,32 @@ class LiveActivityTravelController extends GetxController {
     if (!_isMonitoring) return;
     //log("TravelLiveActivityHandler received new status: ${json.encode(statusData?.barsAndStatusModel?.travel)}");
     _processCurrentState(statusData: statusData);
+  }
+
+  void _scheduleBackupTask(int arrivalTimestamp) {
+    if (!Platform.isAndroid) return;
+
+    final nowSeconds = (DateTime.now().millisecondsSinceEpoch / 1000).round();
+    final delaySeconds = arrivalTimestamp - nowSeconds;
+
+    // Schedule for 30 seconds after arrival to give the native alarm a chance first
+    int initialDelaySeconds = delaySeconds + 30;
+    if (initialDelaySeconds < 0) initialDelaySeconds = 0;
+
+    // Workmanager on Android might have a minimum delay/window
+    // Better late "Arrived" than hours ago...
+    Workmanager().registerOneOffTask(
+      _backupTaskUniqueName,
+      _backupTaskUniqueName,
+      initialDelay: Duration(seconds: initialDelaySeconds),
+      existingWorkPolicy: ExistingWorkPolicy.replace,
+      inputData: {'target_timestamp': arrivalTimestamp},
+    );
+  }
+
+  void _cancelBackupTask() {
+    if (!Platform.isAndroid) return;
+    Workmanager().cancelByUniqueName(_backupTaskUniqueName);
   }
 
   void _processCurrentState({StatusObservable? statusData}) async {
@@ -284,6 +313,18 @@ class LiveActivityTravelController extends GetxController {
       // Sync with Firebase so that a Cloud Function won't start for this LA
       log("Syncing arrival timestamp $arrivalTimestamp with server...");
       _syncTimestamp(arrivalTimestamp);
+
+      if (Platform.isAndroid) {
+        if (isArrivalUpdate) {
+          // If we are notifying arrival, we don't need the backup task anymore
+          _cancelBackupTask();
+          await _prefs.setLiveActivityCurrentTripBackup(null);
+        } else {
+          // Saving current trip for backup purposes
+          await _prefs.setLiveActivityCurrentTripBackup(jsonEncode(laArgs));
+          _scheduleBackupTask(arrivalTimestamp);
+        }
+      }
     }
   }
 
@@ -296,6 +337,11 @@ class LiveActivityTravelController extends GetxController {
     _activeSessionId = null;
     _currentLAArrivalTimestamp = 0;
     _hasArrivedNotified = false;
+
+    if (Platform.isAndroid) {
+      _prefs.setLiveActivityCurrentTripBackup(null);
+      _cancelBackupTask();
+    }
   }
 
   // Ends the native Live Activity and resets the internal state
@@ -360,6 +406,12 @@ class LiveActivityTravelController extends GetxController {
 
     final int currentDeviceTimestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round();
 
+    // Reconstruct the travelID to ensure uniqueness in session matching if needed by native side
+    // (Though currently native relies largely on sessionID, having this consistent helps)
+    String travelId =
+        "${apiTravelData['destination']}-${apiTravelData['arrivalTimestamp']}-${apiTravelData['departureTimestamp']}";
+    if (isRepatriation) travelId += "-repat";
+
     return {
       'currentDestinationDisplayName': currentDestinationDisplayName,
       'currentDestinationFlagAsset': currentDestinationFlagAsset,
@@ -374,6 +426,7 @@ class LiveActivityTravelController extends GetxController {
       'showProgressBar': showProgressBar,
       'hasArrived': hasArrived,
       'destinationEmoji': destinationEmoji,
+      'travelIdentifier': travelId,
     };
   }
 
