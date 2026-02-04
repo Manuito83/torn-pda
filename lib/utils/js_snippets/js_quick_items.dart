@@ -929,6 +929,7 @@ String runQuickItemJS({
           // C. Success Display
           var topBox = document.querySelector('.content-title');
           if (topBox) {
+            document.querySelectorAll('.resultBox').forEach(function(box) { box.remove(); });
             topBox.insertAdjacentHTML('afterend', '<div class="resultBox"></div>');
             var resultBox = document.querySelector('.resultBox');
             resultBox.style.display = "block";
@@ -970,6 +971,21 @@ String runQuickItemJS({
             } else {
               resultBox.innerHTML = respStr || (respObj ? JSON.stringify(respObj) : "Error parsing response");
             }
+
+            // Make links actionable
+            if (!resultBox.getAttribute('data-pda-links')) {
+              resultBox.setAttribute('data-pda-links', '1');
+              resultBox.addEventListener('click', function(e) {
+                try {
+                  var link = e.target && e.target.closest ? e.target.closest('a') : null;
+                  if (!link) return;
+                  var isQuickLink = link.classList.contains('next-act') || link.classList.contains('decrement-amount') || link.getAttribute('data-item');
+                  if (!isQuickLink) return;
+                  e.preventDefault();
+                  useItemWithJQuery(itemId, canEquip, resolvedId, shouldRefreshAfterEquip, handleJQueryResponse);
+                } catch (_) {}
+              });
+            }
           }
         }
         useItemWithJQuery(itemId, canEquip, resolvedId, shouldRefreshAfterEquip, handleJQueryResponse);
@@ -996,6 +1012,7 @@ String runQuickItemJS({
               }
               
               var topBox = document.querySelector('.content-title');
+              document.querySelectorAll('.resultBox').forEach(function(box) { box.remove(); });
               topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
               resultBox = document.querySelector('.resultBox');
               resultBox.style.display = "block";
@@ -1018,6 +1035,7 @@ String runQuickItemJS({
                 oncomplete: function(resp) {
                   var response = JSON.parse(resp.responseText);
                   var topBox = document.querySelector('.content-title');
+                  document.querySelectorAll('.resultBox').forEach(function(box) { box.remove(); });
                   topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
                   resultBox = document.querySelector('.resultBox');
                   resultBox.style.display = "block";
@@ -1042,6 +1060,7 @@ String runQuickItemJS({
                 oncomplete: function(resp) {
                   var response = JSON.parse(resp.responseText);
                   var topBox = document.querySelector('.content-title');
+                  document.querySelectorAll('.resultBox').forEach(function(box) { box.remove(); });
                   topBox.insertAdjacentHTML('afterend', '<div class="resultBox">2</div>');
                   resultBox = document.querySelector('.resultBox');
                   resultBox.style.display = "block";
