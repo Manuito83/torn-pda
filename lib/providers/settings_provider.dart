@@ -1140,6 +1140,22 @@ class SettingsProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  var _quickItemsEnabled = true;
+  bool get quickItemsEnabled => _quickItemsEnabled;
+  set quickItemsEnabled(bool value) {
+    _quickItemsEnabled = value;
+    Prefs().setQuickItemsEnabled(value);
+    notifyListeners();
+  }
+
+  var _quickItemsFactionEnabled = true;
+  bool get quickItemsFactionEnabled => _quickItemsFactionEnabled;
+  set quickItemsFactionEnabled(bool value) {
+    _quickItemsFactionEnabled = value;
+    Prefs().setQuickItemsFactionEnabled(value);
+    notifyListeners();
+  }
+
   int _lastAppUse = 0;
   int get lastAppUse => _lastAppUse;
   set updateLastUsed(int timeStamp) {
@@ -1623,6 +1639,9 @@ class SettingsProvider extends ChangeNotifier {
 
     _retaliationSectionEnabled = await Prefs().getRetaliationSectionEnabled();
     _singleRetaliationOpensBrowser = await Prefs().getSingleRetaliationOpensBrowser();
+
+    _quickItemsEnabled = await Prefs().getQuickItemsEnabled();
+    _quickItemsFactionEnabled = await Prefs().getQuickItemsFactionEnabled();
 
     _syncTornWebTheme = await Prefs().getSyncTornWebTheme();
     _syncDeviceTheme = await Prefs().getSyncDeviceTheme();

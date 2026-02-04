@@ -296,6 +296,8 @@ class Prefs {
   final String _kQuickItemsListFaction = "pda_quickItemsListFaction"; // keep faction data
   final String _kQuickItemsLoadoutsNumber = "pda_quickItemsLoadoutsNumber";
   final String _kQuickItemsRefreshAfterEquip = "pda_quickItemsRefreshAfterEquip";
+  final String _kQuickItemsEnabled = "pda_quickItemsEnabled";
+  final String _kQuickItemsFactionEnabled = "pda_quickItemsFactionEnabled";
   //
   final String _kTradeCalculatorEnabled = "pda_tradeCalculatorActive";
   final String _kAWHEnabled = "pda_awhActive";
@@ -2754,6 +2756,22 @@ class Prefs {
 
   Future setQuickItemsRefreshAfterEquip(bool value) async {
     return await PrefsDatabase.setBool(_kQuickItemsRefreshAfterEquip, value);
+  }
+
+  Future<bool> getQuickItemsEnabled() async {
+    return await PrefsDatabase.getBool(_kQuickItemsEnabled, true);
+  }
+
+  Future setQuickItemsEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsEnabled, value);
+  }
+
+  Future<bool> getQuickItemsFactionEnabled() async {
+    return await PrefsDatabase.getBool(_kQuickItemsFactionEnabled, true);
+  }
+
+  Future setQuickItemsFactionEnabled(bool value) async {
+    return await PrefsDatabase.setBool(_kQuickItemsFactionEnabled, value);
   }
 
   /// ----------------------------

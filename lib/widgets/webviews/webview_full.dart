@@ -621,6 +621,7 @@ class WebViewFullState extends State<WebViewFull>
     super.build(context);
     _terminalProvider = Provider.of<TerminalProvider>(context);
     _themeProvider = Provider.of<ThemeProvider>(context);
+    _settingsProvider = Provider.of<SettingsProvider>(context);
 
     return ShowCaseWidget(
       builder: (_) {
@@ -1135,7 +1136,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsActive
+                  expanded: _quickItemsActive && _settingsProvider.quickItemsEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: false,
@@ -1154,7 +1155,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsFactionController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsFactionActive
+                  expanded: _quickItemsFactionActive && _settingsProvider.quickItemsFactionEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: true,
@@ -1215,7 +1216,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsActive
+                  expanded: _quickItemsActive && _settingsProvider.quickItemsEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: false,
@@ -1234,7 +1235,7 @@ class WebViewFullState extends State<WebViewFull>
                   collapsed: const SizedBox.shrink(),
                   controller: _quickItemsFactionController,
                   header: const SizedBox.shrink(),
-                  expanded: _quickItemsFactionActive
+                  expanded: _quickItemsFactionActive && _settingsProvider.quickItemsFactionEnabled
                       ? QuickItemsWidget(
                           inAppWebViewController: webViewController,
                           faction: true,
